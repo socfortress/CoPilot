@@ -128,7 +128,8 @@ import {
 	TALON_V2_FAILED
 } from "@/api/talonV2Parser"
 import Icon from "@/components/common/Icon.vue"
-import { blocksThread, claimResume, knownAction, openApprovals } from "./approvals"
+import { cardsClock, claimResume, knownAction } from "./actionCards"
+import { blocksThread, openApprovals } from "./approvals"
 import { NOTICE_ARCHIVED, NOTICE_BUSY, NOTICE_LOAD_FAILED, NOTICE_PENDING, NOTICE_REVOKED, noticeFor } from "./notices"
 import TalonContextBadge from "./TalonContextBadge.vue"
 import TalonV2Message from "./TalonV2Message.vue"
@@ -164,18 +165,20 @@ let streamController: AbortController | null = null
 
 const title = computed(() => thread.title || "Untitled thread")
 const archived = computed(() => thread.status === "archived")
-/** The thread's open approval cards, with what each card last read of its record. */
+/** The thread's open approval cards, with what each card last read of its record (shared, `actionCards`). */
 const openCards = computed(() =>
 	openApprovals(messages.value).map(open => ({ ...open, record: knownAction(open.approvalId) }))
 )
 /**
- * A proposal holds the thread: a card read its record pending or approved without a result, or
- * a card still reading a proposal the stream or the read-back called pending.
+ * A proposal holds the thread: a card read its record (of this thread) pending, or approved and
+ * inside its result window; or a card is still reading a proposal the stream or the read-back
+ * called pending. A record of another thread holds nothing here.
  */
 const waitingForDecision = computed(() =>
 	openCards.value.some(card => {
-		if (card.record?.action) return blocksThread(card.record.action)
-		return !card.record?.failed && card.hint === "pending"
+		const action = card.record?.action
+		if (action) return action.thread_id === thread.id && blocksThread(action, cardsClock.value)
+		return !card.record?.gone && card.hint === "pending"
 	})
 )
 const pendingNotice: ThreadNotice = { kind: "pending", text: NOTICE_PENDING, locksComposer: true }
@@ -387,7 +390,9 @@ const resumeDue = computed(() => {
 	if (!cards.length) return false
 	return cards.every(card => {
 		const action = card.record?.action
-		return !!action && !card.record?.failed && action.is_requester && !blocksThread(action)
+		return (
+			!!action && action.thread_id === thread.id && action.is_requester && !blocksThread(action, cardsClock.value)
+		)
 	})
 })
 

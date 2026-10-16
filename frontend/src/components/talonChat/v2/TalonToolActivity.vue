@@ -14,7 +14,7 @@
 		<div v-if="item.errorText" class="text-error" data-testid="talon-v2-tool-error">{{ item.errorText }}</div>
 
 		<details v-if="hasInput" class="text-secondary" data-testid="talon-v2-tool-input">
-			<summary class="cursor-pointer select-none">Arguments</summary>
+			<summary class="cursor-pointer select-none">The model's arguments (not what runs)</summary>
 			<div v-if="keys" class="mt-1" data-testid="talon-v2-tool-keys">
 				Too long to show. Keys: {{ keys.length ? keys.join(", ") : "none" }}
 			</div>

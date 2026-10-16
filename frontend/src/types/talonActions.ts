@@ -53,6 +53,8 @@ export interface TalonAction {
 	customer_code: string
 	/** CoPilot's user id of whoever asked Talon for it, as a string (talon-analyst's `user_id`). */
 	requester_user_id: string
+	/** The requester's CoPilot user name, read now; null if the user no longer exists. */
+	requester_username?: string | null
 	action: TalonActionName | string
 	side_effect: "external-action" | "endpoint-action" | string
 	executes_through?: string | null
@@ -73,6 +75,10 @@ export interface TalonAction {
 	expired: boolean
 	/** Naive UTC (`DATETIME`), without an offset. */
 	expires_at: string
+	/** Seconds until `expires_at` by CoPilot's clock when it answered (0 once passed). */
+	expires_in_seconds?: number
+	/** For an approved record: when talon-analyst stops waiting for its result (naive UTC); null before. */
+	result_due_by?: string | null
 	created_at?: string | null
 	decision?: "approve" | "deny" | string | null
 	approver_user_id?: number | null

@@ -4,7 +4,7 @@
 		:class="toneClass"
 		data-testid="talon-approval-card"
 		:data-approval-id="approvalId"
-		:data-state="action?.state ?? 'loading'"
+		:data-state="action?.state ?? (entry.gone ? 'gone' : 'loading')"
 		:data-talon-status="action?.talon_status ?? ''"
 	>
 		<div class="flex flex-wrap items-center gap-2">
@@ -19,12 +19,23 @@
 			</n-tag>
 		</div>
 
-		<div v-if="!action && loading" class="text-tertiary" data-testid="talon-approval-loading">
+		<div v-if="!action && entry.loading" class="text-tertiary" data-testid="talon-approval-loading">
 			Reading the proposal...
 		</div>
-		<div v-if="loadError" class="text-error" data-testid="talon-approval-load-error">{{ loadError }}</div>
+		<div v-if="entry.loadError" class="text-error" data-testid="talon-approval-load-error">
+			<TalonUntrusted :text="entry.loadError" />
+		</div>
 
 		<template v-if="action">
+			<n-alert
+				v-if="hiddenChars"
+				type="error"
+				:bordered="false"
+				class="text-xs"
+				data-testid="talon-approval-hidden-chars"
+			>
+				{{ HIDDEN_CHARS_WARNING }}
+			</n-alert>
 			<n-alert
 				v-for="warning of warnings"
 				:key="warning.flag"
@@ -39,53 +50,39 @@
 
 			<dl class="grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1">
 				<dt class="text-tertiary">Customer</dt>
-				<dd data-testid="talon-approval-customer">{{ action.customer_code }}</dd>
+				<dd data-testid="talon-approval-customer"><TalonUntrusted :text="action.customer_code" /></dd>
 
 				<dt class="text-tertiary">Target</dt>
 				<dd data-testid="talon-approval-target">
-					<template v-if="alertId !== null">
-						<RouterLink
-							:to="{ name: 'IncidentManagement-Alert', params: { id: String(alertId) } }"
-							class="text-primary underline"
-							data-testid="talon-approval-alert-link"
-						>
-							Alert #{{ alertId }}
-						</RouterLink>
-					</template>
+					<RouterLink
+						v-if="alertId !== null"
+						:to="{ name: 'IncidentManagement-Alert', params: { id: String(alertId) } }"
+						class="text-primary underline"
+						data-testid="talon-approval-alert-link"
+					>
+						Alert #{{ alertId }}
+					</RouterLink>
 					<template v-else-if="host">
 						<span class="font-mono font-semibold" data-testid="talon-approval-hostname">
-							{{ host.hostname }}
+							<TalonUntrusted :text="host.hostname" />
 						</span>
 						<span class="text-secondary" data-testid="talon-approval-agent">
-							· agent {{ host.agentId }}
+							· agent
+							<TalonUntrusted :text="host.agentId" />
 						</span>
-						<span v-if="host.client" class="text-tertiary font-mono">· {{ host.client }}</span>
+						<span v-if="host.client" class="text-tertiary font-mono">
+							·
+							<TalonUntrusted :text="host.client" />
+						</span>
 					</template>
 					<span v-else class="text-tertiary">not shown</span>
 				</dd>
 
 				<template v-for="arg of args" :key="arg.key">
-					<dt class="text-tertiary font-mono">{{ arg.key }}</dt>
-					<dd v-if="arg.key === 'comment'" data-testid="talon-approval-comment">
-						<!-- The comment raw, as it will be posted; links highlighted, never clickable. -->
-						<div class="bg-default rounded p-1.5 font-mono break-words whitespace-pre-wrap">
-							<template v-for="(segment, index) of arg.segments" :key="index">
-								<span
-									v-if="segment.link"
-									class="rounded-sm bg-[rgba(var(--warning-color-rgb)/0.18)] px-0.5 underline decoration-dotted"
-									data-testid="talon-approval-comment-link"
-								>
-									{{ segment.text }}
-								</span>
-								<template v-else>{{ segment.text }}</template>
-							</template>
-						</div>
-						<div v-if="action.links" class="text-warning mt-1" data-testid="talon-approval-links-note">
-							This comment holds links. They are shown, not opened: check them before approving.
-						</div>
-					</dd>
-					<dd v-else class="font-mono break-all" :data-testid="`talon-approval-arg-${arg.key}`">
-						{{ arg.text }}
+					<dt class="text-tertiary font-mono"><TalonUntrusted :text="arg.key" /></dt>
+					<dd class="font-mono break-all" :data-testid="`talon-approval-arg-${arg.key}`">
+						<span v-if="arg.key === 'comment'" class="text-tertiary font-sans">shown below</span>
+						<TalonUntrusted v-else :text="arg.text" />
 					</dd>
 				</template>
 			</dl>
@@ -94,98 +91,137 @@
 				<span class="text-tertiary">The model's reason (untrusted: written by the model, not checked)</span>
 				<!-- Plain text: never Markdown or HTML. -->
 				<p class="text-secondary break-words whitespace-pre-wrap" data-testid="talon-approval-reason-text">
-					{{ action.reason || "none given" }}
+					<TalonUntrusted :text="action.reason || 'none given'" />
 				</p>
 			</div>
 
+			<div v-if="comment !== null" class="flex flex-col gap-0.5" data-testid="talon-approval-comment">
+				<span class="text-tertiary">Comment text (from the model, posted as written)</span>
+				<!-- The comment raw and capped, so it can't push the real target away from the buttons. -->
+				<div
+					class="bg-default max-h-60 overflow-auto rounded p-1.5 font-mono break-words whitespace-pre-wrap"
+					data-testid="talon-approval-comment-text"
+				>
+					<TalonUntrusted :text="comment" links />
+				</div>
+				<div v-if="action.links" class="text-warning" data-testid="talon-approval-links-note">
+					This comment holds links. They are shown, not opened: check them before approving.
+				</div>
+			</div>
+
 			<div class="text-tertiary flex flex-wrap gap-x-3 gap-y-0.5">
-				<span data-testid="talon-approval-requester">Requested by {{ requester }}</span>
-				<span v-if="createdAt">{{ formatDate(createdAt, dFormats.datetime) }}</span>
-				<span v-if="countdown" data-testid="talon-approval-expiry">Expires in {{ countdown }}</span>
-				<span v-else-if="action.state === 'pending'" data-testid="talon-approval-expiry">
-					Expired {{ expiresAt ? formatDate(expiresAt, dFormats.datetime) : "" }}
+				<span data-testid="talon-approval-requester">
+					Requested by
+					<TalonUntrusted :text="requester" />
 				</span>
+				<span v-if="createdAt">{{ formatDate(createdAt, dFormats.datetime) }}</span>
+				<span v-if="expiryText" data-testid="talon-approval-expiry">{{ expiryText }}</span>
 			</div>
 
 			<div v-if="decisionLine" class="text-secondary" data-testid="talon-approval-decision">
-				{{ decisionLine }}
+				{{ decisionLine.verb }} by
+				<TalonUntrusted :text="decisionLine.who" />
+				{{ decisionLine.at }}
 			</div>
 			<div v-if="resultText" class="text-secondary" data-testid="talon-approval-result">
-				Result: {{ resultText }}
+				Result:
+				<TalonUntrusted :text="resultText" />
 			</div>
 			<div v-if="reasonText" class="text-tertiary" data-testid="talon-approval-state-reason">
-				{{ reasonText }}
+				<TalonUntrusted :text="reasonText" />
 			</div>
 			<div v-if="reportText" class="text-tertiary" data-testid="talon-approval-reported">{{ reportText }}</div>
 		</template>
 
-		<div v-if="decisionNote" class="text-warning" data-testid="talon-approval-note">{{ decisionNote }}</div>
-		<div v-if="decisionError" class="text-error" data-testid="talon-approval-error">{{ decisionError }}</div>
+		<div v-if="entry.decisionNote" class="text-warning" data-testid="talon-approval-note">
+			<TalonUntrusted :text="entry.decisionNote" />
+		</div>
+		<div v-if="entry.decisionError" class="text-error" data-testid="talon-approval-error">
+			<TalonUntrusted :text="entry.decisionError" />
+		</div>
 
-		<div v-if="action && (action.can_decide || withdrawable)" class="flex flex-wrap items-center gap-2">
-			<template v-if="action.can_decide">
+		<div
+			v-if="action && (action.can_decide || withdrawable)"
+			class="border-default flex flex-col gap-1.5 border-t pt-2"
+			data-testid="talon-approval-actions"
+		>
+			<div v-if="action.can_decide" class="text-secondary" data-testid="talon-approval-summary">
+				Approve:
+				<template v-for="(part, index) of summary" :key="index">
+					<TalonUntrusted v-if="part.untrusted" class="font-semibold" :text="part.text" />
+					<template v-else>{{ part.text }}</template>
+				</template>
+			</div>
+			<div class="flex flex-wrap items-center gap-2">
+				<template v-if="action.can_decide">
+					<n-button
+						size="small"
+						type="primary"
+						:disabled="busy"
+						:loading="entry.busy === 'approve'"
+						:aria-label="`Approve: ${summaryText}`"
+						data-testid="talon-approval-approve"
+						@click="askApprove()"
+					>
+						Approve
+					</n-button>
+					<n-button
+						size="small"
+						secondary
+						:disabled="busy"
+						:loading="entry.busy === 'deny'"
+						data-testid="talon-approval-deny"
+						@click="decide('deny')"
+					>
+						Deny
+					</n-button>
+				</template>
 				<n-button
+					v-if="withdrawable"
 					size="small"
-					type="primary"
+					tertiary
 					:disabled="busy"
-					:loading="busy && pendingKind === 'approve'"
-					data-testid="talon-approval-approve"
-					@click="askApprove()"
+					:loading="entry.busy === 'withdraw'"
+					data-testid="talon-approval-withdraw"
+					@click="decide('withdraw')"
 				>
-					Approve
+					Withdraw
 				</n-button>
-				<n-button
-					size="small"
-					secondary
-					:disabled="busy"
-					:loading="busy && pendingKind === 'deny'"
-					data-testid="talon-approval-deny"
-					@click="decide('deny')"
-				>
-					Deny
-				</n-button>
-			</template>
-			<n-button
-				v-if="withdrawable"
-				size="small"
-				tertiary
-				:disabled="busy"
-				:loading="busy && pendingKind === 'withdraw'"
-				data-testid="talon-approval-withdraw"
-				@click="decide('withdraw')"
-			>
-				Withdraw
-			</n-button>
-			<span v-if="busy && pendingKind === 'approve'" class="text-tertiary">
-				Approving and running it in CoPilot...
-			</span>
+				<span v-if="entry.busy === 'approve'" class="text-tertiary">
+					Approving and running it in CoPilot...
+				</span>
+			</div>
 		</div>
 
 		<n-modal
 			v-model:show="confirming"
 			preset="card"
 			:title="confirmTitle"
-			:style="{ maxWidth: 'min(480px, 94vw)' }"
+			:style="{ maxWidth: 'min(520px, 94vw)' }"
 			:mask-closable="!busy"
 			:closable="!busy"
 			segmented
 			data-testid="talon-approval-confirm"
 		>
-			<div class="flex flex-col gap-2 text-sm" data-testid="talon-approval-confirm-text">
+			<div v-if="action" class="flex flex-col gap-2 text-sm" data-testid="talon-approval-confirm-text">
 				<p>
-					{{ action?.action === "release_host" ? "Release" : "Quarantine" }}
-					<strong class="font-mono">{{ host?.hostname }}</strong>
-					(agent {{ host?.agentId }}) of customer
-					<strong>{{ action?.customer_code }}</strong>
-					?
+					<strong>{{ actionLabel(action.action) }}</strong>
+				</p>
+				<p>
+					Approve:
+					<template v-for="(part, index) of summary" :key="index">
+						<TalonUntrusted v-if="part.untrusted" class="font-mono font-semibold" :text="part.text" />
+						<template v-else>{{ part.text }}</template>
+					</template>
 				</p>
 				<p class="text-secondary text-xs">
-					{{
-						action?.action === "release_host"
-							? "Velociraptor gives the host its network connections back."
-							: "Velociraptor cuts the host off the network but for its connection to Velociraptor."
-					}}
-					CoPilot runs it now, as you.
+					<template v-if="action.action === 'quarantine_host'">
+						Velociraptor cuts the host off the network but for its connection to Velociraptor.
+					</template>
+					<template v-else-if="action.action === 'release_host'">
+						Velociraptor gives the host its network connections back.
+					</template>
+					CoPilot runs it now, as you. The target and customer are CoPilot's record of the proposal.
 				</p>
 			</div>
 			<template #footer>
@@ -200,7 +236,7 @@
 						data-testid="talon-approval-confirm-run"
 						@click="confirmApprove()"
 					>
-						{{ action?.action === "release_host" ? "Release" : "Quarantine" }}
+						{{ confirmVerb }}
 					</n-button>
 				</div>
 			</template>
@@ -213,182 +249,60 @@
 //
 // Everything shown comes from CoPilot's `GET /api/talon/actions/{id}`, which reads the record back
 // from talon-analyst as the caller: never from the chat stream (`tool-input-available` is the
-// model's own arguments, shown in the tool row, apart from this card). The model's reason and a
-// comment are text: the reason labelled untrusted, a comment raw with its links highlighted and
-// never clickable. Approve and Deny only when CoPilot says the caller may decide it; Withdraw for
-// its requester while it is pending; a host action asks first, naming the host and the customer.
-// The card reads the record again every `TALON_APPROVAL_POLL_MS` until nothing more can change.
-import type { TalonAction } from "@/types/talonActions"
-import axios from "axios"
+// model's own arguments, shown in the tool row, apart from this card). Every value from the record
+// is untrusted text (`TalonUntrusted`: inside `<bdi>`, invisible and direction-changing characters
+// escaped, a warning when there are any); the reason is labelled untrusted, a comment is raw in a
+// capped box with its links highlighted and never clickable. Approve and Deny only when CoPilot
+// says the caller may decide it; Withdraw for its requester while it is pending. Every Approve asks
+// first, naming the action, the target and the customer from the record, which the button row
+// also shows. The record, the read and the decision in flight are shared by every card of the
+// proposal, and one poll for the page keeps them fresh (`actionCards.ts`).
+import type { DecisionKind } from "./actionCards"
 import { NAlert, NButton, NModal, NTag } from "naive-ui"
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
-import Api from "@/api"
-import { refusalDetail } from "@/api/endpoints/talonV2"
-import { TALON_V2_FAILED } from "@/api/talonV2Parser"
+import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { noteApprovalsChanged } from "@/composables/useTalonApprovals"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
+import { useActionCard } from "./actionCards"
 import {
 	actionLabel,
-	forgetAction,
+	expiryDeadline,
+	hasHiddenChars,
+	HIDDEN_CHARS_WARNING,
 	isHostAction,
-	isSettled,
 	isWithdrawable,
-	linkSegments,
 	parseUtc,
 	provenanceWarnings,
-	rememberAction,
+	safeSegments,
 	stateLabel,
 	stateTone,
-	TALON_APPROVAL_POLL_MS,
 	timeLeft
 } from "./approvals"
+import TalonUntrusted from "./TalonUntrusted"
 
 const { approvalId } = defineProps<{ approvalId: string }>()
 
-const emit = defineEmits<{
-	/** The proposal's state (CoPilot's or talon-analyst's) moved. */
-	(e: "changed", value: TalonAction): void
-}>()
-
-type DecisionKind = "approve" | "deny" | "withdraw"
-
 const dFormats = useSettingsStore().dateFormat
 
-const action = ref<TalonAction | null>(null)
-const loading = ref(true)
-const loadError = ref<string | null>(null)
-const busy = ref(false)
-const pendingKind = ref<DecisionKind | null>(null)
-const decisionError = ref<string | null>(null)
-const decisionNote = ref<string | null>(null)
+const { entry, decide: decideCard } = useActionCard(approvalId)
+const action = computed(() => entry.value.action)
+const busy = computed(() => !!entry.value.busy)
 const confirming = ref(false)
 const now = ref(Date.now())
-
-let controller: AbortController | null = null
-let pollTimer: ReturnType<typeof setTimeout> | null = null
 let clockTimer: ReturnType<typeof setInterval> | null = null
-/** Bumped by every record taken: a read started before a decision's answer is dropped. */
-let version = 0
-let gone = false
-let unmounted = false
 
-function errorOf(err: unknown): { status: number | null; detail: string } {
-	if (axios.isAxiosError(err)) {
-		return { status: err.response?.status ?? null, detail: refusalDetail(err.response?.data) }
-	}
-	return { status: null, detail: TALON_V2_FAILED }
-}
-
-/** CoPilot's answer carries the record: anything else is no answer. */
-function recordOf(data: unknown): TalonAction {
-	const next = (data as { action?: unknown } | null)?.action as TalonAction | undefined
-	if (!next || typeof next !== "object" || next.id !== approvalId || typeof next.state !== "string") {
-		throw new Error("not the proposal's record")
-	}
-	return next
-}
-
-function take(next: TalonAction) {
-	const before = action.value
-	version += 1
-	action.value = next
-	rememberAction(next)
-	if (before && (before.state !== next.state || before.talon_status !== next.talon_status)) {
-		emit("changed", next)
-		noteApprovalsChanged() // the Approvals badge follows
-	}
-}
-
-function stopPolling() {
-	if (pollTimer) clearTimeout(pollTimer)
-	pollTimer = null
-}
-
-function schedule() {
-	stopPolling()
-	if (unmounted || gone || (action.value && isSettled(action.value))) return
-	pollTimer = setTimeout(() => {
-		pollTimer = null
-		if (busy.value) schedule()
-		else load()
-	}, TALON_APPROVAL_POLL_MS)
-}
-
-async function load() {
-	controller?.abort()
-	const own = new AbortController()
-	controller = own
-	const started = version
-	try {
-		const res = await Api.talonActions.get(approvalId, own.signal)
-		if (own.signal.aborted || unmounted) return
-		const next = recordOf(res.data)
-		loadError.value = null
-		if (started === version) take(next)
-	} catch (err) {
-		if (own.signal.aborted || unmounted || axios.isCancel(err)) return
-		const { status, detail } = errorOf(err)
-		loadError.value = detail
-		if (status === 404) {
-			gone = true
-			forgetAction(approvalId)
-		}
-	} finally {
-		if (controller === own) {
-			controller = null
-			loading.value = false
-			schedule()
-		}
-	}
-}
-
-async function decide(kind: DecisionKind) {
-	if (busy.value || !action.value) return
-	busy.value = true
-	pendingKind.value = kind
-	decisionError.value = null
-	decisionNote.value = null
-	stopPolling()
-	controller?.abort()
-	controller = null
-	let reread = false
-	try {
-		const call =
-			kind === "approve"
-				? Api.talonActions.approve
-				: kind === "deny"
-					? Api.talonActions.deny
-					: Api.talonActions.withdraw
-		const res = await call(approvalId)
-		if (unmounted) return
-		take(recordOf(res.data))
-		// CoPilot answers 200 with `success: false` when it decided but the run didn't succeed.
-		if (res.data.success === false && res.data.message) decisionNote.value = res.data.message
-	} catch (err) {
-		if (unmounted) return
-		decisionError.value = errorOf(err).detail
-		reread = true // what the record is now (another approver, an expiry...)
-	} finally {
-		busy.value = false
-		pendingKind.value = null
-		confirming.value = false
-		if (!unmounted) {
-			if (reread) load()
-			else schedule()
-		}
-	}
+function decide(kind: DecisionKind) {
+	decideCard(kind)
 }
 
 function askApprove() {
 	if (!action.value || busy.value) return
-	if (isHostAction(action.value)) confirming.value = true
-	else decide("approve")
+	confirming.value = true
 }
 
 function confirmApprove() {
-	decide("approve")
+	if (!action.value?.can_decide || busy.value) return
+	decideCard("approve")
 }
 
 // ── what the card shows ──────────────────────────────────────────────────────
@@ -422,30 +336,103 @@ const host = computed(() => {
 })
 
 const args = computed(() =>
-	Object.entries(action.value?.args ?? {}).map(([key, value]) => {
-		const text = asText(value)
-		return { key, text, segments: key === "comment" ? linkSegments(text) : [] }
-	})
+	Object.entries(action.value?.args ?? {}).map(([key, value]) => ({ key, text: asText(value) }))
+)
+const comment = computed(() => {
+	const value = action.value?.args?.comment
+	return value === undefined ? null : asText(value)
+})
+
+/** "set Alert #840 to CLOSED (ACME)": the decision in the record's own words; untrusted parts marked. */
+const summary = computed(() => {
+	const a = action.value
+	if (!a) return []
+	const plain = (text: string) => ({ text, untrusted: false })
+	const untrusted = (text: string) => ({ text, untrusted: true })
+	const alert = alertId.value !== null ? plain(`Alert #${alertId.value}`) : plain("an alert")
+	const argText = (key: string) => untrusted(asText(a.args?.[key] ?? ""))
+	let parts: { text: string; untrusted: boolean }[]
+	switch (a.action) {
+		case "set_alert_status":
+			parts = [plain("set "), alert, plain(" to "), argText("status")]
+			break
+		case "assign_alert":
+			parts = [plain("assign "), alert, plain(" to "), argText("assigned_to")]
+			break
+		case "comment_on_alert":
+			parts = [plain("comment on "), alert]
+			break
+		case "quarantine_host":
+		case "release_host":
+			parts = [
+				plain(a.action === "quarantine_host" ? "quarantine " : "release "),
+				untrusted(host.value?.hostname ?? ""),
+				plain(" (agent "),
+				untrusted(host.value?.agentId ?? ""),
+				plain(")")
+			]
+			break
+		default:
+			parts = [plain(actionLabel(a.action))]
+	}
+	return [...parts, plain(" for customer "), untrusted(a.customer_code)]
+})
+const summaryText = computed(() =>
+	summary.value
+		.map(part =>
+			part.untrusted
+				? safeSegments(part.text)
+						.map(s => s.text)
+						.join("")
+				: part.text
+		)
+		.join("")
 )
 
+const hiddenChars = computed(() => {
+	const a = action.value
+	if (!a) return false
+	const values = [
+		a.reason,
+		a.customer_code,
+		a.state_reason,
+		a.requester_username,
+		a.execution_result?.message,
+		...Object.keys(a.args ?? {}),
+		...args.value.map(arg => arg.text),
+		...Object.values(a.target ?? {}).map(asText)
+	]
+	return values.some(value => typeof value === "string" && hasHiddenChars(value))
+})
+
 const warnings = computed(() => provenanceWarnings(action.value?.provenance))
+const requester = computed(() => {
+	const a = action.value
+	if (!a) return ""
+	if (a.is_requester) return "you"
+	return a.requester_username || `CoPilot user #${a.requester_user_id}`
+})
 const withdrawable = computed(() => !!action.value && isWithdrawable(action.value))
-const requester = computed(() =>
-	action.value?.is_requester ? "you" : `CoPilot user #${action.value?.requester_user_id ?? "?"}`
-)
 const createdAt = computed(() => parseUtc(action.value?.created_at))
-const expiresAt = computed(() => parseUtc(action.value?.expires_at))
-const countdown = computed(() => {
-	if (!action.value || action.value.state !== "pending" || action.value.expired) return null
-	return timeLeft(expiresAt.value, now.value)
+const expiryText = computed(() => {
+	const a = action.value
+	if (!a || a.state !== "pending") return null
+	if (a.expired) return "Expired"
+	const deadline = expiryDeadline(a, entry.value.receivedAt)
+	if (deadline === null) return "Expiry unknown"
+	const left = timeLeft(deadline, now.value)
+	return left ? `Expires in ${left}` : "Expired"
 })
 
 const decisionLine = computed(() => {
 	const a = action.value
 	if (!a?.approver_username || !a.decision) return null
-	const verb = a.decision === "deny" ? "Denied" : "Approved"
 	const at = parseUtc(a.decided_at)
-	return `${verb} by ${a.approver_username}${at ? ` on ${formatDate(at, dFormats.datetime)}` : ""}`
+	return {
+		verb: a.decision === "deny" ? "Denied" : "Approved",
+		who: a.approver_username,
+		at: at ? ` on ${formatDate(at, dFormats.datetime)}` : ""
+	}
 })
 const resultText = computed(() => {
 	const message = action.value?.execution_result?.message
@@ -461,9 +448,16 @@ const reportText = computed(() => {
 	return a.outcome_reported ? "Reported to Talon." : "Not reported to Talon yet: CoPilot keeps trying."
 })
 
-const confirmTitle = computed(() =>
-	action.value?.action === "release_host" ? "Release this host from quarantine?" : "Quarantine this host?"
-)
+const confirmTitle = computed(() => {
+	if (action.value?.action === "quarantine_host") return "Quarantine this host?"
+	if (action.value?.action === "release_host") return "Release this host from quarantine?"
+	return "Approve this action?"
+})
+const confirmVerb = computed(() => {
+	if (action.value?.action === "quarantine_host") return "Quarantine"
+	if (action.value?.action === "release_host") return "Release"
+	return "Approve and run"
+})
 
 const toneClass = computed(() => {
 	switch (action.value ? stateTone(action.value) : "waiting") {
@@ -495,23 +489,36 @@ const tagType = computed(() => {
 	}
 })
 
+// A confirm opened on an older record never sends: it closes when the record moves on.
+watch(
+	() => [action.value?.state, action.value?.talon_status, action.value?.can_decide],
+	() => {
+		if (confirming.value && !busy.value) confirming.value = false
+	}
+)
+watch(
+	() => !!action.value?.can_decide,
+	can => {
+		if (!can) confirming.value = false
+	}
+)
+watch(busy, (running, wasRunning) => {
+	// The decision this confirm sent has its answer: the dialog's job is done.
+	if (wasRunning && !running) confirming.value = false
+})
+
 // The expiry countdown ticks only while the proposal waits.
 watch(
 	() => !!action.value && action.value.state === "pending" && !action.value.expired,
 	ticking => {
 		if (clockTimer) clearInterval(clockTimer)
 		clockTimer = null
-		if (ticking && !unmounted) clockTimer = setInterval(() => (now.value = Date.now()), 1000)
-	}
+		if (ticking) clockTimer = setInterval(() => (now.value = Date.now()), 1000)
+	},
+	{ immediate: true }
 )
 
-onMounted(() => load())
-
-// Nothing outlives the card: no read in flight, no poll, no clock.
 onBeforeUnmount(() => {
-	unmounted = true
-	controller?.abort()
-	stopPolling()
 	if (clockTimer) clearInterval(clockTimer)
 })
 </script>

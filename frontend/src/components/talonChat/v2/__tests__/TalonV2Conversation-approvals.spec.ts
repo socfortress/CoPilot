@@ -11,10 +11,10 @@ import type { TalonV2MessagesPage, TalonV2Thread, TalonV2UIMessage } from "@/typ
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
-import { resetTalonActions, TALON_APPROVAL_POLL_MS } from "../approvals"
+import { resetTalonActions, TALON_CARDS_FAST_MS, TALON_CARDS_SLOW_MS } from "../actionCards"
 import { NOTICE_PENDING } from "../notices"
 import TalonV2Conversation from "../TalonV2Conversation.vue"
-import { APPROVAL_ID, response, talonAction, THREAD_ID } from "./fixtures"
+import { APPROVAL_ID, listOf, response, talonAction, THREAD_ID } from "./fixtures"
 
 type StreamChat = (
 	threadId: string,
@@ -26,6 +26,7 @@ type StreamChat = (
 const getMessages = vi.fn()
 const streamChat = vi.fn<StreamChat>()
 const getAction = vi.fn()
+const listActions = vi.fn()
 
 vi.mock("@/api", () => ({
 	default: {
@@ -35,6 +36,7 @@ vi.mock("@/api", () => ({
 		},
 		talonActions: {
 			get: (...args: unknown[]) => getAction(...args),
+			list: (...args: unknown[]) => listActions(...args),
 			approve: vi.fn(),
 			deny: vi.fn(),
 			withdraw: vi.fn()
@@ -149,6 +151,12 @@ describe("talon v2 conversation with action proposals", () => {
 		getMessages.mockReset()
 		streamChat.mockReset()
 		getAction.mockReset()
+		listActions.mockReset()
+		// CoPilot's mirror list: by default, whatever the record reads now.
+		listActions.mockImplementation(async () => {
+			const answer = await getAction(APPROVAL_ID)
+			return listOf(answer?.data?.action ? [answer.data.action] : [])
+		})
 	})
 	afterEach(() => {
 		vi.useRealTimers()
@@ -221,12 +229,13 @@ describe("talon v2 conversation with action proposals", () => {
 		vi.useFakeTimers()
 		getMessages.mockResolvedValueOnce(page(PROPOSED))
 		getAction.mockResolvedValueOnce(response(talonAction())).mockResolvedValue(response(talonAction(EXECUTED)))
+		listActions.mockImplementation(async () => listOf([talonAction(EXECUTED)]))
 		streamChat.mockImplementation(resumeStream())
 		const wrapper = render()
 		await flushPromises()
 		expect(streamChat).not.toHaveBeenCalled()
 
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS)
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_FAST_MS)
 		await flushPromises()
 		expect(streamChat).toHaveBeenCalledTimes(1)
 		const [threadId, body] = streamChat.mock.calls[0]
@@ -246,7 +255,9 @@ describe("talon v2 conversation with action proposals", () => {
 		expect(wrapper.emitted("activity")).toHaveLength(1)
 
 		// Settled: no more reads, and nothing sent again.
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 5)
+		listActions.mockClear()
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_FAST_MS * 30)
+		expect(listActions).not.toHaveBeenCalled()
 		expect(getAction).toHaveBeenCalledTimes(2)
 		expect(streamChat).toHaveBeenCalledTimes(1)
 	})
@@ -284,7 +295,7 @@ describe("talon v2 conversation with action proposals", () => {
 		expect(wrapper.find('[data-testid="talon-v2-notice"]').exists()).toBe(false)
 		expect(composer(wrapper).disabled).toBe(false)
 
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 5)
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_FAST_MS * 5)
 		await wrapper.setProps({ thread: { ...THREAD, title: "renamed" } })
 		await flushPromises()
 		expect(streamChat).toHaveBeenCalledTimes(1)
@@ -362,5 +373,60 @@ describe("talon v2 conversation with action proposals", () => {
 		expect(wrapper.findAll('[data-testid="talon-approval-card"]')).toHaveLength(2)
 		expect(composer(wrapper).disabled).toBe(true)
 		expect(streamChat).not.toHaveBeenCalled()
+	})
+	it("a record of another thread neither holds this thread nor resumes it", async () => {
+		getMessages.mockResolvedValueOnce(page(PROPOSED))
+		getAction.mockResolvedValue(response(talonAction({ thread_id: "9e9e9e9e-0000-4000-8000-000000000000" })))
+		const wrapper = render()
+		await flushPromises()
+		expect(composer(wrapper).disabled).toBe(false)
+		getAction.mockResolvedValue(
+			response(talonAction({ ...EXECUTED, thread_id: "9e9e9e9e-0000-4000-8000-000000000000" }))
+		)
+		expect(streamChat).not.toHaveBeenCalled()
+	})
+
+	it("approved, run, but its result never reported: the composer opens once the result window ends", async () => {
+		vi.useFakeTimers()
+		const unreported = {
+			state: "unreported",
+			talon_status: "approved",
+			can_decide: false,
+			result_due_by: new Date(Date.now() + 45_000).toISOString().slice(0, 19)
+		}
+		getMessages.mockResolvedValueOnce(page(PROPOSED))
+		getAction.mockResolvedValue(response(talonAction(unreported)))
+		streamChat.mockImplementation(resumeStream())
+		const wrapper = render()
+		await flushPromises()
+		expect(composer(wrapper).disabled).toBe(true)
+		expect(streamChat).not.toHaveBeenCalled()
+
+		// Past the window talon-analyst no longer waits ("not reported, check CoPilot"): the thread goes on.
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_SLOW_MS + TALON_CARDS_FAST_MS)
+		await flushPromises()
+		expect(streamChat).toHaveBeenCalledTimes(1)
+		expect(streamChat.mock.calls[0][1]).toEqual({ message: "" })
+		expect(composer(wrapper).disabled).toBe(false)
+	})
+
+	it("refused here, still pending at talon-analyst: the slow read heals the thread once it expires there", async () => {
+		vi.useFakeTimers()
+		getMessages.mockResolvedValueOnce(page(PROPOSED))
+		getAction.mockResolvedValue(
+			response(talonAction({ state: "refused", talon_status: "pending", can_decide: false }))
+		)
+		streamChat.mockImplementation(resumeStream())
+		const wrapper = render()
+		await flushPromises()
+		expect(composer(wrapper).disabled).toBe(true)
+
+		getAction.mockResolvedValue(
+			response(talonAction({ state: "refused", talon_status: "expired", can_decide: false }))
+		)
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_SLOW_MS + TALON_CARDS_FAST_MS * 3)
+		await flushPromises()
+		expect(composer(wrapper).disabled).toBe(false)
+		expect(streamChat).toHaveBeenCalledTimes(1)
 	})
 })

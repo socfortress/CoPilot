@@ -1,27 +1,24 @@
 /**
- * The approval card (M5-11b): everything it shows comes from `GET /api/talon/actions/{id}`; the
- * model's reason is untrusted text, a comment is raw with its links highlighted and never
- * clickable, provenance is a banner; Approve / Deny follow `can_decide`, Withdraw `is_requester`
- * while pending, a host action asks first naming the host and the customer; a decision in flight
- * disables every button; the backend's texts are text; it polls every 10 s until settled, and not
- * after unmount.
+ * The approval card (M5-11b, and the review of #1270): everything it shows comes from `GET
+ * /api/talon/actions/{id}`; every value is text inside `<bdi>`, invisible and direction-changing
+ * characters escaped with a warning; the reason is untrusted text; a comment is raw in a capped box
+ * with its links highlighted, never clickable; provenance is a banner. Approve / Deny follow
+ * `can_decide`, Withdraw `is_requester` while pending; every Approve confirms, naming the action,
+ * target and customer from the record, which the button row shows too. A decision in flight
+ * disables the buttons of every card of the proposal; a lost answer says so until a read shows what
+ * happened; a confirm closes when the record moves on; a 404 hides the old record.
  */
 import type { TalonAction } from "@/types/talonActions"
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
-import {
-	knownAction,
-	PROVENANCE_INJECTION,
-	PROVENANCE_UNTRUSTED,
-	PROVENANCE_WEB,
-	resetTalonActions,
-	TALON_APPROVAL_POLL_MS
-} from "../approvals"
+import { DECISION_LOST, knownAction, resetTalonActions, TALON_CARDS_FAST_MS } from "../actionCards"
+import { HIDDEN_CHARS_WARNING, PROVENANCE_INJECTION, PROVENANCE_UNTRUSTED, PROVENANCE_WEB } from "../approvals"
 import TalonApprovalCard from "../TalonApprovalCard.vue"
-import { APPROVAL_ID, axiosError, quarantineAction, response, talonAction } from "./fixtures"
+import { APPROVAL_ID, axiosError, listOf, quarantineAction, response, talonAction } from "./fixtures"
 
 const get = vi.fn()
+const list = vi.fn()
 const approve = vi.fn()
 const deny = vi.fn()
 const withdraw = vi.fn()
@@ -30,6 +27,7 @@ vi.mock("@/api", () => ({
 	default: {
 		talonActions: {
 			get: (...a: unknown[]) => get(...a),
+			list: (...a: unknown[]) => list(...a),
 			approve: (...a: unknown[]) => approve(...a),
 			deny: (...a: unknown[]) => deny(...a),
 			withdraw: (...a: unknown[]) => withdraw(...a)
@@ -58,6 +56,7 @@ const ModalStub = defineComponent({
 			props.show ? h("div", { "data-testid": "modal-stub" }, [slots.default?.(), slots.footer?.()]) : null
 })
 
+const RLO = "\u202E"
 const HOSTILE_REASON = `<a href="https://evil.invalid">click</a> <img src=x onerror="alert(1)"> **bold** [x](https://evil.invalid/y) ![x](https://evil.invalid/pixel.png)`
 
 function render() {
@@ -67,6 +66,8 @@ function render() {
 	})
 }
 
+type Wrapper = ReturnType<typeof render>
+
 async function mounted(action: TalonAction) {
 	get.mockResolvedValueOnce(response(action))
 	const wrapper = render()
@@ -74,14 +75,19 @@ async function mounted(action: TalonAction) {
 	return wrapper
 }
 
-function button(wrapper: ReturnType<typeof render>, id: string) {
+function find(wrapper: Wrapper, id: string) {
 	return wrapper.find(`[data-testid="talon-approval-${id}"]`)
 }
 
 function deferred<T>() {
 	let resolve: (value: T) => void = () => {}
-	const promise = new Promise<T>(r => (resolve = r))
+	const promise = new Promise<T>(res => (resolve = res))
 	return { promise, resolve }
+}
+
+async function approveAndConfirm(wrapper: Wrapper) {
+	await find(wrapper, "approve").trigger("click")
+	await find(wrapper, "confirm-run").trigger("click")
 }
 
 enableAutoUnmount(afterEach)
@@ -89,7 +95,8 @@ enableAutoUnmount(afterEach)
 describe("talon approval card", () => {
 	beforeEach(() => {
 		resetTalonActions()
-		for (const fn of [get, approve, deny, withdraw]) fn.mockReset()
+		for (const fn of [get, list, approve, deny, withdraw]) fn.mockReset()
+		list.mockResolvedValue(listOf([]))
 	})
 	afterEach(() => {
 		vi.useRealTimers()
@@ -98,65 +105,123 @@ describe("talon approval card", () => {
 	it("reads the proposal by its id and shows the GET's action, target, customer and arguments", async () => {
 		const wrapper = await mounted(talonAction())
 		expect(get).toHaveBeenCalledWith(APPROVAL_ID, expect.any(AbortSignal))
-		expect(wrapper.get('[data-testid="talon-approval-title"]').text()).toBe("Set the alert's status")
-		expect(wrapper.get('[data-testid="talon-approval-customer"]').text()).toBe("ACME")
-		const link = wrapper.get('[data-testid="talon-approval-alert-link"]')
+		expect(find(wrapper, "title").text()).toBe("Set the alert's status")
+		expect(find(wrapper, "customer").text()).toBe("ACME")
+		const link = find(wrapper, "alert-link")
 		expect(link.text()).toBe("Alert #840")
 		expect(JSON.parse(link.attributes("data-to") as string)).toEqual({
 			name: "IncidentManagement-Alert",
 			params: { id: "840" }
 		})
-		expect(wrapper.get('[data-testid="talon-approval-arg-status"]').text()).toBe("CLOSED")
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Waiting for a decision")
-		expect(wrapper.get('[data-testid="talon-approval-requester"]').text()).toBe("Requested by you")
-		expect(wrapper.get('[data-testid="talon-approval-expiry"]').text()).toMatch(/^Expires in 3h 59m$/)
-		// Remembered for the thread (its composer and its resume).
+		expect(find(wrapper, "arg-status").text()).toBe("CLOSED")
+		expect(find(wrapper, "status").text()).toBe("Waiting for a decision")
+		expect(find(wrapper, "requester").text()).toBe("Requested by you")
+		expect(find(wrapper, "expiry").text()).toBe("Expires in 4h 0m")
+		expect(find(wrapper, "hidden-chars").exists()).toBe(false)
 		expect(knownAction(APPROVAL_ID)?.action?.state).toBe("pending")
 	})
 
+	it("another requester is named by their CoPilot user name, or their id when gone", async () => {
+		const named = await mounted(talonAction({ is_requester: false, requester_username: "bob" }))
+		expect(find(named, "requester").text()).toBe("Requested by bob")
+		named.unmount()
+		resetTalonActions()
+		const orphan = await mounted(
+			talonAction({ is_requester: false, requester_username: null, requester_user_id: "12" })
+		)
+		expect(find(orphan, "requester").text()).toBe("Requested by CoPilot user #12")
+	})
+
 	it("a host target shows the host name and the agent id", async () => {
-		const wrapper = await mounted(quarantineAction({ is_requester: false, requester_user_id: "12" }))
-		expect(wrapper.get('[data-testid="talon-approval-hostname"]').text()).toBe("WIN-DC01")
-		expect(wrapper.get('[data-testid="talon-approval-agent"]').text()).toBe("· agent 001")
-		expect(wrapper.find('[data-testid="talon-approval-alert-link"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="talon-approval-requester"]').text()).toBe("Requested by CoPilot user #12")
+		const wrapper = await mounted(quarantineAction())
+		expect(find(wrapper, "hostname").text()).toBe("WIN-DC01")
+		expect(find(wrapper, "agent").text()).toBe("· agent 001")
+		expect(find(wrapper, "alert-link").exists()).toBe(false)
 	})
 
 	it("the model's reason with markup renders as text only, labelled untrusted", async () => {
 		const wrapper = await mounted(talonAction({ reason: HOSTILE_REASON }))
-		const reason = wrapper.get('[data-testid="talon-approval-reason"]')
+		const reason = find(wrapper, "reason")
 		expect(reason.text()).toContain("untrusted")
-		expect(wrapper.get('[data-testid="talon-approval-reason-text"]').text()).toBe(HOSTILE_REASON)
+		expect(find(wrapper, "reason-text").text()).toBe(HOSTILE_REASON)
 		for (const tag of ["a", "img", "strong", "em", "script"]) expect(reason.find(tag).exists()).toBe(false)
 		expect(reason.find("[href]").exists()).toBe(false)
 		expect(reason.find("[src]").exists()).toBe(false)
 	})
 
-	it("a comment is shown raw, its links highlighted but not clickable", async () => {
+	it("every value from the record is isolated in <bdi>", async () => {
+		const wrapper = await mounted(
+			talonAction({ action: "comment_on_alert", args: { alert_id: 840, comment: "hi" } })
+		)
+		for (const id of ["customer", "reason-text", "comment-text", "arg-alert_id", "summary"]) {
+			expect(find(wrapper, id).find("bdi").exists(), id).toBe(true)
+		}
+	})
+
+	it("a comment is shown raw in a capped box, its links highlighted but not clickable", async () => {
 		const comment =
 			"See https://evil.invalid/a?b=1 and www.example.org, or evil.invalid/path — [x](hxxp://bad.example/p) <a href=x>y</a>"
 		const wrapper = await mounted(
-			talonAction({
-				action: "comment_on_alert",
-				args: { alert_id: 840, comment },
-				links: true
-			})
+			talonAction({ action: "comment_on_alert", args: { alert_id: 840, comment }, links: true })
 		)
-		const shown = wrapper.get('[data-testid="talon-approval-comment"]')
-		expect(shown.text()).toContain(comment)
-		const links = shown.findAll('[data-testid="talon-approval-comment-link"]').map(l => l.text())
-		expect(links).toEqual([
+		const block = find(wrapper, "comment")
+		expect(block.text()).toContain("Comment text (from the model, posted as written)")
+		const box = find(wrapper, "comment-text")
+		expect(box.text()).toBe(comment)
+		expect(box.classes()).toEqual(expect.arrayContaining(["max-h-60", "overflow-auto"]))
+		const links = box.findAll('[data-testid="talon-untrusted-link"]')
+		expect(links.map(l => l.text())).toEqual([
 			"https://evil.invalid/a?b=1",
 			"www.example.org",
 			"evil.invalid/path",
 			"hxxp://bad.example/p"
 		])
-		expect(shown.find("a").exists()).toBe(false)
-		expect(shown.find("[href]").exists()).toBe(false)
-		for (const link of shown.findAll('[data-testid="talon-approval-comment-link"]')) {
-			expect(link.element.tagName).toBe("SPAN")
-		}
-		expect(wrapper.get('[data-testid="talon-approval-links-note"]').text()).toMatch(/shown, not opened/)
+		for (const l of links) expect(l.element.tagName).toBe("SPAN")
+		expect(block.find("a").exists()).toBe(false)
+		expect(block.find("[href]").exists()).toBe(false)
+		expect(find(wrapper, "links-note").text()).toMatch(/shown, not opened/)
+		// The comment is shown once, in its box: the arguments only point to it.
+		expect(find(wrapper, "arg-comment").text()).toBe("shown below")
+	})
+
+	it("a bidi override can't forge a link: it is escaped, with a warning", async () => {
+		const forged = `https://evil.invalid/${RLO}moc.tfosorcim.www//:sptth`
+		const wrapper = await mounted(
+			talonAction({ action: "comment_on_alert", args: { alert_id: 840, comment: forged } })
+		)
+		const box = find(wrapper, "comment-text")
+		expect(box.text()).not.toContain(RLO)
+		expect(box.text()).toContain("⟨U+202E⟩")
+		expect(box.findAll('[data-testid="talon-untrusted-link"]')[0].text()).toBe("https://evil.invalid/")
+		expect(find(wrapper, "hidden-chars").text()).toBe(HIDDEN_CHARS_WARNING)
+	})
+
+	it("hidden characters are escaped in every value: host, customer, reason, CoPilot's texts, the dialog", async () => {
+		const zw = "\u200B"
+		const wrapper = await mounted(
+			quarantineAction({
+				customer_code: `AC${zw}ME`,
+				reason: `fine${RLO}enif`,
+				target: {
+					customer_code: "ACME",
+					agent_id: `0${zw}01`,
+					velociraptor_id: "C.1234567890abcdef",
+					hostname: `WIN${RLO}-DC01`
+				},
+				state_reason: `odd${zw}`
+			})
+		)
+		expect(find(wrapper, "hidden-chars").exists()).toBe(true)
+		expect(find(wrapper, "customer").text()).toBe("AC⟨U+200B⟩ME")
+		expect(find(wrapper, "hostname").text()).toBe("WIN⟨U+202E⟩-DC01")
+		expect(find(wrapper, "agent").text()).toBe("· agent 0⟨U+200B⟩01")
+		expect(find(wrapper, "reason-text").text()).toBe("fine⟨U+202E⟩enif")
+		expect(find(wrapper, "state-reason").text()).toBe("odd⟨U+200B⟩")
+		expect(wrapper.text()).not.toMatch(/[\u200B\u202E]/)
+		await find(wrapper, "approve").trigger("click")
+		expect(find(wrapper, "confirm-text").text()).toContain("WIN⟨U+202E⟩-DC01")
+		expect(find(wrapper, "confirm-text").text()).not.toMatch(/[\u200B\u202E]/)
+		expect(find(wrapper, "approve").attributes("aria-label")).not.toMatch(/[\u200B\u202E]/)
 	})
 
 	it.each([
@@ -170,17 +235,6 @@ describe("talon approval card", () => {
 		expect(banners[0].text()).toBe(text)
 	})
 
-	it("no provenance flag, no banner; all three, three banners", async () => {
-		const clean = await mounted(talonAction())
-		expect(clean.findAll('[data-testid="talon-approval-provenance"]')).toHaveLength(0)
-		const flagged = await mounted(
-			talonAction({ provenance: { injection_detected: true, untrusted_seen: true, web_used: true } })
-		)
-		expect(
-			flagged.findAll('[data-testid="talon-approval-provenance"]').map(b => b.attributes("data-flag"))
-		).toEqual(["injection_detected", "untrusted_seen", "web_used"])
-	})
-
 	it.each<[Partial<TalonAction>, string[]]>([
 		[{ can_decide: true, is_requester: true }, ["approve", "deny", "withdraw"]],
 		[{ can_decide: true, is_requester: false }, ["approve", "deny"]],
@@ -191,84 +245,117 @@ describe("talon approval card", () => {
 	])("buttons follow can_decide and is_requester (%o)", async (extra, shown) => {
 		const wrapper = await mounted(talonAction(extra))
 		for (const id of ["approve", "deny", "withdraw"]) {
-			expect(button(wrapper, id).exists(), id).toBe(shown.includes(id))
+			expect(find(wrapper, id).exists(), id).toBe(shown.includes(id))
 		}
 	})
 
-	it("an alert action is approved at once", async () => {
-		const wrapper = await mounted(talonAction())
+	it.each<[string, Partial<TalonAction>, string]>([
+		["set_alert_status", {}, "Approve: set Alert #840 to CLOSED for customer ACME"],
+		[
+			"assign_alert",
+			{ args: { alert_id: 840, assigned_to: "bob" } },
+			"Approve: assign Alert #840 to bob for customer ACME"
+		],
+		[
+			"comment_on_alert",
+			{ args: { alert_id: 840, comment: "x" } },
+			"Approve: comment on Alert #840 for customer ACME"
+		]
+	])("every Approve confirms first (%s), naming the action, target and customer", async (name, extra, summary) => {
+		const wrapper = await mounted(talonAction({ action: name, ...extra }))
+		expect(find(wrapper, "summary").text()).toBe(summary)
+		expect(find(wrapper, "approve").attributes("aria-label")).toBe(summary)
+		await find(wrapper, "approve").trigger("click")
+		expect(approve).not.toHaveBeenCalled()
+		expect(find(wrapper, "confirm-text").text()).toContain(summary)
+
+		await find(wrapper, "confirm-cancel").trigger("click")
+		expect(find(wrapper, "confirm-text").exists()).toBe(false)
+		expect(approve).not.toHaveBeenCalled()
+
 		approve.mockResolvedValueOnce(
 			response(
-				talonAction({ state: "executed", talon_status: "executed", can_decide: false }),
-				true,
-				"Action executed"
+				talonAction({ action: name, ...extra, state: "executed", talon_status: "executed", can_decide: false })
 			)
 		)
-		await button(wrapper, "approve").trigger("click")
+		await approveAndConfirm(wrapper)
 		await flushPromises()
+		expect(approve).toHaveBeenCalledTimes(1)
 		expect(approve).toHaveBeenCalledWith(APPROVAL_ID)
-		expect(wrapper.find('[data-testid="modal-stub"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Executed")
+		expect(find(wrapper, "confirm-text").exists()).toBe(false)
+		expect(find(wrapper, "status").text()).toBe("Executed")
 	})
 
 	it.each([
-		["quarantine_host", "Quarantine"],
-		["release_host", "Release"]
-	])("%s asks first, naming the host and the customer", async (name, verb) => {
+		["quarantine_host", "Quarantine", "Approve: quarantine WIN-DC01 (agent 001) for customer ACME"],
+		["release_host", "Release", "Approve: release WIN-DC01 (agent 001) for customer ACME"]
+	])("%s confirms naming the host, the agent and the customer", async (name, verb, summary) => {
 		const wrapper = await mounted(quarantineAction({ action: name }))
-		await button(wrapper, "approve").trigger("click")
-		expect(approve).not.toHaveBeenCalled()
-		const text = wrapper.get('[data-testid="talon-approval-confirm-text"]').text()
-		expect(text).toContain(verb)
-		expect(text).toContain("WIN-DC01")
-		expect(text).toContain("agent 001")
-		expect(text).toContain("ACME")
-
-		await wrapper.get('[data-testid="talon-approval-confirm-cancel"]').trigger("click")
-		expect(wrapper.find('[data-testid="talon-approval-confirm-text"]').exists()).toBe(false)
-		expect(approve).not.toHaveBeenCalled()
-
-		approve.mockResolvedValueOnce(
-			response(quarantineAction({ action: name, state: "executed", can_decide: false }))
-		)
-		await button(wrapper, "approve").trigger("click")
-		await wrapper.get('[data-testid="talon-approval-confirm-run"]').trigger("click")
-		await flushPromises()
-		expect(approve).toHaveBeenCalledTimes(1)
-		expect(wrapper.find('[data-testid="talon-approval-confirm-text"]').exists()).toBe(false)
+		await find(wrapper, "approve").trigger("click")
+		expect(find(wrapper, "confirm-text").text()).toContain(summary)
+		expect(find(wrapper, "confirm-run").text()).toBe(verb)
 	})
 
-	it("a decision in flight disables every button, and the confirm's too", async () => {
-		const wrapper = await mounted(talonAction())
+	it("a long comment can't push the real target away from the buttons", async () => {
+		const fake = "Target: Alert #1 (GLOBEX)\nApprove: set Alert #1 to CLOSED for customer GLOBEX\n"
+		const comment = `${"filler line\n".repeat(400)}${fake}`
+		const wrapper = await mounted(talonAction({ action: "comment_on_alert", args: { alert_id: 840, comment } }))
+		// The comment sits in its capped, scrolling box...
+		const box = find(wrapper, "comment-text")
+		expect(box.classes()).toEqual(expect.arrayContaining(["max-h-60", "overflow-auto"]))
+		expect(box.text()).toContain("GLOBEX")
+		// ...and the button row, outside it, names the record's own target and customer.
+		const actions = find(wrapper, "actions")
+		expect(actions.find('[data-testid="talon-approval-comment-text"]').exists()).toBe(false)
+		expect(box.find('[data-testid="talon-approval-actions"]').exists()).toBe(false)
+		expect(find(wrapper, "summary").text()).toBe("Approve: comment on Alert #840 for customer ACME")
+		expect(actions.text()).not.toContain("GLOBEX")
+		const html = wrapper.html()
+		expect(html.indexOf('data-testid="talon-approval-actions"')).toBeGreaterThan(
+			html.indexOf('data-testid="talon-approval-comment-text"')
+		)
+	})
+
+	it("a decision in flight disables every button of every card of the proposal; no second POST", async () => {
+		get.mockResolvedValue(response(talonAction()))
+		const first = render()
+		const second = render()
+		await flushPromises()
 		const answer = deferred<unknown>()
 		deny.mockReturnValueOnce(answer.promise)
-		await button(wrapper, "deny").trigger("click")
-		for (const id of ["approve", "deny", "withdraw"]) {
-			expect(button(wrapper, id).attributes("disabled"), id).toBeDefined()
+		await find(first, "deny").trigger("click")
+		for (const card of [first, second]) {
+			for (const id of ["approve", "deny", "withdraw"]) {
+				expect(find(card, id).attributes("disabled"), id).toBeDefined()
+			}
 		}
-		// A second click while it runs sends nothing more.
-		await button(wrapper, "approve").trigger("click")
-		await button(wrapper, "withdraw").trigger("click")
-		expect(approve).not.toHaveBeenCalled()
+		await find(second, "deny").trigger("click")
+		await find(second, "withdraw").trigger("click")
+		expect(deny).toHaveBeenCalledTimes(1)
 		expect(withdraw).not.toHaveBeenCalled()
 
-		answer.resolve(
-			response(talonAction({ state: "denied", talon_status: "denied", can_decide: false, is_requester: true }))
-		)
+		answer.resolve(response(talonAction({ state: "denied", talon_status: "denied", can_decide: false })))
 		await flushPromises()
-		expect(button(wrapper, "approve").exists()).toBe(false)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Denied")
+		// The sibling card follows at once.
+		expect(find(second, "status").text()).toBe("Denied")
+		expect(find(second, "approve").exists()).toBe(false)
+	})
 
-		const host = await mounted(quarantineAction())
-		const run = deferred<unknown>()
-		approve.mockReturnValueOnce(run.promise)
-		await button(host, "approve").trigger("click")
-		await host.get('[data-testid="talon-approval-confirm-run"]').trigger("click")
-		expect(host.get('[data-testid="talon-approval-confirm-run"]').attributes("disabled")).toBeDefined()
-		expect(host.get('[data-testid="talon-approval-confirm-cancel"]').attributes("disabled")).toBeDefined()
-		expect(button(host, "deny").attributes("disabled")).toBeDefined()
-		run.resolve(response(quarantineAction({ state: "executed", talon_status: "executed", can_decide: false })))
+	it("a confirm opened on an older record closes when the record moves on, and sends nothing", async () => {
+		get.mockResolvedValue(response(talonAction()))
+		const wrapper = render()
+		const other = render()
 		await flushPromises()
+		await find(wrapper, "approve").trigger("click")
+		expect(find(wrapper, "confirm-run").exists()).toBe(true)
+		// Decided from the other card meanwhile.
+		deny.mockResolvedValueOnce(
+			response(talonAction({ state: "denied", talon_status: "denied", can_decide: false }))
+		)
+		await find(other, "deny").trigger("click")
+		await flushPromises()
+		expect(find(wrapper, "confirm-run").exists()).toBe(false)
+		expect(approve).not.toHaveBeenCalled()
 	})
 
 	it("withdraw is the requester's, while pending", async () => {
@@ -280,11 +367,11 @@ describe("talon approval card", () => {
 				"Action withdrawn"
 			)
 		)
-		await button(wrapper, "withdraw").trigger("click")
+		await find(wrapper, "withdraw").trigger("click")
 		await flushPromises()
 		expect(withdraw).toHaveBeenCalledWith(APPROVAL_ID)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Withdrawn")
-		expect(button(wrapper, "withdraw").exists()).toBe(false)
+		expect(find(wrapper, "status").text()).toBe("Withdrawn")
+		expect(find(wrapper, "withdraw").exists()).toBe(false)
 	})
 
 	it("the backend's refusal is shown as its text, and the record read again", async () => {
@@ -293,14 +380,44 @@ describe("talon approval card", () => {
 			axiosError(409, { success: false, message: "someone else is deciding this action <b>now</b>" })
 		)
 		get.mockResolvedValueOnce(response(talonAction({ state: "claiming", can_decide: false })))
-		await button(wrapper, "approve").trigger("click")
+		await approveAndConfirm(wrapper)
 		await flushPromises()
-		const error = wrapper.get('[data-testid="talon-approval-error"]')
+		const error = find(wrapper, "error")
 		expect(error.text()).toBe("someone else is deciding this action <b>now</b>")
 		expect(error.find("b").exists()).toBe(false)
 		expect(get).toHaveBeenCalledTimes(2)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Being decided")
+		expect(find(wrapper, "status").text()).toBe("Being decided")
 	})
+
+	it.each([[502], [504], [null]])(
+		"an approve whose answer is lost (%s) says so, until a read shows the outcome",
+		async status => {
+			vi.useFakeTimers()
+			const wrapper = await mounted(talonAction())
+			approve.mockRejectedValueOnce(
+				status === null
+					? Object.assign(new Error("Network Error"), { isAxiosError: true })
+					: axiosError(status, "<html>")
+			)
+			// The first read after: still running; the next: run.
+			get.mockResolvedValueOnce(
+				response(talonAction({ state: "executing", talon_status: "approved", can_decide: false }))
+			).mockResolvedValue(
+				response(talonAction({ state: "executed", talon_status: "executed", can_decide: false }))
+			)
+			list.mockResolvedValue(
+				listOf([talonAction({ state: "executed", talon_status: "executed", can_decide: false })])
+			)
+			await approveAndConfirm(wrapper)
+			await flushPromises()
+			expect(find(wrapper, "error").text()).toBe(DECISION_LOST)
+			expect(find(wrapper, "status").text()).toBe("Running")
+			await vi.advanceTimersByTimeAsync(TALON_CARDS_FAST_MS)
+			await flushPromises()
+			expect(find(wrapper, "status").text()).toBe("Executed")
+			expect(find(wrapper, "error").exists()).toBe(false)
+		}
+	)
 
 	it("a decision CoPilot made but whose run didn't succeed says so, as text", async () => {
 		const wrapper = await mounted(talonAction())
@@ -324,114 +441,43 @@ describe("talon approval card", () => {
 				"The action did not succeed"
 			)
 		)
-		await button(wrapper, "approve").trigger("click")
+		await approveAndConfirm(wrapper)
 		await flushPromises()
-		expect(wrapper.get('[data-testid="talon-approval-note"]').text()).toBe("The action did not succeed")
-		expect(wrapper.get('[data-testid="talon-approval-result"]').text()).toBe(
-			"Result: not run: the assignee has no access"
-		)
-		expect(wrapper.find('[data-testid="talon-approval-state-reason"]').exists()).toBe(false)
-		expect(wrapper.get('[data-testid="talon-approval-decision"]').text()).toMatch(/^Approved by alice/)
-		expect(wrapper.get('[data-testid="talon-approval-reported"]').text()).toBe("Reported to Talon.")
+		expect(find(wrapper, "note").text()).toBe("The action did not succeed")
+		expect(find(wrapper, "result").text()).toBe("Result: not run: the assignee has no access")
+		expect(find(wrapper, "state-reason").exists()).toBe(false)
+		expect(find(wrapper, "decision").text()).toMatch(/^Approved by alice/)
+		expect(find(wrapper, "reported").text()).toBe("Reported to Talon.")
 	})
 
-	it("a read the backend refuses shows its text; a 404 is not read again", async () => {
+	it("a 404 after a good read hides the old record and its buttons", async () => {
 		vi.useFakeTimers()
+		const wrapper = await mounted(talonAction())
+		expect(find(wrapper, "approve").exists()).toBe(true)
+		// The row moved; reading it again, the user may no longer see it.
+		list.mockResolvedValue(listOf([talonAction({ can_decide: false })]))
 		get.mockRejectedValueOnce(axiosError(404, { success: false, message: "Action not found" }))
-		const wrapper = render()
+		await vi.advanceTimersByTimeAsync(TALON_CARDS_FAST_MS)
 		await flushPromises()
-		expect(wrapper.get('[data-testid="talon-approval-load-error"]').text()).toBe("Action not found")
-		expect(knownAction(APPROVAL_ID)?.failed).toBe(true)
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 3)
-		expect(get).toHaveBeenCalledTimes(1)
+		expect(find(wrapper, "load-error").text()).toBe("Action not found")
+		for (const id of ["approve", "deny", "withdraw", "customer", "alert-link"]) {
+			expect(find(wrapper, id).exists(), id).toBe(false)
+		}
+		expect(knownAction(APPROVAL_ID)?.gone).toBe(true)
 	})
 
-	it("polls every 10 s while open, stops once the record is final", async () => {
+	it("the expiry counts down from CoPilot's seconds left; unknown when unreadable", async () => {
 		vi.useFakeTimers()
-		get.mockResolvedValueOnce(response(talonAction()))
-			.mockResolvedValueOnce(
-				response(talonAction({ state: "executing", talon_status: "approved", can_decide: false }))
-			)
-			.mockResolvedValueOnce(
-				response(
-					talonAction({
-						state: "executed",
-						talon_status: "approved",
-						can_decide: false,
-						outcome_reported: false
-					})
-				)
-			)
-			.mockResolvedValueOnce(
-				response(
-					talonAction({
-						state: "executed",
-						talon_status: "executed",
-						can_decide: false,
-						outcome_reported: true
-					})
-				)
-			)
-		const wrapper = render()
-		await flushPromises()
-		expect(get).toHaveBeenCalledTimes(1)
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS - 1)
-		expect(get).toHaveBeenCalledTimes(1)
-		await vi.advanceTimersByTimeAsync(1)
-		expect(get).toHaveBeenCalledTimes(2)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Running")
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS)
-		// CoPilot ran it, talon-analyst doesn't have the result yet: still read.
-		expect(wrapper.get('[data-testid="talon-approval-reported"]').text()).toMatch(/Not reported to Talon yet/)
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS)
-		expect(get).toHaveBeenCalledTimes(4)
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Executed")
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 5)
-		expect(get).toHaveBeenCalledTimes(4)
-	})
-
-	it.each([["denied"], ["expired"], ["withdrawn"], ["failed"]])("a %s record is not read again", async status => {
-		vi.useFakeTimers()
-		get.mockResolvedValue(response(talonAction({ state: status, talon_status: status, can_decide: false })))
-		render()
-		await flushPromises()
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 3)
-		expect(get).toHaveBeenCalledTimes(1)
-	})
-
-	it("stops polling on unmount, and a read in flight is aborted", async () => {
-		vi.useFakeTimers()
-		get.mockResolvedValueOnce(response(talonAction()))
-		const wrapper = render()
-		await flushPromises()
-		let signal: AbortSignal | undefined
-		get.mockImplementationOnce((_id: string, s: AbortSignal) => {
-			signal = s
-			return new Promise(() => {})
-		})
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS)
-		expect(get).toHaveBeenCalledTimes(2)
+		const wrapper = await mounted(talonAction({ expires_in_seconds: 125, expires_at: "1999-01-01T00:00:00" }))
+		expect(find(wrapper, "expiry").text()).toBe("Expires in 2m 5s")
+		await vi.advanceTimersByTimeAsync(5_000)
+		expect(find(wrapper, "expiry").text()).toBe("Expires in 2m 0s")
+		await vi.advanceTimersByTimeAsync(121_000)
+		expect(find(wrapper, "expiry").text()).toBe("Expired")
 		wrapper.unmount()
-		expect(signal?.aborted).toBe(true)
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS * 5)
-		expect(get).toHaveBeenCalledTimes(2)
-	})
 
-	it("a read started before a decision's answer doesn't overwrite it", async () => {
-		vi.useFakeTimers()
-		get.mockResolvedValueOnce(response(talonAction()))
-		const wrapper = render()
-		await flushPromises()
-		const stale = deferred<unknown>()
-		get.mockReturnValueOnce(stale.promise)
-		await vi.advanceTimersByTimeAsync(TALON_APPROVAL_POLL_MS)
-		deny.mockResolvedValueOnce(
-			response(talonAction({ state: "denied", talon_status: "denied", can_decide: false }))
-		)
-		await button(wrapper, "deny").trigger("click")
-		await flushPromises()
-		stale.resolve(response(talonAction()))
-		await flushPromises()
-		expect(wrapper.get('[data-testid="talon-approval-status"]').text()).toBe("Denied")
+		resetTalonActions()
+		const unknown = await mounted(talonAction({ expires_in_seconds: undefined, expires_at: "not a time" }))
+		expect(find(unknown, "expiry").text()).toBe("Expiry unknown")
 	})
 })

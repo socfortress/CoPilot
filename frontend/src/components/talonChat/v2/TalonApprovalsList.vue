@@ -59,9 +59,20 @@
 					{{ actionLabel(row.action) }}
 				</span>
 				<span class="text-secondary font-mono" data-testid="talon-approvals-row-target">
-					{{ targetOf(row) }}
+					<TalonUntrusted :text="targetOf(row)" />
 				</span>
-				<n-tag size="small" :bordered="false">{{ row.customer_code }}</n-tag>
+				<n-tag size="small" :bordered="false" data-testid="talon-approvals-row-customer">
+					<TalonUntrusted :text="row.customer_code" />
+				</n-tag>
+				<n-tag
+					v-if="hiddenIn(row)"
+					size="small"
+					type="error"
+					:bordered="false"
+					data-testid="talon-approvals-row-hidden"
+				>
+					Hidden characters
+				</n-tag>
 				<span class="grow" />
 				<n-tag
 					v-if="row.can_decide"
@@ -110,8 +121,9 @@ import { refusalDetail } from "@/api/endpoints/talonV2"
 import { TALON_V2_FAILED } from "@/api/talonV2Parser"
 import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import { refreshApprovals, useTalonApprovals } from "@/composables/useTalonApprovals"
-import { actionLabel, isHostAction, stateLabel } from "./approvals"
+import { actionLabel, hasHiddenChars, isHostAction, stateLabel } from "./approvals"
 import TalonApprovalCard from "./TalonApprovalCard.vue"
+import TalonUntrusted from "./TalonUntrusted"
 
 const scope = ref<TalonActionScope>("pending")
 const openId = ref<string | null>(null)
@@ -131,6 +143,12 @@ function targetOf(row: TalonAction): string {
 	const target = row.target ?? {}
 	if (isHostAction(row)) return typeof target.hostname === "string" ? target.hostname : "a host"
 	return typeof target.alert_id === "number" ? `alert #${target.alert_id}` : "an alert"
+}
+
+/** The row's values hold invisible or direction-changing characters (its card says which). */
+function hiddenIn(row: TalonAction): boolean {
+	const values = [row.customer_code, row.reason, ...Object.values(row.target ?? {}), ...Object.values(row.args ?? {})]
+	return values.some(value => typeof value === "string" && hasHiddenChars(value))
 }
 
 async function loadMine() {

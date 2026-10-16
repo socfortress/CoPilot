@@ -47,6 +47,7 @@ function record(extra: Record<string, unknown> = {}) {
 		thread_id: THREAD,
 		customer_code: "ACME",
 		requester_user_id: "1",
+		requester_username: "admin",
 		action: "set_alert_status",
 		side_effect: "external-action",
 		executes_through: "PUT /api/incidents/db_operations/alert/status",
@@ -61,6 +62,8 @@ function record(extra: Record<string, unknown> = {}) {
 		state_reason: null,
 		expired: false,
 		expires_at: naiveUtc(4),
+		expires_in_seconds: 4 * 3600,
+		result_due_by: null,
 		created_at: naiveUtc(0),
 		decision: null,
 		approver_user_id: null,
@@ -84,6 +87,7 @@ const EXECUTED = record({
 	decided_at: naiveUtc(0),
 	execution_result: { success: true, message: "Alert status updated", status_code: 200 },
 	executed_at: naiveUtc(0),
+	result_due_by: naiveUtc(24),
 	outcome_reported: true,
 	can_decide: false
 })
@@ -141,8 +145,17 @@ async function installApprovalsMock(context: BrowserContext) {
 				})
 			}
 			if (path === "/talon/actions" && method === "GET") {
-				const pending = chats.length > 0 && !decided
-				return json(route, { success: true, message: "", actions: pending ? [record()] : [] })
+				const proposed = chats.length > 0
+				const scope = new URL(request.url()).searchParams.get("scope")
+				const actions =
+					scope === "mine"
+						? proposed
+							? [decided ? EXECUTED : record()]
+							: []
+						: proposed && !decided
+							? [record()]
+							: []
+				return json(route, { success: true, message: "", actions })
 			}
 			if (path === `/talon/actions/${APPROVAL}` && method === "GET") {
 				return json(route, {
@@ -202,9 +215,16 @@ test.describe("Talon v2 action proposals", () => {
 		await expect(row).toHaveAttribute("data-approval-id", APPROVAL)
 		await expect(row.getByTestId("talon-approvals-row-target")).toHaveText("alert #840")
 
-		// Back in the thread, the analyst approves it; CoPilot runs it.
+		// Back in the thread, the analyst approves it, confirming what the record names; CoPilot runs it.
 		await page.locator(".n-tabs-tab", { hasText: /^\s*Talon Chat\s*$/ }).click()
+		await expect(card.getByTestId("talon-approval-summary")).toHaveText(
+			"Approve: set Alert #840 to CLOSED for customer ACME"
+		)
 		await card.getByTestId("talon-approval-approve").click()
+		const confirm = page.getByTestId("talon-approval-confirm-text")
+		await expect(confirm).toContainText("Approve: set Alert #840 to CLOSED for customer ACME")
+		expect(sent.decisions).toEqual([])
+		await page.getByTestId("talon-approval-confirm-run").click()
 		await expect(card.getByTestId("talon-approval-status")).toHaveText("Executed")
 		await expect(card.getByTestId("talon-approval-result")).toHaveText("Result: Alert status updated")
 		await expect(card.getByRole("button")).toHaveCount(0)

@@ -55,6 +55,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
+from app.auth.models.users import User
 from app.connectors.talon.models.talon_v2 import TalonActionRequest
 from app.connectors.talon.schema.talon_actions import ActionListResponse
 from app.connectors.talon.schema.talon_actions import ActionOut
@@ -150,16 +151,43 @@ def _upstream_failure(status: Optional[int], body: bytes = b"") -> HTTPException
 # ── the view ──────────────────────────────────────────────────────────────────
 
 
-async def view(row: TalonActionRequest, user: Any, session: AsyncSession, decider: Optional[bool] = None) -> ActionOut:
+async def usernames_of(session: AsyncSession, user_ids: List[str]) -> Dict[str, str]:
+    """The CoPilot user names of these ``requester_user_id``s (``str(user.id)``), in one query."""
+    ids = sorted({int(u) for u in user_ids if isinstance(u, str) and u.isdigit()})
+    if not ids:
+        return {}
+    rows = await session.execute(select(User.id, User.username).where(User.id.in_(ids)))
+    return {str(uid): name for uid, name in rows.all()}
+
+
+def result_due_by(row: TalonActionRequest) -> Optional[datetime]:
+    """talon-analyst's ``result_due_by`` for an approved record, else the window CoPilot counts by."""
+    if row.result_due_by is not None:
+        return row.result_due_by
+    if row.decision == "approve" or row.talon_status == "approved":
+        return _window_end(row)
+    return None
+
+
+async def view(
+    row: TalonActionRequest,
+    user: Any,
+    session: AsyncSession,
+    decider: Optional[bool] = None,
+    usernames: Optional[Dict[str, str]] = None,
+) -> ActionOut:
     now = sync.utcnow()
     expired = sync.expired_locally(row, now)
     if decider is None:
         decider = await execution.may_decide(user, row, session)
+    if usernames is None:
+        usernames = await usernames_of(session, [row.requester_user_id])
     return ActionOut(
         id=row.id,
         thread_id=row.thread_id,
         customer_code=row.customer_code,
         requester_user_id=row.requester_user_id,
+        requester_username=usernames.get(row.requester_user_id),
         action=row.action,
         side_effect=row.side_effect,
         executes_through=row.executes_through,
@@ -173,6 +201,8 @@ async def view(row: TalonActionRequest, user: Any, session: AsyncSession, decide
         state_reason=row.state_reason,
         expired=expired,
         expires_at=row.expires_at,
+        expires_in_seconds=max(0, int((row.expires_at - now).total_seconds())),
+        result_due_by=result_due_by(row),
         created_at=row.talon_created_at or row.created_at,
         decision=row.decision,
         approver_user_id=row.approver_user_id,
@@ -265,6 +295,7 @@ async def list_actions(user: Any, session: AsyncSession, scope: str) -> ActionLi
         query = query.where(TalonActionRequest.state == "pending", TalonActionRequest.expires_at > sync.utcnow())
     rows = (await session.execute(query.order_by(TalonActionRequest.created_at.desc()).limit(LIST_LIMIT))).scalars().all()
     visible = await visible_alerts(user, session, [i for i in map(_alert_id, rows) if i is not None])
+    names = await usernames_of(session, [row.requester_user_id for row in rows])
     shown: List[ActionOut] = []
     for row in rows:
         if row.action in sync.ALERT_ACTIONS:
@@ -275,7 +306,7 @@ async def list_actions(user: Any, session: AsyncSession, scope: str) -> ActionLi
             seen = True
             decider = await execution.may_decide(user, row, session)
         if seen and (decider or row.requester_user_id == own):
-            shown.append(await view(row, user, session, decider))
+            shown.append(await view(row, user, session, decider, names))
     return ActionListResponse(success=True, message=f"{len(shown)} action(s)", actions=shown)
 
 
@@ -391,6 +422,23 @@ def _refused_state(reason: str) -> str:
     return {EXPIRED_TEXT: "expired", WITHDRAWN_TEXT: "withdrawn"}.get(reason, "refused")
 
 
+#: A claim refusal that settles the proposal for everyone: a conflict (expired, withdrawn, already
+#: decided, another thread) or a body talon-analyst won't take. Anything else (403/404: this
+#: approver's own role, customers or tags) is this approver's alone, and the row is undecided again.
+FINAL_CLAIM_REFUSALS = frozenset({400, 409, 422})
+
+#: A row's decision fields, cleared when it goes back to ``pending``.
+UNDECIDED = {"decision": None, "approver_user_id": None, "approver_username": None, "decided_at": None, "copilot_ref": None}
+
+
+async def _settle_refused_claim(row: TalonActionRequest, status: int, reason: str) -> None:
+    """Record talon-analyst's refusal of a claim: final for everyone, or this approver's alone."""
+    if status in FINAL_CLAIM_REFUSALS:
+        await _move(row.id, ("claiming",), _refused_state(reason), state_reason=reason[:255])
+    else:
+        await _move(row.id, ("claiming",), "pending", state_reason=None, **UNDECIDED)
+
+
 async def decide(action_id: str, user: Any, session: AsyncSession, request: Optional[Request], approve: bool) -> ActionResponse:
     """Approve (and run) or deny one proposal (module docstring)."""
     identity, result = await _refresh(action_id, user, session)
@@ -434,8 +482,7 @@ async def _approve(row, plan, user, session, request, identity) -> ActionRespons
     kind, detail = _claim_answer(await _post_claim(row, identity, "approved", decided_by, row.copilot_ref), row.id, "approved", decided_by)
     if kind == "refused":
         status, reason = detail
-        after = _refused_state(reason)
-        await _move(row.id, ("claiming",), after, state_reason=reason[:255])
+        await _settle_refused_claim(row, status, reason)
         await _audit(
             AuditAction.TALON_ACTION_APPROVE,
             row,
@@ -577,7 +624,7 @@ async def _deny(row, user, session, request, identity) -> ActionResponse:
         return ActionResponse(success=True, message="Action denied", action=await view(await _row(row.id), user, session, True))
     if kind == "refused":
         status, reason = detail
-        await _move(row.id, ("claiming",), _refused_state(reason), state_reason=reason[:255])
+        await _settle_refused_claim(row, status, reason)
         await _audit(
             AuditAction.TALON_ACTION_DENY,
             row,
@@ -589,16 +636,7 @@ async def _deny(row, user, session, request, identity) -> ActionResponse:
         )
         raise _fail(status if status in (403, 404, 409) else 409, reason)
     # Still no answer: nothing ran either way. Undecided here again; the next sync shows the record.
-    await _move(
-        row.id,
-        ("claiming",),
-        "pending",
-        decision=None,
-        approver_user_id=None,
-        approver_username=None,
-        decided_at=None,
-        copilot_ref=None,
-    )
+    await _move(row.id, ("claiming",), "pending", **UNDECIDED)
     await _audit(
         AuditAction.TALON_ACTION_DENY,
         row,
@@ -782,8 +820,7 @@ async def _settle_stale(now: datetime) -> None:
     for row in rows:
         actor = {"actor_id": row.approver_user_id, "actor_name": row.approver_username}
         if row.state == "claiming" and row.decision == "deny":
-            reset = {"decision": None, "approver_user_id": None, "approver_username": None, "decided_at": None, "copilot_ref": None}
-            if await _move(row.id, ("claiming",), "pending", **reset):
+            if await _move(row.id, ("claiming",), "pending", **UNDECIDED):
                 await _audit(AuditAction.TALON_ACTION_DENY, row, **actor, ok=False, details="The denial's answer was lost; undecided again")
         elif row.state == "claiming":
             result = {"success": False, "message": CLAIM_LOST, "status_code": None}

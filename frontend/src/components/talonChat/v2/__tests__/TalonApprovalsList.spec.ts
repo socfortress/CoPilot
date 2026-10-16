@@ -111,6 +111,30 @@ describe("talon approvals list", () => {
 		expect(rows[1].get('[data-testid="talon-approvals-row-status"]').text()).toBe("Executed")
 	})
 
+	it("a row's untrusted values are isolated, their hidden characters escaped and flagged", async () => {
+		const forged = quarantineAction({
+			id: "a-7",
+			customer_code: "AC\u200BME",
+			target: {
+				customer_code: "ACME",
+				agent_id: "001",
+				velociraptor_id: "C.1234567890abcdef",
+				hostname: "WIN\u202E-DC01"
+			}
+		})
+		list.mockResolvedValueOnce(answer([forged, DECIDE]))
+		await refreshApprovals()
+		const wrapper = render()
+		await flushPromises()
+		const [row, plain] = wrapper.findAll('[data-testid="talon-approvals-row"]')
+		expect(row.get('[data-testid="talon-approvals-row-target"]').text()).toBe("WIN⟨U+202E⟩-DC01")
+		expect(row.get('[data-testid="talon-approvals-row-customer"]').text()).toBe("AC⟨U+200B⟩ME")
+		expect(row.get('[data-testid="talon-approvals-row-target"]').find("bdi").exists()).toBe(true)
+		expect(row.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(true)
+		expect(row.text()).not.toMatch(/[\u200B\u202E]/)
+		expect(plain.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(false)
+	})
+
 	it("an empty list says so; a refused read shows its text", async () => {
 		list.mockResolvedValueOnce(answer([]))
 		await refreshApprovals()

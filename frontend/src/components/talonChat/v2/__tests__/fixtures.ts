@@ -15,6 +15,7 @@ export function talonAction(extra: Partial<TalonAction> = {}): TalonAction {
 		thread_id: THREAD_ID,
 		customer_code: "ACME",
 		requester_user_id: "7",
+		requester_username: "ana",
 		action: "set_alert_status",
 		side_effect: "external-action",
 		executes_through: "PUT /api/incidents/db_operations/alert/status",
@@ -28,6 +29,8 @@ export function talonAction(extra: Partial<TalonAction> = {}): TalonAction {
 		state_reason: null,
 		expired: false,
 		expires_at: naiveUtc(4),
+		expires_in_seconds: 4 * 3600,
+		result_due_by: null,
 		created_at: naiveUtc(0),
 		decision: null,
 		approver_user_id: null,
@@ -65,4 +68,9 @@ export function axiosError(status: number, data: unknown) {
 
 export function response(action: TalonAction, success = true, message = "Action retrieved") {
 	return { data: { success, message, action } }
+}
+
+/** CoPilot's list answer (`GET /api/talon/actions?scope=…`). */
+export function listOf(actions: TalonAction[]) {
+	return { data: { success: true, message: `${actions.length} action(s)`, actions } }
 }
