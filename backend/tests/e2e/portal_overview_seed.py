@@ -42,6 +42,7 @@ from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
+from app.db.universal_models import EventSources  # noqa: E402
 from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E402
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import AlertContext  # noqa: E402
@@ -212,6 +213,8 @@ async def cleanup(s):
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
     await s.execute(delete(AlertContext).where(AlertContext.source == CONTEXT_SOURCE))
     await s.execute(delete(Agents).where(Agents.customer_code.in_(codes)))
+    # Event search's sources (event_search_e2e.py): a foreign key to the customer.
+    await s.execute(delete(EventSources).where(EventSources.customer_code.in_(codes)))
     for username in (PORTAL_USER, ADMIN):
         user = (await s.execute(select(User).where(User.username == username))).scalars().first()
         if user:

@@ -5,19 +5,50 @@
 			:loading-events="loading"
 			@search="handleSearchFormSearch"
 			@loaded="handleSearchFormLoaded"
+			@fields="fields = $event"
 		/>
 
 		<!-- Results -->
-		<div v-if="hasSearched">
-			<!-- Results Summary -->
-			<div ref="headerRef" class="mb-1 flex w-full items-center">
-				<p class="text-sm">
-					Showing
-					<span class="font-semibold">{{ events.length }}</span>
+		<div v-if="hasSearched" class="flex flex-col gap-2">
+			<!-- What is loaded, then the tools for it: the columns, and the export of what is loaded. -->
+			<div ref="headerRef" class="flex w-full flex-wrap items-center gap-2" data-testid="event-results-toolbar">
+				<p class="m-0 text-sm" data-testid="event-results-count">
+					<span class="font-semibold tabular-nums">{{ events.length.toLocaleString() }}</span>
 					of
-					<span class="font-semibold">{{ totalEvents }}</span>
-					events
+					<span class="font-semibold tabular-nums">{{ totalEvents.toLocaleString() }}</span>
+					events loaded
 				</p>
+				<div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+					<EventColumnTemplates
+						:templates
+						:active-key="activeLayoutKey"
+						:source-name="sourceLayoutName"
+						:source-columns="sourceLayoutColumns"
+						:resolve="resolveTemplate"
+						:time-field
+						:disabled="!selectedEventSource"
+						:busy="savingColumns"
+						:deleting-id="deletingTemplateId"
+						@apply="applyTemplate"
+						@delete="deleteTemplate"
+						@manage="showColumns = true"
+					/>
+					<n-button size="small" secondary data-testid="event-columns-toggle" @click="showColumns = true">
+						<template #icon><Icon name="carbon:column" /></template>
+						Columns
+						<span v-if="userColumns" class="bg-primary ml-1.5 size-1.5 rounded-full" title="Your own columns" />
+					</n-button>
+					<n-button
+						size="small"
+						secondary
+						:disabled="!events.length"
+						data-testid="event-export"
+						@click="exportCsv"
+					>
+						<template #icon><Icon name="carbon:download" /></template>
+						Export CSV
+					</n-button>
+				</div>
 			</div>
 
 			<n-data-table
@@ -27,6 +58,7 @@
 				:columns
 				:scroll-x="1200"
 				class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
+				data-testid="event-results"
 			>
 				<template #empty>
 					<n-empty description="No events found">
@@ -36,12 +68,35 @@
 			</n-data-table>
 
 			<!-- Load More -->
-			<div v-if="scrollId && events.length < totalEvents" class="mt-4 text-center">
+			<div v-if="scrollId && events.length < totalEvents" class="mt-2 text-center">
 				<n-button :loading @click="loadMoreEvents">
 					{{ loading ? "Loading..." : `Showing ${events.length} of ${totalEvents} events • Load More` }}
 				</n-button>
 			</div>
 		</div>
+
+		<n-modal
+			v-model:show="showColumns"
+			preset="card"
+			:title="`Columns · ${selectedEventSource?.name ?? ''}`"
+			:style="{ maxWidth: 'min(640px, 94vw)' }"
+			segmented
+		>
+			<EventColumnPicker
+				v-if="showColumns"
+				:current="pickerStart"
+				:personal="!!userColumns"
+				:source-columns="selectedEventSource?.displayed_columns"
+				:fields
+				:templates
+				:saving="savingColumns"
+				:saving-template
+				@save="applyColumns"
+				@cancel="showColumns = false"
+				@save-template="saveTemplate"
+				@delete-template="deleteTemplate"
+			/>
+		</n-modal>
 
 		<EventDetails
 			:event="selectedEvent"
@@ -55,11 +110,19 @@
 
 <script setup lang="tsx">
 import type { DataTableColumn, DataTableColumns, TagProps } from "naive-ui"
+import type { EventColumn } from "./eventColumns"
 import type { SearchFormLoad, SearchFormParams } from "@/components/eventSearch/SearchForm.vue"
 import type { ApiError } from "@/types/common"
-import type { DisplayColumn, EventSearchQueryParams, EventSearchResult, EventSourceItem } from "@/types/siem"
+import type {
+	DisplayColumn,
+	EventSearchColumnTemplate,
+	EventSearchQueryParams,
+	EventSearchResult,
+	EventSourceItem,
+	FieldMapping
+} from "@/types/siem"
 import { useElementSize } from "@vueuse/core"
-import { NButton, NDataTable, NEmpty, useMessage } from "naive-ui"
+import { NButton, NDataTable, NEmpty, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
@@ -67,9 +130,21 @@ import Icon from "@/components/common/Icon.vue"
 import EventDetails from "@/components/eventSearch/EventDetails.vue"
 import SearchForm from "@/components/eventSearch/SearchForm.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage } from "@/utils"
-import dayjs from "@/utils/dayjs"
+import { downloadCsv, getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import EventColumnPicker from "./EventColumnPicker.vue"
+import {
+	cellText,
+	columnValue,
+	eventLevel,
+	eventsFilename,
+	eventsToCsv,
+	parseEventTime,
+	resolveColumns
+} from "./eventColumns"
+import EventColumnTemplates from "./EventColumnTemplates.vue"
+import { sameColumns } from "./eventSearchMemory"
+import { useEventSearchMemory } from "./useEventSearchMemory"
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
@@ -93,47 +168,17 @@ function selectEvent(event: EventSearchResult) {
 const { width: headerWidthRef } = useElementSize(useTemplateRef("headerRef"))
 const simpleMode = computed(() => headerWidthRef.value < 600)
 
+const showColumns = ref(false)
+const fields = ref<FieldMapping[]>([])
+const memory = useEventSearchMemory(() => searchFormLoad.value?.customerCode ?? searchFormParams.value?.customerCode)
+
 const selectedEventSource = computed<EventSourceItem | null>(() => {
 	const sourceName = searchFormParams.value?.sourceName
 	const sources = searchFormLoad.value?.eventSources
 	if (!sourceName || !sources) return null
 	return sources.find(s => s.name === sourceName) ?? null
 })
-
-/** Walk a dotted path (e.g. "agent.name") through a nested object. */
-function getNestedValue(obj: EventSearchResult, path: string): unknown {
-	return path.split(".").reduce<unknown>((acc, segment) => {
-		if (acc && typeof acc === "object") {
-			return (acc as Record<string, unknown>)[segment]
-		}
-		return undefined
-	}, obj)
-}
-
-function formatCellValue(val: unknown): string {
-	if (val === undefined || val === null || val === "") return "-"
-	if (Array.isArray(val)) return val.map(v => (v === null || v === undefined ? "" : String(v))).join(", ")
-	if (typeof val === "object") return JSON.stringify(val)
-	return String(val)
-}
-
-/** Source `time_field`, or any key whose name contains `timestamp` (case-insensitive). */
-function isTimeField(key: string): boolean {
-	return key === selectedEventSource.value?.time_field || key.toLowerCase().includes("timestamp")
-}
-
-function getEventTime(row: EventSearchResult): unknown {
-	const preferred = selectedEventSource.value?.time_field
-	const keys = [
-		...(preferred ? [preferred] : []),
-		...Object.keys(row).filter(k => k !== preferred && k.toLowerCase().includes("timestamp"))
-	]
-	for (const key of keys) {
-		const value = getNestedValue(row, key)
-		if (value !== undefined && value !== null && value !== "") return value
-	}
-	return undefined
-}
+const timeField = computed(() => selectedEventSource.value?.time_field)
 
 /**
  * Renders an event time in the viewer's local timezone. `tz: true` is what makes offset-less
@@ -144,77 +189,67 @@ function formatEventTime(value: unknown): string {
 	return String(formatDate(typeof value === "number" ? value : `${value}`, dFormats.datetime, { tz: true }))
 }
 
-/** Parses on the same UTC assumption as `formatEventTime`, so sorting matches what is displayed. */
-function parseEventTime(value: unknown): number {
-	if (value === undefined || value === null || value === "") return Number.NaN
-	const parsed = typeof value === "number" ? dayjs(value) : dayjs.utc(`${value}`)
-	return parsed.isValid() ? parsed.valueOf() : Number.NaN
+function present(value: unknown): boolean {
+	return value !== undefined && value !== null && value !== ""
 }
 
-function buildColumnFromConfig(col: DisplayColumn): DataTableColumn<EventSearchResult> {
-	// A configured column pointing at the source's time field gets the same local-timezone
-	// treatment as the default Timestamp column, instead of being dumped as a raw UTC string.
-	const timeColumn = isTimeField(col.key)
+// The columns in force (#1258): the user's own for this source, else the SOC's, else the
+// default layout. The table renders them and the CSV export writes the same ones.
+const userColumns = computed(() => memory.columnsFor(selectedEventSource.value?.name))
+const eventColumns = computed<EventColumn[]>(() =>
+	resolveColumns(userColumns.value, selectedEventSource.value?.displayed_columns, timeField.value)
+)
+/** What the column picker starts from: the columns shown, when they are fields. */
+const pickerStart = computed(() => userColumns.value ?? selectedEventSource.value?.displayed_columns ?? [])
 
+// Column templates: named layouts for the source, switched from the toolbar. Applying one
+// copies its columns, so the layout in force is whichever one the columns match.
+const templates = computed(() => memory.templatesFor(selectedEventSource.value?.name))
+const sourceLayoutName = computed(() => (selectedEventSource.value?.displayed_columns?.length ? "SOC layout" : "Default layout"))
+const sourceLayoutColumns = computed(() => resolveColumns(null, selectedEventSource.value?.displayed_columns, timeField.value))
+const activeLayoutKey = computed(() => {
+	if (!userColumns.value) return "source"
+	const match = templates.value.find(template => sameColumns(template.columns, userColumns.value))
+	return match ? String(match.id) : null
+})
+
+function resolveTemplate(picked: DisplayColumn[]): EventColumn[] {
+	return resolveColumns(picked, null, timeField.value)
+}
+
+function tableColumn(column: EventColumn): DataTableColumn<EventSearchResult> {
+	const value = (row: EventSearchResult) => columnValue(column, row, timeField.value)
+	if (column.key === "Level" && column.field === null) {
+		return {
+			title: column.label,
+			key: column.key,
+			width: column.width ?? undefined,
+			render: row => <Chip type={levelClass(eventLevel(row))} value={eventLevel(row) ?? "-"} round />
+		}
+	}
 	return {
-		title: col.label || col.key,
-		key: col.key,
-		width: col.width || undefined,
-		ellipsis: { tooltip: true },
+		title: column.label,
+		key: column.key,
+		width: column.width ?? undefined,
+		fixed: column.field === null && column.key === "Timestamp" && !simpleMode.value ? "left" : undefined,
+		ellipsis: column.field === null ? undefined : { tooltip: true },
+		sorter: column.time
+			? (a, b) => {
+					const timeA = parseEventTime(value(a))
+					const timeB = parseEventTime(value(b))
+					if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0
+					if (Number.isNaN(timeA)) return -1
+					if (Number.isNaN(timeB)) return 1
+					return timeA - timeB
+				}
+			: undefined,
 		render: row => {
-			const value = getNestedValue(row, col.key)
-			if (timeColumn && value !== undefined && value !== null && value !== "") {
-				return <div>{formatEventTime(value)}</div>
-			}
-			return <div>{formatCellValue(value)}</div>
+			const raw = value(row)
+			if (column.time && present(raw)) return <div class="font-mono">{formatEventTime(raw)}</div>
+			return <div>{present(raw) ? cellText(raw) : "-"}</div>
 		}
 	}
 }
-
-// Defaults preserved from the original hardcoded layout so behaviour is unchanged
-// for event sources that haven't been configured yet.
-const defaultColumns = computed<DataTableColumn<EventSearchResult>[]>(() => [
-	{
-		title: "Timestamp",
-		key: "Timestamp",
-		fixed: simpleMode.value ? undefined : "left",
-		width: 160,
-		sorter: (a, b) => {
-			const timeA = parseEventTime(getEventTime(a))
-			const timeB = parseEventTime(getEventTime(b))
-			if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0
-			if (Number.isNaN(timeA)) return -1
-			if (Number.isNaN(timeB)) return 1
-			return timeA - timeB
-		},
-		render: row => {
-			const ts = getEventTime(row)
-			return <div class="font-mono">{ts === undefined ? "-" : formatEventTime(ts)}</div>
-		}
-	},
-	{
-		title: "Level",
-		key: "Level",
-		width: 60,
-		render: row => (
-			<Chip
-				type={levelClass(row.rule_level ?? row.rule?.level)}
-				value={row.rule_level ?? row.rule?.level ?? "-"}
-				round
-			/>
-		)
-	},
-	{
-		title: "Source",
-		key: "Source",
-		render: row => <div>{row.agent_name || row.agent?.name || "-"}</div>
-	},
-	{
-		title: "Rule",
-		key: "Rule",
-		render: row => <div>{row.rule_description || row.rule?.description || "-"}</div>
-	}
-])
 
 const actionsColumn = computed<DataTableColumn<EventSearchResult>>(() => ({
 	title: "Actions",
@@ -233,14 +268,89 @@ const actionsColumn = computed<DataTableColumn<EventSearchResult>>(() => ({
 	)
 }))
 
-const columns = computed<DataTableColumns<EventSearchResult>>(() => {
-	const configured = selectedEventSource.value?.displayed_columns
-	const dataColumns =
-		configured && configured.length > 0 ? configured.map(buildColumnFromConfig) : defaultColumns.value
-	// Always keep the View Details action at the right edge — it's the only way
-	// to open the event drawer from the table.
-	return [...dataColumns, actionsColumn.value]
-})
+// Always keep the View Details action at the right edge — it's the only way to open the
+// event drawer from the table.
+const columns = computed<DataTableColumns<EventSearchResult>>(() => [
+	...eventColumns.value.map(tableColumn),
+	actionsColumn.value
+])
+
+const savingColumns = ref(false)
+const savingTemplate = ref(false)
+
+/** Switches to a template's columns, or back to the source's layout. */
+async function applyTemplate(template: EventSearchColumnTemplate | null) {
+	const source = selectedEventSource.value?.name
+	if (!source) return
+	savingColumns.value = true
+	try {
+		await memory.setColumns(source, template ? template.columns : null)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to switch the columns")
+	} finally {
+		savingColumns.value = false
+	}
+}
+
+async function saveTemplate(name: string, picked: DisplayColumn[]) {
+	const source = selectedEventSource.value?.name
+	if (!source) return
+	savingTemplate.value = true
+	try {
+		const replaced = await memory.saveTemplate(source, name, picked)
+		message.success(replaced ? `Updated the template “${name}”` : `Saved the template “${name}”`)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the template")
+	} finally {
+		savingTemplate.value = false
+	}
+}
+
+const deletingTemplateId = ref<number | null>(null)
+
+/** Deletes a template, once the user confirmed it (in the Layout menu or the Columns dialog). */
+async function deleteTemplate(id: number) {
+	const name = templates.value.find(template => template.id === id)?.name
+	savingTemplate.value = true
+	deletingTemplateId.value = id
+	try {
+		await memory.removeTemplate(id)
+		message.success(name ? `Deleted the template “${name}”` : "Template deleted")
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the template")
+	} finally {
+		savingTemplate.value = false
+		deletingTemplateId.value = null
+	}
+}
+
+/** Keeps the picked columns on the server; the dialog stays open if they could not be kept. */
+async function applyColumns(picked: DisplayColumn[] | null) {
+	const source = selectedEventSource.value?.name
+	if (!source) return
+	savingColumns.value = true
+	try {
+		await memory.setColumns(source, picked)
+		showColumns.value = false
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the columns")
+	} finally {
+		savingColumns.value = false
+	}
+}
+
+/** The loaded events, in the columns on screen. */
+function exportCsv() {
+	const source = selectedEventSource.value?.name ?? "events"
+	const { headers, rows } = eventsToCsv(eventColumns.value, events.value, timeField.value)
+	downloadCsv(eventsFilename(source), headers, rows)
+	const more = totalEvents.value - events.value.length
+	message.success(
+		more > 0
+			? `Exported ${events.value.length.toLocaleString()} of ${totalEvents.value.toLocaleString()} events: load more to include the rest`
+			: `Exported ${events.value.length.toLocaleString()} events`
+	)
+}
 
 function handleSearchFormSearch(params: SearchFormParams) {
 	searchFormParams.value = params

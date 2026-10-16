@@ -1,7 +1,10 @@
 import type { CommonResponse } from "@/types/common"
 import type {
+	DisplayColumn,
 	EnabledDashboard,
+	EventSearchMemory,
 	EventSearchResult,
+	EventSearchState,
 	EventSourceItem,
 	FieldMapping,
 	PanelDataResponse
@@ -36,6 +39,54 @@ export default {
 	getFieldMappings(customerCode: string, sourceName: string) {
 		return HttpClient.get<CommonResponse<{ fields: FieldMapping[]; total: number; index_pattern: string }>>(
 			`/siem/events/${customerCode}/${sourceName}/fields`
+		)
+	},
+
+	// -- Event search memory (#1258): the caller's saved and recent searches and columns.
+	// Every call answers with the whole memory. The read is cached by the page, so it is
+	// not page-scoped: a cancelled read would leave the cache waiting forever.
+	getEventSearchMemory(customerCode: string) {
+		return HttpClient.get<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}`, {
+			keepOnNavigation: true
+		})
+	},
+
+	saveEventSearchQuery(customerCode: string, name: string, state: EventSearchState) {
+		return HttpClient.post<CommonResponse<EventSearchMemory & { replaced: boolean }>>(
+			`/siem/event_search/${customerCode}/saved`,
+			{ ...state, name }
+		)
+	},
+
+	deleteEventSearchQuery(customerCode: string, queryId: number) {
+		return HttpClient.delete<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}/saved/${queryId}`)
+	},
+
+	rememberEventSearch(customerCode: string, state: EventSearchState) {
+		return HttpClient.post<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}/recent`, state)
+	},
+
+	clearEventSearchRecent(customerCode: string) {
+		return HttpClient.delete<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}/recent`)
+	},
+
+	setEventSearchColumns(customerCode: string, sourceName: string, columns: DisplayColumn[] | null) {
+		return HttpClient.put<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}/columns`, {
+			source_name: sourceName,
+			columns
+		})
+	},
+
+	saveEventSearchTemplate(customerCode: string, sourceName: string, name: string, columns: DisplayColumn[]) {
+		return HttpClient.post<CommonResponse<EventSearchMemory & { replaced: boolean }>>(
+			`/siem/event_search/${customerCode}/templates`,
+			{ source_name: sourceName, name, columns }
+		)
+	},
+
+	deleteEventSearchTemplate(customerCode: string, templateId: number) {
+		return HttpClient.delete<CommonResponse<EventSearchMemory>>(
+			`/siem/event_search/${customerCode}/templates/${templateId}`
 		)
 	},
 

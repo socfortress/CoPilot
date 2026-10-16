@@ -27,6 +27,7 @@
 
 						<n-select
 							v-model:value="selectedSourceName"
+							data-testid="event-search-source"
 							placeholder="Select Source"
 							filterable
 							size="tiny"
@@ -40,6 +41,7 @@
 
 				<n-mention
 					v-model:value="query"
+					data-testid="event-search-query"
 					type="textarea"
 					separator=" "
 					:autosize="{ minRows: 3, maxRows: 8 }"
@@ -59,14 +61,23 @@
 			</div>
 
 			<div class="flex flex-wrap justify-between gap-3">
-				<div class="text-secondary text-xs">
-					{{
-						!selectedCustomerCode
-							? "Select a customer to search"
-							: !selectedSourceName
-								? "Select a source to search"
-								: ""
-					}}
+				<div class="flex flex-wrap items-center gap-3">
+					<EventSearchQueries
+						:saved="memory.memory.value.saved"
+						:recent="memory.memory.value.recent"
+						:available="memory.available.value"
+						:loading="memory.loading.value"
+						:error="memory.error.value"
+						:can-save="!!selectedSourceName"
+						@restore="restore"
+						@save="saveCurrent"
+						@delete="removeSaved"
+						@clear-recent="clearRecent"
+						@retry="memory.reload"
+					/>
+					<span v-if="!selectedCustomerCode || !selectedSourceName" class="text-secondary text-xs">
+						{{ !selectedCustomerCode ? "Select a customer to search" : "Select a source to search" }}
+					</span>
 				</div>
 
 				<div class="flex flex-wrap items-center justify-end gap-3">
@@ -127,6 +138,7 @@
 						type="primary"
 						:loading="loadingEvents"
 						:disabled="!selectedCustomerCode || !selectedSourceName"
+						data-testid="event-search-submit"
 						@click="searchEvents"
 					>
 						<template #icon>
@@ -144,9 +156,9 @@
 import type { MentionOption } from "naive-ui"
 import type { VNodeChild } from "vue"
 import type { ApiError } from "@/types/common"
-import type { EventSearchQueryTimerange, EventSourceItem, FieldMapping } from "@/types/siem"
+import type { EventSearchQueryTimerange, EventSearchState, EventSourceItem, FieldMapping } from "@/types/siem"
 import { NAlert, NButton, NDatePicker, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
-import { computed, h, onBeforeMount, ref, watch } from "vue"
+import { computed, h, nextTick, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -154,6 +166,8 @@ import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
+import EventSearchQueries from "./EventSearchQueries.vue"
+import { useEventSearchMemory } from "./useEventSearchMemory"
 
 export interface SearchFormParams {
 	customerCode: string
@@ -178,6 +192,8 @@ defineProps<{
 const emit = defineEmits<{
 	(e: "search", value: SearchFormParams): void
 	(e: "loaded", value: SearchFormLoad): void
+	/** The selected source's field list, for the column picker. */
+	(e: "fields", value: FieldMapping[]): void
 }>()
 
 const query = defineModel<string>("query")
@@ -285,11 +301,80 @@ async function loadFieldMappings() {
 		fieldMappings.value = []
 	} finally {
 		loadingFieldMappings.value = false
+		emit("fields", fieldMappings.value)
 	}
+}
+
+// -- Saved and recent searches (#1258) --
+const memory = useEventSearchMemory(selectedCustomerCode)
+
+/** The search on screen, as it is remembered. */
+function currentState(): EventSearchState | null {
+	if (!selectedSourceName.value) return null
+	const absolute = timerangeMode.value === "absolute"
+	return {
+		source_name: selectedSourceName.value,
+		query: (query.value || "").trim(),
+		time_mode: timerangeMode.value,
+		time_amount: filterTimeRange.value.time,
+		time_unit: filterTimeRange.value.unit,
+		time_from: absolute ? new Date(daterange.value[0]).toISOString() : null,
+		time_to: absolute ? new Date(daterange.value[1]).toISOString() : null,
+		page_size: pageSize.value
+	}
+}
+
+async function saveCurrent(name: string) {
+	const state = currentState()
+	if (!state) return
+	try {
+		const replaced = await memory.save(name, state)
+		message.success(replaced ? `Updated “${name.trim()}”` : `Saved “${name.trim()}”`)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the query")
+	}
+}
+
+async function removeSaved(id: number) {
+	try {
+		await memory.remove(id)
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the query")
+	}
+}
+
+async function clearRecent() {
+	try {
+		await memory.clearRecent()
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError) || "Failed to clear the recent searches")
+	}
+}
+
+/** Puts a remembered search back on the form and runs it, if its source is still there. */
+async function restore(state: EventSearchState) {
+	if (!enabledSources.value.some(s => s.name === state.source_name)) {
+		message.warning(`The source “${state.source_name}” is no longer available for this customer`)
+		return
+	}
+	selectedSourceName.value = state.source_name
+	query.value = state.query
+	timerangeMode.value = state.time_mode
+	filterTimeRange.value = { time: state.time_amount, unit: state.time_unit }
+	if (state.time_mode === "absolute" && state.time_from && state.time_to) {
+		daterange.value = [Date.parse(state.time_from), Date.parse(state.time_to)]
+	}
+	if (pageSizeOptions.some(o => o.value === state.page_size)) pageSize.value = state.page_size
+	// `query` is the parent's model: it reads the new text only once the parent has rendered.
+	await nextTick()
+	searchEvents()
 }
 
 async function searchEvents() {
 	if (!selectedCustomerCode.value || !selectedSourceName.value) return
+
+	const state = currentState()
+	if (state) memory.remember(state)
 
 	emit("search", {
 		customerCode: selectedCustomerCode.value,

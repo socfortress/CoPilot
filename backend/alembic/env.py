@@ -67,6 +67,10 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.schedulers.models.scheduler import JobMetadata
+from app.siem.models.event_search import EventSearchColumns
+from app.siem.models.event_search import EventSearchColumnTemplate
+from app.siem.models.event_search import EventSearchRecentQuery
+from app.siem.models.event_search import EventSearchSavedQuery
 from app.soc_management.models.sla import AlertSlaTracking
 from app.soc_management.models.sla import CaseSlaTracking
 from app.soc_management.models.sla import SlaCalendar

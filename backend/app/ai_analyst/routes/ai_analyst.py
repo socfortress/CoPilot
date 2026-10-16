@@ -76,6 +76,7 @@ from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import enforce_owned_object_access
+from app.middleware.customer_access import scoped_customer_codes
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
 
@@ -377,9 +378,15 @@ async def get_ioc_route(
 )
 async def list_alerts_with_reports_route(
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> AlertsWithReportsListResponse:
-    alerts = await list_alerts_with_reports(session, customer_codes=customer_codes)
+    # The requested codes are a filter, not a grant: narrow them to the caller's customers.
+    # `[]` means the caller may see none of them, which the service would read as "no filter".
+    scoped = await scoped_customer_codes(current_user, customer_codes, session)
+    if scoped == []:
+        return AlertsWithReportsListResponse(success=True, message="0 alerts with reports found", alerts=[])
+    alerts = await list_alerts_with_reports(session, customer_codes=scoped)
     return AlertsWithReportsListResponse(
         success=True,
         message=f"{len(alerts)} alerts with reports found",

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.schema.talon import TalonInvestigateResponse
@@ -214,9 +215,31 @@ async def investigate_alert_for_user(request: TalonInvestigateRequest, user: Use
     return await investigate_alert(request.model_copy(update={"sender": ANALYST_SENDER}))
 
 
-async def get_talon_status() -> TalonStatusResponse:
+def _own_lane_only(data: Any, user_id: int) -> Optional[Dict[str, Any]]:
+    """Talon's /status narrowed to one caller.
+
+    Talon lists every conversation lane (``sessions[]``: each analyst's user id and
+    conversation size) and, on NanoClaw, deployment-wide ``scheduled_tasks``. A caller
+    who is not an admin keeps only their own lane, matched on ``user_id`` as
+    ``get_talon_session_context`` does, and no scheduled tasks. The service-level
+    figures (status, uptime, queue depth) are kept: they describe Talon, not a tenant.
+    """
+    if not isinstance(data, dict):
+        return None
+    sessions = data.get("sessions") if isinstance(data.get("sessions"), list) else []
+    narrowed = dict(data)
+    narrowed["sessions"] = [s for s in sessions if isinstance(s, dict) and str(s.get("user_id") or "") == str(user_id)]
+    if "scheduled_tasks" in narrowed:
+        narrowed["scheduled_tasks"] = []
+    return narrowed
+
+
+async def get_talon_status(user: User) -> TalonStatusResponse:
     """
     Get the current status of the Talon service including queue and job overview.
+
+    An admin sees every conversation lane; anyone else sees only their own
+    (``_own_lane_only``).
 
     Returns:
         TalonStatusResponse with the status data.
@@ -228,10 +251,13 @@ async def get_talon_status() -> TalonStatusResponse:
             status_code=500,
             detail=response.get("message", "Failed to get Talon status"),
         )
+    data = response.get("data")
+    if user.role_id != RoleEnum.admin:
+        data = _own_lane_only(data, user.id)
     return TalonStatusResponse(
         success=True,
         message="Talon status retrieved successfully",
-        data=response.get("data"),
+        data=data,
     )
 
 

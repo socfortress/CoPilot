@@ -306,13 +306,20 @@ async def get_customer_ai_trigger_endpoint(
 @incidents_db_operations_router.put(
     "/ai_trigger",
     response_model=AITriggerResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # Runs before `check_customer_exists`, so a scoped caller gets 403 for an unknown
+        # code as for a foreign one, rather than learning which codes exist from a 404.
+        Depends(verify_customer_code_access),
+    ],
 )
 async def put_customer_ai_trigger_endpoint(
     notification: PutAITrigger,
-    _customer: Customers = Depends(check_customer_exists),
+    customer: Customers = Depends(check_customer_exists),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await _ensure_settings_customer(notification.customer_code, customer, current_user, db)
     await put_customer_ai_trigger(notification, db)
     return AITriggerResponse(
         ai_triggers=await get_customer_ai_trigger(notification.customer_code, db),
@@ -344,13 +351,20 @@ async def get_customer_notification_endpoint(
 @incidents_db_operations_router.put(
     "/notification",
     response_model=NotificationResponse,
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # Runs before `check_customer_exists`, so a scoped caller gets 403 for an unknown
+        # code as for a foreign one, rather than learning which codes exist from a 404.
+        Depends(verify_customer_code_access),
+    ],
 )
 async def put_customer_notification_endpoint(
     notification: PutNotification,
-    _customer: Customers = Depends(check_customer_exists),
+    customer: Customers = Depends(check_customer_exists),
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    await _ensure_settings_customer(notification.customer_code, customer, current_user, db)
     await put_customer_notification(notification, db)
     return NotificationResponse(
         notifications=await get_customer_notification(notification.customer_code, db),
@@ -3330,6 +3344,19 @@ async def _ensure_alert_access(alert_id: int, current_user: User, db: AsyncSessi
             detail=f"Access denied to alert {alert_id} - insufficient customer permissions",
         )
     return alert
+
+
+async def _ensure_settings_customer(body_customer_code: str, checked: Customers, current_user: User, db: AsyncSession) -> None:
+    """For the per-customer settings PUTs (``/ai_trigger``, ``/notification``): the customer the body changes.
+
+    These routes take the customer twice. ``check_customer_exists`` reads the
+    ``?customer_code=`` query parameter, but the row written is the body's
+    ``customer_code``, which nothing checked. So: 403 unless the caller may act for the
+    body's customer, and 400 unless it is the customer whose existence was checked.
+    """
+    await _ensure_customer_access(body_customer_code, current_user, db)
+    if body_customer_code != checked.customer_code:
+        raise HTTPException(status_code=400, detail="customer_code in the body does not match the customer_code query parameter")
 
 
 async def _ensure_customer_access(customer_code: str, current_user: User, db: AsyncSession) -> None:

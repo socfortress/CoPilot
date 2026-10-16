@@ -6,6 +6,7 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -16,6 +17,8 @@ from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
 from app.siem.schema.events import FieldMapping
 from app.siem.schema.events import FieldMappingsResponse
+from app.siem.utils.scroll_token import open_scroll
+from app.siem.utils.scroll_token import sign_scroll
 
 
 def _event_from_hit(hit: dict) -> dict:
@@ -60,22 +63,31 @@ async def query_events(
 ) -> EventsQueryResponse:
     logger.info(f"Querying events for customer {customer_code}, source {source_name}")
 
-    # If a scroll_id is provided, continue scrolling
-    if params.scroll_id:
-        return await _scroll_next_page(params.scroll_id)
-
-    # Look up event source to get index_pattern and time_field
+    # Look up event source to get index_pattern and time_field. A next page needs it too:
+    # a source disabled or removed since the first page stops there.
     event_source = await get_event_source_by_customer_and_name(customer_code, source_name, db)
+    secret = AuthHandler().secret
 
-    return await _initial_search(
-        index_pattern=event_source.index_pattern,
-        time_field=event_source.time_field,
-        timerange=params.timerange,
-        page_size=params.page_size,
-        query=params.query,
-        time_from=params.time_from,
-        time_to=params.time_to,
-    )
+    if params.scroll_id:
+        # Only a token issued for this customer and source continues: the route checked the
+        # caller may see the customer, and the token is what ties the scroll to it.
+        scroll_id = open_scroll(params.scroll_id, customer_code, source_name, secret)
+        if scroll_id is None:
+            raise HTTPException(status_code=400, detail="These results are no longer valid: run the search again")
+        response = await _scroll_next_page(scroll_id)
+    else:
+        response = await _initial_search(
+            index_pattern=event_source.index_pattern,
+            time_field=event_source.time_field,
+            timerange=params.timerange,
+            page_size=params.page_size,
+            query=params.query,
+            time_from=params.time_from,
+            time_to=params.time_to,
+        )
+
+    response.scroll_id = sign_scroll(response.scroll_id, customer_code, source_name, secret)
+    return response
 
 
 async def _initial_search(
