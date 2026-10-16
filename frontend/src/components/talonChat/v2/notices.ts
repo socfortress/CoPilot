@@ -20,6 +20,10 @@ export const NOTICE_PENDING =
 	"Waiting for a decision: an action in this thread needs a decision in CoPilot before Talon can go on."
 export const NOTICE_ARCHIVED = "This thread is archived. You can read it, but not continue it."
 export const NOTICE_GONE = "This thread no longer exists."
+/** The read-back's 503 (talon-analyst's reads are bounded: busy, or too slow). */
+export const NOTICE_BUSY = "Talon is busy; try again."
+/** The read-back's 502 even with the smallest page: CoPilot couldn't relay it. */
+export const NOTICE_LOAD_FAILED = "This thread's messages couldn't be loaded."
 
 export type NoticeKind = "blocked" | "pending" | "archived" | "gone" | "error"
 

@@ -7,6 +7,7 @@ import _toLower from "lodash/toLower"
 import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
+import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
 import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
 import { useCustomerFilterStore } from "@/stores/customer-filter"
@@ -55,6 +56,7 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			resetTalonV2Availability()
+			resetCustomerOptions()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

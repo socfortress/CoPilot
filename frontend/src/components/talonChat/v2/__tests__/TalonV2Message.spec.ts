@@ -21,7 +21,7 @@ vi.mock("@/stores/settings", () => ({ useSettingsStore: () => ({ dateFormat: { d
 
 const MarkdownStub = defineComponent({
 	name: "Markdown",
-	props: { source: { type: String, default: "" } },
+	props: { source: { type: String, default: "" }, noImages: { type: Boolean, default: false } },
 	setup: props => () => h("div", { class: "markdown-stub" }, props.source)
 })
 
@@ -143,6 +143,8 @@ describe("talon v2 message: text only", () => {
 		const markdown = wrapper.findAllComponents(MarkdownStub)
 		expect(markdown).toHaveLength(1)
 		expect(markdown[0].props("source")).toBe("**done**")
+		// A second layer behind talon-analyst's own escaping of `![`: no image is ever fetched.
+		expect(markdown[0].props("noImages")).toBe(true)
 	})
 
 	it("the approval placeholder says only whether it waits, keyed by its approval id", () => {

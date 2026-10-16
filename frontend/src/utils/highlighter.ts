@@ -1,3 +1,4 @@
+import type MarkdownIt from "markdown-it/lib/index.mjs"
 import type { BundledLanguage, BundledTheme, HighlighterGeneric } from "shiki"
 import { createHighlighter } from "shiki"
 import { createOnigurumaEngine } from "shiki/engine/oniguruma"
@@ -48,6 +49,37 @@ export async function getHighlighter() {
 	})
 
 	return highlighterPromise
+}
+
+/** Languages Shiki renders as plain text without a grammar. */
+const PLAIN_LANGUAGES = ["text", "txt", "plain", "plaintext"]
+
+/**
+ * A markdown-it plugin, used after `@shikijs/markdown-it`'s, that keeps a code block from blanking
+ * the whole document. Shiki throws on a language it hasn't loaded (` ```kql `, ` ```yara `, a typo,
+ * an info string like ` ```<img `), and an exception in `highlight` ends markdown-it's render, so
+ * every block of a message used to vanish. Here a language that isn't loaded is highlighted as
+ * plain `text`, and any other failure returns "" so markdown-it escapes the code itself.
+ */
+export function markdownItSafeHighlight(highlighter: Pick<HighlighterGeneric<string, string>, "getLoadedLanguages">) {
+	return (md: MarkdownIt): void => {
+		const highlight = md.options.highlight
+		if (!highlight) return
+		md.options.highlight = (code, lang, attrs) => {
+			const loaded = highlighter.getLoadedLanguages() as string[]
+			const known = !lang || PLAIN_LANGUAGES.includes(lang) || loaded.includes(lang)
+			try {
+				return highlight(code, known ? lang : "text", attrs)
+			} catch {
+				return ""
+			}
+		}
+	}
+}
+
+/** A markdown-it plugin that renders no images: `![x](url)` stays a link, never an `<img>` that loads. */
+export function markdownItNoImages(md: MarkdownIt): void {
+	md.disable("image")
 }
 
 export const codeThemes = {

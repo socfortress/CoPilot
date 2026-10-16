@@ -121,7 +121,7 @@ import {
 	TALON_V2_FAILED
 } from "@/api/talonV2Parser"
 import Icon from "@/components/common/Icon.vue"
-import { NOTICE_ARCHIVED, NOTICE_REVOKED, noticeFor } from "./notices"
+import { NOTICE_ARCHIVED, NOTICE_BUSY, NOTICE_LOAD_FAILED, NOTICE_REVOKED, noticeFor } from "./notices"
 import TalonContextBadge from "./TalonContextBadge.vue"
 import TalonV2Message from "./TalonV2Message.vue"
 
@@ -134,8 +134,11 @@ const emit = defineEmits<{
 	(e: "gone", id: string): void
 }>()
 
-/** Turns per read-back page (talon-analyst's default; at most 100). */
-const PAGE_LIMIT = 20
+/**
+ * Turns per read-back page: talon-analyst's default first. A page CoPilot can't relay (a 502:
+ * over its 4 MB cap, or no answer) is asked again with fewer turns before giving up.
+ */
+const PAGE_LIMITS = [20, 5, 1]
 
 const messages = ref<TalonV2ChatMessage[]>([])
 const next = ref<string | null>(null)
@@ -175,6 +178,26 @@ function baseNotice(): ThreadNotice | null {
 	return null
 }
 
+/** A page of turns, asked again with fewer turns on a 502. */
+async function fetchPage(threadId: string, before: string | null, signal?: AbortSignal) {
+	for (let attempt = 0; ; attempt++) {
+		const limit = PAGE_LIMITS[attempt]
+		try {
+			return await Api.talonV2.getMessages(threadId, before ? { limit, before } : { limit }, signal)
+		} catch (err) {
+			const retry = errorOf(err).status === 502 && attempt < PAGE_LIMITS.length - 1 && !signal?.aborted
+			if (!retry) throw err
+		}
+	}
+}
+
+/** The text for a page that couldn't be read: fixed for CoPilot's 502 and talon-analyst's 503. */
+function loadErrorText(status: number | null, detail: string): string {
+	if (status === 503) return NOTICE_BUSY
+	if (status === 502) return NOTICE_LOAD_FAILED
+	return detail
+}
+
 /** The thread's newest page of turns. */
 async function load() {
 	readController?.abort()
@@ -190,7 +213,7 @@ async function load() {
 	readController = controller
 	loading.value = true
 	try {
-		const res = await Api.talonV2.getMessages(thread.id, { limit: PAGE_LIMIT }, controller.signal)
+		const res = await fetchPage(thread.id, null, controller.signal)
 		if (controller.signal.aborted) return
 		messages.value = fromUIMessages(res.data.messages)
 		next.value = res.data.next ?? null
@@ -203,7 +226,7 @@ async function load() {
 			notice.value = noticeFor(status, detail)
 			if (status === 404) emit("gone", thread.id)
 		} else {
-			loadError.value = detail
+			loadError.value = loadErrorText(status, detail)
 		}
 	} finally {
 		if (readController === controller) {
@@ -219,7 +242,7 @@ async function loadOlder() {
 	const threadId = thread.id
 	loadingOlder.value = true
 	try {
-		const res = await Api.talonV2.getMessages(threadId, { limit: PAGE_LIMIT, before: next.value })
+		const res = await fetchPage(threadId, next.value)
 		if (threadId !== thread.id) return
 		messages.value = [...fromUIMessages(res.data.messages), ...messages.value]
 		next.value = res.data.next ?? null
@@ -227,7 +250,7 @@ async function loadOlder() {
 		if (threadId !== thread.id) return
 		const { status, detail } = errorOf(err)
 		if (status === 403 || status === 404) notice.value = noticeFor(status, detail)
-		else loadError.value = detail
+		else loadError.value = loadErrorText(status, detail)
 	} finally {
 		loadingOlder.value = false
 	}

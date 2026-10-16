@@ -51,8 +51,8 @@ export function refusalDetail(body: unknown): string {
 }
 
 export default {
-	getAvailability() {
-		return HttpClient.get<FlaskBaseResponse & { enabled: boolean }>(`/talon/v2/availability`)
+	getAvailability(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { enabled: boolean }>(`/talon/v2/availability`, { signal })
 	},
 	listThreads(
 		query: { status?: TalonV2ThreadStatusFilter; limit?: number; cursor?: string | null },

@@ -10,7 +10,14 @@ import type { TalonV2MessagesPage, TalonV2Thread } from "@/types/talonV2"
 import { flushPromises, mount } from "@vue/test-utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
-import { NOTICE_ARCHIVED, NOTICE_PENDING, NOTICE_REVOKED, NOTICE_TAGS_NARROWED } from "../notices"
+import {
+	NOTICE_ARCHIVED,
+	NOTICE_BUSY,
+	NOTICE_LOAD_FAILED,
+	NOTICE_PENDING,
+	NOTICE_REVOKED,
+	NOTICE_TAGS_NARROWED
+} from "../notices"
 import TalonV2Conversation from "../TalonV2Conversation.vue"
 
 type StreamChat = (
@@ -124,7 +131,7 @@ describe("talon v2 conversation", () => {
 
 		await wrapper.get('[data-testid="talon-v2-load-older"]').trigger("click")
 		await flushPromises()
-		expect(getMessages).toHaveBeenLastCalledWith(THREAD.id, { limit: 20, before: "cursor-1" })
+		expect(getMessages).toHaveBeenLastCalledWith(THREAD.id, { limit: 20, before: "cursor-1" }, undefined)
 		expect(texts(wrapper)).toEqual(["user: first", "assistant: Talon:one", "user: second", "assistant: Talon:two"])
 		expect(wrapper.find('[data-testid="talon-v2-load-older"]').exists()).toBe(false)
 	})
@@ -247,6 +254,51 @@ describe("talon v2 conversation", () => {
 		expect(wrapper.get('[data-testid="talon-v2-notice"]').text()).toBe(notice)
 		expect(wrapper.findAll('[data-testid="talon-v2-message"]')).toHaveLength(0)
 		expect((wrapper.get("textarea").element as HTMLTextAreaElement).disabled).toBe(true)
+	})
+
+	it("a page CoPilot can't relay (502) is asked again with fewer turns", async () => {
+		getMessages
+			.mockRejectedValueOnce(axiosError(502, { detail: "Talon request failed" }))
+			.mockRejectedValueOnce(axiosError(502, { detail: "Talon request failed" }))
+			.mockResolvedValueOnce(page(turn("r9", "big", "reply"), "cursor-9"))
+		const wrapper = render()
+		await flushPromises()
+
+		expect(getMessages.mock.calls.map(call => call[1])).toEqual([{ limit: 20 }, { limit: 5 }, { limit: 1 }])
+		expect(texts(wrapper)).toEqual(["user: big", "assistant: Talon:reply"])
+
+		getMessages
+			.mockRejectedValueOnce(axiosError(502, { detail: "Talon request failed" }))
+			.mockResolvedValueOnce(page(turn("r8", "older", "o"), null))
+		await wrapper.get('[data-testid="talon-v2-load-older"]').trigger("click")
+		await flushPromises()
+		expect(getMessages.mock.calls.slice(3).map(call => call[1])).toEqual([
+			{ limit: 20, before: "cursor-9" },
+			{ limit: 5, before: "cursor-9" }
+		])
+		expect(texts(wrapper)).toHaveLength(4)
+	})
+
+	it("still a 502 with one turn: the fixed error, with Retry", async () => {
+		getMessages.mockRejectedValue(axiosError(502, { detail: "Talon request failed" }))
+		const wrapper = render()
+		await flushPromises()
+		expect(getMessages).toHaveBeenCalledTimes(3)
+		expect(wrapper.get('[data-testid="talon-v2-load-error"]').text()).toContain(NOTICE_LOAD_FAILED)
+
+		getMessages.mockReset().mockResolvedValueOnce(page(turn("r1", "q", "a")))
+		await wrapper.get('[data-testid="talon-v2-load-error"] button').trigger("click")
+		await flushPromises()
+		expect(texts(wrapper)).toHaveLength(2)
+	})
+
+	it("talon-analyst busy (503): a fixed text with Retry, not asked again on its own", async () => {
+		getMessages.mockRejectedValueOnce(axiosError(503, { detail: "Talon request failed" }))
+		const wrapper = render()
+		await flushPromises()
+		expect(getMessages).toHaveBeenCalledTimes(1)
+		expect(wrapper.get('[data-testid="talon-v2-load-error"]').text()).toContain(NOTICE_BUSY)
+		expect(wrapper.find('[data-testid="talon-v2-load-error"] button').exists()).toBe(true)
 	})
 
 	it("a thread whose customer is gone isn't read, and can't be continued", async () => {

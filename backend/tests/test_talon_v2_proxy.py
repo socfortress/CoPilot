@@ -636,6 +636,52 @@ def test_a_messages_page_over_the_thread_routes_cap_still_comes_through():
     assert status == 502
 
 
+# ── never cached ──────────────────────────────────────────────────────────────
+
+
+def test_every_v2_json_answer_is_no_store_and_relayed_as_sent():
+    # Upstream spacing and key order kept: the bytes are relayed, not re-encoded.
+    raw = b'{ "threads" : [ ], "next" : null , "z": 1, "a": "\\u00e9" }'
+
+    def respond(request):
+        if request.url.path.endswith("/messages") and "before" in request.url.params:
+            return httpx.Response(403, json={"detail": "access to this thread's customer was removed"})
+        if request.method == "POST":
+            return httpx.Response(201, json=THREAD_BODY)
+        return httpx.Response(200, content=raw, headers={"content-type": "application/json"})
+
+    async def scenario(client, ctx):
+        return {
+            "list": await client.get("/talon/v2/threads", headers=as_user("admin")),
+            "create": await client.post("/talon/v2/threads", json={}, headers=as_user("admin")),
+            "rename": await client.patch(f"/talon/v2/threads/{THREAD}", json={"title": "x"}, headers=as_user("admin")),
+            "archive": await client.delete(f"/talon/v2/threads/{THREAD}", headers=as_user("admin")),
+            "messages": await client.get(MESSAGES, headers=as_user("admin")),
+            "messages 403": await client.get(f"{MESSAGES}?before=WzQyXQ", headers=as_user("admin")),
+            "availability": await client.get("/talon/v2/availability", headers=as_user("admin")),
+            "settings": await client.get("/talon/v2/settings", headers=as_user("admin")),
+            "settings put": await client.put("/talon/v2/settings", json={"v2_enabled": False}, headers=as_user("admin")),
+        }
+
+    answers = call(scenario, upstream=Upstream(respond))
+    for name, response in answers.items():
+        assert response.status_code < 500, name
+        assert response.headers["cache-control"] == "no-store", name
+        assert response.headers["content-type"].startswith("application/json"), name
+    assert answers["list"].content == raw
+    assert answers["messages"].content == raw
+    assert answers["messages 403"].status_code == 403
+
+
+def test_a_2xx_that_isnt_json_is_still_a_no_store_502():
+    async def scenario(client, ctx):
+        return await client.get(MESSAGES, headers=as_user("ana"))
+
+    response = call(scenario, upstream=Upstream(lambda r: httpx.Response(200, text="<html>")))
+    assert (response.status_code, response.json()) == (502, {"detail": "Talon request failed"})
+    assert response.headers["cache-control"] == "no-store"
+
+
 # ── chat ──────────────────────────────────────────────────────────────────────
 
 

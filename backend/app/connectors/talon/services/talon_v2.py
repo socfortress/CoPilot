@@ -217,16 +217,33 @@ def refused(status: Optional[int], body: bytes) -> JSONResponse:
     return JSONResponse({"detail": reason or FAILED}, status_code=status)
 
 
+#: Every v2 JSON answer: a thread list, a title, a transcript is the user's own and must not be
+#: kept by a browser or a proxy (talon-analyst sends the same on its own v2 answers).
+NO_STORE = {"Cache-Control": "no-store"}
+
+
+class RelayedJSONResponse(JSONResponse):
+    """A JSON body relayed as the bytes it arrived as (already checked to parse)."""
+
+    def render(self, content: Any) -> bytes:
+        return content
+
+
 def relay(answer: V2Answer) -> JSONResponse:
-    """A JSON upstream answer as CoPilot's answer."""
+    """A JSON upstream answer as CoPilot's answer, never stored by a cache. A 2xx body is relayed
+    as the bytes talon-analyst sent, once they parse as JSON (else a 502 with the fixed text)."""
     if answer.status is not None and 200 <= answer.status < 300:
         try:
-            payload = json.loads(answer.body)
+            json.loads(answer.body)
         except ValueError:
             logger.error(f"Talon v2: talon-analyst answered {answer.status} with a body that isn't JSON")
-            return JSONResponse({"detail": FAILED}, status_code=502)
-        return JSONResponse(payload, status_code=answer.status)
-    return refused(answer.status, answer.body)
+            response = JSONResponse({"detail": FAILED}, status_code=502)
+        else:
+            response = RelayedJSONResponse(answer.body, status_code=answer.status)
+    else:
+        response = refused(answer.status, answer.body)
+    response.headers.update(NO_STORE)
+    return response
 
 
 # ── threads ───────────────────────────────────────────────────────────────────

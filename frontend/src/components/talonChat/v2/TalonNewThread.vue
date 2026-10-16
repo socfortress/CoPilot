@@ -84,7 +84,7 @@ const emit = defineEmits<{
 const GENERAL = "__general__"
 const TITLE_MAX = 200
 
-const { options: customerOptions, loading: customersLoading, load: loadCustomers } = useCustomerOptions()
+const { options: customerOptions, loading: customersLoading, reload: reloadCustomers } = useCustomerOptions()
 const { applyGlobalCustomerPrefill } = useGlobalCustomerFilter()
 
 const form = reactive<{ customer: string; title: string }>({ customer: GENERAL, title: "" })
@@ -111,7 +111,8 @@ function prefill() {
 watch(customerCodes, prefill)
 
 onMounted(async () => {
-	loadCustomers().then(prefill)
+	// Always asked again: the list is the caller's own, and a thread's scope is fixed at creation.
+	reloadCustomers().then(prefill)
 	try {
 		const res = await Api.auth.getMyCustomerAccess()
 		unassigned.value = res.data?.scope === "unassigned"

@@ -30,7 +30,8 @@
 						class="**:text-default **:text-sm [&_*:last-child]:mb-0!"
 						data-testid="talon-v2-text"
 					>
-						<Markdown :source="item.text" class="overflow-hidden" />
+						<!-- No images: a URL in the reply is never fetched by the browser (talon-analyst escapes `![` too). -->
+						<Markdown :source="item.text" no-images class="overflow-hidden" />
 					</div>
 					<TalonToolActivity v-else :item :live="message.status === 'streaming'" />
 				</template>

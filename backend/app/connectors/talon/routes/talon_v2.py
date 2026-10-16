@@ -55,7 +55,8 @@ talon_v2_proxy_router = APIRouter(
     description="Whether the Talon v2 chat is turned on. Reads the setting only; never calls Talon.",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_talon_v2_availability(session: AsyncSession = Depends(get_db)) -> TalonV2AvailabilityResponse:
+async def get_talon_v2_availability(response: Response, session: AsyncSession = Depends(get_db)) -> TalonV2AvailabilityResponse:
+    response.headers.update(service.NO_STORE)
     return await service.get_availability(session)
 
 
@@ -66,9 +67,11 @@ async def get_talon_v2_availability(session: AsyncSession = Depends(get_db)) -> 
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def get_talon_v2_settings(
+    response: Response,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> TalonV2SettingsResponse:
+    response.headers.update(service.NO_STORE)
     return await service.get_v2_settings(current_user, session)
 
 
@@ -81,9 +84,11 @@ async def get_talon_v2_settings(
 async def put_talon_v2_settings(
     body: TalonV2SettingsUpdate,
     request: Request,
+    response: Response,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> TalonV2SettingsResponse:
+    response.headers.update(service.NO_STORE)
     return await service.update_v2_settings(current_user, session, body.v2_enabled, request)
 
 

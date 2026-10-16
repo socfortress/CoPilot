@@ -4,14 +4,7 @@
 			v-if="highlighter"
 			:source
 			:options="mdOptions"
-			:plugins="[
-				[
-					fromHighlighter(highlighter, {
-						themes: codeThemes
-					})
-				],
-				markdownItLinkTargetBlank
-			]"
+			:plugins
 			class="markdown-style scrollbar-styled"
 			:class="{ 'code-bg-transparent': codeBgTransparent }"
 			@click="emit('click', $event)"
@@ -29,13 +22,15 @@ import type { HighlighterGeneric } from "shiki/core"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
 import { computed, onMounted, ref, toRefs } from "vue"
-import { codeThemes, getHighlighter } from "@/utils/highlighter"
+import { codeThemes, getHighlighter, markdownItNoImages, markdownItSafeHighlight } from "@/utils/highlighter"
 import "@/assets/scss/overrides/vue-md-it-override.scss"
 
 const props = defineProps<{
 	source: string
 	codeBgTransparent?: boolean
 	breaks?: boolean
+	/** Render `![x](url)` as a link, never as an image that loads (Talon's v2 chat). */
+	noImages?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -76,7 +71,18 @@ function markdownItLinkTargetBlank(md: MarkdownIt): void {
 	}
 }
 
-const { source, codeBgTransparent, breaks } = toRefs(props)
+const { source, codeBgTransparent, breaks, noImages } = toRefs(props)
+
+const plugins = computed(() => {
+	if (!highlighter.value) return []
+	return [
+		[fromHighlighter(highlighter.value, { themes: codeThemes })],
+		// After Shiki's: a language it hasn't loaded must never blank the document.
+		markdownItSafeHighlight(highlighter.value),
+		markdownItLinkTargetBlank,
+		...(noImages.value ? [markdownItNoImages] : [])
+	]
+})
 
 const mdOptions = computed(() => ({
 	...(breaks.value ? { breaks: true } : {})

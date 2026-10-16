@@ -5,14 +5,20 @@
  * kept for the session and forgotten at logout.
  */
 import { flushPromises, mount } from "@vue/test-utils"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
-import { resetTalonV2Availability, useTalonV2Availability } from "@/composables/useTalonV2Availability"
+import {
+	resetTalonV2Availability,
+	TALON_V2_AVAILABILITY_TIMEOUT_MS,
+	useTalonV2Availability
+} from "@/composables/useTalonV2Availability"
 import AiAnalyst from "../AiAnalyst.vue"
 
 const getAvailability = vi.fn()
 
-vi.mock("@/api", () => ({ default: { talonV2: { getAvailability: () => getAvailability() } } }))
+vi.mock("@/api", () => ({
+	default: { talonV2: { getAvailability: (signal?: AbortSignal) => getAvailability(signal) } }
+}))
 
 function stub(name: string) {
 	return { default: defineComponent({ name, setup: () => () => h("div", { "data-testid": name }) }) }
@@ -46,6 +52,9 @@ describe("aI Analyst chat tab and the Talon v2 setting", () => {
 		resetTalonV2Availability()
 		getAvailability.mockReset()
 	})
+	afterEach(() => {
+		vi.useRealTimers()
+	})
 
 	it("off: the v1 chat, as today", async () => {
 		getAvailability.mockResolvedValue({ data: { success: true, enabled: false } })
@@ -78,6 +87,29 @@ describe("aI Analyst chat tab and the Talon v2 setting", () => {
 		const wrapper = render()
 		await flushPromises()
 		expect(wrapper.find('[data-testid="TalonChatV1"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="TalonChatV2"]').exists()).toBe(false)
+	})
+
+	it("an answer that never comes: the v1 chat after the timeout, and a late answer changes nothing", async () => {
+		vi.useFakeTimers()
+		let answer: (value: unknown) => void = () => {}
+		let signal: AbortSignal | undefined
+		getAvailability.mockImplementation((s?: AbortSignal) => {
+			signal = s
+			return new Promise(resolve => (answer = resolve))
+		})
+		const wrapper = render()
+		await flushPromises()
+		expect(wrapper.find('[data-testid="TalonChatV1"]').exists()).toBe(false)
+
+		await vi.advanceTimersByTimeAsync(TALON_V2_AVAILABILITY_TIMEOUT_MS)
+		await flushPromises()
+		expect(wrapper.find('[data-testid="TalonChatV1"]').exists()).toBe(true)
+		expect(signal?.aborted).toBe(true)
+
+		answer({ data: { success: true, enabled: true } })
+		await flushPromises()
+		expect(wrapper.find('[data-testid="TalonChatV1"]').exists()).toBe(true)
 		expect(wrapper.find('[data-testid="TalonChatV2"]').exists()).toBe(false)
 	})
 

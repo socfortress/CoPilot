@@ -100,13 +100,14 @@ def _url(attributes: Mapping[str, Any], path: str) -> str:
 
 
 async def _read_capped(response: httpx.Response, limit: int) -> Optional[bytes]:
-    """The body, or None when it is longer than ``limit``."""
-    body = b""
+    """The body, or None when it is longer than ``limit``. Collected in a ``bytearray``: appending
+    to ``bytes`` copies the whole body each time, quadratic for a 4 MB transcript page."""
+    body = bytearray()
     async for chunk in response.aiter_bytes():
-        body += chunk
+        body.extend(chunk)
         if len(body) > limit:
             return None
-    return body
+    return bytes(body)
 
 
 async def _shielded_close(*closables: Any) -> None:
