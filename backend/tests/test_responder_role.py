@@ -53,6 +53,10 @@ RESPONDER_ROUTES = frozenset(
         ("GET", "/api/sysmon_config/content/{customer_code}"),
         ("GET", "/api/sysmon_config/{customer_code}"),
         ("POST", "/api/sysmon_config/deploy/{customer_code}"),
+        # Deciding a Talon v2 action proposal (talon-analyst M5-11, D47). The scope only lets a
+        # responder in: who may decide which action is checked by the role in the database.
+        ("POST", "/api/talon/actions/{action_id}/approve"),
+        ("POST", "/api/talon/actions/{action_id}/deny"),
     },
 )
 

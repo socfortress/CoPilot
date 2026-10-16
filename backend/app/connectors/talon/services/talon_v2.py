@@ -46,8 +46,10 @@ from app.connectors.talon.schema.talon_v2 import TalonV2ChatRequest
 from app.connectors.talon.schema.talon_v2 import TalonV2SettingsResponse
 from app.connectors.talon.schema.talon_v2 import TalonV2ThreadCreate
 from app.connectors.talon.schema.talon_v2 import TalonV2ThreadRename
+from app.connectors.talon.services import talon_action_sync
 from app.connectors.talon.services.identity import is_talon_customer_code
 from app.connectors.talon.services.identity import talon_identity_headers
+from app.connectors.talon.utils.approval_tap import ApprovalTappedStream
 from app.connectors.talon.utils.universal import refusal_reason
 from app.connectors.talon.utils.v2_client import TALON_CONNECTOR
 from app.connectors.talon.utils.v2_client import V2Answer
@@ -277,7 +279,11 @@ async def rename_thread(user: User, session: AsyncSession, thread_id: uuid.UUID,
 
 async def archive_thread(user: User, session: AsyncSession, thread_id: uuid.UUID) -> JSONResponse:
     identity = await _identity_then_release(user, session)
-    return relay(await v2_request("DELETE", f"/v2/threads/{thread_id}", identity))
+    answer = await v2_request("DELETE", f"/v2/threads/{thread_id}", identity)
+    if answer.status is not None and 200 <= answer.status < 300:
+        # talon-analyst withdrew the thread's pending proposals with it (M5-11): mirror that.
+        talon_action_sync.resync_thread_later(str(thread_id), user.id)
+    return relay(answer)
 
 
 # ── chat ──────────────────────────────────────────────────────────────────────
@@ -306,4 +312,8 @@ async def chat(user: User, session: AsyncSession, thread_id: uuid.UUID, body: Ta
     opened = await open_v2_stream(f"/v2/chat/{thread_id}", identity, submit_message(thread_id, body))
     if isinstance(opened, V2Answer):
         return refused(opened.status, opened.body)
-    return V2StreamingResponse(opened)
+    # The bytes pass through unchanged; once the stream ends, however it ends, each approval card's
+    # proposal is read back from talon-analyst as this user and mirrored (M5-11).
+    user_id = user.id
+    tapped = ApprovalTappedStream(opened, lambda ids: talon_action_sync.sync_later(ids, user_id))
+    return V2StreamingResponse(tapped)
