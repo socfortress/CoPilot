@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
+from app.ai_analyst.routes.ai_analyst import verify_alert_access
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
@@ -107,13 +108,21 @@ async def get_session_context(
 @talon_router.get(
     "/status",
     response_model=TalonStatusResponse,
-    description="Get the current Talon service status",
+    description="Get the current Talon service status (an admin sees every conversation lane, anyone else only their own)",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_status() -> TalonStatusResponse:
-    """Get the current status of the Talon service."""
-    logger.info("Fetching Talon status")
-    return await get_talon_status()
+async def get_status(
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> TalonStatusResponse:
+    """
+    Get the current status of the Talon service.
+
+    Talon's /status lists every analyst's conversation lane; only an admin gets
+    them all. Anyone else gets their own lane and none of the deployment-wide
+    scheduled tasks.
+    """
+    logger.info(f"User {current_user.id} fetching Talon status")
+    return await get_talon_status(current_user)
 
 
 @talon_router.get(
@@ -132,7 +141,11 @@ async def get_templates() -> TalonTemplatesResponse:
     "/jobs/{alert_id}",
     response_model=TalonJobResponse,
     description="Get the Talon job status and report for a specific alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        # The jobs and reports are the alert's tenant's: the alert row decides who may read them.
+        Depends(verify_alert_access),
+    ],
 )
 async def get_job(alert_id: int, db: AsyncSession = Depends(get_db)) -> TalonJobResponse:
     """Get the job status for a specific alert."""

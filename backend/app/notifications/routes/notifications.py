@@ -30,7 +30,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.incidents.models import Alert
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import enforce_owned_object_access
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.notifications.channels import CHANNEL_REGISTRY
@@ -51,6 +53,7 @@ from app.notifications.schema.notifications import NotificationTemplateListRespo
 from app.notifications.schema.notifications import NotificationTemplateRead
 from app.notifications.schema.notifications import NotificationTemplateResponse
 from app.notifications.schema.notifications import NotificationTemplateUpdate
+from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.schema.notifications import ResendQuotaResponse
 from app.notifications.schema.notifications import ShuffleAppListResponse
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
@@ -632,17 +635,43 @@ async def verify_shuffle_integration_route(
     "/notifications/dispatch",
     response_model=DispatchResponse,
     description=(
-        "Walk the customer's notification routes for the given trigger and "
-        "severity, dispatch each match, and log each outcome. Idempotent — "
+        "Walk the customer's notification routes for an investigation_complete event "
+        "and severity, dispatch each match, and log each outcome. Idempotent — "
         "re-dispatching the same (customer, alert, route, trigger) is a no-op. "
-        "Talon calls this after writing back an investigation report."
+        "Legacy: NanoClaw-era Talon called this after writing back a report; CoPilot "
+        "now emits that notification itself on report write-back. Admin only."
     ),
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # Admin only. talon-analyst never calls this (its SPEC FR-WB-6): CoPilot emits
+    # investigation_complete itself when the report is written back (#1007), with the same
+    # dedupe key. What is left is a way to send a customer-facing message with caller-written
+    # text, which an analyst should not have. A NanoClaw-era Talon calling it as an analyst
+    # gets a 403; its dispatch was best-effort and redundant with the write-back emit.
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def dispatch_route(
     payload: DispatchRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> DispatchResponse:
+    # Every other trigger is CoPilot's own (alert created or assigned, report reviewed, SLA
+    # clocks). Accepting them here let a caller fire them with its own text and take their
+    # dedupe key, so CoPilot's genuine notification for that alert was skipped.
+    if payload.trigger != NotificationTrigger.INVESTIGATION_COMPLETE:
+        raise HTTPException(status_code=400, detail="Only investigation_complete can be dispatched through this route")
+    # The routes are looked up by customer_code, but the full report, IOCs and dedupe key are
+    # keyed by alert_id: the alert must be the body's customer's. Unknown and foreign alerts
+    # read the same (403) for a scoped caller, so there is no existence oracle.
+    alert = await session.get(Alert, payload.alert_id)
+    await enforce_owned_object_access(
+        current_user,
+        alert.customer_code if alert else None,
+        session,
+        subject=f"alert {payload.alert_id}",
+    )
+    if alert is None:
+        raise HTTPException(status_code=404, detail=f"Alert {payload.alert_id} not found")
+    if alert.customer_code != payload.customer_code:
+        raise HTTPException(status_code=400, detail=f"Alert {payload.alert_id} does not belong to customer {payload.customer_code}")
     logger.info(
         f"Notification dispatch requested for customer {payload.customer_code} "
         f"alert {payload.alert_id} trigger {payload.trigger.value} "

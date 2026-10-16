@@ -927,8 +927,15 @@ class AiAnalystJob(SQLModel, table=True):
     reports: list["AiAnalystReport"] = Relationship(back_populates="job")
 
 
+#: One report per job. Talon writes a job's report once (it checks before every attempt), so
+#: a second one is a retried POST whose answer was lost; the index makes CoPilot refuse it
+#: (409) rather than file a duplicate. Migration ``a5b1c0d2e3f4``.
+REPORT_JOB_UNIQUE = "uq_ai_analyst_report_job_id"
+
+
 class AiAnalystReport(SQLModel, table=True):
     __tablename__ = "ai_analyst_report"
+    __table_args__ = (UniqueConstraint("job_id", name=REPORT_JOB_UNIQUE),)
 
     id: Optional[int] = Field(primary_key=True)
     job_id: str = Field(foreign_key="ai_analyst_job.id", max_length=64, nullable=False, index=True)
@@ -1024,7 +1031,10 @@ class AiAnalystPalaceLesson(SQLModel, table=True):
     # delete_drawer later when the durability sweeper expires one-offs.
     # Nullable because legacy rows predate this column and because the
     # drainer may fail to capture it if NanoClaw returns a malformed body.
-    drawer_id: Optional[str] = Field(default=None, max_length=64, index=True)
+    # 255, not 64: MemPalace ids are `drawer_<wing>_<room>_<24 hex>` and the
+    # wing is the customer code, so a long code overflowed 64 (migration
+    # `a5b1c0d2e3f5`).
+    drawer_id: Optional[str] = Field(default=None, max_length=255, index=True)
     ingested_at: Optional[datetime] = Field(default=None)
     # Timestamp of the sweeper's delete_drawer call. Set when status flips
     # from 'ingested' → 'expired' so audit queries can tell "never swept"
