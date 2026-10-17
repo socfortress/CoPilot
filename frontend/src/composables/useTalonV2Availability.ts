@@ -11,8 +11,13 @@ import Api from "@/api"
  * `TALON_V2_AVAILABILITY_TIMEOUT_MS` counts as failed. `settled` says the question was answered
  * either way, so the page doesn't flash one chat before the other. Cleared on logout
  * (`stores/auth.ts:setLogout`): the next user on a shared machine asks again.
+ *
+ * `runView` (CoPilot M5-9a's `run_view`): the setting is on and the "Talon Phoenix" connector holds
+ * a URL and a key, so an investigation's run timeline may be offered. Read from the same answer,
+ * kept and cleared with it; false whenever `available` is.
  */
 const enabled = ref(false)
+const runView = ref(false)
 const loaded = ref(false)
 const failed = ref(false)
 let inflight: Promise<void> | null = null
@@ -35,6 +40,7 @@ function fetchAvailability(): Promise<void> {
 		generation += 1
 		controller.abort()
 		enabled.value = false
+		runView.value = false
 		failed.value = true
 		inflight = null
 	}
@@ -45,12 +51,14 @@ function fetchAvailability(): Promise<void> {
 		.then(res => {
 			if (asked !== generation) return
 			enabled.value = res.data?.enabled === true
+			runView.value = enabled.value && res.data?.run_view === true
 			loaded.value = true
 		})
 		.catch(() => {
 			// Silent: the v1 chat stays, which is also right when the backend predates the route.
 			if (asked !== generation) return
 			enabled.value = false
+			runView.value = false
 			failed.value = true
 		})
 		.finally(() => {
@@ -65,6 +73,7 @@ function fetchAvailability(): Promise<void> {
 export function resetTalonV2Availability() {
 	generation += 1
 	enabled.value = false
+	runView.value = false
 	loaded.value = false
 	failed.value = false
 	inflight = null
@@ -77,6 +86,7 @@ export function useTalonV2Availability() {
 
 	return {
 		available: computed(() => enabled.value),
+		runView: computed(() => runView.value),
 		loaded: computed(() => loaded.value),
 		settled: computed(() => loaded.value || failed.value),
 		refresh: fetchAvailability

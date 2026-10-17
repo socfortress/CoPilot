@@ -10,8 +10,8 @@ analysts (a responder's token carries ``analyst``). In order, on every request:
    talon-analyst serves (``talon_role``). An unknown job and a refused one answer the same 404, so
    a job id tells nothing. Then the request's session is closed: Phoenix may take seconds.
 2. **The project is ``talon-<job.customer_code>``** and only when the code passes
-   talon-analyst's ``project_for`` rule (``PROJECT_CUSTOMER``); otherwise 409. Never
-   ``talon-chat``, and nothing from the request names it. A Phoenix viewer key reads every
+   talon-analyst's ``project_for`` rule (``PROJECT_CUSTOMER``, and never ``chat`` in any letter
+   case); otherwise 409. Never ``talon-chat``, and nothing from the request names it. A Phoenix viewer key reads every
    project, so this is the only thing that keeps one customer's traces from another's.
 3. **The query:** ``attribute=job_id:<json>`` and ``attribute=customer_code:<json>`` (Phoenix
    JSON-decodes the value, so both are JSON-quoted), a window from the job's ``created_at`` minus
@@ -65,13 +65,19 @@ from app.incidents.routes import db_operations as incident_routes
 from app.middleware.customer_access import customer_access_handler
 from app.time_utils import now_utc
 
-#: talon-analyst's ``tracing.project_for`` rule, mirrored: a customer's spans go to
-#: ``talon-<code>`` only when the code matches this; anything else goes to the shared ``talon-chat``
-#: project, which CoPilot never reads (FR-PHX-2). talon-analyst M5-9t is widening its rule to the
-#: customer grammar (dotted codes, ``acme.io``); change this one constant to follow it then, and no
-#: earlier (decision F: until then a dotted code's run view is refused). Matched with ``fullmatch``,
-#: stricter than ``re.match`` with ``$`` (which lets a trailing newline through).
-PROJECT_CUSTOMER = re.compile(r"[A-Za-z0-9_-]{1,64}")
+#: talon-analyst's ``tracing.project_for`` rule (M5-9t, its SPEC §5.4 "The project rule"), mirrored:
+#: a customer's spans go to ``talon-<code>`` only when the code is a customer code by
+#: ``config.is_customer_code`` (1 to ``CUSTOMER_CODE_MAX`` = 64 letters, digits, ``.``, ``_`` and
+#: ``-``, starting with a letter or digit, a full match, and never the chat-memory wing) and isn't
+#: ``chat`` in any letter case. Anything else goes to the shared ``talon-chat`` project, which CoPilot
+#: never reads (FR-PHX-2). So ``acme.io`` is ``talon-acme.io``; ``_x``, ``-x``, ``Chat`` and ``CHAT``
+#: are refused (409), as is a trailing newline: ``fullmatch`` is stricter than ``re.match`` with ``$``.
+PROJECT_CUSTOMER = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
+#: talon-analyst ``config.CHAT_MEMORY_WING`` (``reserved_wing``: stripped, any letter case). The
+#: grammar already refuses its spaces; checked as well, as talon-analyst does.
+CHAT_MEMORY_WING = "talon chat memory"
+#: The code whose project would be the shared one (``project_for`` compares it with ``casefold``).
+CHAT_CODE = "chat"
 CHAT_PROJECT = "talon-chat"
 
 FAILED = "Phoenix request failed"
@@ -95,11 +101,14 @@ MAX_CURSOR = 1024
 
 
 def project_for(customer_code: object) -> Optional[str]:
-    """The customer's own Phoenix project, or None when talon-analyst wouldn't route its spans there."""
-    if isinstance(customer_code, str) and PROJECT_CUSTOMER.fullmatch(customer_code):
-        project = f"talon-{customer_code}"
-        return None if project == CHAT_PROJECT else project
-    return None
+    """The customer's own Phoenix project, or None when talon-analyst wouldn't route its spans there
+    (it would send them to ``talon-chat``, which is never read)."""
+    if not isinstance(customer_code, str) or not PROJECT_CUSTOMER.fullmatch(customer_code):
+        return None
+    if customer_code.strip().casefold() == CHAT_MEMORY_WING or customer_code.casefold() == CHAT_CODE:
+        return None
+    project = f"talon-{customer_code}"
+    return None if project == CHAT_PROJECT else project
 
 
 def answer(status: int, content: Dict[str, Any]) -> JSONResponse:

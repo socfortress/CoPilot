@@ -8,6 +8,7 @@
 			</n-tag>
 			<n-tag v-if="archived" size="small" :bordered="false" type="warning">Archived</n-tag>
 			<span class="grow" />
+			<TalonThreadCost v-if="thread.accessible" :thread-id="thread.id" :refresh-key="completedTurns" />
 			<TalonContextBadge :tokens="contextTokens" />
 		</div>
 
@@ -127,6 +128,7 @@ import {
 	newUserMessage,
 	TALON_V2_FAILED
 } from "@/api/talonV2Parser"
+import TalonThreadCost from "@/components/aiAnalyst/usage/TalonThreadCost.vue"
 import Icon from "@/components/common/Icon.vue"
 import { cardsClock, claimResume, knownAction } from "./actionCards"
 import { blocksThread, openApprovals } from "./approvals"
@@ -156,6 +158,8 @@ const loadingOlder = ref(false)
 const loadError = ref<string | null>(null)
 const notice = ref<ThreadNotice | null>(null)
 const contextTokens = ref<number | null>(thread.context_tokens ?? null)
+// Bumped when a turn completes, so the header's thread cost is read again.
+const completedTurns = ref(0)
 const input = ref("")
 const streaming = ref(false)
 const scrollbar = ref<ScrollbarInst | null>(null)
@@ -346,7 +350,10 @@ async function runTurn(text: string | null) {
 		endAssistantMessage(reply, result.kind === "closed" ? "closed" : result.kind)
 		const tokens = reply.usage?.context_tokens
 		if (typeof tokens === "number") contextTokens.value = tokens
-		if (reply.status === "completed") emit("activity", { id: threadId, context_tokens: contextTokens.value })
+		if (reply.status === "completed") {
+			completedTurns.value += 1
+			emit("activity", { id: threadId, context_tokens: contextTokens.value })
+		}
 	}
 
 	try {

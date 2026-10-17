@@ -7,8 +7,9 @@ Pinned here:
 - authorization from CoPilot's own job and alert rows on every request, before any Phoenix call:
   another customer, an alert outside the caller's tags, an unknown job or a job whose alert is
   another customer's are refused with no Phoenix request at all;
-- the project: ``talon-<code>`` only for a code talon-analyst's ``project_for`` routes there;
-  ``talon-chat`` and dotted codes are never queried (409);
+- the project: ``talon-<code>`` only for a code talon-analyst's ``project_for`` routes there
+  (M5-9t: the customer grammar, so a dotted code has its own project); ``talon-chat``, and a code
+  talon-analyst sends there (``chat`` in any letter case, ``_x``), are never queried (409);
 - the query: JSON-quoted ``job_id`` and ``customer_code`` filters, the time window, the sort, the
   page size; paging by cursor, at most 10 pages, ``truncated``; the 16 MB page cap;
 - every span re-checked (another job's or customer's is dropped and counted);
@@ -169,12 +170,23 @@ def test_with_the_setting_off_the_run_view_is_not_found(enabled):
 # ── the project ───────────────────────────────────────────────────────────────
 
 
-@pytest.mark.parametrize("job", [JOB_DOTTED, JOB_CHAT])
-def test_talon_chat_and_dotted_codes_are_never_queried(job):
+def test_talon_chat_is_never_queried():
     phoenix = Phoenix(projects=(f"talon-{ACME}", "talon-chat", f"talon-{DOTTED}"))
-    response, ctx = call(get_timeline("ana", job), phoenix=phoenix)
-    assert response.status_code == 409 and response.headers["cache-control"] == "no-store"
+    response, ctx = call(get_timeline("ana", JOB_CHAT), phoenix=phoenix)
+    assert (response.status_code, response.json()) == (409, {"detail": talon_runs.NO_PROJECT})
+    assert response.headers["cache-control"] == "no-store"
     assert ctx.phoenix.requests == []
+
+
+def test_a_dotted_code_is_read_from_its_own_project():
+    # talon-analyst M5-9t: ``project_for`` follows the customer grammar, so ``acme.io`` traces to
+    # ``talon-acme.io`` (decision F's refusal is over).
+    phoenix = Phoenix(projects=(f"talon-{ACME}", "talon-chat", f"talon-{DOTTED}"), pages=[[span(JOB_DOTTED, DOTTED)]])
+    response, ctx = call(get_timeline("ana", JOB_DOTTED), phoenix=phoenix)
+    assert response.status_code == 200
+    assert (response.json()["customer_code"], len(response.json()["spans"])) == (DOTTED, 1)
+    (spans_request,) = ctx.phoenix.span_requests()
+    assert spans_request.url.path == f"/v1/projects/talon-{DOTTED}/spans"
 
 
 @pytest.mark.parametrize(
@@ -182,13 +194,31 @@ def test_talon_chat_and_dotted_codes_are_never_queried(job):
     [
         ("ACME", "talon-ACME"),
         ("lab_canary-2", "talon-lab_canary-2"),
-        ("acme.io", None),  # until talon-analyst M5-9t routes dotted codes (decision F)
+        ("acme.io", "talon-acme.io"),  # talon-analyst M5-9t routes dotted codes
+        ("a.b_c-d", "talon-a.b_c-d"),
+        ("9lives", "talon-9lives"),
+        ("a" * 64, "talon-" + "a" * 64),
         ("chat", None),  # its spans would share the chat project
+        ("Chat", None),  # chat in any letter case goes to talon-chat
+        ("CHAT", None),
+        ("chat.io", "talon-chat.io"),
+        ("_x", None),  # the grammar starts with a letter or digit
+        ("-x", None),
+        (".x", None),
         ("acme\n", None),  # re.match with $ would let this through
+        (" acme", None),
+        ("acme io", None),
+        ("talon chat memory", None),  # the chat-memory wing
+        ("TALON CHAT MEMORY", None),
         ("", None),
         ("a" * 65, None),
         ("a/b", None),
+        ("a?b", None),
+        ("a#b", None),
+        ("acm\u00e9", None),  # ASCII only
+        ("acme\u200b", None),  # a zero-width space
         (None, None),
+        (7, None),
     ],
 )
 def test_the_project_follows_talon_analysts_project_for_rule(code, project):
@@ -736,7 +766,8 @@ def test_the_connector_check_without_a_key_or_unreachable_fails_without_echoing(
 
 
 def test_the_project_rule_is_one_constant():
-    assert talon_runs.PROJECT_CUSTOMER.pattern == r"[A-Za-z0-9_-]{1,64}"
+    # talon-analyst ``config._CUSTOMER_CODE`` with ``CUSTOMER_CODE_MAX`` (64), as ``project_for`` uses it.
+    assert talon_runs.PROJECT_CUSTOMER.pattern == r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
     assert CHAT == "chat" and talon_runs.project_for(CHAT) is None
 
 
