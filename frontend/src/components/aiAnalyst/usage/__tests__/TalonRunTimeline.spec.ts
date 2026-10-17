@@ -121,6 +121,36 @@ describe("talon run timeline", () => {
 		expect(wrapper.get('[data-testid="talon-run-dropped"]').text()).toContain("2 span(s) left out")
 	})
 
+	it("spans whose times don't parse are added to the left-out count", async () => {
+		const bad = span("000000000000000f", { start_time: "not a time" })
+		getRunTimeline.mockResolvedValue({ data: timeline([...SPANS, bad], { dropped: 1 }) })
+		const wrapper = render()
+		await flushPromises()
+		expect(wrapper.findAll('[data-testid="talon-run-span"]')).toHaveLength(3)
+		expect(wrapper.get('[data-testid="talon-run-dropped"]').text()).toContain("2 span(s) left out")
+	})
+
+	it("untrusted labels are isolated in <bdi>, and a deep tree's indent stops at 12 levels", async () => {
+		const id = (i: number) => i.toString(16).padStart(16, "0")
+		const link = (i: number) =>
+			span(id(i), { parent_id: i ? id(i - 1) : null, tool: i === 15 ? "siem_search" : null })
+		const chain = Array.from({ length: 16 }, (_, i) => link(i))
+		getRunTimeline.mockResolvedValue({ data: timeline(chain) })
+		const wrapper = render()
+		await flushPromises()
+		const rows = wrapper.findAll('[data-testid="talon-run-span"]')
+		expect(rows.at(-1)?.attributes("data-depth")).toBe("15")
+		const indent = (i: number) => rows[i].get("div").attributes("style")
+		expect(indent(12)).toContain("padding-left: 168px")
+		expect(indent(15)).toContain("padding-left: 168px")
+		expect(indent(3)).toContain("padding-left: 42px")
+		expect(rows[0].get('[data-testid="talon-run-span-name"] bdi').text()).toBe("invoke_agent analyst-investigation")
+		expect(rows[15].get('[data-testid="talon-run-span-subject"] bdi').text()).toBe("siem_search")
+		expect(rows[15].get('[data-testid="talon-run-span-name"]').attributes("title")).toBe(
+			"invoke_agent analyst-investigation"
+		)
+	})
+
 	it("no trace data: the empty state", async () => {
 		getRunTimeline.mockResolvedValue({ data: timeline([], { note: "no trace data" }) })
 		const wrapper = render()

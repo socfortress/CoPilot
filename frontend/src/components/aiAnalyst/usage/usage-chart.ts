@@ -4,8 +4,9 @@
 // every other grouping is horizontal bars, the costliest at the top, at most `USAGE_CHART_MAX_BARS`
 // (the table beside it lists every group). Bars are <= 24px with a 4px rounded data end; grid and
 // axes are hairline and recessive; a per-bar tooltip gives the group and its cost **exactly as the
-// API's string**. The amounts are parsed with `Number()` only to size the bars: nothing drawn from
-// the parsed value is ever shown as a figure. The hue is the SOC charts' amber, stepped per mode
+// API's string**. The amounts are parsed with `Number()` only to size the bars, so the value axis
+// carries no labels (a tick would be a float-derived dollar figure); its hairline grid stays for
+// reading lengths, and the tooltip and the table give the exact amounts. The hue is the SOC charts' amber, stepped per mode
 // and validated with the dataviz palette checks (light #A87400 on #FCFCFB, dark #C98500 on
 // #26282D: all pass).
 //
@@ -100,7 +101,8 @@ export function buildUsageChartOption(
 		axisLine: { show: false },
 		axisTick: { show: false },
 		splitLine: { lineStyle: { color: hairline, width: 1, type: "solid" as const } },
-		axisLabel: { color: muted, fontFamily: font, fontSize: 11, formatter: (value: number) => `$${value}` }
+		// No tick labels: they would be figures made from parsed floats (the tooltip and table have the strings).
+		axisLabel: { show: false }
 	}
 
 	return {

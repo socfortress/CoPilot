@@ -10,6 +10,12 @@
 		@update:show="value => !value && close()"
 	>
 		<div v-if="step === 'edit'" class="flex flex-col gap-4">
+			<p v-if="reading" class="text-secondary text-xs" data-testid="talon-budget-reading">
+				Reading the current budgets...
+			</p>
+			<n-alert v-if="readError" type="error" :bordered="false" size="small" data-testid="talon-budget-read-error">
+				{{ readError }}
+			</n-alert>
 			<div
 				v-for="win of WINDOWS"
 				:key="win.key"
@@ -92,13 +98,15 @@
 </template>
 
 <script setup lang="ts">
-import type { BudgetWindowForm } from "./budgets"
 // The Budgets tab's edit dialog: each window "Default", "Unlimited" or an amount (a positive decimal
 // string, checked as CoPilot checks it), then a confirmation naming both, then
-// `PUT /api/talon/v2/budgets/{code}` with both windows (the PUT replaces both).
+// `PUT /api/talon/v2/budgets/{code}` with both windows (the PUT replaces both). Opening it re-reads
+// that customer's budgets (`GET /budgets?customer_code=`) and starts from them, so a change another
+// admin made since the table loaded is what is edited, never silently replaced; Save waits for it.
+import type { BudgetWindowForm } from "./budgets"
 import type { TalonBudgetEntry, TalonCustomerBudget } from "@/types/talonUsage"
 import { NAlert, NButton, NInput, NModal, NRadio, NRadioGroup } from "naive-ui"
-import { computed, reactive, ref, watch } from "vue"
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import { talonFailure } from "@/api/endpoints/talonUsage"
 import { budgetPayload, describeWindow, windowFormFromEntry, windowProblem } from "./budgets"
@@ -112,6 +120,8 @@ const props = defineProps<{
 const emit = defineEmits<{
 	(e: "close"): void
 	(e: "saved", value: TalonCustomerBudget): void
+	/** The customer's budgets as just re-read, for the table. */
+	(e: "loaded", value: TalonCustomerBudget): void
 }>()
 
 type WindowKey = "daily" | "monthly"
@@ -127,9 +137,12 @@ const forms = reactive<Record<WindowKey, BudgetWindowForm>>({
 const step = ref<"edit" | "confirm">("edit")
 const saving = ref(false)
 const error = ref<string | null>(null)
+const reading = ref(false)
+const readError = ref<string | null>(null)
+let readController: AbortController | null = null
 
 const problems = computed(() => ({ daily: windowProblem(forms.daily), monthly: windowProblem(forms.monthly) }))
-const invalid = computed(() => !!problems.value.daily || !!problems.value.monthly)
+const invalid = computed(() => !!problems.value.daily || !!problems.value.monthly || reading.value || !!readError.value)
 
 function reset(entry: { daily?: TalonBudgetEntry; monthly?: TalonBudgetEntry } | null) {
 	Object.assign(forms.daily, windowFormFromEntry(entry?.daily))
@@ -139,13 +152,38 @@ function reset(entry: { daily?: TalonBudgetEntry; monthly?: TalonBudgetEntry } |
 	saving.value = false
 }
 
+/** The customer's budgets now, as the form's starting point. */
+async function reread(code: string) {
+	readController?.abort()
+	const own = new AbortController()
+	readController = own
+	reading.value = true
+	readError.value = null
+	try {
+		const res = await Api.talonUsage.getBudgets(code, own.signal)
+		if (readController !== own) return
+		const fresh = res.data?.customers?.find(c => c.customer_code === code) ?? null
+		reset(fresh)
+		if (fresh) emit("loaded", fresh)
+	} catch (err) {
+		if (readController === own && !own.signal.aborted) {
+			readError.value = `The current budgets couldn't be read: ${talonFailure(err).detail}`
+		}
+	} finally {
+		if (readController === own) reading.value = false
+	}
+}
+
 watch(
 	() => [props.show, props.customerCode] as const,
-	([show]) => {
-		if (show) reset(props.current)
+	([show, code]) => {
+		if (!show) return
+		reset(props.current)
+		reread(code)
 	},
 	{ immediate: true }
 )
+onBeforeUnmount(() => readController?.abort())
 
 function close() {
 	if (!saving.value) emit("close")

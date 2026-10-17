@@ -41,6 +41,9 @@ describe("talon usage tab", () => {
 		setActivePinia(createPinia())
 		getUsage.mockReset()
 	})
+	afterEach(() => {
+		vi.useRealTimers()
+	})
 
 	it("asks for the last 30 UTC days by customer, with the global filter's customer", async () => {
 		useCustomerFilterStore().setSelected(["ACME"])
@@ -130,6 +133,7 @@ describe("talon usage tab", () => {
 	})
 
 	it("a range over 366 days is refused here, with nothing asked", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
 		signInAs(AuthUserRole.Admin)
 		getUsage.mockResolvedValue({ data: usageReport() })
 		const wrapper = render()
@@ -138,18 +142,49 @@ describe("talon usage tab", () => {
 		const picker = wrapper.findComponent({ name: "DatePicker" })
 		picker.vm.$emit("update:formatted-value", ["2025-01-01", "2026-10-16"])
 		await nextTick()
-		await flushPromises()
 		expect(wrapper.get('[data-testid="talon-usage-range-problem"]').text()).toBe("At most 366 days.")
+		expect(wrapper.get('[data-testid="talon-usage-refresh"]').attributes("disabled")).toBeDefined()
+		await vi.advanceTimersByTimeAsync(1000)
+		await flushPromises()
 		expect(getUsage).not.toHaveBeenCalled()
 	})
 
-	it("changing the grouping asks again", async () => {
+	it("filter changes are debounced: quick changes make one query, once they settle", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
 		signInAs(AuthUserRole.Admin)
 		getUsage.mockResolvedValue({ data: usageReport() })
 		const wrapper = render()
 		await flushPromises()
-		wrapper.findAllComponents({ name: "Select" })[0].vm.$emit("update:value", "model")
+		expect(getUsage).toHaveBeenCalledTimes(1) // the first load is at once
+		const select = wrapper.findAllComponents({ name: "Select" })[0]
+		select.vm.$emit("update:value", "model")
+		await nextTick()
+		await vi.advanceTimersByTimeAsync(100)
+		select.vm.$emit("update:value", "stage")
+		await nextTick()
+		await vi.advanceTimersByTimeAsync(200)
+		expect(getUsage).toHaveBeenCalledTimes(1) // still settling
+		await vi.advanceTimersByTimeAsync(150)
 		await flushPromises()
-		expect(getUsage.mock.calls.at(-1)?.[0].group_by).toBe("model")
+		expect(getUsage).toHaveBeenCalledTimes(2)
+		expect(getUsage.mock.calls[1][0].group_by).toBe("stage")
+	})
+
+	it("refresh is disabled while a query is loading", async () => {
+		signInAs(AuthUserRole.Admin)
+		let answer: (value: unknown) => void = () => {}
+		getUsage.mockReturnValue(new Promise(resolve => (answer = resolve)))
+		const wrapper = render()
+		await flushPromises()
+		const refresh = () => wrapper.get('[data-testid="talon-usage-refresh"]')
+		expect(refresh().attributes("disabled")).toBeDefined()
+		await refresh().trigger("click")
+		expect(getUsage).toHaveBeenCalledTimes(1)
+		answer({ data: usageReport() })
+		await flushPromises()
+		expect(refresh().attributes("disabled")).toBeUndefined()
+		getUsage.mockResolvedValue({ data: usageReport() })
+		await refresh().trigger("click")
+		expect(getUsage).toHaveBeenCalledTimes(2)
 	})
 })

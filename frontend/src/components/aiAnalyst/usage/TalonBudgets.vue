@@ -50,7 +50,9 @@
 							:data-customer="customerBudget.customer_code"
 							:data-window="win.name"
 						>
-							<td v-if="index === 0" rowspan="2" class="font-mono">{{ customerBudget.customer_code }}</td>
+							<td v-if="index === 0" rowspan="2" class="font-mono break-all">
+								<bdi>{{ customerBudget.customer_code }}</bdi>
+							</td>
 							<td>{{ win.label }}</td>
 							<td class="font-mono" data-testid="talon-budget-limit">{{ limitText(win.entry) }}</td>
 							<td>{{ SOURCE_LABELS[win.entry.source] ?? win.entry.source }}</td>
@@ -115,6 +117,7 @@
 			:current="currentOf(editing)"
 			@close="editing = null"
 			@saved="saved"
+			@loaded="replaceRow"
 		/>
 	</div>
 </template>
@@ -131,7 +134,7 @@ import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref } from "v
 import Api from "@/api"
 import { talonFailure } from "@/api/endpoints/talonUsage"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
-import { limitText, SOURCE_LABELS } from "./budgets"
+import { limitText, SOURCE_LABELS, warnAtPercent } from "./budgets"
 import TalonBudgetDialog from "./TalonBudgetDialog.vue"
 
 const TalonBudgetState = defineComponent({
@@ -154,10 +157,7 @@ const editing = ref<string | null>(null)
 const savedNote = ref<string | null>(null)
 let controller: AbortController | null = null
 
-const warnAt = computed(() => {
-	const share = Number(budgets.value?.warn_at ?? "0.8")
-	return Number.isFinite(share) ? `${Math.round(share * 100)}%` : "80%"
-})
+const warnAt = computed(() => warnAtPercent(budgets.value?.warn_at))
 
 function windowsOf(entry: TalonCustomerBudget) {
 	return [
@@ -175,13 +175,18 @@ function edit(code: string) {
 	editing.value = code
 }
 
-function saved(report: TalonCustomerBudget) {
+/** Put one customer's budgets in the table, in code order. */
+function replaceRow(report: TalonCustomerBudget) {
 	if (budgets.value) {
 		const others = budgets.value.customers.filter(c => c.customer_code !== report.customer_code)
 		budgets.value.customers = [...others, report].sort((a, b) =>
 			a.customer_code < b.customer_code ? -1 : a.customer_code > b.customer_code ? 1 : 0
 		)
 	}
+}
+
+function saved(report: TalonCustomerBudget) {
+	replaceRow(report)
 	savedNote.value = `Budgets of ${report.customer_code} saved.`
 	editing.value = null
 }

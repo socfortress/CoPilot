@@ -67,11 +67,15 @@
 					</thead>
 					<tbody>
 						<tr v-for="(run, index) of usage.runs" :key="index" data-testid="talon-job-cost-run">
-							<td>{{ run.stage ?? "—" }}</td>
 							<td>
-								<span>{{ run.model ?? "—" }}</span>
+								<bdi>{{ run.stage ?? "—" }}</bdi>
+							</td>
+							<td>
+								<bdi class="break-all">{{ run.model ?? "—" }}</bdi>
 								<span v-if="run.provider" class="text-secondary ml-1 text-xs">
-									({{ run.provider }})
+									(
+									<bdi>{{ run.provider }}</bdi>
+									)
 								</span>
 							</td>
 							<td class="font-mono text-xs">

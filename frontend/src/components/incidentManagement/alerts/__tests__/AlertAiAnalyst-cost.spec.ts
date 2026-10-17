@@ -8,6 +8,8 @@ import { createPinia, setActivePinia } from "pinia"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h, nextTick } from "vue"
 import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth"
 import AlertAiAnalyst from "../AlertAiAnalyst.vue"
 
 const getAvailability = vi.fn()
@@ -88,11 +90,16 @@ async function settle() {
 	await flushPromises()
 }
 
+function signInAs(role: AuthUserRole) {
+	useAuthStore().user = { access_token: "t", username: "u", email: "", role }
+}
+
 enableAutoUnmount(afterEach)
 
 describe("alert AI analyst cost and run", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		signInAs(AuthUserRole.Analyst)
 		resetTalonV2Availability()
 		getAvailability.mockReset()
 		getJob.mockReset().mockResolvedValue({ data: { success: true, data: JOB } })
@@ -124,5 +131,25 @@ describe("alert AI analyst cost and run", () => {
 		await nextTick()
 		await settle()
 		expect(wrapper.get('[data-testid="cost-stub"]').attributes("data-job-id")).toBe("copilot-inv-840-1")
+	})
+
+	it.each([AuthUserRole.CustomerUser, AuthUserRole.Scheduler])(
+		"a role v2 doesn't serve (%s) never asks for availability",
+		async role => {
+			signInAs(role)
+			getAvailability.mockResolvedValue({ data: { success: true, enabled: true } })
+			const wrapper = render()
+			await settle()
+			expect(getAvailability).not.toHaveBeenCalled()
+			expect(wrapper.findAll("[data-pane]").map(p => p.attributes("data-pane"))).toEqual(["report", "actions"])
+		}
+	)
+
+	it("an alert with no report never asks for availability", async () => {
+		getJob.mockResolvedValue({ data: { success: true, data: { ...JOB, reports: [] } } })
+		getAvailability.mockResolvedValue({ data: { success: true, enabled: true } })
+		render()
+		await settle()
+		expect(getAvailability).not.toHaveBeenCalled()
 	})
 })

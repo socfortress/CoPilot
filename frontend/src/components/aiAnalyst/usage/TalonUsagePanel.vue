@@ -39,7 +39,7 @@
 			<n-button
 				size="small"
 				:loading
-				:disabled="!!rangeProblem"
+				:disabled="!!rangeProblem || loading"
 				data-testid="talon-usage-refresh"
 				@click="load()"
 			>
@@ -90,7 +90,13 @@
 					</thead>
 					<tbody>
 						<tr v-for="(group, index) of report.groups" :key="index" data-testid="talon-usage-row">
-							<td data-testid="talon-usage-group">{{ usageGroupLabel(group, report.group_by) }}</td>
+							<td
+								class="max-w-80 break-all"
+								:title="usageGroupLabel(group, report.group_by)"
+								data-testid="talon-usage-group"
+							>
+								<bdi>{{ usageGroupLabel(group, report.group_by) }}</bdi>
+							</td>
 							<td class="text-right font-mono">{{ formatCount(group.responses) }}</td>
 							<td class="text-right font-mono">{{ formatCount(group.input_tokens) }}</td>
 							<td class="text-right font-mono">{{ formatCount(group.output_tokens) }}</td>
@@ -147,8 +153,9 @@
 // emptied, it means all of the caller's customers.
 import type { TalonFailure } from "@/api/endpoints/talonUsage"
 import type { TalonUsageGroupBy, TalonUsageReport } from "@/types/talonUsage"
+import { watchDebounced } from "@vueuse/core"
 import { NAlert, NButton, NDatePicker, NEmpty, NSelect, NSpin, NTable, NTag } from "naive-ui"
-import { computed, onBeforeUnmount, ref, watch } from "vue"
+import { computed, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import { talonFailure } from "@/api/endpoints/talonUsage"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
@@ -208,7 +215,14 @@ async function load() {
 	}
 }
 
-watch([() => range.value?.join(","), groupBy, customer], () => load(), { immediate: true })
+/** How long a filter must hold still before it is asked for (a usage query is heavy upstream: 2 at once per process). */
+const USAGE_QUERY_DEBOUNCE_MS = 300
+
+// The first load at once; a change of range, grouping or customer once it has settled.
+load()
+watchDebounced([() => range.value?.join(","), groupBy, customer], () => load(), {
+	debounce: USAGE_QUERY_DEBOUNCE_MS
+})
 
 // The global filter wins when it changes; an emptied selection means every customer the caller has.
 onGlobalCustomerFilterChange(codes => {

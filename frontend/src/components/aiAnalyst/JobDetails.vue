@@ -95,7 +95,7 @@ import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
-import { useTalonV2Availability } from "@/composables/useTalonV2Availability"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -116,7 +116,7 @@ const dFormats = useSettingsStore().dateFormat
 
 // Loaded only with the "Talon v2" setting on, and only on the job page.
 const TalonJobCostRun = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonJobCostRun.vue"))
-const { available: talonV2Available } = useTalonV2Availability()
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(() => !props.embedded)
 const timelineRef = useTemplateRef("timelineRef")
 const { width: timelineWidth } = useElementSize(timelineRef)
 

@@ -6,6 +6,8 @@ import type { TalonTimelineSpan } from "@/types/talonUsage"
 
 /** The narrowest bar, in percent of the axis, so an instant span is still seen. */
 export const TIMELINE_MIN_WIDTH_PCT = 0.5
+/** The deepest indent drawn (deeper spans keep their depth, drawn at this one), so a deep tree stays readable. */
+export const TIMELINE_MAX_INDENT = 12
 
 export interface TimelineRow {
 	span: TalonTimelineSpan
@@ -24,6 +26,8 @@ export interface TimelineLane {
 
 export interface TimelineLayout {
 	lanes: TimelineLane[]
+	/** Spans whose start or end time doesn't parse: not placed, counted for the `dropped` note. */
+	unreadable: number
 	/** The axis: the earliest start and the latest end, in milliseconds since the epoch. */
 	startMs: number
 	endMs: number
@@ -48,7 +52,8 @@ function byStart(a: TalonTimelineSpan, b: TalonTimelineSpan): number {
 
 export function layoutTimeline(spans: TalonTimelineSpan[]): TimelineLayout {
 	const usable = spans.filter(s => Number.isFinite(timeMs(s.start_time)) && Number.isFinite(timeMs(s.end_time)))
-	if (!usable.length) return { lanes: [], startMs: 0, endMs: 0 }
+	const unreadable = spans.length - usable.length
+	if (!usable.length) return { lanes: [], unreadable, startMs: 0, endMs: 0 }
 	const startMs = Math.min(...usable.map(s => timeMs(s.start_time)))
 	const endMs = Math.max(...usable.map(s => Math.max(timeMs(s.end_time), timeMs(s.start_time))))
 	const total = Math.max(endMs - startMs, 1)
@@ -83,10 +88,12 @@ export function layoutTimeline(spans: TalonTimelineSpan[]): TimelineLayout {
 				if (placed.has(span.span_id)) return
 				placed.add(span.span_id)
 				const start = timeMs(span.start_time)
-				const end = Math.max(timeMs(span.end_time), start)
-				const leftPct = round(((start - startMs) / total) * 100)
+				// A span that ends before it starts is taken as an instant.
+				const duration = Math.max(timeMs(span.end_time) - start, 0)
+				// Never so far right that the narrowest bar has no room: an instant at the axis end is still seen.
+				const leftPct = round(Math.min(((start - startMs) / total) * 100, 100 - TIMELINE_MIN_WIDTH_PCT))
 				const widthPct = round(
-					Math.min(Math.max(((end - start) / total) * 100, TIMELINE_MIN_WIDTH_PCT), 100 - leftPct)
+					Math.min(Math.max((duration / total) * 100, TIMELINE_MIN_WIDTH_PCT), 100 - leftPct)
 				)
 				rows.push({ span, depth, leftPct, widthPct })
 				for (const child of children.get(span.span_id) ?? []) visit(child, depth + 1)
@@ -103,7 +110,7 @@ export function layoutTimeline(spans: TalonTimelineSpan[]): TimelineLayout {
 			}
 		})
 
-	return { lanes, startMs, endMs }
+	return { lanes, unreadable, startMs, endMs }
 }
 
 /** What a span ran: its model or its tool, when the DTO names one. */

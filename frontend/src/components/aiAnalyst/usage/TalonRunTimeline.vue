@@ -24,12 +24,12 @@
 		</n-alert>
 
 		<div v-else-if="timeline" class="flex flex-col gap-3">
-			<div v-if="timeline.truncated || timeline.dropped" class="flex flex-wrap gap-2">
+			<div v-if="timeline.truncated || leftOut" class="flex flex-wrap gap-2">
 				<n-tag v-if="timeline.truncated" type="info" size="small" data-testid="talon-run-truncated">
 					Truncated: the run has more spans than are shown
 				</n-tag>
-				<n-tag v-if="timeline.dropped" type="warning" size="small" data-testid="talon-run-dropped">
-					{{ timeline.dropped }} span(s) left out: not this investigation's, unreadable or repeated
+				<n-tag v-if="leftOut" type="warning" size="small" data-testid="talon-run-dropped">
+					{{ leftOut }} span(s) left out: not this investigation's, unreadable or repeated
 				</n-tag>
 			</div>
 
@@ -56,18 +56,23 @@
 				>
 					<div
 						class="flex min-w-0 flex-wrap items-center gap-1.5"
-						:style="{ paddingLeft: `${row.depth * 14}px` }"
+						:style="{ paddingLeft: `${Math.min(row.depth, TIMELINE_MAX_INDENT) * 14}px` }"
 					>
-						<span class="truncate font-mono text-xs" data-testid="talon-run-span-name">
-							{{ row.span.name }}
+						<span
+							class="truncate font-mono text-xs"
+							:title="row.span.name"
+							data-testid="talon-run-span-name"
+						>
+							<bdi>{{ row.span.name }}</bdi>
 						</span>
 						<n-tag size="tiny" :bordered="false">{{ row.span.kind }}</n-tag>
 						<span
 							v-if="spanSubject(row.span)"
 							class="text-secondary truncate text-xs"
+							:title="spanSubject(row.span) ?? undefined"
 							data-testid="talon-run-span-subject"
 						>
-							{{ spanSubject(row.span) }}
+							<bdi>{{ spanSubject(row.span) }}</bdi>
 						</span>
 						<span
 							v-if="tokensOf(row.span)"
@@ -115,7 +120,7 @@ import { NAlert, NSpin, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import { talonFailure } from "@/api/endpoints/talonUsage"
-import { layoutTimeline, spanSubject, spanTokens } from "./run-timeline"
+import { layoutTimeline, spanSubject, spanTokens, TIMELINE_MAX_INDENT } from "./run-timeline"
 import { formatCount, formatDurationMs } from "./usage"
 
 const { jobId } = defineProps<{ jobId: string }>()
@@ -126,6 +131,8 @@ const loading = ref(false)
 let controller: AbortController | null = null
 
 const layout = computed(() => layoutTimeline(timeline.value?.spans ?? []))
+/** Spans not shown: those the backend dropped, and any whose times don't parse here. */
+const leftOut = computed(() => (timeline.value?.dropped ?? 0) + layout.value.unreadable)
 
 function tokensOf(span: TalonTimelineSpan) {
 	return spanTokens(span, formatCount)

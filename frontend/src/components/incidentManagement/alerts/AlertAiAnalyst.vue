@@ -68,7 +68,7 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
-import { useTalonV2Availability } from "@/composables/useTalonV2Availability"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
@@ -79,10 +79,6 @@ const props = defineProps<{
 
 const dFormats = useSettingsStore().dateFormat
 
-// Loaded only with the "Talon v2" setting on: off, this panel is as before.
-const TalonJobCostRun = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonJobCostRun.vue"))
-const { available: talonV2Available } = useTalonV2Availability()
-
 const loading = ref(false)
 const job = ref<TalonJobData | null>(null)
 const selectedIndex = ref(0)
@@ -92,6 +88,11 @@ const reports = computed(() => {
 	// Most recent first
 	return [...r].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
+
+// Loaded only with the "Talon v2" setting on: off, this panel is as before. Availability is asked
+// for only once there is a report to show it for, and only for a role v2 serves.
+const TalonJobCostRun = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonJobCostRun.vue"))
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(() => reports.value.length > 0)
 
 const reportOptions = computed(() =>
 	reports.value.map((r, i) => {

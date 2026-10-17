@@ -75,3 +75,17 @@ export function limitText(entry: TalonBudgetEntry): string {
 	if (entry.limit_usd !== null) return `$${entry.limit_usd}`
 	return entry.source === "unlimited" ? "Unlimited" : "No limit"
 }
+
+/**
+ * The warning threshold (`warn_at`, a decimal string share such as `"0.8"`) as a percentage, by
+ * moving the decimal point two places on the string itself: `"0.805"` is `80.5%`, never a float's
+ * `80.50000000000001%`. Anything that isn't a plain decimal reads as the default, 80%.
+ */
+export function warnAtPercent(share: string | null | undefined): string {
+	const match = typeof share === "string" ? /^(\d{1,6})(?:\.(\d{1,12}))?$/.exec(share) : null
+	if (!match) return "80%"
+	const fraction = match[2] ?? ""
+	const whole = `${match[1]}${fraction.slice(0, 2).padEnd(2, "0")}`.replace(/^0+(?=\d)/, "")
+	const rest = fraction.slice(2).replace(/0+$/, "")
+	return `${whole}${rest ? `.${rest}` : ""}%`
+}

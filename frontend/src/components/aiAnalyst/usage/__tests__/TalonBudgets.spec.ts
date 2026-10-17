@@ -46,12 +46,23 @@ async function chooseAmount(wrapper: ReturnType<typeof render>, win: "daily" | "
 	await nextTick()
 }
 
+/** `GET /budgets[?customer_code=]` as talon-analyst answers it: the one customer, its defaults when it has nothing. */
+function reread(code: string | null) {
+	if (!code) return budgets()
+	const listed = budgets().customers.find(c => c.customer_code === code)
+	return budgets({
+		customers: [
+			listed ?? { customer_code: code, daily: entry(), monthly: entry({ window: "month", period: "2026-10" }) }
+		]
+	})
+}
+
 enableAutoUnmount(afterEach)
 
 describe("talon budgets tab", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		getBudgets.mockReset().mockResolvedValue({ data: budgets() })
+		getBudgets.mockReset().mockImplementation((code: string | null) => Promise.resolve({ data: reread(code) }))
 		putBudget.mockReset()
 	})
 
@@ -77,7 +88,7 @@ describe("talon budgets tab", () => {
 		const wrapper = render()
 		await flushPromises()
 		await wrapper.get('[data-testid="talon-budget-edit"]').trigger("click")
-		await nextTick()
+		await flushPromises()
 		const amount = wrapper.get('[data-testid="talon-budget-daily-amount"] input')
 		expect((amount.element as HTMLInputElement).value).toBe("25")
 		const save = () => wrapper.get('[data-testid="talon-budget-save"]')
@@ -92,6 +103,43 @@ describe("talon budgets tab", () => {
 		expect(save().attributes("disabled")).toBeUndefined()
 	})
 
+	it("opening the dialog re-reads that customer and starts from what is stored now", async () => {
+		const wrapper = render()
+		await flushPromises()
+		// Another admin raised ACME's daily budget to 40 since the table loaded.
+		getBudgets.mockImplementation((code: string | null) =>
+			Promise.resolve({
+				data: code
+					? budgets({
+							customers: [
+								{
+									...budgets().customers[0],
+									daily: entry({ limit_usd: "40", source: "override", spent_usd: "20.5" })
+								}
+							]
+						})
+					: budgets()
+			})
+		)
+		await wrapper.get('[data-testid="talon-budget-edit"]').trigger("click")
+		await flushPromises()
+		expect(getBudgets).toHaveBeenLastCalledWith("ACME", expect.any(AbortSignal))
+		const amount = wrapper.get('[data-testid="talon-budget-daily-amount"] input')
+		expect((amount.element as HTMLInputElement).value).toBe("40")
+		const daily = wrapper.get('[data-testid="talon-budget-row"][data-customer="ACME"][data-window="daily"]')
+		expect(daily.get('[data-testid="talon-budget-limit"]').text()).toBe("$40")
+	})
+
+	it("if the re-read fails, nothing can be saved", async () => {
+		const wrapper = render()
+		await flushPromises()
+		getBudgets.mockRejectedValue(refused(502, "Talon request failed"))
+		await wrapper.get('[data-testid="talon-budget-edit"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-budget-read-error"]').text()).toContain("Talon request failed")
+		expect(wrapper.get('[data-testid="talon-budget-save"]').attributes("disabled")).toBeDefined()
+	})
+
 	it("confirms before the PUT, then sends both windows as chosen", async () => {
 		putBudget.mockResolvedValue({
 			data: {
@@ -103,7 +151,7 @@ describe("talon budgets tab", () => {
 		const wrapper = render()
 		await flushPromises()
 		await wrapper.get('[data-testid="talon-budget-edit"]').trigger("click")
-		await nextTick()
+		await flushPromises()
 		await chooseAmount(wrapper, "daily", "12.50")
 		await wrapper.get('[data-testid="talon-budget-monthly"] input[value="unlimited"]').setValue(true)
 		await wrapper.get('[data-testid="talon-budget-save"]').trigger("click")
@@ -124,7 +172,7 @@ describe("talon budgets tab", () => {
 		const wrapper = render()
 		await flushPromises()
 		await wrapper.get('[data-testid="talon-budget-edit"]').trigger("click")
-		await nextTick()
+		await flushPromises()
 		await wrapper.get('[data-testid="talon-budget-daily"] input[value="default"]').setValue(true)
 		await wrapper.get('[data-testid="talon-budget-save"]').trigger("click")
 		await nextTick()
@@ -144,7 +192,7 @@ describe("talon budgets tab", () => {
 		wrapper.findComponent({ name: "Select" }).vm.$emit("update:value", "GLOBEX")
 		await nextTick()
 		await wrapper.get('[data-testid="talon-budgets-pick-edit"]').trigger("click")
-		await nextTick()
+		await flushPromises()
 		await chooseAmount(wrapper, "daily", "10")
 		await wrapper.get('[data-testid="talon-budget-save"]').trigger("click")
 		await nextTick()

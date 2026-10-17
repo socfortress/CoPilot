@@ -1,3 +1,4 @@
+import axios from "axios"
 import { computed, ref } from "vue"
 import Api from "@/api"
 
@@ -15,6 +16,10 @@ import Api from "@/api"
  * `runView` (CoPilot M5-9a's `run_view`): the setting is on and the "Talon Phoenix" connector holds
  * a URL and a key, so an investigation's run timeline may be offered. Read from the same answer,
  * kept and cleared with it; false whenever `available` is.
+ *
+ * A 403 (a role the route doesn't serve: a scheduler, a portal user) is an answer, not a failure:
+ * "off" for the session, never asked again. Surfaces outside the AI Analyst page ask through
+ * `useTalonV2Gate.ts`, which asks only for a role that could use v2 and only where it is shown.
  */
 const enabled = ref(false)
 const runView = ref(false)
@@ -54,12 +59,16 @@ function fetchAvailability(): Promise<void> {
 			runView.value = enabled.value && res.data?.run_view === true
 			loaded.value = true
 		})
-		.catch(() => {
+		.catch(err => {
 			// Silent: the v1 chat stays, which is also right when the backend predates the route.
 			if (asked !== generation) return
 			enabled.value = false
 			runView.value = false
-			failed.value = true
+			if (axios.isAxiosError(err) && err.response?.status === 403) {
+				loaded.value = true // this user may not use v2: off for the session
+			} else {
+				failed.value = true
+			}
 		})
 		.finally(() => {
 			clearTimeout(timer)
@@ -79,10 +88,25 @@ export function resetTalonV2Availability() {
 	inflight = null
 }
 
-export function useTalonV2Availability() {
+/** Ask, unless it is answered or being asked (no-op then). */
+export function ensureTalonV2Availability() {
 	if (!loaded.value && !inflight) {
 		fetchAvailability()
 	}
+}
+
+/** The answer so far, without asking. */
+export function talonV2AvailabilityState() {
+	return {
+		available: computed(() => enabled.value),
+		runView: computed(() => runView.value),
+		loaded: computed(() => loaded.value),
+		settled: computed(() => loaded.value || failed.value)
+	}
+}
+
+export function useTalonV2Availability() {
+	ensureTalonV2Availability()
 
 	return {
 		available: computed(() => enabled.value),

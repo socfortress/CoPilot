@@ -9,6 +9,8 @@ import { createPinia, setActivePinia } from "pinia"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth"
 import JobDetails from "../JobDetails.vue"
 
 const getAvailability = vi.fn()
@@ -50,11 +52,16 @@ async function settle() {
 	await flushPromises()
 }
 
+function signInAs(role: AuthUserRole) {
+	useAuthStore().user = { access_token: "t", username: "u", email: "", role }
+}
+
 enableAutoUnmount(afterEach)
 
 describe("job details cost and run", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		signInAs(AuthUserRole.Admin)
 		resetTalonV2Availability()
 		getAvailability.mockReset()
 	})
@@ -71,6 +78,7 @@ describe("job details cost and run", () => {
 		const wrapper = render(true)
 		await settle()
 		expect(wrapper.find('[data-testid="cost-stub"]').exists()).toBe(false)
+		expect(getAvailability).not.toHaveBeenCalled() // one row of a list asks nothing
 	})
 
 	it("off: as before", async () => {
@@ -80,4 +88,16 @@ describe("job details cost and run", () => {
 		expect(wrapper.find('[data-testid="cost-stub"]').exists()).toBe(false)
 		expect(wrapper.find('[data-testid="job-cost-and-run"]').exists()).toBe(false)
 	})
+
+	it.each([AuthUserRole.Scheduler, AuthUserRole.CustomerUser])(
+		"a role v2 doesn't serve (%s) never asks, even on the job page",
+		async role => {
+			signInAs(role)
+			getAvailability.mockResolvedValue({ data: { success: true, enabled: true } })
+			const wrapper = render(false)
+			await settle()
+			expect(getAvailability).not.toHaveBeenCalled()
+			expect(wrapper.find('[data-testid="cost-stub"]').exists()).toBe(false)
+		}
+	)
 })

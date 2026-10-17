@@ -5,7 +5,14 @@
  */
 import type { TalonTimelineSpan, TalonUsageFigures, TalonUsageReport } from "@/types/talonUsage"
 import { describe, expect, it } from "vitest"
-import { budgetAmountProblem, budgetPayload, describeWindow, limitText, windowFormFromEntry } from "../budgets"
+import {
+	budgetAmountProblem,
+	budgetPayload,
+	describeWindow,
+	limitText,
+	warnAtPercent,
+	windowFormFromEntry
+} from "../budgets"
 import { layoutTimeline, spanTokens, TIMELINE_MIN_WIDTH_PCT, timeMs } from "../run-timeline"
 import { compareStages, defaultUsageRange, formatDurationMs, usageGroupLabel, usageRangeProblem } from "../usage"
 import {
@@ -49,6 +56,11 @@ const STYLE = {
 	"border-color": "#eee",
 	"font-family": "Inter",
 	"fg-default-color": "#111"
+}
+
+interface ValueAxisLike {
+	type: string
+	axisLabel?: { show?: boolean; formatter?: unknown }
 }
 
 function chartOption(input: TalonUsageReport, dark: boolean) {
@@ -124,6 +136,24 @@ describe("the usage chart", () => {
 
 	it("nothing to draw is no option", () => {
 		expect(buildUsageChartOption(report([]), STYLE, false)).toBeNull()
+	})
+
+	it("no axis label is a dollar figure: amounts are parsed only to size the bars", () => {
+		for (const groupBy of ["customer", "day"] as const) {
+			const groups = [
+				{ key: "2026-10-15", ...figures("0.1") },
+				{ key: "2026-10-16", ...figures("0.2") }
+			]
+			const option = chartOption(report(groups, { group_by: groupBy }), false)
+			const axes = [option.xAxis, option.yAxis] as ValueAxisLike[]
+			for (const axis of axes) {
+				if (axis.type === "value") {
+					expect(axis.axisLabel?.show).toBe(false)
+					expect(axis.axisLabel?.formatter).toBeUndefined()
+				}
+			}
+			expect(JSON.stringify(option)).not.toMatch(/\$\d/)
+		}
 	})
 
 	it("the tooltip shows the API's string as it is, escaped, and says when it is incomplete", () => {
@@ -224,6 +254,61 @@ describe("the run timeline layout", () => {
 		)
 		expect(spanTokens({ prompt_tokens: null, completion_tokens: null, total_tokens: 9 }, format)).toBe("9 tokens")
 		expect(spanTokens({ prompt_tokens: null, completion_tokens: null, total_tokens: null }, format)).toBeNull()
+	})
+})
+
+describe("the run timeline's edges", () => {
+	it("an instant at the axis end still has room: its left is clamped before it is sized", () => {
+		const layout = layoutTimeline([
+			span("r"),
+			span("end", {
+				parent_id: "r",
+				start_time: "2026-10-16T08:00:10.000000Z",
+				end_time: "2026-10-16T08:00:10.000000Z"
+			})
+		])
+		const end = layout.lanes[0].rows.find(r => r.span.span_id === "end")
+		expect(end?.leftPct).toBe(100 - TIMELINE_MIN_WIDTH_PCT)
+		expect(end?.widthPct).toBe(TIMELINE_MIN_WIDTH_PCT)
+		for (const row of layout.lanes[0].rows) expect(row.leftPct + row.widthPct).toBeLessThanOrEqual(100)
+	})
+
+	it("a span ending before it starts is an instant, never a negative bar", () => {
+		const layout = layoutTimeline([
+			span("r"),
+			span("back", {
+				parent_id: "r",
+				start_time: "2026-10-16T08:00:05.000000Z",
+				end_time: "2026-10-16T08:00:02.000000Z"
+			})
+		])
+		const back = layout.lanes[0].rows.find(r => r.span.span_id === "back")
+		expect(back?.leftPct).toBe(50)
+		expect(back?.widthPct).toBe(TIMELINE_MIN_WIDTH_PCT)
+	})
+
+	it("spans whose times don't parse are counted, not placed", () => {
+		const layout = layoutTimeline([
+			span("r"),
+			span("bad", { start_time: "yesterday" }),
+			span("worse", { end_time: "" })
+		])
+		expect(layout.unreadable).toBe(2)
+		expect(layout.lanes[0].rows.map(r => r.span.span_id)).toEqual(["r"])
+		expect(layoutTimeline([span("bad", { start_time: "x" })])).toMatchObject({ lanes: [], unreadable: 1 })
+	})
+})
+
+describe("the warning threshold", () => {
+	it("is the API's share as a percentage, moved on the string, never through a float", () => {
+		expect(warnAtPercent("0.805")).toBe("80.5%")
+		expect(warnAtPercent("0.995")).toBe("99.5%")
+		expect(warnAtPercent("0.8")).toBe("80%")
+		expect(warnAtPercent("0.80")).toBe("80%")
+		expect(warnAtPercent("0.07")).toBe("7%")
+		expect(warnAtPercent("1")).toBe("100%")
+		expect(warnAtPercent("0.123456")).toBe("12.3456%")
+		for (const bad of [undefined, null, "", "-0.8", "8e-1", "0.8%", " 0.8"]) expect(warnAtPercent(bad)).toBe("80%")
 	})
 })
 
