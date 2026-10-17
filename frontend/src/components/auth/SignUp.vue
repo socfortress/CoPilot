@@ -169,7 +169,6 @@ import type { RegisterPayload } from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import _trim from "lodash/trim"
 import { NButton, NForm, NFormItem, NInput, NSelect, NSpin, NStep, NSteps, useMessage } from "naive-ui"
-import PasswordValidator from "password-validator"
 import isEmail from "validator/es/lib/isEmail"
 import { computed, ref } from "vue"
 import Api from "@/api"
@@ -178,6 +177,7 @@ import { NEEDS_A_CUSTOMER, needsCustomers } from "@/components/users/roles"
 import UserCustomersSelect from "@/components/users/UserCustomersSelect.vue"
 import { AuthUserRole } from "@/types/auth"
 import { getApiErrorMessage } from "@/utils"
+import { passwordProblem } from "@/utils/password-policy"
 // import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 
 interface ModelType {
@@ -239,21 +239,6 @@ const detailsStepValid = computed(
 )
 // const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
-const passwordSchema = new PasswordValidator()
-passwordSchema
-	.is()
-	.min(8) // Minimum length 8
-	.is()
-	.max(100) // Maximum length 100
-	.has()
-	.uppercase() // Must have uppercase letters
-	.has()
-	.lowercase() // Must have lowercase letters
-	.has()
-	.digits(1) // Must have at least 1 digit
-	.has()
-	.symbols(1) // Must have at least 1 symbol
-
 const rules: FormRules = {
 	email: [
 		{
@@ -283,11 +268,11 @@ const rules: FormRules = {
 			message: "Password is required"
 		},
 		{
-			validator: (_rule: FormItemRule, value: string): boolean => {
-				return !!passwordSchema.validate(value, { details: false })
+			// The API's own policy (#1265), so the form never accepts what the API refuses.
+			validator: (_rule: FormItemRule, value: string): Error | true => {
+				const problem = passwordProblem(value || "")
+				return problem ? new Error(problem) : true
 			},
-			message:
-				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
 			trigger: ["blur"]
 		}
 	],
