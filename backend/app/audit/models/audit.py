@@ -76,6 +76,9 @@ class AuditAction(str, Enum):
     TALON_ACTION_APPROVE = "talon_action.approve"
     TALON_ACTION_DENY = "talon_action.deny"
     TALON_ACTION_EXECUTE = "talon_action.execute"
+    # An admin's per-customer Talon budget override (talon-analyst M5-9a, FR-COST-4), with the old
+    # and new ceilings; refused attempts are recorded as failures.
+    TALON_BUDGET_UPDATE = "talon_budget.update"
 
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"
