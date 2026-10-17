@@ -5,10 +5,11 @@
 #   pnpm test:e2e         # headless
 #   pnpm test:e2e:open    # Cypress UI
 #
-# Needs the e2e MySQL on 127.0.0.1:13306 — see cypress/README.md for the one-line
-# docker run. Everything is overridable through E2E_* variables; the database ones are
-# deliberately NOT read from MYSQL_* so a shell pointed at a real CoPilot cannot be
-# seeded by accident.
+# Needs the e2e MySQL on 127.0.0.1:13306 and the e2e MinIO on 127.0.0.1:19000 — see
+# cypress/README.md for the docker runs. Everything is overridable through E2E_* variables;
+# the database and storage ones are deliberately NOT read from MYSQL_* / MINIO_* (nor from
+# .env, which python-dotenv never lets override what is set here) so a shell pointed at a
+# real CoPilot cannot be seeded, and generated reports never land in a real bucket.
 set -euo pipefail
 
 PORTAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -23,6 +24,10 @@ export MYSQL_USER="${E2E_MYSQL_USER:-copilot}"
 export MYSQL_PASSWORD="${E2E_MYSQL_PASSWORD:-e2epass}"
 export MYSQL_ROOT_PASSWORD="${E2E_MYSQL_ROOT_PASSWORD:-e2eroot}"
 export JWT_SECRET="${E2E_JWT_SECRET:-e2e-test-secret-not-the-default}"
+export MINIO_URL="${E2E_MINIO_URL:-127.0.0.1:19000}"
+export MINIO_ROOT_USER="${E2E_MINIO_USER:-e2eminio}"
+export MINIO_ROOT_PASSWORD="${E2E_MINIO_PASSWORD:-e2eminio-secret}"
+export MINIO_SECURE="False"
 export PYTHONPATH="$BACKEND_DIR"
 export E2E_PYTHON="$PYTHON"
 
@@ -46,7 +51,8 @@ wait_for() {
 pids=()
 cleanup() {
 	local status=$?
-	for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
+	# ${pids[@]+…}: bash 3.2 (macOS) calls an empty array unbound under `set -u`.
+	for pid in ${pids[@]+"${pids[@]}"}; do kill "$pid" 2>/dev/null || true; done
 	if [[ $status -ne 0 && -n "${BACKEND_LOG:-}" ]]; then echo "Backend log: $BACKEND_LOG" >&2; fi
 }
 trap cleanup EXIT
@@ -56,6 +62,11 @@ echo "Applying migrations to $MYSQL_URL"
 	echo "Could not migrate the e2e database at $MYSQL_URL — is the e2e MySQL running? See cypress/README.md." >&2
 	exit 1
 }
+
+# Report generation (reports.cy.ts) stores its PDF there; the rest of the suite runs without.
+if ! curl -sf -o /dev/null "http://$MINIO_URL/minio/health/live"; then
+	echo "Warning: no e2e MinIO at $MINIO_URL — report generation will fail. See cypress/README.md." >&2
+fi
 
 BACKEND_LOG="$(mktemp -t copilot-portal-e2e-backend.XXXXXX)"
 echo "Starting the backend on :$API_PORT (no lifespan: no scheduler, MinIO or connector sync); log: $BACKEND_LOG"

@@ -6,13 +6,13 @@ import { resolveColumns } from "../eventColumns"
 import EventColumnTemplates from "../EventColumnTemplates.vue"
 
 function template(id: number, name: string, columns: DisplayColumn[]): EventSearchColumnTemplate {
-  return {
-	id,
-	source_name: "Wazuh",
-	name,
-	columns,
-	updated_at: ""
-}
+	return {
+		id,
+		source_name: "Wazuh",
+		name,
+		columns,
+		updated_at: ""
+	}
 }
 const TRIAGE = template(1, "Triage", [
 	{ key: "agent_name", label: "Host" },
@@ -43,7 +43,9 @@ function render(activeKey: string | null, templates = [TRIAGE, NETWORK]) {
 const all = (selector: string) => [...document.body.querySelectorAll<HTMLElement>(selector)]
 /** The previewed layout: each column's header and field, in order. */
 function preview() {
-  return all("[data-testid=columns-preview-column]").map(row => [...row.querySelectorAll("span")].slice(1).map(el => el.textContent?.trim()))
+	return all("[data-testid=columns-preview-column]").map(row =>
+		[...row.querySelectorAll("span")].slice(1).map(el => el.textContent?.trim())
+	)
 }
 
 describe("eventColumnTemplates", () => {
@@ -71,7 +73,9 @@ describe("eventColumnTemplates", () => {
 		await wrapper.find("[data-testid=column-layouts-toggle]").trigger("click")
 		await flushPromises()
 		const rows = all("[data-testid=column-layout]")
-		expect(rows.map(row => [...row.querySelectorAll(":scope > span > span")].map(el => el.textContent?.trim()))).toEqual([
+		expect(
+			rows.map(row => [...row.querySelectorAll(":scope > span > span")].map(el => el.textContent?.trim()))
+		).toEqual([
 			["SOC layout", "Time"],
 			["Triage", "Host · Level"],
 			["Network", "Source IP · Destination · Port · +2"]
@@ -129,7 +133,9 @@ describe("eventColumnTemplates", () => {
 		await wrapper.find("[data-testid=column-layouts-toggle]").trigger("click")
 		await flushPromises()
 		// The source's own layout cannot be deleted.
-		expect(all("[data-testid=column-layout-row]")[0]!.querySelector("[data-testid=column-layout-delete]")).toBeNull()
+		expect(
+			all("[data-testid=column-layout-row]")[0]!.querySelector("[data-testid=column-layout-delete]")
+		).toBeNull()
 
 		all("[data-testid=column-layout-delete]")[1]!.click()
 		await flushPromises()
@@ -163,7 +169,9 @@ describe("eventColumnTemplates", () => {
 		await flushPromises()
 		all("[data-testid=column-layout-delete]")[0]!.click()
 		await flushPromises()
-		all("[data-testid=template-delete-confirm]")[0]!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
+		all("[data-testid=template-delete-confirm]")[0]!.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
+		)
 		await flushPromises()
 		expect(all("[data-testid=template-delete-confirm]")).toHaveLength(0)
 		expect(wrapper.emitted("delete")).toBeUndefined()

@@ -22,6 +22,12 @@ minio_secure = env.bool("MINIO_SECURE", default=False)
 logger.info(f"Minio Root User: {minio_root_user}")
 
 
+def minio_endpoint(url: str) -> str:
+    """``MINIO_URL`` as the client's endpoint: a bare host gets MinIO's port 9000, as it always
+    has; ``host:port`` is kept (the disposable e2e MinIO listens on 19000, like MySQL on 13306)."""
+    return url if ":" in url else f"{url}:9000"
+
+
 async def create_session() -> Minio:
-    client = Minio(f"{minio_url}:9000", access_key=minio_root_user, secret_key=minio_root_password, secure=minio_secure)
+    client = Minio(minio_endpoint(minio_url), access_key=minio_root_user, secret_key=minio_root_password, secure=minio_secure)
     return client

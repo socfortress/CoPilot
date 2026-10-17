@@ -25,7 +25,7 @@ export interface Notification {
 	 * the list is persisted, and a function does not survive serialisation — that is
 	 * how a reloaded bell ends up with items that look clickable and do nothing.
 	 */
-	actionRoute?: { name: string }
+	actionRoute?: { name: string; query?: Record<string, string> }
 	actionTitle?: string
 }
 
@@ -43,7 +43,7 @@ const list = useStorage<Notification[]>("notifications-list", [], secureLocalSto
 /** Navigate to a notification's target. A push to the current page is a no-op. */
 export function openRoute(route: Notification["actionRoute"]) {
 	if (!route) return
-	router.push({ name: route.name }).catch(() => {})
+	router.push({ name: route.name, query: route.query }).catch(() => {})
 }
 
 export function useNotifications() {
@@ -95,16 +95,25 @@ export function useNotifications() {
 					keepAliveOnHover: true
 				}
 
+				// Acting on the toast is the end of it: it closes, rather than sitting over the page.
+				let toast: ReturnType<ReturnType<typeof useGlobalActions>["notification"]>
 				if (newItem.actionRoute) {
 					notify.action = () =>
 						h(
 							NButton,
-							{ text: true, type: newItem.type, onClick: () => openRoute(newItem.actionRoute) },
+							{
+								text: true,
+								type: newItem.type,
+								onClick: () => {
+									toast?.destroy()
+									openRoute(newItem.actionRoute)
+								}
+							},
 							{ default: () => newItem.actionTitle || "Details" }
 						)
 				}
 
-				useGlobalActions().notification(notify)
+				toast = useGlobalActions().notification(notify)
 			}
 
 			list.value = _uniqBy([newItem, ...list.value], o => o.id)

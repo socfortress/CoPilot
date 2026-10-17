@@ -1,7 +1,7 @@
 <template>
 	<n-popover :show-arrow="false" placement="bottom" content-class="w-72 p-0!">
 		<template #trigger>
-			<n-badge :show="hasUnread" dot :color="primaryColor">
+			<n-badge :show="hasUnread" dot :color="primaryColor" data-testid="notifications-bell">
 				<Icon :name="BellIcon" :size="21" class="text-default" />
 			</n-badge>
 		</template>

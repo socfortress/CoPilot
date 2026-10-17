@@ -57,12 +57,17 @@ describe("event columns", () => {
 	})
 
 	it("finds an event's time by the source's field first, then any timestamp", () => {
-		expect(eventTime({ "@timestamp": "x", "ts": "y" } as unknown as EventSearchResult, "ts")).toBe("y")
+		expect(eventTime({ "@timestamp": "x", ts: "y" } as unknown as EventSearchResult, "ts")).toBe("y")
 		expect(eventTime({ "@timestamp": "x" } as unknown as EventSearchResult, "ts")).toBe("x")
 	})
 
 	it("writes values as text: lists joined, objects as JSON, nothing empty", () => {
-		expect([cellText(["a", null, 2]), cellText({ a: 1 }), cellText(null), cellText(0)]).toEqual(["a, , 2", '{"a":1}', "", "0"])
+		expect([cellText(["a", null, 2]), cellText({ a: 1 }), cellText(null), cellText(0)]).toEqual([
+			"a, , 2",
+			'{"a":1}',
+			"",
+			"0"
+		])
 	})
 })
 
@@ -103,6 +108,8 @@ describe("events as CSV", () => {
 			"rule_description"
 		])
 		expect(columnSource(DEFAULT_COLUMNS[0]!, null)).toBe("timestamp")
-		expect(columnSource(resolveColumns([{ key: "data.win.user", label: "User" }], null, null)[0]!, null)).toBe("data.win.user")
+		expect(columnSource(resolveColumns([{ key: "data.win.user", label: "User" }], null, null)[0]!, null)).toBe(
+			"data.win.user"
+		)
 	})
 })

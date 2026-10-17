@@ -5,6 +5,7 @@
 			:key="item.id"
 			class="item flex"
 			:class="[{ pointer: !!item.actionRoute }, item.type]"
+			data-testid="notification-item"
 			@click.stop="item.actionRoute ? preformAction(item) : undefined"
 		>
 			<div class="icon-box">

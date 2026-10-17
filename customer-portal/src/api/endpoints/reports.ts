@@ -2,7 +2,8 @@ import type { CommonResponse } from "@/types/common"
 import type {
 	IncidentCustomerReportGenerateBackgroundResponse,
 	IncidentCustomerReportGenerateRequest,
-	IncidentCustomerReportListResponse
+	IncidentCustomerReportListResponse,
+	IncidentCustomerReportStatusResponse
 } from "@/types/reports"
 import { HttpClient } from "../httpClient"
 import { withCustomerCodes } from "../params"
@@ -19,6 +20,17 @@ export default {
 		return HttpClient.get<CommonResponse<IncidentCustomerReportListResponse>>(
 			"/incidents/customer_reports",
 			withCustomerCodes(customerCodes, { signal, keepOnNavigation })
+		)
+	},
+
+	/**
+	 * Where the given reports' generation stands (#1263): the poller's light read, never
+	 * the whole list. Not page-scoped: the poller outlives the page that started it.
+	 */
+	getReportStatuses(reportIds: number[]) {
+		return HttpClient.get<CommonResponse<IncidentCustomerReportStatusResponse>>(
+			"/incidents/customer_reports/status",
+			{ params: { ids: reportIds }, paramsSerializer: { indexes: null }, keepOnNavigation: true }
 		)
 	},
 

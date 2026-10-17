@@ -89,7 +89,11 @@ export function eventLevel(row: EventSearchResult): number | undefined {
 }
 
 /** A column's raw value for one event: what the table formats and the CSV writes. */
-export function columnValue(column: EventColumn, row: EventSearchResult, timeField: string | null | undefined): unknown {
+export function columnValue(
+	column: EventColumn,
+	row: EventSearchResult,
+	timeField: string | null | undefined
+): unknown {
 	switch (column.field === null ? column.key : null) {
 		case "Timestamp":
 			return eventTime(row, timeField)

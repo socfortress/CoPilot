@@ -50,3 +50,24 @@ export interface IncidentCustomerReportListResponse {
 	reports: IncidentCustomerReport[]
 	total_count: number
 }
+
+/** Where one report's generation stands (#1263): what the poller needs, and nothing more. */
+export interface IncidentCustomerReportStatus {
+	id: number
+	report_name: string
+	file_name: string
+	status: IncidentCustomerReport["status"]
+	/** Set only when it failed; a generic message for a portal user. */
+	error_message?: string | null
+	/** ISO 8601 in UTC: when generation started. */
+	started_at: string
+	/** While processing, how long it has been running, by the server's clock. */
+	running_seconds?: number | null
+	download_url?: string | null
+}
+
+export interface IncidentCustomerReportStatusResponse {
+	reports: IncidentCustomerReportStatus[]
+	/** Asked ids the caller cannot see: deleted, never existed, or not theirs. */
+	missing: number[]
+}

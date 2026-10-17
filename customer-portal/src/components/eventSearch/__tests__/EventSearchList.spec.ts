@@ -19,7 +19,10 @@ import List from "../List.vue"
 import { resetEventSearchMemory } from "../useEventSearchMemory"
 
 /** The server's side of the memory, as the routes answer it: the whole memory every time. */
-const server = vi.hoisted(() => ({ memory: { saved: [], recent: [], columns: {}, templates: [] } as EventSearchMemory, failColumns: false }))
+const server = vi.hoisted(() => ({
+	memory: { saved: [], recent: [], columns: {}, templates: [] } as EventSearchMemory,
+	failColumns: false
+}))
 const reply = () => Promise.resolve({ data: { success: true, message: "ok", ...structuredClone(server.memory) } })
 const siem = vi.hoisted(() => ({
 	getEventSources: vi.fn(),
@@ -37,7 +40,10 @@ const siem = vi.hoisted(() => ({
 const downloadCsv = vi.hoisted(() => vi.fn())
 
 vi.mock("@/api", () => ({ default: { siem } }))
-vi.mock("vue-router", async original => ({ ...(await original<typeof import("vue-router")>()), useRoute: () => ({ query: {} }) }))
+vi.mock("vue-router", async original => ({
+	...(await original<typeof import("vue-router")>()),
+	useRoute: () => ({ query: {} })
+}))
 vi.mock("@/utils", async original => ({ ...(await original<typeof import("@/utils")>()), downloadCsv }))
 
 const SOURCES: EventSourceItem[] = [
@@ -85,7 +91,7 @@ async function render() {
 }
 
 function headers(wrapper: Awaited<ReturnType<typeof render>>) {
-  return wrapper
+	return wrapper
 		.findAll("[data-testid=event-results] thead th")
 		.map(th => th.text())
 		.filter(Boolean)
@@ -116,20 +122,24 @@ describe("event search list (#1258)", () => {
 			server.memory.saved = [{ ...state, id: 1, name, updated_at: "2026-10-15T09:00:00Z" }]
 			return reply()
 		})
-		siem.saveEventSearchTemplate.mockImplementation((_code: string, source: string, name: string, columns: DisplayColumn[]) => {
-			server.memory.templates = [{ id: 9, source_name: source, name, columns, updated_at: "" }]
-			return reply()
-		})
+		siem.saveEventSearchTemplate.mockImplementation(
+			(_code: string, source: string, name: string, columns: DisplayColumn[]) => {
+				server.memory.templates = [{ id: 9, source_name: source, name, columns, updated_at: "" }]
+				return reply()
+			}
+		)
 		siem.deleteEventSearchTemplate.mockImplementation(() => {
 			server.memory.templates = []
 			return reply()
 		})
-		siem.setEventSearchColumns.mockImplementation((_code: string, source: string, columns: DisplayColumn[] | null) => {
-			if (server.failColumns) return Promise.reject(new Error("Network Error"))
-			if (columns?.length) server.memory.columns = { [source]: columns }
-			else server.memory.columns = {}
-			return reply()
-		})
+		siem.setEventSearchColumns.mockImplementation(
+			(_code: string, source: string, columns: DisplayColumn[] | null) => {
+				if (server.failColumns) return Promise.reject(new Error("Network Error"))
+				if (columns?.length) server.memory.columns = { [source]: columns }
+				else server.memory.columns = {}
+				return reply()
+			}
+		)
 	})
 
 	it("reads the user's memory from the server for the customer on screen", async () => {
@@ -145,7 +155,11 @@ describe("event search list (#1258)", () => {
 		await restore(wrapper, STATE)
 
 		// The query is the parent's model: read too early, it is still the old (empty) text.
-		expect(siem.queryEvents).toHaveBeenCalledWith("A", "Wazuh", { page_size: 100, query: "rule_level:>=10", timerange: "7d" })
+		expect(siem.queryEvents).toHaveBeenCalledWith("A", "Wazuh", {
+			page_size: 100,
+			query: "rule_level:>=10",
+			timerange: "7d"
+		})
 		expect(siem.rememberEventSearch).toHaveBeenCalledWith("A", STATE)
 		expect(wrapper.findComponent(EventSearchQueries).props("recent")).toHaveLength(1)
 	})
@@ -280,7 +294,13 @@ describe("event search list (#1258)", () => {
 
 	it("deletes a template from the Layout menu, saying so", async () => {
 		server.memory.templates = [
-			{ id: 9, source_name: "Wazuh", name: "Triage", columns: [{ key: "agent_name", label: "Host" }], updated_at: "" }
+			{
+				id: 9,
+				source_name: "Wazuh",
+				name: "Triage",
+				columns: [{ key: "agent_name", label: "Host" }],
+				updated_at: ""
+			}
 		]
 		const wrapper = await render()
 		await restore(wrapper, STATE)
@@ -299,7 +319,9 @@ describe("event search list (#1258)", () => {
 		const picker = wrapper.findComponent(EventColumnPicker)
 		picker.vm.$emit("saveTemplate", "Triage", [{ key: "agent_name", label: "Host" }])
 		await flushPromises()
-		expect(siem.saveEventSearchTemplate).toHaveBeenCalledWith("A", "Wazuh", "Triage", [{ key: "agent_name", label: "Host" }])
+		expect(siem.saveEventSearchTemplate).toHaveBeenCalledWith("A", "Wazuh", "Triage", [
+			{ key: "agent_name", label: "Host" }
+		])
 		expect(document.body.textContent).toContain("Saved the template “Triage”")
 		expect(picker.props("templates")).toHaveLength(1)
 

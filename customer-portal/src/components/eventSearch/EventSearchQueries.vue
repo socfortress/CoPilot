@@ -5,11 +5,16 @@
 				<n-button size="small" secondary :disabled="!available" :loading data-testid="saved-queries-toggle">
 					<template #icon><Icon name="carbon:bookmark" /></template>
 					Queries
-					<span v-if="saved.length" class="text-tertiary ml-1.5 font-mono text-xs tabular-nums">{{ saved.length }}</span>
+					<span v-if="saved.length" class="text-tertiary ml-1.5 font-mono text-xs tabular-nums">
+						{{ saved.length }}
+					</span>
 				</n-button>
 			</template>
 
-			<div class="flex max-h-[min(70vh,32rem)] w-[min(92vw,26rem)] flex-col overflow-y-auto" data-testid="saved-queries">
+			<div
+				class="flex max-h-[min(70vh,32rem)] w-[min(92vw,26rem)] flex-col overflow-y-auto"
+				data-testid="saved-queries"
+			>
 				<div
 					v-if="error"
 					class="border-default bg-error/5 flex items-center justify-between gap-3 border-b px-3 py-2"
@@ -40,8 +45,12 @@
 								@click="pick(entry)"
 							>
 								<span class="text-default truncate text-sm font-medium">{{ entry.name }}</span>
-								<span class="text-secondary truncate font-mono text-xs [font-variant-ligatures:none]">{{ entry.query || "*" }}</span>
-								<span class="text-tertiary truncate text-xs">{{ entry.source_name }} · {{ timeLabel(entry) }}</span>
+								<span class="text-secondary truncate font-mono text-xs [font-variant-ligatures:none]">
+									{{ entry.query || "*" }}
+								</span>
+								<span class="text-tertiary truncate text-xs">
+									{{ entry.source_name }} · {{ timeLabel(entry) }}
+								</span>
 							</button>
 							<n-button
 								size="tiny"
@@ -60,7 +69,13 @@
 				<section class="border-default flex flex-col border-t">
 					<header class="bg-secondary border-default flex items-baseline justify-between border-b px-3 py-2">
 						<span :class="HEAD">Recent</span>
-						<n-button v-if="recent.length" text size="tiny" data-testid="recent-queries-clear" @click="emit('clearRecent')">
+						<n-button
+							v-if="recent.length"
+							text
+							size="tiny"
+							data-testid="recent-queries-clear"
+							@click="emit('clearRecent')"
+						>
 							Clear
 						</n-button>
 					</header>
@@ -76,7 +91,9 @@
 							data-testid="recent-query"
 							@click="pick(entry)"
 						>
-							<span class="text-default truncate font-mono text-xs [font-variant-ligatures:none]">{{ entry.query || "*" }}</span>
+							<span class="text-default truncate font-mono text-xs [font-variant-ligatures:none]">
+								{{ entry.query || "*" }}
+							</span>
 							<span class="text-tertiary truncate text-xs">
 								{{ entry.source_name }} · {{ timeLabel(entry) }} · {{ relative(entry.ran_at) }}
 							</span>
@@ -93,7 +110,11 @@
 					Save
 				</n-button>
 			</template>
-			<form class="flex w-[min(86vw,20rem)] flex-col gap-2" data-testid="save-query-form" @submit.prevent="submitSave">
+			<form
+				class="flex w-[min(86vw,20rem)] flex-col gap-2"
+				data-testid="save-query-form"
+				@submit.prevent="submitSave"
+			>
 				<span :class="HEAD" class="text-tertiary">Save this search as</span>
 				<n-input
 					ref="nameInput"
@@ -106,7 +127,13 @@
 				<span v-if="willReplace" class="text-warning text-xs">Updates the query saved under this name.</span>
 				<div class="flex justify-end gap-2">
 					<n-button size="small" quaternary @click="showSave = false">Cancel</n-button>
-					<n-button size="small" type="primary" attr-type="submit" :disabled="!name.trim()" data-testid="save-query-submit">
+					<n-button
+						size="small"
+						type="primary"
+						attr-type="submit"
+						:disabled="!name.trim()"
+						data-testid="save-query-submit"
+					>
 						Save
 					</n-button>
 				</div>
@@ -130,7 +157,14 @@ import { describeTime } from "./eventSearchMemory"
  * a name. Picking one hands it to the search form, which restores it and runs it.
  */
 
-const { saved, recent, available, canSave, loading = false, error = null } = defineProps<{
+const {
+	saved,
+	recent,
+	available,
+	canSave,
+	loading = false,
+	error = null
+} = defineProps<{
 	saved: EventSearchSavedQuery[]
 	recent: EventSearchRecentQuery[]
 	/** A user and a customer to remember for. */

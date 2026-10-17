@@ -40,6 +40,7 @@
 				<n-form-item label="Report Name" path="report_name">
 					<n-input
 						v-model:value="formData.report_name"
+						data-testid="report-name"
 						placeholder="Leave empty for auto-generated name"
 						clearable
 					/>
@@ -73,7 +74,14 @@
 
 				<div class="mt-6 flex justify-end gap-3">
 					<n-button @click="showGenerateModal = false">Cancel</n-button>
-					<n-button type="primary" :loading="generating" @click="handleGenerate">Generate Report</n-button>
+					<n-button
+						type="primary"
+						:loading="generating"
+						data-testid="report-generate-submit"
+						@click="handleGenerate"
+					>
+						Generate Report
+					</n-button>
 				</div>
 			</n-form>
 		</n-modal>
@@ -104,6 +112,7 @@ import type {
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
@@ -112,6 +121,7 @@ import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { getApiErrorMessage } from "@/utils"
+import { downloadQueryId, fileNameFromDisposition } from "./reportDownload"
 
 const AddIcon = "carbon:document-add"
 
@@ -121,6 +131,8 @@ const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustome
 	useCustomerPrefill()
 const reportGenerationStore = useReportGenerationStore()
 const customerFilterStore = useCustomerFilterStore()
+const route = useRoute()
+const router = useRouter()
 
 const generating = ref(false)
 const reports = ref<IncidentCustomerReport[]>([])
@@ -292,15 +304,37 @@ async function handleGenerate() {
 	}
 }
 
-async function handleDownload(report: IncidentCustomerReport) {
+async function downloadReport(reportId: number, fileName?: string) {
 	try {
-		const response = await Api.reports.downloadReport(report.id)
-		saveAs(new Blob([response.data]), report.file_name)
+		const response = await Api.reports.downloadReport(reportId)
+		const name =
+			fileName ?? fileNameFromDisposition(response.headers?.["content-disposition"]) ?? `report-${reportId}.pdf`
+		saveAs(new Blob([response.data]), name)
 		message.success("Report downloaded successfully")
 	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to download report")
 	}
 }
+
+function handleDownload(report: IncidentCustomerReport) {
+	downloadReport(report.id, report.file_name)
+}
+
+// "Download" on a "Report ready" notification (toast or bell) lands here with ?download=<id>.
+// The query is dropped first, so a reload or the back button never downloads it again.
+watch(
+	() => route.query.download,
+	value => {
+		const reportId = downloadQueryId(value)
+		if (value === undefined) return
+		const { download: _download, ...query } = route.query
+		router.replace({ query })
+		if (reportId !== null) {
+			downloadReport(reportId, reports.value.find(report => report.id === reportId)?.file_name)
+		}
+	},
+	{ immediate: true }
+)
 
 function handleDeleteClick(report: IncidentCustomerReport) {
 	reportToDelete.value = report

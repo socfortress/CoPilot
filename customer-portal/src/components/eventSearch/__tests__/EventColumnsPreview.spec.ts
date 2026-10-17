@@ -11,12 +11,17 @@ function render(picked: DisplayColumn[] | null, timeField = "timestamp") {
 }
 
 function rows(wrapper: ReturnType<typeof render>) {
-  return wrapper.findAll("[data-testid=columns-preview-column]").map(row => row.findAll("span").map(cell => cell.text()))
+	return wrapper
+		.findAll("[data-testid=columns-preview-column]")
+		.map(row => row.findAll("span").map(cell => cell.text()))
 }
 
 describe("eventColumnsPreview", () => {
 	it("lists every column in order, with its header and the field it reads", () => {
-		const columns = ["a", "b", "c", "d", "e", "f", "g"].map(key => ({ key: `data_${key}`, label: key.toUpperCase() }))
+		const columns = ["a", "b", "c", "d", "e", "f", "g"].map(key => ({
+			key: `data_${key}`,
+			label: key.toUpperCase()
+		}))
 		const wrapper = render(columns)
 		expect(wrapper.text()).toContain("Network")
 		expect(wrapper.text()).toContain("7 columns")
