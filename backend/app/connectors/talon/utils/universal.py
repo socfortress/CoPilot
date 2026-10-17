@@ -9,6 +9,7 @@ import requests
 from loguru import logger
 
 from app.blocking import run_blocking
+from app.connectors.talon.utils import capped_body
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -202,7 +203,7 @@ def refusal_reason(status_code: int, body: bytes) -> Optional[str]:
         return None
     try:
         payload = json.loads(body)
-    except ValueError:  # includes UnicodeDecodeError
+    except (ValueError, RecursionError):  # ValueError includes UnicodeDecodeError
         return None
     if not isinstance(payload, dict):
         return None
@@ -213,13 +214,9 @@ def refusal_reason(status_code: int, body: bytes) -> Optional[str]:
 
 
 async def _read_capped(response: httpx.Response, limit: int = MAX_REFUSAL_BODY_BYTES) -> bytes:
-    """At most ``limit`` bytes of a streamed response body."""
-    body = b""
-    async for chunk in response.aiter_bytes():
-        body += chunk
-        if len(body) >= limit:
-            return body[:limit]
-    return body
+    """At most ``limit`` raw bytes of a streamed response body; an encoded body reads as nothing
+    (``capped_body``: httpx would inflate stacked gzip without a limit)."""
+    return await capped_body.read_prefix(response, limit)
 
 
 async def send_post_request_sse(
@@ -255,7 +252,7 @@ async def send_post_request_sse(
         return
     failed = f"Failed to stream from {endpoint}"
     try:
-        headers = _build_headers(attributes["connector_api_key"])
+        headers = {**_build_headers(attributes["connector_api_key"]), "Accept-Encoding": "identity"}
         timeout = httpx.Timeout(connect=10.0, read=None, write=10.0, pool=10.0)
         async with httpx.AsyncClient(verify=False, timeout=timeout) as client:
             async with client.stream(
@@ -269,7 +266,11 @@ async def send_post_request_sse(
                     logger.error(f"Talon {endpoint} answered {response.status_code}" + (f": {reason}" if reason else ""))
                     yield _sse_error(f"Talon refused the request: {reason}" if reason else failed)
                     return
-                async for chunk in response.aiter_bytes():
+                if not capped_body.is_identity(response):  # Talon never compresses its stream
+                    logger.error(f"Talon {endpoint}: the stream came with a Content-Encoding; refused")
+                    yield _sse_error(failed)
+                    return
+                async for chunk in capped_body.raw_chunks(response):
                     yield chunk
     except Exception as e:
         logger.error(f"Failed to stream from Talon {endpoint} with error: {e}")

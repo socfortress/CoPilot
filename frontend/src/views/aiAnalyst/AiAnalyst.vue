@@ -5,7 +5,30 @@
 				<TalonOverview />
 			</n-tab-pane>
 			<n-tab-pane name="talon" tab="Talon Chat" display-directive="show:lazy">
-				<TalonChat class="h-fixed" />
+				<!-- The v2 chat (threads, a customer per thread) only with the "Talon v2" setting on; else v1, unchanged. -->
+				<template v-if="talonV2Settled">
+					<TalonV2Chat v-if="talonV2Available" class="h-fixed" />
+					<TalonChat v-else class="h-fixed" />
+				</template>
+				<div v-else class="h-fixed flex items-center justify-center">
+					<n-spin size="small" />
+				</div>
+			</n-tab-pane>
+			<!-- Talon's chat action proposals waiting in CoPilot: only with the "Talon v2" setting on. -->
+			<n-tab-pane v-if="talonV2Available" name="approvals" display-directive="show:lazy">
+				<template #tab>
+					<span class="flex items-center gap-2" data-testid="talon-approvals-tab">
+						Approvals
+						<n-badge
+							v-if="approvalsCount > 0"
+							:value="approvalsCount"
+							:max="99"
+							type="warning"
+							data-testid="talon-approvals-badge"
+						/>
+					</span>
+				</template>
+				<TalonApprovalsList class="pt-6" />
 			</n-tab-pane>
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">
 				<AlertsReportsList />
@@ -18,14 +41,38 @@
 </template>
 
 <script setup lang="ts">
-import { NTabPane, NTabs } from "naive-ui"
-import { ref } from "vue"
+import { NBadge, NSpin, NTabPane, NTabs } from "naive-ui"
+import { defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
 import FeedbackDashboard from "@/components/aiAnalyst/Feedback/FeedbackDashboard.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
 import TalonChat from "@/components/talonChat/TalonChatContainer.vue"
+import { useTalonApprovals, watchApprovals } from "@/composables/useTalonApprovals"
+import { useTalonV2Availability } from "@/composables/useTalonV2Availability"
+
+// Loaded only when the setting is on: with it off, the page is the v1 chat as before.
+const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonV2Chat.vue"))
+const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
 
 const activeTab = ref("overview")
+const { available: talonV2Available, settled: talonV2Settled } = useTalonV2Availability()
+
+// The Approvals badge: the pending list, read while this page is open and visible, only with v2 on.
+const { count: approvalsCount } = useTalonApprovals()
+let stopApprovals: (() => void) | null = null
+watch(
+	talonV2Available,
+	on => {
+		if (on && !stopApprovals) {
+			stopApprovals = watchApprovals()
+		} else if (!on && stopApprovals) {
+			stopApprovals()
+			stopApprovals = null
+		}
+	},
+	{ immediate: true }
+)
+onBeforeUnmount(() => stopApprovals?.())
 </script>
 
 <style lang="scss">

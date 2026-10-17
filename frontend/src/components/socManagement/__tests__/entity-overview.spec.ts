@@ -35,12 +35,14 @@ vi.mock("@/components/users/UserDetails.vue", () => ({
 	})
 }))
 
-const user = (username: string, id = 1): User => ({
-	id,
-	username,
-	email: `${username}@example.com`,
-	role_name: "analyst"
-})
+function user(username: string, id = 1): User {
+	return {
+		id,
+		username,
+		email: `${username}@example.com`,
+		role_name: "analyst"
+	}
+}
 
 beforeEach(() => {
 	setActivePinia(createPinia())

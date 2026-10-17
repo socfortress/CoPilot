@@ -83,7 +83,7 @@ class WafCapabilities(BaseModel):
 class WafVerifyResult(BaseModel):
     reachable: bool
     authenticated: bool
-    reason: Optional[str] = Field(None, description="Stable failure code: unreachable, token_rejected, tls_error, …")
+    reason: Optional[str] = Field(None, description="Stable failure code: unreachable, timeout, token_rejected, tls_error, …")
     detail: Optional[str] = None
     waf_user_email: Optional[str] = None
     waf_roles: List[str] = []
