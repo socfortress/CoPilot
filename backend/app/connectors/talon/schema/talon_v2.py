@@ -21,6 +21,10 @@ class TalonV2AvailabilityResponse(BaseModel):
     success: bool
     message: str
     enabled: bool = Field(..., description="Whether the Talon v2 chat (threads and the v2 stream) is turned on")
+    run_view: bool = Field(
+        False,
+        description="Whether the investigation run view can be offered: v2 is on and the Talon Phoenix connector has a URL and a key",
+    )
 
 
 class TalonV2SettingsResponse(BaseModel):

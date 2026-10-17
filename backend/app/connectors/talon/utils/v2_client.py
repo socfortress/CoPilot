@@ -31,6 +31,7 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from app.connectors.talon.services.identity import IDENTITY_HEADERS
+from app.connectors.talon.utils import capped_body
 from app.connectors.talon.utils.universal import MAX_REFUSAL_BODY_BYTES
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
@@ -100,14 +101,9 @@ def _url(attributes: Mapping[str, Any], path: str) -> str:
 
 
 async def _read_capped(response: httpx.Response, limit: int) -> Optional[bytes]:
-    """The body, or None when it is longer than ``limit``. Collected in a ``bytearray``: appending
-    to ``bytes`` copies the whole body each time, quadratic for a 4 MB transcript page."""
-    body = bytearray()
-    async for chunk in response.aiter_bytes():
-        body.extend(chunk)
-        if len(body) > limit:
-            return None
-    return bytes(body)
+    """The raw body, or None when it is longer than ``limit``; an encoded answer raises
+    ``EncodedBody`` (``capped_body``: httpx would inflate stacked gzip without a limit)."""
+    return await capped_body.read_capped(response, limit)
 
 
 async def _shielded_close(*closables: Any) -> None:
@@ -143,6 +139,11 @@ async def v2_request(
     try:
         async with _new_client(REQUEST_TIMEOUT) as client:
             async with client.stream(method, _url(attributes, path), headers=headers, params=params, json=json_body) as response:
+                if not capped_body.is_identity(response):
+                    # Never decoded (capped_body). A refusal keeps its status with no reason (the
+                    # fixed text); a 2xx can't be relayed, so it is no answer.
+                    logger.error(f"Talon v2 {method} {path}: the answer came with a Content-Encoding; not read")
+                    return V2Answer(None) if response.is_success else V2Answer(response.status_code, b"")
                 body = await _read_capped(response, max_body_bytes)
                 if body is None:
                     logger.error(f"Talon v2 {method} {path}: the answer is over {max_body_bytes} bytes")
@@ -165,7 +166,7 @@ class V2Stream:
     async def chunks(self) -> AsyncIterator[bytes]:
         """The upstream's bytes as they arrive, unchanged (keepalive comments included)."""
         try:
-            async for chunk in self._response.aiter_bytes():
+            async for chunk in capped_body.raw_chunks(self._response):
                 yield chunk
         except httpx.HTTPError as e:
             # Cut off mid-stream: the browser sees the stream end without [DONE] (the parser's
@@ -212,14 +213,14 @@ async def open_v2_stream(
         await _shielded_close(client)
         raise
     if response.is_success:
-        return V2Stream(client, response)
+        if capped_body.is_identity(response):
+            return V2Stream(client, response)
+        # talon-analyst never compresses its stream: an encoded one is not relayed or decoded.
+        await _shielded_close(response, client)
+        logger.error(f"Talon v2 POST {path}: the stream came with a Content-Encoding; refused")
+        return V2Answer(None)
     try:
-        body = b""
-        async for chunk in response.aiter_bytes():
-            body += chunk
-            if len(body) >= MAX_REFUSAL_BODY_BYTES:
-                body = body[:MAX_REFUSAL_BODY_BYTES]
-                break
+        body = await capped_body.read_prefix(response, MAX_REFUSAL_BODY_BYTES)
     except httpx.HTTPError:
         body = b""
     finally:

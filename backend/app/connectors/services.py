@@ -25,6 +25,7 @@ from app.connectors.resend.utils.universal import verify_resend_connection
 from app.connectors.schema import ConnectorResponse
 from app.connectors.shuffle.utils.universal import verify_shuffle_connection
 from app.connectors.sublime.utils.universal import verify_sublime_connection
+from app.connectors.talon.utils.phoenix_client import verify_talon_phoenix_connection
 from app.connectors.talon.utils.universal import verify_talon_connection
 from app.connectors.uba.utils.universal import verify_uba_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
@@ -220,6 +221,16 @@ class TalonService(ConnectorServiceInterface):
         return await verify_talon_connection(connector.connector_name)
 
 
+class TalonPhoenixService(ConnectorServiceInterface):
+    """talon-analyst's Phoenix: ``GET /v1/user`` with the key passes only for a VIEWER (plan M5-9a)."""
+
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_talon_phoenix_connection(connector.connector_name)
+
+
 class OpenCTIService(ConnectorServiceInterface):
     async def verify_authentication(
         self,
@@ -266,6 +277,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Portainer": PortainerService,
         "Resend": ResendService,
         "Talon": TalonService,
+        "Talon Phoenix": TalonPhoenixService,
         "OpenCTI": OpenCTIService,
         "SOCFortress UBA": UbaService,
     }

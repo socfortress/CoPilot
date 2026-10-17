@@ -49,6 +49,7 @@ from app.connectors.talon.schema.talon_v2 import TalonV2ThreadRename
 from app.connectors.talon.services import talon_action_sync
 from app.connectors.talon.services.identity import is_talon_customer_code
 from app.connectors.talon.services.identity import talon_identity_headers
+from app.connectors.talon.utils import phoenix_client
 from app.connectors.talon.utils.approval_tap import ApprovalTappedStream
 from app.connectors.talon.utils.universal import refusal_reason
 from app.connectors.talon.utils.v2_client import MAX_MESSAGES_BODY_BYTES
@@ -96,11 +97,16 @@ def require_talon_v2(connector_name: str = TALON_CONNECTOR):
 
 
 async def get_availability(session: AsyncSession, connector_name: str = TALON_CONNECTOR) -> TalonV2AvailabilityResponse:
+    """The setting, and whether the run view can be offered (plan M5-9a): v2 on and the "Talon
+    Phoenix" connector holding a URL and a key. Reads CoPilot's own rows only: never Phoenix (whether
+    the key is a viewer's is checked when a run view is asked for)."""
     enabled = await is_v2_enabled(session, connector_name)
+    run_view = enabled and await phoenix_client.is_configured()
     return TalonV2AvailabilityResponse(
         success=True,
         message="Talon v2 chat is on" if enabled else "Talon v2 chat is off",
         enabled=enabled,
+        run_view=run_view,
     )
 
 
@@ -237,7 +243,7 @@ def relay(answer: V2Answer) -> JSONResponse:
     if answer.status is not None and 200 <= answer.status < 300:
         try:
             json.loads(answer.body)
-        except ValueError:
+        except (ValueError, RecursionError):  # not JSON, or nested past the recursion limit
             logger.error(f"Talon v2: talon-analyst answered {answer.status} with a body that isn't JSON")
             response = JSONResponse({"detail": FAILED}, status_code=502)
         else:

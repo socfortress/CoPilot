@@ -203,6 +203,18 @@ def get_connectors_list():
                 "API key to one created with `uba-admin api-keys create --name copilot --scope write`."
             ),
         ),
+        (
+            "Talon Phoenix",
+            "20.20",
+            "api_key",
+            (
+                "Read-only connection to talon-analyst's Phoenix (traces of Talon's AI investigations), for the run "
+                "timeline on an alert's AI analysis. Set the URL to Phoenix on CoPilot's Docker network (e.g. "
+                "http://talon-analyst-phoenix:6006) and the API key to a Phoenix VIEWER user's key: the check passes "
+                "only for a viewer key. A viewer key can read every customer's project, so CoPilot checks the "
+                "user's access to the customer before every read."
+            ),
+        ),
         # ... Add more connectors as needed ...
     ]
 

@@ -9,6 +9,13 @@ Two routers:
   ``analyst``), behind ``require_talon_v2``: with the setting off every declared route answers 404
   ``{"detail": "Not Found"}``, as if it didn't exist (a method no route declares still answers
   405). The scope check comes first.
+- On the same router (plan M5-9a): talon-analyst's usage (``/usage``, ``/usage/investigations/{job_id}``,
+  ``/usage/threads/{thread_id}``) and budgets (``/budgets``, ``PUT /budgets/{customer_code}``, admin
+  only: the GET by the token and the database role, the PUT by the database role in the service,
+  so every refused PUT is audited) through ``services/talon_usage.py``, and an
+  investigation's run timeline from Phoenix (``/runs/{job_id}/timeline``, ``services/talon_runs.py``).
+  Their query and body are checked in the services, so every refusal is ``{"detail": …}`` and
+  ``no-store``.
 
 The identity talon-analyst sees is computed from the JWT's user on every request
 (``services/identity.py``); no header and no body field from the browser carries it.
@@ -33,6 +40,8 @@ from app.connectors.talon.schema.talon_v2 import TalonV2SettingsResponse
 from app.connectors.talon.schema.talon_v2 import TalonV2SettingsUpdate
 from app.connectors.talon.schema.talon_v2 import TalonV2ThreadCreate
 from app.connectors.talon.schema.talon_v2 import TalonV2ThreadRename
+from app.connectors.talon.services import talon_runs
+from app.connectors.talon.services import talon_usage
 from app.connectors.talon.services import talon_v2 as service
 from app.db.db_session import get_db
 
@@ -167,3 +176,96 @@ async def talon_v2_chat(
     session: AsyncSession = Depends(get_db),
 ) -> Response:
     return await service.chat(current_user, session, thread_id, body)
+
+
+# ── usage and budgets (talon-analyst FR-COST-4/5, plan M5-9a) ─────────────────
+
+ADMIN_ONLY = [Security(AuthHandler().require_any_scope("admin"))]
+
+
+@talon_v2_proxy_router.get("/usage", response_class=Response, description="Talon's tokens and cost per group over whole UTC days")
+async def get_talon_v2_usage(
+    start: Optional[str] = Query(None, alias="from", description="The first UTC day, YYYY-MM-DD"),
+    end: Optional[str] = Query(None, alias="to", description="The last UTC day, YYYY-MM-DD (included; at most 366 days)"),
+    group_by: Optional[str] = Query(None, description="customer (default), model, provider, role, stage, day or user"),
+    customer_code: Optional[str] = Query(None, description="One of the caller's customers"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    params = {"from": start, "to": end, "group_by": group_by, "customer_code": customer_code}
+    return await talon_usage.usage(current_user, session, params)
+
+
+@talon_v2_proxy_router.get(
+    "/usage/investigations/{job_id}",
+    response_class=Response,
+    description="One investigation's cost, per run, stage and model",
+)
+async def get_talon_v2_investigation_usage(
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await talon_usage.investigation_usage(current_user, session, job_id)
+
+
+@talon_v2_proxy_router.get(
+    "/usage/threads/{thread_id}",
+    response_class=Response,
+    description="One of the caller's own Talon v2 threads' cost",
+)
+async def get_talon_v2_thread_usage(
+    thread_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await talon_usage.thread_usage(current_user, session, thread_id)
+
+
+@talon_v2_proxy_router.get(
+    "/budgets",
+    response_class=Response,
+    description="Talon's daily and monthly budgets per customer (admin only)",
+    dependencies=ADMIN_ONLY,
+)
+async def get_talon_v2_budgets(
+    customer_code: Optional[str] = Query(None),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await talon_usage.budgets(current_user, session, customer_code)
+
+
+@talon_v2_proxy_router.put(
+    "/budgets/{customer_code}",
+    response_class=Response,
+    description=(
+        "Set one customer's Talon budget override (admin only, audited). Body: "
+        '{"daily_usd": …, "monthly_usd": …}, each null (the default), "unlimited" or an amount such as "25" or "12.50".'
+    ),
+    # No admin-only scope here: the service refuses anyone but a database admin and audits it,
+    # which a scope dependency (refusing before the handler) could not.
+)
+async def put_talon_v2_budget(
+    customer_code: str,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await talon_usage.put_budget(current_user, session, customer_code, request)
+
+
+# ── the run view (talon-analyst §5.4, plan M5-9a) ─────────────────────────────
+
+
+@talon_v2_proxy_router.get(
+    "/runs/{job_id}/timeline",
+    response_class=Response,
+    description="One investigation's run timeline from Phoenix: span names, kinds, times, status and token counts only",
+)
+async def get_talon_v2_run_timeline(
+    job_id: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Response:
+    return await talon_runs.run_timeline(current_user, session, job_id)
