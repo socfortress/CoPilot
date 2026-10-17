@@ -74,7 +74,12 @@
 
 				<div class="mt-6 flex justify-end gap-3">
 					<n-button @click="showGenerateModal = false">Cancel</n-button>
-					<n-button type="primary" :loading="generating" data-testid="report-generate-submit" @click="handleGenerate">
+					<n-button
+						type="primary"
+						:loading="generating"
+						data-testid="report-generate-submit"
+						@click="handleGenerate"
+					>
 						Generate Report
 					</n-button>
 				</div>

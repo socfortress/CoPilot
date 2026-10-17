@@ -31,7 +31,8 @@
 			<div class="flex items-center justify-between gap-2">
 				<span class="text-secondary text-xs">
 					<template v-if="authorText">{{ authorText }} ·</template>
-					{{ formatDate(report.generated_at, dFormats.datetime, { tz: true }) }} · {{ formatBytes(report.file_size) }}
+					{{ formatDate(report.generated_at, dFormats.datetime, { tz: true }) }} ·
+					{{ formatBytes(report.file_size) }}
 				</span>
 				<div class="flex items-center gap-2">
 					<n-button

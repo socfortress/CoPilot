@@ -36,7 +36,11 @@
 					<n-button size="small" secondary data-testid="event-columns-toggle" @click="showColumns = true">
 						<template #icon><Icon name="carbon:column" /></template>
 						Columns
-						<span v-if="userColumns" class="bg-primary ml-1.5 size-1.5 rounded-full" title="Your own columns" />
+						<span
+							v-if="userColumns"
+							class="bg-primary ml-1.5 size-1.5 rounded-full"
+							title="Your own columns"
+						/>
 					</n-button>
 					<n-button
 						size="small"
@@ -205,8 +209,12 @@ const pickerStart = computed(() => userColumns.value ?? selectedEventSource.valu
 // Column templates: named layouts for the source, switched from the toolbar. Applying one
 // copies its columns, so the layout in force is whichever one the columns match.
 const templates = computed(() => memory.templatesFor(selectedEventSource.value?.name))
-const sourceLayoutName = computed(() => (selectedEventSource.value?.displayed_columns?.length ? "SOC layout" : "Default layout"))
-const sourceLayoutColumns = computed(() => resolveColumns(null, selectedEventSource.value?.displayed_columns, timeField.value))
+const sourceLayoutName = computed(() =>
+	selectedEventSource.value?.displayed_columns?.length ? "SOC layout" : "Default layout"
+)
+const sourceLayoutColumns = computed(() =>
+	resolveColumns(null, selectedEventSource.value?.displayed_columns, timeField.value)
+)
 const activeLayoutKey = computed(() => {
 	if (!userColumns.value) return "source"
 	const match = templates.value.find(template => sameColumns(template.columns, userColumns.value))

@@ -59,7 +59,9 @@ export default {
 	},
 
 	deleteEventSearchQuery(customerCode: string, queryId: number) {
-		return HttpClient.delete<CommonResponse<EventSearchMemory>>(`/siem/event_search/${customerCode}/saved/${queryId}`)
+		return HttpClient.delete<CommonResponse<EventSearchMemory>>(
+			`/siem/event_search/${customerCode}/saved/${queryId}`
+		)
 	},
 
 	rememberEventSearch(customerCode: string, state: EventSearchState) {

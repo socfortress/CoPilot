@@ -44,7 +44,11 @@ export function downloadRoute(reportId: number): NonNullable<Notification["actio
 	return { name: "ReportsList", query: { download: String(reportId) } }
 }
 
-function notify(report: PendingReport, status: IncidentCustomerReportStatus["status"] | "timeout", error?: string | null) {
+function notify(
+	report: PendingReport,
+	status: IncidentCustomerReportStatus["status"] | "timeout",
+	error?: string | null
+) {
 	const base = {
 		id: `report-${report.id}`,
 		category: "report" as const,
@@ -207,10 +211,13 @@ function schedule() {
 	if (!store.pending.length || inFlight) return
 
 	const newest = Math.max(...store.pending.map(r => r.startedAt))
-	pollTimer = setTimeout(() => {
-		pollTimer = null
-		store.poll()
-	}, pollDelay(Date.now() - newest))
+	pollTimer = setTimeout(
+		() => {
+			pollTimer = null
+			store.poll()
+		},
+		pollDelay(Date.now() - newest)
+	)
 }
 
 function stopPolling() {

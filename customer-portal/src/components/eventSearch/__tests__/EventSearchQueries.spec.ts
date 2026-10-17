@@ -66,7 +66,11 @@ describe("eventSearchQueries", () => {
 		])
 
 		recent[1]!.click()
-		expect(wrapper.emitted("restore")?.[0]?.[0]).toMatchObject({ query: "agent_name:web", time_amount: 7, time_unit: "d" })
+		expect(wrapper.emitted("restore")?.[0]?.[0]).toMatchObject({
+			query: "agent_name:web",
+			time_amount: 7,
+			time_unit: "d"
+		})
 		saved[0]!.querySelector("button")!.click()
 		expect(wrapper.emitted("restore")?.[1]?.[0]).toMatchObject({ name: "High level" })
 	})

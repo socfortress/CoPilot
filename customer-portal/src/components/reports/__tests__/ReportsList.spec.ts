@@ -22,10 +22,9 @@ async function render(url: string) {
 	})
 	await router.push(url)
 	const replace = vi.spyOn(router, "replace")
-	const wrapper = mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(List)) }),
-		{ global: { plugins: [router], stubs: { ReportCard: true } } }
-	)
+	const wrapper = mount(defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(List)) }), {
+		global: { plugins: [router], stubs: { ReportCard: true } }
+	})
 	await flushPromises()
 	return { router, replace, wrapper }
 }

@@ -9,7 +9,11 @@ const prepend = vi.hoisted(() => vi.fn())
 vi.mock("@/api", () => ({ default: { reports: { getReportStatuses } } }))
 vi.mock("@/composables/common/useNotifications", () => ({ useNotifications: () => ({ prepend }) }))
 
-function status(id: number, value: IncidentCustomerReportStatus["status"], extra: Partial<IncidentCustomerReportStatus> = {}) {
+function status(
+	id: number,
+	value: IncidentCustomerReportStatus["status"],
+	extra: Partial<IncidentCustomerReportStatus> = {}
+) {
 	return { id, report_name: `r${id}`, file_name: `r${id}.pdf`, status: value, started_at: "", ...extra }
 }
 
@@ -38,12 +42,7 @@ describe("report generation poller (#1263)", () => {
 
 	it("asks often at first, then less and less", () => {
 		expect([0, 59_999, 60_000, 299_999, 300_000, 3_600_000].map(pollDelay)).toEqual([
-			3_000,
-3_000,
-10_000,
-10_000,
-30_000,
-30_000
+			3_000, 3_000, 10_000, 10_000, 30_000, 30_000
 		])
 	})
 

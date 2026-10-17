@@ -39,7 +39,12 @@ describe("eventSearchMemory", () => {
 			{ key: "agent_name", label: "Host" },
 			{ key: "rule_level", label: "Level" }
 		]
-		expect(sameColumns(a, a.map(c => ({ ...c })))).toBe(true)
+		expect(
+			sameColumns(
+				a,
+				a.map(c => ({ ...c }))
+			)
+		).toBe(true)
 		expect(sameColumns(a, [...a].reverse())).toBe(false)
 		expect(sameColumns(a, [{ key: "agent_name", label: "Agent" }, a[1]!])).toBe(false)
 		expect(sameColumns(a, a.slice(0, 1))).toBe(false)

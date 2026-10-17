@@ -42,7 +42,9 @@ function memory(names: string[] = [], extra: Partial<EventSearchMemory> = {}): E
 const answer = (data: object) => Promise.resolve({ data: { success: true, message: "ok", ...data } })
 
 function signIn(username: string | null) {
-	useAuthStore().$patch({ user: username ? ({ username, role: "customer_user", customer_codes: ["A", "B"] } as never) : null })
+	useAuthStore().$patch({
+		user: username ? ({ username, role: "customer_user", customer_codes: ["A", "B"] } as never) : null
+	})
 }
 
 describe("useEventSearchMemory", () => {
@@ -114,7 +116,9 @@ describe("useEventSearchMemory", () => {
 		siem.saveEventSearchQuery.mockReturnValue(answer({ ...memory(["on A", "MINE"]), replaced: true }))
 		expect(await form.save("MINE", STATE)).toBe(true)
 
-		siem.setEventSearchColumns.mockReturnValue(answer(memory([], { columns: { Wazuh: [{ key: "agent_name", label: "Host" }] } })))
+		siem.setEventSearchColumns.mockReturnValue(
+			answer(memory([], { columns: { Wazuh: [{ key: "agent_name", label: "Host" }] } }))
+		)
 		await results.setColumns("Wazuh", [{ key: "agent_name", label: "Host" }])
 		expect(siem.setEventSearchColumns).toHaveBeenCalledWith("A", "Wazuh", [{ key: "agent_name", label: "Host" }])
 		expect(form.columnsFor("Wazuh")).toEqual([{ key: "agent_name", label: "Host" }])
@@ -131,7 +135,13 @@ describe("useEventSearchMemory", () => {
 
 	it("lists a source's templates, and saves and deletes them", async () => {
 		signIn("alice")
-		const triage = { id: 3, source_name: "Wazuh", name: "Triage", columns: [{ key: "agent_name", label: "Host" }], updated_at: "" }
+		const triage = {
+			id: 3,
+			source_name: "Wazuh",
+			name: "Triage",
+			columns: [{ key: "agent_name", label: "Host" }],
+			updated_at: ""
+		}
 		const office = { ...triage, id: 4, source_name: "Office" }
 		siem.getEventSearchMemory.mockImplementation(() => answer(memory([], { templates: [triage, office] })))
 		const search = useEventSearchMemory("A")

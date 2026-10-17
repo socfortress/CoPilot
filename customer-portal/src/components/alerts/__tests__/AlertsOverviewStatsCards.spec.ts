@@ -16,7 +16,7 @@ function mountCards(status: AlertStatus | null) {
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
 					h(AlertsOverviewStatsCards, {
-						status: status,
+						status,
 						"onUpdate:status": (value: AlertStatus | null) => updates.push(value)
 					})
 				)

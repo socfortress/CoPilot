@@ -14,9 +14,9 @@ describe("report download helpers", () => {
 	it("takes the file name from Content-Disposition, quoted, bare or encoded", () => {
 		expect(fileNameFromDisposition('attachment; filename="weekly report.pdf"')).toBe("weekly report.pdf")
 		expect(fileNameFromDisposition("attachment; filename=weekly.pdf")).toBe("weekly.pdf")
-		expect(fileNameFromDisposition("attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.pdf; filename=\"resume.pdf\"")).toBe(
-			"résumé.pdf"
-		)
+		expect(
+			fileNameFromDisposition("attachment; filename*=UTF-8''r%C3%A9sum%C3%A9.pdf; filename=\"resume.pdf\"")
+		).toBe("résumé.pdf")
 		expect(fileNameFromDisposition("attachment; filename*=UTF-8''%E0%A4%A.pdf; filename=\"plain.pdf\"")).toBe(
 			"plain.pdf"
 		)

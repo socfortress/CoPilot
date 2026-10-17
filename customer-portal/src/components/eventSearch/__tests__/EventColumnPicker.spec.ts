@@ -19,7 +19,7 @@ function render(props: {
 }
 
 function keys(wrapper: ReturnType<typeof render>) {
-  return wrapper.findAll("[data-testid=picked-column]").map(row => row.find("[title]").attributes("title"))
+	return wrapper.findAll("[data-testid=picked-column]").map(row => row.find("[title]").attributes("title"))
 }
 
 describe("eventColumnPicker", () => {
@@ -31,10 +31,9 @@ describe("eventColumnPicker", () => {
 			]
 		})
 		expect(keys(wrapper)).toEqual(["timestamp", "agent_name"])
-		expect(wrapper.findAll("[data-testid=picked-column-label] input").map(i => (i.element as HTMLInputElement).value)).toEqual([
-			"Time",
-			"Host"
-		])
+		expect(
+			wrapper.findAll("[data-testid=picked-column-label] input").map(i => (i.element as HTMLInputElement).value)
+		).toEqual(["Time", "Host"])
 	})
 
 	it("moves and removes columns, and applies them with blank headers falling back to the field", async () => {
