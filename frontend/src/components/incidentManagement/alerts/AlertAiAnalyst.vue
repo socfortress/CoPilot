@@ -40,6 +40,15 @@
 							<Markdown :source="report.recommended_actions || 'No recommended actions'" breaks />
 						</div>
 					</n-tab-pane>
+					<!-- The selected report's job: its cost and run (talon-analyst M5-9, decision D), only with "Talon v2" on. -->
+					<n-tab-pane
+						v-if="talonV2Available && report.job_id"
+						name="cost"
+						tab="Cost & run"
+						display-directive="show:lazy"
+					>
+						<TalonJobCostRun :key="report.job_id" :job-id="report.job_id" class="pt-2" />
+					</n-tab-pane>
 				</n-tabs>
 			</div>
 		</div>
@@ -54,11 +63,12 @@
 <script setup lang="ts">
 import type { TalonJobData } from "@/types/talon"
 import { NSelect, NSpin, NTabPane, NTabs, NTag } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
@@ -78,6 +88,11 @@ const reports = computed(() => {
 	// Most recent first
 	return [...r].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 })
+
+// Loaded only with the "Talon v2" setting on: off, this panel is as before. Availability is asked
+// for only once there is a report to show it for, and only for a role v2 serves.
+const TalonJobCostRun = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonJobCostRun.vue"))
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(() => reports.value.length > 0)
 
 const reportOptions = computed(() =>
 	reports.value.map((r, i) => {

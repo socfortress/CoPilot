@@ -30,6 +30,14 @@
 				</template>
 				<TalonApprovalsList class="pt-6" />
 			</n-tab-pane>
+			<!-- Talon's cost (talon-analyst FR-COST-5): only with the "Talon v2" setting on. -->
+			<n-tab-pane v-if="talonV2Available" name="usage" tab="Usage" display-directive="show:lazy">
+				<TalonUsagePanel v-if="visited.has('usage')" class="pt-6" />
+			</n-tab-pane>
+			<!-- Budgets (FR-COST-4, decision B): an admin's only, with v2 on; the backend refuses anyone else. -->
+			<n-tab-pane v-if="talonV2Available && isAdmin" name="budgets" tab="Budgets" display-directive="show:lazy">
+				<TalonBudgets v-if="visited.has('budgets')" class="pt-6" />
+			</n-tab-pane>
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">
 				<AlertsReportsList />
 			</n-tab-pane>
@@ -42,20 +50,33 @@
 
 <script setup lang="ts">
 import { NBadge, NSpin, NTabPane, NTabs } from "naive-ui"
-import { defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
+import { getActivePinia } from "pinia"
+import { computed, defineAsyncComponent, onBeforeUnmount, reactive, ref, watch } from "vue"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
 import FeedbackDashboard from "@/components/aiAnalyst/Feedback/FeedbackDashboard.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
 import TalonChat from "@/components/talonChat/TalonChatContainer.vue"
 import { useTalonApprovals, watchApprovals } from "@/composables/useTalonApprovals"
 import { useTalonV2Availability } from "@/composables/useTalonV2Availability"
+import { useAuthStore } from "@/stores/auth"
 
 // Loaded only when the setting is on: with it off, the page is the v1 chat as before.
 const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonV2Chat.vue"))
 const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
+const TalonUsagePanel = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonUsagePanel.vue"))
+const TalonBudgets = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonBudgets.vue"))
 
 const activeTab = ref("overview")
 const { available: talonV2Available, settled: talonV2Settled } = useTalonV2Availability()
+
+// The cost tabs mount their content when first opened and keep it (the panes' `show:lazy`, held
+// here too so nothing is asked for before the tab is).
+const visited = reactive(new Set<string>())
+watch(activeTab, tab => visited.add(tab), { immediate: true })
+
+// The Budgets tab is an admin's (decision B). Read only when v2 is on; with no store there is no
+// session, so nobody is an admin.
+const isAdmin = computed(() => (getActivePinia() ? useAuthStore().isAdmin : false))
 
 // The Approvals badge: the pending list, read while this page is open and visible, only with v2 on.
 const { count: approvalsCount } = useTalonApprovals()

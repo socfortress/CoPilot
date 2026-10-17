@@ -50,6 +50,7 @@ import sysmonConfig from "./endpoints/sysmon-config"
 import tagRbac from "./endpoints/tag-rbac"
 import talon from "./endpoints/talon"
 import talonActions from "./endpoints/talonActions"
+import talonUsage from "./endpoints/talonUsage"
 import talonV2 from "./endpoints/talonV2"
 import threatIntel from "./endpoints/threat-intel"
 import totp from "./endpoints/totp"
@@ -118,6 +119,7 @@ export default {
 	tagRbac,
 	talon,
 	talonActions,
+	talonUsage,
 	talonV2,
 	opencti,
 	uba,

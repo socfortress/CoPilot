@@ -70,6 +70,19 @@
 				</div>
 			</template>
 		</CardEntity>
+
+		<!-- The job page only (not the embedded lists): its cost and run, with "Talon v2" on (talon-analyst M5-9). -->
+		<CardEntity
+			v-if="resolvedJob && !embedded && talonV2Available"
+			size="small"
+			class="mt-4"
+			data-testid="job-cost-and-run"
+		>
+			<template #headerMain>Cost & run</template>
+			<template #default>
+				<TalonJobCostRun :key="resolvedJob.id" :job-id="resolvedJob.id" />
+			</template>
+		</CardEntity>
 	</n-spin>
 </template>
 
@@ -77,11 +90,12 @@
 import type { AiAnalystJob } from "@/types/ai-analyst"
 import { useElementSize } from "@vueuse/core"
 import { NAlert, NSpin, NTimeline, NTimelineItem } from "naive-ui"
-import { computed, useTemplateRef } from "vue"
+import { computed, defineAsyncComponent, useTemplateRef } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import { useEntityDetails } from "@/composables/useEntityDetails"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
 
@@ -99,6 +113,10 @@ const emit = defineEmits<{
 }>()
 
 const dFormats = useSettingsStore().dateFormat
+
+// Loaded only with the "Talon v2" setting on, and only on the job page.
+const TalonJobCostRun = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonJobCostRun.vue"))
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(() => !props.embedded)
 const timelineRef = useTemplateRef("timelineRef")
 const { width: timelineWidth } = useElementSize(timelineRef)
 
