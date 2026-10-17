@@ -16,11 +16,15 @@ analysts (a responder's token carries ``analyst``). In order, on every request:
 3. **The query:** ``attribute=job_id:<json>`` and ``attribute=customer_code:<json>`` (Phoenix
    JSON-decodes the value, so both are JSON-quoted), a window from the job's ``created_at`` minus
    2 minutes to its ``completed_at`` (or now) plus 15 minutes, in UTC with ``Z``, sorted by start
-   time ascending, 100 spans a page, at most 10 pages; ``truncated`` past either cap.
+   time ascending, 100 spans a page, at most 10 pages; ``truncated`` past either cap. A job not
+   completed ends its window at now, at most ``created_at`` + 24 h. At most 100 spans are taken
+   from any page and 1000 in all, each (trace, span) id once; the role check and every page share
+   one 30 s deadline, and each request has its own (``phoenix_client``).
 4. **Every span is checked again**: its ``job_id`` and ``customer_code`` attributes must be the
    job's, exactly; any other span is dropped and counted (``dropped``), as is one that doesn't parse.
 5. **The allowlist DTO** (``schema/talon_runs.py``): ids, kind, a known name, times, status code,
-   stage, role, model, a known tool and integer token counts. Never ``status_message``, events,
+   stage and role (talon-analyst's own values only), model (an operator's model name), a known
+   tool and integer token counts. Never ``status_message``, events,
    ``input.*``, ``output.*``, ``llm.*_messages``, ``talon.scrub_*`` or any other attribute; a name
    that isn't one of the known span-name patterns is shown as ``"<kind> span"``.
 6. **Phoenix's answers:** its 404 (no project yet) is an empty timeline with ``note: "no trace
@@ -29,6 +33,7 @@ analysts (a responder's token carries ``analyst``). In order, on every request:
 
 Every answer is ``no-store``.
 """
+import asyncio
 import json
 import re
 from dataclasses import dataclass
@@ -40,6 +45,7 @@ from typing import Dict
 from typing import List
 from typing import Mapping
 from typing import Optional
+from typing import Set
 from typing import Tuple
 
 from fastapi import HTTPException
@@ -78,6 +84,12 @@ PAGE_SIZE = 100
 MAX_PAGES = 10
 WINDOW_BEFORE = timedelta(minutes=2)
 WINDOW_AFTER = timedelta(minutes=15)
+#: The longest a job without ``completed_at`` is taken to have run, for the window.
+MAX_RUNNING = timedelta(hours=24)
+#: The most spans a timeline holds (``PAGE_SIZE`` x ``MAX_PAGES``), whatever Phoenix sends.
+MAX_SPANS = 1000
+#: The whole of a timeline's Phoenix work (the role check and every page), whatever each read does.
+TIMELINE_DEADLINE_SECONDS = 30.0
 MAX_JOB_ID = 64  # ``ai_analyst_job.id``
 MAX_CURSOR = 1024
 
@@ -151,9 +163,15 @@ def _z(value: datetime) -> str:
 
 
 def time_window(job: JobFacts, now: Optional[datetime] = None) -> Tuple[str, str]:
-    start = _utc(job.created_at) - WINDOW_BEFORE
-    end = _utc(job.completed_at if job.completed_at is not None else (now or now_utc())) + WINDOW_AFTER
-    return _z(start), _z(end)
+    """From ``created_at`` - 2 min to ``completed_at`` + 15 min. A job with no ``completed_at`` ends
+    at now, but never past ``created_at`` + ``MAX_RUNNING`` (a job stuck for days doesn't widen the
+    query to all of them)."""
+    created = _utc(job.created_at)
+    if job.completed_at is not None:
+        last = _utc(job.completed_at)
+    else:
+        last = min(_utc(now or now_utc()), created + MAX_RUNNING)
+    return _z(created - WINDOW_BEFORE), _z(last + WINDOW_AFTER)
 
 
 def span_query(job: JobFacts, cursor: Optional[str] = None, now: Optional[datetime] = None) -> List[Tuple[str, str]]:
@@ -226,16 +244,25 @@ TOOL_NAMES = frozenset(
     },
 )
 #: A model name as an operator configures it (``anthropic:claude-…``, ``claude-sonnet-5-5``,
-#: ``qwen3:32b``): never model-written, and still held to these characters.
-MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,127}")
-STAGE = re.compile(r"S[0-9]{1,2}(-[a-z]{1,16})?")
-ROLE = re.compile(r"[a-z][a-z_-]{0,31}")
+#: ``qwen3:32b``): never model-written, and still held to these characters and this length.
+MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}")
+#: The ``stage`` values talon-analyst's runs carry (``TalonDeps.stage`` under ``tracing.scope``:
+#: S0-S10 as investigation stages, S4 the template chooser, S5 the investigation, ``S5-escalation``
+#: its escalation (``escalation.LEDGER_STAGE``; ``S5-esc`` its event stage), ``S5-revision`` the
+#: review's revision, S6 the reviewer, ``chat`` and ``chat-memory``). Anything else is null.
+STAGES = frozenset({f"S{n}" for n in range(11)} | {"S5-esc", "S5-escalation", "S5-revision", "chat", "chat-memory"})
+#: The ``role`` values talon-analyst's runs carry: ``analyst`` (an investigation, and v1/v2 chat's
+#: default agent) and ``analyst-chat-memory`` (chat-memory notes). Anything else is null.
+ROLES = frozenset({"analyst", "analyst-chat-memory"})
 TRACE_ID = re.compile(r"[0-9a-f]{32}")
 SPAN_ID = re.compile(r"[0-9a-f]{16}")
 #: The span names Pydantic AI 2.x gives talon-analyst's spans, each with what may follow.
 _AGENT_SPAN = re.compile(r"invoke_agent (?P<agent>.+)")
 _TOOL_SPAN = re.compile(r"execute_tool (?P<tool>.+)")
-_MODEL_SPAN = re.compile(r"(?:chat|model request attempt) (?P<model>.+)")
+#: Pydantic AI's model request span (``_instrumentation.py``: ``f"chat {model_name}"``). Its failed
+#: attempts' spans (``model request attempt <model>``) and anything else show as ``"<kind> span"``:
+#: talon-analyst makes no spans of its own (no tracer use in ``src/talon/``), so these are the names.
+_MODEL_SPAN = re.compile(r"chat (?P<model>.+)")
 _FIXED_NAMES = frozenset({"agent run", "running tool", "running tools", "running output function"})
 #: The largest token count believed (a count past it is not one).
 MAX_TOKENS = 10**12
@@ -324,8 +351,8 @@ def to_dto(span: Mapping[str, Any]) -> Optional[TimelineSpan]:
         end_time=_iso(end),
         duration_ms=max(0, int((end - start).total_seconds() * 1000)),
         status_code=status,
-        stage=_matching(attributes.get("stage"), STAGE),
-        role=_matching(attributes.get("role"), ROLE),
+        stage=_member(attributes.get("stage"), STAGES),
+        role=_member(attributes.get("role"), ROLES),
         model=_matching(model, MODEL_NAME),
         tool=_member(tool, TOOL_NAMES),
         prompt_tokens=_tokens(attributes, "llm.token_count.prompt", "gen_ai.usage.input_tokens"),
@@ -355,7 +382,7 @@ def _page(body: bytes) -> Tuple[List[Any], Optional[str]]:
     """``{"data": [...], "next_cursor": str | null}`` (Phoenix ``SpansResponseBody``), or PhoenixFailed."""
     try:
         payload = json.loads(body)
-    except ValueError:
+    except Exception:  # noqa: BLE001 - not JSON, or nested past the recursion limit
         raise PhoenixFailed("not JSON") from None
     if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
         raise PhoenixFailed("not a page of spans")
@@ -366,58 +393,72 @@ def _page(body: bytes) -> Tuple[List[Any], Optional[str]]:
 
 
 async def read_timeline(job: JobFacts, project: str) -> RunTimeline:
-    """Every page of the job's spans (at most ``MAX_PAGES``), filtered and mapped. Raises
-    ``PhoenixFailed`` for anything but a usable answer, and 503 (``HTTPException``) when busy."""
+    """The job's timeline, read within one of the Phoenix slots and ``TIMELINE_DEADLINE_SECONDS``.
+    Raises ``PhoenixFailed`` for anything but a usable answer (the deadline included), and 503
+    (``HTTPException``) when busy. The slot is given back however the read ends."""
     async with phoenix_client.reading():
-        conn = await phoenix_client.connector()
-        if conn is None:
-            raise PhoenixFailed("no usable connector")
-        if not await phoenix_client.is_viewer(conn):
-            raise PhoenixFailed("not a viewer key")
-        spans: List[TimelineSpan] = []
-        dropped = 0
-        truncated = False
-        note: Optional[str] = None
-        cursor: Optional[str] = None
-        path = f"/v1/projects/{project}/spans"
-        for page_number in range(MAX_PAGES):
-            got = await phoenix_client.get(conn, path, span_query(job, cursor), max_bytes=phoenix_client.MAX_PAGE_BYTES)
-            if got.status == 404 and page_number == 0:  # no project yet: nothing traced for this customer
-                return RunTimeline(
-                    job_id=job.job_id,
-                    customer_code=job.customer_code,
-                    spans=[],
-                    truncated=False,
-                    dropped=0,
-                    note=NO_TRACE_DATA,
-                )
-            if got.status != 200:
-                raise PhoenixFailed(f"HTTP {got.status}")
-            if got.over_cap:
-                truncated, note = True, PAGE_TOO_LARGE
+        try:
+            async with asyncio.timeout(TIMELINE_DEADLINE_SECONDS):
+                return await _read_pages(job, project)
+        except TimeoutError:
+            raise PhoenixFailed("the timeline's deadline passed") from None
+
+
+async def _read_pages(job: JobFacts, project: str) -> RunTimeline:
+    """Every page of the job's spans: at most ``MAX_PAGES`` pages, ``PAGE_SIZE`` spans of each and
+    ``MAX_SPANS`` in all (``truncated`` past any of them), each span once by (trace, span) id."""
+    conn = await phoenix_client.connector()
+    if conn is None:
+        raise PhoenixFailed("no usable connector")
+    if not await phoenix_client.is_viewer(conn):
+        raise PhoenixFailed("not a viewer key")
+    spans: List[TimelineSpan] = []
+    seen: Set[Tuple[str, str]] = set()
+    dropped = 0
+    truncated = False
+    note: Optional[str] = None
+    cursor: Optional[str] = None
+    path = f"/v1/projects/{project}/spans"
+    for page_number in range(MAX_PAGES):
+        got = await phoenix_client.get(conn, path, span_query(job, cursor), max_bytes=phoenix_client.MAX_PAGE_BYTES)
+        if got.status == 404 and page_number == 0:  # no project yet: nothing traced for this customer
+            return RunTimeline(job_id=job.job_id, customer_code=job.customer_code, spans=[], truncated=False, dropped=0, note=NO_TRACE_DATA)
+        if got.status != 200:
+            raise PhoenixFailed(f"HTTP {got.status}")
+        if got.over_cap:
+            truncated, note = True, PAGE_TOO_LARGE
+            break
+        data, next_cursor = _page(got.body or b"")
+        if len(data) > PAGE_SIZE:  # more than was asked for: the rest is not read
+            truncated = True
+        for raw in data[:PAGE_SIZE]:
+            if len(spans) >= MAX_SPANS:
+                truncated = True
                 break
-            data, next_cursor = _page(got.body or b"")
-            for raw in data:
-                if not isinstance(raw, Mapping) or not belongs(raw, job):
-                    dropped += 1
-                    continue
-                dto = to_dto(raw)
-                if dto is None:
-                    dropped += 1
-                    continue
-                spans.append(dto)
-            if next_cursor is None:
-                break
-            if next_cursor == cursor:  # a cursor that doesn't move would page forever
-                raise PhoenixFailed("the cursor did not move")
-            cursor = next_cursor
-        else:
-            truncated = True  # MAX_PAGES read and Phoenix still has more
-        if dropped:
-            logger.warning(f"Talon run view: dropped {dropped} span(s) of job {job.job_id} that weren't its own or didn't parse")
-        if not spans and note is None:
-            note = NO_TRACE_DATA
-        return RunTimeline(job_id=job.job_id, customer_code=job.customer_code, spans=spans, truncated=truncated, dropped=dropped, note=note)
+            if not isinstance(raw, Mapping) or not belongs(raw, job):
+                dropped += 1
+                continue
+            dto = to_dto(raw)
+            if dto is None or (dto.trace_id, dto.span_id) in seen:  # unparsable, or a repeat
+                dropped += 1
+                continue
+            seen.add((dto.trace_id, dto.span_id))
+            spans.append(dto)
+        if truncated or next_cursor is None:
+            break
+        if len(spans) >= MAX_SPANS:
+            truncated = True  # the cap is reached and Phoenix has more
+            break
+        if next_cursor == cursor:  # a cursor that doesn't move would page forever
+            raise PhoenixFailed("the cursor did not move")
+        cursor = next_cursor
+    else:
+        truncated = True  # MAX_PAGES read and Phoenix still has more
+    if dropped:
+        logger.warning(f"Talon run view: dropped {dropped} span(s) of job {job.job_id} that weren't its own, didn't parse or repeated")
+    if not spans and note is None:
+        note = NO_TRACE_DATA
+    return RunTimeline(job_id=job.job_id, customer_code=job.customer_code, spans=spans, truncated=truncated, dropped=dropped, note=note)
 
 
 async def run_timeline(user: User, session: AsyncSession, job_id: str) -> JSONResponse:

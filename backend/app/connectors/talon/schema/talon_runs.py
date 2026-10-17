@@ -43,9 +43,11 @@ class RunTimeline(BaseModel):
     job_id: str
     customer_code: str
     spans: List[TimelineSpan]
-    #: More spans exist than were read (over 10 pages of 100, or a page over the byte cap).
+    #: More spans exist than were read: over 10 pages, over 1000 spans, a page with more than
+    #: 100, or a page over the byte cap.
     truncated: bool
-    #: Spans Phoenix returned that weren't this job's and customer's, or that didn't parse: never shown.
+    #: Spans Phoenix returned that weren't this job's and customer's, didn't parse or repeated one
+    #: already shown: never shown.
     dropped: int
     #: Why there is nothing to show, when that is known (``"no trace data"``).
     note: Optional[str] = None

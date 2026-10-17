@@ -36,7 +36,9 @@ from tests.talon_v2_support import NEW_ROUTES
 from tests.talon_v2_support import TALON_KEY
 from tests.talon_v2_support import Upstream
 from tests.talon_v2_support import as_user
+from tests.talon_v2_support import bomb_response
 from tests.talon_v2_support import call
+from tests.talon_v2_support import deeply_nested
 from tests.talon_v2_support import phoenix_connector
 from tests.talon_v2_support import restrict_tags
 
@@ -370,6 +372,11 @@ def test_budgets_are_refused_for_anyone_but_a_database_admin(who, status):
     get, put, ctx = call(scenario, upstream=upstream())
     assert get.status_code == put.status_code == status
     assert ctx.upstream.requests == []
+    # The PUT's refusal is audited whatever refused it: an analyst's token as much as a demoted
+    # admin's (review of #1271: a scope dependency refused before anything was recorded).
+    (audited,) = ctx.audit.await_args_list
+    assert audited.kwargs["action"].value == "talon_budget.update" and audited.kwargs["result"].value == "failure"
+    assert audited.kwargs["actor_username"] == who
 
 
 def test_a_demoted_admins_put_is_refused_and_audited_as_a_failure():
@@ -550,3 +557,63 @@ def test_the_usage_rules_mirror_talon_analysts():
     assert talon_usage.GROUP_BY == {"customer", "model", "provider", "role", "stage", "day", "user"}
     assert talon_usage.MAX_DAYS == 366
     assert talon_usage.usage_query_problem({"from": "2026-10-01", "to": "2026-10-01"}) is None
+
+
+# ── review of #1271 ───────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("answer", [httpx.Response(200, text="ok"), httpx.Response(204), httpx.Response(200, content=deeply_nested())])
+def test_a_2xx_to_the_put_is_audited_as_applied_even_when_its_body_isnt_json(answer):
+    def respond(request):
+        return answer if request.method == "PUT" else by_route(request)
+
+    async def scenario(client, ctx):
+        put = await client.put(f"/talon/v2/budgets/{ACME}", json={"daily_usd": "25", "monthly_usd": None}, headers=as_user("admin"))
+        return put, ctx
+
+    put, ctx = call(scenario, upstream=Upstream(respond))
+    assert (put.status_code, put.json()) == (502, {"detail": "Talon request failed"})
+    (audited,) = ctx.audit.await_args_list
+    assert audited.kwargs["result"].value == "success"
+    assert audited.kwargs["new_value"] == {"daily_usd": "25", "monthly_usd": None}
+    assert "unconfirmed" in audited.kwargs["details"]
+
+
+def test_a_deeply_nested_put_body_is_a_422_not_a_500():
+    async def scenario(client, ctx):
+        put = await client.put(f"/talon/v2/budgets/{ACME}", content=b"[" * 4000, headers=as_user("admin"))
+        return put, ctx
+
+    put, ctx = call(scenario, upstream=upstream())
+    assert put.status_code == 422 and ctx.upstream.requests == []
+
+
+def test_a_deeply_nested_talon_analyst_answer_is_a_502_not_a_500():
+    async def scenario(client, ctx):
+        return [
+            (await client.get(USAGE, headers=as_user("ana"))).status_code,
+            (await client.get(USAGE + "&group_by=user", headers=as_user("admin"))).status_code,
+            (await client.get(f"/talon/v2/usage/threads/{THREAD}", headers=as_user("ana"))).status_code,
+        ]
+
+    nested = Upstream(lambda request: httpx.Response(200, content=deeply_nested()))
+    assert call(scenario, upstream=nested) == [502, 502, 502]
+
+
+def test_a_customer_code_with_whitespace_is_refused_not_stripped():
+    # talon-analyst strips each code; CoPilot is stricter and refuses it, so nothing ambiguous is sent.
+    async def scenario(client, ctx):
+        return await client.get(f"/talon/v2/usage?from=2026-10-01&to=2026-10-02&customer_code=%20{ACME}%20", headers=as_user("ana")), ctx
+
+    response, ctx = call(scenario, upstream=upstream())
+    assert (response.status_code, response.json()) == (400, {"detail": "invalid customer_code"}) and ctx.upstream.requests == []
+
+
+@pytest.mark.parametrize("status", [200, 403])
+def test_a_stacked_gzip_answer_from_talon_analyst_is_never_inflated(status):
+    async def scenario(client, ctx):
+        return await client.get(USAGE, headers=as_user("ana"))
+
+    response = call(scenario, upstream=Upstream(lambda request: bomb_response(status)))
+    # A 2xx can't be relayed undecoded: 502. A refusal's reason can't be read: the fixed text.
+    assert (response.status_code, response.json()) == (502 if status == 200 else 403, {"detail": "Talon request failed"})

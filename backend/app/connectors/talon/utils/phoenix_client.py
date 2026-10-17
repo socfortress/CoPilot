@@ -16,8 +16,10 @@ What this module guarantees:
   key), connect 5 s and read 20 s. TLS is not verified, as for v1 and the v2 client: Phoenix
   belongs on CoPilot's private Docker network (talon-analyst M5-9t, alias
   ``talon-analyst-phoenix``).
-- **Byte caps.** Every body is streamed and dropped past its cap (16 MB for a page of spans,
-  ``MAX_PAGE_BYTES``), so a huge answer can't fill memory.
+- **Byte caps.** Every body is streamed raw and dropped past its cap (16 MB for a page of spans,
+  ``MAX_PAGE_BYTES``), so a huge answer can't fill memory. An answer with any ``Content-Encoding``
+  but identity is refused, never decoded (``capped_body``: httpx inflates stacked gzip with no
+  limit). Each request also has a total deadline (``GET_TOTAL_SECONDS``, ``USER_TOTAL_SECONDS``).
 - **The viewer role, checked.** No run view unless ``GET /v1/user`` answers 200 with
   ``data.role == "VIEWER"`` exactly (Phoenix 20.20 ``routers/v1/users.py:get_viewer``; anything
   else, an anonymous user included, fails closed). A definite answer is cached for 10 minutes,
@@ -45,6 +47,7 @@ import httpx
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.talon.utils import capped_body
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -55,6 +58,9 @@ TIMEOUT = httpx.Timeout(connect=5.0, read=20.0, write=5.0, pool=5.0)
 MAX_PAGE_BYTES = 16 * 1024 * 1024
 #: ``GET /v1/user`` is one small object.
 MAX_USER_BYTES = 64 * 1024
+#: Each request's whole life (connect, headers, body), whatever the per-read timeouts say.
+GET_TOTAL_SECONDS = 25.0
+USER_TOTAL_SECONDS = 10.0
 
 #: Phoenix reads in flight per process, and how long a caller waits for one.
 CONCURRENT = 2
@@ -147,30 +153,24 @@ async def is_configured() -> bool:
     return await connector() is not None
 
 
-async def _read_capped(response: httpx.Response, limit: int) -> Optional[bytes]:
-    body = bytearray()
-    async for chunk in response.aiter_bytes():
-        body.extend(chunk)
-        if len(body) > limit:
-            return None
-    return bytes(body)
-
-
 async def get(
     conn: PhoenixConnector,
     path: str,
     params: Optional[Sequence[Tuple[str, str]]] = None,
     *,
     max_bytes: int,
+    total_seconds: Optional[float] = None,
 ) -> PhoenixAnswer:
-    """``GET {url}{path}`` with the viewer key. Never raises for a status or a transport error."""
+    """``GET {url}{path}`` with the viewer key, all of it within ``total_seconds`` (a server that
+    dribbles bytes never trips the read timeout). Never raises for a status, a transport error, an
+    encoded body (``capped_body``) or the deadline: each is ``PhoenixAnswer(None)``."""
     if not path.startswith("/v1/"):
         raise ValueError("a Phoenix path starts with /v1/")
     headers = {"Authorization": f"Bearer {conn.api_key}", "Accept": "application/json", "Accept-Encoding": "identity"}
     try:
-        async with _new_client() as client:
+        async with asyncio.timeout(GET_TOTAL_SECONDS if total_seconds is None else total_seconds), _new_client() as client:
             async with client.stream("GET", f"{conn.url}{path}", params=list(params or []), headers=headers) as response:
-                body = await _read_capped(response, max_bytes)
+                body = await capped_body.read_capped(response, max_bytes)
                 if body is None:
                     logger.error(f"Talon Phoenix GET {path.split('?')[0]}: the answer is over {max_bytes} bytes")
                 return PhoenixAnswer(response.status_code, body)
@@ -197,7 +197,7 @@ def role_of(answer: PhoenixAnswer) -> Optional[str]:
         return None
     try:
         payload = json.loads(answer.body)
-    except ValueError:
+    except Exception:  # noqa: BLE001 - not JSON, or nested past the recursion limit: no role
         return None
     data = payload.get("data") if isinstance(payload, dict) else None
     role = data.get("role") if isinstance(data, dict) else None
@@ -224,7 +224,7 @@ async def is_viewer(conn: PhoenixConnector) -> bool:
     cached = _ROLE_CACHE.get(key)
     if cached is not None and cached[0] > now:
         return cached[1]
-    answer = await get(conn, "/v1/user", max_bytes=MAX_USER_BYTES)
+    answer = await get(conn, "/v1/user", max_bytes=MAX_USER_BYTES, total_seconds=USER_TOTAL_SECONDS)
     viewer = is_viewer_answer(answer)
     if answer.status in (200, 401, 403):
         for stale in [k for k in _ROLE_CACHE if k != key]:  # the connector changed: forget the old key
@@ -276,7 +276,7 @@ async def verify_talon_phoenix_credentials(attributes: Optional[Mapping[str, Any
     conn = connector_from(attributes)
     if conn is None:
         return {"connectionSuccessful": False, "message": "Set the Phoenix URL and a viewer user's API key"}
-    answer = await get(conn, "/v1/user", max_bytes=MAX_USER_BYTES)
+    answer = await get(conn, "/v1/user", max_bytes=MAX_USER_BYTES, total_seconds=USER_TOTAL_SECONDS)
     if answer.status is None:
         return {"connectionSuccessful": False, "message": "Phoenix could not be reached"}
     if answer.status in (401, 403):

@@ -8,6 +8,8 @@ hook, no redirects, no proxy) are the ones under test.
 """
 
 import asyncio
+import functools
+import gzip
 import json
 import os
 from contextlib import ExitStack
@@ -320,3 +322,46 @@ NEW_ROUTES = [
     ("PUT", f"/talon/v2/budgets/{ACME}", {"daily_usd": "25", "monthly_usd": None}),
     ("GET", f"/talon/v2/runs/{JOB_ACME}/timeline", None),
 ]
+
+
+class RawStream(httpx.AsyncByteStream):
+    """A body as a network transport hands it over: raw bytes, never pre-read by httpx (so its
+    ``Content-Encoding`` would be decoded as it is read). ``forever`` dribbles ``data`` for ever,
+    one chunk each ``delay`` seconds."""
+
+    def __init__(self, data: bytes, *, chunk: int = 65536, delay: float = 0.0, forever: bool = False):
+        self.data, self.chunk, self.delay, self.forever = data, chunk, delay, forever
+        self.sent = 0
+
+    async def __aiter__(self):
+        while True:
+            for start in range(0, len(self.data), self.chunk):
+                if self.delay:
+                    await asyncio.sleep(self.delay)
+                piece = self.data[start : start + self.chunk]
+                self.sent += len(piece)
+                yield piece
+            if not self.forever:
+                return
+
+    async def aclose(self):
+        pass
+
+
+@functools.lru_cache(maxsize=1)
+def stacked_gzip(size: int = 64 * 1024 * 1024) -> bytes:
+    """``size`` bytes of zeros, gzipped twice: a few hundred bytes on the wire. Made once."""
+    return gzip.compress(gzip.compress(b"0" * size, compresslevel=9), compresslevel=9)
+
+
+def bomb_response(status: int = 200, encoding: str = "gzip, gzip") -> httpx.Response:
+    return httpx.Response(
+        status,
+        headers={"content-encoding": encoding, "content-type": "application/json"},
+        stream=RawStream(stacked_gzip()),
+    )
+
+
+def deeply_nested(depth: int = 100_000) -> bytes:
+    """JSON that ``json.loads`` can't parse without passing the recursion limit."""
+    return b'{"data": ' + b"[" * depth + b"]" * depth + b', "next_cursor": null}'

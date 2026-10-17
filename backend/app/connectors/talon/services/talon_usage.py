@@ -16,10 +16,16 @@ Every route is on ``talon_v2_proxy_router``: admin or analyst by token (a respon
   customer's; the row's own id is what is sent upstream. Unknown and refused answer the same 404.
 - ``GET /talon/v2/usage/threads/{thread_id}``: a UUID, relayed; talon-analyst enforces owner-only.
 - ``GET /talon/v2/budgets`` and ``PUT /talon/v2/budgets/{code}`` (decision B): an admin's, by the
-  role in the database as well as the token (a demoted admin's old token is refused). The ``PUT``
+  role in the database (the GET by the token's scope too; a demoted admin's old token is refused).
+  The PUT's role check is in the service, not a scope dependency, so a refusal of any token is
+  audited. The ``PUT``
   checks the customer as a new thread's is checked (``check_thread_customer``), takes a strict body
   (``daily_usd`` and ``monthly_usd``, each null, ``"unlimited"`` or a decimal string), reads the old
   values first, and is audited (``talon_budget.update``) with the old and new values, failures too.
+  Any 2xx from talon-analyst counts as applied and is audited as a success, even when its body
+  can't be read (the browser then gets a 502, and the audit says the values are unconfirmed).
+- ``customer_code`` is never stripped: talon-analyst strips each code, CoPilot refuses one with
+  surrounding whitespace (``invalid customer_code``), so what is checked is what is sent.
 
 Answers: talon-analyst's 2xx body is relayed; its refusals keep their status with its short fixed
 text (``refusal_reason``) or ``Talon request failed``; a 401 (CoPilot's API key) or no answer is a
@@ -145,7 +151,7 @@ async def with_usernames(answer: V2Answer) -> JSONResponse:
         groups = payload["groups"]
         if not isinstance(groups, list) or not all(isinstance(group, dict) for group in groups):
             raise TypeError("groups")
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, RecursionError):
         logger.error("Talon v2 usage: talon-analyst's group_by=user answer isn't a report")
         return refusal(502, FAILED)
     ids = [group.get("key") for group in groups]
@@ -251,7 +257,7 @@ def parse_budget_body(raw: bytes) -> Dict[str, Optional[str]]:
         raise BodyProblem("the body is too large")
     try:
         body = json.loads(raw)
-    except ValueError:
+    except (ValueError, RecursionError):  # not JSON, or nested past the recursion limit
         raise BodyProblem("the body must be JSON") from None
     if not isinstance(body, dict) or set(body) != set(BUDGET_FIELDS):
         raise BodyProblem("the body must have exactly daily_usd and monthly_usd")
@@ -267,7 +273,7 @@ def _limits(answer: V2Answer, code: str) -> Optional[Dict[str, Any]]:
         return {
             window: {"limit_usd": entry[window].get("limit_usd"), "source": entry[window].get("source")} for window in ("daily", "monthly")
         }
-    except (ValueError, KeyError, TypeError, AttributeError):
+    except (ValueError, KeyError, TypeError, AttributeError, RecursionError):
         return None
 
 
@@ -292,6 +298,8 @@ async def put_budget(user: User, session: AsyncSession, customer_code: str, requ
         )
         return refusal(status, detail)
 
+    # The PUT route takes any admin or analyst token, so a refusal by role is audited here: by the
+    # role in the database, which also refuses a demoted admin's old admin token.
     if not is_admin(user):
         await session.close()
         return await failed(403, ADMIN_ONLY)
@@ -319,18 +327,23 @@ async def put_budget(user: User, session: AsyncSession, customer_code: str, requ
 
     got = await v2_request("PUT", f"/v2/budgets/{customer_code}", identity, json_body=body)
     response = relay(got)
-    if got.status is not None and 200 <= got.status < 300 and response.status_code < 300:
+    if got.status is not None and 200 <= got.status < 300:
+        # talon-analyst applied it (its 2xx), whatever its body: audited as done. An answer that
+        # isn't JSON still reaches the browser as the relay's 502, and the audit says the stored
+        # values weren't confirmed.
+        readable = response.status_code < 300
         await record_audit_event(
             **audit,
             result=AuditResult.SUCCESS,
             old_value=old,
             new_value=body,
-            details=f"Talon budget set for customer '{customer_code}'",
+            details=f"Talon budget set for customer '{customer_code}'"
+            + ("" if readable else "; talon-analyst's answer was unreadable, so the stored values are unconfirmed"),
         )
         return response
     try:
         detail = json.loads(response.body)["detail"]
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, RecursionError):
         detail = FAILED
     await record_audit_event(
         **audit,

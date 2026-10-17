@@ -25,7 +25,10 @@ Run with: cd backend && python -m pytest tests/test_talon_phoenix_runs.py
 
 import asyncio
 import json
+import time
+import tracemalloc
 from datetime import datetime
+from datetime import timedelta
 
 import httpx
 import pytest
@@ -53,11 +56,15 @@ from tests.talon_v2_support import JOB_RUNNING
 from tests.talon_v2_support import PHOENIX_KEY
 from tests.talon_v2_support import PHOENIX_URL
 from tests.talon_v2_support import Phoenix
+from tests.talon_v2_support import RawStream
 from tests.talon_v2_support import as_user
+from tests.talon_v2_support import bomb_response
 from tests.talon_v2_support import call
+from tests.talon_v2_support import deeply_nested
 from tests.talon_v2_support import phoenix_connector
 from tests.talon_v2_support import restrict_tags
 from tests.talon_v2_support import span
+from tests.talon_v2_support import stacked_gzip
 
 MARKER = "PLANTED-MARKER-7f3a"
 SPAN_KEYS = set(TimelineSpan.model_fields)
@@ -392,7 +399,11 @@ def test_a_planted_marker_never_reaches_the_response_and_its_keys_are_the_allowl
     [
         ("chat claude-sonnet-5-5", "LLM", "chat claude-sonnet-5-5"),
         ("chat anthropic:claude-opus-5-5", "LLM", "chat anthropic:claude-opus-5-5"),
-        ("model request attempt qwen3:32b", "LLM", "model request attempt qwen3:32b"),
+        ("model request attempt qwen3:32b", "LLM", "LLM span"),  # not one of the exact names
+        ("chat qwen3:32b", "LLM", "chat qwen3:32b"),
+        ("chat model@evil", "LLM", "LLM span"),
+        ("chat " + "a" * 81, "LLM", "LLM span"),
+        ("chat " + "a" * 80, "LLM", "chat " + "a" * 80),
         ("chat a model with spaces", "LLM", "LLM span"),
         ("invoke_agent reviewer", "AGENT", "invoke_agent reviewer"),
         ("invoke_agent analyst-template-chooser", "AGENT", "invoke_agent analyst-template-chooser"),
@@ -727,3 +738,196 @@ def test_the_connector_check_without_a_key_or_unreachable_fails_without_echoing(
 def test_the_project_rule_is_one_constant():
     assert talon_runs.PROJECT_CUSTOMER.pattern == r"[A-Za-z0-9_-]{1,64}"
     assert CHAT == "chat" and talon_runs.project_for(CHAT) is None
+
+
+# ── review of #1271: hostile Phoenix answers ──────────────────────────────────
+
+
+def test_a_stacked_gzip_page_is_refused_without_being_inflated():
+    phoenix = Phoenix()
+    stacked_gzip()  # made before measuring: the test's own 64 MB isn't the client's
+    phoenix.spans_answer = lambda request, index: bomb_response()
+    tracemalloc.start()
+    try:
+        response, ctx = call(get_timeline(), phoenix=phoenix)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert (response.status_code, response.json()) == (502, {"detail": "Phoenix request failed"})
+    assert peak < 16 * 1024 * 1024  # 64 MB once inflated; refused raw, it never is
+
+
+@pytest.mark.parametrize("encoding", ["gzip", "deflate", "br", "gzip, identity", "identity, gzip", "x-custom"])
+def test_any_content_encoding_but_identity_is_refused(encoding):
+    phoenix = Phoenix()
+    phoenix.spans_answer = lambda request, index: httpx.Response(
+        200,
+        headers={"content-encoding": encoding},
+        stream=RawStream(json.dumps({"data": [span()], "next_cursor": None}).encode()),
+    )
+    response, _ = call(get_timeline(), phoenix=phoenix)
+    assert response.status_code == 502
+
+
+@pytest.mark.parametrize("encoding", ["identity", "Identity", " identity "])
+def test_an_identity_encoding_is_read(encoding):
+    phoenix = Phoenix()
+    phoenix.spans_answer = lambda request, index: httpx.Response(
+        200,
+        headers={"content-encoding": encoding},
+        stream=RawStream(json.dumps({"data": [span()], "next_cursor": None}).encode()),
+    )
+    response, _ = call(get_timeline(), phoenix=phoenix)
+    assert response.status_code == 200 and len(response.json()["spans"]) == 1
+
+
+def test_a_stacked_gzip_user_answer_is_no_role():
+    phoenix = Phoenix()
+    phoenix.user_answer = bomb_response()
+    response, ctx = call(get_timeline(), phoenix=phoenix)
+    assert response.status_code == 502 and ctx.phoenix.span_requests() == []
+    assert verify(phoenix_connector(), phoenix)["connectionSuccessful"] is False
+
+
+def test_every_phoenix_request_asks_for_identity():
+    _, ctx = call(get_timeline())
+    assert {r.headers["accept-encoding"] for r in ctx.phoenix.requests} == {"identity"}
+
+
+def test_at_most_page_size_spans_are_taken_from_a_page():
+    page = [span(n=i) for i in range(talon_runs.PAGE_SIZE * 50)]  # 5000 where 100 were asked for
+    response, ctx = call(get_timeline(), phoenix=Phoenix(pages=[page, [span(n=99999)]]))
+    body = response.json()
+    assert len(body["spans"]) == talon_runs.PAGE_SIZE and body["truncated"] is True
+    assert len(ctx.phoenix.span_requests()) == 1
+
+
+def test_a_timeline_holds_at_most_max_spans():
+    pages = [[span(n=p * 100 + i) for i in range(100)] for p in range(12)]
+    response, ctx = call(get_timeline(), phoenix=Phoenix(pages=pages))
+    body = response.json()
+    assert len(body["spans"]) == talon_runs.MAX_SPANS == 1000 and body["truncated"] is True
+    assert len(ctx.phoenix.span_requests()) == 10
+
+
+def test_the_span_cap_stops_paging(monkeypatch):
+    monkeypatch.setattr(talon_runs, "MAX_SPANS", 5)
+    pages = [[span(n=p * 3 + i) for i in range(3)] for p in range(4)]
+    response, ctx = call(get_timeline(), phoenix=Phoenix(pages=pages))
+    body = response.json()
+    assert len(body["spans"]) == 5 and body["truncated"] is True and len(ctx.phoenix.span_requests()) == 2
+
+
+def test_exactly_the_cap_with_nothing_more_is_not_truncated(monkeypatch):
+    monkeypatch.setattr(talon_runs, "MAX_SPANS", 4)
+    response, _ = call(get_timeline(), phoenix=Phoenix(pages=[[span(n=0), span(n=1)], [span(n=2), span(n=3)]]))
+    assert len(response.json()["spans"]) == 4 and response.json()["truncated"] is False
+
+
+def test_a_repeated_span_is_shown_once():
+    pages = [[span(n=0), span(n=0), span(n=1)], [span(n=1), span(n=2)]]
+    response, _ = call(get_timeline(), phoenix=Phoenix(pages=pages))
+    body = response.json()
+    assert [s["span_id"] for s in body["spans"]] == [f"{1:016x}", f"{2:016x}", f"{3:016x}"]
+    assert body["dropped"] == 2
+
+
+def dribble():
+    return httpx.Response(200, stream=RawStream(b" ", chunk=1, delay=0.05, forever=True))
+
+
+def test_a_dribbling_phoenix_hits_the_timelines_deadline_and_gives_the_slot_back(monkeypatch):
+    monkeypatch.setattr(talon_runs, "TIMELINE_DEADLINE_SECONDS", 0.3)
+    monkeypatch.setattr(phoenix_client, "QUEUE_WAIT", 0.2)
+
+    async def scenario(client, ctx):
+        ctx.phoenix.spans_answer = lambda request, index: dribble()
+        started = time.monotonic()
+        slow = [(await client.get(timeline(), headers=as_user("ana"))).status_code for _ in range(3)]
+        elapsed = time.monotonic() - started
+        ctx.phoenix.spans_answer = None
+        after = await client.get(timeline(), headers=as_user("ana"))
+        return slow, elapsed, after.status_code
+
+    slow, elapsed, after = call(scenario)
+    assert slow == [502, 502, 502] and elapsed < 5 and after == 200  # three over two slots: none leaked
+
+
+def test_each_request_has_its_own_total_deadline(monkeypatch):
+    monkeypatch.setattr(phoenix_client, "USER_TOTAL_SECONDS", 0.2)
+
+    async def scenario(client, ctx):
+        ctx.phoenix.user_answer = dribble()
+        first = await client.get(timeline(), headers=as_user("ana"))
+        ctx.phoenix.user_answer = None
+        second = await client.get(timeline(), headers=as_user("ana"))
+        return first.status_code, second.status_code, len(ctx.phoenix.user_requests())
+
+    assert call(scenario) == (502, 200, 2)  # the timed-out check isn't cached
+
+
+def test_a_page_read_has_its_own_total_deadline(monkeypatch):
+    monkeypatch.setattr(phoenix_client, "GET_TOTAL_SECONDS", 0.2)
+    phoenix = Phoenix()
+    phoenix.spans_answer = lambda request, index: dribble()
+    started = time.monotonic()
+    response, _ = call(get_timeline(), phoenix=phoenix)
+    assert response.status_code == 502 and time.monotonic() - started < 5
+
+
+def test_deeply_nested_json_is_a_502_not_a_500():
+    phoenix = Phoenix()
+    phoenix.spans_answer = lambda request, index: httpx.Response(200, content=deeply_nested())
+    response, _ = call(get_timeline(), phoenix=phoenix)
+    assert (response.status_code, response.json()) == (502, {"detail": "Phoenix request failed"})
+
+
+def test_a_deeply_nested_user_answer_is_no_role():
+    phoenix = Phoenix()
+    phoenix.user_answer = httpx.Response(200, content=b'{"data": ' + b"[" * 50_000 + b"]" * 50_000 + b"}")
+    response, ctx = call(get_timeline(), phoenix=phoenix)
+    assert response.status_code == 502 and ctx.phoenix.span_requests() == []
+
+
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        ("role", MARKER),
+        ("role", "admin"),
+        ("role", "analyst "),
+        ("stage", MARKER),
+        ("stage", f"S5-{MARKER.lower()}"),
+        ("stage", "S11"),
+        ("stage", "s5"),
+        ("llm.model_name", f"{MARKER}@host"),
+        ("llm.model_name", "m" * 81),
+        ("llm.model_name", f"claude {MARKER}"),
+    ],
+)
+def test_free_text_in_role_stage_and_model_is_null(field, value):
+    extra = {"name": f"chat {value}"} if field == "llm.model_name" else {}
+    planted = span(attributes={field: value, "gen_ai.response.model": None}, **extra)
+    response, _ = call(get_timeline(), phoenix=Phoenix(pages=[[planted]]))
+    (item,) = response.json()["spans"]
+    key = {"llm.model_name": "model"}.get(field, field)
+    assert item[key] is None
+    assert MARKER.encode() not in response.content
+    if field == "llm.model_name":
+        assert item["name"] == "LLM span"
+
+
+@pytest.mark.parametrize("stage", ["S0", "S4", "S5", "S5-escalation", "S5-revision", "S6", "S10", "chat", "chat-memory"])
+def test_talon_analysts_own_stages_are_shown(stage):
+    item = talon_runs.to_dto(span(attributes={"stage": stage}))
+    assert item.stage == stage
+
+
+@pytest.mark.parametrize("role", ["analyst", "analyst-chat-memory"])
+def test_talon_analysts_own_roles_are_shown(role):
+    assert talon_runs.to_dto(span(attributes={"role": role})).role == role
+
+
+def test_a_running_jobs_window_is_capped_a_day_after_it_began():
+    job = talon_runs.JobFacts(job_id=JOB_RUNNING, customer_code=ACME, created_at=CREATED, completed_at=None)
+    start, end = talon_runs.time_window(job, now=CREATED + timedelta(days=3))
+    assert (start, end) == ("2026-10-16T07:58:00Z", "2026-10-17T08:15:00Z")

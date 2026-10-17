@@ -11,7 +11,8 @@ Two routers:
   405). The scope check comes first.
 - On the same router (plan M5-9a): talon-analyst's usage (``/usage``, ``/usage/investigations/{job_id}``,
   ``/usage/threads/{thread_id}``) and budgets (``/budgets``, ``PUT /budgets/{customer_code}``, admin
-  only, by the token and by the database role) through ``services/talon_usage.py``, and an
+  only: the GET by the token and the database role, the PUT by the database role in the service,
+  so every refused PUT is audited) through ``services/talon_usage.py``, and an
   investigation's run timeline from Phoenix (``/runs/{job_id}/timeline``, ``services/talon_runs.py``).
   Their query and body are checked in the services, so every refusal is ``{"detail": …}`` and
   ``no-store``.
@@ -242,7 +243,8 @@ async def get_talon_v2_budgets(
         "Set one customer's Talon budget override (admin only, audited). Body: "
         '{"daily_usd": …, "monthly_usd": …}, each null (the default), "unlimited" or an amount such as "25" or "12.50".'
     ),
-    dependencies=ADMIN_ONLY,
+    # No admin-only scope here: the service refuses anyone but a database admin and audits it,
+    # which a scope dependency (refusing before the handler) could not.
 )
 async def put_talon_v2_budget(
     customer_code: str,

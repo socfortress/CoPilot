@@ -243,7 +243,7 @@ def relay(answer: V2Answer) -> JSONResponse:
     if answer.status is not None and 200 <= answer.status < 300:
         try:
             json.loads(answer.body)
-        except ValueError:
+        except (ValueError, RecursionError):  # not JSON, or nested past the recursion limit
             logger.error(f"Talon v2: talon-analyst answered {answer.status} with a body that isn't JSON")
             response = JSONResponse({"detail": FAILED}, status_code=502)
         else:
