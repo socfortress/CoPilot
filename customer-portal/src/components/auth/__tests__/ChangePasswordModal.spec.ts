@@ -13,7 +13,12 @@ vi.mock("naive-ui", async original => {
 	const { defineComponent, h } = await import("vue")
 	return {
 		...(await original<typeof import("naive-ui")>()),
-		NModal: defineComponent({ setup: (_props, { slots }) => () => h("div", [slots.default?.(), slots.footer?.()]) })
+		NModal: defineComponent({
+			setup:
+				(_props, { slots }) =>
+				() =>
+					h("div", [slots.default?.(), slots.footer?.()])
+		})
 	}
 })
 
@@ -47,10 +52,13 @@ describe("changing my password in the portal (#1265)", () => {
 		document.body.innerHTML = ""
 	})
 
-	it.each(["Password1!-x", "Correct Horse 9+", "Pässwörd1_ok"])("sends %s, which meets every rule", async password => {
-		await changePassword(password)
-		expect(auth.resetPassword).toHaveBeenCalledWith("customer", password, "Old-Passw0rd")
-	})
+	it.each(["Password1!-x", "Correct Horse 9+", "Pässwörd1_ok"])(
+		"sends %s, which meets every rule",
+		async password => {
+			await changePassword(password)
+			expect(auth.resetPassword).toHaveBeenCalledWith("customer", password, "Old-Passw0rd")
+		}
+	)
 
 	it("names the rule a password breaks and sends nothing", async () => {
 		await changePassword("password1-x")
