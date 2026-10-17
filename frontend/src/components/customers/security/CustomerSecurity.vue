@@ -210,7 +210,7 @@
 						v-model:value="pwForm.newPassword"
 						type="password"
 						show-password-on="click"
-						placeholder="At least 8 characters"
+						:placeholder="PASSWORD_REQUIREMENTS"
 					/>
 				</n-form-item>
 				<n-form-item label="Confirm password" path="confirmPassword">
@@ -256,6 +256,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import { PASSWORD_REQUIREMENTS, passwordProblem } from "@/utils/password-policy"
 
 const { customerCode } = defineProps<{
 	customerCode: string
@@ -315,7 +316,17 @@ const pwFormRef = ref<FormInst | null>(null)
 const pwForm = ref({ newPassword: "", confirmPassword: "" })
 
 const pwRules: FormRules = {
-	newPassword: [{ required: true, min: 8, message: "At least 8 characters", trigger: ["blur", "input"] }],
+	newPassword: [
+		{ required: true, message: "New password is required", trigger: ["blur", "input"] },
+		{
+			// The API's own policy (#1265), so the form never accepts what the API refuses.
+			validator: (_rule, value: string) => {
+				const problem = passwordProblem(value || "")
+				return problem ? new Error(problem) : true
+			},
+			trigger: ["blur", "input"]
+		}
+	],
 	confirmPassword: [
 		{
 			required: true,
