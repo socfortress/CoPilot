@@ -122,6 +122,13 @@ class OverviewTrendResponse(BaseModel):
     since: str = Field(..., description="Start of the window, ISO 8601 UTC: a day more than the range, for any timezone")
     until: str = Field(..., description="End of the window (exclusive), ISO 8601 UTC")
     hours: List[OverviewTrendHour] = Field(default_factory=list, description="Hours with activity, oldest first")
+    alerts_open_at_since: Optional[int] = Field(
+        None,
+        description="Alerts still open at `since`. Adding each hour's opened and taking away its closed gives how many were open "
+        "at any later moment, so the portal can show the absolute Net (open at the end of each day) beside the relative one "
+        "(opened − closed). None when the alert trend failed.",
+    )
+    cases_open_at_since: Optional[int] = Field(None, description="Cases still open at `since`; see `alerts_open_at_since`")
     alerts_error: Optional[str] = None
     cases_error: Optional[str] = None
     success: bool = True
