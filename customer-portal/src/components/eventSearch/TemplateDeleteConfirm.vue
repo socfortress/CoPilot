@@ -10,9 +10,7 @@
 		<span class="flex min-w-36 grow basis-0 items-start gap-2">
 			<Icon name="carbon:warning-alt" :size="14" class="text-error mt-px shrink-0" />
 			<span class="text-default min-w-0 text-xs break-words">
-				Delete
-				<span class="font-medium">“{{ name }}”</span>
-				?
+				Delete <span class="font-medium">“{{ name }}”</span>?
 			</span>
 		</span>
 		<span class="ml-auto flex shrink-0 gap-2">
