@@ -25,7 +25,7 @@
 					size="large"
 					show-password-on="click"
 					:input-props="{ autocomplete: 'new-password' }"
-					placeholder="Enter new password"
+					:placeholder="PASSWORD_REQUIREMENTS"
 				/>
 			</n-form-item>
 			<n-form-item path="confirmPassword" label="Confirm Password" required>
@@ -64,6 +64,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
+import { PASSWORD_REQUIREMENTS, passwordProblem } from "@/utils/password-policy"
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -106,12 +107,11 @@ async function handleSubmit() {
 		return
 	}
 
-	// Mirror the backend complexity requirements so the user gets a clear message
-	// instead of an opaque 422 from the API.
-	if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,72}$/.test(newPassword.value)) {
-		message.error(
-			"Password must be 8-72 characters and include an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#)"
-		)
+	// The API's own policy, so the user reads which rule failed instead of an opaque 422. It used to
+	// allow only letters, digits and @$!%*?&#, refusing passwords that met every rule it listed (#1265).
+	const problem = passwordProblem(newPassword.value)
+	if (problem) {
+		message.error(problem)
 		return
 	}
 

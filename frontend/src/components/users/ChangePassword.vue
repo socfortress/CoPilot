@@ -57,12 +57,12 @@ import type { ButtonSize, ButtonType, FormInst, FormItemRule, FormRules, FormVal
 import type { ApiError } from "@/types/common"
 import type { User } from "@/types/user"
 import { NButton, NDrawer, NDrawerContent, NForm, NFormItem, NInput, NSpin, useMessage } from "naive-ui"
-import PasswordValidator from "password-validator"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
+import { passwordProblem } from "@/utils/password-policy"
 
 interface ModelType {
 	password: string | null
@@ -93,21 +93,6 @@ const model = ref<ModelType>({
 const username = computed(() => user?.username || "")
 const formRef = ref<FormInst | null>(null)
 const storedUserName = useAuthStore().userName
-const passwordSchema = new PasswordValidator()
-
-passwordSchema
-	.is()
-	.min(8) // Minimum length 8
-	.is()
-	.max(100) // Maximum length 100
-	.has()
-	.uppercase() // Must have uppercase letters
-	.has()
-	.lowercase() // Must have lowercase letters
-	.has()
-	.digits(1) // Must have at least 1 digit
-	.has()
-	.symbols(1) // Must have at least 1 symbol
 
 const rules: FormRules = {
 	password: [
@@ -117,11 +102,11 @@ const rules: FormRules = {
 			message: "Password is required"
 		},
 		{
-			validator: (_rule: FormItemRule, value: string): boolean => {
-				return !!passwordSchema.validate(value, { details: false })
+			// The API's own policy (#1265), so the form never accepts what the API refuses.
+			validator: (_rule: FormItemRule, value: string): Error | true => {
+				const problem = passwordProblem(value || "")
+				return problem ? new Error(problem) : true
 			},
-			message:
-				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
 			trigger: ["blur"]
 		}
 	],
