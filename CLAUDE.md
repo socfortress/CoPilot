@@ -505,6 +505,16 @@ Tests: `tests/test_customer_report_status.py` (no DB, no network), `tests/e2e/cu
 
 Tests: `tests/test_event_scroll_scoping.py`, `tests/test_event_search_memory.py` (no DB, no network), `tests/e2e/event_search_e2e.py` (13306, the indexer replaced by a recorder: tenancy of the search routes, and the memory and its templates across two logins, their limits, a race for the last slot, other users and customers, the cascade). Portal: `components/eventSearch/__tests__/`, `cypress/e2e/event-search.cy.ts` (memory on the real backend, a second device included).
 
+### Customer Portal Overview trend and AI analysis status (#1273)
+
+- **The trend is its own call**: `GET /customer_portal/overview/trend?range=7d|30d` (`services/overview_trend.py`), so the one-call Overview (#1181) stays light. It counts **opened from `opened_at` and closed from `resolved_at`** of `soc_sla_alert_tracking` / `soc_sla_case_tracking` — never `alert_creation_time`, which ingest moves to the latest trigger. A reopened item has no `resolved_at`, so it stops counting as closed. Items from before the SLA tracking tables have no clock and are not in the trend.
+- **Per UTC hour, in SQL; days are the viewer's.** One `UNION ALL … GROUP BY` per entity returns hours with something in them, over the range plus one day; the portal sums them into local days (`components/overview/trend/trend.ts:trendDays`, DST-safe through dayjs' timezone) and lists every day, empty ones included. Don't bucket by day on the server: a UTC day is not the customer's day.
+- **Visibility is the usual pair**: `alert_visibility_filters_for_user` for alerts (tag RBAC included; `None` → no query) and `resolve_effective_customers` for cases (`[]` → no query). Each entity fails on its own (`alerts_error` / `cases_error`, generic text, rolled back).
+- **Portal**: `OverviewTrendPanel.vue` (opened/closed lines on one axis, the totals as the legend, a screen-reader table, the colours in `TREND_COLORS` validated per mode) and a sparkline of opened per day on the alerts and cases posture cells. The period is `?trend=7d` (`replace`; the default `30d` is left out of the URL). `ChartColumn` was not reused: it is one series with a colour per bar.
+- **AI investigation status** (`AlertDetails/aiInvestigation.ts`): one map from status to label and colour ("Queued", "Analysing", "Completed", "Failed"); an active job older than `STALE_INVESTIGATION_MS` (2 h, the backend's own cutoff) reads "Stalled". The elapsed time ("Analysing · 4 min") counts from `started_at ?? created_at`, which are naive UTC: read them with `utcMillis` / `formatDate(…, { tz: true })`, never as local time. `utils/elapsed.ts` (moved from `reports/reportTiming.ts`) formats it for the reports too.
+
+Tests: `tests/test_customer_portal_overview_trend.py` (no DB), `tests/e2e/customer_portal_overview_trend_e2e.py` (13306: hour-exact counts, 7 vs 30 days, other customers, a tag-restricted analyst, the statement budget). Portal: `components/overview/trend/__tests__/`, `posture/__tests__/postureCells.spec.ts`, `AlertDetails/__tests__/{aiInvestigation,AlertAiReport}.spec.ts`, `cypress/e2e/{overview-trend,ai-request}.cy.ts`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
