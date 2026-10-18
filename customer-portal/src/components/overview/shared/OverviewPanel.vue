@@ -7,6 +7,9 @@
 				<span v-if="meta" class="text-tertiary font-mono text-xs tabular-nums">{{ meta }}</span>
 			</div>
 
+			<!-- Controls that change what the panel shows (a range, a breakdown). -->
+			<slot name="actions" />
+
 			<RouterLink
 				v-if="link"
 				:to="link.to"

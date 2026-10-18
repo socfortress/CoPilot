@@ -77,6 +77,32 @@ export interface PortalOverview {
 	ai: AiInsights & { error: string | null }
 }
 
+/** One UTC hour of `GET /customer_portal/overview/trend`; hours with nothing are omitted. */
+export interface OverviewTrendHour {
+	/** ISO 8601, UTC, on the hour: `2026-10-17T09:00:00Z`. */
+	hour: string
+	alerts_opened: number
+	alerts_closed: number
+	cases_opened: number
+	cases_closed: number
+}
+
+export type OverviewTrendRange = "7d" | "30d"
+
+/**
+ * Alerts and cases opened and closed per UTC hour, over the range plus one day, so any
+ * timezone can sum whole local days out of it. Each entity fails on its own.
+ */
+export interface OverviewTrend {
+	range: OverviewTrendRange
+	since: string
+	/** The next whole hour: the latest hour counted ends here. */
+	until: string
+	hours: OverviewTrendHour[]
+	alerts_error: string | null
+	cases_error: string | null
+}
+
 export interface DashboardStats {
 	total_alerts: number
 	total_agents: number
