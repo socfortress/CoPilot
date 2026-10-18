@@ -122,9 +122,6 @@ importers:
       password-generator:
         specifier: ^3.0.0
         version: 3.0.0
-      password-validator:
-        specifier: ^5.3.0
-        version: 5.3.0
       pinia:
         specifier: ^4.0.3
         version: 4.0.3(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3))
@@ -4054,10 +4051,6 @@ packages:
     resolution: {integrity: sha512-si0IXGjiLJBpNYHmowDpti6TKuvvbKVq4HhJPzXp/C+GDGdml8PeUjUZiMGaOwlFNpwDZNRhTVpdGZA3ksVfRQ==}
     engines: {node: '>=20'}
     hasBin: true
-
-  password-validator@5.3.0:
-    resolution: {integrity: sha512-Q+bSEM5pjokZqzWGoQaoylkeWeH4+9uMYlVImiPD0EOJClQ2RPBhrJ5h0OjhMKtwOmu5rRcLaTZo5Gk9RBl0ig==}
-    engines: {node: '>=8.10.0'}
 
   path-browserify@1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
@@ -9378,8 +9371,6 @@ snapshots:
       entities: 8.0.0
 
   password-generator@3.0.0: {}
-
-  password-validator@5.3.0: {}
 
   path-browserify@1.0.1: {}
 

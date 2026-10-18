@@ -1,5 +1,4 @@
 import datetime
-import re
 import secrets
 import string
 from enum import Enum
@@ -13,6 +12,9 @@ from pydantic import field_validator
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
+
+from app.auth.schema.password_policy import PASSWORD_REQUIREMENTS
+from app.auth.schema.password_policy import validate_password
 
 
 class Role(SQLModel, table=True):
@@ -111,15 +113,9 @@ def effective_roles(role_id: int) -> List[RoleEnum]:
 
 class UserInput(SQLModel):
     username: str
-    # bcrypt's input is capped at 72 bytes; longer passwords would either be silently
-    # truncated (bcrypt 4 behaviour) or rejected with ValueError (bcrypt 5+). We enforce
-    # the limit here so users get a clean 422 ValidationError instead.
-    password: str = Field(
-        max_length=72,
-        min_length=8,
-        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$",
-        description="Password must be 8-72 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-    )
+    # The password policy (8-72 bytes for bcrypt, the four character classes) lives in
+    # schema/password_policy.py, shared with the reset schemas below and both frontends.
+    password: str = Field(description=f"Password: {PASSWORD_REQUIREMENTS}")
     email: EmailStr
     role_id: RoleEnum = Field(
         RoleEnum.analyst,
@@ -129,6 +125,11 @@ class UserInput(SQLModel):
 
     # The customers an analyst or responder works on: required for those roles (#1219).
     customer_codes: List[str] = Field(default_factory=list, description="Customers to assign: at least one for an analyst or responder")
+
+    @field_validator("password")
+    @classmethod
+    def check_password(cls, value):
+        return validate_password(value)
 
     @field_validator("role_id")
     @classmethod
@@ -214,18 +215,8 @@ class PasswordResetToken(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def validate_password(cls, password):
-        if len(password) < 8 or len(password) > 72:
-            raise ValueError("Password length must be between 8 and 72 characters (bcrypt input limit).")
-        if not re.search(r"[a-z]", password):
-            raise ValueError("Password must contain at least one lowercase letter.")
-        if not re.search(r"[A-Z]", password):
-            raise ValueError("Password must contain at least one uppercase letter.")
-        if not re.search(r"\d", password):
-            raise ValueError("Password must contain at least one digit.")
-        if not re.search(r"[@$!%*?&#]", password):
-            raise ValueError("Password must contain at least one special character.")
-        return password
+    def check_new_password(cls, value):
+        return validate_password(value)
 
 
 class PasswordReset(BaseModel):
@@ -234,10 +225,11 @@ class PasswordReset(BaseModel):
     # against the stored hash before changing the password. Admin/analyst reset flows that
     # already prove identity via the JWT may omit it, preserving backwards compatibility.
     current_password: Optional[str] = None
-    # 8-72 chars — bcrypt's 72-byte input limit (matches UserInput).
-    new_password: str = Field(
-        max_length=72,
-        min_length=8,
-        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
-        description="Password must be 8-72 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-    )
+    # Same policy as UserInput. This used to allow only letters, digits and @$!%*?&#, so a
+    # password with any other character was refused even though it met every stated rule (#1265).
+    new_password: str = Field(description=f"Password: {PASSWORD_REQUIREMENTS}")
+
+    @field_validator("new_password")
+    @classmethod
+    def check_new_password(cls, value):
+        return validate_password(value)
