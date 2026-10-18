@@ -474,6 +474,13 @@ def fixture() -> dict:
         "ai_a": {"total_reports": 2, "severity_counts": {"High": 1, "Medium": 1}},
         "reports": {"a": REPORTS["A"], "b": REPORTS["B"]},
         "sla_a": sla_expectations(),
+        # The Overview's trend (#1273) counts the clocks above: every one inside the last 7 days.
+        "trend_a": {
+            "alerts_opened": len(SLA_ALERTS_A),
+            "alerts_closed": sum(1 for _, resolved_after in SLA_ALERTS_A if resolved_after),
+            "cases_opened": len(CASES_A),
+            "cases_closed": CASES_A.count("CLOSED"),
+        },
     }
 
 
