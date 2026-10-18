@@ -63,8 +63,8 @@ import { computed } from "vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { elapsedLabel, secondsSince } from "@/utils/elapsed"
 import { formatBytes, formatDate } from "@/utils/format"
-import { elapsedLabel, secondsSince } from "./reportTiming"
 
 const { report } = defineProps<{
 	report: IncidentCustomerReport

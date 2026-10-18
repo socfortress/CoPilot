@@ -439,6 +439,8 @@ async def seed(quiet: bool = False) -> dict:
             "ai_alert_id": alerts[(CUST_A, 0)].id,
             # An open alert of A no AI analysis ever ran on, for the portal request (#1215).
             "fresh_alert_id": alerts[(CUST_A, 2)].id,
+            # Another open alert of A with no AI analysis, for an investigation a test runs itself (#1273).
+            "ai_idle_alert_id": alerts[(CUST_A, 3)].id,
             # A's first agent (#1256): its case is A's first, never B's on the same host name.
             "agent_a0": {"agent_id": f"e2e-ov-{CUST_A}-0", "hostname": AGENT_HOST_A0, "case_id": cases[(CUST_A, 0)].id},
             "agent_b0_id": f"e2e-ov-{CUST_B}-0",

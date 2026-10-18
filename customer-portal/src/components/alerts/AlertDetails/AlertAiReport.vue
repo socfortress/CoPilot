@@ -42,32 +42,28 @@
 						:value="report.severity_assessment"
 					/>
 					<Chip
-						v-if="investigation"
-						:type="statusType"
+						v-if="investigation && statusMeta"
+						:type="statusMeta.type"
 						size="small"
 						round
 						:bordered="false"
 						label="Investigation"
-						:value="investigation.status"
+						:value="statusText"
+						data-testid="ai-investigation-status"
 					/>
 					<Chip
 						v-if="investigation"
 						size="small"
 						round
 						label="Started"
-						:value="
-							formatDate(
-								investigation.started_at ?? investigation.created_at,
-								dFormats.datetime
-							) as string
-						"
+						:value="utcDate(investigation.started_at ?? investigation.created_at)"
 					/>
 					<Chip
 						v-if="investigation?.completed_at"
 						size="small"
 						round
 						label="Completed"
-						:value="formatDate(investigation.completed_at, dFormats.datetime) as string"
+						:value="utcDate(investigation.completed_at)"
 					/>
 					<div v-if="analysis.can_request" class="ml-auto">
 						<AiAnalysisRequestButton has-analysis :in-progress :requesting @request="requestAnalysis" />
@@ -89,9 +85,21 @@
 					type="info"
 					:show-icon="false"
 					title="Investigation in progress"
+					data-testid="ai-investigation-progress"
 				>
-					The AI analyst is still working on this alert. Findings will appear here once the investigation
-					completes.
+					The AI analyst
+					{{ elapsedText ? `has been working on this alert for ${elapsedText}` : "is working on this alert" }}.
+					Findings will appear here once the investigation completes.
+				</n-alert>
+				<n-alert
+					v-else-if="investigationStalled"
+					type="warning"
+					:show-icon="false"
+					title="Investigation did not finish"
+					data-testid="ai-investigation-stalled"
+				>
+					The AI analyst stopped working on this alert before writing its findings.
+					<template v-if="analysis.can_request">You can ask for a new analysis.</template>
 				</n-alert>
 
 				<template v-if="report">
@@ -168,7 +176,7 @@
 					</div>
 
 					<div class="text-secondary text-xs">
-						Report generated {{ formatDate(report.created_at, dFormats.datetime) }}
+						Report generated {{ utcDate(report.created_at) }}
 					</div>
 				</template>
 			</div>
@@ -180,7 +188,7 @@
 import type { TagProps } from "naive-ui"
 import type { AiAlertAnalysis } from "@/types/aiReports"
 import type { ApiError } from "@/types/common"
-import { useWindowSize } from "@vueuse/core"
+import { useIntervalFn, useNow, useWindowSize } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NSpin } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
@@ -191,8 +199,10 @@ import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { elapsedLabel, secondsSince } from "@/utils/elapsed"
 import { formatDate } from "@/utils/format"
 import AiAnalysisRequestButton from "./AiAnalysisRequestButton.vue"
+import { investigationStatusMeta, STALE_INVESTIGATION_MS, utcMillis } from "./aiInvestigation"
 
 // The portal never exposes Talon chat, review submission, palace lessons or replay —
 // those stay in the SOC frontend. Where the customer allows it, a user can ask for an
@@ -204,8 +214,6 @@ const props = defineProps<{
 const POLL_MS = 15_000
 const FULL_REPORT_WIDTH = 760
 const FULL_REPORT_MIN_WIDTH = 420
-// The backend treats a job pending or running for longer as dead; so does the button.
-const STALE_INVESTIGATION_MS = 2 * 60 * 60_000
 // How long the tab expects Talon to start a request before it stops waiting for it.
 const AWAIT_JOB_FOR_MS = 15 * 60_000
 // Talon's job and the request are both stamped by the server, but by different steps.
@@ -229,13 +237,31 @@ let abortController: AbortController | null = null
 
 const report = computed(() => analysis.value?.report ?? null)
 const investigation = computed(() => analysis.value?.investigation ?? null)
-const investigationPending = computed(
-	() => !!investigation.value && ["pending", "running"].includes(investigation.value.status) && !report.value
+
+// The status in words, and while the analysis runs, for how long (#1273).
+const now = useNow({ scheduler: tick => useIntervalFn(tick, 15_000) })
+const statusMeta = computed(() =>
+	investigation.value
+		? investigationStatusMeta(investigation.value.status, investigation.value.created_at, now.value.getTime())
+		: null
+)
+const elapsedText = computed(() => {
+	const job = investigation.value
+	if (!job || !statusMeta.value?.active) return null
+	const seconds = secondsSince(job.started_at ?? job.created_at, now.value.getTime())
+	return seconds === null ? null : elapsedLabel(seconds)
+})
+const statusText = computed(() =>
+	statusMeta.value && elapsedText.value ? `${statusMeta.value.label} · ${elapsedText.value}` : (statusMeta.value?.label ?? "")
 )
 
-/** The backend's timestamps are UTC without an offset. */
-function utcMillis(value: string): number {
-	return Date.parse(/(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`)
+const investigationPending = computed(() => !!statusMeta.value?.active && !report.value)
+/** Queued or running for longer than the backend waits: nothing more will come of it. */
+const investigationStalled = computed(() => !!statusMeta.value?.stalled && !report.value)
+
+/** The backend's times are UTC without an offset: shown in the viewer's own time. */
+function utcDate(value: string): string {
+	return String(formatDate(value, dFormats.datetime, { tz: true }))
 }
 
 const requesting = ref(false)
@@ -277,19 +303,6 @@ const severityType = computed<TagProps["type"]>(() => {
 			return "warning"
 		case "Low":
 			return "success"
-		default:
-			return "default"
-	}
-})
-
-const statusType = computed<TagProps["type"]>(() => {
-	switch (investigation.value?.status) {
-		case "completed":
-			return "success"
-		case "running":
-			return "info"
-		case "failed":
-			return "error"
 		default:
 			return "default"
 	}
