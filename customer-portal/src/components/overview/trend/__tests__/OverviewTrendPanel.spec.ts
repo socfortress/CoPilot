@@ -27,6 +27,8 @@ function trend(overrides: Partial<OverviewTrend> = {}): OverviewTrend {
 			{ hour: "2026-10-15T10:00:00Z", alerts_opened: 4, alerts_closed: 1, cases_opened: 0, cases_closed: 2 },
 			{ hour: "2026-10-16T10:00:00Z", alerts_opened: 1, alerts_closed: 1, cases_opened: 0, cases_closed: 0 }
 		],
+		alerts_open_at_since: 3,
+		cases_open_at_since: 2,
 		alerts_error: null,
 		cases_error: null,
 		...overrides

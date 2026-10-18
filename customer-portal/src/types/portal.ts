@@ -99,6 +99,13 @@ export interface OverviewTrend {
 	/** The next whole hour: the latest hour counted ends here. */
 	until: string
 	hours: OverviewTrendHour[]
+	/**
+	 * Still open at `since`. Each hour's opened − closed added to it gives how many were
+	 * open at any later moment: the absolute Net, beside the relative opened − closed.
+	 * `null` when that entity failed.
+	 */
+	alerts_open_at_since: number | null
+	cases_open_at_since: number | null
 	alerts_error: string | null
 	cases_error: string | null
 }

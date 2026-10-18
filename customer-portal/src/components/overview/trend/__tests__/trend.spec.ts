@@ -44,16 +44,16 @@ describe("overview trend (#1273)", () => {
 		]
 		const days = trendDays({ range: "7d", until: "2026-10-17T09:00:00Z", hours }, "Europe/Rome")
 		const byDay = Object.fromEntries(days.map(day => [day.day, day]))
-		expect(byDay["2026-10-16"]!.alerts).toEqual({ opened: 2, closed: 0 })
-		expect(byDay["2026-10-17"]!.alerts).toEqual({ opened: 1, closed: 3 })
-		expect(byDay["2026-10-17"]!.cases).toEqual({ opened: 1, closed: 1 })
+		expect(byDay["2026-10-16"]!.alerts).toMatchObject({ opened: 2, closed: 0 })
+		expect(byDay["2026-10-17"]!.alerts).toMatchObject({ opened: 1, closed: 3 })
+		expect(byDay["2026-10-17"]!.cases).toMatchObject({ opened: 1, closed: 1 })
 
 		// The same hours in New York (UTC−4) all fall on the 16th, but the 08:00Z one.
 		const ny = Object.fromEntries(
 			trendDays({ range: "7d", until: "2026-10-17T09:00:00Z", hours }, "America/New_York").map(day => [day.day, day])
 		)
-		expect(ny["2026-10-16"]!.alerts).toEqual({ opened: 3, closed: 3 })
-		expect(ny["2026-10-17"]!.cases).toEqual({ opened: 1, closed: 1 })
+		expect(ny["2026-10-16"]!.alerts).toMatchObject({ opened: 3, closed: 3 })
+		expect(ny["2026-10-17"]!.cases).toMatchObject({ opened: 1, closed: 1 })
 	})
 
 	it("follows a DST change: the same UTC hour starts a different local day on each side", () => {
@@ -92,8 +92,52 @@ describe("overview trend (#1273)", () => {
 			},
 			"UTC"
 		)
-		expect(trendTotals(days, "alerts")).toEqual({ opened: 5, closed: 2, net: 3 })
-		expect(trendTotals(days, "cases")).toEqual({ opened: 0, closed: 2, net: -2 })
+		expect(trendTotals(days, "alerts")).toMatchObject({ opened: 5, closed: 2, net: 3 })
+		expect(trendTotals(days, "cases")).toMatchObject({ opened: 0, closed: 2, net: -2 })
 		expect([formatNet(3), formatNet(-2), formatNet(0)]).toEqual(["+3", "−2", "0"])
+	})
+
+	it("follows what is still open from the start of the window: the absolute Net, beside the relative one", () => {
+		const days = trendDays(
+			{
+				range: "7d",
+				until: "2026-10-17T10:00:00Z",
+				alerts_open_at_since: 10,
+				cases_open_at_since: 0,
+				hours: [
+					// The extra day before the 7: it moves the level, not the counts.
+					hour("2026-10-10T12:00:00Z", { alerts_opened: 2, alerts_closed: 5 }),
+					hour("2026-10-12T09:00:00Z", { alerts_opened: 4, cases_opened: 1 }),
+					hour("2026-10-15T09:00:00Z", { alerts_closed: 6, cases_closed: 1 })
+				]
+			},
+			"UTC"
+		)
+		expect(days.map(day => day.alerts.open)).toEqual([7, 11, 11, 11, 5, 5, 5])
+		expect(days.map(day => day.cases.open)).toEqual([0, 1, 1, 1, 0, 0, 0])
+		// 264 opened and 280 closed is not "nothing open" nor "264 open": it is what was open, 16 fewer.
+		expect(trendTotals(days, "alerts")).toEqual({ opened: 4, closed: 6, net: -2, open: 5, openAtStart: 7 })
+		expect(trendTotals(days, "cases")).toEqual({ opened: 1, closed: 1, net: 0, open: 0, openAtStart: 0 })
+	})
+
+	it("sums the hours into local days for the level too", () => {
+		const days = trendDays(
+			{
+				range: "7d",
+				until: "2026-10-17T09:00:00Z",
+				alerts_open_at_since: 1,
+				cases_open_at_since: 0,
+				hours: [hour("2026-10-16T22:00:00Z", { alerts_opened: 3 })] // 00:00 of the 17th in Rome
+			},
+			"Europe/Rome"
+		)
+		expect(days.at(-2)!.alerts.open).toBe(1)
+		expect(days.at(-1)!.alerts.open).toBe(4)
+	})
+
+	it("knows no level for an entity whose anchor did not come", () => {
+		const days = trendDays({ range: "7d", until: "2026-10-17T10:00:00Z", alerts_open_at_since: null, hours: [] }, "UTC")
+		expect(days.every(day => day.alerts.open === null && day.cases.open === null)).toBe(true)
+		expect(trendTotals(days, "alerts")).toMatchObject({ open: null, openAtStart: null })
 	})
 })

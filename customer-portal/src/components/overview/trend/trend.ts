@@ -17,6 +17,8 @@ export const TREND_ENTITIES: { key: TrendEntity; label: string }[] = [
 export interface TrendCounts {
 	opened: number
 	closed: number
+	/** Still open at the end of the day (the absolute Net); `null` when not known. */
+	open: number | null
 }
 
 /** One local calendar day of the viewer. */
@@ -27,9 +29,15 @@ export interface TrendDay {
 	cases: TrendCounts
 }
 
-export interface TrendTotals extends TrendCounts {
-	/** Opened minus closed: what the period added to the backlog (negative: it shrank). */
+export interface TrendTotals {
+	opened: number
+	closed: number
+	/** Relative Net: opened minus closed, what the period added to the backlog (negative: it shrank). */
 	net: number
+	/** Absolute Net: still open at the end of the period, never below zero; `null` when not known. */
+	open: number | null
+	/** Still open when the period started; `null` when not known. */
+	openAtStart: number | null
 }
 
 /** `?trend=` as the route carries it; anything unreadable is the default. */
@@ -47,22 +55,47 @@ export function trendRangeDays(range: OverviewTrendRange): number {
  * day it starts in, which a fixed UTC offset could not do across a DST change. The days
  * are the last `range` ones up to the one holding the latest counted hour (`until`
  * minus a moment), every one of them listed even when nothing happened.
+ *
+ * The absolute Net of a day is how many were open at its end: what was open at `since`,
+ * plus every earlier hour's opened, minus its closed (the hours before the first day
+ * included, since the server sends a day more than the range).
  */
-export function trendDays(trend: Pick<OverviewTrend, "range" | "until" | "hours">, tz = dayjs.tz.guess()): TrendDay[] {
+export function trendDays(
+	trend: Pick<OverviewTrend, "range" | "until" | "hours"> &
+		Partial<Pick<OverviewTrend, "alerts_open_at_since" | "cases_open_at_since">>,
+	tz = dayjs.tz.guess()
+): TrendDay[] {
 	const today = dayjs.utc(trend.until).subtract(1, "millisecond").tz(tz).startOf("day")
+	const hours = [...trend.hours].sort((a, b) => a.hour.localeCompare(b.hour))
+	let alertsOpen = trend.alerts_open_at_since ?? null
+	let casesOpen = trend.cases_open_at_since ?? null
+	let next = 0
 	const days: TrendDay[] = []
-	const byDay = new Map<string, TrendDay>()
 
 	for (let back = trendRangeDays(trend.range) - 1; back >= 0; back--) {
-		const day = today.subtract(back, "day").format("YYYY-MM-DD")
-		const entry: TrendDay = { day, alerts: { opened: 0, closed: 0 }, cases: { opened: 0, closed: 0 } }
+		// Calendar arithmetic on the plain date, then each midnight read in the timezone:
+		// adding days to a zoned time keeps its offset, so across a DST change the
+		// midnight would be an hour off.
+		const key = dayjs(today.format("YYYY-MM-DD")).subtract(back, "day").format("YYYY-MM-DD")
+		const start = dayjs.tz(key, tz)
+		const end = dayjs.tz(dayjs(key).add(1, "day").format("YYYY-MM-DD"), tz)
+		const entry: TrendDay = {
+			day: key,
+			alerts: { opened: 0, closed: 0, open: null },
+			cases: { opened: 0, closed: 0, open: null }
+		}
+		// Every hour that starts before this day ends. Those before the first day (the
+		// extra day the server sends) only move the levels.
+		while (next < hours.length && dayjs.utc(hours[next]!.hour).isBefore(end)) {
+			const hour = hours[next]!
+			if (!dayjs.utc(hour.hour).isBefore(start)) addHour(entry, hour)
+			if (alertsOpen !== null) alertsOpen += hour.alerts_opened - hour.alerts_closed
+			if (casesOpen !== null) casesOpen += hour.cases_opened - hour.cases_closed
+			next++
+		}
+		entry.alerts.open = alertsOpen
+		entry.cases.open = casesOpen
 		days.push(entry)
-		byDay.set(day, entry)
-	}
-
-	for (const hour of trend.hours) {
-		const entry = byDay.get(dayjs.utc(hour.hour).tz(tz).format("YYYY-MM-DD"))
-		if (entry) addHour(entry, hour)
 	}
 	return days
 }
@@ -77,7 +110,8 @@ function addHour(entry: TrendDay, hour: OverviewTrendHour) {
 export function trendTotals(days: TrendDay[], entity: TrendEntity): TrendTotals {
 	const opened = days.reduce((sum, day) => sum + day[entity].opened, 0)
 	const closed = days.reduce((sum, day) => sum + day[entity].closed, 0)
-	return { opened, closed, net: opened - closed }
+	const open = days.at(-1)?.[entity].open ?? null
+	return { opened, closed, net: opened - closed, open, openAtStart: open === null ? null : open - (opened - closed) }
 }
 
 /** `+3`, `−2`, `0`: the sign is part of the figure. */
