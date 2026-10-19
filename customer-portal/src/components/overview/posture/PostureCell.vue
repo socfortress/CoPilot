@@ -21,14 +21,21 @@
 		<PostureCellSkeleton v-else-if="loading" />
 
 		<template v-else>
-			<div class="flex items-baseline gap-2">
-				<span
-					class="font-mono text-4xl leading-none font-semibold tracking-tight tabular-nums"
-					data-testid="posture-headline"
-				>
-					{{ cell.headline }}
-				</span>
-				<span class="text-secondary text-sm">{{ cell.caption }}</span>
+			<div class="flex items-end justify-between gap-4">
+				<div class="flex min-w-0 items-baseline gap-2">
+					<span
+						class="font-mono text-4xl leading-none font-semibold tracking-tight tabular-nums"
+						data-testid="posture-headline"
+					>
+						{{ cell.headline }}
+					</span>
+					<span class="text-secondary text-sm">{{ cell.caption }}</span>
+				</div>
+
+				<div v-if="cell.spark" class="flex shrink-0 flex-col items-end gap-1" data-testid="posture-spark">
+					<Sparkline :values="cell.spark.values" :label="cell.spark.label" :color="sparkColor" class="h-7 w-24" />
+					<span class="text-tertiary font-mono text-[10px] leading-none tabular-nums">{{ cell.spark.caption }}</span>
+				</div>
 			</div>
 
 			<StatusBar :segments="cell.segments" />
@@ -45,10 +52,14 @@
 
 <script setup lang="ts">
 import type { PostureCellModel } from "./postureCells"
+import { computed } from "vue"
 import { RouterLink } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
+import Sparkline from "../shared/Sparkline.vue"
 import StatusBar from "../shared/StatusBar.vue"
 import StatusLegend from "../shared/StatusLegend.vue"
+import { TREND_COLORS } from "../trend/trend"
 import PostureCellSkeleton from "./PostureCellSkeleton.vue"
 
 defineProps<{
@@ -56,4 +67,8 @@ defineProps<{
 	loading?: boolean
 	error?: string | null
 }>()
+
+// The trend panel's "opened" colour: the sparkline is that line, in small.
+const themeStore = useThemeStore()
+const sparkColor = computed(() => TREND_COLORS[themeStore.isThemeDark ? "dark" : "light"].opened)
 </script>

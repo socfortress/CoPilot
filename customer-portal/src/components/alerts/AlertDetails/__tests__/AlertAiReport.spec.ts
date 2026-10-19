@@ -174,3 +174,56 @@ describe("aiAnalysisRequestButton", () => {
 		wrapper.unmount()
 	})
 })
+
+describe("the investigation's status, in words (#1273)", () => {
+	const status = (wrapper: Awaited<ReturnType<typeof render>>) =>
+		wrapper.find("[data-testid=ai-investigation-status]").text()
+
+	it("says the analysis is under way, and for how long, counting on its own", async () => {
+		getAlertAnalysis.mockResolvedValue(analysis({ has_analysis: true, investigation: job("running", 4) }))
+		const wrapper = await render()
+		expect(status(wrapper)).toContain("Analysing · 4 min")
+		expect(wrapper.find("[data-testid=ai-investigation-progress]").text()).toContain(
+			"has been working on this alert for 4 min"
+		)
+
+		// Two minutes on, the same job: the tab counts without being told.
+		await vi.advanceTimersByTimeAsync(2 * 60_000)
+		expect(status(wrapper)).toContain("Analysing · 6 min")
+	})
+
+	it("calls a queued job queued", async () => {
+		getAlertAnalysis.mockResolvedValue(analysis({ has_analysis: true, investigation: job("pending", 1) }))
+		const wrapper = await render()
+		expect(status(wrapper)).toContain("Queued · 1 min")
+	})
+
+	it("says plainly when an investigation stalled, and offers a new one when allowed", async () => {
+		getAlertAnalysis.mockResolvedValue(analysis({ has_analysis: true, investigation: job("running", 180) }))
+		const wrapper = await render()
+		expect(status(wrapper)).toContain("Stalled")
+		expect(status(wrapper)).not.toContain("min")
+		expect(wrapper.find("[data-testid=ai-investigation-progress]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=ai-investigation-stalled]").text()).toContain("You can ask for a new analysis.")
+		expect(button(wrapper).props("inProgress")).toBe(false)
+	})
+
+	it("shows a finished investigation's outcome without a running time", async () => {
+		getAlertAnalysis.mockResolvedValue(done())
+		const wrapper = await render()
+		expect(status(wrapper)).toContain("Completed")
+		expect(status(wrapper)).not.toContain("·")
+	})
+
+	it("shows the investigation's times in the viewer's own time, not as UTC", async () => {
+		getAlertAnalysis.mockResolvedValue(done())
+		const wrapper = await render()
+		// Started two hours before NOW (12:00 UTC): 10:00 UTC, in the local zone of the run.
+		const local = new Date(Date.parse("2026-10-09T10:00:00Z"))
+		const hh = String(local.getHours()).padStart(2, "0")
+		const mm = String(local.getMinutes()).padStart(2, "0")
+		expect(wrapper.text()).toContain(`${hh}:${mm}`)
+		// Where the run's zone is not UTC, the raw UTC clock must not show (it used to).
+		if (local.getTimezoneOffset() !== 0) expect(wrapper.text()).not.toContain("10:00")
+	})
+})
