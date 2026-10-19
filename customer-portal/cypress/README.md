@@ -25,6 +25,7 @@ field of a real response to show a failed section.
 | `alert-cases.cy.ts` | #1192 — an alert's Linked Cases tab: create a case from the alert, unlink it (the confirm closes at once, before the answer) and link it back. |
 | `live-changes.cy.ts` | What an operator changes in CoPilot reaches the portal on the next page load: customer assignments, the AI report switch, branding (save, second save, removal). |
 | `sla.cy.ts` | #1187 — the Service Levels page is offered only while the SOC publishes it for the customer, shows the seeded compliance, response times, open items and targets of the user's customer (never an analyst's name), links "waiting on you" to the filtered list, and a reply to a waiting alert hands it back. |
+| `brand-theme.cy.ts` | #1278 — the brand color as the interface's primary, chosen in CoPilot: off, the login page keeps the default theme; on, its Sign in button and the `--primary-color` take the global color; signed in, the customer's own choice wins (on with its color, or off while the global choice is on) and a logout drops it; in dark mode a dark brand color is lightened until it stands out, with readable text on it. |
 | `theme-switch.cy.ts` | #1192 — the toolbar theme switch flips between light and dark. |
 | `profile.cy.ts` | #1192 — the profile page shows the user and both tabs; the never-shown image editor is gone. |
 
