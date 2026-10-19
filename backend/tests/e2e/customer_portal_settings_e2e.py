@@ -13,7 +13,10 @@ Real routers, real MySQL, real JWTs, the real exception handlers:
      PATCH and the per-customer branding PUT;
   C) a service's 404 reaches the client as a 404, never a 500 carrying the error text;
   D) timestamps are written as UTC wall-clock time, as before;
-  E) case filter options stay scoped to the caller's customers after moving into a service.
+  E) case filter options stay scoped to the caller's customers after moving into a service;
+  F) the portal theme from the brand color (#1278): off by default, chosen globally and
+     per customer (null inherits), read by the login page and by the effective branding
+     a portal user gets, at once after each change.
 
 The global settings are restored at the end. Exits non-zero when a check fails.
 """
@@ -177,7 +180,85 @@ async def main():
         check("portal user: own customer's assignees only", "e2e-b-analyst" not in mine["assigned_to"], str(mine["assigned_to"]))
         check("admin: every customer", "IN_PROGRESS" in everyone["statuses"] and "e2e-b-analyst" in everyone["assigned_to"])
 
-        restore = {k: original[k] for k in ("title", "logo_base64", "logo_mime_type", "brand_color")}
+        print("\n=== F) the portal theme from the brand color, by choice (#1278) ===")
+
+        async def effective():
+            return (await client.get("/customer_portal/settings/effective", headers=portal)).json()["settings"]
+
+        await client.post("/customer_portal/settings", headers=admin, json={"title": "E2E Portal", "brand_color": "#215ac8"})
+        now, public = await stored(), (await client.get("/customer_portal/settings")).json()["settings"]
+        check("off unless chosen", (now["theme_from_brand_color"], public["theme_from_brand_color"]) == (False, False), str(public))
+
+        response = await client.patch("/customer_portal/settings", headers=admin, json={"theme_from_brand_color": True})
+        now, public = await stored(), (await client.get("/customer_portal/settings")).json()["settings"]
+        check(
+            "PATCH turns it on and keeps the rest",
+            response.status_code == 200
+            and (now["theme_from_brand_color"], now["brand_color"], now["title"]) == (True, "#215ac8", "E2E Portal"),
+            str(now)[:200],
+        )
+        check("the login page reads it", (public["theme_from_brand_color"], public["brand_color"]) == (True, "#215ac8"), str(public))
+        mine = await effective()
+        check("a customer without an override inherits it", (mine["theme_from_brand_color"], mine["source"]) == (True, "global"), str(mine))
+
+        response = await client.put(
+            f"/customer_portal/branding/{CUST_A}",
+            headers=admin,
+            json={"enabled": True, "theme_from_brand_color": False},
+        )
+        stored_override = response.json()["override"]
+        mine = await effective()
+        check(
+            "a customer can turn it off",
+            response.status_code == 200 and stored_override["theme_from_brand_color"] is False,
+            response.text[:200],
+        )
+        check(
+            "the portal sees the customer's choice at once (cache invalidated)",
+            (mine["theme_from_brand_color"], mine["source"], mine["brand_color"]) == (False, "custom", "#215ac8"),
+            str(mine),
+        )
+
+        await client.put(f"/customer_portal/branding/{CUST_A}", headers=admin, json={"enabled": True, "brand_color": "#0f766e"})
+        mine = await effective()
+        listed = (await client.get("/customer_portal/branding", headers=admin)).json()["overrides"]
+        row = next((item for item in listed if item["customer_code"] == CUST_A), {})
+        check(
+            "an override without the choice inherits it again",
+            (mine["theme_from_brand_color"], mine["brand_color"]) == (True, "#0f766e"),
+            str(mine),
+        )
+        check(
+            "the override list shows inherit as null",
+            "theme_from_brand_color" in row and row["theme_from_brand_color"] is None,
+            str(row),
+        )
+
+        await client.patch("/customer_portal/settings", headers=admin, json={"reset": ["theme_from_brand_color"]})
+        await client.put(f"/customer_portal/branding/{CUST_A}", headers=admin, json={"enabled": True, "theme_from_brand_color": True})
+        mine, now = await effective(), await stored()
+        check("reset turns the global choice off", now["theme_from_brand_color"] is False, str(now)[:200])
+        check("a customer can turn it on alone", mine["theme_from_brand_color"] is True, str(mine))
+
+        await client.put(f"/customer_portal/branding/{CUST_A}", headers=admin, json={"enabled": False, "theme_from_brand_color": True})
+        mine = await effective()
+        check(
+            "a disabled override inherits the global choice",
+            (mine["theme_from_brand_color"], mine["source"]) == (False, "global"),
+            str(mine),
+        )
+
+        response = await client.patch("/customer_portal/settings", headers=admin, json={"theme_from_brand_color": None})
+        check("PATCH refuses null", response.status_code == 422 and "theme_from_brand_color" in response.text, response.text[:200])
+        response = await client.put(
+            f"/customer_portal/branding/{CUST_A}",
+            headers=portal,
+            json={"enabled": True, "theme_from_brand_color": True},
+        )
+        check("a portal user cannot choose it", response.status_code in (401, 403), str(response.status_code))
+        await client.delete(f"/customer_portal/branding/{CUST_A}", headers=admin)
+
+        restore = {k: original[k] for k in ("title", "logo_base64", "logo_mime_type", "brand_color", "theme_from_brand_color")}
         await client.post("/customer_portal/settings", headers=admin, json=restore)
 
     async with AsyncSession(async_engine) as s:
