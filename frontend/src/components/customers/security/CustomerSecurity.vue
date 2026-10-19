@@ -3,7 +3,9 @@
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<div class="flex flex-col gap-1">
 				<h3 class="text-lg font-bold">Security</h3>
-				<p class="text-secondary text-sm">Manage 2FA and passwords for the user accounts scoped to this customer</p>
+				<p class="text-secondary text-sm">
+					Manage 2FA and passwords for the user accounts scoped to this customer
+				</p>
 			</div>
 			<!-- The tab stays mounted: a user who changes their password or signs in meanwhile shows on a refresh (#1277). -->
 			<n-button size="small" secondary :loading data-testid="security-refresh" @click="loadUsers()">

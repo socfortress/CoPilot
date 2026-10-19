@@ -25,7 +25,8 @@ function render() {
 		defineComponent({
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
-					h(NDialogProvider, null, () => h(CustomerSecurity, { customerCode: "ACME" })))
+					h(NDialogProvider, null, () => h(CustomerSecurity, { customerCode: "ACME" }))
+				)
 		})
 	)
 }
