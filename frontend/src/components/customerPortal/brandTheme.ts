@@ -22,13 +22,17 @@ export interface LoginPrimary {
 }
 
 /** Null when the portal keeps its default theme: the switch off, no color, or not a hex color. */
-export function loginPrimary(brandColor: string | null | undefined, themed: boolean | null | undefined): LoginPrimary | null {
+export function loginPrimary(
+	brandColor: string | null | undefined,
+	themed: boolean | null | undefined
+): LoginPrimary | null {
 	if (!themed || !brandColor || !HEX_COLOR.test(brandColor.trim())) return null
 
 	let primary = colord(brandColor.trim())
 	for (let step = 0; step < 50 && primary.contrast(SURFACE) < MIN_SURFACE_CONTRAST; step++) {
 		primary = primary.darken(0.02)
 	}
-	const onPrimary = primary.contrast(ON_PRIMARY_LIGHT) >= primary.contrast(ON_PRIMARY_DARK) ? ON_PRIMARY_LIGHT : ON_PRIMARY_DARK
+	const onPrimary =
+		primary.contrast(ON_PRIMARY_LIGHT) >= primary.contrast(ON_PRIMARY_DARK) ? ON_PRIMARY_LIGHT : ON_PRIMARY_DARK
 	return { primary: primary.toHex(), onPrimary }
 }

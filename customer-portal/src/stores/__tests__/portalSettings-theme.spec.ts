@@ -10,7 +10,15 @@ function settings(fields: Partial<PortalSettings>): PortalSettings {
 }
 
 function branding(fields: Partial<EffectivePortalBranding>): EffectivePortalBranding {
-	return { title: "Acme", logo_url: null, logo_mime_type: null, brand_color: null, source: "custom", customer_code: "ACME", ...fields }
+	return {
+		title: "Acme",
+		logo_url: null,
+		logo_mime_type: null,
+		brand_color: null,
+		source: "custom",
+		customer_code: "ACME",
+		...fields
+	}
 }
 
 /** The brand color the interface takes as its primary (#1278): only when CoPilot turned that on. */

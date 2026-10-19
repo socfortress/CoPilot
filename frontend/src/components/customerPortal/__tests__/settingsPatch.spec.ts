@@ -40,13 +40,17 @@ describe("buildSettingsPatch", () => {
 	})
 
 	it("sends the brand theme switch as a boolean, only when it changed (#1278)", () => {
-		expect(buildSettingsPatch(SAVED, { ...SAVED, theme_from_brand_color: true })).toEqual({ theme_from_brand_color: true })
+		expect(buildSettingsPatch(SAVED, { ...SAVED, theme_from_brand_color: true })).toEqual({
+			theme_from_brand_color: true
+		})
 		expect(
 			buildSettingsPatch({ ...SAVED, theme_from_brand_color: true }, { ...SAVED, theme_from_brand_color: false })
 		).toEqual({ theme_from_brand_color: false })
 		// Off and not loaded yet read the same: nothing to save.
 		expect(buildSettingsPatch(SAVED, { ...SAVED, theme_from_brand_color: false })).toBeNull()
-		expect(buildSettingsPatch({ ...SAVED, theme_from_brand_color: null }, { ...SAVED, theme_from_brand_color: false })).toBeNull()
+		expect(
+			buildSettingsPatch({ ...SAVED, theme_from_brand_color: null }, { ...SAVED, theme_from_brand_color: false })
+		).toBeNull()
 	})
 
 	it("sends the switch alongside other changes", () => {

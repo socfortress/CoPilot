@@ -58,7 +58,11 @@ export function onColorText(color: string): string {
 }
 
 /** The palette for a brand color in one mode; null (the default theme) for anything that isn't one. */
-export function brandPalette(brandColor: string | null | undefined, mode: BrandMode, surfaces: string[]): BrandPalette | null {
+export function brandPalette(
+	brandColor: string | null | undefined,
+	mode: BrandMode,
+	surfaces: string[]
+): BrandPalette | null {
 	if (!isBrandColor(brandColor)) return null
 	const primary = guardContrast(brandColor.trim(), mode, surfaces)
 	return { primary, onPrimary: onColorText(primary) }

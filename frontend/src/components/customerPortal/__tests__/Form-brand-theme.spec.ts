@@ -144,7 +144,10 @@ describe("a customer's branding: inherit, on or off (#1278)", () => {
 
 		await wrapper.get("[data-testid=portal-settings-save]").trigger("click")
 		await flushPromises()
-		expect(setCustomerBranding).toHaveBeenCalledWith("ACME", expect.objectContaining({ theme_from_brand_color: null }))
+		expect(setCustomerBranding).toHaveBeenCalledWith(
+			"ACME",
+			expect.objectContaining({ theme_from_brand_color: null })
+		)
 	})
 
 	it.each([

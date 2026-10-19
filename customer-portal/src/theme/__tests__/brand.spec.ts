@@ -108,7 +108,8 @@ describe("the theme", () => {
 		expect(getPalette(state("#215ac8")).colors.primary).toBe("#215ac8")
 		const dark = getPalette(state("#215ac8", ThemeNameEnum.Dark)).colors.primary
 		expect(hue(dark)).toBeCloseTo(hue("#215ac8"), 0)
-		for (const surface of DARK_SURFACES) expect(contrast(dark, surface)).toBeGreaterThanOrEqual(MIN_SURFACE_CONTRAST)
+		for (const surface of DARK_SURFACES)
+			expect(contrast(dark, surface)).toBeGreaterThanOrEqual(MIN_SURFACE_CONTRAST)
 	})
 
 	it("hands it to naive-ui with its shades and the text drawn on it", () => {

@@ -74,7 +74,11 @@ export function getDefaultState() {
  */
 export function getPalette(state: ThemeState, mode: ThemeNameEnum = state.themeName) {
 	const colors = state.colors[mode]
-	const brand = brandPalette(state.brandColor, mode, [colors.background, colors.bodyBackground, colors.backgroundSecondary])
+	const brand = brandPalette(state.brandColor, mode, [
+		colors.background,
+		colors.bodyBackground,
+		colors.backgroundSecondary
+	])
 	return {
 		colors: brand ? { ...colors, primary: brand.primary } : colors,
 		onPrimary: brand?.onPrimary ?? null

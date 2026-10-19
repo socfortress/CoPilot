@@ -152,8 +152,8 @@
 								<div class="flex flex-col gap-0.5">
 									<span class="text-sm font-medium">Theme the portal with the brand color</span>
 									<span class="text-secondary max-w-prose text-xs">
-										Buttons, links and highlights take the brand color, adjusted for contrast in light
-										and dark mode.
+										Buttons, links and highlights take the brand color, adjusted for contrast in
+										light and dark mode.
 									</span>
 								</div>
 
@@ -315,7 +315,8 @@ const preview = computed<SettingsModel>(() => {
 
 /** Per-customer scope: inherit the global choice (null), or turn the brand theme on or off for this customer. */
 const themeChoice = computed<"inherit" | "on" | "off">({
-	get: () => (model.value.theme_from_brand_color === null ? "inherit" : model.value.theme_from_brand_color ? "on" : "off"),
+	get: () =>
+		model.value.theme_from_brand_color === null ? "inherit" : model.value.theme_from_brand_color ? "on" : "off",
 	set: choice => {
 		model.value.theme_from_brand_color = choice === "inherit" ? null : choice === "on"
 	}
