@@ -10,6 +10,8 @@ export interface PortalSettings {
 	logo_url: string | null
 	logo_mime_type: string | null
 	brand_color: string | null
+	/** Whether the interface takes `brand_color` as its primary color (#1278); the login page reads it here. */
+	theme_from_brand_color?: boolean
 	updated_at: string | null
 }
 
@@ -24,6 +26,8 @@ export interface EffectivePortalBranding {
 	logo_url: string | null
 	logo_mime_type: string | null
 	brand_color: string | null
+	/** Whether the interface takes `brand_color` as its primary color (#1278), as chosen in CoPilot. */
+	theme_from_brand_color?: boolean
 	source: "custom" | "global"
 	customer_code: string | null
 }
