@@ -543,9 +543,9 @@ The portal's interface can take the brand color as naive-ui's primary. It is **o
   - All of them invalidate the branding cache like any branding write.
 - **CoPilot editor** (`components/customerPortal/Form.vue`).
   - A switch in the global settings, sent as a boolean by `buildSettingsPatch`.
-  - *Inherit · On|Off / On / Off* in a customer's custom branding.
+  - In a customer's custom branding, three choices worded by their effect: *Same as the global setting* (with whether that is on now), *Use the brand color for this customer*, *Keep the default theme for this customer*.
   - A warning when it is on with no color.
-  - The login preview's Sign in button shows the result (`brandTheme.ts:loginPrimary`, the portal's light-mode rule).
+  - The login preview's Sign in button shows the result (`brandTheme.ts:loginPrimary`, the portal's light-mode rule). It is enabled (a disabled one is faded and misstates the color), and without the brand theme it shows the portal's own default primary (`PORTAL_DEFAULT_PRIMARY`), not a colour of its own.
 - **Portal.**
   - `portalSettings.themeBrandColor` is the color only when the branding in force has it on and holds a valid `#RGB`/`#RRGGBB`: the customer's branding once signed in, else the global settings. Anything else is null, which keeps the default theme.
   - `App.vue` hands it to `themeStore.setBrandColor`. The theme store's `brandColor` is **not persisted**: it follows the branding, so the logout's `clearBranding` takes the portal back to the global choice.
@@ -554,8 +554,9 @@ The portal's interface can take the brand color as naive-ui's primary. It is **o
   - The color is darkened (light mode) or lightened (dark mode), hue kept, until it reaches 3:1 (WCAG 1.4.11) against the mode's three surfaces.
   - The text naive-ui draws on the primary (its `baseColor`, i.e. the card surface) is replaced by white or near black, whichever contrasts more: Button `textColor*Primary`, Checkbox, Calendar, Steps, Tag.
   - The default theme stays byte for byte as it was: no overrides are added while the flag is off.
+- **"Waiting on you" has a colour of its own, never the primary.** `PENDING_CUSTOMER` used `primary`, so a brand colour repainted it, and a blue brand put it beside Open's indigo. It is the `waiting` design token (`figma-tokens.json`, `design-tokens.json`: `rgb(255, 97, 201)`, validated against Open, In progress and Closed in both modes), exposed as `--waiting-color(-rgb)` and Tailwind's `bg-/text-/border-waiting`. `getStatusColor` answers `"waiting"`; naive-ui has no such tag type, so status tags go through `utils:statusTagProps` (a type, or a `color` for waiting; `Chip` takes `color` too). The status strip's lifted cell is tinted in its own colour (`--lift-rgb`), and so are the SLA page's count and the "waiting on your reply" banner. Selection and focus stay primary.
 
-Tests: `tests/test_customer_portal_brand_theme.py` (no DB), section F of `tests/e2e/customer_portal_settings_e2e.py` (13306). Frontend: `components/customerPortal/__tests__/{settingsPatch,brandTheme,Form-brand-theme}.spec.ts`. Portal: `theme/__tests__/brand.spec.ts`, `stores/__tests__/portalSettings-theme.spec.ts`, `cypress/e2e/brand-theme.cy.ts`.
+Tests: `tests/test_customer_portal_brand_theme.py` (no DB), section F of `tests/e2e/customer_portal_settings_e2e.py` (13306). Frontend: `components/customerPortal/__tests__/{settingsPatch,brandTheme,Form-brand-theme}.spec.ts`. Portal: `theme/__tests__/brand.spec.ts`, `stores/__tests__/portalSettings-theme.spec.ts`, `components/__tests__/waiting-on-you.spec.ts`, `common/__tests__/StatusStrip.spec.ts`, `cypress/e2e/brand-theme.cy.ts`.
 
 ### Tenant scoping: customer codes are not the only tenant key
 
