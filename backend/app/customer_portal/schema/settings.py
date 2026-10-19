@@ -22,6 +22,10 @@ class UpdatePortalSettingsRequest(BaseModel):
         max_length=9,
         description="Brand color as a hex string (e.g. #RRGGBB), used to theme customer-branded reports. Set to null to restore default.",
     )
+    theme_from_brand_color: Optional[bool] = Field(
+        None,
+        description="Also use the brand color as the portal interface's primary color. Null restores the default (off).",
+    )
 
     @field_validator("brand_color")
     @classmethod
@@ -43,7 +47,7 @@ class UpdatePortalSettingsRequest(BaseModel):
     )
 
 
-ResettableField = Literal["title", "logo", "brand_color"]
+ResettableField = Literal["title", "logo", "brand_color", "theme_from_brand_color"]
 
 
 class PatchPortalSettingsRequest(BaseModel):
@@ -58,6 +62,7 @@ class PatchPortalSettingsRequest(BaseModel):
     logo_base64: Optional[str] = Field(None, description="Base64 encoded logo image. Send together with logo_mime_type.")
     logo_mime_type: Optional[str] = Field(None, max_length=50, description="MIME type of the logo. Send together with logo_base64.")
     brand_color: Optional[str] = Field(None, max_length=9, description="Brand color as a hex string (e.g. #RRGGBB).")
+    theme_from_brand_color: Optional[bool] = Field(None, description="Also use the brand color as the portal interface's primary color.")
     reset: List[ResettableField] = Field(
         default_factory=list,
         description="Fields to restore to their default. `logo` resets the logo and its MIME type.",
@@ -107,6 +112,7 @@ class PortalSettingsData(BaseModel):
     logo_base64: Optional[str] = None
     logo_mime_type: Optional[str] = None
     brand_color: Optional[str] = None
+    theme_from_brand_color: bool = False
     updated_at: str
     model_config = ConfigDict(from_attributes=True)
 
@@ -128,6 +134,8 @@ class PublicPortalSettingsData(BaseModel):
     )
     logo_mime_type: Optional[str] = None
     brand_color: Optional[str] = None
+    # The login page has no customer yet: it follows the global choice (#1278).
+    theme_from_brand_color: bool = False
     updated_at: Optional[str] = None
 
 

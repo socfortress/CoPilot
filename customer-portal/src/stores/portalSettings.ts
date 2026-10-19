@@ -3,6 +3,7 @@ import { defineStore } from "pinia"
 import Api from "@/api"
 import { API_ROOT, HttpClient } from "@/api/httpClient"
 import { useAuthStore } from "@/stores/auth"
+import { isBrandColor } from "@/theme/brand"
 import { getAvatar } from "@/utils"
 import { getNameInitials } from "@/utils/format"
 
@@ -39,6 +40,16 @@ export const usePortalSettingsStore = defineStore("portalSettings", {
 				return state.brandingLogo ?? globalLogo
 			}
 			return globalLogo
+		},
+		/**
+		 * The brand color the interface takes as its primary (#1278), or null for the default
+		 * theme: only when CoPilot turned that on for the branding in force (the customer's once
+		 * signed in, the global one before and after) and the color is a valid one.
+		 */
+		themeBrandColor(state): string | null {
+			const source = state.branding ?? state.settings
+			if (!source?.theme_from_brand_color || !isBrandColor(source.brand_color)) return null
+			return source.brand_color
 		},
 		portalInitials(): string {
 			return getNameInitials(this.portalTitle || "")

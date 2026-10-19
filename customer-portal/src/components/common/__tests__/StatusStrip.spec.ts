@@ -47,7 +47,11 @@ describe("statusStrip", () => {
 		const waiting = workflow({ ...counts, pending_customer: 2 })
 		expect(waiting.get("[data-testid=stat-pending_customer]").classes()).toContain("is-lifted")
 		expect(waiting.get("[data-testid=stat-pending_customer] [data-testid=stat-value]").classes()).toContain(
-			"text-primary"
+			"text-waiting"
+		)
+		// Tinted in its own colour, never the primary: that may be a customer's brand colour (#1278).
+		expect(waiting.get("[data-testid=stat-pending_customer]").attributes("style")).toContain(
+			"--lift-rgb: var(--waiting-color-rgb)"
 		)
 	})
 

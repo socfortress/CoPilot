@@ -54,6 +54,7 @@ def _to_override_schema(override) -> CustomerBrandingOverride:
         logo_base64=override.logo_base64,
         logo_mime_type=override.logo_mime_type,
         brand_color=override.brand_color,
+        theme_from_brand_color=override.theme_from_brand_color,
         updated_at=override.updated_at.isoformat(),
         updated_by=override.updated_by,
     )
@@ -118,6 +119,7 @@ async def list_customer_branding(
                     title=item.title,
                     has_logo=bool(item.logo_base64),
                     brand_color=item.brand_color,
+                    theme_from_brand_color=item.theme_from_brand_color,
                     updated_at=item.updated_at.isoformat(),
                 )
                 for item in overrides
@@ -174,6 +176,7 @@ async def set_customer_branding(
             logo_mime_type=request.logo_mime_type,
             brand_color=request.brand_color,
             user_id=current_user.id,
+            theme_from_brand_color=request.theme_from_brand_color,
         )
         await session.commit()
         branding_cache.invalidate_all()

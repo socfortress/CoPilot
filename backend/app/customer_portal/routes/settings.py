@@ -161,6 +161,7 @@ async def get_global_portal_settings(
                 logo_base64=settings.logo_base64,
                 logo_mime_type=settings.logo_mime_type,
                 brand_color=settings.brand_color,
+                theme_from_brand_color=bool(settings.theme_from_brand_color),
                 updated_at=settings.updated_at.isoformat(),
             ),
         )

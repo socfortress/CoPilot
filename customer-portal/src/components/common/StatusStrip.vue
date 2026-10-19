@@ -39,6 +39,7 @@
 					'col-span-2 @3xl:col-span-1': cells.length % 2 === 1 && index === cells.length - 1
 				}
 			]"
+			:style="lifted(cell) ? { '--lift-rgb': rgbVar(cell.color) } : undefined"
 			:data-testid="`stat-${cell.key}`"
 		>
 			<span class="text-tertiary flex min-w-0 items-center gap-1.5 text-xs whitespace-nowrap">
@@ -50,7 +51,7 @@
 			<div class="flex items-baseline justify-between gap-2">
 				<span
 					class="font-display text-2xl leading-none font-semibold tabular-nums"
-					:class="{ 'text-primary': lifted(cell) }"
+					:class="lifted(cell) ? textClass(cell.color) : undefined"
 					data-testid="stat-value"
 					v-text="formatCount(cell.value)"
 				/>
@@ -77,7 +78,7 @@
 // `selected` marks the one in force.
 import type { StatusSegment } from "@/components/overview/shared/status"
 import Icon from "@/components/common/Icon.vue"
-import { bgClass, textClass } from "@/components/overview/shared/status"
+import { bgClass, rgbVar, textClass } from "@/components/overview/shared/status"
 import StatusBar from "@/components/overview/shared/StatusBar.vue"
 
 export interface StatusStripCell extends StatusSegment {
@@ -142,8 +143,9 @@ function share(value: number) {
 </script>
 
 <style scoped>
+/* A cell that asks for attention, tinted in its own colour (never the primary, #1278). */
 .is-lifted {
-	background-color: rgb(var(--primary-color-rgb) / 0.06);
+	background-color: rgb(var(--lift-rgb) / 0.06);
 }
 
 .is-selectable {

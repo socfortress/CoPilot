@@ -3,6 +3,7 @@ import { useOsTheme } from "naive-ui"
 import tokens from "@/design-tokens.json"
 import { Layout, RouterTransition, ThemeNameEnum } from "@/types/theme"
 import { colorToArray, expandPattern, getThemeColors, getTypeValue } from "@/utils/theme"
+import { brandPalette } from "./brand"
 
 type ThemeState = ReturnType<typeof getDefaultState>
 
@@ -59,11 +60,33 @@ export function getDefaultState() {
 		fontSize: tokens.fontSize, // Font size from the token
 		fontWeight: tokens.fontWeight, // Font weight from the token
 		fontFamily: tokens.fontFamily, // Font family from the token
-		typography: tokens.typography // Typography configurations from the token
+		typography: tokens.typography, // Typography configurations from the token
+		// The customer's brand color as the primary, when CoPilot turns that on (#1278). Set from
+		// the portal branding, never persisted: it follows whoever is signed in.
+		brandColor: null as string | null
+	}
+}
+
+/**
+ * The colors of a mode: the tokens, with the brand color as the primary when one is set,
+ * adjusted for contrast against that mode's surfaces. `onPrimary` is null with the
+ * default theme, which keeps naive-ui's own text on the primary.
+ */
+export function getPalette(state: ThemeState, mode: ThemeNameEnum = state.themeName) {
+	const colors = state.colors[mode]
+	const brand = brandPalette(state.brandColor, mode, [
+		colors.background,
+		colors.bodyBackground,
+		colors.backgroundSecondary
+	])
+	return {
+		colors: brand ? { ...colors, primary: brand.primary } : colors,
+		onPrimary: brand?.onPrimary ?? null
 	}
 }
 
 export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
+	const { colors, onPrimary } = getPalette(state)
 	const {
 		primary,
 		success,
@@ -77,7 +100,7 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 		textTertiary,
 		border,
 		hover
-	} = state.colors[state.themeName]
+	} = colors
 
 	const themeColors = getThemeColors({ primary, success, warning, error, info })
 
@@ -87,7 +110,7 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 	const borderColor = border
 	const hoverColor = hover
 
-	return {
+	const overrides: GlobalThemeOverrides = {
 		common: {
 			...themeColors,
 			textColorBase: text,
@@ -140,10 +163,34 @@ export function getThemeOverrides(state: ThemeState): GlobalThemeOverrides {
 			headerFontSize6: getTypeValue(state, state.typography.h6.fontSize)
 		}
 	}
+
+	return onPrimary ? withTextOnPrimary(overrides, onPrimary) : overrides
+}
+
+/**
+ * naive-ui draws text and marks on the primary in `baseColor` (the card surface here),
+ * which is unreadable on a light brand color in light mode or a dark one in dark mode.
+ */
+function withTextOnPrimary(overrides: GlobalThemeOverrides, onPrimary: string): GlobalThemeOverrides {
+	return {
+		...overrides,
+		Button: {
+			textColorPrimary: onPrimary,
+			textColorHoverPrimary: onPrimary,
+			textColorPressedPrimary: onPrimary,
+			textColorFocusPrimary: onPrimary,
+			textColorDisabledPrimary: onPrimary
+		},
+		Checkbox: { checkMarkColor: onPrimary },
+		Calendar: { dateTextColorCurrent: onPrimary },
+		Steps: { indicatorTextColorProcess: onPrimary },
+		Tag: { textColorChecked: onPrimary }
+	}
 }
 
 export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: string]: string } {
 	const naive = getters.naiveCommon
+	const { colors } = getPalette(state)
 
 	const bgColor = naive.baseColor
 	const bgSecondaryColor = state.colors[state.themeName].backgroundSecondary
@@ -206,11 +253,21 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 	}
 
 	// import colors by patterns
-	for (const pattern of ["extra(1|2|3|4)", "primary", "success", "warning", "error", "info", "border", "hover"]) {
+	for (const pattern of [
+		"extra(1|2|3|4)",
+		"primary",
+		"success",
+		"warning",
+		"error",
+		"info",
+		"waiting",
+		"border",
+		"hover"
+	]) {
 		const keys = expandPattern(pattern)
 
 		for (const key of keys) {
-			styleObject[`${key}-color`] = (state.colors[state.themeName] as Record<string, string>)[key] ?? ""
+			styleObject[`${key}-color`] = (colors as Record<string, string>)[key] ?? ""
 		}
 	}
 

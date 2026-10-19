@@ -526,6 +526,38 @@ Tests: `tests/test_customer_portal_overview_trend.py` (no DB), `tests/e2e/custom
 
 Tests: `tests/test_password_change.py` (no DB), `tests/e2e/password_change_e2e.py` (13306: creation, refusals, release on the same token, admin reset mid-session, temporary password with SMTP replaced, 2FA, an analyst not held). Portal: `stores/__tests__/auth-password-change.spec.ts`, `utils/__tests__/auth-password-change.spec.ts`, `api/__tests__/password-change.spec.ts`, `views/__tests__/ChangePassword.spec.ts`, `cypress/e2e/password-change.cy.ts`. Frontend: `components/customers/security/__tests__/CustomerSecurity.spec.ts`.
 
+### Customer Portal theme from the brand color (#1278)
+
+The portal's interface can take the brand color as naive-ui's primary. It is **opt-in, chosen in CoPilot**, and it never changes the PDF theming, which always used the brand color.
+
+- **One flag, resolved like the other branding fields.**
+  - `theme_from_brand_color` on `customer_portal_settings`: global, `NOT NULL`, default off.
+  - The same column on `customer_portal_branding`: per customer, NULL inherits, true/false overrides. Migration `f1278a0b1c2d`.
+  - `build_effective_branding` resolves it field by field. A customer's choice alone makes the branding `custom`; a disabled override inherits.
+  - Which color is used is the usual per-field merge, independent of the flag.
+  - The public settings carry the global value for the login page, and the effective branding carries the resolved one.
+- **Writes.**
+  - `PATCH /customer_portal/settings` takes it and `reset: ["theme_from_brand_color"]`, and refuses null.
+  - `POST` replaces it (missing = off).
+  - The per-customer `PUT` stores null/true/false, and a PUT without it inherits.
+  - All of them invalidate the branding cache like any branding write.
+- **CoPilot editor** (`components/customerPortal/Form.vue`).
+  - A switch in the global settings, sent as a boolean by `buildSettingsPatch`.
+  - In a customer's custom branding, three choices worded by their effect: *Same as the global setting* (with whether that is on now), *Use the brand color for this customer*, *Keep the default theme for this customer*.
+  - A warning when it is on with no color.
+  - The login preview's Sign in button shows the result (`brandTheme.ts:loginPrimary`, the portal's light-mode rule). It is enabled (a disabled one is faded and misstates the color), and without the brand theme it shows the portal's own default primary (`PORTAL_DEFAULT_PRIMARY`), not a colour of its own.
+- **Portal.**
+  - `portalSettings.themeBrandColor` is the color only when the branding in force has it on and holds a valid `#RGB`/`#RRGGBB`: the customer's branding once signed in, else the global settings. Anything else is null, which keeps the default theme.
+  - `App.vue` hands it to `themeStore.setBrandColor`. The theme store's `brandColor` is **not persisted**: it follows the branding, so the logout's `clearBranding` takes the portal back to the global choice.
+  - `theme/index.ts:getPalette` swaps the primary for every consumer at once: naive's overrides with the hover/pressed shades, `--primary-color(-rgb)` for Tailwind, `light/darkPrimaryColor`.
+- **Contrast** (`theme/brand.ts`).
+  - The color is darkened (light mode) or lightened (dark mode), hue kept, until it reaches 3:1 (WCAG 1.4.11) against the mode's three surfaces.
+  - The text naive-ui draws on the primary (its `baseColor`, i.e. the card surface) is replaced by white or near black, whichever contrasts more: Button `textColor*Primary`, Checkbox, Calendar, Steps, Tag.
+  - The default theme stays byte for byte as it was: no overrides are added while the flag is off.
+- **"Waiting on you" has a colour of its own, never the primary.** `PENDING_CUSTOMER` used `primary`, so a brand colour repainted it, and a blue brand put it beside Open's indigo. It is the `waiting` design token (`figma-tokens.json`, `design-tokens.json`: `rgb(255, 97, 201)`, validated against Open, In progress and Closed in both modes), exposed as `--waiting-color(-rgb)` and Tailwind's `bg-/text-/border-waiting`. `getStatusColor` answers `"waiting"`; naive-ui has no such tag type, so status tags go through `utils:statusTagProps` (a type, or a `color` for waiting; `Chip` takes `color` too). The status strip's lifted cell is tinted in its own colour (`--lift-rgb`), and so are the SLA page's count and the "waiting on your reply" banner. Selection and focus stay primary.
+
+Tests: `tests/test_customer_portal_brand_theme.py` (no DB), section F of `tests/e2e/customer_portal_settings_e2e.py` (13306). Frontend: `components/customerPortal/__tests__/{settingsPatch,brandTheme,Form-brand-theme}.spec.ts`. Portal: `theme/__tests__/brand.spec.ts`, `stores/__tests__/portalSettings-theme.spec.ts`, `components/__tests__/waiting-on-you.spec.ts`, `common/__tests__/StatusStrip.spec.ts`, `cypress/e2e/brand-theme.cy.ts`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route

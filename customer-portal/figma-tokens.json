@@ -116,6 +116,10 @@
 			"value": "rgb(255, 1, 86)",
 			"type": "color"
 		},
+		"color-light-waiting": {
+			"value": "rgb(255, 97, 201)",
+			"type": "color"
+		},
 		"color-dark-sidebar-background": {
 			"value": "rgb(29, 31, 37)",
 			"type": "color"
@@ -186,6 +190,10 @@
 		},
 		"color-dark-extra-4": {
 			"value": "rgb(255, 1, 86)",
+			"type": "color"
+		},
+		"color-dark-waiting": {
+			"value": "rgb(255, 97, 201)",
 			"type": "color"
 		},
 		"typo-h1": {
@@ -323,6 +331,10 @@
 		"color-extra-4": {
 			"value": "{color-light-extra-4}",
 			"type": "color"
+		},
+		"color-waiting": {
+			"value": "{color-light-waiting}",
+			"type": "color"
 		}
 	},
 	"dark": {
@@ -396,6 +408,10 @@
 		},
 		"color-extra-4": {
 			"value": "{color-dark-extra-4}",
+			"type": "color"
+		},
+		"color-waiting": {
+			"value": "{color-dark-waiting}",
 			"type": "color"
 		}
 	}

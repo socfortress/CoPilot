@@ -82,7 +82,8 @@
 			"extra1": "rgb(98, 103, 255)",
 			"extra2": "rgb(255, 97, 201)",
 			"extra3": "rgb(227, 194, 47)",
-			"extra4": "rgb(255, 1, 86)"
+			"extra4": "rgb(255, 1, 86)",
+			"waiting": "rgb(255, 97, 201)"
 		},
 		"dark": {
 			"sidebarBackground": "rgb(29, 31, 37)",
@@ -102,7 +103,8 @@
 			"extra1": "rgb(98, 103, 255)",
 			"extra2": "rgb(255, 97, 201)",
 			"extra3": "rgb(227, 194, 47)",
-			"extra4": "rgb(255, 1, 86)"
+			"extra4": "rgb(255, 1, 86)",
+			"waiting": "rgb(255, 97, 201)"
 		}
 	}
 }

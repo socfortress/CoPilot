@@ -1,10 +1,10 @@
 <template>
 	<div
 		data-testid="waiting-on-you"
-		class="border-primary/40 bg-primary/5 mb-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border px-4 py-3"
+		class="border-waiting/40 bg-waiting/5 mb-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border px-4 py-3"
 		role="status"
 	>
-		<Icon name="carbon:user-follow" :size="22" class="text-primary shrink-0" />
+		<Icon name="carbon:user-follow" :size="22" class="text-waiting shrink-0" />
 		<div class="min-w-0 grow basis-64">
 			<div class="font-semibold">The SOC is waiting on your reply</div>
 			<div class="text-secondary text-sm">

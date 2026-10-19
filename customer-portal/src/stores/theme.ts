@@ -7,7 +7,7 @@ import _set from "lodash/set"
 import { darkTheme, lightTheme } from "naive-ui"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import { watch } from "vue"
-import { getCssVars, getDefaultState, getThemeOverrides } from "@/theme"
+import { getCssVars, getDefaultState, getPalette, getThemeOverrides } from "@/theme"
 import { ThemeNameEnum } from "@/types/theme"
 
 export const useThemeStore = defineStore("theme", {
@@ -39,6 +39,10 @@ export const useThemeStore = defineStore("theme", {
 		},
 		setThemeDark(): void {
 			this.themeName = ThemeNameEnum.Dark
+		},
+		/** The brand color to theme the portal with (#1278); null for the default theme. */
+		setBrandColor(color: string | null): void {
+			this.brandColor = color
 		},
 		setColor(theme: ThemeNameEnum, colorName: string, color: string): void {
 			;(this.colors[theme] as Record<string, string>)[colorName] = color
@@ -156,10 +160,10 @@ export const useThemeStore = defineStore("theme", {
 			return getThemeOverrides(state)
 		},
 		darkPrimaryColor(state): string {
-			return state.colors.dark.primary
+			return getPalette(state, ThemeNameEnum.Dark).colors.primary
 		},
 		lightPrimaryColor(state): string {
-			return state.colors.light.primary
+			return getPalette(state, ThemeNameEnum.Light).colors.primary
 		},
 		naiveCommon(): ThemeCommonVars {
 			return { ...this.naiveTheme.common, ...this.themeOverrides.common }

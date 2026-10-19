@@ -88,7 +88,7 @@ import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
 
@@ -157,7 +157,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 			return (
 				<div class="flex items-center gap-2">
 					<NTag
-						type={getStatusColor(row.case_status)}
+						{...statusTagProps(row.case_status)}
 						round
 						class="p-1! [&_.n-tag\_\_icon]:m-0!"
 						v-slots={{

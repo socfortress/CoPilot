@@ -90,6 +90,14 @@ watch(
 	{ immediate: true }
 )
 
+// The brand color as the theme's primary, when CoPilot turns that on (#1278). It follows the
+// branding in force, so signing out drops a customer's color for the global choice.
+watch(
+	() => portalSettingsStore.themeBrandColor,
+	color => themeStore.setBrandColor(color),
+	{ immediate: true }
+)
+
 watch(layoutComponentName, () => {
 	loading.value = false
 })
