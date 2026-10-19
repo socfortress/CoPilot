@@ -18,6 +18,7 @@ describe("brand color as the theme", () => {
 	const NAVY = "#0f172a"
 	const DEFAULT_LIGHT_PRIMARY = "rgb(219, 157, 0)"
 	const DARK_SURFACE = "rgb(38, 40, 45)"
+	const WAITING = "rgb(255, 97, 201)"
 
 	before(() => {
 		cy.seedPortal().then(result => {
@@ -93,6 +94,22 @@ describe("brand color as the theme", () => {
 		cy.location("pathname").should("eq", "/login")
 		expectPrimary(DEFAULT_LIGHT_PRIMARY)
 		signIn().should("have.css", "background-color", DEFAULT_LIGHT_PRIMARY)
+	})
+
+	it("keeps 'Waiting on you' in its own colour, never the brand colour", () => {
+		setGlobal({ brand_color: BLUE, theme_from_brand_color: true })
+
+		cy.loginToPortal(seed)
+		visitIn("/alerts", "light")
+		expectPrimary(BLUE)
+		cy.get("[data-testid=stat-pending_customer] .rounded-full").should(
+			"have.css",
+			"background-color",
+			WAITING
+		)
+		cy.get("[data-testid=stat-open] .rounded-full").should("not.have.css", "background-color", WAITING)
+		// The list's status tag too: naive-ui has no type for it, so it takes the colour as a value.
+		cy.contains("tbody tr", "Waiting on you").find(".n-tag__icon").should("have.css", "color", WAITING)
 	})
 
 	it("lets a customer turn it off while the global choice is on", () => {
