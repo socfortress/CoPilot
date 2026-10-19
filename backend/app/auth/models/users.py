@@ -6,6 +6,7 @@ from typing import List
 from typing import Optional
 
 import bcrypt
+import sqlalchemy as sa
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import field_validator
@@ -74,6 +75,10 @@ class User(SQLModel, table=True):
     # /auth/token/customer-portal and 2FA completion). Surfaced for audit/last-login
     # visibility (issue #943). Nullable: existing users have never logged in under this field.
     last_login_at: Optional[datetime.datetime] = Field(default=None, nullable=True)
+    # Set when an admin chose the password (a temporary one emailed, a reset, a new
+    # account) and cleared when the user sets their own (#1277). While it is set, a
+    # customer_user reaches only the password change (app/auth/services/password_change.py).
+    must_change_password: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": sa.false()})
 
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")

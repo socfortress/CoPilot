@@ -35,4 +35,5 @@ async def get_portal_profile(user: User, session: AsyncSession) -> PortalMeRespo
         username=user.username,
         role=RoleEnum(user.role_id).name,
         customers=await portal_customers(user, session),
+        must_change_password=bool(user.must_change_password),
     )

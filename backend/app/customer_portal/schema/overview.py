@@ -8,6 +8,7 @@ section carries its own ``error`` so one failing block never blanks the others.
 from datetime import datetime
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -98,3 +99,37 @@ class CustomerPortalOverviewResponse(BaseModel):
     ai: OverviewAiSection
     success: bool
     message: str
+
+
+# ---- The Overview's trend (#1273): opened and closed per hour, bucketed in SQL ----
+
+TrendRange = Literal["7d", "30d"]
+TREND_DAYS: Dict[str, int] = {"7d": 7, "30d": 30}
+
+
+class OverviewTrendHour(BaseModel):
+    """One UTC hour with any activity. The portal sums hours into the viewer's local days."""
+
+    hour: str = Field(..., description="Start of the hour, ISO 8601 UTC (`…Z`)")
+    alerts_opened: int = 0
+    alerts_closed: int = 0
+    cases_opened: int = 0
+    cases_closed: int = 0
+
+
+class OverviewTrendResponse(BaseModel):
+    range: TrendRange
+    since: str = Field(..., description="Start of the window, ISO 8601 UTC: a day more than the range, for any timezone")
+    until: str = Field(..., description="End of the window (exclusive), ISO 8601 UTC")
+    hours: List[OverviewTrendHour] = Field(default_factory=list, description="Hours with activity, oldest first")
+    alerts_open_at_since: Optional[int] = Field(
+        None,
+        description="Alerts still open at `since`. Adding each hour's opened and taking away its closed gives how many were open "
+        "at any later moment, so the portal can show the absolute Net (open at the end of each day) beside the relative one "
+        "(opened − closed). None when the alert trend failed.",
+    )
+    cases_open_at_since: Optional[int] = Field(None, description="Cases still open at `since`; see `alerts_open_at_since`")
+    alerts_error: Optional[str] = None
+    cases_error: Optional[str] = None
+    success: bool = True
+    message: str = "Overview trend retrieved"

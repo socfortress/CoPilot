@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
+import { elapsedLabel, secondsSince } from "@/utils/elapsed"
 import { downloadQueryId, fileNameFromDisposition } from "../reportDownload"
-import { elapsedLabel, secondsSince } from "../reportTiming"
 
 describe("report download helpers", () => {
 	it("reads the report id a ?download= names, and nothing else", () => {

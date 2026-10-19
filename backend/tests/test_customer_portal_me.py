@@ -22,7 +22,7 @@ import app.customer_portal.services.me as me_service  # noqa: E402
 from app.customer_portal.routes.me import customer_portal_me_router  # noqa: E402
 from app.middleware.customer_access import customer_access_handler  # noqa: E402
 
-PORTAL_USER = SimpleNamespace(id=7, username="acme.viewer", role_id=4)
+PORTAL_USER = SimpleNamespace(id=7, username="acme.viewer", role_id=4, must_change_password=False)
 
 
 def _session(rows):
@@ -82,6 +82,15 @@ def test_the_profile_names_the_user_and_role():
     with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])):
         profile = asyncio.run(me_service.get_portal_profile(PORTAL_USER, AsyncMock()))
     assert (profile.username, profile.role, profile.customers) == ("acme.viewer", "customer_user", [])
+    assert profile.must_change_password is False
+
+
+def test_the_profile_says_when_the_password_must_be_replaced():
+    # An admin chose it (#1277): the portal holds the user on the change until they do.
+    held = SimpleNamespace(id=7, username="acme.viewer", role_id=4, must_change_password=True)
+    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])):
+        profile = asyncio.run(me_service.get_portal_profile(held, AsyncMock()))
+    assert profile.must_change_password is True
 
 
 def test_the_route_is_for_portal_users_only():

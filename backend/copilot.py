@@ -225,6 +225,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # Readable by a portal served from another origin: it holds a user on the password change (#1277).
+    expose_headers=["X-Password-Change-Required"],
 )
 
 ################## ! RESPONSE COMPRESSION (#1072, level 3) ! ##################

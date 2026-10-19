@@ -27,6 +27,28 @@ const WS_ROOT = import.meta.env.VITE_WS_ROOT || API_ROOT
 let __TOKEN_REFRESHING = false
 let __TOKEN_LAST_CHECK: Date | null = null
 
+/** The API's refusal while a password an admin chose is not replaced (#1277). */
+export const PASSWORD_CHANGE_HEADER = "x-password-change-required"
+
+export function isPasswordChangeRequired(headers: unknown): boolean {
+	const value =
+		headers && typeof (headers as { get?: unknown }).get === "function"
+			? (headers as { get: (name: string) => unknown }).get(PASSWORD_CHANGE_HEADER)
+			: (headers as Record<string, unknown> | undefined)?.[PASSWORD_CHANGE_HEADER]
+	return String(value ?? "").toLowerCase() === "true"
+}
+
+async function holdForPasswordChange() {
+	// Loaded on demand: the router imports the pages, which import this client.
+	const { default: router } = await import("@/router")
+	const current = router.currentRoute.value
+	// Before the first navigation has settled there is no page to leave yet, and the
+	// router's own guard is already taking the user to the change with the right
+	// destination: navigating here would replace it with the start location ("/").
+	if (!current.matched.length || current.name === "ChangePassword") return
+	await router.replace({ name: "ChangePassword", query: { redirect: current.fullPath } })
+}
+
 function applyInterceptors(client: AxiosInstance) {
 	client.interceptors.request.use(
 		config => {
@@ -83,6 +105,16 @@ function applyInterceptors(client: AxiosInstance) {
 			// settles skips its `.catch` (no error toast) and its `.finally` (nothing left
 			// to update). A cancellation the caller made itself still rejects as before.
 			if (axios.isCancel(error) && error.config?.navigationSignal?.aborted) {
+				return new Promise(() => {})
+			}
+
+			// A password an admin chose holds the user on the change (#1277): the API answers
+			// 403 with this header, never 401 (which would end the session). Send the user
+			// there; the page that asked is left behind, so its request never settles (no
+			// error toast on it), like a cancelled one.
+			if (error.response?.status === 403 && isPasswordChangeRequired(error.response.headers)) {
+				useAuthStore().setPasswordChangeRequired(true)
+				void holdForPasswordChange()
 				return new Promise(() => {})
 			}
 

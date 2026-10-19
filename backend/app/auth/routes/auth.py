@@ -28,6 +28,7 @@ from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
 from app.auth.schema.user import UserDetailResponse
+from app.auth.services import password_change
 from app.auth.services.customer_assignment import NEEDS_A_CUSTOMER
 from app.auth.services.customer_assignment import assigned_codes
 from app.auth.services.customer_assignment import replace_assignment
@@ -134,7 +135,7 @@ async def login_for_access_token(
         details="Main portal login",
         request=request,
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "must_change_password": user.must_change_password}
 
 
 @auth_router.post("/token/customer-portal")
@@ -209,7 +210,8 @@ async def login_for_customer_portal(
         details="Customer portal login",
         request=request,
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    # The portal sends a held user straight to the password change (#1277).
+    return {"access_token": access_token, "token_type": "bearer", "must_change_password": user.must_change_password}
 
 
 @auth_router.get("/refresh", response_model=Token)
@@ -279,6 +281,8 @@ async def register(
         password=hashed_pwd,
         email=user.email,
         role_id=role_id,
+        # The admin chose this password: the new user replaces it at first sign-in (#1277).
+        must_change_password=True,
     )
     logger.info(f"User: {u}")
     session.add(u)
@@ -294,6 +298,7 @@ async def register(
         new_value={"username": u.username, "email": u.email, "role_id": u.role_id, "customer_codes": customer_codes},
         request=http_request,
     )
+    await password_change.record_change_required(u, current_user, "new account", http_request)
     return {"message": "User created successfully", "success": True}
 
 
@@ -435,6 +440,9 @@ async def reset_password_via_username(
         raise HTTPException(status_code=404, detail="User not found")
     hashed_pwd = auth_handler.get_password_hash(request.new_password)
     user.password = hashed_pwd
+    # Someone else's password, which the admin now knows: the user replaces it (#1277).
+    # An admin resetting their own through this route chose it themselves.
+    required = password_change.require_change(user, current_user)
     session.add(user)
     await session.commit()
     await record_audit_event(
@@ -446,6 +454,8 @@ async def reset_password_via_username(
         details="Password reset by admin",
         request=http_request,
     )
+    if required:
+        await password_change.record_change_required(user, current_user, "reset", http_request)
     return {"message": "Password reset successfully", "success": True}
 
 
@@ -478,10 +488,19 @@ async def reset_password_me(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     await auth_handler.verify_reset_token_me(token, user)
+    was_required = bool(user.must_change_password)
+    # Lifting the portal's hold takes the password received (#1277): a session alone must
+    # not be enough. The analyst frontend's own change sends no current password, and
+    # analysts are not held, so it keeps working and clears their flag too.
+    if password_change.is_held(user) and request.current_password is None:
+        raise HTTPException(status_code=400, detail="Enter the password you received to choose a new one")
     if request.current_password is not None and not auth_handler.verify_password(request.current_password, user.password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if auth_handler.verify_password(request.new_password, user.password):
+        raise HTTPException(status_code=400, detail="Choose a password different from the current one")
     hashed_pwd = auth_handler.get_password_hash(request.new_password)
     user.password = hashed_pwd
+    user.must_change_password = False
     session.add(user)
     await session.commit()
     await record_audit_event(
@@ -493,6 +512,8 @@ async def reset_password_me(
         details="Self-service password change",
         request=http_request,
     )
+    if was_required:
+        await password_change.record_changed(user, http_request)
     return {"message": "Password reset successfully", "success": True}
 
 

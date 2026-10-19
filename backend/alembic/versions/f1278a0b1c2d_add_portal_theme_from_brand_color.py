@@ -1,7 +1,7 @@
 """add theme_from_brand_color to the customer portal branding
 
 Revision ID: f1278a0b1c2d
-Revises: d5b11a2b3c4d
+Revises: f1277a0b1c2d
 Create Date: 2026-10-19 15:00:00.000000
 
 Whether the Customer Portal's interface takes the brand color as its primary color
@@ -19,7 +19,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f1278a0b1c2d"
-down_revision: Union[str, None] = "d5b11a2b3c4d"
+down_revision: Union[str, None] = "f1277a0b1c2d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

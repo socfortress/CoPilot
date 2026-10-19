@@ -13,6 +13,7 @@ from loguru import logger
 
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import effective_roles
+from app.auth.services.password_change import enforce_password_change
 from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
 
@@ -302,6 +303,9 @@ class AuthHandler:
                 headers={"WWW-Authenticate": authenticate_value},
             )
 
+        # A customer whose password an admin chose reaches only the change (#1277).
+        enforce_password_change(request, user)
+
         for scope in security_scopes.scopes:
             if scope not in token_scopes:
                 raise HTTPException(
@@ -377,6 +381,9 @@ class AuthHandler:
                     detail="User not found",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+
+            # A customer whose password an admin chose reaches only the change (#1277).
+            enforce_password_change(request, user)
 
             if not any(scope in token_scopes for scope in required_scopes):
                 raise HTTPException(

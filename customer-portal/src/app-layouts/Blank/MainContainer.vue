@@ -18,6 +18,7 @@ import { NScrollbar } from "naive-ui"
 import { computed, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
+import { startsAtTop } from "@/utils/scroll"
 
 const themeStore = useThemeStore()
 const router = useRouter()
@@ -47,8 +48,8 @@ router.beforeEach(checkThemeOverrides)
 onMounted(() => {
 	checkThemeOverrides(route)
 
-	router.afterEach(() => {
-		if (scrollbar?.value?.scrollTo) {
+	router.afterEach((to, from) => {
+		if (startsAtTop(to, from) && scrollbar?.value?.scrollTo) {
 			scrollbar?.value.scrollTo({ top: 0, behavior: "smooth" })
 		}
 	})

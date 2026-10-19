@@ -31,6 +31,8 @@ export interface PortalProfile {
 	username: string
 	role: string
 	customers: PortalCustomer[]
+	/** An admin chose the password and it has not been replaced yet (#1277). */
+	must_change_password: boolean
 }
 
 export interface AuthUser {
@@ -39,6 +41,11 @@ export interface AuthUser {
 	username: string | null
 	/** From the token, until `GET /customer_portal/me` answers: see `stores/auth.ts`. */
 	customer_codes: string[]
+	/**
+	 * An admin chose the password (a temporary one emailed, a reset, a new account): the
+	 * portal holds the user on the change until they replace it (#1277).
+	 */
+	must_change_password?: boolean
 }
 
 /**
@@ -54,6 +61,8 @@ export interface AuthResponse {
 	 * is a short-lived temp token to be exchanged at /auth/2fa/validate rather than a session.
 	 */
 	requires_2fa?: boolean
+	/** Sent with a session token: the user must replace a password an admin chose (#1277). */
+	must_change_password?: boolean
 }
 
 export interface JWTPayload extends jose.JWTPayload {

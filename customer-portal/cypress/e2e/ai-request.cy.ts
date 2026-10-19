@@ -90,4 +90,27 @@ describe("asking for an AI analysis", () => {
 		cy.contains("High finding").should("be.visible")
 		cy.get("[data-testid=ai-request-button]").should("contain", "Re-run AI analysis")
 	})
+
+	it("names the investigation's state in words, says how long it has run, and follows it to the end", () => {
+		const jobId = `e2e-running-${Date.now()}`
+		const job = `/ai_analyst/jobs/${jobId}`
+		cy.adminApi(seed, "POST", "/ai_analyst/jobs", {
+			id: jobId,
+			alert_id: seed.ai_idle_alert_id,
+			customer_code: seed.customers.a,
+			triggered_by: "manual"
+		})
+		cy.adminApi(seed, "PATCH", job, { status: "running" })
+
+		cy.clock(Date.now(), ["Date", "setInterval", "clearInterval"])
+		openAiReport(seed.ai_idle_alert_id)
+		cy.get("[data-testid=ai-investigation-status]").should("contain", "Analysing · <1 min")
+		cy.get("[data-testid=ai-investigation-progress]").should("contain", "has been working on this alert for <1 min")
+
+		// The SOC's analyst gives up on it; the tab notices on its next refresh.
+		cy.adminApi(seed, "PATCH", job, { status: "failed", error_message: "e2e: stopped" })
+		cy.tick(3 * 60_000)
+		cy.get("[data-testid=ai-investigation-status]").should("contain", "Failed").and("not.contain", "min")
+		cy.get("[data-testid=ai-investigation-progress]").should("not.exist")
+	})
 })

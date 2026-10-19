@@ -6,6 +6,8 @@ export interface CustomerSecurityUser {
 	role_name?: string | null
 	last_login_at?: string | null
 	totp_enabled: boolean
+	/** Still on a password an admin chose: the Customer Portal holds them on the change (#1277). */
+	must_change_password?: boolean
 }
 
 /**
