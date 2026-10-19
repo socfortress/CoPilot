@@ -46,12 +46,15 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
         await logger_instance.log_error(user_id, request, exc.detail)
         await session.commit()  # Make sure to commit the session
 
+    # The exception's headers go out with it: a 401's WWW-Authenticate, and the
+    # X-Password-Change-Required the portal reads to hold a user on the change (#1277).
     return JSONResponse(
         status_code=exc.status_code,
         content={
             "success": False,
             "message": exc.detail,
         },
+        headers=getattr(exc, "headers", None),
     )
 
 
