@@ -505,6 +505,37 @@ Tests: `tests/test_customer_report_status.py` (no DB, no network), `tests/e2e/cu
 
 Tests: `tests/test_event_scroll_scoping.py`, `tests/test_event_search_memory.py` (no DB, no network), `tests/e2e/event_search_e2e.py` (13306, the indexer replaced by a recorder: tenancy of the search routes, and the memory and its templates across two logins, their limits, a race for the last slot, other users and customers, the cascade). Portal: `components/eventSearch/__tests__/`, `cypress/e2e/event-search.cy.ts` (memory on the real backend, a second device included).
 
+### Customer Portal theme from the brand color (#1278)
+
+The portal's interface can take the brand color as naive-ui's primary. It is **opt-in, chosen in CoPilot**, and it never changes the PDF theming, which always used the brand color.
+
+- **One flag, resolved like the other branding fields.**
+  - `theme_from_brand_color` on `customer_portal_settings`: global, `NOT NULL`, default off.
+  - The same column on `customer_portal_branding`: per customer, NULL inherits, true/false overrides. Migration `f1278a0b1c2d`.
+  - `build_effective_branding` resolves it field by field. A customer's choice alone makes the branding `custom`; a disabled override inherits.
+  - Which color is used is the usual per-field merge, independent of the flag.
+  - The public settings carry the global value for the login page, and the effective branding carries the resolved one.
+- **Writes.**
+  - `PATCH /customer_portal/settings` takes it and `reset: ["theme_from_brand_color"]`, and refuses null.
+  - `POST` replaces it (missing = off).
+  - The per-customer `PUT` stores null/true/false, and a PUT without it inherits.
+  - All of them invalidate the branding cache like any branding write.
+- **CoPilot editor** (`components/customerPortal/Form.vue`).
+  - A switch in the global settings, sent as a boolean by `buildSettingsPatch`.
+  - *Inherit · On|Off / On / Off* in a customer's custom branding.
+  - A warning when it is on with no color.
+  - The login preview's Sign in button shows the result (`brandTheme.ts:loginPrimary`, the portal's light-mode rule).
+- **Portal.**
+  - `portalSettings.themeBrandColor` is the color only when the branding in force has it on and holds a valid `#RGB`/`#RRGGBB`: the customer's branding once signed in, else the global settings. Anything else is null, which keeps the default theme.
+  - `App.vue` hands it to `themeStore.setBrandColor`. The theme store's `brandColor` is **not persisted**: it follows the branding, so the logout's `clearBranding` takes the portal back to the global choice.
+  - `theme/index.ts:getPalette` swaps the primary for every consumer at once: naive's overrides with the hover/pressed shades, `--primary-color(-rgb)` for Tailwind, `light/darkPrimaryColor`.
+- **Contrast** (`theme/brand.ts`).
+  - The color is darkened (light mode) or lightened (dark mode), hue kept, until it reaches 3:1 (WCAG 1.4.11) against the mode's three surfaces.
+  - The text naive-ui draws on the primary (its `baseColor`, i.e. the card surface) is replaced by white or near black, whichever contrasts more: Button `textColor*Primary`, Checkbox, Calendar, Steps, Tag.
+  - The default theme stays byte for byte as it was: no overrides are added while the flag is off.
+
+Tests: `tests/test_customer_portal_brand_theme.py` (no DB), section F of `tests/e2e/customer_portal_settings_e2e.py` (13306). Frontend: `components/customerPortal/__tests__/{settingsPatch,brandTheme,Form-brand-theme}.spec.ts`. Portal: `theme/__tests__/brand.spec.ts`, `stores/__tests__/portalSettings-theme.spec.ts`, `cypress/e2e/brand-theme.cy.ts`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
