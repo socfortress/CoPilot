@@ -480,6 +480,9 @@ def fixture() -> dict:
             "alerts_closed": sum(1 for _, resolved_after in SLA_ALERTS_A if resolved_after),
             "cases_opened": len(CASES_A),
             "cases_closed": CASES_A.count("CLOSED"),
+            # All of them opened inside the window: what is still open is opened − closed.
+            "alerts_open": len(SLA_ALERTS_A) - sum(1 for _, resolved_after in SLA_ALERTS_A if resolved_after),
+            "cases_open": len(CASES_A) - CASES_A.count("CLOSED"),
         },
     }
 

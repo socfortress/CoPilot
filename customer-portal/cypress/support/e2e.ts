@@ -25,7 +25,15 @@ export interface PortalSeed {
 	/** What the SLA page must show for customer A (#1187). */
 	sla_a: SlaSeed
 	/** What the Overview's trend counts for customer A, over 7 days as over 30 (#1273). */
-	trend_a: { alerts_opened: number; alerts_closed: number; cases_opened: number; cases_closed: number }
+	trend_a: {
+		alerts_opened: number
+		alerts_closed: number
+		cases_opened: number
+		cases_closed: number
+		/** Still open now (all of A's clocks start inside the window). */
+		alerts_open: number
+		cases_open: number
+	}
 	/** A's first agent and its case (#1256); B's case names the same host and must not show. */
 	agent_a0: { agent_id: string; hostname: string; case_id: number }
 	agent_b0_id: string

@@ -3,9 +3,10 @@ import type { PortalSeed } from "../support/e2e"
 const TREND = "**/api/customer_portal/overview/trend*"
 
 /**
- * The Overview's trend (#1273): alerts and cases opened and closed per day, counted by the
- * real backend from the seeded SLA clocks, with its period in the URL, a sparkline on the
- * alerts and cases cells, and a failure contained to the panel.
+ * The Overview's trend (#1273): how many alerts and cases are still open, the period's Net,
+ * and opened and closed per day, counted by the real backend from the seeded SLA clocks,
+ * with its period in the URL, a sparkline on the alerts and cases cells, and a failure
+ * contained to the panel.
  */
 describe("overview trend", () => {
 	let seed: PortalSeed
@@ -20,11 +21,14 @@ describe("overview trend", () => {
 		cy.loginToPortal(seed)
 	})
 
-	function figures(opened: number, closed: number) {
+	/** The readout: still open now first, then the period's Net, opened and closed. */
+	function figures(opened: number, closed: number, open: number) {
+		cy.get("[data-testid=overview-trend-open]").should("have.text", String(open))
+		cy.get("[data-testid=overview-trend-open-caption]").should("have.text", `${open ? "still open" : "all cleared"} · was 0`)
 		cy.get("[data-testid=overview-trend-opened]").should("have.text", String(opened))
 		cy.get("[data-testid=overview-trend-closed]").should("have.text", String(closed))
 		const net = opened - closed
-		cy.get("[data-testid=overview-trend-net]").should("have.text", net > 0 ? `+${net}` : net < 0 ? `−${-net}` : "0")
+		cy.get("[data-testid=overview-trend-net]").should("have.text", net > 0 ? `+${net}` : net < 0 ? `\u2212${-net}` : "0")
 	}
 
 	it("counts the customer's alerts and cases opened and closed, as a separate request", () => {
@@ -36,12 +40,18 @@ describe("overview trend", () => {
 		})
 
 		cy.get("[data-testid=overview-trend]").should("contain.text", "last 30 days")
-		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed)
+		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed, seed.trend_a.alerts_open)
 		cy.get("[data-testid=overview-trend-chart]").should("be.visible")
 		cy.get("[data-testid=overview-trend-table] tbody tr").should("have.length", 30)
+		// The last day of the table is what is still open now.
+		cy.get("[data-testid=overview-trend-table] tbody tr")
+			.last()
+			.find("td")
+			.first()
+			.should("have.text", String(seed.trend_a.alerts_open))
 
 		cy.get("[data-testid=overview-trend-entity-cases]").click()
-		figures(seed.trend_a.cases_opened, seed.trend_a.cases_closed)
+		figures(seed.trend_a.cases_opened, seed.trend_a.cases_closed, seed.trend_a.cases_open)
 	})
 
 	it("draws what was opened per day on the alerts and cases cells", () => {
@@ -66,9 +76,32 @@ describe("overview trend", () => {
 		cy.location("search").should("eq", "?trend=7d")
 		cy.get("[data-testid=overview-trend]").should("contain.text", "last 7 days")
 		// Every seeded clock is inside the last 7 days.
-		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed)
+		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed, seed.trend_a.alerts_open)
 		cy.get("[data-testid=overview-trend-table] tbody tr").should("have.length", 7)
 		cy.get("[data-testid=posture-alerts] [data-testid=posture-spark]").should("contain.text", "opened · 7d")
+
+		// Changing the period keeps the place: the page used to jump back to the top on any
+		// query change, away from the control just used.
+		cy.get("[data-testid=overview-trend]").scrollIntoView()
+		cy.get("[data-testid=overview-trend]")
+			.closest(".n-scrollbar-container")
+			.then($container => {
+				const before = $container[0]!.scrollTop
+				expect(before).to.be.greaterThan(0)
+				cy.get("[data-testid=overview-trend-range-30d]").click()
+				cy.wait("@trend")
+				cy.wait(600) // longer than the smooth scroll the layout used to start
+				// Not back at the top, and the panel still on screen (the page may settle a little
+				// as the new days render).
+				cy.wrap($container).should($el => expect($el[0]!.scrollTop).to.be.greaterThan(before / 2))
+				cy.get("[data-testid=overview-trend]").should($panel => {
+					const box = $panel[0]!.getBoundingClientRect()
+					expect(box.top).to.be.lessThan(Cypress.config("viewportHeight"))
+					expect(box.bottom).to.be.greaterThan(0)
+				})
+				cy.get("[data-testid=overview-trend-range-7d]").click()
+				cy.wait("@trend")
+			})
 
 		cy.reload()
 		cy.wait("@trend").its("request.url").should("contain", "range=7d")
@@ -90,7 +123,7 @@ describe("overview trend", () => {
 
 		cy.get("[data-testid=overview-trend] [data-testid=panel-error]").should("be.visible").find("button").click()
 		cy.wait("@trend").its("response.statusCode").should("eq", 200)
-		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed)
+		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed, seed.trend_a.alerts_open)
 		// The rest of the Overview never noticed.
 		cy.get("[data-testid=posture-alerts] [data-testid=posture-headline]").should("have.text", String(seed.alerts.a.open))
 	})
@@ -98,7 +131,7 @@ describe("overview trend", () => {
 	it("shows the panel on a phone without a horizontal scroll", () => {
 		cy.viewport(430, 932)
 		cy.visit("/overview")
-		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed)
+		figures(seed.trend_a.alerts_opened, seed.trend_a.alerts_closed, seed.trend_a.alerts_open)
 		cy.document().then(doc => {
 			expect(doc.documentElement.scrollWidth).to.be.at.most(doc.documentElement.clientWidth)
 		})
