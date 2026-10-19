@@ -117,8 +117,11 @@ def alembic_cfg() -> Config:
 def section_a():
     print("\n=== A) the migration ===")
     cfg = alembic_cfg()
-    heads = ScriptDirectory.from_config(cfg).get_heads()
-    check("one alembic head, this PR's index migration", heads == [REV], str(heads))
+    script = ScriptDirectory.from_config(cfg)
+    heads = script.get_heads()
+    # One head, with this migration in its chain: a later migration on top is not a failure.
+    chain = {revision.revision for revision in script.iterate_revisions(heads[0], "base")} if len(heads) == 1 else set()
+    check("one alembic head, with this PR's index migration in its chain", REV in chain, str(heads))
     engine = create_engine(URL)
 
     def table():
