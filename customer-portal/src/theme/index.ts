@@ -253,7 +253,17 @@ export function getCssVars(state: ThemeState, getters: ThemeGetters): { [key: st
 	}
 
 	// import colors by patterns
-	for (const pattern of ["extra(1|2|3|4)", "primary", "success", "warning", "error", "info", "waiting", "border", "hover"]) {
+	for (const pattern of [
+		"extra(1|2|3|4)",
+		"primary",
+		"success",
+		"warning",
+		"error",
+		"info",
+		"waiting",
+		"border",
+		"hover"
+	]) {
 		const keys = expandPattern(pattern)
 
 		for (const key of keys) {
