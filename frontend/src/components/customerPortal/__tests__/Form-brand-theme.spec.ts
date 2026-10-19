@@ -79,13 +79,8 @@ function render(component: typeof Form | typeof Settings, props: Record<string, 
 	return mount(Host, { attachTo: document.body })
 }
 
-function choose(wrapper: ReturnType<typeof render>, label: string) {
-	const option = wrapper
-		.get("[data-testid=portal-theme-choice]")
-		.findAll("label")
-		.find(item => item.text().startsWith(label))
-	if (!option) throw new Error(`no "${label}" option`)
-	return option.find("input").setValue(true)
+function choose(wrapper: ReturnType<typeof render>, value: "inherit" | "on" | "off") {
+	return wrapper.get(`[data-testid=portal-theme-${value}] input`).setValue(true)
 }
 
 beforeEach(() => {
@@ -120,8 +115,11 @@ describe("global settings: theme the portal with the brand color (#1278)", () =>
 		getSettings.mockResolvedValue(globalSettings())
 		const wrapper = render(Settings)
 		await flushPromises()
-		const button = () => wrapper.get("[data-testid=portal-preview-sign-in]").element as HTMLElement
-		expect(button().style.backgroundColor).toBe("")
+		const button = () => wrapper.get("[data-testid=portal-preview-sign-in]").element as HTMLButtonElement
+		// Off: the portal's own default primary, as customers see it.
+		expect(button().style.backgroundColor).toBe("rgb(219, 157, 0)")
+		// Enabled, as the portal shows it: a disabled one is faded and misstates the color.
+		expect(button().disabled).toBe(false)
 
 		await wrapper.get("[data-testid=portal-theme-switch]").trigger("click")
 		await flushPromises()
@@ -138,8 +136,10 @@ describe("a customer's branding: inherit, on or off (#1278)", () => {
 		const wrapper = render(Form, { customerCode: "ACME" })
 		await flushPromises()
 
-		const choice = wrapper.get("[data-testid=portal-theme-choice]")
-		expect(choice.text()).toContain("Inherit · On")
+		const inherit = wrapper.get("[data-testid=portal-theme-inherit]")
+		expect(inherit.text()).toContain("Same as the global setting")
+		expect(inherit.text()).toContain("Currently on")
+		expect((inherit.find("input").element as HTMLInputElement).checked).toBe(true)
 		expect(wrapper.find("[data-testid=portal-theme-switch]").exists()).toBe(false)
 
 		await wrapper.get("[data-testid=portal-settings-save]").trigger("click")
@@ -151,16 +151,16 @@ describe("a customer's branding: inherit, on or off (#1278)", () => {
 	})
 
 	it.each([
-		["On", true],
-		["Off", false]
-	])("sends %s as the customer's own choice", async (label, value) => {
+		["on", true],
+		["off", false]
+	] as const)("sends %s as the customer's own choice", async (choice, value) => {
 		getSettings.mockResolvedValue(globalSettings())
 		getCustomerBranding.mockResolvedValue(customerBranding({}))
 		setCustomerBranding.mockResolvedValue(customerBranding({ theme_from_brand_color: value }))
 		const wrapper = render(Form, { customerCode: "ACME" })
 		await flushPromises()
 
-		await choose(wrapper, label)
+		await choose(wrapper, choice)
 		await wrapper.get("[data-testid=portal-settings-save]").trigger("click")
 		await flushPromises()
 		expect(setCustomerBranding).toHaveBeenCalledWith(
@@ -174,7 +174,8 @@ describe("a customer's branding: inherit, on or off (#1278)", () => {
 		getCustomerBranding.mockResolvedValue(customerBranding({ theme_from_brand_color: false }))
 		const wrapper = render(Form, { customerCode: "ACME" })
 		await flushPromises()
-		const checked = wrapper.get("[data-testid=portal-theme-choice]").find("input:checked")
-		expect(checked.element.closest("label")?.textContent?.trim()).toBe("Off")
+		expect((wrapper.get("[data-testid=portal-theme-off] input").element as HTMLInputElement).checked).toBe(true)
+		expect(wrapper.get("[data-testid=portal-theme-off]").text()).toContain("Keep the default theme")
+		expect(wrapper.get("[data-testid=portal-theme-inherit]").text()).toContain("Currently on")
 	})
 })

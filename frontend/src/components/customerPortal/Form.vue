@@ -157,27 +157,35 @@
 									</span>
 								</div>
 
-								<n-radio-group
-									v-if="isCustomerScope"
-									v-model:value="themeChoice"
-									size="small"
-									:disabled="loading"
-									data-testid="portal-theme-choice"
-								>
-									<n-radio-button value="inherit">
-										Inherit · {{ globalDefaults.theme_from_brand_color ? "On" : "Off" }}
-									</n-radio-button>
-									<n-radio-button value="on">On</n-radio-button>
-									<n-radio-button value="off">Off</n-radio-button>
-								</n-radio-group>
 								<n-switch
-									v-else
+									v-if="!isCustomerScope"
 									:value="!!model.theme_from_brand_color"
 									:disabled="loading"
 									data-testid="portal-theme-switch"
 									@update:value="model.theme_from_brand_color = $event"
 								/>
 							</div>
+
+							<n-radio-group
+								v-if="isCustomerScope"
+								v-model:value="themeChoice"
+								:disabled="loading"
+								data-testid="portal-theme-choice"
+							>
+								<div class="flex flex-col gap-2.5 pt-1">
+									<n-radio
+										v-for="option of themeOptions"
+										:key="option.value"
+										:value="option.value"
+										:data-testid="`portal-theme-${option.value}`"
+									>
+										<div class="flex flex-col">
+											<span class="text-sm">{{ option.label }}</span>
+											<span class="text-secondary text-xs">{{ option.hint }}</span>
+										</div>
+									</n-radio>
+								</div>
+							</n-radio-group>
 
 							<span
 								v-if="themedWithoutColor"
@@ -228,6 +236,7 @@ import {
 	NColorPicker,
 	NFormItem,
 	NInput,
+	NRadio,
 	NRadioButton,
 	NRadioGroup,
 	NSpin,
@@ -321,6 +330,27 @@ const themeChoice = computed<"inherit" | "on" | "off">({
 		model.value.theme_from_brand_color = choice === "inherit" ? null : choice === "on"
 	}
 })
+
+/** A customer's three choices, worded by what the portal does rather than as on/off. */
+const themeOptions = computed(() => [
+	{
+		value: "inherit",
+		label: "Same as the global setting",
+		hint: globalDefaults.value.theme_from_brand_color
+			? "Currently on: the portal takes the brand color."
+			: "Currently off: the portal keeps its default theme."
+	},
+	{
+		value: "on",
+		label: "Use the brand color for this customer",
+		hint: "Whatever the global setting says."
+	},
+	{
+		value: "off",
+		label: "Keep the default theme for this customer",
+		hint: "The brand color still themes the PDF reports."
+	}
+])
 
 /** The portal would take the brand color, but there is none to take. */
 const themedWithoutColor = computed(() => !!preview.value.theme_from_brand_color && !preview.value.brand_color)

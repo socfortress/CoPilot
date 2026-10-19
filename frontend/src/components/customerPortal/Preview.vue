@@ -35,11 +35,12 @@
 					/>
 				</div>
 				<div>
+					<!-- Shown as the portal shows it, enabled: a faded preview would misstate the color. -->
 					<button
-						type="submit"
-						disabled
+						type="button"
+						tabindex="-1"
 						data-testid="portal-preview-sign-in"
-						class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+						class="group relative flex w-full cursor-default justify-center rounded-md border border-transparent px-4 py-3 text-base font-medium focus:outline-none"
 						:style="themedButton"
 					>
 						<span>Sign in</span>
@@ -52,7 +53,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { loginPrimary } from "./brandTheme"
+import { loginPrimary, PORTAL_DEFAULT_PRIMARY } from "./brandTheme"
 
 const { title, logo, brandColor, themed } = defineProps<{
 	title?: string | null
@@ -62,8 +63,9 @@ const { title, logo, brandColor, themed } = defineProps<{
 	themed?: boolean | null
 }>()
 
+// The portal's own default primary when it is not themed, so the preview shows what customers see.
 const themedButton = computed(() => {
-	const palette = loginPrimary(brandColor, themed)
-	return palette ? { backgroundColor: palette.primary, color: palette.onPrimary } : undefined
+	const palette = loginPrimary(brandColor, themed) ?? PORTAL_DEFAULT_PRIMARY
+	return { backgroundColor: palette.primary, color: palette.onPrimary }
 })
 </script>

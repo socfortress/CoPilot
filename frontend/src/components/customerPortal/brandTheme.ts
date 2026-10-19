@@ -16,6 +16,9 @@ const MIN_SURFACE_CONTRAST = 3
 const ON_PRIMARY_LIGHT = "#ffffff"
 const ON_PRIMARY_DARK = "#14161a"
 
+/** The portal's own light-mode primary (`customer-portal/src/design-tokens.json`), with white text on it. */
+export const PORTAL_DEFAULT_PRIMARY: LoginPrimary = { primary: "rgb(219, 157, 0)", onPrimary: ON_PRIMARY_LIGHT }
+
 export interface LoginPrimary {
 	primary: string
 	onPrimary: string
