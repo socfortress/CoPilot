@@ -36,10 +36,20 @@ export const useAuthStore = defineStore("auth", {
 				access_token: payload.access_token,
 				username: jwtPayload.sub || "",
 				customer_codes: jwtPayload.customer_codes ?? [],
-				role: jwtRoleToUserRole(jwtPayload.scopes)
+				role: jwtRoleToUserRole(jwtPayload.scopes),
+				must_change_password: !!payload.must_change_password
 			}
 			// A new session: never show the customers of the previous one.
 			this.customers = null
+		},
+		/**
+		 * Hold the user on the password change, or let them go (#1277). Set from the login,
+		 * the profile, or any request the API refuses for that reason; cleared by the change.
+		 */
+		setPasswordChangeRequired(value: boolean) {
+			if (this.user) {
+				this.user.must_change_password = value
+			}
 		},
 		setTokens(payload: AuthResponse) {
 			if (this.user) {
@@ -103,6 +113,8 @@ export const useAuthStore = defineStore("auth", {
 				const response = await Api.portal.me()
 				if (response.data?.success && this.isLogged) {
 					this.customers = response.data.customers
+					// Read live, like the customers: an admin may have set a password since login.
+					this.setPasswordChangeRequired(!!response.data.must_change_password)
 				}
 			} catch (err) {
 				console.error("Failed to load the portal profile:", err)
@@ -129,6 +141,10 @@ export const useAuthStore = defineStore("auth", {
 		},
 		userToken(state): string | null {
 			return state.user?.access_token || null
+		},
+		/** The user must replace a password an admin chose before using the portal (#1277). */
+		mustChangePassword(state): boolean {
+			return !!state.user?.must_change_password
 		},
 		/** The customers the user may see, named once the profile has loaded. */
 		accessibleCustomers(state): PortalCustomer[] {

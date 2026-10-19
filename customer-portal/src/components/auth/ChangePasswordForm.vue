@@ -1,0 +1,165 @@
+<template>
+	<n-form :disabled="loading">
+		<n-form-item path="currentPassword" :label="currentLabel" required>
+			<n-input
+				v-model:value="currentPassword"
+				type="password"
+				size="large"
+				show-password-on="click"
+				:input-props="{ autocomplete: 'current-password' }"
+				data-testid="change-password-current"
+				:placeholder="currentPlaceholder"
+			/>
+		</n-form-item>
+		<n-form-item path="newPassword" label="New Password" required>
+			<div class="flex w-full flex-col gap-1.5">
+				<n-input
+					v-model:value="newPassword"
+					type="password"
+					size="large"
+					show-password-on="click"
+					:input-props="{ autocomplete: 'new-password', 'aria-describedby': 'change-password-rules' }"
+					data-testid="change-password-new"
+					placeholder="Enter new password"
+				/>
+				<!-- In full: as a placeholder the rules were cut off at the field's width. -->
+				<p id="change-password-rules" class="text-tertiary text-xs">{{ PASSWORD_REQUIREMENTS }}</p>
+			</div>
+		</n-form-item>
+		<n-form-item path="confirmPassword" label="Confirm Password" required>
+			<n-input
+				v-model:value="confirmPassword"
+				type="password"
+				show-password-on="click"
+				placeholder="Enter confirm password"
+				:input-props="{ autocomplete: 'new-password' }"
+				data-testid="change-password-confirm"
+				size="large"
+				:disabled="!newPassword"
+			>
+				<template #prefix>
+					<Icon name="carbon:locked" class="text-tertiary! mr-1" />
+				</template>
+			</n-input>
+		</n-form-item>
+
+		<div class="flex w-full flex-wrap justify-end gap-4">
+			<n-button secondary :disabled="loading" data-testid="change-password-cancel" @click="emit('cancel')">
+				{{ cancelLabel }}
+			</n-button>
+			<n-button
+				type="primary"
+				:loading
+				:disabled="!isValid"
+				data-testid="change-password-submit"
+				@click="handleSubmit()"
+			>
+				{{ submitLabel }}
+			</n-button>
+		</div>
+	</n-form>
+</template>
+
+<script setup lang="ts">
+import type { ApiError } from "@/types/common"
+import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
+import { computed, ref } from "vue"
+import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
+import { getApiErrorMessage } from "@/utils"
+import { PASSWORD_REQUIREMENTS, passwordProblem } from "@/utils/password-policy"
+
+/**
+ * The password change, shared by the Profile's modal and the change a password an admin
+ * chose forces (#1277): the current password, a new one meeting the API's policy, and its
+ * confirmation.
+ */
+const {
+	currentLabel = "Current Password",
+	currentPlaceholder = "Enter current password",
+	submitLabel = "Change Password",
+	cancelLabel = "Cancel"
+} = defineProps<{
+	currentLabel?: string
+	currentPlaceholder?: string
+	submitLabel?: string
+	cancelLabel?: string
+}>()
+
+const emit = defineEmits<{
+	(e: "cancel"): void
+	(e: "success"): void
+}>()
+
+const loading = defineModel<boolean>("loading", { default: false })
+
+const message = useMessage()
+const authStore = useAuthStore()
+const currentPassword = ref("")
+const newPassword = ref("")
+const confirmPassword = ref("")
+
+const isValid = computed(() => {
+	return (
+		currentPassword.value.length > 0 && newPassword.value.length >= 8 && newPassword.value === confirmPassword.value
+	)
+})
+
+function reset() {
+	currentPassword.value = ""
+	newPassword.value = ""
+	confirmPassword.value = ""
+}
+
+async function handleSubmit() {
+	if (!isValid.value || loading.value) return
+
+	// Validate passwords match
+	if (newPassword.value !== confirmPassword.value) {
+		message.error("New passwords do not match")
+		return
+	}
+
+	// The API's own policy, so the user reads which rule failed instead of an opaque 422. It used to
+	// allow only letters, digits and @$!%*?&#, refusing passwords that met every rule it listed (#1265).
+	const problem = passwordProblem(newPassword.value)
+	if (problem) {
+		message.error(problem)
+		return
+	}
+
+	// The API refuses it too: a password an admin chose must actually be replaced (#1277).
+	if (newPassword.value === currentPassword.value) {
+		message.error("Choose a password different from the current one")
+		return
+	}
+
+	const username = authStore.userName
+	if (!username) {
+		message.error("Authentication required. Please log in again.")
+		return
+	}
+
+	loading.value = true
+
+	try {
+		// Token is injected by the HTTP client from the auth store.
+		const response = await Api.auth.resetPassword(username, newPassword.value, currentPassword.value)
+
+		if (response.data.success) {
+			message.success("Password changed successfully!")
+			reset()
+			emit("success")
+		} else {
+			message.error(response.data.message || "Failed to change password")
+		}
+	} catch (err) {
+		message.error(getApiErrorMessage(err as ApiError))
+	} finally {
+		loading.value = false
+	}
+}
+
+defineExpose({ reset })
+</script>

@@ -41,8 +41,11 @@ export function getSafeRedirect(value: unknown): string {
 	if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) {
 		return "/"
 	}
-	return /^\/(?:login|logout)(?:[/?#]|$)/.test(value) ? "/" : value
+	return /^\/(?:login|logout|change-password)(?:[/?#]|$)/.test(value) ? "/" : value
 }
+
+/** The page a user whose password an admin chose is held on (#1277). */
+export const PASSWORD_CHANGE_ROUTE = "ChangePassword"
 
 /**
  * Verifies user authentication and permissions for a given route
@@ -73,6 +76,16 @@ export function authCheck(route: RouteLocationNormalized) {
 
 	if (auth && roles && !authStore.isRoleGranted(roles)) {
 		return loginPath
+	}
+
+	// A password an admin chose holds the user on the change until they replace it (#1277):
+	// every page leads there, remembering where the user was going.
+	if (authStore.isLogged && authStore.mustChangePassword && route.name !== PASSWORD_CHANGE_ROUTE) {
+		const redirect = route.meta.checkAuth ? route.query.redirect : route.fullPath
+		return { name: PASSWORD_CHANGE_ROUTE, query: typeof redirect === "string" && redirect !== "/" ? { redirect } : {} }
+	}
+	if (route.name === PASSWORD_CHANGE_ROUTE && authStore.isLogged && !authStore.mustChangePassword) {
+		return getSafeRedirect(route.query.redirect)
 	}
 
 	if (checkAuth && authStore.isLogged) {

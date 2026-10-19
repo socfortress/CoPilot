@@ -7,64 +7,14 @@
 		segmented
 		title="Change Password"
 	>
-		<n-form :disabled="loading">
-			<n-form-item path="currentPassword" label="Current Password" required>
-				<n-input
-					v-model:value="currentPassword"
-					type="password"
-					size="large"
-					show-password-on="click"
-					:input-props="{ autocomplete: 'new-password' }"
-					placeholder="Enter current password"
-				/>
-			</n-form-item>
-			<n-form-item path="newPassword" label="New Password" required>
-				<n-input
-					v-model:value="newPassword"
-					type="password"
-					size="large"
-					show-password-on="click"
-					:input-props="{ autocomplete: 'new-password' }"
-					:placeholder="PASSWORD_REQUIREMENTS"
-				/>
-			</n-form-item>
-			<n-form-item path="confirmPassword" label="Confirm Password" required>
-				<n-input
-					v-model:value="confirmPassword"
-					type="password"
-					show-password-on="click"
-					placeholder="Enter confirm password"
-					:input-props="{ autocomplete: 'new-password' }"
-					size="large"
-					:disabled="!newPassword"
-				>
-					<template #prefix>
-						<Icon name="carbon:locked" class="text-tertiary! mr-1" />
-					</template>
-				</n-input>
-			</n-form-item>
-		</n-form>
-
-		<template #footer>
-			<div class="flex w-full justify-end gap-4">
-				<n-button secondary :disabled="loading" @click="closeModal">Cancel</n-button>
-				<n-button type="primary" :loading :disabled="!isValid" @click="handleSubmit()">
-					Change Password
-				</n-button>
-			</div>
-		</template>
+		<ChangePasswordForm ref="form" v-model:loading="loading" @cancel="closeModal" @success="succeeded" />
 	</n-modal>
 </template>
 
 <script setup lang="ts">
-import type { ApiError } from "@/types/common"
-import { NButton, NForm, NFormItem, NInput, NModal, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
-import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import { useAuthStore } from "@/stores/auth"
-import { getApiErrorMessage } from "@/utils"
-import { PASSWORD_REQUIREMENTS, passwordProblem } from "@/utils/password-policy"
+import { NModal } from "naive-ui"
+import { useTemplateRef } from "vue"
+import ChangePasswordForm from "./ChangePasswordForm.vue"
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -73,71 +23,18 @@ const emit = defineEmits<{
 
 const isOpen = defineModel<boolean>("open", { default: false })
 const loading = defineModel<boolean>("loading", { default: false })
-
-const message = useMessage()
-const authStore = useAuthStore()
-const currentPassword = ref("")
-const newPassword = ref("")
-const confirmPassword = ref("")
-
-const isValid = computed(() => {
-	return (
-		currentPassword.value.length > 0 && newPassword.value.length >= 8 && newPassword.value === confirmPassword.value
-	)
-})
+const form = useTemplateRef<InstanceType<typeof ChangePasswordForm>>("form")
 
 function closeModal() {
 	if (!loading.value) {
-		resetForm()
+		form.value?.reset()
 		isOpen.value = false
 		emit("close")
 	}
 }
 
-function resetForm() {
-	currentPassword.value = ""
-	newPassword.value = ""
-	confirmPassword.value = ""
-}
-
-async function handleSubmit() {
-	// Validate passwords match
-	if (newPassword.value !== confirmPassword.value) {
-		message.error("New passwords do not match")
-		return
-	}
-
-	// The API's own policy, so the user reads which rule failed instead of an opaque 422. It used to
-	// allow only letters, digits and @$!%*?&#, refusing passwords that met every rule it listed (#1265).
-	const problem = passwordProblem(newPassword.value)
-	if (problem) {
-		message.error(problem)
-		return
-	}
-
-	const username = authStore.userName
-	if (!username) {
-		message.error("Authentication required. Please log in again.")
-		return
-	}
-
-	loading.value = true
-
-	try {
-		// Token is injected by the HTTP client from the auth store.
-		const response = await Api.auth.resetPassword(username, newPassword.value, currentPassword.value)
-
-		if (response.data.success) {
-			message.success("Password changed successfully!")
-			emit("success")
-			closeModal()
-		} else {
-			message.error(response.data.message || "Failed to change password")
-		}
-	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError))
-	} finally {
-		loading.value = false
-	}
+function succeeded() {
+	emit("success")
+	closeModal()
 }
 </script>
