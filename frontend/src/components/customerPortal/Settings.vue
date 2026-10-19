@@ -4,7 +4,13 @@
 			class="border-primary shrink-0 overflow-hidden rounded-lg border-2 bg-white p-4 pt-12 lg:p-8"
 			:class="customerCode ? 'lg:w-100' : 'lg:w-120'"
 		>
-			<Preview class="mx-auto" :title="previewData?.title" :logo="previewData?.logo" />
+			<Preview
+				class="mx-auto"
+				:title="previewData?.title"
+				:logo="previewData?.logo"
+				:brand-color="previewData?.brand_color"
+				:themed="previewData?.theme_from_brand_color"
+			/>
 		</div>
 
 		<n-card class="grow">

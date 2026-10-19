@@ -4,6 +4,8 @@ export interface CustomerPortalSettings {
 	logo_base64: string
 	logo_mime_type: string
 	brand_color: string | null
+	/** The portal's interface takes `brand_color` as its primary color (#1278). Off by default. */
+	theme_from_brand_color: boolean
 	updated_at: Date
 }
 
@@ -16,6 +18,8 @@ export interface CustomerPortalBrandingOverride {
 	logo_base64: string | null
 	logo_mime_type: string | null
 	brand_color: string | null
+	/** Null inherits the global choice. */
+	theme_from_brand_color: boolean | null
 	updated_at: string
 	updated_by: number | null
 }
@@ -26,6 +30,7 @@ export interface CustomerPortalEffectiveBranding {
 	logo_base64: string | null
 	logo_mime_type: string | null
 	brand_color: string | null
+	theme_from_brand_color: boolean
 	source: "custom" | "global"
 	customer_code: string | null
 }
@@ -62,5 +67,6 @@ export interface CustomerPortalBrandingListItem {
 	title: string | null
 	has_logo: boolean
 	brand_color: string | null
+	theme_from_brand_color: boolean | null
 	updated_at: string
 }

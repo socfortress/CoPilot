@@ -48,7 +48,7 @@
 						<span class="text-secondary text-xs">
 							{{
 								mode === "inherit"
-									? "This customer sees the global portal title, logo and brand color."
+									? "This customer sees the global portal title, logo, brand color and theme."
 									: "Fields left empty below keep inheriting the global value."
 							}}
 						</span>
@@ -146,6 +146,48 @@
 									: "Used to theme customer-branded PDF reports. Leave empty to derive it from the logo."
 							}}
 						</span>
+
+						<div class="flex flex-col gap-2" data-testid="portal-theme-setting">
+							<div class="flex flex-wrap items-center justify-between gap-3">
+								<div class="flex flex-col gap-0.5">
+									<span class="text-sm font-medium">Theme the portal with the brand color</span>
+									<span class="text-secondary max-w-prose text-xs">
+										Buttons, links and highlights take the brand color, adjusted for contrast in light
+										and dark mode.
+									</span>
+								</div>
+
+								<n-radio-group
+									v-if="isCustomerScope"
+									v-model:value="themeChoice"
+									size="small"
+									:disabled="loading"
+									data-testid="portal-theme-choice"
+								>
+									<n-radio-button value="inherit">
+										Inherit · {{ globalDefaults.theme_from_brand_color ? "On" : "Off" }}
+									</n-radio-button>
+									<n-radio-button value="on">On</n-radio-button>
+									<n-radio-button value="off">Off</n-radio-button>
+								</n-radio-group>
+								<n-switch
+									v-else
+									:value="!!model.theme_from_brand_color"
+									:disabled="loading"
+									data-testid="portal-theme-switch"
+									@update:value="model.theme_from_brand_color = $event"
+								/>
+							</div>
+
+							<span
+								v-if="themedWithoutColor"
+								class="text-warning flex items-center gap-1.5 text-xs"
+								data-testid="portal-theme-no-color"
+							>
+								<Icon :name="WarningIcon" :size="14" />
+								No brand color: the portal keeps its default theme until one is set.
+							</span>
+						</div>
 					</div>
 				</template>
 			</CardEntity>
@@ -189,6 +231,7 @@ import {
 	NRadioButton,
 	NRadioGroup,
 	NSpin,
+	NSwitch,
 	useMessage
 } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
@@ -215,6 +258,8 @@ export interface SettingsModel {
 	title: string | null
 	logo: string | null
 	brand_color: string | null
+	/** Theme the portal with the brand color (#1278). Per customer, null inherits the global choice. */
+	theme_from_brand_color: boolean | null
 }
 
 const { customerCode } = defineProps<{
@@ -232,6 +277,7 @@ const SaveIcon = "carbon:save"
 const EditIcon = "uil:image-edit"
 const RemoveIcon = "carbon:trash-can"
 const LogoIcon = "carbon:image"
+const WarningIcon = "carbon:warning-alt"
 const brandSwatches = ["#fc862e", "#12c46a", "#215ac8", "#ee4b3b", "#8c6fe0", "#22c1dc", "#0f172a"]
 const message = useMessage()
 
@@ -262,20 +308,34 @@ const preview = computed<SettingsModel>(() => {
 	return {
 		title: model.value.title || globalDefaults.value.title,
 		logo: model.value.logo || globalDefaults.value.logo,
-		brand_color: model.value.brand_color || globalDefaults.value.brand_color
+		brand_color: model.value.brand_color || globalDefaults.value.brand_color,
+		theme_from_brand_color: model.value.theme_from_brand_color ?? globalDefaults.value.theme_from_brand_color
 	}
 })
+
+/** Per-customer scope: inherit the global choice (null), or turn the brand theme on or off for this customer. */
+const themeChoice = computed<"inherit" | "on" | "off">({
+	get: () => (model.value.theme_from_brand_color === null ? "inherit" : model.value.theme_from_brand_color ? "on" : "off"),
+	set: choice => {
+		model.value.theme_from_brand_color = choice === "inherit" ? null : choice === "on"
+	}
+})
+
+/** The portal would take the brand color, but there is none to take. */
+const themedWithoutColor = computed(() => !!preview.value.theme_from_brand_color && !preview.value.brand_color)
 
 function getDefaultModel(entity?: {
 	title?: string | null
 	logo_base64?: string | null
 	logo_mime_type?: string | null
 	brand_color?: string | null
+	theme_from_brand_color?: boolean | null
 }): SettingsModel {
 	return {
 		title: entity?.title || "",
 		logo: toDataUrl(entity?.logo_base64, entity?.logo_mime_type),
-		brand_color: entity?.brand_color ?? null
+		brand_color: entity?.brand_color ?? null,
+		theme_from_brand_color: entity?.theme_from_brand_color ?? null
 	}
 }
 
@@ -372,6 +432,7 @@ async function save() {
 				logo_base64: logoMeta.base64,
 				logo_mime_type: logoMeta.mime_type,
 				brand_color: model.value.brand_color || null,
+				theme_from_brand_color: model.value.theme_from_brand_color,
 				enabled: mode.value === "custom"
 			}
 			const res = await Api.customerPortal.setCustomerBranding(customerCode, brandingPayload)

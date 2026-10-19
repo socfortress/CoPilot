@@ -38,7 +38,9 @@
 					<button
 						type="submit"
 						disabled
+						data-testid="portal-preview-sign-in"
 						class="group relative flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white transition-colors duration-200 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+						:style="themedButton"
 					>
 						<span>Sign in</span>
 					</button>
@@ -49,5 +51,19 @@
 </template>
 
 <script setup lang="ts">
-const { title, logo } = defineProps<{ title?: string | null; logo?: string | null }>()
+import { computed } from "vue"
+import { loginPrimary } from "./brandTheme"
+
+const { title, logo, brandColor, themed } = defineProps<{
+	title?: string | null
+	logo?: string | null
+	brandColor?: string | null
+	/** The portal takes the brand color as its primary (#1278). */
+	themed?: boolean | null
+}>()
+
+const themedButton = computed(() => {
+	const palette = loginPrimary(brandColor, themed)
+	return palette ? { backgroundColor: palette.primary, color: palette.onPrimary } : undefined
+})
 </script>
