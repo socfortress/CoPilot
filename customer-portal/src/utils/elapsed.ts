@@ -1,9 +1,9 @@
 import dayjs from "@/utils/dayjs"
 
 /**
- * How long a report has been generating (#1263). Report times come from the backend as
- * naive UTC (`2026-10-16T09:00:00`, no offset): they are read as UTC, never as the
- * viewer's local time.
+ * How long something has been running: a report generating (#1263), an AI analysis
+ * (#1273). The backend's times are naive UTC (`2026-10-16T09:00:00`, no offset): they
+ * are read as UTC, never as the viewer's local time.
  */
 
 /** Seconds from a stored (UTC) time to `now`, never negative; null when the time is unreadable. */

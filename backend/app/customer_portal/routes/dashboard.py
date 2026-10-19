@@ -15,7 +15,10 @@ from app.customer_portal.schema.dashboard import CustomerDashboardAlertStatsResp
 from app.customer_portal.schema.dashboard import CustomerDashboardCaseStatsResponse
 from app.customer_portal.schema.dashboard import CustomerDashboardStatsResponse
 from app.customer_portal.schema.overview import CustomerPortalOverviewResponse
+from app.customer_portal.schema.overview import OverviewTrendResponse
+from app.customer_portal.schema.overview import TrendRange
 from app.customer_portal.services.overview import get_portal_overview
+from app.customer_portal.services.overview_trend import get_overview_trend
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.incidents.services.db_operations import alert_status_counts_for_user
@@ -23,6 +26,8 @@ from app.incidents.services.db_operations import alert_total_for_user
 from app.incidents.services.db_operations import case_status_counts_for_user
 from app.incidents.services.db_operations import case_total_for_user
 from app.middleware.customer_access import customer_access_handler
+from app.time_utils import now_utc
+from app.time_utils import to_naive_utc
 
 customer_portal_dashboard_router = APIRouter()
 
@@ -47,6 +52,23 @@ async def get_customer_portal_overview(
 ) -> CustomerPortalOverviewResponse:
     logger.info(f"Fetching portal overview for user {current_user.username}")
     return await get_portal_overview(current_user, db, customer_codes=customer_codes, recent_limit=recent_limit, ai_limit=ai_limit)
+
+
+@customer_portal_dashboard_router.get(
+    "/overview/trend",
+    response_model=OverviewTrendResponse,
+    description=(
+        "Alerts and cases opened and closed per UTC hour over the last 7 or 30 days (plus a day, so the portal "
+        "can fill the viewer's local days). Same visibility as the lists. A separate call, so the Overview stays light."
+    ),
+)
+async def get_customer_portal_overview_trend(
+    range_: TrendRange = Query("30d", alias="range", description="7d or 30d"),
+    customer_codes: Optional[List[str]] = Query(None, description="Optional subset of customer codes to scope the trend to"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OverviewTrendResponse:
+    return await get_overview_trend(current_user, db, range_, to_naive_utc(now_utc()), customer_codes=customer_codes)
 
 
 @customer_portal_dashboard_router.get(

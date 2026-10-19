@@ -5,6 +5,8 @@ import type {
 	CasesStats,
 	DashboardStats,
 	EffectivePortalBranding,
+	OverviewTrend,
+	OverviewTrendRange,
 	PortalOverview,
 	PortalSettings
 } from "@/types/portal"
@@ -37,6 +39,13 @@ export default {
 				params: { recent_limit: options.recentLimit, ai_limit: options.aiLimit },
 				signal: options.signal
 			})
+		)
+	},
+	/** The Overview's trend: a call of its own, so the Overview itself stays one light request. */
+	overviewTrend(options: { range: OverviewTrendRange; customerCodes?: string[]; signal?: AbortSignal }) {
+		return HttpClient.get<CommonResponse<OverviewTrend>>(
+			"/customer_portal/overview/trend",
+			withCustomerCodes(options.customerCodes, { params: { range: options.range }, signal: options.signal })
 		)
 	},
 	dashboardStats(customerCodes?: string[]) {

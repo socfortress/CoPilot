@@ -41,9 +41,9 @@ describe("report generation poller (#1263)", () => {
 	})
 
 	it("asks often at first, then less and less", () => {
-		expect([0, 59_999, 60_000, 299_999, 300_000, 3_600_000].map(pollDelay)).toEqual([
-			3_000, 3_000, 10_000, 10_000, 30_000, 30_000
-		])
+		const elapsed = [0, 59_999, 60_000, 299_999, 300_000, 3_600_000]
+		const delays = [3_000, 3_000, 10_000, 10_000, 30_000, 30_000]
+		expect(elapsed.map(pollDelay)).toEqual(delays)
 	})
 
 	it("asks about the pending reports only, a few seconds after one is queued", async () => {

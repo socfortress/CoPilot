@@ -15,20 +15,22 @@
 </template>
 
 <script setup lang="ts">
-import type { PostureKey } from "./postureCells"
+import type { PostureKey, PostureTrend } from "./postureCells"
 import type { AgentCounts, StatusCounts } from "@/types/portal"
 import { computed } from "vue"
 import PostureCell from "./PostureCell.vue"
 import { buildPostureCells } from "./postureCells"
 
-const { alertCounts, caseCounts, agentCounts } = defineProps<{
+const { alertCounts, caseCounts, agentCounts, trend = null } = defineProps<{
 	alertCounts: StatusCounts
 	caseCounts: StatusCounts
 	agentCounts: AgentCounts
+	/** Opened per day, drawn as a sparkline on the alerts and cases cells. */
+	trend?: PostureTrend | null
 	/** Per cell: show the placeholder (first load only — refreshes keep the numbers). */
 	loading: Record<PostureKey, boolean>
 	errors: Record<PostureKey, string | null>
 }>()
 
-const cells = computed(() => buildPostureCells({ alerts: alertCounts, cases: caseCounts, agents: agentCounts }))
+const cells = computed(() => buildPostureCells({ alerts: alertCounts, cases: caseCounts, agents: agentCounts, trend }))
 </script>

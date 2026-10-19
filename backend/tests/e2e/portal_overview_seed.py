@@ -439,6 +439,8 @@ async def seed(quiet: bool = False) -> dict:
             "ai_alert_id": alerts[(CUST_A, 0)].id,
             # An open alert of A no AI analysis ever ran on, for the portal request (#1215).
             "fresh_alert_id": alerts[(CUST_A, 2)].id,
+            # Another open alert of A with no AI analysis, for an investigation a test runs itself (#1273).
+            "ai_idle_alert_id": alerts[(CUST_A, 3)].id,
             # A's first agent (#1256): its case is A's first, never B's on the same host name.
             "agent_a0": {"agent_id": f"e2e-ov-{CUST_A}-0", "hostname": AGENT_HOST_A0, "case_id": cases[(CUST_A, 0)].id},
             "agent_b0_id": f"e2e-ov-{CUST_B}-0",
@@ -472,6 +474,16 @@ def fixture() -> dict:
         "ai_a": {"total_reports": 2, "severity_counts": {"High": 1, "Medium": 1}},
         "reports": {"a": REPORTS["A"], "b": REPORTS["B"]},
         "sla_a": sla_expectations(),
+        # The Overview's trend (#1273) counts the clocks above: every one inside the last 7 days.
+        "trend_a": {
+            "alerts_opened": len(SLA_ALERTS_A),
+            "alerts_closed": sum(1 for _, resolved_after in SLA_ALERTS_A if resolved_after),
+            "cases_opened": len(CASES_A),
+            "cases_closed": CASES_A.count("CLOSED"),
+            # All of them opened inside the window: what is still open is opened − closed.
+            "alerts_open": len(SLA_ALERTS_A) - sum(1 for _, resolved_after in SLA_ALERTS_A if resolved_after),
+            "cases_open": len(CASES_A) - CASES_A.count("CLOSED"),
+        },
     }
 
 
