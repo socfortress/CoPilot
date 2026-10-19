@@ -33,10 +33,8 @@ async def get_flows(velociraptor_id: str, velociraptor_org: str = "root") -> Flo
     logger.info("Fetching artifacts from Velociraptor")
     validate_client_id(velociraptor_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
-    query = create_query(
-        f"SELECT * FROM flows(client_id='{velociraptor_id}')",
-    )
-    all_flows = await velociraptor_service.execute_query_async(query, org_id=velociraptor_org)
+    query = create_query("SELECT * FROM flows(client_id=ClientId)")
+    all_flows = await velociraptor_service.execute_query_async(query, org_id=velociraptor_org, env={"ClientId": velociraptor_id})
     try:
         if not all_flows["success"]:
             raise HTTPException(
@@ -79,10 +77,12 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest, velociraptor_org:
     validate_client_id(retrieve_flow_request.client_id)
     validate_flow_id(retrieve_flow_request.session_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
-    query = create_query(
-        f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",
+    query = create_query("SELECT * FROM flow_results(client_id=ClientId, flow_id=FlowId)")
+    flow_results = await velociraptor_service.execute_query_async(
+        query,
+        org_id=velociraptor_org,
+        env={"ClientId": retrieve_flow_request.client_id, "FlowId": retrieve_flow_request.session_id},
     )
-    flow_results = await velociraptor_service.execute_query_async(query, org_id=velociraptor_org)
     logger.info(f"flow_results: {flow_results}")
     try:
         if flow_results["success"]:

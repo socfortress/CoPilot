@@ -406,8 +406,10 @@ async def invoke_action_on_agent(
         artifact_body = await build_artifact_collection_body(agent, artifact_name, velociraptor_params)
         logger.info(f"Built artifact collection request for {agent.hostname}")
 
-        # Execute the collection
-        response = await run_artifact_collection(artifact_body, session)
+        # Execute the collection. Script parameters the artifact does not declare (unpositioned,
+        # or past its Arg<n> slots) are dropped, as Velociraptor did before: this path is admin
+        # and responder only.
+        response = await run_artifact_collection(artifact_body, session, drop_undeclared_parameters=True)
         logger.info(f"Successfully invoked Copilot action on {agent.hostname}")
 
         return response

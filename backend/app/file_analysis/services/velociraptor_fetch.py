@@ -23,13 +23,20 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import pyvelociraptor
 from loguru import logger
 
 from app.connectors.velociraptor.utils.universal import UniversalService
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_org_id
 
 CONNECTOR_NAME = "Velociraptor"
+
+# Every value this module sends to Velociraptor is passed as a query variable
+# (``execute_query(..., env=...)``), never as query text (GHSA-5542-j2fc-gqjm): client ids,
+# flow ids, paths and globs come from requests, from Velociraptor or from the endpoint itself.
 
 
 @dataclasses.dataclass
@@ -91,19 +98,6 @@ async def _service() -> UniversalService:
         raise VelociraptorFetchError(f"could not connect to Velociraptor connector: {exc}")
 
 
-async def resolve_client_id(hostname: str) -> Optional[str]:
-    """Resolve a hostname to a client_id; most-recently-seen wins."""
-    svc = await _service()
-    vql = f"SELECT client_id, last_seen_at FROM clients(search='host:{hostname}') ORDER BY last_seen_at DESC"
-    try:
-        res = await asyncio.to_thread(svc.execute_query, vql)
-    except Exception as exc:
-        logger.error(f"resolve_client_id failed for {hostname!r}: {exc}")
-        return None
-    rows = res.get("results", []) if isinstance(res, dict) else []
-    return rows[0]["client_id"] if rows else None
-
-
 # A client is considered "online" if it checked in within this window. Velociraptor
 # has no boolean online flag in clients(); we derive it from last_seen_at (µs).
 _ONLINE_WINDOW_US = 15 * 60 * 1_000_000  # 15 minutes
@@ -145,29 +139,32 @@ async def live_last_seen_map() -> Dict[str, int]:
     return {r.get("client_id"): int(r.get("last_seen_at") or 0) for r in rows if r.get("client_id")}
 
 
-def _client_os(svc: UniversalService, client_id: str) -> str:
+def _client_os(svc: UniversalService, client_id: str, org_id: str = "root") -> str:
     """Best-effort OS family ('windows' | 'linux' | 'darwin') for a client_id."""
-    safe = client_id.replace("'", "''")
     try:
-        res = svc.execute_query("SELECT os_info.system AS os FROM clients() WHERE client_id='%s'" % safe)
+        res = svc.execute_query(
+            "SELECT os_info.system AS os FROM clients() WHERE client_id = TargetClientId",
+            org_id=org_id,
+            env={"TargetClientId": client_id},
+        )
     except Exception as exc:
         logger.warning(f"_client_os failed for {client_id}: {exc}")
         return ""
     rows = res.get("results", []) if isinstance(res, dict) else []
-    return (rows[0].get("os") if rows else "").lower()
+    return str((rows[0].get("os") if rows else "") or "").lower()
 
 
-async def fetch_from_flow(client_id: str, flow_id: str) -> List[LocalFile]:
+async def fetch_from_flow(client_id: str, flow_id: str, org_id: str = "root") -> List[LocalFile]:
     """Fetch every uploaded file from an existing flow (one LocalFile each)."""
     cap = int(os.getenv("FILE_ANALYSIS_MAX_FLOW_FILES", "25"))
     svc = await _service()
     try:
-        rows = await asyncio.to_thread(_read_uploads, svc, client_id, flow_id)
+        rows = await asyncio.to_thread(_read_uploads, svc, client_id, flow_id, org_id)
     except Exception as exc:
         raise VelociraptorFetchError(f"failed to read flow uploads: {exc}")
     results: List[LocalFile] = []
     for row in rows[:cap]:
-        local = await asyncio.to_thread(_download_one, svc, row, flow_id)
+        local = await asyncio.to_thread(_download_one, svc, row, flow_id, org_id)
         if local:
             results.append(local)
     if len(rows) > cap:
@@ -188,29 +185,36 @@ def _finder_artifact(os_name: str) -> str:
     return _FINDER_BY_OS.get(os_name, "Linux.Search.FileFinder")
 
 
-def _finder_vql(client_id: str, os_name: str, target_path: str, upload: bool) -> str:
-    """Build FileFinder collect_client VQL, per OS.
+def _finder_vql(client_id: str, os_name: str, target_path: str, upload: bool, org_id: str = "root") -> Tuple[str, Dict[str, str]]:
+    """Build FileFinder collect_client VQL and its query variables, per OS.
 
     ``upload=True`` pulls the file bytes (``Upload_File=Y``) for analysis;
     ``upload=False`` only enumerates matches with hashes (``Upload_File=N``) — used
     by the picker so a glob lists candidates without transferring every file.
 
     Linux/macOS FileFinder take a single ``SearchFilesGlob``; Windows takes a CSV
-    ``SearchFilesGlobTable`` (``Glob\\n<path>\\n``), embedded as a VQL backtick raw
-    string so the newline is literal.
+    ``SearchFilesGlobTable`` (``Glob\\n<path>\\n``). The client id, artifact and path
+    are query variables, so the path reaches the artifact verbatim -- newline included --
+    and nothing in it can alter the query.
     """
+    validate_client_id(client_id)
+    validate_org_id(org_id)
     artifact = _finder_artifact(os_name)
-    up = "Y" if upload else "N"
+    env = {"OrgId": org_id, "ClientId": client_id, "ArtifactName": artifact, "UploadFile": "Y" if upload else "N"}
     if os_name == "windows":
-        glob = target_path.replace("`", "")  # backticks would close the raw string
-        env = "dict(SearchFilesGlobTable=`Glob\n%s\n`, Upload_File='%s', Calculate_Hash='Y')" % (glob, up)
+        env["SearchFilesGlobTable"] = "Glob\n%s\n" % target_path
+        params = "SearchFilesGlobTable=SearchFilesGlobTable"
     else:
-        safe = target_path.replace("'", "''")
-        env = "dict(SearchFilesGlob='%s', Upload_File='%s', Calculate_Hash='Y')" % (safe, up)
-    return "SELECT collect_client(client_id='%s', artifacts=['%s'], env=%s) AS Flow FROM scope()" % (client_id, artifact, env)
+        env["SearchFilesGlob"] = target_path
+        params = "SearchFilesGlob=SearchFilesGlob"
+    vql = (
+        "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], "
+        "env=dict(%s, Upload_File=UploadFile, Calculate_Hash='Y')) AS Flow FROM scope()" % params
+    )
+    return vql, env
 
 
-def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout: int) -> None:
+def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout: int, org_id: str = "root") -> None:
     """Poll ``uploads(flow_id=...)`` until the collected file appears, or timeout.
 
     This is the only dependable readiness signal across server versions: ``flows()``
@@ -220,11 +224,14 @@ def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout:
     the caller's :func:`fetch_from_flow` report "no file" (deleted / glob missed /
     symlink not captured).
     """
-    safe = client_id.replace("'", "''")
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            res = svc.execute_query("SELECT * FROM uploads(client_id='%s', flow_id='%s')" % (safe, flow_id))
+            res = svc.execute_query(
+                "SELECT * FROM uploads(client_id=ClientId, flow_id=FlowId)",
+                org_id=org_id,
+                env={"ClientId": client_id, "FlowId": flow_id},
+            )
             rows = res.get("results", []) if isinstance(res, dict) else []
             if rows:
                 logger.info(f"[velo] flow {flow_id} has {len(rows)} upload(s); ready")
@@ -235,18 +242,19 @@ def _wait_for_flow(svc: UniversalService, client_id: str, flow_id: str, timeout:
     logger.warning(f"[velo] flow {flow_id} produced no upload within {timeout}s")
 
 
-async def collect_and_fetch(client_id: str, target_path: str, customer_code: str) -> Optional[LocalFile]:
+async def collect_and_fetch(client_id: str, target_path: str, customer_code: str, org_id: str = "root") -> Optional[LocalFile]:
     """Collect a specific file from a host, then fetch it. None if the file is gone.
 
     Picks the correct OS FileFinder automatically, launches the collection, waits
     for the flow, then reuses :func:`fetch_from_flow` to read the uploaded bytes.
     """
+    validate_client_id(client_id)
     svc = await _service()
-    os_name = await asyncio.to_thread(_client_os, svc, client_id)
-    vql = _finder_vql(client_id, os_name, target_path, upload=True)
+    os_name = await asyncio.to_thread(_client_os, svc, client_id, org_id)
+    vql, env = _finder_vql(client_id, os_name, target_path, upload=True, org_id=org_id)
     logger.info(f"[velo] collecting {target_path!r} from {client_id} (os={os_name or 'unknown'})")
     try:
-        res = await asyncio.to_thread(svc.execute_query, vql)
+        res = await asyncio.to_thread(svc.execute_query, vql, org_id=org_id, env=env)
     except Exception as exc:
         raise VelociraptorFetchError(f"collect_client failed: {exc}")
     flow_id = _extract_flow_id(res.get("results", []) if isinstance(res, dict) else [])
@@ -254,9 +262,9 @@ async def collect_and_fetch(client_id: str, target_path: str, customer_code: str
         raise VelociraptorFetchError("collect_client returned no flow id")
 
     timeout = int(os.getenv("FILE_ANALYSIS_COLLECT_TIMEOUT", "180"))
-    await asyncio.to_thread(_wait_for_flow, svc, client_id, flow_id, timeout)
+    await asyncio.to_thread(_wait_for_flow, svc, client_id, flow_id, timeout, org_id)
 
-    files = await fetch_from_flow(client_id, flow_id)
+    files = await fetch_from_flow(client_id, flow_id, org_id)
     if not files:
         # Race: dropper deleted the file before collection, or the glob matched
         # nothing (see CLAUDE.md -> File Analysis).
@@ -280,17 +288,27 @@ def _match_from_source_row(row: dict) -> Optional[Dict[str, Any]]:
     }
 
 
-def _wait_and_read_source(svc: UniversalService, client_id: str, flow_id: str, artifact: str, timeout: int) -> List[dict]:
+def _wait_and_read_source(
+    svc: UniversalService,
+    client_id: str,
+    flow_id: str,
+    artifact: str,
+    timeout: int,
+    org_id: str = "root",
+) -> List[dict]:
     """Poll ``source(flow_id=..., artifact=...)`` until the FileFinder rows appear.
 
     Mirrors :func:`_wait_for_flow` but for enumerate (no upload): the result rows
     are the readiness signal. Returns [] if the glob matched nothing within timeout.
     """
-    safe = client_id.replace("'", "''")
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            res = svc.execute_query("SELECT * FROM source(client_id='%s', flow_id='%s', artifact='%s')" % (safe, flow_id, artifact))
+            res = svc.execute_query(
+                "SELECT * FROM source(client_id=ClientId, flow_id=FlowId, artifact=ArtifactName)",
+                org_id=org_id,
+                env={"ClientId": client_id, "FlowId": flow_id, "ArtifactName": artifact},
+            )
             rows = res.get("results", []) if isinstance(res, dict) else []
             if rows:
                 return rows
@@ -300,19 +318,20 @@ def _wait_and_read_source(svc: UniversalService, client_id: str, flow_id: str, a
     return []
 
 
-async def enumerate_matches(client_id: str, target_path: str) -> List[Dict[str, Any]]:
+async def enumerate_matches(client_id: str, target_path: str, org_id: str = "root") -> List[Dict[str, Any]]:
     """List files matching ``target_path`` on a host WITHOUT pulling their bytes.
 
     Runs the OS FileFinder with ``Upload_File=N`` (hashes only) so a glob returns
     every candidate (path/name/size/sha256) for the operator to pick from. The
     chosen paths are then analyzed individually via :func:`collect_and_fetch`.
     """
+    validate_client_id(client_id)
     svc = await _service()
-    os_name = await asyncio.to_thread(_client_os, svc, client_id)
-    vql = _finder_vql(client_id, os_name, target_path, upload=False)
+    os_name = await asyncio.to_thread(_client_os, svc, client_id, org_id)
+    vql, env = _finder_vql(client_id, os_name, target_path, upload=False, org_id=org_id)
     logger.info(f"[velo] enumerating {target_path!r} on {client_id} (os={os_name or 'unknown'})")
     try:
-        res = await asyncio.to_thread(svc.execute_query, vql)
+        res = await asyncio.to_thread(svc.execute_query, vql, org_id=org_id, env=env)
     except Exception as exc:
         raise VelociraptorFetchError(f"enumerate collect_client failed: {exc}")
     flow_id = _extract_flow_id(res.get("results", []) if isinstance(res, dict) else [])
@@ -321,7 +340,7 @@ async def enumerate_matches(client_id: str, target_path: str) -> List[Dict[str, 
 
     cap = int(os.getenv("FILE_ANALYSIS_MAX_FLOW_FILES", "25"))
     timeout = int(os.getenv("FILE_ANALYSIS_ENUM_TIMEOUT", "90"))
-    rows = await asyncio.to_thread(_wait_and_read_source, svc, client_id, flow_id, _finder_artifact(os_name), timeout)
+    rows = await asyncio.to_thread(_wait_and_read_source, svc, client_id, flow_id, _finder_artifact(os_name), timeout, org_id)
     matches = [m for m in (_match_from_source_row(r) for r in rows) if m]
     logger.info(f"[velo] enumerate matched {len(matches)} file(s) for {target_path!r}")
     return matches[:cap]
@@ -335,10 +354,10 @@ _PATH_COLUMNS = ("file_store", "_FileStore", "FileStore", "vfs_path", "_Path", "
 _READ_ACCESSORS = ("fs", "collector")
 
 
-def _read_uploads(svc: UniversalService, client_id: str, flow_id: str) -> List[dict]:
+def _read_uploads(svc: UniversalService, client_id: str, flow_id: str, org_id: str = "root") -> List[dict]:
     """List the flow's uploaded files (no read_file — done per-row for robustness)."""
-    vql = "SELECT * FROM uploads(client_id='%s', flow_id='%s')" % (client_id, flow_id)
-    res = svc.execute_query(vql)
+    vql = "SELECT * FROM uploads(client_id=ClientId, flow_id=FlowId)"
+    res = svc.execute_query(vql, org_id=org_id, env={"ClientId": client_id, "FlowId": flow_id})
     rows = res.get("results", []) if isinstance(res, dict) else []
     logger.info(f"[velo] uploads() returned {len(rows)} row(s) for flow {flow_id}")
     if rows:
@@ -376,17 +395,18 @@ def _candidate_paths(row: dict) -> List[str]:
     return paths
 
 
-def _download_one(svc: UniversalService, row: dict, flow_id: str) -> Optional[LocalFile]:
+def _download_one(svc: UniversalService, row: dict, flow_id: str, org_id: str = "root") -> Optional[LocalFile]:
     """Read one uploaded file's bytes, trying each candidate path + accessor."""
     name = _upload_name(row)
     data = None
     used = ""
     for path in _candidate_paths(row):
-        safe = path.replace("'", "''")
         for accessor in _READ_ACCESSORS:
             try:
                 res = svc.execute_query(
-                    "SELECT read_file(filename='%s', accessor='%s') AS Data FROM scope()" % (safe, accessor),
+                    "SELECT read_file(filename=FileName, accessor=Accessor) AS Data FROM scope()",
+                    org_id=org_id,
+                    env={"FileName": path, "Accessor": accessor},
                 )
                 out = res.get("results", []) if isinstance(res, dict) else []
                 if out and out[0].get("Data"):

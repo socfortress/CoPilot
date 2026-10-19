@@ -5,6 +5,8 @@ from loguru import logger
 
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
+from app.connectors.velociraptor.utils.universal import VQL_CLIENT_BY_SEARCH
+from app.connectors.velociraptor.utils.universal import VQL_CLIENT_LAST_SEEN_BY_SEARCH
 from app.connectors.velociraptor.utils.universal import UniversalService
 from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.velociraptor.utils.validation import validate_org_id
@@ -30,18 +32,13 @@ async def collect_velociraptor_clients(org_id: str) -> list:
     Returns:
         list: A list of all clients.
     """
-    # org_id is interpolated into VQL here but execute_query runs with the default org, so
+    # execute_query runs with the default org and org_id is a query variable here, so
     # validate it explicitly (the central create_vql_request check would only see "root").
     # GHSA-5542-j2fc-gqjm.
     validate_org_id(org_id)
     velociraptor_service = await UniversalService.create("Velociraptor")
-    # query = create_query(
-    #     "SELECT * FROM clients()",
-    # )
-    query = create_query(
-        f"SELECT * FROM query(org_id='{org_id}', query='SELECT * FROM clients()')",
-    )
-    flow = await velociraptor_service.execute_query_async(query)
+    query = create_query("SELECT * FROM query(org_id=OrgId, query='SELECT * FROM clients()')")
+    flow = await velociraptor_service.execute_query_async(query, env={"OrgId": org_id})
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow["results"]
 
@@ -87,9 +84,11 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         )
 
     try:
-        vql_last_seen_at = f"select last_seen_at from clients(search='host:{agent_name}')"
+        # agent_name is passed as a query variable: this branch is also reached when
+        # get_client_id rejected it.
         last_seen_at = await velociraptor_service._get_last_seen_timestamp(
-            vql_last_seen_at,
+            VQL_CLIENT_LAST_SEEN_BY_SEARCH,
+            {"Search": f"host:{agent_name}"},
         )
         client_last_seen = datetime.fromtimestamp(
             int(last_seen_at) / 1000000,
@@ -103,10 +102,9 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         client_last_seen = "1970-01-01T00:00:00+00:00"
 
     try:
-        vql_client_version = f"select * from clients(search='host:{agent_name}')"
-        # client_version = UniversalService()._get_client_version(vql_client_version)
         client_version = await velociraptor_service._get_client_version(
-            vql_client_version,
+            VQL_CLIENT_BY_SEARCH,
+            {"Search": f"host:{agent_name}"},
         )
     except Exception as e:
         logger.error(f"Failed to get client version for {agent_name}. Error: {e}")
@@ -144,9 +142,9 @@ async def collect_velociraptor_agent_via_client_id(client_id: str) -> Velocirapt
         )
 
     try:
-        vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_id}')"
         last_seen_at = await velociraptor_service._get_last_seen_timestamp(
-            vql_last_seen_at,
+            VQL_CLIENT_LAST_SEEN_BY_SEARCH,
+            {"Search": f"host:{client_id}"},
         )
         client_last_seen = datetime.fromtimestamp(
             int(last_seen_at) / 1000000,
@@ -160,10 +158,9 @@ async def collect_velociraptor_agent_via_client_id(client_id: str) -> Velocirapt
         client_last_seen = "1970-01-01T00:00:00+00:00"
 
     try:
-        vql_client_version = f"select * from clients(search='host:{client_id}')"
-        # client_version = UniversalService()._get_client_version(vql_client_version)
         client_version = await velociraptor_service._get_client_version(
-            vql_client_version,
+            VQL_CLIENT_BY_SEARCH,
+            {"Search": f"host:{client_id}"},
         )
     except Exception as e:
         logger.error(f"Failed to get client version for {client_id}. Error: {e}")
@@ -176,18 +173,19 @@ async def collect_velociraptor_agent_via_client_id(client_id: str) -> Velocirapt
     )
 
 
-async def execute_query(universal_service, query: str) -> dict:
+async def execute_query(universal_service, query: str, env: dict = None) -> dict:
     """
     Executes a query using the provided universal service.
 
     Args:
         universal_service: The universal service to use for executing the query.
         query: The query to execute.
+        env: Query variables referenced by `query`.
 
     Returns:
         A dictionary containing the result of the query execution.
     """
-    flow = await universal_service.execute_query_async(query)
+    flow = await universal_service.execute_query_async(query, env=env)
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow
 
@@ -272,9 +270,10 @@ async def delete_client(client_id: str) -> dict:
     universal_service = await UniversalService.create("Velociraptor")
     try:
         query = create_query(
-            f"SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y')) FROM scope()",
+            "SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], "
+            "env=dict(ClientIdList=ClientIdList, ReallyDoIt='Y')) FROM scope()",
         )
-        flow = await execute_query(universal_service, query)
+        flow = await execute_query(universal_service, query, env={"ClientIdList": client_id})
         return check_flow_success(flow, client_id)
     except Exception as e:
         return handle_exception(e, client_id)

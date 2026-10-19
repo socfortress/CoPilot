@@ -21,12 +21,15 @@ from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.utils.validation import validate_client_id
+from app.connectors.velociraptor.utils.validation import validate_org_id
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.file_analysis.schema.analysis import AgentInfo
@@ -74,6 +77,55 @@ async def verify_job_customer_access(
 
 
 _JOB_ACCESS = Depends(verify_job_customer_access)
+
+
+async def resolve_endpoint(
+    session: AsyncSession,
+    user: User,
+    customer_code: str,
+    *,
+    client_id: str = None,
+    hostname: str = None,
+) -> Agents:
+    """The CoPilot agent a file-analysis request names, after the caller's access to it is checked.
+
+    The request names an endpoint by Velociraptor client id (the dropdown sends the bare
+    ``C.<hex>``; CoPilot may store it org-suffixed) or by hostname. It must be a known agent,
+    every row claiming it must belong to a tenant the caller may see -- the check the artifact
+    routes make with ``enforce_hostname_access`` -- and it must belong to the request's
+    customer, so a job is never filed under another tenant. The collection then runs with the
+    stored client id in the agent's own Velociraptor org.
+    """
+    query = select(Agents).where(Agents.velociraptor_id.is_not(None), Agents.velociraptor_id != "n/a")
+    if client_id:
+        validate_client_id(client_id)
+        bare = client_id.split("-", 1)[0].lower()
+        stored = func.lower(Agents.velociraptor_id)
+        query = query.where(or_(stored == client_id.lower(), stored == bare, stored.like(f"{bare}-%")))
+        subject = f"endpoint {client_id}"
+    elif hostname:
+        query = query.where(Agents.hostname == hostname)
+        subject = f"host {hostname}"
+    else:
+        raise HTTPException(status_code=400, detail="an endpoint client_id or hostname is required")
+
+    agents = (await session.execute(query)).scalars().all()
+    if not agents:
+        raise HTTPException(status_code=404, detail=f"{subject} is not a known agent")
+    for agent in agents:
+        await enforce_owned_object_access(user, agent.customer_code, session, subject=subject)
+        if agent.customer_code and agent.customer_code != customer_code:
+            raise HTTPException(status_code=403, detail=f"{subject} does not belong to customer {customer_code}")
+    if len({(agent.velociraptor_id, agent.velociraptor_org) for agent in agents}) > 1:
+        raise HTTPException(status_code=409, detail=f"{subject} matches more than one agent")
+    agent = agents[0]
+    if not agent.velociraptor_org:
+        raise HTTPException(status_code=404, detail=f"Velociraptor org for {subject} is not available")
+    validate_client_id(agent.velociraptor_id)
+    validate_org_id(agent.velociraptor_org)
+    return agent
+
+
 _CUSTOMER_QUERY_ACCESS = Depends(verify_customer_code_access)
 
 
@@ -125,7 +177,11 @@ async def velociraptor_agents(customer_code: str, session: AsyncSession = Depend
 
 
 @file_analysis_router.post("/velociraptor/enumerate", response_model=EnumerateResponse, dependencies=[_ANALYST])
-async def velociraptor_enumerate(body: EnumerateRequest) -> EnumerateResponse:
+async def velociraptor_enumerate(
+    body: EnumerateRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> EnumerateResponse:
     """List files matching a path/glob on an endpoint (hashes only, no bytes pulled).
 
     Backs the multi-file picker: the operator enters a path, sees the matches, then
@@ -135,8 +191,10 @@ async def velociraptor_enumerate(body: EnumerateRequest) -> EnumerateResponse:
 
     if not (body.client_id and body.target_path):
         raise HTTPException(status_code=400, detail="client_id and target_path are required")
+    await customer_access_handler.enforce_customer_access(current_user, body.customer_code, session)
+    agent = await resolve_endpoint(session, current_user, body.customer_code, client_id=body.client_id)
     try:
-        matches = await vf.enumerate_matches(body.client_id, body.target_path)
+        matches = await vf.enumerate_matches(agent.velociraptor_id, body.target_path, agent.velociraptor_org)
     except Exception as exc:
         logger.error(f"enumerate failed: {exc}")
         raise HTTPException(status_code=502, detail="could not enumerate files on the endpoint")
@@ -165,6 +223,7 @@ async def submit(
         raise HTTPException(status_code=400, detail="host_path source requires hostname or client_id")
     if not body.target_path:
         raise HTTPException(status_code=400, detail="host_path source requires target_path")
+    agent = await resolve_endpoint(session, current_user, body.customer_code, client_id=body.client_id, hostname=body.hostname)
 
     job_id, needs_run = await orchestrator.create_and_dispatch(
         source=body.source,
@@ -173,9 +232,10 @@ async def submit(
     )
     if needs_run:
         refs = {
-            "client_id": body.client_id,
+            "client_id": agent.velociraptor_id,
+            "org_id": agent.velociraptor_org,
             "target_path": body.target_path,
-            "hostname": body.hostname,
+            "hostname": agent.hostname,
         }
         background.add_task(
             orchestrator.run,

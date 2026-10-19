@@ -36,9 +36,13 @@ from app.connectors.velociraptor.services.artifacts import run_artifact_collecti
 from app.connectors.velociraptor.services.artifacts import run_file_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
+from app.connectors.velociraptor.services.collection_policy import (
+    enforce_collect_artifact_policy,
+)
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.middleware.customer_access import enforce_hostname_access
+from app.middleware.customer_access import enforce_owned_object_access
 from app.middleware.customer_access import verify_agent_id_access
 from app.middleware.customer_access import verify_hostname_access
 
@@ -225,6 +229,34 @@ def format_file_path_for_os(file_path: str, os_prefix: str) -> str:
 
     logger.info(f"Formatted {os_prefix} path: '{formatted_path}'")
     return formatted_path
+
+
+async def resolve_target_host(session: AsyncSession, user: User, hostname: str) -> Agents:
+    """The one agent row a response or collection route acts on, after the caller's access to it.
+
+    The access check, the client id and the org used to come from separate, unordered
+    ``.first()`` lookups by hostname, so with a hostname shared across customers they could come
+    from different rows. Every row with the hostname is read once: each must belong to a tenant
+    the caller may see, and if they name more than one client, org or customer the request is
+    refused with a 409 (as file analysis's ``resolve_endpoint`` does) instead of picking one.
+    """
+    agents = (await session.execute(select(Agents).where(Agents.hostname == hostname))).scalars().all()
+    if not agents:
+        raise HTTPException(status_code=404, detail=f"Agent with hostname {hostname} not found")
+    for agent in agents:
+        await enforce_owned_object_access(user, agent.customer_code, session, subject=f"host {hostname}")
+    if len({(agent.velociraptor_id, agent.velociraptor_org, agent.customer_code) for agent in agents}) > 1:
+        raise HTTPException(status_code=409, detail=f"Hostname {hostname} matches more than one agent")
+    return agents[0]
+
+
+def velociraptor_target(agent: Agents, hostname: str):
+    """The resolved agent's Velociraptor client id and org, with the 404s the lookups gave."""
+    if not agent.velociraptor_id or agent.velociraptor_id == "n/a":
+        raise HTTPException(status_code=404, detail=f"Velociraptor ID for hostname {hostname} is not available")
+    if agent.velociraptor_org is None:
+        raise HTTPException(status_code=404, detail=f"Velociraptor ORG for hostname {hostname} is not available")
+    return agent.velociraptor_id, agent.velociraptor_org
 
 
 async def update_agent_quarantine_status(
@@ -457,6 +489,7 @@ async def collect_artifact(
     # The host is named in the body, so no path dependency can guard it: collecting an
     # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
     await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
+    target = await resolve_target_host(session, current_user, collect_artifact_body.hostname)
     result = await get_all_artifacts_for_hostname(
         collect_artifact_body.hostname,
         session,
@@ -469,20 +502,26 @@ async def collect_artifact(
             detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
         )
 
-    # Validate parameters if provided
-    await validate_artifact_parameters(
+    collect_artifact_body.velociraptor_id, collect_artifact_body.velociraptor_org = velociraptor_target(
+        target,
+        collect_artifact_body.hostname,
+    )
+
+    # The host's artifact list includes the command and remediation artifacts, which /command
+    # and /quarantine keep to admins and responders: an analyst may only collect what the
+    # analyst allowlist admits, judged by the definition in the host's own org.
+    await enforce_collect_artifact_policy(
+        current_user,
         collect_artifact_body.artifact_name,
+        collect_artifact_body.velociraptor_org,
         collect_artifact_body.parameters,
     )
 
-    collect_artifact_body.velociraptor_id = await get_velociraptor_id(
-        session,
-        collect_artifact_body.hostname,
-    )
-
-    collect_artifact_body.velociraptor_org = await get_velociraptor_org(
-        session,
-        collect_artifact_body.hostname,
+    # Validate parameters if provided, against the definition in the host's org
+    await validate_artifact_parameters(
+        collect_artifact_body.artifact_name,
+        collect_artifact_body.parameters,
+        collect_artifact_body.velociraptor_org,
     )
 
     await record_audit_event(
@@ -523,6 +562,7 @@ async def run_command(
     logger.info(f"Received request to run command {run_command_body}")
     # A responder is scoped to their customers (#1219): the host is named in the body.
     await enforce_hostname_access(current_user, run_command_body.hostname, session)
+    target = await resolve_target_host(session, current_user, run_command_body.hostname)
     result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
     if run_command_body.artifact_name not in artifact_names:
@@ -531,15 +571,7 @@ async def run_command(
             detail=f"Artifact name {run_command_body.artifact_name.value} does not apply for hostname {run_command_body.hostname} or does not exist",
         )
     # Add the velociraptor_id to the run_command_body object
-    run_command_body.velociraptor_id = await get_velociraptor_id(
-        session,
-        run_command_body.hostname,
-    )
-
-    run_command_body.velociraptor_org = await get_velociraptor_org(
-        session,
-        run_command_body.hostname,
-    )
+    run_command_body.velociraptor_id, run_command_body.velociraptor_org = velociraptor_target(target, run_command_body.hostname)
     await record_audit_event(
         action=AuditAction.RESPONSE_COMMAND_EXECUTE,
         actor_user_id=current_user.id,
@@ -582,6 +614,7 @@ async def quarantine(
     logger.info(f"Received request to quarantine host {quarantine_body}")
     # A responder is scoped to their customers (#1219): the host is named in the body.
     await enforce_hostname_access(current_user, quarantine_body.hostname, session)
+    target = await resolve_target_host(session, current_user, quarantine_body.hostname)
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
     # Resolve any configured custom-artifact override (e.g.
@@ -597,15 +630,7 @@ async def quarantine(
     quarantine_body.artifact_name = effective_artifact
     # Add the velociraptor_id to the run_command_body object
     # Add the velociraptor_id to the quarantine_body object
-    quarantine_body.velociraptor_id = await get_velociraptor_id(
-        session,
-        quarantine_body.hostname,
-    )
-
-    quarantine_body.velociraptor_org = await get_velociraptor_org(
-        session,
-        quarantine_body.hostname,
-    )
+    quarantine_body.velociraptor_id, quarantine_body.velociraptor_org = velociraptor_target(target, quarantine_body.hostname)
 
     # Quarantine the host
     quarantine_response = await quarantine_host(quarantine_body)

@@ -1,4 +1,7 @@
 import os
+import re
+import shutil
+import tempfile
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -25,9 +28,13 @@ from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
 from app.connectors.velociraptor.utils.validation import validate_artifact_name
+from app.connectors.velociraptor.utils.validation import (
+    validate_artifact_parameter_name,
+)
 from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.velociraptor.utils.validation import validate_flow_id
 from app.connectors.velociraptor.utils.validation import validate_org_id
+from app.connectors.velociraptor.utils.validation import vql_string_literal_value
 
 
 def create_query(query: str) -> str:
@@ -43,49 +50,109 @@ def create_query(query: str) -> str:
     return query
 
 
-def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
+# Every collection is launched from a constant template: the org, client, artifact and every
+# user-supplied value travel as query variables (VQLCollectorArgs.env, see
+# UniversalService.execute_query) and are referenced by name, so none of them is ever part of
+# the query text (GHSA-5542-j2fc-gqjm). `collect_client(env=...)` applies the dict to every
+# listed artifact, exactly as `spec=dict(`<artifact>`=dict(...))` did (vql/server/flows/create.go).
+VQL_COLLECT = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName]) AS Flow FROM scope()"
+VQL_COLLECT_WITH_ENV = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], env=dict({env})) AS Flow FROM scope()"
+VQL_RUN_COMMAND = (
+    "SELECT collect_client(org_id=OrgId, client_id=ClientId, urgent=true, artifacts=[ArtifactName], "
+    "env=dict(Command=Command)) AS Flow FROM scope()"
+)
+VQL_COLLECT_FILE = (
+    "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], "
+    "env=dict(collectionSpec=CollectionSpec, Root=Root)) AS Flow FROM scope()"
+)
+VQL_QUARANTINE = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], env=dict()) AS Flow FROM scope()"
+VQL_REMOVE_QUARANTINE = (
+    "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], env=dict(RemovePolicy='Y')) AS Flow FROM scope()"
+)
+
+
+def collection_env(org_id: str, client_id: str, artifact_name: str, **values: str) -> Dict[str, str]:
+    """The query variables of a collect_client template: the target plus any extra values."""
+    return {"OrgId": org_id, "ClientId": client_id, "ArtifactName": artifact_name, **values}
+
+
+def extract_flow_id(flow: dict) -> Optional[str]:
+    """The flow id from a collect_client result row (the `Flow` column, else any dict carrying one)."""
+    results = flow.get("results") or []
+    if not results:
+        return None
+    row = results[0]
+    candidates = [row.get("Flow")] + [value for key, value in row.items() if key != "Flow"]
+    for value in candidates:
+        if isinstance(value, dict) and value.get("flow_id"):
+            return value["flow_id"]
+    return None
+
+
+def requested_artifact_parameters(
+    parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]],
+) -> Optional[Dict[str, str]]:
+    """The ``{name: value}`` artifact parameters a /collect body asks for, or None for none.
+
+    Two shapes are accepted, as before: ``{"env": [{"key": ..., "value": ...}, ...]}``
+    (what the frontend and Copilot Actions send) or a plain ``{name: value}`` dict whose
+    string values are the parameters. An ``env`` list -- even an empty one -- returns a
+    dict, so the collection still passes ``env=dict()``.
     """
-    Construct the artifact key.
+    if not parameters:
+        return None
+    if "env" in parameters and isinstance(parameters["env"], list):
+        requested = {}
+        for item in parameters["env"]:
+            if isinstance(item, ParameterKeyValue):
+                requested[item.key] = item.value
+            elif isinstance(item, dict) and "key" in item:
+                requested[item["key"]] = item.get("value", "")
+        return requested
+    requested = {name: value for name, value in parameters.items() if isinstance(value, str)}
+    return requested or None
 
-    Args:
-        analyzer_body: The collector body with artifact details
 
-    Returns:
-        str: The constructed artifact key.
+async def declared_artifact_parameter_names(artifact_name: str, org_id: str = "root") -> set:
+    """The parameter names the artifact itself declares, read from Velociraptor in `org_id`."""
+    artifact_response = await get_artifact_by_name(artifact_name, org_id)
+    if not artifact_response.artifacts:
+        raise HTTPException(status_code=404, detail=f"Artifact {artifact_name} not found")
+    return {param.name for param in (artifact_response.artifacts[0].parameters or [])}
+
+
+def build_parameter_env(requested: Dict[str, str], declared: set, artifact_name: str, drop_undeclared: bool = False):
+    """The ``env=dict(...)`` body and query variables for the requested artifact parameters.
+
+    A name is only written into the query (as a backtick-quoted identifier, since VQL's
+    ``dict()`` takes literal names) when the artifact declares it and it passes
+    `validate_artifact_parameter_name`. A name the artifact does not declare is refused with a
+    400, or -- with `drop_undeclared`, for the admin/responder CoPilot Actions path -- left
+    out with a warning, as Velociraptor itself ignored it before; it never reaches the query.
+    Each value goes into its own variable, ``Param<n>``, and is never part of the query text.
     """
-    action = getattr(analyzer_body, "action", None)
-    command = getattr(analyzer_body, "command", None)
-    parameters = getattr(analyzer_body, "parameters", None)
-
-    if action == "quarantine":
-        return (
-            f'collect_client(org_id="{analyzer_body.velociraptor_org}", client_id="{analyzer_body.velociraptor_id}", '
-            f'artifacts=["{analyzer_body.artifact_name}"], '
-            f"spec=dict(`{analyzer_body.artifact_name}`=dict()))"
+    parts = []
+    env = {}
+    undeclared = [name for name in requested if name not in declared]
+    if undeclared and not drop_undeclared:
+        valid = ", ".join(sorted(declared)) or "none"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Parameter '{undeclared[0]}' is not valid for artifact {artifact_name}. Valid parameters: {valid}",
         )
-    elif action == "remove_quarantine":
-        return (
-            f'collect_client(org_id="{analyzer_body.velociraptor_org}", client_id="{analyzer_body.velociraptor_id}", '
-            f'artifacts=["{analyzer_body.artifact_name}"], '
-            f'spec=dict(`{analyzer_body.artifact_name}`=dict(`RemovePolicy`="Y")))'
-        )
-    elif command is not None:
-        return (
-            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
-            f"urgent=true, artifacts=['{analyzer_body.artifact_name}'], "
-            f"env=dict(Command='{analyzer_body.command}'))"
-        )
-    elif parameters is not None:
-        # Parameters are provided, will be included in the query
-        return (
-            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
-            f"artifacts=['{analyzer_body.artifact_name}'])"
-        )
-    else:
-        return (
-            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
-            f"artifacts=['{analyzer_body.artifact_name}'])"
-        )
+    if undeclared:
+        logger.warning(f"Dropping parameters {undeclared!r} that artifact {artifact_name} does not declare")
+    requested = {name: value for name, value in requested.items() if name in declared}
+    for index, (name, value) in enumerate(requested.items()):
+        validate_artifact_parameter_name(name)
+        if not isinstance(value, str):
+            raise HTTPException(status_code=400, detail=f"Parameter '{name}' must be a string")
+        variable = f"Param{index}"
+        parts.append(f"`{name}`={variable}")
+        # The value used to be written between single quotes, so keep its VQL escapes meaning
+        # what they meant (see vql_string_literal_value).
+        env[variable] = vql_string_literal_value(value)
+    return ", ".join(parts), env
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -120,12 +187,13 @@ async def get_artifacts() -> ArtifactsResponse:
         )
 
 
-async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
+async def get_artifact_by_name(artifact_name: str, org_id: str = "root") -> ArtifactsResponse:
     """
     Get a specific artifact by name from Velociraptor.
 
     Args:
         artifact_name (str): The name of the artifact to retrieve.
+        org_id (str): The Velociraptor org to read the definition from.
 
     Returns:
         ArtifactsResponse: A response containing the specific artifact.
@@ -135,8 +203,8 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
     velociraptor_service = await UniversalService.create("Velociraptor")
 
     # Query for a specific artifact by name
-    query = create_query(f"SELECT name,description,parameters FROM artifact_definitions() WHERE name = '{artifact_name}'")
-    artifact_result = await velociraptor_service.execute_query_async(query)
+    query = create_query("SELECT name,description,parameters FROM artifact_definitions() WHERE name = ArtifactName")
+    artifact_result = await velociraptor_service.execute_query_async(query, org_id=org_id, env={"ArtifactName": artifact_name})
 
     try:
         if artifact_result["success"]:
@@ -166,9 +234,29 @@ async def get_artifact_by_name(artifact_name: str) -> ArtifactsResponse:
         )
 
 
+async def get_artifact_policy_definitions(artifact_name: str, org_id: str) -> List[dict]:
+    """The artifact's definition and every dependency's, as the host's org resolves them.
+
+    `deps=true` makes Velociraptor resolve the dependencies with its own VQL parser
+    (launcher.GetDependentArtifacts), the set the client would receive. Read from `org_id`, the
+    host's org, where the collection will run. See `collection_policy`.
+    """
+    validate_artifact_name(artifact_name)
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    query = create_query(
+        "SELECT name, compiled_in, built_in, parameters, required_permissions, implied_permissions, imports, tools, "
+        "export, precondition, sources FROM artifact_definitions(names=[ArtifactName], deps=true)",
+    )
+    result = await velociraptor_service.execute_query_async(query, org_id=org_id, env={"ArtifactName": artifact_name})
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=f"Failed to get artifact '{artifact_name}': {result.get('message')}")
+    return [row for row in (result.get("results") or []) if isinstance(row, dict)]
+
+
 async def validate_artifact_parameters(
     artifact_name: str,
     provided_parameters: Optional[Dict[str, Union[str, List[ParameterKeyValue]]]],
+    org_id: str = "root",
 ) -> None:
     """
     Validates that the provided parameters match the artifact's expected parameters.
@@ -183,8 +271,8 @@ async def validate_artifact_parameters(
     if not provided_parameters:
         return  # No parameters to validate
 
-    # Fetch the artifact details
-    artifact_response = await get_artifact_by_name(artifact_name)
+    # Fetch the artifact details from the org the collection runs in
+    artifact_response = await get_artifact_by_name(artifact_name, org_id)
 
     if not artifact_response.artifacts or len(artifact_response.artifacts) == 0:
         raise HTTPException(
@@ -309,141 +397,10 @@ async def get_artifact_parameters_by_prefix_service(
         )
 
 
-# async def run_artifact_collection(
-#     collect_artifact_body: CollectArtifactBody,
-# ) -> CollectArtifactResponse:
-#     """
-#     Run an artifact collection on a client with optional parameters.
-
-#     Args:
-#         collect_artifact_body: The body of the request with optional parameters.
-
-#     Returns:
-#         CollectArtifactResponse: A dictionary containing the success status, message and results.
-#     """
-#     velociraptor_service = await UniversalService.create("Velociraptor")
-#     try:
-#         # Build the query dynamically based on whether parameters are provided
-#         parameters = getattr(collect_artifact_body, "parameters", None)
-
-#         if parameters:
-#             # Velociraptor expects parameters in a very specific format
-#             # For the "env" parameter, we need to construct a dict
-#             if "env" in parameters and isinstance(parameters["env"], list):
-#                 env_dict = {}
-#                 for item in parameters["env"]:
-#                     env_dict[item.key] = item.value
-
-#                 # Format the query with proper VQL syntax
-#                 query = create_query(
-#                     f"SELECT collect_client("
-#                     f"org_id='{collect_artifact_body.velociraptor_org}', "
-#                     f"client_id='{collect_artifact_body.velociraptor_id}', "
-#                     f"artifacts=['{collect_artifact_body.artifact_name}'], "
-#                     f"env=dict(",
-#                 )
-
-#                 # Add each environment variable as a key-value pair
-#                 env_parts = []
-#                 for key, value in env_dict.items():
-#                     # Escape any single quotes in the values
-#                     escaped_value = value.replace("'", "\\'")
-#                     env_parts.append(f"`{key}`='{escaped_value}'")
-
-#                 query += ", ".join(env_parts)
-#                 query += ")) FROM scope()"
-#             else:
-#                 # Handle other types of parameters
-#                 query = create_query(
-#                     f"SELECT collect_client("
-#                     f"org_id='{collect_artifact_body.velociraptor_org}', "
-#                     f"client_id='{collect_artifact_body.velociraptor_id}', "
-#                     f"artifacts=['{collect_artifact_body.artifact_name}']",
-#                 )
-
-#                 # Add other parameters if needed
-#                 for param_key, param_value in parameters.items():
-#                     if isinstance(param_value, str):
-#                         query += f", `{param_key}`='{param_value}'"
-
-#                 query += ") FROM scope()"
-#         else:
-#             # Original query without parameters
-#             query = create_query(
-#                 f"SELECT collect_client("
-#                 f"org_id='{collect_artifact_body.velociraptor_org}', "
-#                 f"client_id='{collect_artifact_body.velociraptor_id}', "
-#                 f"artifacts=['{collect_artifact_body.artifact_name}']) "
-#                 f"FROM scope()",
-#             )
-
-#         logger.info(f"Running artifact collection with query: {query}")
-#         flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
-#         logger.info(f"Successfully ran artifact collection on {flow}")
-
-#         # Check if results are available
-#         if not flow.get("results") or len(flow["results"]) == 0:
-#             logger.error("No results returned from query execution")
-#             raise HTTPException(
-#                 status_code=500,
-#                 detail="Query execution did not return any results",
-#             )
-
-#         # Instead of relying on get_artifact_key, extract the flow_id directly from results
-#         # by checking all keys in the first result for a flow_id
-#         result_dict = flow["results"][0]
-#         flow_id = None
-
-#         # Look for any key that has a flow_id in its value
-#         for key, value in result_dict.items():
-#             if isinstance(value, dict) and "flow_id" in value:
-#                 flow_id = value["flow_id"]
-#                 logger.debug(f"Found flow_id {flow_id} in key: {key}")
-#                 break
-
-#         if not flow_id:
-#             logger.error(f"Could not find flow_id in results: {result_dict}")
-#             raise HTTPException(
-#                 status_code=500,
-#                 detail="Failed to extract flow ID from results",
-#             )
-
-#         logger.info(f"Extracted flow_id: {flow_id}")
-
-#         completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
-#         logger.info(f"Successfully watched flow completion on {completed}")
-
-#         results = velociraptor_service.read_collection_results(
-#             client_id=collect_artifact_body.velociraptor_id,
-#             flow_id=flow_id,
-#             org_id=collect_artifact_body.velociraptor_org,
-#             artifact=collect_artifact_body.artifact_name,
-#         )
-
-#         logger.info(f"Successfully read collection results on {results}")
-
-#         return CollectArtifactResponse(
-#             success=results["success"],
-#             message=results["message"],
-#             results=results["results"],
-#         )
-#     except HTTPException as he:  # Catch HTTPException separately to propagate the original message
-#         logger.error(
-#             f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
-#         )
-#         raise he
-#     except Exception as err:
-#         logger.error(
-#             f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-#         )
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
-#         )
-
 async def run_artifact_collection(
     collect_artifact_body: CollectArtifactBody,
     session: AsyncSession,
+    drop_undeclared_parameters: bool = False,
 ) -> CollectArtifactResponse:
     """
     Run an artifact collection on a client with optional parameters and upload results to MinIO.
@@ -460,9 +417,8 @@ async def run_artifact_collection(
     from app.db.universal_models import AgentDataStore
     from app.db.universal_models import Agents
 
-    # Validate the identifier fields that get interpolated into VQL (GHSA-5542-j2fc-gqjm).
-    # Note: artifact `parameters`/`env` values are free-form and are NOT validated here;
-    # those are secured by parameterized VQL (follow-up), not format rejection.
+    # Validate the identifier fields (GHSA-5542-j2fc-gqjm). They and every parameter value are
+    # passed as query variables; parameter names are checked against the artifact below.
     validate_org_id(collect_artifact_body.velociraptor_org)
     validate_client_id(collect_artifact_body.velociraptor_id)
     validate_artifact_name(collect_artifact_body.artifact_name)
@@ -481,62 +437,31 @@ async def run_artifact_collection(
                 detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found",
             )
 
-        # Build the query dynamically based on whether parameters are provided
-        parameters = getattr(collect_artifact_body, "parameters", None)
-
-        if parameters:
-            # Velociraptor expects parameters in a very specific format
-            # For the "env" parameter, we need to construct a dict
-            if "env" in parameters and isinstance(parameters["env"], list):
-                env_dict = {}
-                for item in parameters["env"]:
-                    env_dict[item.key] = item.value
-
-                # Format the query with proper VQL syntax
-                query = create_query(
-                    f"SELECT collect_client("
-                    f"org_id='{collect_artifact_body.velociraptor_org}', "
-                    f"client_id='{collect_artifact_body.velociraptor_id}', "
-                    f"artifacts=['{collect_artifact_body.artifact_name}'], "
-                    f"env=dict(",
-                )
-
-                # Add each environment variable as a key-value pair
-                env_parts = []
-                for key, value in env_dict.items():
-                    # Escape any single quotes in the values
-                    escaped_value = value.replace("'", "\\'")
-                    env_parts.append(f"`{key}`='{escaped_value}'")
-
-                query += ", ".join(env_parts)
-                query += ")) FROM scope()"
-            else:
-                # Handle other types of parameters
-                query = create_query(
-                    f"SELECT collect_client("
-                    f"org_id='{collect_artifact_body.velociraptor_org}', "
-                    f"client_id='{collect_artifact_body.velociraptor_id}', "
-                    f"artifacts=['{collect_artifact_body.artifact_name}']",
-                )
-
-                # Add other parameters if needed
-                for param_key, param_value in parameters.items():
-                    if isinstance(param_value, str):
-                        query += f", `{param_key}`='{param_value}'"
-
-                query += ") FROM scope()"
+        env = collection_env(
+            collect_artifact_body.velociraptor_org,
+            collect_artifact_body.velociraptor_id,
+            collect_artifact_body.artifact_name,
+        )
+        requested = requested_artifact_parameters(getattr(collect_artifact_body, "parameters", None))
+        if requested is None:
+            query = create_query(VQL_COLLECT)
         else:
-            # Original query without parameters
-            query = create_query(
-                f"SELECT collect_client("
-                f"org_id='{collect_artifact_body.velociraptor_org}', "
-                f"client_id='{collect_artifact_body.velociraptor_id}', "
-                f"artifacts=['{collect_artifact_body.artifact_name}']) "
-                f"FROM scope()",
+            declared = (
+                await declared_artifact_parameter_names(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
+                if requested
+                else set()
             )
+            env_body, parameter_env = build_parameter_env(
+                requested,
+                declared,
+                collect_artifact_body.artifact_name,
+                drop_undeclared=drop_undeclared_parameters,
+            )
+            query = create_query(VQL_COLLECT_WITH_ENV.format(env=env_body))
+            env.update(parameter_env)
 
         logger.info(f"Running artifact collection with query: {query}")
-        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org, env=env)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
@@ -547,20 +472,10 @@ async def run_artifact_collection(
                 detail="Query execution did not return any results",
             )
 
-        # Instead of relying on get_artifact_key, extract the flow_id directly from results
-        # by checking all keys in the first result for a flow_id
-        result_dict = flow["results"][0]
-        flow_id = None
-
-        # Look for any key that has a flow_id in its value
-        for key, value in result_dict.items():
-            if isinstance(value, dict) and "flow_id" in value:
-                flow_id = value["flow_id"]
-                logger.debug(f"Found flow_id {flow_id} in key: {key}")
-                break
+        flow_id = extract_flow_id(flow)
 
         if not flow_id:
-            logger.error(f"Could not find flow_id in results: {result_dict}")
+            logger.error(f"Could not find flow_id in results: {flow['results'][0]}")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to extract flow ID from results",
@@ -660,9 +575,8 @@ async def run_file_collection(
     from app.db.universal_models import AgentDataStore
     from app.db.universal_models import Agents
 
-    # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). The `file`
-    # and `root_disk` values are free-form and are NOT validated here; those are secured by
-    # parameterized VQL (follow-up).
+    # Validate the identifier fields (GHSA-5542-j2fc-gqjm). They and the free-form `file` and
+    # `root_disk` values are passed as query variables, never as query text.
     validate_org_id(collect_artifact_body.velociraptor_org)
     validate_client_id(collect_artifact_body.velociraptor_id)
     validate_artifact_name(collect_artifact_body.artifact_name)
@@ -682,21 +596,20 @@ async def run_file_collection(
                 detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found",
             )
 
-        # Build the query with proper VQL syntax
-        query = create_query(
-            f"SELECT collect_client("
-            f"org_id='{collect_artifact_body.velociraptor_org}', "
-            f"client_id='{collect_artifact_body.velociraptor_id}', "
-            f"artifacts=['{collect_artifact_body.artifact_name}'], "
-            f"spec=dict(`{collect_artifact_body.artifact_name}`=dict("
-            f"`collectionSpec`='{collect_artifact_body.file}', "
-            f"`Root`='{collect_artifact_body.root_disk}'"
-            f"))) "
-            f"FROM scope()",
+        # The glob and root used to be written between single quotes (and
+        # format_file_path_for_os escapes Windows backslashes for that), so keep their VQL
+        # escapes meaning what they meant (see vql_string_literal_value).
+        query = create_query(VQL_COLLECT_FILE)
+        env = collection_env(
+            collect_artifact_body.velociraptor_org,
+            collect_artifact_body.velociraptor_id,
+            collect_artifact_body.artifact_name,
+            CollectionSpec=vql_string_literal_value(collect_artifact_body.file),
+            Root=vql_string_literal_value(collect_artifact_body.root_disk or ""),
         )
 
         logger.info(f"Query: {query}")
-        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org, env=env)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
@@ -707,18 +620,10 @@ async def run_file_collection(
                 detail="Query execution did not return any results",
             )
 
-        # Extract flow_id from results
-        result_dict = flow["results"][0]
-        flow_id = None
-
-        for key, value in result_dict.items():
-            if isinstance(value, dict) and "flow_id" in value:
-                flow_id = value["flow_id"]
-                logger.debug(f"Found flow_id {flow_id} in key: {key}")
-                break
+        flow_id = extract_flow_id(flow)
 
         if not flow_id:
-            logger.error(f"Could not find flow_id in results: {result_dict}")
+            logger.error(f"Could not find flow_id in results: {flow['results'][0]}")
             raise HTTPException(
                 status_code=500,
                 detail="Failed to extract flow ID from results",
@@ -787,6 +692,25 @@ async def run_file_collection(
         )
 
 
+_UNSAFE_FILE_CHARACTERS = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def safe_file_component(value: Optional[str], fallback: str = "host") -> str:
+    """`value` reduced to one safe file-name component: ``[A-Za-z0-9._-]``, no ``..``, no leading dot."""
+    cleaned = _UNSAFE_FILE_CHARACTERS.sub("_", str(value or ""))
+    cleaned = re.sub(r"\.{2,}", "_", cleaned).lstrip(".")[:128]
+    return cleaned or fallback
+
+
+def contained_path(directory: str, file_name: str) -> str:
+    """``directory/file_name``, refusing any name that would resolve outside `directory`."""
+    base = os.path.realpath(directory)
+    path = os.path.realpath(os.path.join(base, file_name))
+    if os.path.dirname(path) != base:
+        raise HTTPException(status_code=400, detail="Invalid download file name")
+    return path
+
+
 async def fetch_file_from_filestore(
     client_id: str,
     flow_id: str,
@@ -802,26 +726,24 @@ async def fetch_file_from_filestore(
     First creates a download pack for the flow, then fetches and uploads to MinIO.
     """
     import base64
-    import os
 
     from app.data_store.data_store_operations import upload_agent_artifact_file
 
-    # Validate identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). org_id is
-    # validated centrally in create_vql_request.
+    # Validate identifier fields (GHSA-5542-j2fc-gqjm); org_id is validated centrally in
+    # create_vql_request. Every value below -- including the hostname, which the endpoint
+    # itself reports -- is passed as a query variable, never as query text.
     validate_client_id(client_id)
     validate_flow_id(flow_id)
 
     velociraptor_service = await UniversalService.create("Velociraptor")
+    temp_dir = None
 
     try:
         # If hostname is not provided, fetch it from client metadata
         if not hostname:
             logger.info(f"Fetching hostname for client {client_id}")
-            query = create_query(
-                f"SELECT os_info.hostname AS Hostname "
-                f"FROM clients(client_id='{client_id}')",
-            )
-            client_info = await velociraptor_service.execute_query_async(query, org_id=org_id)
+            query = create_query("SELECT os_info.hostname AS Hostname FROM clients(client_id=ClientId)")
+            client_info = await velociraptor_service.execute_query_async(query, org_id=org_id, env={"ClientId": client_id})
 
             if client_info.get("results") and len(client_info["results"]) > 0:
                 hostname = client_info["results"][0].get("Hostname", client_id)
@@ -833,18 +755,28 @@ async def fetch_file_from_filestore(
         logger.info(f"Creating flow download for client {client_id}, flow {flow_id}")
 
         download_query_parts = [
-            f"client_id='{client_id}'",
-            f"flow_id='{flow_id}'",
+            "client_id=ClientId",
+            "flow_id=FlowId",
             "wait=true",
-            f"format='{format}'",
-            f"expand_sparse={str(expand_sparse).lower()}",
+            "format=Format",
+            f"expand_sparse={'true' if expand_sparse else 'false'}",
         ]
+        # The hostname is reported by the endpoint, so it only reaches a file, VFS or object
+        # name reduced to a safe component; client_id and flow_id are validated above.
+        download_name = f"{safe_file_component(hostname)}-{client_id}-{flow_id}"
+        download_env = {
+            "ClientId": client_id,
+            "FlowId": flow_id,
+            "Format": str(format),
+            "DownloadName": download_name,
+        }
 
         if password:
-            download_query_parts.append(f"password='{password}'")
+            download_query_parts.append("password=Password")
+            download_env["Password"] = str(password)
 
-        zip_filename = f"{hostname}-{client_id}-{flow_id}.zip"
-        download_query_parts.append(f"name='{hostname}-{client_id}-{flow_id}'")
+        zip_filename = f"{download_name}.zip"
+        download_query_parts.append("name=DownloadName")
 
         create_download_query = create_query(
             f"SELECT create_flow_download({', '.join(download_query_parts)}) "
@@ -852,7 +784,7 @@ async def fetch_file_from_filestore(
         )
 
         logger.info(f"Create download query: {create_download_query}")
-        download_result = await velociraptor_service.execute_query_async(create_download_query, org_id=org_id)
+        download_result = await velociraptor_service.execute_query_async(create_download_query, org_id=org_id, env=download_env)
 
         if not download_result.get("success"):
             raise HTTPException(
@@ -866,24 +798,26 @@ async def fetch_file_from_filestore(
         vfs_path = f"downloads/{client_id}/{flow_id}/{zip_filename}"
         logger.info(f"Fetching file from VFS path: {vfs_path}")
 
-        # Save to temporary location first
-        temp_file_path = os.path.join(os.getcwd(), zip_filename)
+        # Save to a private temporary directory first, never the working directory.
+        temp_dir = tempfile.mkdtemp(prefix="velociraptor_download_")
+        temp_file_path = contained_path(temp_dir, zip_filename)
         offset = 0
         chunk_size = 1024 * 1024  # 1MB chunks
         total_bytes = 0
 
         with open(temp_file_path, 'wb') as f:
             while True:
+                # offset and chunk_size are ints CoPilot computes; the path carries the hostname.
                 query = create_query(
                     f"SELECT base64encode(string=read_file("
                     f"accessor='fs', "
-                    f"filename='/{vfs_path}', "
-                    f"offset={offset}, "
-                    f"length={chunk_size})) AS Data "
+                    f"filename=VfsPath, "
+                    f"offset={int(offset)}, "
+                    f"length={int(chunk_size)})) AS Data "
                     f"FROM scope()",
                 )
 
-                result = await velociraptor_service.execute_query_async(query, org_id=org_id)
+                result = await velociraptor_service.execute_query_async(query, org_id=org_id, env={"VfsPath": f"/{vfs_path}"})
 
                 if not result.get("success"):
                     raise HTTPException(
@@ -918,8 +852,6 @@ async def fetch_file_from_filestore(
 
         if total_bytes == 0:
             logger.warning(f"No file data found at path: {vfs_path}")
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
             return {
                 "success": False,
                 "message": f"No file found at path: {vfs_path}",
@@ -938,10 +870,6 @@ async def fetch_file_from_filestore(
             file_name=zip_filename,
         )
 
-        # Remove temporary file
-        os.remove(temp_file_path)
-        logger.info(f"Removed temporary file {temp_file_path}")
-
         return {
             "success": True,
             "message": "Successfully fetched file from Velociraptor and uploaded to MinIO",
@@ -957,6 +885,10 @@ async def fetch_file_from_filestore(
             status_code=500,
             detail=f"Failed to fetch file from filestore: {err}",
         )
+    finally:
+        # The downloaded zip never outlives the call, whatever happened.
+        if temp_dir:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
@@ -972,26 +904,29 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         run_command_body.artifact_name = run_command_body.artifact_name.value
-        # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm). The
-        # `command` value is free-form by design and is NOT validated here; it is secured by
-        # parameterized VQL (follow-up). artifact_name is already an enum.
+        # Validate the identifier fields (GHSA-5542-j2fc-gqjm); artifact_name is already an
+        # enum. The free-form `command` is passed, like them, as a query variable and is never
+        # part of the query text.
         validate_org_id(run_command_body.velociraptor_org)
         validate_client_id(run_command_body.velociraptor_id)
+        validate_artifact_name(run_command_body.artifact_name)
         logger.info(f"Running remote command on {run_command_body}")
-        query = create_query(
-            (
-                f"SELECT collect_client(org_id='{run_command_body.velociraptor_org}', client_id='{run_command_body.velociraptor_id}', "
-                f"urgent=true, artifacts=['{run_command_body.artifact_name}'], "
-                f"env=dict(Command='{run_command_body.command}')) "
-                "FROM scope()"
-            ),
+        query = create_query(VQL_RUN_COMMAND)
+        command = run_command_body.command if run_command_body.command is not None else ""
+        env = collection_env(
+            run_command_body.velociraptor_org,
+            run_command_body.velociraptor_id,
+            run_command_body.artifact_name,
+            # The command used to be written between single quotes; keep its VQL escapes
+            # meaning what they meant (see vql_string_literal_value).
+            Command=vql_string_literal_value(command),
         )
-        flow = await velociraptor_service.execute_query_async(query, org_id=run_command_body.velociraptor_org)
+        flow = await velociraptor_service.execute_query_async(query, org_id=run_command_body.velociraptor_org, env=env)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
-        artifact_key = get_artifact_key(analyzer_body=run_command_body)
-
-        flow_id = flow["results"][0][artifact_key]["flow_id"]
+        flow_id = extract_flow_id(flow)
+        if not flow_id:
+            raise HTTPException(status_code=500, detail="Failed to extract flow ID from results")
         logger.info(f"Extracted flow_id: {flow_id}")
 
         completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=run_command_body.velociraptor_org)
@@ -1065,34 +1000,19 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         # route already resolved it). See issue #913.
         quarantine_body.artifact_name = resolve_quarantine_artifact(quarantine_body.artifact_name)
         quarantine_body.action = quarantine_body.action.value
-        # Validate the identifier fields interpolated into VQL (GHSA-5542-j2fc-gqjm).
+        # Validate the identifier fields (GHSA-5542-j2fc-gqjm); they are passed as query
+        # variables, never as query text.
         validate_org_id(quarantine_body.velociraptor_org)
         validate_client_id(quarantine_body.velociraptor_id)
         validate_artifact_name(quarantine_body.artifact_name)
-        if quarantine_body.action == "quarantine":
-            query = create_query(
-                (
-                    f'SELECT collect_client(org_id="{quarantine_body.velociraptor_org}", client_id="{quarantine_body.velociraptor_id}", '
-                    f'artifacts=["{quarantine_body.artifact_name}"], '
-                    f"spec=dict(`{quarantine_body.artifact_name}`=dict())) "
-                    "FROM scope()"
-                ),
-            )
-        else:
-            query = create_query(
-                (
-                    f'SELECT collect_client(org_id="{quarantine_body.velociraptor_org}", client_id="{quarantine_body.velociraptor_id}", '
-                    f'artifacts=["{quarantine_body.artifact_name}"], '
-                    f'spec=dict(`{quarantine_body.artifact_name}`=dict(`RemovePolicy`="Y"))) '
-                    "FROM scope()"
-                ),
-            )
-        flow = await velociraptor_service.execute_query_async(query, org_id=quarantine_body.velociraptor_org)
+        query = create_query(VQL_QUARANTINE if quarantine_body.action == "quarantine" else VQL_REMOVE_QUARANTINE)
+        env = collection_env(quarantine_body.velociraptor_org, quarantine_body.velociraptor_id, quarantine_body.artifact_name)
+        flow = await velociraptor_service.execute_query_async(query, org_id=quarantine_body.velociraptor_org, env=env)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
-        artifact_key = get_artifact_key(analyzer_body=quarantine_body)
-
-        flow_id = flow["results"][0][artifact_key]["flow_id"]
+        flow_id = extract_flow_id(flow)
+        if not flow_id:
+            raise HTTPException(status_code=500, detail="Failed to extract flow ID from results")
         logger.info(f"Extracted flow_id: {flow_id}")
 
         completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=quarantine_body.velociraptor_org)

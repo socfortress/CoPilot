@@ -249,15 +249,14 @@ async def _resolve_sample(job: AnalysisJob, refs: Optional[Dict[str, Any]]) -> O
     try:
         if job.source != "host_path":
             return None
-        # The UI sends a hostname (picked from the agent dropdown); resolve it to
-        # a client_id here so the operator never deals with raw client_ids.
+        # The submit route resolved the endpoint to a CoPilot agent the caller may reach
+        # (routes.resolve_endpoint): its stored client id and its Velociraptor org.
         client_id = refs.get("client_id")
-        if not client_id and refs.get("hostname"):
-            client_id = await vf.resolve_client_id(refs["hostname"])
-        if not client_id:
-            logger.error(f"host_path: could not resolve an agent from refs={refs}")
+        org_id = refs.get("org_id")
+        if not client_id or not org_id:
+            logger.error(f"host_path: no resolved agent in refs={refs}")
             return None
-        local = await vf.collect_and_fetch(client_id, refs["target_path"], job.customer_code)
+        local = await vf.collect_and_fetch(client_id, refs["target_path"], job.customer_code, org_id)
         if local is None:
             return None
         job.sha256 = local.sha256
