@@ -7,8 +7,12 @@
 			<header class="flex flex-col gap-3">
 				<Logo max-height="32px" class="justify-start!" />
 				<div class="flex flex-col gap-1.5">
-					<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">Account security</span>
-					<h1 id="change-password-title" class="text-2xl leading-tight font-semibold">Choose a new password</h1>
+					<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">
+						Account security
+					</span>
+					<h1 id="change-password-title" class="text-2xl leading-tight font-semibold">
+						Choose a new password
+					</h1>
 					<p class="text-secondary text-sm">
 						Your password was set by your security team, so they know it too.
 						<template v-if="userName">

@@ -7,12 +7,20 @@ const me = vi.hoisted(() => vi.fn())
 vi.mock("@/api", () => ({ default: { portal: { me } } }))
 
 function token() {
-	return new jose.UnsecuredJWT({ scopes: ["customer_user"], customer_codes: ["ACME"] }).setSubject("acme.viewer").encode()
+	return new jose.UnsecuredJWT({ scopes: ["customer_user"], customer_codes: ["ACME"] })
+		.setSubject("acme.viewer")
+		.encode()
 }
 
 function profile(mustChange: boolean) {
 	return Promise.resolve({
-		data: { success: true, username: "acme.viewer", role: "customer_user", customers: [], must_change_password: mustChange }
+		data: {
+			success: true,
+			username: "acme.viewer",
+			role: "customer_user",
+			customers: [],
+			must_change_password: mustChange
+		}
 	})
 }
 

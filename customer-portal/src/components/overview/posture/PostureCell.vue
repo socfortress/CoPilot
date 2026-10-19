@@ -33,8 +33,15 @@
 				</div>
 
 				<div v-if="cell.spark" class="flex shrink-0 flex-col items-end gap-1" data-testid="posture-spark">
-					<Sparkline :values="cell.spark.values" :label="cell.spark.label" :color="sparkColor" class="h-7 w-24" />
-					<span class="text-tertiary font-mono text-[10px] leading-none tabular-nums">{{ cell.spark.caption }}</span>
+					<Sparkline
+						:values="cell.spark.values"
+						:label="cell.spark.label"
+						:color="sparkColor"
+						class="h-7 w-24"
+					/>
+					<span class="text-tertiary font-mono text-[10px] leading-none tabular-nums">
+						{{ cell.spark.caption }}
+					</span>
 				</div>
 			</div>
 

@@ -47,7 +47,9 @@ describe("authCheck: a password an admin chose", () => {
 
 	it("leaves the change once the password is replaced, for where the user was going", () => {
 		signIn(false)
-		const change = route(PASSWORD_CHANGE_ROUTE, "/change-password?redirect=/alerts", CHANGE.meta, { redirect: "/alerts" })
+		const change = route(PASSWORD_CHANGE_ROUTE, "/change-password?redirect=/alerts", CHANGE.meta, {
+			redirect: "/alerts"
+		})
 		expect(authCheck(change)).toBe("/alerts")
 		expect(authCheck(OVERVIEW)).toBeUndefined()
 	})

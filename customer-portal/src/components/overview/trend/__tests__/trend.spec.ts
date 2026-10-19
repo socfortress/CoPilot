@@ -50,7 +50,10 @@ describe("overview trend (#1273)", () => {
 
 		// The same hours in New York (UTC−4) all fall on the 16th, but the 08:00Z one.
 		const ny = Object.fromEntries(
-			trendDays({ range: "7d", until: "2026-10-17T09:00:00Z", hours }, "America/New_York").map(day => [day.day, day])
+			trendDays({ range: "7d", until: "2026-10-17T09:00:00Z", hours }, "America/New_York").map(day => [
+				day.day,
+				day
+			])
 		)
 		expect(ny["2026-10-16"]!.alerts).toMatchObject({ opened: 3, closed: 3 })
 		expect(ny["2026-10-17"]!.cases).toMatchObject({ opened: 1, closed: 1 })
@@ -73,7 +76,10 @@ describe("overview trend (#1273)", () => {
 			{
 				range: "7d",
 				until: "2026-10-17T10:00:00Z",
-				hours: [hour("2026-10-09T10:00:00Z", { alerts_opened: 5 }), hour("2026-10-11T00:00:00Z", { alerts_opened: 1 })]
+				hours: [
+					hour("2026-10-09T10:00:00Z", { alerts_opened: 5 }),
+					hour("2026-10-11T00:00:00Z", { alerts_opened: 1 })
+				]
 			},
 			"UTC"
 		)
@@ -136,7 +142,10 @@ describe("overview trend (#1273)", () => {
 	})
 
 	it("knows no level for an entity whose anchor did not come", () => {
-		const days = trendDays({ range: "7d", until: "2026-10-17T10:00:00Z", alerts_open_at_since: null, hours: [] }, "UTC")
+		const days = trendDays(
+			{ range: "7d", until: "2026-10-17T10:00:00Z", alerts_open_at_since: null, hours: [] },
+			"UTC"
+		)
 		expect(days.every(day => day.alerts.open === null && day.cases.open === null)).toBe(true)
 		expect(trendTotals(days, "alerts")).toMatchObject({ open: null, openAtStart: null })
 	})

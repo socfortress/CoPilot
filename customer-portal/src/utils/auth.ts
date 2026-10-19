@@ -82,7 +82,10 @@ export function authCheck(route: RouteLocationNormalized) {
 	// every page leads there, remembering where the user was going.
 	if (authStore.isLogged && authStore.mustChangePassword && route.name !== PASSWORD_CHANGE_ROUTE) {
 		const redirect = route.meta.checkAuth ? route.query.redirect : route.fullPath
-		return { name: PASSWORD_CHANGE_ROUTE, query: typeof redirect === "string" && redirect !== "/" ? { redirect } : {} }
+		return {
+			name: PASSWORD_CHANGE_ROUTE,
+			query: typeof redirect === "string" && redirect !== "/" ? { redirect } : {}
+		}
 	}
 	if (route.name === PASSWORD_CHANGE_ROUTE && authStore.isLogged && !authStore.mustChangePassword) {
 		return getSafeRedirect(route.query.redirect)

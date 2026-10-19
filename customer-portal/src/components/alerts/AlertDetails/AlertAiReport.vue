@@ -88,8 +88,9 @@
 					data-testid="ai-investigation-progress"
 				>
 					The AI analyst
-					{{ elapsedText ? `has been working on this alert for ${elapsedText}` : "is working on this alert" }}.
-					Findings will appear here once the investigation completes.
+					{{
+						elapsedText ? `has been working on this alert for ${elapsedText}` : "is working on this alert"
+					}}. Findings will appear here once the investigation completes.
 				</n-alert>
 				<n-alert
 					v-else-if="investigationStalled"
@@ -175,9 +176,7 @@
 						</CardEntity>
 					</div>
 
-					<div class="text-secondary text-xs">
-						Report generated {{ utcDate(report.created_at) }}
-					</div>
+					<div class="text-secondary text-xs">Report generated {{ utcDate(report.created_at) }}</div>
 				</template>
 			</div>
 		</template>
@@ -252,7 +251,9 @@ const elapsedText = computed(() => {
 	return seconds === null ? null : elapsedLabel(seconds)
 })
 const statusText = computed(() =>
-	statusMeta.value && elapsedText.value ? `${statusMeta.value.label} · ${elapsedText.value}` : (statusMeta.value?.label ?? "")
+	statusMeta.value && elapsedText.value
+		? `${statusMeta.value.label} · ${elapsedText.value}`
+		: (statusMeta.value?.label ?? "")
 )
 
 const investigationPending = computed(() => !!statusMeta.value?.active && !report.value)

@@ -2,14 +2,7 @@
 	<div class="page overview flex flex-col gap-6">
 		<OverviewHeader :last-updated :refreshing="isRefreshing || trend.loading.value" @refresh="refreshAll()" />
 
-		<PostureStrip
-			:alert-counts
-			:case-counts
-			:agent-counts
-			:loading="showSkeleton"
-			:errors
-			:trend="postureTrend"
-		/>
+		<PostureStrip :alert-counts :case-counts :agent-counts :loading="showSkeleton" :errors :trend="postureTrend" />
 
 		<OverviewTrendPanel
 			:trend="trend.trend.value"

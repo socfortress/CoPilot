@@ -49,8 +49,16 @@ describe("posture cells", () => {
 
 	it("render the sparkline in the cell (#1273)", () => {
 		setActivePinia(createPinia())
-		const [cell] = buildPostureCells({ alerts: counts, cases: counts, agents, trend: { alerts: [0, 4, 2], cases: [], range: "30d" } })
-		const wrapper = mount(PostureCell, { props: { cell: cell! }, global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } } })
+		const [cell] = buildPostureCells({
+			alerts: counts,
+			cases: counts,
+			agents,
+			trend: { alerts: [0, 4, 2], cases: [], range: "30d" }
+		})
+		const wrapper = mount(PostureCell, {
+			props: { cell: cell! },
+			global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } }
+		})
 		const spark = wrapper.get("[data-testid=posture-spark]")
 		expect(spark.text()).toContain("opened · 30d")
 		expect(spark.get("svg").attributes("aria-label")).toBe("6 alerts opened over the last 3 days")
@@ -59,7 +67,9 @@ describe("posture cells", () => {
 
 describe("sparkline (#1273)", () => {
 	it("scales the busiest day to the top and a quiet one to the bottom", () => {
-		const points = mount(Sparkline, { props: { values: [0, 4, 2], label: "x" } }).get("polyline").attributes("points")
+		const points = mount(Sparkline, { props: { values: [0, 4, 2], label: "x" } })
+			.get("polyline")
+			.attributes("points")
 		expect(points).toBe("0.00,27.00 50.00,1.00 100.00,14.00")
 	})
 
