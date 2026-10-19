@@ -43,6 +43,10 @@ class AuditAction(str, Enum):
     USER_DELETE = "user.delete"
     USER_UPDATE = "user.update"
     USER_ROLE_CHANGE = "user.role_change"
+    # An admin chose a user's password (temporary, reset or new account), and the user's own
+    # change that replaces it (#1277)
+    USER_PASSWORD_CHANGE_REQUIRED = "user.password_change_required"
+    USER_PASSWORD_CHANGE = "user.password_change"
 
     # Connectors
     CONNECTOR_CREATE = "connector.create"

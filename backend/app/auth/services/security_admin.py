@@ -68,6 +68,7 @@ async def list_customer_users(session: AsyncSession, customer_code: str) -> List
             "role_name": _role_name(u.role_id),
             "last_login_at": u.last_login_at,
             "totp_enabled": totp_map.get(u.id, False),
+            "must_change_password": bool(u.must_change_password),
         }
         for u in users
     ]
@@ -102,8 +103,9 @@ def generate_temporary_password() -> Password:
 
 
 async def apply_temporary_password(session: AsyncSession, user: User, password: Password) -> None:
-    """Store the hash of an already-generated temporary password."""
+    """Store the hash of an already-generated temporary password; the user must replace it (#1277)."""
     user.password = password.hashed
+    user.must_change_password = True
     session.add(user)
     await session.commit()
 
