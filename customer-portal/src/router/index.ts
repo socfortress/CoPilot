@@ -150,6 +150,20 @@ const router = createRouter({
 			}
 		},
 		{
+			// Where a user whose password an admin chose is held until they replace it (#1277).
+			// The login's layout: no page that loads a customer's data runs behind it.
+			path: "/change-password",
+			name: "ChangePassword",
+			component: () => import("@/views/ChangePassword.vue"),
+			meta: {
+				title: "Choose a new password",
+				auth: true,
+				roles: RouteRole.All,
+				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
+				skipPin: true
+			}
+		},
+		{
 			path: "/logout",
 			name: "Logout",
 			redirect: "/login"

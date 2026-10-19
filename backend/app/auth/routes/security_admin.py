@@ -24,6 +24,7 @@ from sqlmodel import select
 from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
+from app.auth.services import password_change
 from app.auth.services import security_admin
 from app.auth.services import temp_password_email
 from app.auth.utils import AuthHandler
@@ -40,6 +41,8 @@ class CustomerSecurityUser(BaseModel):
     role_name: Optional[str] = None
     last_login_at: Optional[datetime.datetime] = None
     totp_enabled: bool = False
+    # Still on a password an admin chose (#1277): the portal holds them on the change.
+    must_change_password: bool = False
 
 
 class CustomerSecurityUsersResponse(BaseModel):
@@ -306,6 +309,9 @@ async def send_temp_password(
         )
 
     await security_admin.apply_temporary_password(db, user, password)
+    # Recorded before the email goes out: the password is rotated and must be replaced
+    # whether or not the email arrives (#1277).
+    await password_change.record_change_required(user, current_user, "temporary password", http_request)
     try:
         await security_admin.send_email(
             to_addr=user.email,

@@ -97,7 +97,12 @@ const chartOption = computed((): ChartOption => {
 		marks.push({ name: "today", coord: [last, levels[last]], value: levels[last], label: { position: "top" } })
 	}
 	if (peak && peak.open > 0 && peakIndex !== last) {
-		marks.push({ name: "peak", coord: [peakIndex, peak.open], value: `peak ${peak.open}`, label: { position: "top" } })
+		marks.push({
+			name: "peak",
+			coord: [peakIndex, peak.open],
+			value: `peak ${peak.open}`,
+			label: { position: "top" }
+		})
 	}
 
 	return {

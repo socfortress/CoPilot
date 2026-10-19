@@ -1,8 +1,17 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<div class="flex flex-col gap-1">
-			<h3 class="text-lg font-bold">Security</h3>
-			<p class="text-secondary text-sm">Manage 2FA and passwords for the user accounts scoped to this customer</p>
+		<div class="flex flex-wrap items-start justify-between gap-3">
+			<div class="flex flex-col gap-1">
+				<h3 class="text-lg font-bold">Security</h3>
+				<p class="text-secondary text-sm">
+					Manage 2FA and passwords for the user accounts scoped to this customer
+				</p>
+			</div>
+			<!-- The tab stays mounted: a user who changes their password or signs in meanwhile shows on a refresh (#1277). -->
+			<n-button size="small" secondary :loading data-testid="security-refresh" @click="loadUsers()">
+				<template #icon><Icon :name="RefreshIcon" :size="14" /></template>
+				Refresh
+			</n-button>
 		</div>
 
 		<n-alert v-if="!smtpConfigured" type="warning" :bordered="false" class="text-xs">
@@ -25,9 +34,20 @@
 				<tbody>
 					<tr v-for="user in users" :key="user.id">
 						<td>
-							<div class="flex flex-col">
+							<div class="flex flex-col items-start gap-0.5">
 								<span class="font-semibold">{{ user.username }}</span>
 								<span class="text-secondary text-xs">{{ user.email }}</span>
+								<!-- An admin chose the password; the portal holds the user on the change (#1277). -->
+								<n-tag
+									v-if="user.must_change_password"
+									type="warning"
+									size="tiny"
+									:bordered="false"
+									title="The password was set by an admin. The user must choose a new one at their next sign-in."
+									data-testid="security-must-change-password"
+								>
+									Password change pending
+								</n-tag>
 							</div>
 						</td>
 						<td>{{ roleLabel(user.role_name) }}</td>
@@ -482,7 +502,9 @@ async function submitTempPassword() {
 			customer_code: customerCode
 		})
 		if (response.data.success) {
-			message.success(response.data.message || "Temporary password sent")
+			message.success(
+				`${response.data.message || "Temporary password sent"}. ${user.username} will choose a new one at their next sign-in.`
+			)
 			showTempPasswordModal.value = false
 		} else {
 			message.error(response.data.message || "Failed to send temporary password")
@@ -496,6 +518,8 @@ async function submitTempPassword() {
 	} finally {
 		sendingTempPassword.value = false
 		busyUserId.value = null
+		// Even a failed delivery may have rotated the password: show who must now change it (#1277).
+		loadUsers()
 	}
 }
 
@@ -517,8 +541,11 @@ async function submitPassword() {
 	try {
 		const response = await Api.auth.resetPassword(passwordTarget.value.username, pwForm.value.newPassword)
 		if (response.data.success) {
-			message.success(`Password updated for ${passwordTarget.value.username}`)
+			message.success(
+				`Password updated for ${passwordTarget.value.username}. They will choose a new one at their next sign-in.`
+			)
 			showPasswordModal.value = false
+			loadUsers()
 		} else {
 			message.error(response.data.message || "Failed to update password")
 		}

@@ -24,3 +24,6 @@ class PortalMeResponse(BaseModel):
     username: str
     role: str
     customers: List[PortalCustomer]
+    # An admin chose the password and the user has not replaced it yet: the portal holds
+    # them on the password change until they do (#1277).
+    must_change_password: bool = False

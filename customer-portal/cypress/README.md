@@ -28,6 +28,7 @@ field of a real response to show a failed section.
 | `sla.cy.ts` | #1187 — the Service Levels page is offered only while the SOC publishes it for the customer, shows the seeded compliance, response times, open items and targets of the user's customer (never an analyst's name), links "waiting on you" to the filtered list, and a reply to a waiting alert hands it back. |
 | `theme-switch.cy.ts` | #1192 — the toolbar theme switch flips between light and dark. |
 | `profile.cy.ts` | #1192 — the profile page shows the user and both tabs; the never-shown image editor is gone. |
+| `password-change.cy.ts` | #1277 — an account the SOC creates signs in to the password change and nothing else (any page leads there, keeping where it was going; the API answers 403 with `X-Password-Change-Required`), refusals keep the user there, the change continues to the destination for good, signing out is the only other way, and an admin reset holds a signed-in user again at their next request. |
 
 The same seed drives the API-level test `backend/tests/e2e/customer_portal_overview_e2e.py`,
 which additionally checks field-by-field parity and the SQL statement budget.

@@ -50,6 +50,8 @@ const points = computed(() => {
 	if (values.length < 2 || max === 0) return null
 	const step = WIDTH / (values.length - 1)
 	// 1 unit of headroom top and bottom, so a 2px line is never clipped.
-	return values.map((value, i) => `${(i * step).toFixed(2)},${(HEIGHT - 1 - (value / max) * (HEIGHT - 2)).toFixed(2)}`).join(" ")
+	return values
+		.map((value, i) => `${(i * step).toFixed(2)},${(HEIGHT - 1 - (value / max) * (HEIGHT - 2)).toFixed(2)}`)
+		.join(" ")
 })
 </script>

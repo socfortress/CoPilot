@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-	PASSWORD_PROBLEMS,
-	PASSWORD_REQUIREMENTS,
-	passwordProblem,
-	passwordProblemCode
-} from "../password-policy"
+import { PASSWORD_PROBLEMS, PASSWORD_REQUIREMENTS, passwordProblem, passwordProblemCode } from "../password-policy"
 import fixture from "./fixtures/password-policy-cases.json"
 
 // The cases backend/tests/test_password_policy.py runs against the API's policy (#1265).

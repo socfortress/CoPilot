@@ -14,7 +14,10 @@ vi.mock("vue-echarts", () => ({
 	default: defineComponent({
 		name: "VChart",
 		props: { option: Object },
-		setup: (_, { attrs }) => () => h("div", { "data-testid": attrs["data-testid"] })
+		setup:
+			(_, { attrs }) =>
+			() =>
+				h("div", { "data-testid": attrs["data-testid"] })
 	})
 }))
 
@@ -50,7 +53,7 @@ function mountPanel(props: { trend?: OverviewTrend | null; loading?: boolean; er
 }
 
 function figure(wrapper: ReturnType<typeof mountPanel>, key: string) {
-  return wrapper.get(`[data-testid=overview-trend-${key}]`).text()
+	return wrapper.get(`[data-testid=overview-trend-${key}]`).text()
 }
 
 beforeEach(() => {
@@ -74,7 +77,11 @@ describe("overviewTrendPanel (#1273)", () => {
 	it("switches to cases: more closed than opened is a negative Net, and still never below zero open", async () => {
 		const wrapper = mountPanel()
 		await wrapper.get("[data-testid=overview-trend-entity-cases] input").setValue(true)
-		expect([figure(wrapper, "net"), figure(wrapper, "opened"), figure(wrapper, "closed")]).toEqual(["\u22122", "0", "2"])
+		expect([figure(wrapper, "net"), figure(wrapper, "opened"), figure(wrapper, "closed")]).toEqual([
+			"\u22122",
+			"0",
+			"2"
+		])
 		expect(wrapper.get("[data-testid=overview-trend-net]").classes()).toContain("text-success")
 		expect(figure(wrapper, "open")).toBe("0")
 		expect(figure(wrapper, "open-caption")).toBe("all cleared · was 2")
@@ -83,8 +90,18 @@ describe("overviewTrendPanel (#1273)", () => {
 	it("has a table of every day for screen readers, with what was still open at its end", () => {
 		const rows = mountPanel().findAll("[data-testid=overview-trend-table] tbody tr")
 		expect(rows).toHaveLength(7)
-		expect(rows.at(0)!.findAll("td").map(cell => cell.text())).toEqual(["3", "0", "0"])
-		expect(rows.at(-3)!.findAll("td").map(cell => cell.text())).toEqual(["6", "4", "1"])
+		expect(
+			rows
+				.at(0)!
+				.findAll("td")
+				.map(cell => cell.text())
+		).toEqual(["3", "0", "0"])
+		expect(
+			rows
+				.at(-3)!
+				.findAll("td")
+				.map(cell => cell.text())
+		).toEqual(["6", "4", "1"])
 	})
 
 	it("says a quiet period is quiet rather than drawing flat lines", () => {

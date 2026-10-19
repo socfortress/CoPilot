@@ -21,7 +21,12 @@ import { computed } from "vue"
 import PostureCell from "./PostureCell.vue"
 import { buildPostureCells } from "./postureCells"
 
-const { alertCounts, caseCounts, agentCounts, trend = null } = defineProps<{
+const {
+	alertCounts,
+	caseCounts,
+	agentCounts,
+	trend = null
+} = defineProps<{
 	alertCounts: StatusCounts
 	caseCounts: StatusCounts
 	agentCounts: AgentCounts

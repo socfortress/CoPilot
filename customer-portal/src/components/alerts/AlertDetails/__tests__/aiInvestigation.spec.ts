@@ -34,7 +34,10 @@ describe("aI investigation status, in words (#1273)", () => {
 	})
 
 	it("shows a status it does not know as it came, never blank", () => {
-		expect(investigationStatusMeta("cancelled", startedAgo(0), NOW)).toMatchObject({ label: "Cancelled", type: "default" })
+		expect(investigationStatusMeta("cancelled", startedAgo(0), NOW)).toMatchObject({
+			label: "Cancelled",
+			type: "default"
+		})
 		expect(investigationStatusMeta("", startedAgo(0), NOW).label).toBe("Unknown")
 	})
 

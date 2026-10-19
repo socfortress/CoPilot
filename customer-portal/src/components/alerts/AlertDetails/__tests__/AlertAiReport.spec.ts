@@ -204,7 +204,9 @@ describe("the investigation's status, in words (#1273)", () => {
 		expect(status(wrapper)).toContain("Stalled")
 		expect(status(wrapper)).not.toContain("min")
 		expect(wrapper.find("[data-testid=ai-investigation-progress]").exists()).toBe(false)
-		expect(wrapper.find("[data-testid=ai-investigation-stalled]").text()).toContain("You can ask for a new analysis.")
+		expect(wrapper.find("[data-testid=ai-investigation-stalled]").text()).toContain(
+			"You can ask for a new analysis."
+		)
 		expect(button(wrapper).props("inProgress")).toBe(false)
 	})
 

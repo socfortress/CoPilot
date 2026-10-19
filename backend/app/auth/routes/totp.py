@@ -236,7 +236,8 @@ async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
         request=request,
     )
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    # As at /token/customer-portal: a held user goes straight to the password change (#1277).
+    return {"access_token": access_token, "token_type": "bearer", "must_change_password": user.must_change_password}
 
 
 # ── Regenerate backup codes ──────────────────────────────────────────────────

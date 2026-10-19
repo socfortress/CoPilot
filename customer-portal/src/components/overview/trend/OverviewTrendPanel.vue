@@ -10,7 +10,12 @@
 	>
 		<template #actions>
 			<div class="flex flex-wrap items-center gap-2">
-				<n-radio-group v-model:value="entity" size="small" aria-label="Trend of" data-testid="overview-trend-entity">
+				<n-radio-group
+					v-model:value="entity"
+					size="small"
+					aria-label="Trend of"
+					data-testid="overview-trend-entity"
+				>
 					<n-radio-button
 						v-for="item of TREND_ENTITIES"
 						:key="item.key"
@@ -192,7 +197,9 @@ const totals = computed(() => trendTotals(days ?? [], entity.value))
 const peak = computed(() => trendPeak(days ?? [], entity.value))
 
 /** Nothing arrived, nothing was closed and nothing was waiting: an empty chart says nothing. */
-const quiet = computed(() => !totals.value.opened && !totals.value.closed && !totals.value.open && !totals.value.openAtStart)
+const quiet = computed(
+	() => !totals.value.opened && !totals.value.closed && !totals.value.open && !totals.value.openAtStart
+)
 
 const openCaption = computed(() => {
 	const { open, openAtStart } = totals.value
@@ -214,8 +221,24 @@ const stats = computed(() => {
 			color: null,
 			hint: "Opened minus closed in the period. The closed include items opened before it, so it can be negative."
 		},
-		{ key: "opened", label: "Opened", value: String(opened), sub: "", tone: "", color: colors.opened, hint: undefined },
-		{ key: "closed", label: "Closed", value: String(closed), sub: "", tone: "", color: colors.closed, hint: undefined },
+		{
+			key: "opened",
+			label: "Opened",
+			value: String(opened),
+			sub: "",
+			tone: "",
+			color: colors.opened,
+			hint: undefined
+		},
+		{
+			key: "closed",
+			label: "Closed",
+			value: String(closed),
+			sub: "",
+			tone: "",
+			color: colors.closed,
+			hint: undefined
+		},
 		{
 			key: "peak",
 			label: "Peak open",
