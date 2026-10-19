@@ -1,13 +1,16 @@
+import type { TagProps } from "naive-ui"
 import type { Component } from "vue"
 import type { ApiError, OsTypesFull, Severity } from "@/types/common"
 import type { SafeAny } from "@/types/utils"
 import process from "node:process"
+import { colord } from "colord"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { saveAs } from "file-saver"
 import isDateObject from "lodash/isDate"
 import _trim from "lodash/trim"
 import { h } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import tokens from "@/design-tokens.json"
 import dayjs from "@/utils/dayjs"
 
 const URL_PROTOCOL_REGEX = /^https?:\/\//i
@@ -333,15 +336,16 @@ export function getSeverityColor(severity: string | null): "error" | "warning" |
 	return map[severity.toLowerCase()] ?? "default"
 }
 
-export function getStatusColor(
-	status: string | null
-): "error" | "warning" | "info" | "default" | "success" | "primary" {
+export type StatusTone = "error" | "warning" | "info" | "default" | "success" | "waiting"
+
+export function getStatusColor(status: string | null): StatusTone {
 	if (!status) return "default"
 
-	const map: Record<string, "error" | "warning" | "info" | "default" | "success" | "primary"> = {
+	const map: Record<string, StatusTone> = {
 		pending: "warning",
-		// The SOC waits on the customer: their move, in the brand colour (#1187).
-		pending_customer: "primary",
+		// The SOC waits on the customer: their move, in a colour of its own (#1187). Never the
+		// primary, which may be a customer's brand colour (#1278).
+		pending_customer: "waiting",
 		in_progress: "warning",
 		running: "info",
 		open: "info",
@@ -360,6 +364,24 @@ export function getStatusColor(
 	}
 
 	return map[status.toLowerCase()] ?? "default"
+}
+
+// The waiting token is one colour in both modes (a test holds it), so a tag can take it as
+// a value: naive-ui builds a class name out of a tag's colours, and a `var(...)` breaks it.
+const WAITING = colord(tokens.colors.light.waiting)
+const WAITING_TAG: TagProps["color"] = {
+	color: WAITING.alpha(0.1).toRgbString(),
+	textColor: WAITING.toRgbString(),
+	borderColor: WAITING.alpha(0.3).toRgbString()
+}
+
+/**
+ * `NTag` / `Chip` props for a status: naive-ui's own type, or the waiting colour, which
+ * naive-ui has no type for (tinted the way its typed tags are).
+ */
+export function statusTagProps(status: string | null): { type?: TagProps["type"]; color?: TagProps["color"] } {
+	const tone = getStatusColor(status)
+	return tone === "waiting" ? { color: WAITING_TAG } : { type: tone }
 }
 
 export function getHealthColor(status: string | null): "error" | "warning" | "info" | "default" | "success" {

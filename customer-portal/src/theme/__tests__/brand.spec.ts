@@ -128,6 +128,10 @@ describe("the theme", () => {
 		expect(vars["primary-color"]).toBe("#215ac8")
 		expect(vars["primary-color-rgb"]).toBe("33 90 200")
 		expect(vars["success-color"]).toBe(LIGHT.success)
+		// "Waiting on you" keeps a colour of its own, whatever the brand colour is.
+		expect(vars["waiting-color"]).toBe(LIGHT.waiting)
+		expect(vars["waiting-color"]).not.toBe(vars["primary-color"])
+		expect(vars["waiting-color-rgb"]).toBe("255 97 201")
 	})
 
 	it("never persists it: it follows whoever is signed in", async () => {

@@ -108,9 +108,9 @@ const items = computed<Item[]>(() => [
 		key: "waiting",
 		label: "Waiting on you",
 		icon: "carbon:user-follow",
-		iconClass: "text-primary",
+		iconClass: "text-waiting",
 		value: openNow.waiting_on_you,
-		valueClass: "text-primary",
+		valueClass: "text-waiting",
 		links: [
 			{ label: "Alerts", to: { name: "AlertsList", query: { status: WAITING_ON_CUSTOMER } } },
 			{ label: "Cases", to: { name: "CasesList", query: { status: WAITING_ON_CUSTOMER } } }

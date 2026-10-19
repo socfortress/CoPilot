@@ -15,6 +15,8 @@
 	--color-error: var(--error-color);
 	--color-warning: var(--warning-color);
 	--color-info: var(--info-color);
+	/* "Waiting on you" (PENDING_CUSTOMER): a status colour of its own, never the primary (#1278). */
+	--color-waiting: var(--waiting-color);
 	--color-border: var(--border-color);
 	--color-hover: var(--hover-color);
 

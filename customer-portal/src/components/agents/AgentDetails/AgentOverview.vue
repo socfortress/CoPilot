@@ -3,7 +3,7 @@
 		<template #suffix>
 			<CardKV label="wazuh_agent_status">
 				<Chip
-					:type="getStatusColor(agent.wazuh_agent_status)"
+					v-bind="statusTagProps(agent.wazuh_agent_status)"
 					:value="agent.wazuh_agent_status.toUpperCase()"
 				/>
 			</CardKV>
@@ -28,7 +28,7 @@ import { computed } from "vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Chip from "@/components/common/Chip.vue"
 import EntityDetailsCard from "@/components/common/entity/EntityDetailsCard.vue"
-import { getStatusColor } from "@/utils"
+import { statusTagProps } from "@/utils"
 import AgentCriticalSelect from "../AgentCriticalSelect.vue"
 
 const props = defineProps<{
