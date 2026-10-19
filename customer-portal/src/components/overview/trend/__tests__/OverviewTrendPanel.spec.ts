@@ -59,31 +59,55 @@ beforeEach(() => {
 })
 
 describe("overviewTrendPanel (#1273)", () => {
-	it("totals the period, with what it added to the backlog, and draws it", () => {
+	it("leads with what is still open, then how the period moved it, then what arrived and was closed", () => {
 		const wrapper = mountPanel()
-		expect([figure(wrapper, "opened"), figure(wrapper, "closed"), figure(wrapper, "net")]).toEqual(["5", "2", "+3"])
+		// 3 open at the start, +4 −1 on the 15th, +1 −1 on the 16th.
+		expect(figure(wrapper, "open")).toBe("6")
+		expect(figure(wrapper, "open-caption")).toBe("still open · was 3")
+		expect([figure(wrapper, "net"), figure(wrapper, "opened"), figure(wrapper, "closed")]).toEqual(["+3", "5", "2"])
+		expect(wrapper.get("[data-testid=overview-trend-net]").classes()).toContain("text-warning")
+		expect(figure(wrapper, "peak")).toBe("6")
 		expect(wrapper.find("[data-testid=overview-trend-chart]").exists()).toBe(true)
 		expect(wrapper.text()).toContain("last 7 days")
 	})
 
-	it("switches to cases", async () => {
+	it("switches to cases: more closed than opened is a negative Net, and still never below zero open", async () => {
 		const wrapper = mountPanel()
 		await wrapper.get("[data-testid=overview-trend-entity-cases] input").setValue(true)
-		expect([figure(wrapper, "opened"), figure(wrapper, "closed"), figure(wrapper, "net")]).toEqual(["0", "2", "−2"])
+		expect([figure(wrapper, "net"), figure(wrapper, "opened"), figure(wrapper, "closed")]).toEqual(["\u22122", "0", "2"])
+		expect(wrapper.get("[data-testid=overview-trend-net]").classes()).toContain("text-success")
+		expect(figure(wrapper, "open")).toBe("0")
+		expect(figure(wrapper, "open-caption")).toBe("all cleared · was 2")
 	})
 
-	it("has a table of every day for screen readers", () => {
+	it("has a table of every day for screen readers, with what was still open at its end", () => {
 		const rows = mountPanel().findAll("[data-testid=overview-trend-table] tbody tr")
 		expect(rows).toHaveLength(7)
-		expect(rows.at(-3)!.findAll("td").map(cell => cell.text())).toEqual(["4", "1"])
+		expect(rows.at(0)!.findAll("td").map(cell => cell.text())).toEqual(["3", "0", "0"])
+		expect(rows.at(-3)!.findAll("td").map(cell => cell.text())).toEqual(["6", "4", "1"])
 	})
 
-	it("says a quiet period is quiet rather than drawing two flat lines", () => {
-		const wrapper = mountPanel({ trend: trend({ hours: [] }) })
+	it("says a quiet period is quiet rather than drawing flat lines", () => {
+		const wrapper = mountPanel({ trend: trend({ hours: [], alerts_open_at_since: 0 }) })
 		expect(wrapper.get("[data-testid=overview-trend-empty]").text()).toContain(
-			"No alerts opened or closed in the last 7 days"
+			"No alerts opened, closed or still open in the last 7 days"
 		)
 		expect(wrapper.find("[data-testid=overview-trend-chart]").exists()).toBe(false)
+	})
+
+	it("still draws a period where nothing moved but some were waiting", () => {
+		const wrapper = mountPanel({ trend: trend({ hours: [], alerts_open_at_since: 4 }) })
+		expect(wrapper.find("[data-testid=overview-trend-empty]").exists()).toBe(false)
+		expect(figure(wrapper, "open")).toBe("4")
+		expect(figure(wrapper, "net")).toBe("0")
+	})
+
+	it("says not known rather than guessing when the start was not answered", () => {
+		const wrapper = mountPanel({ trend: trend({ alerts_open_at_since: null }) })
+		expect(figure(wrapper, "open")).toBe("—")
+		expect(figure(wrapper, "open-caption")).toBe("not known")
+		expect(figure(wrapper, "peak")).toBe("—")
+		expect(figure(wrapper, "net")).toBe("+3")
 	})
 
 	it("shows one entity's failure on that entity only", async () => {

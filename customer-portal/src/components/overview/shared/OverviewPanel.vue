@@ -1,6 +1,6 @@
 <template>
 	<section class="bg-default border-default flex min-w-0 flex-col rounded-lg border">
-		<header class="border-default flex items-center justify-between gap-3 border-b px-5 py-3.5">
+		<header class="border-default flex flex-wrap items-center justify-between gap-3 border-b px-5 py-3.5">
 			<div class="flex min-w-0 items-center gap-2.5">
 				<Icon v-if="icon" :name="icon" :size="16" class="text-secondary shrink-0" />
 				<h2 class="truncate text-sm font-semibold">{{ title }}</h2>

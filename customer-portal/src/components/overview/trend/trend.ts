@@ -114,6 +114,24 @@ export function trendTotals(days: TrendDay[], entity: TrendEntity): TrendTotals 
 	return { opened, closed, net: opened - closed, open, openAtStart: open === null ? null : open - (opened - closed) }
 }
 
+/** The day still open was highest, the first of them on a tie; `null` when not known. */
+export function trendPeak(days: TrendDay[], entity: TrendEntity): { open: number; day: string } | null {
+	let peak: { open: number; day: string } | null = null
+	for (const day of days) {
+		const open = day[entity].open
+		if (open === null) return null
+		if (!peak || open > peak.open) peak = { open, day: day.day }
+	}
+	return peak
+}
+
+/** How the period moved the backlog, in a word beside the relative Net. */
+export function netWord(net: number): string {
+	if (net > 0) return "grew"
+	if (net < 0) return "shrank"
+	return "flat"
+}
+
 /** `+3`, `−2`, `0`: the sign is part of the figure. */
 export function formatNet(net: number): string {
 	if (net > 0) return `+${net}`
@@ -132,10 +150,11 @@ export function dayTitle(day: string): string {
 }
 
 /**
- * The opened and closed lines' colours, validated (dataviz palette checks) against the
- * panel surface of each mode: light on #ffffff, dark on #26282d.
+ * The opened and closed colours, validated (dataviz palette checks) against the panel
+ * surface of each mode: light on #ffffff, dark on #26282d. Still open is a neutral ink, not
+ * a third hue: it is a level, read by its position, never confused with a series.
  */
 export const TREND_COLORS = {
-	light: { opened: "#2a78d6", closed: "#eb6834" },
-	dark: { opened: "#3987e5", closed: "#d95926" }
+	light: { opened: "#2a78d6", closed: "#eb6834", open: "#4b5263" },
+	dark: { opened: "#3987e5", closed: "#d95926", open: "#b8bdc8" }
 } as const
