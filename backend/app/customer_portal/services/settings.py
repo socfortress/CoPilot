@@ -89,7 +89,7 @@ async def replace_global_settings(
         session.add(settings)
 
     defaults = CustomerPortalSettings.get_default_values()
-    for field in ("title", "logo_base64", "logo_mime_type", "brand_color"):
+    for field in ("title", "logo_base64", "logo_mime_type", "brand_color", "theme_from_brand_color"):
         value = getattr(request, field)
         setattr(settings, field, defaults[field] if value is None else value)
 
@@ -104,6 +104,7 @@ RESET_FIELDS = {
     "title": ("title",),
     "logo": ("logo_base64", "logo_mime_type"),
     "brand_color": ("brand_color",),
+    "theme_from_brand_color": ("theme_from_brand_color",),
 }
 
 
@@ -153,6 +154,7 @@ async def get_public_portal_settings(session: AsyncSession) -> PublicPortalSetti
             CustomerPortalSettings.title,
             CustomerPortalSettings.logo_mime_type,
             CustomerPortalSettings.brand_color,
+            CustomerPortalSettings.theme_from_brand_color,
             CustomerPortalSettings.updated_at,
             func.coalesce(func.length(CustomerPortalSettings.logo_base64), 0).label("logo_length"),
         ).limit(1),
@@ -167,6 +169,7 @@ async def get_public_portal_settings(session: AsyncSession) -> PublicPortalSetti
             logo_url=None,
             logo_mime_type=defaults["logo_mime_type"],
             brand_color=defaults["brand_color"],
+            theme_from_brand_color=defaults["theme_from_brand_color"],
             updated_at=None,
         )
 
@@ -176,6 +179,7 @@ async def get_public_portal_settings(session: AsyncSession) -> PublicPortalSetti
         logo_url=f"{LOGO_PATH}?v={_logo_version(row.updated_at)}" if row.logo_length else None,
         logo_mime_type=row.logo_mime_type,
         brand_color=row.brand_color,
+        theme_from_brand_color=bool(row.theme_from_brand_color),
         updated_at=row.updated_at.isoformat() if row.updated_at else None,
     )
 

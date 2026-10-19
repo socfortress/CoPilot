@@ -10,7 +10,8 @@ Two layers exist:
    the stored values).
 
 Resolution is per *field*, not all-or-nothing: an override that only sets a title
-still inherits the global logo and brand color. That makes "clear the field ->
+still inherits the global logo and brand color. ``theme_from_brand_color`` (#1278)
+follows the same rule: null in the override inherits the global choice. That makes "clear the field ->
 fall back to global" the natural behaviour for every field, and deleting the row
 (or disabling it) reverts the customer completely.
 
@@ -76,6 +77,7 @@ def build_effective_branding(
     global_logo = _normalize(global_settings.logo_base64 if global_settings else None)
     global_mime = _normalize(global_settings.logo_mime_type if global_settings else None)
     global_color = _normalize(global_settings.brand_color if global_settings else None)
+    global_theme = bool(global_settings.theme_from_brand_color) if global_settings else False
 
     if not override or not override.enabled:
         return EffectiveBranding(
@@ -83,6 +85,7 @@ def build_effective_branding(
             logo_base64=global_logo,
             logo_mime_type=global_mime,
             brand_color=global_color,
+            theme_from_brand_color=global_theme,
             source="global",
             customer_code=None,
         )
@@ -91,8 +94,9 @@ def build_effective_branding(
     custom_logo = _normalize(override.logo_base64)
     custom_mime = _normalize(override.logo_mime_type)
     custom_color = _normalize(override.brand_color)
+    custom_theme = override.theme_from_brand_color
 
-    used_custom = any([custom_title, custom_logo, custom_color])
+    used_custom = any([custom_title, custom_logo, custom_color, custom_theme is not None])
 
     return EffectiveBranding(
         title=custom_title or global_title,
@@ -100,6 +104,7 @@ def build_effective_branding(
         # Keep the mime type paired with whichever logo won.
         logo_mime_type=(custom_mime or "image/png") if custom_logo else global_mime,
         brand_color=custom_color or global_color,
+        theme_from_brand_color=global_theme if custom_theme is None else bool(custom_theme),
         source="custom" if used_custom else "global",
         customer_code=customer_code if used_custom else None,
     )
@@ -145,6 +150,7 @@ def to_portal_branding(effective: EffectiveBranding) -> PortalEffectiveBranding:
         logo_url=f"{EFFECTIVE_LOGO_PATH}?v={logo_content_version(effective.logo_base64)}" if effective.logo_base64 else None,
         logo_mime_type=effective.logo_mime_type,
         brand_color=effective.brand_color,
+        theme_from_brand_color=effective.theme_from_brand_color,
         source=effective.source,
         customer_code=effective.customer_code,
     )
@@ -167,6 +173,7 @@ async def upsert_branding_override(
     logo_mime_type: Optional[str],
     brand_color: Optional[str],
     user_id: Optional[int] = None,
+    theme_from_brand_color: Optional[bool] = None,
 ) -> CustomerPortalBranding:
     """Create or update a customer's override row and return it (caller commits)."""
     override = await get_branding_override(session, customer_code)
@@ -180,6 +187,7 @@ async def upsert_branding_override(
     override.logo_base64 = _normalize(logo_base64)
     override.logo_mime_type = _normalize(logo_mime_type) if _normalize(logo_base64) else None
     override.brand_color = _normalize(brand_color)
+    override.theme_from_brand_color = theme_from_brand_color
     override.updated_by = user_id
     override.updated_at = now_utc()
 

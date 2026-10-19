@@ -30,6 +30,10 @@ class UpdateCustomerBrandingRequest(BaseModel):
     logo_base64: Optional[str] = Field(None, description="Base64 encoded logo. Null/empty inherits the global logo.")
     logo_mime_type: Optional[str] = Field(None, max_length=50, description="MIME type of the logo.")
     brand_color: Optional[str] = Field(None, max_length=9, description="Hex brand color (e.g. #RRGGBB). Null inherits the global color.")
+    theme_from_brand_color: Optional[bool] = Field(
+        None,
+        description="Also theme the portal interface with the brand color. Null inherits the global choice.",
+    )
 
     @field_validator("brand_color")
     @classmethod
@@ -69,6 +73,7 @@ class CustomerBrandingOverride(BaseModel):
     logo_base64: Optional[str] = None
     logo_mime_type: Optional[str] = None
     brand_color: Optional[str] = None
+    theme_from_brand_color: Optional[bool] = None
     updated_at: str
     updated_by: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
@@ -86,6 +91,8 @@ class EffectiveBranding(BaseModel):
     logo_base64: Optional[str] = None
     logo_mime_type: Optional[str] = None
     brand_color: Optional[str] = None
+    # Whether the portal's interface takes ``brand_color`` as its primary color (#1278).
+    theme_from_brand_color: bool = False
     source: str = "global"
     customer_code: Optional[str] = None
 
@@ -103,6 +110,7 @@ class CustomerBrandingListItem(BaseModel):
     title: Optional[str] = None
     has_logo: bool = False
     brand_color: Optional[str] = None
+    theme_from_brand_color: Optional[bool] = None
     updated_at: str
 
 
@@ -123,6 +131,7 @@ class PortalEffectiveBranding(BaseModel):
     logo_url: Optional[str] = None
     logo_mime_type: Optional[str] = None
     brand_color: Optional[str] = None
+    theme_from_brand_color: bool = False
     source: str = "global"
     customer_code: Optional[str] = None
 
