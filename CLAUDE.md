@@ -526,6 +526,41 @@ Tests: `tests/test_customer_portal_overview_trend.py` (no DB), `tests/e2e/custom
 
 Tests: `tests/test_password_change.py` (no DB), `tests/e2e/password_change_e2e.py` (13306: creation, refusals, release on the same token, admin reset mid-session, temporary password with SMTP replaced, 2FA, an analyst not held). Portal: `stores/__tests__/auth-password-change.spec.ts`, `utils/__tests__/auth-password-change.spec.ts`, `api/__tests__/password-change.spec.ts`, `views/__tests__/ChangePassword.spec.ts`, `cypress/e2e/password-change.cy.ts`. Frontend: `components/customers/security/__tests__/CustomerSecurity.spec.ts`.
 
+### Customer Portal user notifications: the bell and email (#1282)
+
+Portal users can be told about their own customer's events, in the portal's bell and by email. CoPilot's notification engine (`app/notifications/`) stays the SOC's: these are not routes. This is `app/customer_portal/services/notifications.py` (rules, feed, email queue, digest), `notification_events.py` (the events and their emission) and `notification_email.py` (rendering).
+
+- **Opt-in twice.**
+  - Per customer: `customer_portal_notification_settings` (a missing row reads as off), set under *Customers → Customer → Portal Notifications*. `PUT /customer_portal/notifications/settings/{code}` is admin only; the GET is admin/analyst and also says whether SMTP is configured and the digest hour.
+  - Per user: `customer_portal_notification_pref`, one row per (user, event), written only on save. A missing row means the defaults: in the bell, no email, new alerts from High up. Users change it under *Profile → Notifications* (`GET`/`PUT /customer_portal/notifications/preferences`, `customer_user` only, the user from the token).
+- **Events.**
+  - `alert_created`: from `create_alert_full` after the tags are attached, and from the manual `POST /alert` route. Gated by the user's `min_severity` against `severity_of`.
+  - `waiting_on_you`: an alert or a case set to `PENDING_CUSTOMER`. Keyed on the SLA clock's `paused_at`, so a repeated write does not notify again but a later wait does.
+  - `case_closed`: the case only, never the alerts its cascade moves. Keyed on `case_closed_time`, and only when the status really changed.
+  - `report_ready`: on completion (a portal user's own report is theirs alone) and when the SOC shares one (`PATCH …/visibility`, every user of the customer).
+  - The routes call `notify_*` after the SLA recorder. Each schedules a detached task on its own session with a time limit, like `emit`: ingest and status changes never wait on SMTP.
+- **One row per user and notification**, in `customer_portal_notification`, unique on (user, `dedupe_key`). It is the bell's feed and the email queue at once, so a retry or a concurrent emission notifies nobody twice.
+  - Recipients are the customer's `customer_user` accounts, filtered by `alert_visibility_filters_for_user`. By policy a customer user sees every alert of their customer, tags included.
+  - The actor is never told.
+  - `in_app=false` keeps a row out of the bell (email only).
+  - Users and customers cascade on delete.
+- **Email is SMTP only** (the `SMTP_*` variables of the temporary-password email).
+  - `email_status` goes `pending` → `sending` (a guarded claim, so one sender per row) → `sent` | `failed` | `skipped`, with the reason. Skip reasons: no SMTP, no address, switch turned off, access removed.
+  - The daily digest is the `invoke_portal_notification_digest` job, every 15 min. It sends from `PORTAL_NOTIFICATION_DIGEST_HOUR` (UTC, default 7), once per user per day (`digest_due`), and a run that missed the hour still sends that day.
+  - Links come from `CUSTOMER_PORTAL_URL`; unset, the email has none.
+- **Templates are `notification_template` rows** scoped to the triggers `portal_alert_created | portal_waiting_on_you | portal_case_closed | portal_report_ready | portal_digest`.
+  - These triggers are in `PORTAL_TRIGGERS`, never in `DISPATCH_TRIGGERS`, so a route refuses them.
+  - Resolution: the customer's template, then a shared one, then the seeded built-in (`template_seeds.PORTAL_TEMPLATES`), then plain text.
+  - A render failure sends the plain text (logged): nobody is watching a dialog.
+  - The editor previews them with sample extras (`notification_email.preview_*`); `templateVariables.ts:PORTAL_VARIABLES` mirrors `build_extra_context`.
+- **The bell** (`GET /customer_portal/notifications?limit&before`, `/unread-count`, `POST /read` with `ids` or `all`, own rows only).
+  - It shows only customers the user still has, with notifications still on.
+  - In the portal, `useServerNotifications` caches the availability for the session, loads the first page when the toolbar mounts, then polls only the count every 60 s, never while hidden, re-reading the page when the count moves. It is reset at logout.
+  - `useBell` shows the server's items when on, else the session list as before. Server items are marked read for good and have no Delete or Clear.
+  - The report poller then only pops its toast (`toastOnly`), since the bell gets "report ready" from the server.
+
+Tests: `tests/test_customer_portal_notifications.py` (no DB), `tests/e2e/customer_portal_notifications_e2e.py` (13306, SMTP replaced by a recorder: the switch, preferences, every event through the real routes, idempotency, the actor, the bell, the digest, skips and failures, templates, cascades). Frontend: `components/customerPortal/__tests__/NotificationSettings.spec.ts`, `components/notifications/__tests__/portal-triggers.spec.ts`. Portal: `composables/common/__tests__/{useServerNotifications,useBell,useNotifications}.spec.ts`, `components/profile/__tests__/`, `app-layouts/common/Toolbar/__tests__/Notifications-server.spec.ts`, `cypress/e2e/portal-notifications.cy.ts` (emails land in the SMTP sink `cypress.config.ts` runs; `scripts/e2e.sh` points the backend at it).
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route
