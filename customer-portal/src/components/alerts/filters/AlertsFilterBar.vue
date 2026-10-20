@@ -15,6 +15,32 @@
 			</template>
 		</n-input>
 
+		<!-- Set by a link (the Activity page's), never from the menu: shown as they are, removable. -->
+		<div v-for="type of linkTypes" :key="type" class="max-w-full">
+			<n-input-group :data-testid="`alerts-filter-${type}`">
+				<n-input-group-label size="small">{{ ALERTS_FILTER_LABELS[type] }}</n-input-group-label>
+				<n-input-group-label
+					size="small"
+					class="max-w-80 truncate"
+					:title="linkText(type)"
+					:data-testid="`alerts-filter-${type}-value`"
+				>
+					{{ linkText(type) }}
+				</n-input-group-label>
+				<n-button
+					size="small"
+					secondary
+					:aria-label="`Remove the ${ALERTS_FILTER_LABELS[type].toLowerCase()} filter`"
+					:data-testid="`alerts-filter-${type}-remove`"
+					@click="removeFilter(type)"
+				>
+					<template #icon>
+						<Icon name="carbon:close" />
+					</template>
+				</n-button>
+			</n-input-group>
+		</div>
+
 		<!-- Each group in its own box: an input group alone stretches to the whole row. -->
 		<div v-for="type of shownTypes" :key="type" class="max-w-full">
 			<n-input-group :data-testid="`alerts-filter-${type}`">
@@ -148,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AlertsFilters, AlertsFilterType } from "./alertsFilters"
+import type { AlertsFilters, AlertsFilterType, AlertsLinkFilterType } from "./alertsFilters"
 import type { AlertStatus } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { refDebounced, useDebounceFn } from "@vueuse/core"
@@ -159,6 +185,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 import { WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
 import {
 	activeFilterTypes,
@@ -167,6 +194,8 @@ import {
 	dayToTimestamp,
 	EMPTY_ALERTS_FILTERS,
 	hasFilters,
+	isLinkFilter,
+	openedLabel,
 	timestampToDay,
 	withoutFilter
 } from "./alertsFilters"
@@ -228,6 +257,13 @@ const shownTypes = computed(() => {
 	return ALERTS_FILTER_TYPES.filter(type => active.includes(type) || opened.value.includes(type))
 })
 const addableTypes = computed(() => ALERTS_FILTER_TYPES.filter(type => !shownTypes.value.includes(type)))
+const linkTypes = computed(() => activeFilterTypes(filters).filter(isLinkFilter))
+
+function linkText(type: AlertsLinkFilterType): string {
+	if (type === "detection") return filters.detection ?? ""
+	const datetime = useSettingsStore().dateFormat.datetime
+	return openedLabel(filters, iso => String(formatDate(iso, datetime)))
+}
 
 function openFilter(type: AlertsFilterType) {
 	opened.value = [...opened.value, type]

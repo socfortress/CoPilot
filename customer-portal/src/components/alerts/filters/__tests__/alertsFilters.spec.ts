@@ -9,7 +9,10 @@ import {
 	filtersToParams,
 	filtersToQuery,
 	hasFilters,
+	instant,
 	isDay,
+	isLinkFilter,
+	openedLabel,
 	timestampToDay,
 	withFilters,
 	withoutFilter
@@ -22,7 +25,10 @@ const ALL: AlertsFilters = {
 	asset: "web-01",
 	tags: ["phishing", "vip"],
 	from: "2026-10-01",
-	to: "2026-10-13"
+	to: "2026-10-13",
+	detection: "Brute force",
+	openedFrom: "2026-09-01T12:00:00Z",
+	openedBefore: "2026-10-01T12:00:00Z"
 }
 
 /** The alerts list's filters and the URL (#1245): the query string is their only store. */
@@ -36,7 +42,10 @@ describe("alerts filters ↔ query string", () => {
 			asset: "web-01",
 			tag: ["phishing", "vip"],
 			from: "2026-10-01",
-			to: "2026-10-13"
+			to: "2026-10-13",
+			detection: "Brute force",
+			opened_from: "2026-09-01T12:00:00Z",
+			opened_before: "2026-10-01T12:00:00Z"
 		})
 		expect(filtersFromQuery(query as Record<string, string | string[]>)).toEqual(ALL)
 	})
@@ -84,7 +93,7 @@ describe("alerts filters ↔ query string", () => {
 
 describe("alerts filters: which are in use", () => {
 	it("lists the menu filters in use, in menu order", () => {
-		expect(activeFilterTypes(ALL)).toEqual(["status", "source", "asset", "tag", "date"])
+		expect(activeFilterTypes(ALL)).toEqual(["detection", "opened", "status", "source", "asset", "tag", "date"])
 		expect(activeFilterTypes({ ...EMPTY_ALERTS_FILTERS, to: "2026-10-01", source: "x" })).toEqual([
 			"source",
 			"date"
@@ -95,6 +104,18 @@ describe("alerts filters: which are in use", () => {
 	it("counts the title as a filter", () => {
 		expect(hasFilters({ ...EMPTY_ALERTS_FILTERS, title: "x" })).toBe(true)
 		expect(hasFilters(EMPTY_ALERTS_FILTERS)).toBe(false)
+	})
+
+	it("tells the links' filters from the menu's", () => {
+		expect(["detection", "opened"].every(type => isLinkFilter(type as "detection"))).toBe(true)
+		expect(isLinkFilter("source")).toBe(false)
+		expect(hasFilters({ ...EMPTY_ALERTS_FILTERS, openedBefore: "2026-10-01T12:00:00Z" })).toBe(true)
+	})
+
+	it("removes the reached-the-SOC window as a whole, and the detection alone", () => {
+		const window = withoutFilter(ALL, "opened")
+		expect([window.openedFrom, window.openedBefore, window.detection]).toEqual([null, null, "Brute force"])
+		expect(withoutFilter(ALL, "detection")).toEqual({ ...ALL, detection: null })
 	})
 
 	it("removes one filter at a time, the date range as a whole", () => {
@@ -113,7 +134,10 @@ describe("alerts filters → API parameters", () => {
 			status: "OPEN",
 			source: "wazuh",
 			asset_name: "web-01",
-			tags: ["phishing", "vip"]
+			tags: ["phishing", "vip"],
+			alert_name: "Brute force",
+			opened_from: "2026-09-01T12:00:00Z",
+			opened_before: "2026-10-01T12:00:00Z"
 		})
 	})
 
@@ -135,6 +159,31 @@ describe("alerts filters → API parameters", () => {
 	it("leaves an open end open", () => {
 		expect(Object.keys(filtersToParams({ ...EMPTY_ALERTS_FILTERS, from: "2026-10-01" }))).toEqual(["date_from"])
 		expect(Object.keys(filtersToParams({ ...EMPTY_ALERTS_FILTERS, to: "2026-10-01" }))).toEqual(["date_to"])
+	})
+})
+
+/** The Activity page's links (#1284): an exact detection and the window it counted in. */
+describe("the reached-the-SOC window", () => {
+	it("reads only ISO instants with a time, and keeps them as written", () => {
+		expect(instant("2026-09-01T12:00:00Z")).toBe("2026-09-01T12:00:00Z")
+		expect(instant("2026-09-01T12:00:00+02:00")).toBe("2026-09-01T12:00:00+02:00")
+		for (const value of ["2026-09-01", "yesterday", "2026-13-45T99:99", "", null]) expect(instant(value)).toBeNull()
+	})
+
+	it("drops an empty or reversed window instead of sending one the server refuses", () => {
+		const reversed = filtersFromQuery({ opened_from: "2026-10-01T12:00:00Z", opened_before: "2026-09-01T12:00:00Z" })
+		expect([reversed.openedFrom, reversed.openedBefore]).toEqual([null, null])
+		const empty = filtersFromQuery({ opened_from: "2026-10-01T12:00:00Z", opened_before: "2026-10-01T12:00:00Z" })
+		expect([empty.openedFrom, empty.openedBefore]).toEqual([null, null])
+		expect(filtersFromQuery({ opened_before: "2026-10-01T12:00:00Z" }).openedBefore).toBe("2026-10-01T12:00:00Z")
+	})
+
+	it("reads on its chip as the window, or the bound it has", () => {
+		const format = (iso: string) => iso.slice(5, 10)
+		expect(openedLabel(ALL, format)).toBe("09-01 – 10-01")
+		expect(openedLabel({ ...ALL, openedBefore: null }, format)).toBe("since 09-01")
+		expect(openedLabel({ ...ALL, openedFrom: null }, format)).toBe("before 10-01")
+		expect(openedLabel(EMPTY_ALERTS_FILTERS, format)).toBe("")
 	})
 })
 

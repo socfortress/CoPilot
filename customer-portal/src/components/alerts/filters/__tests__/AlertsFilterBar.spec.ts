@@ -25,8 +25,7 @@ function mountBar(initial: Partial<AlertsFilters> = {}) {
 							patches.push(patch)
 							filters.value = { ...filters.value, ...patch }
 						}
-					})
-				)
+					}))
 		})
 	)
 	const group = (type: string) => wrapper.find(`[data-testid=alerts-filter-${type}]`)
@@ -58,6 +57,30 @@ describe("alertsFilterBar (#1245)", () => {
 		expect(group("tag").exists()).toBe(true)
 		expect(group("source").exists()).toBe(false)
 		expect(menu()).toEqual(["source", "asset", "date"])
+	})
+
+	it("shows the Activity page's filters as removable chips, never in the menu (#1284)", async () => {
+		const { wrapper, group, menu, patches } = mountBar({
+			detection: "Brute force",
+			openedFrom: "2026-09-01T12:00:00Z",
+			openedBefore: "2026-10-01T12:00:00Z"
+		})
+		await flushPromises()
+
+		expect(wrapper.get("[data-testid=alerts-filter-detection-value]").text()).toBe("Brute force")
+		const window = wrapper.get("[data-testid=alerts-filter-opened-value]").text()
+		expect(window).toContain(" – ")
+		expect(group("opened").text()).toContain("Reached the SOC")
+		expect(menu()).toEqual(["status", "source", "asset", "tag", "date"])
+
+		await wrapper.get("[data-testid=alerts-filter-opened-remove]").trigger("click")
+		expect(patches.at(-1)).toMatchObject({ openedFrom: null, openedBefore: null, detection: "Brute force" })
+		await nextTick()
+		expect(group("opened").exists()).toBe(false)
+		expect(group("detection").exists()).toBe(true)
+
+		await wrapper.get("[data-testid=alerts-filter-clear]").trigger("click")
+		expect(patches.at(-1)).toEqual(EMPTY_ALERTS_FILTERS)
 	})
 
 	it("adds an empty group from the menu, which a value turns into a filter", async () => {

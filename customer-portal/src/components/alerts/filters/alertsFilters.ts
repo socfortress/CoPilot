@@ -10,6 +10,11 @@ import { WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
  * In the URL: `?title=…&status=OPEN&source=…&asset=…&tag=a&tag=b&from=YYYY-MM-DD&to=YYYY-MM-DD`.
  * Dates are calendar days in the browser's timezone — what the user picked, whatever
  * timezone they share the link to; the API gets the matching UTC instants.
+ *
+ * Two more arrive only from the Activity page's links (#1284), and are shown as chips
+ * the user can remove but not add: `?detection=` (an exact alert name, where the title
+ * searches) and `?opened_from=…&opened_before=…` (ISO 8601 instants: when the alerts
+ * reached the SOC, the window the page counted in), so a click lists exactly its count.
  */
 export interface AlertsFilters {
 	title: string | null
@@ -20,22 +25,33 @@ export interface AlertsFilters {
 	tags: string[]
 	from: string | null
 	to: string | null
+	/** An exact alert name: what the Activity page's detection links ask for. */
+	detection: string | null
+	/** When the alerts reached the SOC, as ISO 8601 instants: from (inclusive), before (exclusive). */
+	openedFrom: string | null
+	openedBefore: string | null
 }
 
 /** The filters the "Add filter" menu offers; the title search is always shown. */
-export type AlertsFilterType = "status" | "source" | "asset" | "tag" | "date"
+export type AlertsMenuFilterType = "status" | "source" | "asset" | "tag" | "date"
+/** Filters only a link sets (the Activity page's): shown as removable chips, never offered. */
+export type AlertsLinkFilterType = "detection" | "opened"
+export type AlertsFilterType = AlertsMenuFilterType | AlertsLinkFilterType
 
-export const ALERTS_FILTER_TYPES: AlertsFilterType[] = ["status", "source", "asset", "tag", "date"]
+export const ALERTS_FILTER_TYPES: AlertsMenuFilterType[] = ["status", "source", "asset", "tag", "date"]
+export const ALERTS_LINK_FILTER_TYPES: AlertsLinkFilterType[] = ["detection", "opened"]
 
 export const ALERTS_FILTER_LABELS: Record<AlertsFilterType, string> = {
 	status: "Status",
 	source: "Source",
 	asset: "Asset",
 	tag: "Tag",
-	date: "Created"
+	date: "Created",
+	detection: "Detection",
+	opened: "Reached the SOC"
 }
 
-const QUERY_KEYS = ["title", "status", "source", "asset", "tag", "from", "to"] as const
+const QUERY_KEYS = ["title", "status", "source", "asset", "tag", "from", "to", "detection", "opened_from", "opened_before"] as const
 
 export const EMPTY_ALERTS_FILTERS: AlertsFilters = Object.freeze({
 	title: null,
@@ -44,7 +60,10 @@ export const EMPTY_ALERTS_FILTERS: AlertsFilters = Object.freeze({
 	asset: null,
 	tags: [],
 	from: null,
-	to: null
+	to: null,
+	detection: null,
+	openedFrom: null,
+	openedBefore: null
 }) as AlertsFilters
 
 type QueryValue = LocationQueryValue | LocationQueryValue[] | undefined
@@ -70,6 +89,12 @@ function isStatus(value: string | null): value is AlertStatus {
 	return !!value && Object.hasOwn(WORKFLOW_STATUS_LABELS, value)
 }
 
+/** An ISO 8601 instant with a date and a time (`2026-10-01T12:00:00Z`), or null. */
+export function instant(value: string | null): string | null {
+	if (!value || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return null
+	return Number.isNaN(Date.parse(value)) ? null : value
+}
+
 /** The filters a query asks for. Anything unreadable is ignored rather than sent. */
 export function filtersFromQuery(query: LocationQuery): AlertsFilters {
 	const status = single(query.status)
@@ -80,6 +105,14 @@ export function filtersFromQuery(query: LocationQuery): AlertsFilters {
 	// A hand-edited link with the days the wrong way round still means that range.
 	if (from && to && from > to) [from, to] = [to, from]
 
+	let openedFrom = instant(single(query.opened_from))
+	let openedBefore = instant(single(query.opened_before))
+	// An empty or reversed window would be refused: drop it rather than send it.
+	if (openedFrom && openedBefore && Date.parse(openedFrom) >= Date.parse(openedBefore)) {
+		openedFrom = null
+		openedBefore = null
+	}
+
 	return {
 		title: single(query.title),
 		status: isStatus(status) ? status : null,
@@ -87,7 +120,10 @@ export function filtersFromQuery(query: LocationQuery): AlertsFilters {
 		asset: single(query.asset),
 		tags: [...new Set(values(query.tag))],
 		from,
-		to
+		to,
+		detection: single(query.detection),
+		openedFrom,
+		openedBefore
 	}
 }
 
@@ -102,6 +138,9 @@ export function filtersToQuery(filters: AlertsFilters): LocationQueryRaw {
 	if (filters.tags.length) query.tag = [...filters.tags]
 	if (filters.from) query.from = filters.from
 	if (filters.to) query.to = filters.to
+	if (filters.detection) query.detection = filters.detection
+	if (filters.openedFrom) query.opened_from = filters.openedFrom
+	if (filters.openedBefore) query.opened_before = filters.openedBefore
 	return query
 }
 
@@ -118,16 +157,22 @@ export function filtersKey(filters: AlertsFilters): string {
 	return JSON.stringify(filtersToQuery(filters))
 }
 
-/** The menu filters that currently restrict the list, in menu order. */
+/** The filters that currently restrict the list (the title aside): the links' first, then the menu's in order. */
 export function activeFilterTypes(filters: AlertsFilters): AlertsFilterType[] {
 	const active: Record<AlertsFilterType, boolean> = {
 		status: !!filters.status,
 		source: !!filters.source,
 		asset: !!filters.asset,
 		tag: filters.tags.length > 0,
-		date: !!(filters.from || filters.to)
+		date: !!(filters.from || filters.to),
+		detection: !!filters.detection,
+		opened: !!(filters.openedFrom || filters.openedBefore)
 	}
-	return ALERTS_FILTER_TYPES.filter(type => active[type])
+	return [...ALERTS_LINK_FILTER_TYPES, ...ALERTS_FILTER_TYPES].filter(type => active[type])
+}
+
+export function isLinkFilter(type: AlertsFilterType): type is AlertsLinkFilterType {
+	return (ALERTS_LINK_FILTER_TYPES as AlertsFilterType[]).includes(type)
 }
 
 export function hasFilters(filters: AlertsFilters): boolean {
@@ -141,9 +186,19 @@ export function withoutFilter(filters: AlertsFilters, type: AlertsFilterType): A
 			return { ...filters, tags: [] }
 		case "date":
 			return { ...filters, from: null, to: null }
+		case "opened":
+			return { ...filters, openedFrom: null, openedBefore: null }
 		default:
 			return { ...filters, [type]: null }
 	}
+}
+
+/** How the "reached the SOC" window reads on its chip, each instant shown by `format`. */
+export function openedLabel(filters: AlertsFilters, format: (iso: string) => string): string {
+	const { openedFrom: from, openedBefore: before } = filters
+	if (from && before) return `${format(from)} – ${format(before)}`
+	if (from) return `since ${format(from)}`
+	return before ? `before ${format(before)}` : ""
 }
 
 /** Local midnight of a `YYYY-MM-DD`, as epoch milliseconds (what the date picker holds). */
@@ -167,6 +222,9 @@ export interface AlertsFilterParams {
 	tags?: string[]
 	date_from?: string
 	date_to?: string
+	alert_name?: string
+	opened_from?: string
+	opened_before?: string
 }
 
 /**
@@ -187,5 +245,8 @@ export function filtersToParams(filters: AlertsFilters): AlertsFilterParams {
 		const [year, month, day] = filters.to.split("-").map(Number)
 		params.date_to = new Date(year, month - 1, day, 23, 59, 59, 999).toISOString()
 	}
+	if (filters.detection) params.alert_name = filters.detection
+	if (filters.openedFrom) params.opened_from = filters.openedFrom
+	if (filters.openedBefore) params.opened_before = filters.openedBefore
 	return params
 }
