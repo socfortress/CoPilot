@@ -2,7 +2,7 @@ import { getStatusColor } from "@/utils"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 /** A theme colour name; `neutral` is the muted text colour. */
-export type StatusColor = "error" | "warning" | "success" | "info" | "primary" | "neutral"
+export type StatusColor = "error" | "warning" | "success" | "info" | "primary" | "waiting" | "neutral"
 
 export interface StatusSegment {
 	key: string
@@ -18,6 +18,7 @@ const BACKGROUND_CLASS: Record<StatusColor, string> = {
 	success: "bg-success",
 	info: "bg-info",
 	primary: "bg-primary",
+	waiting: "bg-waiting",
 	neutral: "bg-muted"
 }
 
@@ -27,7 +28,24 @@ const TEXT_CLASS: Record<StatusColor, string> = {
 	success: "text-success",
 	info: "text-info",
 	primary: "text-primary",
+	waiting: "text-waiting",
 	neutral: "text-tertiary"
+}
+
+// The CSS colour variable behind each name; every `--<name>-color` also has an `-rgb` twin.
+const CSS_COLOR: Record<StatusColor, string> = {
+	error: "error",
+	warning: "warning",
+	success: "success",
+	info: "info",
+	primary: "primary",
+	waiting: "waiting",
+	neutral: "fg-tertiary"
+}
+
+/** The colour as space-separated RGB, for a tint: `rgb(${rgbVar(color)} / 0.06)`. */
+export function rgbVar(color: StatusColor) {
+	return `var(--${CSS_COLOR[color]}-color-rgb)`
 }
 
 /** Background utility for a status colour (dots, rails, bar segments). */

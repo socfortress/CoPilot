@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 from typing import Any
 from typing import Dict
+from typing import List
+from typing import Optional
 
 import anyio
 import anyio.to_thread
@@ -15,11 +17,13 @@ from pyvelociraptor import api_pb2_grpc
 
 from app.blocking import run_blocking
 from app.connectors.utils import get_connector_info_from_db
+from app.connectors.velociraptor.utils.validation import encode_vql_value
 from app.connectors.velociraptor.utils.validation import validate_artifact_name
 from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.velociraptor.utils.validation import validate_flow_id
 from app.connectors.velociraptor.utils.validation import validate_hostname
 from app.connectors.velociraptor.utils.validation import validate_org_id
+from app.connectors.velociraptor.utils.validation import validate_vql_variable_name
 from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
 
@@ -65,6 +69,30 @@ FLOW_TIMEOUT_SECONDS = _positive_int_from_env("VELOCIRAPTOR_FLOW_TIMEOUT", 300)
 # they queue behind each other rather than starving everything else.
 FLOW_WAIT_CONCURRENCY = _positive_int_from_env("VELOCIRAPTOR_MAX_CONCURRENT_FLOW_WAITS", 20)
 _flow_wait_limiter = anyio.CapacityLimiter(FLOW_WAIT_CONCURRENCY)
+
+# Client lookups by a clients() search term ("host:<name>", "client_id:<id>"), passed as the
+# `Search` query variable.
+VQL_CLIENT_ID_BY_SEARCH = "select client_id,os_info from clients(search=Search)"
+VQL_CLIENT_LAST_SEEN_BY_SEARCH = "select last_seen_at from clients(search=Search)"
+VQL_CLIENT_BY_SEARCH = "select * from clients(search=Search)"
+
+
+def build_vql_env(env: Optional[Dict[str, str]]) -> List[api_pb2.VQLEnv]:
+    """Turn ``{name: value}`` into the ``VQLCollectorArgs.env`` entries of a query.
+
+    Velociraptor's Query API sets each entry as a variable in the query's scope (api/query.go),
+    so the VQL references the value by name -- ``client_id=ClientId`` -- and the value is never
+    part of the query text. That is what makes a quote, backslash, backtick or newline in a
+    command, glob or parameter value inert (GHSA-5542-j2fc-gqjm).
+    """
+    entries = []
+    for name, value in (env or {}).items():
+        validate_vql_variable_name(name)
+        if not isinstance(value, str):
+            raise TypeError(f"VQL variable {name} must be a str, got {type(value).__name__}")
+        encode_vql_value(value)  # protobuf string fields must be valid UTF-8
+        entries.append(api_pb2.VQLEnv(key=name, value=value))
+    return entries
 
 
 def _verify_velociraptor_credentials_sync(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -200,12 +228,14 @@ class UniversalService:
 
     # ! Modify this to use AsyncSessionLocal End
 
-    def create_vql_request(self, vql: str, org_id: str = "root"):
+    def create_vql_request(self, vql: str, org_id: str = "root", env: Optional[Dict[str, str]] = None):
         """
         Creates a VQLCollectorArgs object with given VQL query.
 
         Args:
-            vql (str): The VQL query.
+            vql (str): The VQL query. A constant template: values belong in `env`.
+            org_id (str): The Velociraptor org to run against.
+            env (dict, optional): Query variables, ``{name: value}``, referenced by name in `vql`.
 
         Returns:
             VQLCollectorArgs: The VQLCollectorArgs object with given VQL query.
@@ -219,6 +249,7 @@ class UniversalService:
         return api_pb2.VQLCollectorArgs(
             max_wait=1,
             org_id=org_id,
+            env=build_vql_env(env),
             Query=[
                 api_pb2.VQLRequest(
                     Name="VQLRequest",
@@ -227,24 +258,28 @@ class UniversalService:
             ],
         )
 
-    def execute_query(self, vql: str, org_id: str = "root", timeout: int = None):
+    def execute_query(self, vql: str, org_id: str = "root", timeout: int = None, env: Optional[Dict[str, str]] = None):
         """
         Executes a VQL query and returns the results.
 
         Args:
-            vql (str): The VQL query to be executed.
+            vql (str): The VQL query to be executed. Never interpolate a value into it:
+                pass the value in `env` and reference it by name.
             org_id (str): The Velociraptor org to run against.
             timeout (int, optional): gRPC deadline in seconds. Defaults to
                 `QUERY_TIMEOUT_SECONDS`; callers that wait on a flow pass
                 `FLOW_TIMEOUT_SECONDS` instead.
+            env (dict, optional): Query variables, ``{name: value}`` (see `build_vql_env`).
 
         Returns:
             dict: A dictionary with the success status, a message, and potentially the results.
         """
         timeout = timeout or QUERY_TIMEOUT_SECONDS
-        logger.info(f"Executing query: {vql} (timeout {timeout}s)")
+        # Variable names only: values can be a whole command or script, and are logged by
+        # the callers that want them.
+        logger.info(f"Executing query: {vql} (variables {sorted(env or {})}, timeout {timeout}s)")
 
-        client_request = self.create_vql_request(vql, org_id)
+        client_request = self.create_vql_request(vql, org_id, env)
 
         try:
             results = []
@@ -314,9 +349,9 @@ class UniversalService:
             dict: A dictionary with the success status and a message.
         """
         validate_flow_id(flow_id)
-        vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
+        vql = "SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId = TargetFlowId LIMIT 1"
         logger.info(f"Watching flow {flow_id} for completion (timeout {timeout or FLOW_TIMEOUT_SECONDS}s)")
-        return self.execute_query(vql, org_id, timeout=timeout or FLOW_TIMEOUT_SECONDS)
+        return self.execute_query(vql, org_id, timeout=timeout or FLOW_TIMEOUT_SECONDS, env={"TargetFlowId": flow_id})
 
     def read_collection_results(
         self,
@@ -339,12 +374,12 @@ class UniversalService:
         validate_client_id(client_id)
         validate_flow_id(flow_id)
         validate_artifact_name(artifact)
-        vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
-        return self.execute_query(vql, org_id)
+        vql = "SELECT * FROM source(client_id=ClientId, flow_id=FlowId, artifact=ArtifactName)"
+        return self.execute_query(vql, org_id, env={"ClientId": client_id, "FlowId": flow_id, "ArtifactName": artifact})
 
-    async def execute_query_async(self, vql: str, org_id: str = "root", timeout: int = None):
+    async def execute_query_async(self, vql: str, org_id: str = "root", timeout: int = None, env: Optional[Dict[str, str]] = None):
         """`execute_query` on a worker thread, so the event loop keeps serving other requests."""
-        return await run_blocking(self.execute_query, vql, org_id, timeout)
+        return await run_blocking(self.execute_query, vql, org_id, timeout, env)
 
     async def watch_flow_completion_async(self, flow_id: str, org_id: str = "root", timeout: int = None):
         """`watch_flow_completion` on a worker thread from the flow-wait allowance.
@@ -380,21 +415,20 @@ class UniversalService:
         # Formulate queries
         try:
             validate_hostname(client_name)
-            vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
-            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
+            env = {"Search": f"host:{client_name}"}
 
             # Get the last seen timestamp
             logger.info(f"Getting last seen at timestamp for {client_name}")
 
-            last_seen_at = await self._get_last_seen_timestamp(vql_last_seen_at)
+            last_seen_at = await self._get_last_seen_timestamp(VQL_CLIENT_LAST_SEEN_BY_SEARCH, env)
 
             logger.info(f"Last seen at timestamp for {client_name}: {last_seen_at}")
 
             # if last_seen_at is longer than 30 seconds from now, return False
             if await self._is_offline(last_seen_at):
-                return await self.execute_query_async(vql_client_id)
+                return await self.execute_query_async(VQL_CLIENT_ID_BY_SEARCH, env=env)
 
-            return await self.execute_query_async(vql_client_id)
+            return await self.execute_query_async(VQL_CLIENT_ID_BY_SEARCH, env=env)
         except Exception as e:
             return {
                 "success": False,
@@ -414,21 +448,20 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = f"select client_id,os_info from clients(search='client_id:{client_id}')"
-            vql_last_seen_at = f"select last_seen_at from clients(search='client_id:{client_id}')"
+            env = {"Search": f"client_id:{client_id}"}
 
             # Get the last seen timestamp
             logger.info(f"Getting last seen at timestamp for {client_id}")
 
-            last_seen_at = await self._get_last_seen_timestamp(vql_last_seen_at)
+            last_seen_at = await self._get_last_seen_timestamp(VQL_CLIENT_LAST_SEEN_BY_SEARCH, env)
 
             logger.info(f"Last seen at timestamp for {client_id}: {last_seen_at}")
 
             # if last_seen_at is longer than 30 seconds from now, return False
             if await self._is_offline(last_seen_at):
-                return await self.execute_query_async(vql_client_id)
+                return await self.execute_query_async(VQL_CLIENT_ID_BY_SEARCH, env=env)
 
-            return await self.execute_query_async(vql_client_id)
+            return await self.execute_query_async(VQL_CLIENT_ID_BY_SEARCH, env=env)
         except Exception as e:
             return {
                 "success": False,
@@ -436,29 +469,31 @@ class UniversalService:
                 "results": [{"client_id": None}],
             }
 
-    async def _get_last_seen_timestamp(self, vql: str):
+    async def _get_last_seen_timestamp(self, vql: str, env: Optional[Dict[str, str]] = None):
         """
         Executes the VQL query and returns the last_seen_at timestamp.
 
         Args:
             vql (str): The VQL query.
+            env (dict, optional): Query variables referenced by `vql`.
 
         Returns:
             float: The last_seen_at timestamp.
         """
-        return (await self.execute_query_async(vql))["results"][0]["last_seen_at"]
+        return (await self.execute_query_async(vql, env=env))["results"][0]["last_seen_at"]
 
-    async def _get_client_version(self, vql: str):
+    async def _get_client_version(self, vql: str, env: Optional[Dict[str, str]] = None):
         """
         Executes the VQL query and returns the `agent_information``version` field
 
         Args:
             vql (str): The VQL query.
+            env (dict, optional): Query variables referenced by `vql`.
 
         Returns:
             str: The client version.
         """
-        return (await self.execute_query_async(vql))["results"][0]["agent_information"]["version"]
+        return (await self.execute_query_async(vql, env=env))["results"][0]["agent_information"]["version"]
 
     async def _get_server_version(self, vql: str):
         """

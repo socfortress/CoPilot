@@ -1,7 +1,7 @@
 """add the Customer Portal's user notifications
 
 Revision ID: f1282a0b1c2d
-Revises: f1277a0b1c2d
+Revises: f1278a0b1c2d
 Create Date: 2026-10-20 09:00:00.000000
 
 Email and in-app notifications for portal users (#1282):
@@ -25,7 +25,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f1282a0b1c2d"
-down_revision: Union[str, None] = "f1277a0b1c2d"
+down_revision: Union[str, None] = "f1278a0b1c2d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

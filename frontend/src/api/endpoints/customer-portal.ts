@@ -23,12 +23,15 @@ export interface CustomerPortalSettingsPatch {
 	logo_base64?: string
 	logo_mime_type?: string
 	brand_color?: string
-	reset?: ("title" | "logo" | "brand_color")[]
+	theme_from_brand_color?: boolean
+	reset?: ("title" | "logo" | "brand_color" | "theme_from_brand_color")[]
 }
 
 /** Per-customer override payload. Null fields inherit the corresponding global setting. */
 export interface CustomerPortalBrandingPayload extends CustomerPortalSettingsPayload {
 	enabled: boolean
+	/** Theme the portal with the brand color; null inherits the global choice. */
+	theme_from_brand_color: boolean | null
 }
 
 export interface CustomerPortalAiReportSettingsPayload {

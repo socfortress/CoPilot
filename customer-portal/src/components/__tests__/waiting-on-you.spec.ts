@@ -9,7 +9,8 @@ import CaseStatusSelect from "@/components/cases/CaseStatusSelect.vue"
 import CreateCaseForm from "@/components/cases/CreateCaseForm.vue"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import { statusColor, workflowStatus } from "@/components/overview/shared/status"
-import { getStatusColor } from "@/utils"
+import tokens from "@/design-tokens.json"
+import { getStatusColor, statusTagProps } from "@/utils"
 
 const updateAlertStatus = vi.hoisted(() => vi.fn())
 const updateCaseStatus = vi.hoisted(() => vi.fn())
@@ -84,12 +85,27 @@ describe("the SOC waiting on the customer, in the portal (#1187)", () => {
 		])
 	})
 
-	it("colours the waiting status in the brand colour, apart from every other state", () => {
-		expect(getStatusColor("PENDING_CUSTOMER")).toBe("primary")
+	it("colours the waiting status in a colour of its own, never the primary (#1278)", () => {
+		expect(getStatusColor("PENDING_CUSTOMER")).toBe("waiting")
 		expect(getStatusColor("IN_PROGRESS")).toBe("warning")
-		expect(statusColor("PENDING_CUSTOMER")).toBe("primary")
+		expect(statusColor("PENDING_CUSTOMER")).toBe("waiting")
 		expect(statusColor("SOMETHING_NEW")).toBe("neutral")
-		expect(workflowStatus("PENDING_CUSTOMER")).toEqual({ label: "waiting on you", color: "primary" })
+		expect(workflowStatus("PENDING_CUSTOMER")).toEqual({ label: "waiting on you", color: "waiting" })
 		expect(workflowStatus("IN_PROGRESS")).toEqual({ label: "in progress", color: "warning" })
+	})
+
+	it("gives the tags naive-ui's type, or the waiting colour, which naive-ui has no type for", () => {
+		expect(statusTagProps("OPEN")).toEqual({ type: "info" })
+		expect(statusTagProps("CLOSED")).toEqual({ type: "success" })
+		const waiting = statusTagProps("PENDING_CUSTOMER")
+		expect(waiting.type).toBeUndefined()
+		// Values, not var(...): naive-ui builds a class name out of them.
+		expect(waiting.color).toEqual({
+			color: "rgba(255, 97, 201, 0.1)",
+			textColor: "rgb(255, 97, 201)",
+			borderColor: "rgba(255, 97, 201, 0.3)"
+		})
+		// Which is why the token must be the same colour in both modes.
+		expect(tokens.colors.light.waiting).toBe(tokens.colors.dark.waiting)
 	})
 })

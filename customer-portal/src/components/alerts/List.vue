@@ -87,7 +87,7 @@ import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 
 // The filters live in the URL, owned by the page (it shares them with the status cards).
@@ -164,7 +164,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 			return (
 				<div class="flex items-center gap-2">
 					<NTag
-						type={getStatusColor(row.status)}
+						{...statusTagProps(row.status)}
 						round
 						class="p-1! [&_.n-tag\_\_icon]:m-0!"
 						v-slots={{

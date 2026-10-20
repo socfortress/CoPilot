@@ -7,7 +7,7 @@
 			<CardEntity v-for="alert in caseData.alerts" :key="alert.id" size="small" embedded>
 				<template #header-main>#{{ alert.id }}</template>
 				<template #header-extra>
-					<Chip :type="getStatusColor(alert.status)">
+					<Chip v-bind="statusTagProps(alert.status)">
 						{{ workflowStatusLabel(alert.status).toUpperCase() }}
 					</Chip>
 				</template>
@@ -63,7 +63,7 @@ import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getStatusColor } from "@/utils"
+import { statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 

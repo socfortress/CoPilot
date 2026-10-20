@@ -32,7 +32,7 @@
 					data-testid="agent-case-row"
 				>
 					<span class="[grid-area:status]">
-						<Chip size="small" :type="getStatusColor(c.case_status)">
+						<Chip size="small" v-bind="statusTagProps(c.case_status)">
 							{{ workflowStatusLabel(c.case_status).toUpperCase() }}
 						</Chip>
 					</span>
@@ -74,7 +74,7 @@ import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, statusTagProps } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 import { workflowStatusLabel } from "@/utils/workflowStatus"

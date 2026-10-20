@@ -69,8 +69,14 @@ describe("event search: saved queries, CSV export and columns", () => {
 		return cy.wait("@events")
 	}
 
-	function headers() {
-		return cy.get("[data-testid=event-results] thead th").then($th => [...$th].map(th => th.textContent?.trim()).filter(Boolean))
+	/**
+	 * The table's headers, retried until they match: a `.then()` would read them once, at
+	 * whatever render the click landed on, and fail when the table had not caught up yet.
+	 */
+	function expectHeaders(expected: string[]) {
+		cy.get("[data-testid=event-results] thead th").should($th => {
+			expect([...$th].map(th => th.textContent?.trim()).filter(Boolean)).to.deep.equal(expected)
+		})
 	}
 
 	it("saves a search under a name, finds it on another device, and runs it again from the list", () => {
@@ -165,7 +171,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		visit()
 		pickSource("Office 365")
 		search("*")
-		headers().should("deep.equal", ["Time", "User", "Actions"])
+		expectHeaders(["Time", "User", "Actions"])
 
 		cy.get("[data-testid=event-columns-toggle]").click()
 		cy.get("[data-testid=picked-column]").should("have.length", 2)
@@ -176,7 +182,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.get("[data-testid=picked-column]").last().find("button[aria-label='Move left']").click()
 		cy.get("[data-testid=picked-column]").eq(1).find("button[aria-label='Move left']").click()
 		cy.get("[data-testid=column-picker-save]").click()
-		headers().should("deep.equal", ["Source IP", "Time", "User", "Actions"])
+		expectHeaders(["Source IP", "Time", "User", "Actions"])
 
 		cy.get("[data-testid=event-export]").click()
 		cy.readFile("cypress/downloads/events-Office_365-2026-10-15-09-00-00.csv").should(
@@ -188,18 +194,18 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.wait(["@sources", "@memory"])
 		pickSource("Office 365")
 		search("*")
-		headers().should("deep.equal", ["Source IP", "Time", "User", "Actions"])
+		expectHeaders(["Source IP", "Time", "User", "Actions"])
 
 		// The choice is per source: another source keeps its own layout.
 		pickSource("Wazuh Alerts")
 		search("*")
-		headers().should("deep.equal", ["Timestamp", "Level", "Source", "Rule", "Actions"])
+		expectHeaders(["Timestamp", "Level", "Source", "Rule", "Actions"])
 
 		pickSource("Office 365")
 		search("*")
 		cy.get("[data-testid=event-columns-toggle]").click()
 		cy.get("[data-testid=column-picker-reset]").click()
-		headers().should("deep.equal", ["Time", "User", "Actions"])
+		expectHeaders(["Time", "User", "Actions"])
 	})
 
 	it("saves column templates, previews and switches between them, and finds them on another device", () => {
@@ -220,7 +226,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 		cy.get("[data-testid=column-template-name] input").should("have.value", "")
 		// Saving a template applies nothing.
 		cy.get("[data-testid=column-picker]").parents(".n-card").find("[aria-label=close]").first().click()
-		headers().should("deep.equal", ["Time", "User", "Actions"])
+		expectHeaders(["Time", "User", "Actions"])
 
 		// Each layout is previewed before it is picked: every column, its header and field.
 		cy.get("[data-testid=column-layouts-toggle]").click()
@@ -235,7 +241,7 @@ describe("event search: saved queries, CSV export and columns", () => {
 			])
 		})
 		cy.get("[data-testid=column-layout]").eq(1).click()
-		headers().should("deep.equal", ["Time", "User", "Source IP", "Actions"])
+		expectHeaders(["Time", "User", "Source IP", "Actions"])
 		cy.get("[data-testid=column-layouts-current]").should("have.text", "Network")
 
 		// Another device finds the template and the layout in force.
@@ -245,11 +251,11 @@ describe("event search: saved queries, CSV export and columns", () => {
 		visit()
 		pickSource("Office 365")
 		search("*")
-		headers().should("deep.equal", ["Time", "User", "Source IP", "Actions"])
+		expectHeaders(["Time", "User", "Source IP", "Actions"])
 		cy.get("[data-testid=column-layouts-current]").should("have.text", "Network")
 		cy.get("[data-testid=column-layouts-toggle]").click()
 		cy.get("[data-testid=column-layout]").first().click()
-		headers().should("deep.equal", ["Time", "User", "Actions"])
+		expectHeaders(["Time", "User", "Actions"])
 
 		// Deleting asks first, in the Layout menu…
 		cy.get("[data-testid=column-layouts-toggle]").click()

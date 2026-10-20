@@ -86,7 +86,7 @@ import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AgentCriticalSelect from "./AgentCriticalSelect.vue"
 import AgentDetailsButton from "./AgentDetailsButton.vue"
@@ -151,7 +151,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		render: row => (
 			<div class="flex items-center gap-2">
 				<NTag
-					type={getStatusColor(row.wazuh_agent_status)}
+					{...statusTagProps(row.wazuh_agent_status)}
 					round
 					class="p-1! [&_.n-tag\_\_icon]:m-0!"
 					v-slots={{
@@ -192,7 +192,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
-					<Chip type={getStatusColor(row.wazuh_agent_status)} value={row.wazuh_agent_status.toUpperCase()} />
+					<Chip {...statusTagProps(row.wazuh_agent_status)} value={row.wazuh_agent_status.toUpperCase()} />
 				</div>
 			)
 		}

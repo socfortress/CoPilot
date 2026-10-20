@@ -5,6 +5,8 @@ export interface SettingsFields {
 	title: string | null
 	logo: string | null
 	brand_color: string | null
+	/** Theme the portal with the brand color (#1278); null reads as off. */
+	theme_from_brand_color?: boolean | null
 }
 
 const DATA_URL_REGEX = /^data:([^;,]+);base64,(.+)$/
@@ -46,6 +48,9 @@ export function buildSettingsPatch(saved: SettingsFields, current: SettingsField
 		if (color) patch.brand_color = color
 		else reset.push("brand_color")
 	}
+
+	const themed = !!current.theme_from_brand_color
+	if (themed !== !!saved.theme_from_brand_color) patch.theme_from_brand_color = themed
 
 	if (reset.length) patch.reset = reset
 	return Object.keys(patch).length ? patch : null

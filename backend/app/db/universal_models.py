@@ -11,6 +11,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
+from sqlalchemy import false
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlmodel import Field
 from sqlmodel import Relationship
@@ -409,6 +410,9 @@ class CustomerPortalSettings(SQLModel, table=True):
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # Use TEXT column for large base64 data
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g., "image/png", "image/jpeg"
     brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g., "#RRGGBB" - used to theme customer-branded reports
+    # Whether the portal's interface is themed with the brand color too (#1278). Off by
+    # default: a color chosen for reports may not suit an interface.
+    theme_from_brand_color: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": false()})
     updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
@@ -420,6 +424,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             "logo_base64": None,
             "logo_mime_type": None,
             "brand_color": None,
+            "theme_from_brand_color": False,
         }
 
     @classmethod
@@ -431,6 +436,7 @@ class CustomerPortalSettings(SQLModel, table=True):
             logo_base64=defaults["logo_base64"],
             logo_mime_type=defaults["logo_mime_type"],
             brand_color=defaults["brand_color"],
+            theme_from_brand_color=defaults["theme_from_brand_color"],
         )
 
 
@@ -458,6 +464,8 @@ class CustomerPortalBranding(SQLModel, table=True):
     logo_base64: Optional[str] = Field(default=None, sa_column=Column(LONGTEXT))  # LONGTEXT: base64 payloads are large
     logo_mime_type: Optional[str] = Field(default=None, max_length=50)  # e.g. "image/png", "image/jpeg"
     brand_color: Optional[str] = Field(default=None, max_length=9)  # e.g. "#RRGGBB"
+    # NULL inherits the global choice; true/false overrides it for this customer (#1278).
+    theme_from_brand_color: Optional[bool] = Field(default=None, nullable=True)
     updated_at: datetime = Field(default_factory=now_utc)
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 

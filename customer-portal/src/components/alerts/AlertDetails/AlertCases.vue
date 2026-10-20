@@ -11,7 +11,7 @@
 				<template #header-extra>
 					<div class="flex flex-wrap items-center justify-end gap-2">
 						<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
-						<Chip :type="getStatusColor(linkedCase.case_status)">
+						<Chip v-bind="statusTagProps(linkedCase.case_status)">
 							{{ workflowStatusLabel(linkedCase.case_status).toUpperCase() }}
 						</Chip>
 					</div>
@@ -78,7 +78,7 @@ import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import { useSettingsStore } from "@/stores/settings"
-import { getApiErrorMessage, getStatusColor } from "@/utils"
+import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 

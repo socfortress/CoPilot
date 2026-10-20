@@ -1,5 +1,5 @@
 <template>
-	<n-tag :size :type :bordered :round>
+	<n-tag :size :type :color :bordered :round>
 		<div v-if="$slots.default">
 			<slot />
 		</div>
@@ -23,6 +23,8 @@ withDefaults(
 		label?: string | number | null
 		value?: string | number | null
 		type?: TagProps["type"]
+		/** A colour naive-ui has no type for (the waiting status). */
+		color?: TagProps["color"]
 		size?: TagProps["size"]
 		bordered?: boolean
 		round?: boolean

@@ -239,7 +239,7 @@ def migration_round_trip():
 
     cfg = alembic_cfg()
     command.upgrade(cfg, "head")
-    command.downgrade(cfg, "f1277a0b1c2d")
+    command.downgrade(cfg, "f1278a0b1c2d")
     gone = present()
     command.upgrade(cfg, "head")
     back = present()
