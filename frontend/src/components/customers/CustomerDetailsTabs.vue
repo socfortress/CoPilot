@@ -6,7 +6,7 @@
 				type="line"
 				animated
 				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
 				placement="left"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
@@ -111,7 +111,7 @@
 				type="line"
 				animated
 				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
 				placement="left"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
