@@ -42,6 +42,9 @@
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
 					<n-tab name="settings">Settings</n-tab>
+					<n-tab v-if="notificationsOn" name="notifications" data-testid="profile-tab-notifications">
+						Notifications
+					</n-tab>
 					<n-tab name="security">Security</n-tab>
 				</n-tabs>
 			</div>
@@ -50,6 +53,9 @@
 			<n-tabs v-model:value="tabActive" tab-class="hidden!" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
+				</n-tab-pane>
+				<n-tab-pane v-if="notificationsOn" name="notifications" display-directive="if">
+					<NotificationPreferences />
 				</n-tab-pane>
 				<n-tab-pane name="security">
 					<div class="flex flex-col gap-4">
@@ -64,18 +70,28 @@
 
 <script lang="ts" setup>
 import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
+import { useRoute } from "vue-router"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
 import CustomerName from "@/components/common/CustomerName.vue"
 import Icon from "@/components/common/Icon.vue"
+import NotificationPreferences from "@/components/profile/NotificationPreferences.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
+import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useAuthStore } from "@/stores/auth"
 
 const RoleIcon = "carbon:user"
 const CustomersIcon = "carbon:enterprise"
 
-const tabActive = ref("settings")
+// `?tab=notifications` opens it directly: the link in every notification email points here.
+const tabActive = ref(useRoute().query.tab === "notifications" ? "notifications" : "settings")
+// Only while the user's customer has portal notifications on (#1282).
+const server = useServerNotifications()
+const notificationsOn = server.available
+onBeforeMount(() => {
+	void server.loadAvailability()
+})
 const authStore = useAuthStore()
 
 const userRole = authStore.userRoleName

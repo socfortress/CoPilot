@@ -3,6 +3,7 @@ import type { IncidentCustomerReportStatus } from "@/types/reports"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { useNotifications } from "@/composables/common/useNotifications"
+import { useServerNotifications } from "@/composables/common/useServerNotifications"
 
 /**
  * Tracks report generations until the backend reports them done, wherever the user
@@ -85,7 +86,8 @@ function notify(
 						actionTitle: "View reports"
 					}
 
-	useNotifications().prepend(item, { sendNotify: true })
+	// With server notifications on, the bell gets "report ready" from the server (#1282).
+	useNotifications().prepend(item, { sendNotify: true, toastOnly: useServerNotifications().available.value })
 }
 
 /**
