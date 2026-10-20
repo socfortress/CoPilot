@@ -10,6 +10,7 @@ column (that table is cached in-process, ``app/connectors/cache.py``). Read and 
 through ``app/connectors/talon/services/talon_v2.py``.
 """
 from datetime import datetime
+from typing import List
 from typing import Optional
 
 from sqlalchemy import JSON
@@ -29,6 +30,14 @@ class TalonConnectorSettings(SQLModel, table=True):
     connector_name: str = Field(max_length=256, unique=True, index=True, nullable=False)
     # Off by default: the v2 chat proxy exists only once an admin turns it on.
     v2_enabled: bool = Field(default=False, nullable=False)
+    # The collection start route's second gate for talon-analyst's service account (talon-analyst
+    # EA-4b, D77; ``services/talon_collections.py``). ``collect_service_username``: the CoPilot user
+    # talon-analyst logs in as (unset: ``talon-analyst``, the name CoPilot's docs give it; that name is
+    # held to the gate whatever this says). ``collect_allowed_artifacts``: the auto-run artifacts that
+    # user may start, a JSON list of names from ``talon_catalogue.TALON_AUTO_RUN``; unset (null) means
+    # none, so the service account starts nothing until an admin sets it.
+    collect_service_username: Optional[str] = Field(default=None, max_length=256, nullable=True)
+    collect_allowed_artifacts: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
     updated_by_user_id: Optional[int] = Field(default=None, nullable=True)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)
 

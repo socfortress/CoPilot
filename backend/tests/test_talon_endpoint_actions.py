@@ -548,7 +548,9 @@ def test_an_approved_proposal_starts_through_the_routes_checks_and_reports_the_f
     assert TALON_FLOW_ID.fullmatch(posted[0]["result"]["flow_id"])
     # Started once, through the route's checks, with the values as written; never waited for.
     ((kind, body, kwargs),) = vr.starts
-    assert kwargs == ({"literal_values": True} if kind == "collect" else {"literal": True}) and vr.finishes == []
+    # An approved collection keeps the analyst policy's place for its approver and sets no limits
+    # (those are the start route's, EA-4b).
+    assert kwargs == ({"literal_values": True, "limits": None} if kind == "collect" else {"literal": True}) and vr.finishes == []
     assert (body["hostname"], body["velociraptor_id"], body["velociraptor_org"]) == (HOST, VID, "root")
     if action == "collect_artifact":
         assert kind == "collect" and body["artifact_name"] == artifact and body["parameters"] == PARAMETERS
@@ -690,7 +692,7 @@ def test_the_command_and_parameters_reach_velociraptor_as_written(action):
         assert env == {"OrgId": "root", "ClientId": VID, "ArtifactName": "Windows.System.PowerShell", "Command": COMMAND}
         assert vql_string_literal_value(COMMAND) != COMMAND  # what the manual route's unescaping would have run
     else:
-        assert vql == artifacts_service.VQL_COLLECT_WITH_ENV.format(env="`ProcessRegex`=Param0, `UsernameRegex`=Param1")
+        assert vql == artifacts_service.VQL_COLLECT_WITH_ENV.format(env="`ProcessRegex`=Param0, `UsernameRegex`=Param1", limits="")
         assert env == {
             "OrgId": "root",
             "ClientId": VID,
@@ -769,9 +771,11 @@ def test_the_start_functions_signatures_are_pinned():
             "request",
             "session",
             "literal_values",
-        ] + (["require_built_in"] if function is velociraptor_routes.start_collection_as else [])
+        ] + (["require_built_in", "analyst_policy", "limits"] if function is velociraptor_routes.start_collection_as else [])
         assert inspect.signature(function).parameters["literal_values"].default is False
     assert inspect.signature(velociraptor_routes.start_collection_as).parameters["require_built_in"].default is False
+    assert inspect.signature(velociraptor_routes.start_collection_as).parameters["analyst_policy"].default is True
+    assert inspect.signature(velociraptor_routes.start_collection_as).parameters["limits"].default is None
 
 
 class _HostRows:

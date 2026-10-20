@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import tempfile
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -55,8 +56,33 @@ def create_query(query: str) -> str:
 # UniversalService.execute_query) and are referenced by name, so none of them is ever part of
 # the query text (GHSA-5542-j2fc-gqjm). `collect_client(env=...)` applies the dict to every
 # listed artifact, exactly as `spec=dict(`<artifact>`=dict(...))` did (vql/server/flows/create.go).
-VQL_COLLECT = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName]) AS Flow FROM scope()"
-VQL_COLLECT_WITH_ENV = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], env=dict({env})) AS Flow FROM scope()"
+VQL_COLLECT = "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName]{limits}) AS Flow FROM scope()"
+VQL_COLLECT_WITH_ENV = (
+    "SELECT collect_client(org_id=OrgId, client_id=ClientId, artifacts=[ArtifactName], env=dict({env}){limits}) AS Flow FROM scope()"
+)
+
+
+@dataclass(frozen=True)
+class FlowLimits:
+    """Resource limits a started collection runs under on the endpoint: ``collect_client``'s
+    ``timeout`` (seconds), ``cpu_limit`` (percent of one CPU), ``max_rows`` and ``max_bytes`` (bytes
+    uploaded) arguments (https://docs.velociraptor.app/vql_reference/server/collect_client/). The
+    start route for investigations (talon-analyst EA-4b) sets them; ``/collect`` doesn't."""
+
+    timeout: int
+    cpu_limit: int
+    max_rows: int
+    max_bytes: int
+
+    def vql(self) -> str:
+        """The arguments as written into the template: numbers CoPilot formats from its own typed
+        settings (``int``), never request text, so nothing a caller sends reaches the query."""
+        return (
+            f", timeout={int(self.timeout)}, cpu_limit={float(int(self.cpu_limit))!r}, "
+            f"max_rows={int(self.max_rows)}, max_bytes={int(self.max_bytes)}"
+        )
+
+
 VQL_RUN_COMMAND = (
     "SELECT collect_client(org_id=OrgId, client_id=ClientId, urgent=true, artifacts=[ArtifactName], "
     "env=dict(Command=Command)) AS Flow FROM scope()"
@@ -295,7 +321,8 @@ async def validate_artifact_parameters(
     valid_param_names = {param.name for param in artifact.parameters}
 
     logger.info(f"Valid parameters for artifact {artifact_name}: {valid_param_names}")
-    logger.info(f"Provided parameters for artifact {artifact_name}: {provided_parameters}")
+    # The names only: a value can be anything a caller typed (never logged).
+    logger.info(f"Provided parameters for artifact {artifact_name}: {sorted(requested_artifact_parameters(provided_parameters) or {})}")
 
     # Check if provided parameters are valid
     # Handle both direct key-value pairs and the 'env' list format
@@ -406,7 +433,8 @@ def started_flow_id(flow: dict) -> str:
     try:
         return validate_flow_id(flow_id)
     except HTTPException:
-        logger.error(f"Could not find flow_id in results: {(flow.get('results') or [None])[0]}")
+        # Not the row itself: a started flow echoes its request, parameter values included.
+        logger.error("Could not find a usable flow_id in the collection's results")
         raise HTTPException(status_code=500, detail="Failed to extract flow ID from results") from None
 
 
@@ -415,19 +443,26 @@ async def start_artifact_collection(
     drop_undeclared_parameters: bool = False,
     velociraptor_service: Optional[UniversalService] = None,
     literal_values: bool = False,
+    limits: Optional[FlowLimits] = None,
 ) -> str:
     """Start an artifact collection on a client and return its flow id, without waiting for it.
 
     The caller has checked the host, the artifact and its parameter names (``/collect``'s
     checks, ``routes.artifacts.start_collection_as``). The org, client, artifact and every
     parameter value are query variables of a constant template (GHSA-5542-j2fc-gqjm).
-    `literal_values`: the values are passed as written (``build_parameter_env``).
+    `literal_values`: the values are passed as written (``build_parameter_env``). `limits`: the
+    flow's resource limits on the endpoint (``FlowLimits``). Nothing here logs a parameter value or
+    the started flow (which echoes its request): only the artifact, the client, the org and the id.
     """
     # Validate the identifier fields (GHSA-5542-j2fc-gqjm). They and every parameter value are
     # passed as query variables; parameter names are checked against the artifact below.
     validate_org_id(collect_artifact_body.velociraptor_org)
     validate_client_id(collect_artifact_body.velociraptor_id)
     validate_artifact_name(collect_artifact_body.artifact_name)
+    target = (
+        f"{collect_artifact_body.artifact_name} on {collect_artifact_body.velociraptor_id} "
+        f"(org {collect_artifact_body.velociraptor_org})"
+    )
     try:
         velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
         env = collection_env(
@@ -436,8 +471,9 @@ async def start_artifact_collection(
             collect_artifact_body.artifact_name,
         )
         requested = requested_artifact_parameters(getattr(collect_artifact_body, "parameters", None))
+        limits_vql = limits.vql() if limits is not None else ""
         if requested is None:
-            query = create_query(VQL_COLLECT)
+            query = create_query(VQL_COLLECT.format(limits=limits_vql))
         else:
             declared = (
                 await declared_artifact_parameter_names(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
@@ -451,12 +487,11 @@ async def start_artifact_collection(
                 drop_undeclared=drop_undeclared_parameters,
                 literal=literal_values,
             )
-            query = create_query(VQL_COLLECT_WITH_ENV.format(env=env_body))
+            query = create_query(VQL_COLLECT_WITH_ENV.format(env=env_body, limits=limits_vql))
             env.update(parameter_env)
 
         logger.info(f"Running artifact collection with query: {query}")
         flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org, env=env)
-        logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
         if not flow.get("results") or len(flow["results"]) == 0:
@@ -466,16 +501,17 @@ async def start_artifact_collection(
                 detail="Query execution did not return any results",
             )
         flow_id = started_flow_id(flow)
-        logger.info(f"Extracted flow_id: {flow_id}")
+        logger.info(f"Started flow {flow_id} for {target}")
         return flow_id
     except HTTPException as he:  # Catch HTTPException separately to propagate the original message
-        logger.error(f"HTTPException while starting artifact collection on {collect_artifact_body}: {he.detail}")
+        logger.error(f"HTTPException while starting artifact collection for {target}: {he.detail}")
         raise he
     except Exception as err:
-        logger.error(f"Failed to run artifact collection on {collect_artifact_body}: {err}")
+        # The error's class, never its text or the body: either can carry the parameter values.
+        logger.error(f"Failed to run artifact collection for {target}: {type(err).__name__}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+            detail=f"Failed to run artifact collection for {target}",
         )
 
 
@@ -675,7 +711,6 @@ async def run_file_collection(
 
         logger.info(f"Query: {query}")
         flow = await velociraptor_service.execute_query_async(query, org_id=collect_artifact_body.velociraptor_org, env=env)
-        logger.info(f"Successfully ran artifact collection on {flow}")
 
         # Check if results are available
         if not flow.get("results") or len(flow["results"]) == 0:
@@ -1110,7 +1145,6 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         query = create_query(VQL_QUARANTINE if quarantine_body.action == "quarantine" else VQL_REMOVE_QUARANTINE)
         env = collection_env(quarantine_body.velociraptor_org, quarantine_body.velociraptor_id, quarantine_body.artifact_name)
         flow = await velociraptor_service.execute_query_async(query, org_id=quarantine_body.velociraptor_org, env=env)
-        logger.info(f"Successfully ran artifact collection on {flow}")
 
         flow_id = extract_flow_id(flow)
         if not flow_id:

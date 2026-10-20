@@ -27,6 +27,7 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.services.artifacts import FlowLimits
 from app.connectors.velociraptor.services.artifacts import finish_artifact_collection
 from app.connectors.velociraptor.services.artifacts import finish_remote_command
 from app.connectors.velociraptor.services.artifacts import get_artifact_by_name
@@ -342,6 +343,8 @@ async def start_collection_as(
     session: AsyncSession,
     literal_values: bool = False,
     require_built_in: bool = False,
+    analyst_policy: bool = True,
+    limits: Optional[FlowLimits] = None,
 ) -> StartedFlow:
     """``/collect``'s checks and its ``ARTIFACT_COLLECT`` audit event, once, then the collection
     started without waiting: the flow id back. The route waits for it and reads its results after
@@ -356,7 +359,14 @@ async def start_collection_as(
     ``/collect``'s clients expect, so what runs is what the approver read. `require_built_in`
     (Talon v2): the artifact and its dependencies must be Velociraptor's built-in definitions in the
     host's org, whatever the caller's role.
+
+    `analyst_policy=False` (only the Talon service account on ``/collect/start``, talon-analyst
+    EA-4b): the analyst allowlist is replaced by the stricter auto-run allowlist the caller has
+    already checked (``talon_catalogue.auto_run_violation``); pass `require_built_in` with it.
+    `limits`: the flow's resource limits on the endpoint (``FlowLimits``).
     """
+    if not analyst_policy and not require_built_in:
+        raise ValueError("the analyst artifact policy is only replaced together with require_built_in")
     # The host is named in the body, so no path dependency can guard it: collecting an
     # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
     await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
@@ -381,12 +391,13 @@ async def start_collection_as(
     # The host's artifact list includes the command and remediation artifacts, which /command
     # and /quarantine keep to admins and responders: an analyst may only collect what the
     # analyst allowlist admits, judged by the definition in the host's own org.
-    await enforce_collect_artifact_policy(
-        current_user,
-        collect_artifact_body.artifact_name,
-        collect_artifact_body.velociraptor_org,
-        collect_artifact_body.parameters,
-    )
+    if analyst_policy:
+        await enforce_collect_artifact_policy(
+            current_user,
+            collect_artifact_body.artifact_name,
+            collect_artifact_body.velociraptor_org,
+            collect_artifact_body.parameters,
+        )
     if require_built_in:
         await enforce_built_in_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
 
@@ -406,7 +417,7 @@ async def start_collection_as(
         new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
         request=request,
     )
-    flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values)
+    flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values, limits=limits)
     return StartedFlow(
         flow_id=flow_id,
         client_id=collect_artifact_body.velociraptor_id,

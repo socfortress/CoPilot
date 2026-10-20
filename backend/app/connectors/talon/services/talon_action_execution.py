@@ -445,7 +445,15 @@ async def _lock_host_rows(session: AsyncSession, hostname: str, client: str) -> 
 async def lock_and_recheck_host(plan: Plan, row: TalonActionRequest, session: AsyncSession) -> None:
     """Lock the host's ``agents`` rows (and every row claiming its client) and check them. The
     locks are held by ``session``'s transaction, so the route run in it sees what was checked."""
-    hostname, client = plan.hostname or "", plan.velociraptor_id or ""
+    await lock_and_check_host(session, plan.hostname or "", plan.velociraptor_id or "", row.customer_code)
+
+
+async def lock_and_check_host(session: AsyncSession, hostname: str, client: str, customer_code: Optional[str] = None) -> Agents:
+    """``lock_and_recheck_host``'s check, for a host and a canonical root-org client id: exactly one
+    ``agents`` row for the host name, carrying that client, in the root org, no other row claiming
+    the client, and (when given) of ``customer_code``. The row, locked by ``session``'s transaction;
+    ``RecheckFailed`` otherwise. Also the collection start route's check (talon-analyst EA-4b), where
+    the caller's access to the row's customer is checked by the route itself."""
     host_rows, client_rows = await _lock_host_rows(session, hostname, client)
     claimants = {agent.id for agent in client_rows if claimed_client_id(agent.velociraptor_id) == client}
     if len(host_rows) != 1 or (host_rows[0].hostname or "").lower() != hostname.lower():
@@ -453,12 +461,13 @@ async def lock_and_recheck_host(plan: Plan, row: TalonActionRequest, session: As
     agent = host_rows[0]
     if canonical_client_id(agent.velociraptor_id) != client:
         raise RecheckFailed("the host's Velociraptor client changed")
-    if agent.customer_code != row.customer_code:
+    if customer_code is not None and agent.customer_code != customer_code:
         raise RecheckFailed("the host belongs to another customer")
     if agent.velociraptor_org != "root":
         raise RecheckFailed("the host is not in Velociraptor's root org")
     if claimants != {agent.id}:
         raise RecheckFailed("another agent carries the host's Velociraptor client")
+    return agent
 
 
 async def recheck(plan: Plan, row: TalonActionRequest, session: AsyncSession) -> None:
