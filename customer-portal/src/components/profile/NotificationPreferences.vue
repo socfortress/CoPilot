@@ -19,11 +19,13 @@
 				{{ emailUnavailable }}
 			</n-alert>
 
+			<!-- On wide screens every row is a grid on the same tracks, so the controls line up
+			     in columns whether or not a row has the severity picker. -->
 			<div class="divide-border border-border flex flex-col divide-y rounded-lg border">
 				<div
 					v-for="row of rows"
 					:key="row.event"
-					class="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-6"
+					class="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_8.5rem_18.5rem_16rem]"
 					:data-testid="`notification-pref-${row.event}`"
 				>
 					<div class="flex min-w-0 grow items-start gap-3">
@@ -34,7 +36,7 @@
 						</div>
 					</div>
 
-					<div class="flex flex-wrap items-center gap-x-5 gap-y-3 md:shrink-0">
+					<div class="flex flex-wrap items-center gap-x-5 gap-y-3 md:shrink-0 xl:contents">
 						<label class="flex items-center gap-2 text-sm">
 							<n-switch
 								v-model:value="draft[row.event].in_app"
@@ -45,11 +47,11 @@
 						</label>
 
 						<label class="flex items-center gap-2 text-sm">
-							<span class="text-secondary">Email</span>
+							<span class="text-secondary shrink-0">Email</span>
 							<n-select
 								v-model:value="draft[row.event].email"
 								size="small"
-								class="w-40!"
+								class="w-60!"
 								:options="emailOptions"
 								:disabled="!!emailUnavailable"
 								:data-testid="`notification-pref-${row.event}-email`"
@@ -57,15 +59,16 @@
 						</label>
 
 						<label v-if="row.event === 'alert_created'" class="flex items-center gap-2 text-sm">
-							<span class="text-secondary">From</span>
+							<span class="text-secondary shrink-0">From</span>
 							<n-select
 								v-model:value="draft.alert_created.min_severity"
 								size="small"
-								class="w-36!"
+								class="w-48!"
 								:options="severityOptions"
 								data-testid="notification-pref-alert_created-severity"
 							/>
 						</label>
+						<div v-else class="hidden xl:block" aria-hidden="true" data-testid="notification-pref-spacer" />
 					</div>
 				</div>
 			</div>

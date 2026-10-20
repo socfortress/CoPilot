@@ -56,6 +56,23 @@ describe("notification preferences", () => {
 		wrapper.unmount()
 	})
 
+	it("lines every row's controls up in the same columns, the severity picker or its place", async () => {
+		api.getAvailability.mockImplementation(() => availability(true))
+		const wrapper = render()
+		await flushPromises()
+		const rows = ["alert_created", "waiting_on_you", "case_closed", "report_ready"].map(event =>
+			wrapper.get(`[data-testid=notification-pref-${event}]`)
+		)
+		const tracks = rows.map(row => row.classes().find(name => name.startsWith("xl:grid-cols-")))
+		expect(tracks[0]).toBeDefined()
+		expect(new Set(tracks).size).toBe(1)
+		for (const row of rows.slice(1)) expect(row.find("[data-testid=notification-pref-spacer]").exists()).toBe(true)
+		expect(rows[0].find("[data-testid=notification-pref-spacer]").exists()).toBe(false)
+		// Wide enough for "Daily summary (07:00 UTC)" in full.
+		expect(wrapper.get("[data-testid=notification-pref-waiting_on_you-email]").classes()).toContain("w-60!")
+		wrapper.unmount()
+	})
+
 	it("saves every event once a choice changed", async () => {
 		api.getAvailability.mockImplementation(() => availability(true))
 		const changed = DEFAULTS.map(pref => (pref.event === "case_closed" ? { ...pref, in_app: false } : pref))
