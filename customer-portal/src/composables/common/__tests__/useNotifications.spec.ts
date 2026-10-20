@@ -53,3 +53,23 @@ describe("a notification's target (#1263)", () => {
 		expect(push).toHaveBeenLastCalledWith({ name: "ReportsList", query: { download: "5" } })
 	})
 })
+
+describe("server notifications in the bell (#1282)", () => {
+	it("open an alert or a case by its id", () => {
+		openRoute({ name: "AlertDetails", params: { id: "42" } })
+		expect(push).toHaveBeenLastCalledWith({ name: "AlertDetails", params: { id: "42" }, query: undefined })
+	})
+
+	it("a toast-only item pops the toast and stays out of the session list", () => {
+		setActivePinia(createPinia())
+		const { list, prepend } = useNotifications()
+		list.value = []
+		create.mockClear()
+		prepend(
+			{ id: "report-9", category: "report", type: "success", title: "Report ready", description: "", read: false, date: new Date() },
+			{ sendNotify: true, toastOnly: true }
+		)
+		expect(create).toHaveBeenCalledTimes(1)
+		expect(list.value).toEqual([])
+	})
+})

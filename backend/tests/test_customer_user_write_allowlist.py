@@ -67,6 +67,9 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("PUT", "/api/siem/event_search/{customer_code}/columns"),
         ("POST", "/api/siem/event_search/{customer_code}/templates"),
         ("DELETE", "/api/siem/event_search/{customer_code}/templates/{template_id}"),
+        # Their own notification choices and bell (#1282): every query is scoped to the caller.
+        ("PUT", "/api/customer_portal/notifications/preferences"),
+        ("POST", "/api/customer_portal/notifications/read"),
         # Reads that take a body, so they are POSTs. They change nothing.
         ("POST", "/api/siem/dashboards/panel-data"),
         ("POST", "/api/copilot_searches/by-ids"),

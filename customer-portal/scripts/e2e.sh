@@ -28,12 +28,23 @@ export MINIO_URL="${E2E_MINIO_URL:-127.0.0.1:19000}"
 export MINIO_ROOT_USER="${E2E_MINIO_USER:-e2eminio}"
 export MINIO_ROOT_PASSWORD="${E2E_MINIO_PASSWORD:-e2eminio-secret}"
 export MINIO_SECURE="False"
+# Portal user emails (#1282) go to the SMTP sink Cypress runs (cypress.config.ts), never to
+# a real relay. Set explicitly, empty included, so nothing in .env can fill them in.
+export E2E_SMTP_PORT="${E2E_SMTP_PORT:-2526}"
+export SMTP_HOST="127.0.0.1"
+export SMTP_PORT="$E2E_SMTP_PORT"
+export SMTP_USE_TLS="false"
+export SMTP_USERNAME=""
+export SMTP_PASSWORD=""
+export SMTP_FROM="copilot-e2e@e2e.example"
+# The emails' links point at the portal under test.
+export CUSTOMER_PORTAL_URL="http://localhost:$WEB_PORT"
 export PYTHONPATH="$BACKEND_DIR"
 export E2E_PYTHON="$PYTHON"
 
-for port in "$API_PORT" "$WEB_PORT"; do
+for port in "$API_PORT" "$WEB_PORT" "$E2E_SMTP_PORT"; do
 	if lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-		echo "Port $port is already in use: stop what is on it or set E2E_API_PORT / E2E_WEB_PORT." >&2
+		echo "Port $port is already in use: stop what is on it or set E2E_API_PORT / E2E_WEB_PORT / E2E_SMTP_PORT." >&2
 		exit 1
 	fi
 done

@@ -32,6 +32,30 @@ export type NotificationTrigger =
 	| "sla_at_risk"
 	| "sla_breached"
 	| "temp_password_issued"
+	| PortalTrigger
+
+// The Customer Portal's emails to its users (#1282). Template scopes, NOT route
+// triggers, like `temp_password_issued`: each scopes the email a portal user gets
+// for one notification (or the daily summary), sent over SMTP by the portal's own
+// sender. The backend rejects them on a route.
+export type PortalTrigger =
+	| "portal_alert_created"
+	| "portal_waiting_on_you"
+	| "portal_case_closed"
+	| "portal_report_ready"
+	| "portal_digest"
+
+export const PORTAL_TRIGGERS: PortalTrigger[] = [
+	"portal_alert_created",
+	"portal_waiting_on_you",
+	"portal_case_closed",
+	"portal_report_ready",
+	"portal_digest"
+]
+
+export function isPortalTrigger(trigger: NotificationTrigger | null | undefined): trigger is PortalTrigger {
+	return !!trigger && (PORTAL_TRIGGERS as string[]).includes(trigger)
+}
 
 // The SLA triggers (#1187) are internal too: a SOC running late on a clock is the
 // SOC's business, never the customer's. They fire once per clock, from a scheduler
@@ -58,7 +82,12 @@ export const NOTIFICATION_TRIGGER_LABELS: Record<NotificationTrigger, string> = 
 	sla_breached: "SLA breached",
 	// Never reachable on a route — the backend rejects it as a route trigger —
 	// but the map is exhaustive over NotificationTrigger, so it needs a label.
-	temp_password_issued: "Temporary password email"
+	temp_password_issued: "Temporary password email",
+	portal_alert_created: "Portal email — new alert",
+	portal_waiting_on_you: "Portal email — waiting on you",
+	portal_case_closed: "Portal email — case closed",
+	portal_report_ready: "Portal email — report ready",
+	portal_digest: "Portal email — daily summary"
 }
 
 export function isInternalTrigger(trigger: NotificationTrigger): boolean {

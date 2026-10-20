@@ -27,6 +27,7 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
 )
+from app.customer_portal.services.notification_events import notify_alert_created
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -1093,6 +1094,9 @@ async def create_alert_full(
             asset_name=asset.asset_name if asset is not None else None,
         ),
     )
+    # The customer's portal users who asked to hear about new alerts (#1282). Here, after
+    # the tags are attached, because tag access decides which of them may see it.
+    notify_alert_created(alert_id)
 
     if threshold_alert is True or velo_sigma_alert is True:
         logger.info(

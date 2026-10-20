@@ -29,6 +29,8 @@ from app.connectors.wazuh_indexer.utils.universal import (
 )
 from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
 from app.connectors.wazuh_indexer.utils.universal import get_index_source
+from app.customer_portal.services.notification_events import notify_alert_created
+from app.customer_portal.services.notification_events import notify_status_change
 from app.customer_provisioning.routes.provision import check_customer_exists
 from app.data_store.data_store_operations import (
     list_case_report_template_data_store_files,
@@ -609,6 +611,7 @@ async def create_alert_endpoint(
     created = await create_alert(alert, db)
     # A SOC user filing an alert by hand has responded to it by definition (#1187).
     await SlaLifecycleRecorder().alert_action(created.id, LifecycleAction.CREATED, Actor.from_user(current_user))
+    notify_alert_created(created.id)
     return created
 
 
@@ -633,6 +636,8 @@ async def update_alert_status_endpoint(
         Actor.from_user(current_user),
         to_status=alert_status.status.value,
     )
+    # After the SLA recorder: a wait's dedupe key is the clock's `paused_at` (#1282).
+    notify_status_change("alert", [alert_status.alert_id], alert_status.status.value, current_user.id)
     return AlertResponse(alert=updated, success=True, message="Alert status updated successfully")
 
 
@@ -678,6 +683,7 @@ async def bulk_update_alert_status_endpoint(
         Actor.from_user(current_user),
         to_status=bulk_status.status.value,
     )
+    notify_status_change("alert", updated_alert_ids, bulk_status.status.value, current_user.id)
 
     return BulkAlertUpdateResponse(
         message=f"Updated {len(updated_alert_ids)} alert(s) to {bulk_status.status.value}",
@@ -2517,6 +2523,9 @@ async def update_case_status_endpoint(
     recorder = SlaLifecycleRecorder()
     actor = Actor.from_user(current_user)
     await recorder.case_action(case_status.case_id, LifecycleAction.STATUS_CHANGED, actor, to_status=new_status_value)
+    # The case only: the alerts the cascade moved are the case's, and one notice says it (#1282).
+    if old_status != new_status_value:
+        notify_status_change("case", [case_status.case_id], new_status_value, current_user.id)
     if new_alert_status:
         await recorder.alerts_action(
             [alert_id for alert_id in alert_ids if alert_id not in failed_alerts],

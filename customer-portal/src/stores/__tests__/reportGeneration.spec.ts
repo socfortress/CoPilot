@@ -6,8 +6,10 @@ import { POLL_TIMEOUT_MS, pollDelay, STATUS_BATCH, useReportGenerationStore } fr
 
 const getReportStatuses = vi.hoisted(() => vi.fn())
 const prepend = vi.hoisted(() => vi.fn())
+const serverFeed = vi.hoisted(() => ({ available: { value: false } }))
 vi.mock("@/api", () => ({ default: { reports: { getReportStatuses } } }))
 vi.mock("@/composables/common/useNotifications", () => ({ useNotifications: () => ({ prepend }) }))
+vi.mock("@/composables/common/useServerNotifications", () => ({ useServerNotifications: () => serverFeed }))
 
 function status(
 	id: number,
@@ -57,6 +59,15 @@ describe("report generation poller (#1263)", () => {
 		expect(store.isPending(5)).toBe(true)
 	})
 
+	it("only pops the toast when the bell gets the news from the server (#1282)", async () => {
+		serverFeed.available.value = true
+		getReportStatuses.mockImplementation(() => answer([status(5, "completed")]))
+		useReportGenerationStore().track({ id: 5, name: "Weekly" })
+		await tick(3_000)
+		expect(prepend.mock.calls[0]![1]).toEqual({ sendNotify: true, toastOnly: true })
+		serverFeed.available.value = false
+	})
+
 	it("says a report is ready, with a Download that leads straight to the file", async () => {
 		getReportStatuses.mockImplementation(() => answer([status(5, "completed")]))
 		const store = useReportGenerationStore()
@@ -72,7 +83,7 @@ describe("report generation poller (#1263)", () => {
 			actionRoute: { name: "ReportsList", query: { download: "5" } },
 			actionTitle: "Download"
 		})
-		expect(options).toEqual({ sendNotify: true })
+		expect(options).toEqual({ sendNotify: true, toastOnly: false })
 		expect(store.pending).toEqual([])
 		expect(store.lastResolvedAt).toBeGreaterThan(0)
 

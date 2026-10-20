@@ -53,6 +53,17 @@ export interface CustomerPortalAiReportSettings {
 	updated_by: number | null
 }
 
+/**
+ * Per-customer switch for portal users' email and in-app notifications (#1282). Opt-in:
+ * a missing row reads as off. Each portal user then picks what they get.
+ */
+export interface CustomerPortalNotificationSettings {
+	customer_code: string
+	enabled: boolean
+	updated_at: string | null
+	updated_by: number | null
+}
+
 /** Per-customer switch for the Customer Portal's SLA page (#1187). Opt-in: a missing row reads as off. */
 export interface CustomerPortalSlaSettings {
 	customer_code: string
