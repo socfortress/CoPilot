@@ -4,7 +4,7 @@
 			v-for="item of listSanitized"
 			:key="item.id"
 			class="item flex"
-			:class="[{ pointer: !!item.actionRoute }, item.type]"
+			:class="[{ pointer: !!item.actionRoute }, item.accent ?? item.type]"
 			data-testid="notification-item"
 			@click.stop="item.actionRoute ? preformAction(item) : undefined"
 		>
@@ -188,6 +188,17 @@ function formatDatetime(date: Date | string) {
 			}
 			.action-text {
 				color: var(--warning-color);
+			}
+		}
+		&.waiting {
+			.icon-box {
+				.n-icon {
+					background-color: rgba(var(--waiting-color-rgb) / 0.1);
+					color: var(--waiting-color);
+				}
+			}
+			.action-text {
+				color: var(--waiting-color);
 			}
 		}
 		&.error {

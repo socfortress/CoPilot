@@ -65,6 +65,15 @@ describe("the bell's server notifications", () => {
 		expect(useBell().hasUnread.value).toBe(true)
 	})
 
+	it("paints \"waiting on you\" in the waiting colour, never the warning one", async () => {
+		await serverOn([item(1)], 1)
+		const list = mount(NotificationsList)
+		await nextTick()
+		const row = list.get("[data-testid=notification-item]")
+		expect(row.classes()).toContain("waiting")
+		expect(row.classes()).not.toContain("warning")
+	})
+
 	it("marks all read on the server", async () => {
 		await serverOn([item(2), item(1)], 2)
 		api.markRead.mockResolvedValue({ data: { marked: 2, unread_count: 0 } })

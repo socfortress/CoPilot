@@ -16,6 +16,11 @@ export interface Notification {
 	id: number | string
 	category: NotificationCategory
 	type: NotificationType
+	/**
+	 * A colour of the bell's own, over the type's: "waiting" is the SOC waiting on the
+	 * customer, which keeps its status colour everywhere (#1278). Toasts still use the type.
+	 */
+	accent?: "waiting"
 	title: string
 	description: string
 	read: boolean

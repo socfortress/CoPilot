@@ -48,6 +48,7 @@ export function toBellItem(item: PortalNotification): Notification {
 		id: `server-${item.id}`,
 		category: item.entity_type === "report" ? "report" : item.entity_type,
 		type: tone(item),
+		...(item.event === "waiting_on_you" ? { accent: "waiting" as const } : {}),
 		title: item.title,
 		description: item.body ?? "",
 		read: item.read,

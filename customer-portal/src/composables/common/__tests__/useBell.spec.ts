@@ -37,6 +37,7 @@ describe("toBellItem", () => {
 			actionTitle: "Open alert"
 		})
 		expect(toBellItem(notification({ severity: "Medium" })).type).toBe("warning")
+		expect(toBellItem(notification({})).accent).toBeUndefined()
 	})
 
 	it("reads the stored time as UTC, never as local time", () => {
@@ -46,7 +47,9 @@ describe("toBellItem", () => {
 	it("opens the case or the reports, with their own icons", () => {
 		const waiting = toBellItem(notification({ event: "waiting_on_you", entity_type: "case", entity_id: 3 }))
 		expect(waiting).toMatchObject({
+			// The toast keeps a type naive-ui knows; the bell paints it in the waiting colour.
 			type: "warning",
+			accent: "waiting",
 			icon: "carbon:user-follow",
 			actionRoute: { name: "CaseDetails", params: { id: "3" } }
 		})
