@@ -91,8 +91,16 @@ async def verdict_counts(
     result = await session.execute(
         select(Alert.verdict, func.count().label("cnt")).where(_window(customer_codes, date_from, date_to)).group_by(Alert.verdict),
     )
-    counts = {row[0]: int(row[1]) for row in result.all()}
+    return verdict_figures({row[0]: int(row[1]) for row in result.all()})
 
+
+def verdict_figures(counts: Dict[Optional[str], int]) -> Dict[str, float]:
+    """The headline numbers from alert counts per stored verdict (``None`` = untriaged). Pure.
+
+    Shared by the PDF report and the Customer Portal's Activity page (#1284), so the two
+    can never compute the rates differently. A verdict this module does not know counts
+    nowhere, as it always has.
+    """
     false_positive = counts.get(FALSE_POSITIVE, 0)
     true_positive = counts.get(TRUE_POSITIVE, 0)
     untriaged = counts.get(None, 0)
