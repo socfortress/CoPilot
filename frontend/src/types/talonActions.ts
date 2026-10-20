@@ -54,6 +54,8 @@ export interface TalonActionProvenance {
 	risk_labels?: unknown
 	/** A command only: `read-only` (a plain read or a pipeline of reads) or `free-form`. */
 	shape?: unknown
+	/** A collection only: the catalogue's one-line note for the artifact, plain text. */
+	catalogue_note?: unknown
 	[key: string]: unknown
 }
 

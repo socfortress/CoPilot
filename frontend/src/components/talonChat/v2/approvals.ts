@@ -245,69 +245,252 @@ export function countsText(command: string): string {
 	return `${lines} ${lines === 1 ? "line" : "lines"}, ${chars.toLocaleString("en-US")} ${chars === 1 ? "character" : "characters"}`
 }
 
-/** The command's first line, as written (empty when it starts with a newline). */
-export function firstLine(command: string): string {
-	return command.split("\n", 1)[0] ?? ""
+/**
+ * The command's first line that isn't blank (only spaces and tabs), as written, with its number
+ * (from 1). A command of blank lines only gives its first line.
+ */
+export function firstContentLine(command: string): { line: number; text: string } {
+	const lines = command.split("\n")
+	const index = lines.findIndex(line => !/^[\t\p{Zs}]*$/u.test(line))
+	return index < 0 ? { line: 1, text: lines[0] ?? "" } : { line: index + 1, text: lines[index] }
 }
 
 export type CommandSegment =
+	/** Printable ASCII, and runs of fewer than four spaces inside a line. */
 	| { kind: "text"; text: string }
+	/** Visible characters outside ASCII, highlighted: a look-alike letter can hide among them. */
+	| { kind: "nonascii"; text: string; trailing?: boolean }
 	/** A tab, kept as the tab itself and marked. */
-	| { kind: "tab"; text: string }
-	/** The spaces that end a line, kept as written and marked. */
+	| { kind: "tab"; text: string; trailing?: boolean }
+	/** Fewer than four spaces that end a line, kept as written and highlighted. */
 	| { kind: "trailing"; text: string }
-	/** A character nobody can see (format or control, but tab and newline), shown as `⟨U+000D⟩`. */
-	| { kind: "escape"; text: string; char: string }
+	/** Four or more spaces in a row, shown as `␠×N`; `trailing` when they end the line. */
+	| { kind: "spaces"; text: string; count: number; trailing: boolean }
+	/** A character nobody can see, shown as `⟨U+000D⟩`; `trailing` when it ends the line. */
+	| { kind: "escape"; text: string; char: string; trailing?: boolean }
 
-// Format (Cf), control (Cc) but tab and newline, surrogates, and the line and paragraph separators.
-const UNSEEN = /[\p{Cf}\p{Cs}\u2028\u2029]|(?![\t\n])\p{Cc}/u
-const TAB_OR_UNSEEN = /[\t\p{Cf}\p{Cs}\u2028\u2029]|(?![\t\n])\p{Cc}/gu
+/**
+ * Characters a reader can't see or can't tell from a space: format (Cf), control (Cc) but tab and
+ * newline, surrogates, the line and paragraph separators, every space separator (Zs) but U+0020,
+ * every default-ignorable code point (variation selectors, Hangul fillers…), and U+2800 (the
+ * braille blank).
+ */
+const UNSEEN_CHAR = /[\p{Cf}\p{Cs}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800]|(?![\t\n])\p{Cc}|(?! )\p{Zs}/u
+const UNSEEN_ANY = new RegExp(UNSEEN_CHAR.source, "u")
 
-/** The command holds a character nobody can see (talon-analyst refuses those, so it shouldn't). */
-export function hasUnseenChars(command: string): boolean {
-	return UNSEEN.test(command)
+/** The text holds a character nobody can see (talon-analyst refuses those in a command). */
+export function hasUnseenChars(text: string): boolean {
+	return UNSEEN_ANY.test(text)
 }
 
-function lineRuns(text: string, out: CommandSegment[]) {
-	let last = 0
-	for (const match of text.matchAll(TAB_OR_UNSEEN)) {
-		const start = match.index ?? 0
-		if (start > last) out.push({ kind: "text", text: text.slice(last, start) })
-		if (match[0] === "\t") out.push({ kind: "tab", text: "\t" })
-		else out.push({ kind: "escape", text: escapeOf(match[0]), char: match[0] })
-		last = start + match[0].length
+/** Spaces in a row from this many on are shown as `␠×N`, so a long gap can't push text away. */
+export const SPACES_RUN = 4
+
+type CharClass = "tab" | "space" | "unseen" | "nonascii" | "ascii"
+
+function classOf(char: string): CharClass {
+	if (char === "\t") return "tab"
+	if (char === " ") return "space"
+	if (UNSEEN_CHAR.test(char)) return "unseen"
+	return /[^\x20-\x7E]/.test(char) ? "nonascii" : "ascii"
+}
+
+/** One line (no `\n`) as runs; the whitespace that ends it (tabs and every Zs) is marked trailing. */
+function lineSegments(line: string): CommandSegment[] {
+	const tail = /[\t\p{Zs}]+$/u.exec(line)
+	const trailingFrom = tail ? tail.index : line.length
+	const out: CommandSegment[] = []
+	const push = (segment: CommandSegment) => {
+		const last = out.at(-1)
+		if (segment.kind === "text" && last?.kind === "text") last.text += segment.text
+		else out.push(segment)
 	}
-	if (last < text.length) out.push({ kind: "text", text: text.slice(last) })
+	const flush = (cls: CharClass, text: string, trailing: boolean) => {
+		if (!text) return
+		if (cls === "space") {
+			const count = text.length
+			if (count >= SPACES_RUN) push({ kind: "spaces", text: `␠×${count}`, count, trailing })
+			else push(trailing ? { kind: "trailing", text } : { kind: "text", text })
+		} else if (cls === "nonascii") {
+			push(trailing ? { kind: "nonascii", text, trailing } : { kind: "nonascii", text })
+		} else {
+			push({ kind: "text", text })
+		}
+	}
+	let run = ""
+	let runClass: CharClass | null = null
+	let runTrailing = false
+	let index = 0
+	for (const char of line) {
+		const cls = classOf(char)
+		const trailing = index >= trailingFrom
+		index += char.length
+		if (cls === "tab" || cls === "unseen") {
+			if (runClass) flush(runClass, run, runTrailing)
+			run = ""
+			runClass = null
+			if (cls === "tab") {
+				push(trailing ? { kind: "tab", text: "\t", trailing } : { kind: "tab", text: "\t" })
+			} else {
+				const escape = { kind: "escape" as const, text: escapeOf(char), char }
+				push(trailing ? { ...escape, trailing } : escape)
+			}
+			continue
+		}
+		if (cls !== runClass || trailing !== runTrailing) {
+			if (runClass) flush(runClass, run, runTrailing)
+			run = ""
+			runClass = cls
+			runTrailing = trailing
+		}
+		run += char
+	}
+	if (runClass) flush(runClass, run, runTrailing)
+	return out
 }
 
 /**
- * A command's lines, each as runs: plain text, tabs, the spaces and tabs that end a line, and
- * escapes for characters nobody can see. Joined, the runs' texts are the command exactly, but for
- * those escapes; the lines are joined by `\n`.
+ * A command's lines, each as runs: plain text, non-ASCII runs, tabs, spaces (four or more as
+ * `␠×N`), the whitespace that ends a line, and escapes for characters nobody can see. Joined,
+ * the runs' texts are the command but for those escapes and `␠×N` marks; lines are joined by `\n`.
  */
 export function commandSegments(command: string): CommandSegment[][] {
-	return command.split("\n").map(line => {
-		const out: CommandSegment[] = []
-		const end = /[ \t]+$/.exec(line)
-		const body = end ? line.slice(0, end.index) : line
-		lineRuns(body, out)
-		if (end) {
-			// A tab at the end stays a tab; the spaces around it are trailing.
-			for (const part of end[0].split(/(\t)/)) {
-				if (part === "\t") out.push({ kind: "tab", text: "\t" })
-				else if (part) out.push({ kind: "trailing", text: part })
-			}
-		}
-		return out
-	})
+	return command.split("\n").map(lineSegments)
 }
 
-/** How many tabs, and how many lines end in spaces or tabs: the card names them beside the command. */
-export function whitespaceCounts(command: string): { tabs: number; trailingLines: number } {
+/** Columns a box wraps a command line at, so nothing hides beyond its right edge. */
+export const WRAP_COLUMNS = 72
+const TAB_STOP = 4
+
+function charsOf(text: string): string[] {
+	return Array.from(text)
+}
+
+/**
+ * One line's runs cut into rows of at most `columns` columns (a tab to its next stop, an escape or a
+ * `␠×N` mark as wide as it is shown and never cut). Every row after the first continues the line.
+ */
+export function wrapSegments(segments: CommandSegment[], columns: number = WRAP_COLUMNS): CommandSegment[][] {
+	const rows: CommandSegment[][] = [[]]
+	let col = 0
+	const newRow = () => {
+		rows.push([])
+		col = 0
+	}
+	for (const segment of segments) {
+		if (segment.kind === "text" || segment.kind === "nonascii" || segment.kind === "trailing") {
+			let rest = charsOf(segment.text)
+			while (rest.length) {
+				if (col >= columns) newRow()
+				const take = rest.slice(0, columns - col)
+				rows[rows.length - 1].push({ ...segment, text: take.join("") })
+				col += take.length
+				rest = rest.slice(take.length)
+			}
+			continue
+		}
+		const width = segment.kind === "tab" ? TAB_STOP - (col % TAB_STOP) : charsOf(segment.text).length
+		if (col > 0 && col + width > columns) newRow()
+		rows[rows.length - 1].push(segment)
+		col += width
+	}
+	return rows
+}
+
+/** How many tabs, and how many lines end in whitespace (tabs and every Zs): named beside the command. */
+export function whitespaceCounts(command: string): { tabs: number; trailingLines: number; spaceRuns: number } {
 	return {
 		tabs: (command.match(/\t/g) ?? []).length,
-		trailingLines: command.split("\n").filter(line => /[ \t]$/.test(line)).length
+		trailingLines: command.split("\n").filter(line => /[\t\p{Zs}]$/u.test(line)).length,
+		spaceRuns: (command.match(new RegExp(` {${SPACES_RUN},}`, "g")) ?? []).length
 	}
+}
+
+// ── look-alike characters ─────────────────────────────────────────────────────
+
+const SCRIPTS: [string, RegExp][] = [
+	["Latin", /\p{Script=Latin}/u],
+	["Greek", /\p{Script=Greek}/u],
+	["Cyrillic", /\p{Script=Cyrillic}/u],
+	["Armenian", /\p{Script=Armenian}/u],
+	["Georgian", /\p{Script=Georgian}/u],
+	["Cherokee", /\p{Script=Cherokee}/u],
+	["Coptic", /\p{Script=Coptic}/u],
+	["Hebrew", /\p{Script=Hebrew}/u],
+	["Arabic", /\p{Script=Arabic}/u],
+	["Han", /\p{Script=Han}/u],
+	["Hiragana", /\p{Script=Hiragana}/u],
+	["Katakana", /\p{Script=Katakana}/u],
+	["Hangul", /\p{Script=Hangul}/u]
+]
+// Right-to-left scripts. Only scripts of Unicode 10 or earlier, so no browser rejects the pattern.
+const RTL =
+	/[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Samaritan}\p{Script=Mandaic}\p{Script=Adlam}\p{Script=Mende_Kikakui}\p{Script=Imperial_Aramaic}\p{Script=Phoenician}\p{Script=Avestan}\p{Script=Old_South_Arabian}\p{Script=Old_North_Arabian}\p{Script=Nabataean}\p{Script=Palmyrene}\p{Script=Hatran}\p{Script=Kharoshthi}\p{Script=Manichaean}\p{Script=Psalter_Pahlavi}\p{Script=Inscriptional_Pahlavi}\p{Script=Inscriptional_Parthian}\p{Script=Lydian}\p{Script=Cypriot}\p{Script=Old_Hungarian}\p{Script=Old_Turkic}\p{Script=Meroitic_Cursive}\p{Script=Meroitic_Hieroglyphs}]/u
+
+export interface Lookalikes {
+	/** Code points outside ASCII. */
+	nonAscii: number
+	/** The scripts of its letters, in `SCRIPTS` order, "another script" last. */
+	scripts: string[]
+	/** It holds characters of a right-to-left script. */
+	rtl: boolean
+}
+
+export function lookalikes(text: string): Lookalikes {
+	let nonAscii = 0
+	let rtl = false
+	const found = new Set<string>()
+	for (const char of text) {
+		if ((char.codePointAt(0) ?? 0) > 127) nonAscii++
+		if (RTL.test(char)) rtl = true
+		if (!/\p{L}/u.test(char)) continue
+		const script = SCRIPTS.find(([, pattern]) => pattern.test(char))
+		found.add(script ? script[0] : "another script")
+	}
+	const order = [...SCRIPTS.map(([name]) => name), "another script"]
+	return { nonAscii, scripts: order.filter(name => found.has(name)), rtl }
+}
+
+export interface LookalikeWarning {
+	flag: "non_ascii" | "mixed_scripts" | "rtl"
+	text: string
+}
+
+/** What a command or a parameter value holds that can make it read as something it isn't. */
+export function lookalikeWarnings(text: string, what = "This command"): LookalikeWarning[] {
+	const found = lookalikes(text)
+	const out: LookalikeWarning[] = []
+	if (found.nonAscii) {
+		out.push({
+			flag: "non_ascii",
+			text: `${what} holds ${found.nonAscii} non-ASCII ${found.nonAscii === 1 ? "character" : "characters"}, highlighted: a look-alike letter can make it read as something it isn't.`
+		})
+	}
+	if (found.scripts.length > 1) {
+		out.push({
+			flag: "mixed_scripts",
+			text: `${what} mixes scripts (${found.scripts.join(", ")}): letters of different alphabets can look the same.`
+		})
+	}
+	if (found.rtl) {
+		out.push({
+			flag: "rtl",
+			text: `${what} holds right-to-left characters: they can change the order it is drawn in.`
+		})
+	}
+	return out
+}
+
+/** The OS a command artifact's shell runs on, as `target.os` names it; null for an unknown shell. */
+export function shellOs(artifact: unknown): "windows" | "linux" | null {
+	if (artifact === "Windows.System.PowerShell" || artifact === "Windows.System.CmdShell") return "windows"
+	if (artifact === "Linux.Sys.BashShell") return "linux"
+	return null
+}
+
+/** Whether the record lists risk labels at all (a list, even empty), as against not labelling them. */
+export function riskLabelled(provenance: TalonActionProvenance | null | undefined): boolean {
+	return Array.isArray(provenance?.risk_labels)
 }
 
 export interface ParameterRow {
