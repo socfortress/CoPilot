@@ -74,6 +74,8 @@ class AuditAction(str, Enum):
     # AI Analyst from the Customer Portal (#1215)
     AI_ANALYSIS_REQUEST = "ai_analysis.request"
     AI_REPORT_SETTINGS_UPDATE = "ai_report.settings_update"
+    # The Customer Portal's Activity page switch, per customer (#1284).
+    ACTIVITY_SETTINGS_UPDATE = "activity.settings_update"
 
     # Talon v2 chat action proposals, decided and run in CoPilot (talon-analyst M5-11). A
     # quarantine run this way also records RESPONSE_QUARANTINE, from its own route.

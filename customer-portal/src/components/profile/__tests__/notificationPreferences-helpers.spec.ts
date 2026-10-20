@@ -32,7 +32,11 @@ describe("notification preferences helpers (#1282)", () => {
 			})
 		).toContain("no email address")
 		expect(
-			emailUnavailableText({ ...base, email_available: false, email_unavailable_reason: "SMTP is not configured" })
+			emailUnavailableText({
+				...base,
+				email_available: false,
+				email_unavailable_reason: "SMTP is not configured"
+			})
 		).toContain("not set up")
 	})
 

@@ -47,7 +47,15 @@ beforeEach(() => {
 	useServerNotifications().stop()
 	useServerNotifications().reset()
 	useNotifications().list.value = [
-		{ id: "report-1", category: "report", type: "success", title: "Report ready", description: "", read: false, date: new Date() }
+		{
+			id: "report-1",
+			category: "report",
+			type: "success",
+			title: "Report ready",
+			description: "",
+			read: false,
+			date: new Date()
+		}
 	]
 })
 
@@ -65,7 +73,7 @@ describe("the bell's server notifications", () => {
 		expect(useBell().hasUnread.value).toBe(true)
 	})
 
-	it("paints \"waiting on you\" in the waiting colour, never the warning one", async () => {
+	it('paints "waiting on you" in the waiting colour, never the warning one', async () => {
 		await serverOn([item(1)], 1)
 		const list = mount(NotificationsList)
 		await nextTick()

@@ -104,9 +104,9 @@ describe("notification preferences", () => {
 		const wrapper = render()
 		await flushPromises()
 		expect(wrapper.get("[data-testid=notification-email-unavailable]").text()).toContain("no email address")
-		expect(wrapper.find("[data-testid=notification-pref-alert_created-email] .n-base-selection--disabled").exists()).toBe(
-			true
-		)
+		expect(
+			wrapper.find("[data-testid=notification-pref-alert_created-email] .n-base-selection--disabled").exists()
+		).toBe(true)
 		wrapper.unmount()
 	})
 })

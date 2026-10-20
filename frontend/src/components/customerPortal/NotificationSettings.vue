@@ -102,7 +102,11 @@
 					</p>
 				</div>
 
-				<div v-if="settings?.updated_at" class="text-secondary text-xs" data-testid="notification-settings-updated">
+				<div
+					v-if="settings?.updated_at"
+					class="text-secondary text-xs"
+					data-testid="notification-settings-updated"
+				>
 					Last changed {{ formatDate(settings.updated_at, dFormats.datetime, { tz: true }) }}
 				</div>
 			</div>

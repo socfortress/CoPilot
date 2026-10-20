@@ -8,7 +8,12 @@ const server = vi.hoisted(() => ({ available: null as any, loadAvailability: vi.
 
 vi.mock("vue-router", () => ({ useRoute: () => route }))
 vi.mock("@/stores/auth", () => ({
-	useAuthStore: () => ({ userRoleName: "Customer_user", userName: "acme.viewer", accessibleCustomers: [], userPic: "" })
+	useAuthStore: () => ({
+		userRoleName: "Customer_user",
+		userName: "acme.viewer",
+		accessibleCustomers: [],
+		userPic: ""
+	})
 }))
 vi.mock("@/composables/common/useServerNotifications", () => ({ useServerNotifications: () => server }))
 

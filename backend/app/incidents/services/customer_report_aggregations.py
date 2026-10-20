@@ -11,6 +11,7 @@ fallback), which do not share date-extraction functions.
 """
 from datetime import datetime
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from sqlalchemy import and_
@@ -317,8 +318,19 @@ async def cases_reported_by_type(
     total = 0
     for (name,) in result.all():
         total += 1
-        upper = (name or "").upper()
-        matched = next((key for key in ("INC", "RFI", "CONF", "CTI") if f"[{key}]" in upper), "OTROS")
-        counts[matched] += 1
+        counts[case_type_key(name) or "OTROS"] += 1
     counts["total"] = total
     return counts
+
+
+#: The case types a bracketed prefix in ``case_name`` can name, in the order they are tried.
+CASE_TYPE_KEYS = ("INC", "RFI", "CONF", "CTI")
+
+
+def case_type_key(case_name: Optional[str]) -> Optional[str]:
+    """The case type named by a ``[INC]``-style prefix anywhere in ``case_name``, or None. Pure.
+
+    Shared by the PDF report and the Customer Portal's Activity page (#1284).
+    """
+    upper = (case_name or "").upper()
+    return next((key for key in CASE_TYPE_KEYS if f"[{key}]" in upper), None)

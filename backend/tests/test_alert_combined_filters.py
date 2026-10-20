@@ -145,6 +145,9 @@ def _call(**params):
         verdict_reason=None,
         date_from=None,
         date_to=None,
+        alert_name=None,
+        opened_from=None,
+        opened_before=None,
         page=1,
         page_size=25,
         order="desc",
@@ -199,6 +202,28 @@ def test_a_user_who_sees_nothing_gets_an_empty_page_without_querying():
     assert (response.alerts, response.total_filtered) == ([], 0)
     listed.assert_not_awaited()
     counted.assert_not_awaited()
+
+
+def test_the_opened_window_and_exact_name_reach_page_and_count_as_naive_utc():
+    """The portal's Activity page (#1284) links here with the window it counted in."""
+    rome = timezone(timedelta(hours=2))
+    _, listed, counted = _run_with(
+        [],
+        alert_name="Brute force",
+        opened_from=datetime(2026, 10, 1, 2, 0, tzinfo=rome),
+        opened_before=datetime(2026, 10, 31, tzinfo=timezone.utc),
+    )
+    for call in (listed, counted):
+        kwargs = call.await_args.kwargs
+        assert kwargs["alert_name"] == "Brute force"
+        assert (kwargs["opened_from"], kwargs["opened_before"]) == (datetime(2026, 10, 1, 0, 0), datetime(2026, 10, 31, 0, 0))
+
+
+@pytest.mark.parametrize("before", [datetime(2026, 10, 1), datetime(2026, 9, 1)])
+def test_an_empty_or_reversed_opened_window_is_refused(before):
+    with pytest.raises(HTTPException) as exc:
+        _call(opened_from=datetime(2026, 10, 1), opened_before=before)
+    assert exc.value.status_code == 422
 
 
 def test_a_reversed_range_is_refused():

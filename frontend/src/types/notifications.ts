@@ -39,11 +39,7 @@ export type NotificationTrigger =
 // for one notification (or the daily summary), sent over SMTP by the portal's own
 // sender. The backend rejects them on a route.
 export type PortalTrigger =
-	| "portal_alert_created"
-	| "portal_waiting_on_you"
-	| "portal_case_closed"
-	| "portal_report_ready"
-	| "portal_digest"
+	"portal_alert_created" | "portal_waiting_on_you" | "portal_case_closed" | "portal_report_ready" | "portal_digest"
 
 export const PORTAL_TRIGGERS: PortalTrigger[] = [
 	"portal_alert_created",
