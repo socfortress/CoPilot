@@ -27,10 +27,10 @@ async function mountPage(path = "/activity") {
 	})
 	await router.push(path)
 	await router.isReady()
-	const wrapper = mount(
-		defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(RouterView)) }),
-		{ global: { plugins: [router] }, attachTo: document.body }
-	)
+	const wrapper = mount(defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(RouterView)) }), {
+		global: { plugins: [router] },
+		attachTo: document.body
+	})
 	await flushPromises()
 	return { wrapper, router }
 }
@@ -64,9 +64,9 @@ describe("activityPage", () => {
 		expect(wrapper.get("[data-testid=activity-kpi-false-positives] [data-testid=activity-kpi-value]").text()).toBe(
 			"25%"
 		)
-		expect(wrapper.find("[data-testid=activity-kpi-false-positives] [data-testid=activity-kpi-delta]").exists()).toBe(
-			false
-		)
+		expect(
+			wrapper.find("[data-testid=activity-kpi-false-positives] [data-testid=activity-kpi-delta]").exists()
+		).toBe(false)
 		const rows = (testid: string) =>
 			wrapper.findAll(`[data-testid=${testid}-row]`).map(row => row.attributes("data-key"))
 		expect(rows("activity-sources")).toEqual(["wazuh", "office365"])
@@ -105,12 +105,12 @@ describe("activityPage", () => {
 		expect(linkFilters(kpi.attributes("href")).openedFrom).toBe("2026-09-01T12:00:00Z")
 
 		// Severity, reasons and cases cannot be listed as counted: they are not links.
-		expect(wrapper.get("[data-testid=activity-severities-row] [data-testid=activity-row-label]").element.tagName).toBe(
-			"SPAN"
-		)
-		expect(wrapper.get("[data-testid=activity-case-types-row] [data-testid=activity-row-count]").element.tagName).toBe(
-			"SPAN"
-		)
+		expect(
+			wrapper.get("[data-testid=activity-severities-row] [data-testid=activity-row-label]").element.tagName
+		).toBe("SPAN")
+		expect(
+			wrapper.get("[data-testid=activity-case-types-row] [data-testid=activity-row-count]").element.tagName
+		).toBe("SPAN")
 		wrapper.unmount()
 	})
 
@@ -178,7 +178,9 @@ describe("activityPage", () => {
 		quiet.alerts.top_assets = []
 		getActivity.mockImplementation(() => respond(quiet))
 		const { wrapper } = await mountPage()
-		expect(wrapper.get("[data-testid=activity-assets-panel]").text()).toContain("No alert named an asset this period")
+		expect(wrapper.get("[data-testid=activity-assets-panel]").text()).toContain(
+			"No alert named an asset this period"
+		)
 		wrapper.unmount()
 	})
 })

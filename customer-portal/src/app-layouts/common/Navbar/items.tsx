@@ -116,7 +116,11 @@ export default function getItems({ sla = false, activity = false }: NavbarFeatur
 	if (activity) {
 		items.push({
 			label: () =>
-				h(RouterLink, { to: { name: "Activity" }, "data-testid": "nav-activity" }, { default: () => "Activity" }),
+				h(
+					RouterLink,
+					{ to: { name: "Activity" }, "data-testid": "nav-activity" },
+					{ default: () => "Activity" }
+				),
 			key: "Activity",
 			icon: renderIcon(ICONS.activity)
 		})

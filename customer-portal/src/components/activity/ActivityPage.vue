@@ -39,8 +39,8 @@
 			<Icon name="carbon:activity" :size="28" class="text-tertiary" />
 			<p class="font-semibold">Activity is not available yet</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC has not published the activity breakdown for this customer. Ask your SOC contact if you would like
-				to see it here.
+				Your SOC has not published the activity breakdown for this customer. Ask your SOC contact if you would
+				like to see it here.
 			</p>
 		</div>
 
@@ -61,7 +61,8 @@
 			</div>
 
 			<p v-if="activity" class="text-tertiary -mt-2 text-xs" data-testid="activity-note">
-				Counted from when each alert and case reached the SOC, {{ periodText }}. Select a count to list those alerts.
+				Counted from when each alert and case reached the SOC, {{ periodText }}. Select a count to list those
+				alerts.
 			</p>
 
 			<div class="grid grid-cols-1 gap-6 xl:grid-cols-2" :class="{ 'opacity-60': loading && !!activity }">
@@ -81,11 +82,7 @@
 					<template #skeleton>
 						<div class="p-5"><n-skeleton text :repeat="5" /></div>
 					</template>
-					<ActivityRankList
-						:items="panel.items"
-						:link="panel.link"
-						:testid="panel.testid"
-					/>
+					<ActivityRankList :items="panel.items" :link="panel.link" :testid="panel.testid" />
 					<p
 						v-if="panel.testid === 'activity-severities'"
 						class="text-tertiary border-default mt-auto border-t px-5 py-3 text-xs"
@@ -122,7 +119,11 @@
 						<h3 class="text-secondary border-default border-t px-5 pt-4 text-xs font-medium">
 							Where the cases opened stand now
 						</h3>
-						<ActivityRankList :items="activity.cases.by_status" label-kind="status" testid="activity-case-statuses" />
+						<ActivityRankList
+							:items="activity.cases.by_status"
+							label-kind="status"
+							testid="activity-case-statuses"
+						/>
 					</template>
 				</OverviewPanel>
 				<OverviewPanel
@@ -153,7 +154,9 @@
 						<!-- Side by side when the panel spans the page: why, and where from. -->
 						<div class="divide-default grid grid-cols-1 lg:grid-cols-2 lg:divide-x">
 							<section>
-								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">Why alerts were false positives</h3>
+								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">
+									Why alerts were false positives
+								</h3>
 								<ActivityRankList
 									v-if="activity.verdicts.reasons.length"
 									:items="activity.verdicts.reasons"
@@ -162,7 +165,9 @@
 								<p v-else class="text-tertiary px-5 py-4 text-xs">No false positive this period.</p>
 							</section>
 							<section>
-								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">Detections with the most false positives</h3>
+								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">
+									Detections with the most false positives
+								</h3>
 								<ul
 									v-if="activity.verdicts.noisy_detections.length"
 									class="flex flex-col gap-3 px-5 py-4"
@@ -219,7 +224,9 @@ const { activity, error, loading, reload } = useActivity(range)
 
 const kpis = computed(() => (activity.value ? buildKpis(activity.value) : []))
 const periodMeta = computed(() => `last ${rangeLabel(range.value)}`)
-const periodText = computed(() => `over the last ${rangeLabel(range.value)} beside the ${rangeLabel(range.value)} before`)
+const periodText = computed(
+	() => `over the last ${rangeLabel(range.value)} beside the ${rangeLabel(range.value)} before`
+)
 
 /** Where a slice of `kind` leads: the alerts list showing exactly what it counted. */
 function drill(kind: DrillKind | null) {

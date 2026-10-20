@@ -25,7 +25,8 @@ function mountBar(initial: Partial<AlertsFilters> = {}) {
 							patches.push(patch)
 							filters.value = { ...filters.value, ...patch }
 						}
-					}))
+					})
+				)
 		})
 	)
 	const group = (type: string) => wrapper.find(`[data-testid=alerts-filter-${type}]`)

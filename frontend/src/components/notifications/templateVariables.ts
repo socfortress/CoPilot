@@ -325,7 +325,9 @@ export function snippetsForTrigger(trigger: NotificationTrigger | null): { label
  * emails only ever go out by email, so a word about Teams cards or other channels would mislead.
  */
 export function subjectHintForTrigger(trigger: NotificationTrigger | null): string {
-	if (trigger === "temp_password_issued") return "Used as the email's subject. Left empty, the email keeps its default subject."
-	if (isPortalTrigger(trigger)) return "Used as the email's subject. Left empty, the email takes the notification's own title."
+	if (trigger === "temp_password_issued")
+		return "Used as the email's subject. Left empty, the email keeps its default subject."
+	if (isPortalTrigger(trigger))
+		return "Used as the email's subject. Left empty, the email takes the notification's own title."
 	return "Used as the email subject and the Teams card title. Channels without a subject ignore it."
 }

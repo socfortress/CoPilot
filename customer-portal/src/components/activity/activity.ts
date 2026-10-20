@@ -105,7 +105,12 @@ export function windowOf(activity: Activity, period: Period): { from: string; be
  * (the list's own), the same window of when the alerts reached the SOC, and the slice's
  * exact value. `kind` null is every alert of the period.
  */
-export function alertsLink(activity: Activity, period: Period, kind: DrillKind | null, key?: string): RouteLocationRaw | null {
+export function alertsLink(
+	activity: Activity,
+	period: Period,
+	kind: DrillKind | null,
+	key?: string
+): RouteLocationRaw | null {
 	const window = windowOf(activity, period)
 	if (!window) return null
 	const filters = { ...EMPTY_ALERTS_FILTERS, openedFrom: window.from, openedBefore: window.before }

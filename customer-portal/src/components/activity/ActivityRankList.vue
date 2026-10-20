@@ -22,7 +22,10 @@
 			</component>
 
 			<!-- This period as the bar, the period before as a tick on the same scale. -->
-			<div class="bg-body relative order-last col-span-2 h-2 rounded-full sm:order-none sm:col-span-1" role="presentation">
+			<div
+				class="bg-body relative order-last col-span-2 h-2 rounded-full sm:order-none sm:col-span-1"
+				role="presentation"
+			>
 				<div
 					class="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none"
 					:style="{ width: `${barWidth(item.count, scale)}%`, backgroundColor: colors.current }"
@@ -30,7 +33,10 @@
 				<div
 					v-if="item.previous > 0"
 					class="absolute -inset-y-1 w-0.5 rounded-full"
-					:style="{ left: `calc(${barWidth(item.previous, scale)}% - 1px)`, backgroundColor: colors.previous }"
+					:style="{
+						left: `calc(${barWidth(item.previous, scale)}% - 1px)`,
+						backgroundColor: colors.previous
+					}"
 					:title="`The period before: ${item.previous}`"
 				/>
 			</div>
@@ -48,7 +54,11 @@
 				>
 					{{ item.count }}
 				</component>
-				<span class="text-secondary flex items-center pl-1" title="Change from the period before" data-testid="activity-row-delta">
+				<span
+					class="text-secondary flex items-center pl-1"
+					title="Change from the period before"
+					data-testid="activity-row-delta"
+				>
 					<Icon v-if="delta(item).direction === 'up'" name="carbon:arrow-up" :size="12" />
 					<Icon v-else-if="delta(item).direction === 'down'" name="carbon:arrow-down" :size="12" />
 					{{ delta(item).text }}

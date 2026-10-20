@@ -124,7 +124,9 @@ export default {
 		return HttpClient.put<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, payload)
 	},
 	getCustomerActivitySettings(customerCode: string, signal?: AbortSignal) {
-		return HttpClient.get<ActivitySettingsResponse>(`/customer_portal/activity/settings/${customerCode}`, { signal })
+		return HttpClient.get<ActivitySettingsResponse>(`/customer_portal/activity/settings/${customerCode}`, {
+			signal
+		})
 	},
 	/** Admin-only: shows or hides the portal's Activity page for this customer (#1284). */
 	setCustomerActivitySettings(customerCode: string, payload: CustomerPortalActivitySettingsPayload) {
@@ -137,6 +139,9 @@ export default {
 	},
 	/** Admin-only: turns portal users' notifications on or off for this customer (#1282). */
 	setCustomerNotificationSettings(customerCode: string, payload: CustomerPortalNotificationSettingsPayload) {
-		return HttpClient.put<NotificationSettingsResponse>(`/customer_portal/notifications/settings/${customerCode}`, payload)
+		return HttpClient.put<NotificationSettingsResponse>(
+			`/customer_portal/notifications/settings/${customerCode}`,
+			payload
+		)
 	}
 }

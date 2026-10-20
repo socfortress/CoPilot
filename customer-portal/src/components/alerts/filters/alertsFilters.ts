@@ -51,7 +51,18 @@ export const ALERTS_FILTER_LABELS: Record<AlertsFilterType, string> = {
 	opened: "Reached the SOC"
 }
 
-const QUERY_KEYS = ["title", "status", "source", "asset", "tag", "from", "to", "detection", "opened_from", "opened_before"] as const
+const QUERY_KEYS = [
+	"title",
+	"status",
+	"source",
+	"asset",
+	"tag",
+	"from",
+	"to",
+	"detection",
+	"opened_from",
+	"opened_before"
+] as const
 
 export const EMPTY_ALERTS_FILTERS: AlertsFilters = Object.freeze({
 	title: null,

@@ -171,7 +171,10 @@ describe("the reached-the-SOC window", () => {
 	})
 
 	it("drops an empty or reversed window instead of sending one the server refuses", () => {
-		const reversed = filtersFromQuery({ opened_from: "2026-10-01T12:00:00Z", opened_before: "2026-09-01T12:00:00Z" })
+		const reversed = filtersFromQuery({
+			opened_from: "2026-10-01T12:00:00Z",
+			opened_before: "2026-09-01T12:00:00Z"
+		})
 		expect([reversed.openedFrom, reversed.openedBefore]).toEqual([null, null])
 		const empty = filtersFromQuery({ opened_from: "2026-10-01T12:00:00Z", opened_before: "2026-10-01T12:00:00Z" })
 		expect([empty.openedFrom, empty.openedBefore]).toEqual([null, null])

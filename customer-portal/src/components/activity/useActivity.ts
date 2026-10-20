@@ -22,7 +22,11 @@ export function useActivity(range: Ref<ActivityRange>) {
 	function load() {
 		return run(
 			async signal => {
-				const response = await Api.activity.getActivity(range.value, customerFilterStore.queryCustomerCodes, signal)
+				const response = await Api.activity.getActivity(
+					range.value,
+					customerFilterStore.queryCustomerCodes,
+					signal
+				)
 				// A response that lands after a newer load started must not overwrite it.
 				if (signal.aborted) return
 				activity.value = response.data

@@ -95,7 +95,9 @@ describe("activity: labels and headline", () => {
 	it("shows the API's label, the key, or a status in the portal's words", () => {
 		expect(sliceLabel({ key: "INC", label: "Incident", count: 1, previous: 0 })).toBe("Incident")
 		expect(sliceLabel({ key: "wazuh", label: null, count: 1, previous: 0 })).toBe("wazuh")
-		expect(sliceLabel({ key: "PENDING_CUSTOMER", label: null, count: 1, previous: 0 }, "status")).toBe("Waiting on you")
+		expect(sliceLabel({ key: "PENDING_CUSTOMER", label: null, count: 1, previous: 0 }, "status")).toBe(
+			"Waiting on you"
+		)
 	})
 
 	it("builds the four headline figures with their changes", () => {

@@ -58,9 +58,9 @@ describe("activityRankList", () => {
 			"previous"
 		)
 		// A previous count of 0 lists nothing: not a link.
-		expect(linked.findAll("[data-testid=list-row]")[1]!.get("[data-testid=activity-row-previous]").element.tagName).toBe(
-			"SPAN"
-		)
+		expect(
+			linked.findAll("[data-testid=list-row]")[1]!.get("[data-testid=activity-row-previous]").element.tagName
+		).toBe("SPAN")
 
 		const plain = render()
 		expect(plain.find("a").exists()).toBe(false)
