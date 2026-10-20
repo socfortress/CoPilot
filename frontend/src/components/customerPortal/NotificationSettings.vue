@@ -57,28 +57,27 @@
 					variables to let users receive them by email.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm">
+				<div class="text-secondary flex flex-col gap-3 text-sm" data-testid="notification-settings-help">
 					<p>Turning this on lets each portal user of this customer choose to be told when:</p>
 					<ul class="ml-4 flex list-disc flex-col gap-1">
 						<li>
 							a
 							<b>new alert</b>
-							arrives, from the severity they pick (High by default);
+							arrives, from the severity they pick (High by default)
 						</li>
 						<li>
 							the SOC is
 							<b>waiting on their reply</b>
-							on an alert or a case;
+							on an alert or a case
 						</li>
 						<li>
 							one of their
 							<b>cases is closed</b>
-							;
 						</li>
 						<li>
 							a
 							<b>report is ready</b>
-							: one they generated, or one the SOC shared with them.
+							that they generated, or that the SOC shared with them
 						</li>
 					</ul>
 					<p>
@@ -86,25 +85,25 @@
 						<b>daily summary</b>
 						sent at
 						<b data-testid="notification-settings-digest-hour">{{ digestHourLabel }}</b>
-						. Until they choose, they get the bell only: email is theirs to turn on.
+						every day. Until they choose, they get the bell only: email is theirs to turn on.
 					</p>
 					<p>
 						A user is never told about something they caused, and never about an alert or a case the portal
 						would not show them. The emails use the
 						<b>Portal —</b>
-						message templates under
+						message templates, which can be copied and adapted for this customer under
 						<b>Notifications → Message Templates</b>
-						, which can be copied and adapted for this customer.
+						in the menu.
 					</p>
 					<p>
 						New customers start with this
 						<b>off</b>
-						.
+						until an administrator turns it on.
 					</p>
 				</div>
 
-				<div v-if="settings?.updated_at" class="text-secondary text-xs">
-					Last changed {{ formatDate(settings.updated_at, dFormats.datetime) }}
+				<div v-if="settings?.updated_at" class="text-secondary text-xs" data-testid="notification-settings-updated">
+					Last changed {{ formatDate(settings.updated_at, dFormats.datetime, { tz: true }) }}
 				</div>
 			</div>
 		</n-spin>
@@ -142,7 +141,11 @@ const digestHourLabel = computed(() => `${String(digestHour.value).padStart(2, "
 
 const FALLBACK_ERROR = "An error occurred. Please try again later."
 
-function apply(data: { settings: CustomerPortalNotificationSettings; email_configured: boolean; digest_hour_utc: number }) {
+function apply(data: {
+	settings: CustomerPortalNotificationSettings
+	email_configured: boolean
+	digest_hour_utc: number
+}) {
 	settings.value = data.settings
 	emailConfigured.value = data.email_configured
 	digestHour.value = data.digest_hour_utc
@@ -172,7 +175,9 @@ async function save(value: boolean) {
 		if (res.data.success) {
 			apply(res.data)
 			message.success(
-				value ? "Portal notifications enabled for this customer" : "Portal notifications disabled for this customer"
+				value
+					? "Portal notifications enabled for this customer"
+					: "Portal notifications disabled for this customer"
 			)
 		} else {
 			message.warning(res.data?.message || FALLBACK_ERROR)

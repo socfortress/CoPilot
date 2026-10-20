@@ -17,6 +17,8 @@ vi.mock("@/api", () => ({
 	}
 }))
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
+const formatDate = vi.hoisted(() => vi.fn((date: string, _format: string, opts?: { tz?: boolean }) => `${date}${opts?.tz ? " local" : ""}`))
+vi.mock("@/utils/format", () => ({ formatDate }))
 vi.mock("@/stores/settings", () => ({ useSettingsStore: () => ({ dateFormat: { datetime: "YYYY-MM-DD HH:mm" } }) }))
 
 function response(enabled: boolean, over: Record<string, unknown> = {}) {
@@ -46,6 +48,29 @@ beforeEach(() => {
 })
 
 describe("customer portal notification settings (#1282)", () => {
+	it("reads its help without a space before any punctuation", async () => {
+		getCustomerNotificationSettings.mockResolvedValue(response(true))
+		const wrapper = render()
+		await flushPromises()
+		const help = wrapper.get("[data-testid=notification-settings-help]").text()
+		expect(help).toContain("07:00 UTC every day.")
+		expect(help).not.toMatch(/\s[.,;:]/)
+	})
+
+	it("shows when it last changed in the viewer's time, the stored time being UTC", async () => {
+		getCustomerNotificationSettings.mockResolvedValue(
+			response(true, {
+				settings: { customer_code: "ACME", enabled: true, updated_at: "2026-10-20T10:40:00", updated_by: 1 }
+			})
+		)
+		const wrapper = render()
+		await flushPromises()
+		expect(formatDate).toHaveBeenCalledWith("2026-10-20T10:40:00", "YYYY-MM-DD HH:mm", { tz: true })
+		expect(wrapper.get("[data-testid=notification-settings-updated]").text()).toBe(
+			"Last changed 2026-10-20T10:40:00 local"
+		)
+	})
+
 	it("reads the switch as off until an admin turns it on, with the digest hour", async () => {
 		getCustomerNotificationSettings.mockResolvedValue(response(false))
 		const wrapper = render()
