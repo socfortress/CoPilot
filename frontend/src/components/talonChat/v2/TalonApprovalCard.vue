@@ -70,9 +70,13 @@
 							· agent
 							<TalonUntrusted :text="host.agentId" />
 						</span>
-						<span v-if="host.client" class="text-tertiary font-mono">
+						<span v-if="host.client" class="text-tertiary font-mono" data-testid="talon-approval-client">
 							·
 							<TalonUntrusted :text="host.client" />
+						</span>
+						<span v-if="host.os" class="text-tertiary" data-testid="talon-approval-os">
+							·
+							<TalonUntrusted :text="host.os" />
 						</span>
 					</template>
 					<span v-else class="text-tertiary">not shown</span>
@@ -81,11 +85,176 @@
 				<template v-for="arg of args" :key="arg.key">
 					<dt class="text-tertiary font-mono"><TalonUntrusted :text="arg.key" /></dt>
 					<dd class="font-mono break-all" :data-testid="`talon-approval-arg-${arg.key}`">
-						<span v-if="arg.key === 'comment'" class="text-tertiary font-sans">shown below</span>
+						<span v-if="shownBelow.has(arg.key)" class="text-tertiary font-sans">shown below</span>
 						<TalonUntrusted v-else :text="arg.text" />
 					</dd>
 				</template>
 			</dl>
+
+			<div
+				v-if="action.action === 'collect_artifact'"
+				class="flex min-w-0 flex-col gap-1"
+				data-testid="talon-approval-collection"
+			>
+				<div class="flex flex-wrap items-baseline gap-x-2">
+					<span class="text-tertiary">Artifact</span>
+					<span class="font-mono font-semibold break-all" data-testid="talon-approval-artifact">
+						<TalonUntrusted :text="artifactName" />
+					</span>
+				</div>
+				<!-- Plain text: never Markdown or HTML. -->
+				<p
+					v-if="catalogueNote"
+					class="text-secondary m-0 break-words whitespace-pre-wrap"
+					data-testid="talon-approval-catalogue-note"
+				>
+					<TalonUntrusted :text="catalogueNote" />
+				</p>
+				<span class="text-tertiary">Parameters, sent to Velociraptor as written</span>
+				<n-table
+					v-if="parameters.ok && parameters.rows.length"
+					size="small"
+					:single-line="false"
+					class="text-xs"
+					data-testid="talon-approval-parameters"
+				>
+					<thead>
+						<tr>
+							<th>Parameter</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="(row, index) of parameters.rows" :key="index" data-testid="talon-approval-parameter">
+							<td class="font-mono break-all" data-testid="talon-approval-parameter-key">
+								<TalonUntrusted :text="row.key" />
+							</td>
+							<td data-testid="talon-approval-parameter-value">
+								<TalonCommandText
+									inline
+									:text="row.value"
+									:columns="40"
+									test-id="talon-approval-parameter-text"
+								/>
+							</td>
+						</tr>
+					</tbody>
+				</n-table>
+				<div v-else-if="parameters.ok" class="text-secondary" data-testid="talon-approval-parameters-none">
+					None: the artifact runs with its own defaults.
+				</div>
+				<template v-else>
+					<n-alert
+						type="warning"
+						:bordered="false"
+						class="text-xs"
+						data-testid="talon-approval-parameters-raw-note"
+					>
+						These parameters aren't in the shape CoPilot sends to Velociraptor. They are shown as the record
+						holds them.
+					</n-alert>
+					<div
+						class="bg-default max-h-60 overflow-auto rounded p-1.5 font-mono break-all whitespace-pre-wrap"
+						data-testid="talon-approval-parameters-raw"
+					>
+						<TalonUntrusted :text="parametersRaw" />
+					</div>
+				</template>
+				<div
+					v-for="warning of parameterLookalikes"
+					:key="warning.flag"
+					class="text-warning"
+					data-testid="talon-approval-parameters-lookalike"
+					:data-flag="warning.flag"
+				>
+					{{ warning.text }}
+				</div>
+			</div>
+
+			<div
+				v-if="action.action === 'endpoint_command'"
+				class="flex min-w-0 flex-col gap-1.5"
+				data-testid="talon-approval-command"
+			>
+				<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+					<span class="text-tertiary">Shell</span>
+					<span class="font-semibold" data-testid="talon-approval-shell">
+						{{ shell ?? "not a known shell" }}
+					</span>
+					<span class="text-tertiary font-mono break-all" data-testid="talon-approval-shell-artifact">
+						<TalonUntrusted :text="artifactName" />
+					</span>
+					<n-tag
+						size="small"
+						:bordered="false"
+						:type="shapeCaution ? 'warning' : 'success'"
+						data-testid="talon-approval-shape"
+						:data-shape="shape"
+						:data-caution="shapeCaution ? 'true' : 'false'"
+					>
+						{{ shapeLabel }}
+					</n-tag>
+				</div>
+				<n-alert
+					v-if="shellMismatch"
+					type="warning"
+					:bordered="false"
+					class="text-xs"
+					data-testid="talon-approval-shell-mismatch"
+				>
+					{{ shellMismatch }}
+				</n-alert>
+				<div :class="shapeCaution ? 'text-warning' : 'text-tertiary'" data-testid="talon-approval-shape-note">
+					{{ shapeNote }}
+				</div>
+				<div class="flex flex-wrap items-center gap-1.5" data-testid="talon-approval-risks">
+					<span class="text-tertiary">Risk labels</span>
+					<n-tag
+						v-for="risk of risks"
+						:key="risk.key"
+						size="small"
+						type="error"
+						:bordered="false"
+						data-testid="talon-approval-risk"
+						:data-risk="risk.key"
+					>
+						<TalonUntrusted :text="risk.text" />
+					</n-tag>
+					<span v-if="!riskListed" class="text-warning" data-testid="talon-approval-risks-unlabelled">
+						not labelled
+					</span>
+					<span v-else-if="!risks.length" class="text-secondary" data-testid="talon-approval-risks-none">
+						none matched
+					</span>
+				</div>
+				<div class="text-tertiary" data-testid="talon-approval-risks-note">{{ RISK_LABELS_NOTE }}</div>
+				<div class="flex flex-wrap items-baseline gap-x-3">
+					<span class="text-tertiary grow">The command, exactly as it runs (plain text, every line)</span>
+					<span class="text-secondary" data-testid="talon-approval-command-counts">
+						{{ commandCountsText }}
+					</span>
+				</div>
+				<n-alert
+					v-for="warning of commandLookalikes"
+					:key="warning.flag"
+					type="warning"
+					:bordered="false"
+					class="text-xs"
+					data-testid="talon-approval-command-lookalike"
+					:data-flag="warning.flag"
+				>
+					{{ warning.text }}
+				</n-alert>
+				<TalonCommandText
+					:text="command"
+					:max-rows="16"
+					:total-lines="commandLines"
+					test-id="talon-approval-command-text"
+				/>
+				<div v-if="whitespaceText" class="text-warning" data-testid="talon-approval-whitespace">
+					{{ whitespaceText }}
+				</div>
+			</div>
 
 			<div class="flex flex-col gap-0.5" data-testid="talon-approval-reason">
 				<span class="text-tertiary">The model's reason (untrusted: written by the model, not checked)</span>
@@ -126,6 +295,10 @@
 			<div v-if="resultText" class="text-secondary" data-testid="talon-approval-result">
 				Result:
 				<TalonUntrusted :text="resultText" />
+			</div>
+			<div v-if="flowId" class="text-secondary" data-testid="talon-approval-flow">
+				Velociraptor flow
+				<span class="font-mono"><TalonUntrusted :text="flowId" /></span>
 			</div>
 			<div v-if="reasonText" class="text-tertiary" data-testid="talon-approval-state-reason">
 				<TalonUntrusted :text="reasonText" />
@@ -214,12 +387,61 @@
 						<template v-else>{{ part.text }}</template>
 					</template>
 				</p>
+				<div
+					v-if="action.action === 'endpoint_command'"
+					class="flex min-w-0 flex-col gap-1"
+					data-testid="talon-approval-confirm-command"
+				>
+					<span class="text-secondary text-xs" data-testid="talon-approval-confirm-first-line-label">
+						Its first non-blank line, line {{ commandFirst.line }} ({{ commandCountsText }} in all):
+					</span>
+					<span
+						v-if="commandFirst.line > 1"
+						class="text-warning text-xs"
+						data-testid="talon-approval-confirm-blank-lines"
+					>
+						The command starts with {{ commandFirst.line - 1 }} blank
+						{{ commandFirst.line === 2 ? "line" : "lines" }}.
+					</span>
+					<TalonCommandText
+						:text="commandFirst.text"
+						:first-line-number="commandFirst.line"
+						:columns="56"
+						:max-rows="6"
+						test-id="talon-approval-confirm-first-line"
+					/>
+					<span
+						v-if="commandLines > commandFirst.line"
+						class="text-warning text-xs"
+						data-testid="talon-approval-confirm-more"
+					>
+						and {{ commandLines - commandFirst.line }} more
+						{{ commandLines - commandFirst.line === 1 ? "line" : "lines" }}: read the whole command on the
+						card before running it.
+					</span>
+					<span
+						v-for="warning of confirmWarnings"
+						:key="warning.flag"
+						class="text-warning text-xs"
+						data-testid="talon-approval-confirm-warning"
+						:data-flag="warning.flag"
+					>
+						{{ warning.text }}
+					</span>
+				</div>
 				<p class="text-secondary text-xs">
 					<template v-if="action.action === 'quarantine_host'">
 						Velociraptor cuts the host off the network but for its connection to Velociraptor.
 					</template>
 					<template v-else-if="action.action === 'release_host'">
 						Velociraptor gives the host its network connections back.
+					</template>
+					<template v-else-if="action.action === 'collect_artifact'">
+						Velociraptor collects the artifact on the host; Talon reads the results.
+					</template>
+					<template v-else-if="action.action === 'endpoint_command'">
+						Velociraptor runs the command on the host with its client's privileges (SYSTEM on Windows, root
+						on Linux); Talon reads the output.
 					</template>
 					CoPilot runs it now, as you. The target and customer are CoPilot's record of the proposal.
 				</p>
@@ -257,8 +479,14 @@
 // first, naming the action, the target and the customer from the record, which the button row
 // also shows. The record, the read and the decision in flight are shared by every card of the
 // proposal, and one poll for the page keeps them fresh (`actionCards.ts`).
+//
+// Endpoint actions (talon-analyst's endpoint actions plan, EA-4; SPEC §9.5, D74-D79): a collection
+// shows its artifact and a table of the parameters CoPilot sends; a command shows its shell, its
+// read-only / free-form shape, talon-analyst's risk labels, its counts, and the command itself in a
+// `<pre>` of text nodes (`TalonCommandText`: whole, scrolled, tabs and trailing spaces marked). The
+// confirm names the host and, for a command, its first line.
 import type { DecisionKind } from "./actionCards"
-import { NAlert, NButton, NModal, NTag } from "naive-ui"
+import { NAlert, NButton, NModal, NTable, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -266,18 +494,32 @@ import { formatDate } from "@/utils/format"
 import { useActionCard } from "./actionCards"
 import {
 	actionLabel,
+	collectionParameters,
+	commandCounts,
+	commandShape,
+	countsText,
 	expiryDeadline,
+	firstContentLine,
 	hasHiddenChars,
+	hasUnseenChars,
 	HIDDEN_CHARS_WARNING,
 	isHostAction,
 	isWithdrawable,
+	lookalikeWarnings,
 	parseUtc,
 	provenanceWarnings,
+	RISK_LABELS_NOTE,
+	riskLabelled,
+	riskLabels,
 	safeSegments,
+	shellOf,
+	shellOs,
 	stateLabel,
 	stateTone,
-	timeLeft
+	timeLeft,
+	whitespaceCounts
 } from "./approvals"
+import TalonCommandText from "./TalonCommandText"
 import TalonUntrusted from "./TalonUntrusted"
 
 const { approvalId } = defineProps<{ approvalId: string }>()
@@ -331,7 +573,8 @@ const host = computed(() => {
 	return {
 		hostname: asText(target.hostname ?? ""),
 		agentId: asText(target.agent_id ?? ""),
-		client: typeof target.velociraptor_id === "string" ? target.velociraptor_id : null
+		client: typeof target.velociraptor_id === "string" ? target.velociraptor_id : null,
+		os: typeof target.os === "string" ? target.os : null
 	}
 })
 
@@ -343,6 +586,94 @@ const comment = computed(() => {
 	return value === undefined ? null : asText(value)
 })
 
+// ── a collection or a command ──
+
+/** Arguments shown in their own view below the list, not inline. */
+const shownBelow = computed(() => {
+	const keys = new Set(["comment"])
+	if (action.value?.action === "collect_artifact") keys.add("parameters")
+	if (action.value?.action === "endpoint_command") keys.add("command")
+	return keys
+})
+const artifactName = computed(() => asText(action.value?.args?.artifact_name ?? ""))
+const parameters = computed(() => collectionParameters(action.value?.args?.parameters))
+const parameterLookalikes = computed(() =>
+	lookalikeWarnings(parameters.value.rows.map(row => row.value).join("\n"), "A parameter value")
+)
+/** The catalogue's one-line note for the artifact (talon-analyst's `provenance.catalogue_note`). */
+const catalogueNote = computed(() => {
+	const note = action.value?.provenance?.catalogue_note
+	return typeof note === "string" && note.trim() ? note : null
+})
+const parametersRaw = computed(() => {
+	const value = action.value?.args?.parameters
+	try {
+		return JSON.stringify(value, null, 2) ?? String(value)
+	} catch {
+		return String(value)
+	}
+})
+
+const command = computed(() => {
+	const value = action.value?.args?.command
+	return value === undefined || value === null ? "" : asText(value)
+})
+const commandLines = computed(() => commandCounts(command.value).lines)
+const commandCountsText = computed(() => countsText(command.value))
+const commandFirst = computed(() => firstContentLine(command.value))
+const shell = computed(() => shellOf(action.value?.args?.artifact_name))
+const shellMismatch = computed(() => {
+	const os = host.value?.os
+	const runsOn = shellOs(action.value?.args?.artifact_name)
+	if (!os || !runsOn || os.toLowerCase() === runsOn) return null
+	return `The shell (${shell.value}) is for ${runsOn === "windows" ? "Windows" : "Linux"} hosts, but this host's OS is recorded as ${os}. CoPilot should refuse it: don't approve it.`
+})
+const shape = computed(() => commandShape(action.value?.provenance))
+const risks = computed(() => riskLabels(action.value?.provenance))
+const riskListed = computed(() => riskLabelled(action.value?.provenance))
+const copied = computed(() => action.value?.provenance?.copied_from_output === true)
+/** Read-only gets the caution style too when the command carries risk labels or copied output. */
+const shapeCaution = computed(() => shape.value !== "read-only" || risks.value.length > 0 || copied.value)
+const shapeLabel = computed(() => (shape.value === "unknown" ? "shape not labelled" : shape.value))
+const shapeNote = computed(() => {
+	switch (shape.value) {
+		case "read-only":
+			if (shapeCaution.value) {
+				const why = [
+					risks.value.length ? "risk labels" : "",
+					copied.value ? "parts copied from endpoint output" : ""
+				]
+					.filter(Boolean)
+					.join(" and ")
+				return `Labelled read-only, but it carries ${why}: read every line before approving.`
+			}
+			return "Read-only shape: talon-analyst found only read commands and filters, by a short allowlist. A heuristic: read it anyway."
+		case "free-form":
+			return "Free-form: not only plain reads. It may change the host: read every line before approving."
+		default:
+			return "talon-analyst didn't label this command's shape: treat it as free-form and read every line."
+	}
+})
+const commandLookalikes = computed(() => lookalikeWarnings(command.value))
+const confirmWarnings = computed(() => {
+	const out = commandLookalikes.value.map(w => ({ flag: w.flag as string, text: w.text }))
+	if (hasUnseenChars(command.value)) out.unshift({ flag: "hidden", text: HIDDEN_CHARS_WARNING })
+	return out
+})
+const whitespace = computed(() => whitespaceCounts(command.value))
+const whitespaceText = computed(() => {
+	const { tabs, trailingLines, spaceRuns } = whitespace.value
+	const parts: string[] = []
+	if (tabs) parts.push(`${tabs} ${tabs === 1 ? "tab" : "tabs"}, marked →`)
+	if (spaceRuns) {
+		parts.push(`${spaceRuns} ${spaceRuns === 1 ? "run" : "runs"} of 4 or more spaces, shown as ␠×N`)
+	}
+	if (trailingLines) {
+		parts.push(`${trailingLines} ${trailingLines === 1 ? "line ends" : "lines end"} in whitespace, highlighted`)
+	}
+	return parts.length ? `Whitespace: ${parts.join("; ")}.` : null
+})
+
 /** "set Alert #840 to CLOSED (ACME)": the decision in the record's own words; untrusted parts marked. */
 const summary = computed(() => {
 	const a = action.value
@@ -351,6 +682,12 @@ const summary = computed(() => {
 	const untrusted = (text: string) => ({ text, untrusted: true })
 	const alert = alertId.value !== null ? plain(`Alert #${alertId.value}`) : plain("an alert")
 	const argText = (key: string) => untrusted(asText(a.args?.[key] ?? ""))
+	const onHost = () => [
+		untrusted(host.value?.hostname ?? ""),
+		plain(" (agent "),
+		untrusted(host.value?.agentId ?? ""),
+		plain(")")
+	]
 	let parts: { text: string; untrusted: boolean }[]
 	switch (a.action) {
 		case "set_alert_status":
@@ -364,13 +701,15 @@ const summary = computed(() => {
 			break
 		case "quarantine_host":
 		case "release_host":
-			parts = [
-				plain(a.action === "quarantine_host" ? "quarantine " : "release "),
-				untrusted(host.value?.hostname ?? ""),
-				plain(" (agent "),
-				untrusted(host.value?.agentId ?? ""),
-				plain(")")
-			]
+			parts = [plain(a.action === "quarantine_host" ? "quarantine " : "release "), ...onHost()]
+			break
+		case "collect_artifact":
+			parts = [plain("collect "), untrusted(artifactName.value), plain(" on "), ...onHost()]
+			break
+		case "endpoint_command":
+			parts = shell.value
+				? [plain(`run a ${shell.value} command on `), ...onHost()]
+				: [plain("run a command ("), untrusted(artifactName.value), plain(") on "), ...onHost()]
 			break
 		default:
 			parts = [plain(actionLabel(a.action))]
@@ -400,9 +739,15 @@ const hiddenChars = computed(() => {
 		a.execution_result?.message,
 		...Object.keys(a.args ?? {}),
 		...args.value.map(arg => arg.text),
-		...Object.values(a.target ?? {}).map(asText)
+		...Object.values(a.target ?? {}).map(asText),
+		...riskLabels(a.provenance).map(risk => risk.text),
+		...parameters.value.rows.flatMap(row => [row.key, row.value])
 	]
-	return values.some(value => typeof value === "string" && hasHiddenChars(value))
+	return (
+		values.some(value => typeof value === "string" && hasHiddenChars(value)) ||
+		(a.action === "endpoint_command" && hasUnseenChars(command.value)) ||
+		parameters.value.rows.some(row => hasUnseenChars(row.key) || hasUnseenChars(row.value))
+	)
 })
 
 const warnings = computed(() => provenanceWarnings(action.value?.provenance))
@@ -438,6 +783,10 @@ const resultText = computed(() => {
 	const message = action.value?.execution_result?.message
 	return typeof message === "string" && message ? message : null
 })
+const flowId = computed(() => {
+	const flow = action.value?.execution_result?.flow_id
+	return typeof flow === "string" && flow ? flow : null
+})
 const reasonText = computed(() => {
 	const reason = action.value?.state_reason
 	return reason && reason !== resultText.value ? reason : null
@@ -451,11 +800,15 @@ const reportText = computed(() => {
 const confirmTitle = computed(() => {
 	if (action.value?.action === "quarantine_host") return "Quarantine this host?"
 	if (action.value?.action === "release_host") return "Release this host from quarantine?"
+	if (action.value?.action === "collect_artifact") return "Collect this artifact on the host?"
+	if (action.value?.action === "endpoint_command") return "Run this command on the host?"
 	return "Approve this action?"
 })
 const confirmVerb = computed(() => {
 	if (action.value?.action === "quarantine_host") return "Quarantine"
 	if (action.value?.action === "release_host") return "Release"
+	if (action.value?.action === "collect_artifact") return "Collect"
+	if (action.value?.action === "endpoint_command") return "Run the command"
 	return "Approve and run"
 })
 

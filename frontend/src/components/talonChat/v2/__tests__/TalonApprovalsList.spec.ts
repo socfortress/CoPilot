@@ -16,7 +16,7 @@ import {
 	watchApprovals
 } from "@/composables/useTalonApprovals"
 import TalonApprovalsList from "../TalonApprovalsList.vue"
-import { quarantineAction, talonAction } from "./fixtures"
+import { collectAction, commandAction, quarantineAction, talonAction } from "./fixtures"
 
 const list = vi.fn()
 
@@ -133,6 +133,45 @@ describe("talon approvals list", () => {
 		expect(row.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(true)
 		expect(row.text()).not.toMatch(/[\u200B\u202E]/)
 		expect(plain.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(false)
+	})
+
+	it("a collection and a command show their kind, with the artifact or the shell, and their host", async () => {
+		const collection = collectAction({ id: "a-4" })
+		const command = commandAction("Get-Process", { id: "a-5" })
+		const hidden = collectAction({
+			id: "a-6",
+			args: {
+				hostname: "WIN-DC01",
+				artifact_name: "Windows.System.Pslist",
+				parameters: { env: [{ key: "ProcessRegex", value: "a\u202Eb" }] }
+			}
+		})
+		list.mockResolvedValueOnce(answer([collection, command, DECIDE, hidden]))
+		await refreshApprovals()
+		const wrapper = render()
+		await flushPromises()
+		const [first, second, third, fourth] = wrapper.findAll('[data-testid="talon-approvals-row"]')
+
+		expect(first.get('[data-testid="talon-approvals-row-action"]').text()).toBe("Collect a Velociraptor artifact")
+		const kind = first.get('[data-testid="talon-approvals-row-kind"]')
+		expect(kind.attributes("data-kind")).toBe("collection")
+		expect(kind.text().replace(/\s+/g, " ")).toBe("Collection · Windows.System.Pslist")
+		expect(kind.find("bdi").exists()).toBe(true)
+		expect(first.get('[data-testid="talon-approvals-row-target"]').text()).toBe("WIN-DC01")
+
+		expect(second.get('[data-testid="talon-approvals-row-action"]').text()).toBe("Run a command on the endpoint")
+		expect(second.get('[data-testid="talon-approvals-row-kind"]').attributes("data-kind")).toBe("command")
+		expect(second.get('[data-testid="talon-approvals-row-kind"]').text().replace(/\s+/g, " ")).toBe(
+			"Command · PowerShell"
+		)
+		expect(second.get('[data-testid="talon-approvals-row-target"]').text()).toBe("WIN-DC01")
+		// The command itself is the card's to show, never the row's.
+		expect(second.text()).not.toContain("Get-Process")
+
+		expect(third.find('[data-testid="talon-approvals-row-kind"]').exists()).toBe(false)
+		// A hidden character inside a collection's parameters flags the row.
+		expect(first.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(false)
+		expect(fourth.find('[data-testid="talon-approvals-row-hidden"]').exists()).toBe(true)
 	})
 
 	it("an empty list says so; a refused read shows its text", async () => {
