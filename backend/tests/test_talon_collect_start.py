@@ -43,6 +43,7 @@ from sqlalchemy import update  # noqa: E402
 import app.connectors.velociraptor.services.artifacts as artifacts_service  # noqa: E402
 import tests.test_talon_actions as harness  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
+from app.auth.models.users import User  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
 from app.connectors.talon.services import talon_service_account  # noqa: E402
@@ -1154,16 +1155,15 @@ async def _record_id(ctx, user_id, username=None):
 
 
 @pytest.mark.parametrize(
-    "recorded, username, cleared",
+    "recorded, username, cleared, warned",
     [
-        (20, None, False),  # talon-analyst, still named so
-        (21, "svc", False),
-        (2, None, True),  # the id is now `ana`'s: never gate her
-        (99, None, True),  # no such user any more
-        (21, None, True),  # `svc`, but the setting's name is talon-analyst
+        (20, None, False, False),  # talon-analyst, still named so
+        (21, "svc", False, False),
+        (99, None, True, True),  # no user has the id any more: cleared
+        (21, None, False, True),  # `svc`, while the setting's name is talon-analyst: kept, with a warning
     ],
 )
-def test_startup_clears_a_recorded_id_that_no_longer_belongs_to_the_service_account(recorded, username, cleared):
+def test_startup_clears_a_recorded_id_only_when_no_user_has_it(recorded, username, cleared, warned):
     lines = []
 
     async def scenario(client, ctx):
@@ -1178,7 +1178,37 @@ def test_startup_clears_a_recorded_id_that_no_longer_belongs_to_the_service_acco
 
     row = call(scenario)
     assert (row.collect_service_user_id is None) is cleared and (row.collect_service_user_id == recorded) is not cleared
-    assert bool([line for line in lines if "no longer belongs" in line]) is cleared
+    assert bool([line for line in lines if "recorded service-account user id" in line]) is warned
+
+
+def test_a_renamed_service_account_is_still_gated_after_a_restart():
+    lines = []
+
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            with patch.object(talon_collections, "record_audit_event", ctx.audit):
+                await client.put(SETTINGS, json={"service_username": "svc", "allowed_artifacts": ALL_AUTO_RUN}, headers=as_user("admin"))
+            async with ctx.db.session() as session:  # the account is renamed outside the setting
+                await session.execute(update(User).where(User.id == 21).values(username="renamed"))
+                await session.commit()
+            sink = logger.add(lambda message: lines.append(str(message)), level="WARNING")
+            try:
+                await talon_service_account.warn_if_service_user_missing(ctx.db.engine)  # a restart
+            finally:
+                logger.remove(sink)
+            async with ctx.db.session() as session:
+                row = await session.get(TalonConnectorSettings, 1)
+            with patch.dict(harness.USERS, {"renamed": (21, 2, [ACME])}), patch.dict(harness.SCOPES, {"renamed": ["analyst"]}):
+                outside = await client.post(ROUTE, json=body("Windows.System.DNSCache"), headers=as_user("renamed"))
+                manual = await client.post(ROUTE, json=SERVICES, headers=as_user("renamed"))
+        return row, outside, manual, vr
+
+    row, outside, manual, vr = call(scenario)
+    assert row.collect_service_user_id == 21  # kept
+    assert outside.status_code == 403 and outside.json()["message"] == talon_collections.SERVICE_REFUSED  # still held
+    assert manual.status_code == 200 and vr.starts[0][2]["literal_values"] is True  # its allowlist still works
+    assert [line for line in lines if "stays held to the gate" in line]
 
 
 def test_deleting_the_service_user_clears_its_recorded_id():
