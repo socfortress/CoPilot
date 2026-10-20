@@ -1077,29 +1077,41 @@ describe("talon approval card: endpoint collections and commands", () => {
 		expect(find(wrapper, "command-text").get('[data-testid="talon-command-spaces"]').text()).toBe("⟨␠×4⟩")
 	})
 
-	it("in a box narrower than 72 columns the rows are cut to fit it; a row still too wide is cued", async () => {
-		const sizes = { box: 300, scroll: 300 }
+	/**
+	 * Layout widths for the command box and its font probe (jsdom lays nothing out). The probe's
+	 * `getBoundingClientRect` answers a box scaled to 0.9, as during NModal's entry animation, to show
+	 * it isn't what's measured.
+	 */
+	function layout(sizes: { box: number; scroll: number; char: number }) {
 		const isBox = (el: Element) => (el as HTMLElement).dataset?.testid?.endsWith("-box") ?? false
-		const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get").mockImplementation(function (
-			this: Element
-		) {
-			return isBox(this) ? sizes.box : 0
-		})
-		const scrollWidth = vi.spyOn(Element.prototype, "scrollWidth", "get").mockImplementation(function (
-			this: Element
-		) {
-			return isBox(this) ? sizes.scroll : 0
-		})
-		const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
-			// The probe: ten zeros, 7 px each.
-			const width = (this as HTMLElement).dataset?.probe ? 70 : 0
-			return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) }
-		})
+		const isProbe = (el: Element) => !!(el as HTMLElement).dataset?.probe
+		const spies = [
+			vi.spyOn(Element.prototype, "clientWidth", "get").mockImplementation(function (this: Element) {
+				return isBox(this) ? sizes.box : 0
+			}),
+			vi.spyOn(Element.prototype, "scrollWidth", "get").mockImplementation(function (this: Element) {
+				return isBox(this) ? sizes.scroll : 0
+			}),
+			vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+				return isProbe(this) ? sizes.char * 10 : 0
+			}),
+			vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+				const width = isProbe(this) ? sizes.char * 10 * 0.9 : 0
+				return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) }
+			})
+		]
+		return () => spies.forEach(spy => spy.mockRestore())
+	}
+
+	it("in a box narrower than 72 columns the rows are cut to fit it; a row still too wide is cued", async () => {
+		const sizes = { box: 300, scroll: 300, char: 7 }
+		const restore = layout(sizes)
 		try {
 			const line = `${"a ".repeat(60)}end`
 			const wrapper = await mounted(commandAction(line))
 			await flushPromises()
-			// 300 px less a gutter of 2.5ch (17.5 px), at 7 px a column: 40 columns.
+			// 300 px less a gutter of 2.5ch (17.5 px), at 7 px a column: 40 columns (not the 44 a
+			// scaled-down probe would give).
 			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("40")
 			const rows = rowTexts(wrapper)
 			expect(rows.length).toBe(Math.ceil(line.length / 40))
@@ -1119,9 +1131,110 @@ describe("talon approval card: endpoint collections and commands", () => {
 				"A line is wider than the box: scroll sideways to see all of it."
 			)
 		} finally {
-			clientWidth.mockRestore()
-			scrollWidth.mockRestore()
-			rect.mockRestore()
+			restore()
 		}
+	})
+
+	it("a resize the ResizeObserver reports re-wraps the rows to the new width", async () => {
+		const callbacks: (() => void)[] = []
+		vi.stubGlobal(
+			"ResizeObserver",
+			class {
+				constructor(callback: () => void) {
+					callbacks.push(callback)
+				}
+
+				observe() {}
+				disconnect() {}
+			}
+		)
+		const sizes = { box: 300, scroll: 300, char: 7 }
+		const restore = layout(sizes)
+		try {
+			const line = "b ".repeat(50)
+			const wrapper = await mounted(commandAction(line.trimEnd()))
+			await flushPromises()
+			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("40")
+			expect(callbacks.length).toBeGreaterThan(0)
+
+			// 230 px less 17.5 px of gutter, at 7 px: 30 columns.
+			sizes.box = 230
+			for (const callback of callbacks) callback()
+			await flushPromises()
+			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("30")
+			const rows = rowTexts(wrapper)
+			expect(rows.length).toBe(Math.ceil(line.trimEnd().length / 30))
+			for (const row of rows) {
+				expect([...row].length).toBeLessThanOrEqual(30)
+				expect(row.startsWith(" ") || row.endsWith(" ")).toBe(false)
+			}
+		} finally {
+			restore()
+			vi.unstubAllGlobals()
+		}
+	})
+
+	it("the rows are measured again once the page's fonts have loaded", async () => {
+		let loaded: () => void = () => {}
+		const ready = new Promise<void>(resolve => (loaded = resolve))
+		const fonts = Object.getOwnPropertyDescriptor(document, "fonts")
+		Object.defineProperty(document, "fonts", { configurable: true, value: { ready } })
+		const sizes = { box: 300, scroll: 300, char: 7 }
+		const restore = layout(sizes)
+		try {
+			const wrapper = await mounted(commandAction("c ".repeat(50).trimEnd()))
+			await flushPromises()
+			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("40")
+			// The web font is narrower: 300 px less 2.5ch (15 px), at 6 px: 47 columns.
+			sizes.char = 6
+			loaded()
+			await flushPromises()
+			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("47")
+		} finally {
+			restore()
+			if (fonts) Object.defineProperty(document, "fonts", fonts)
+			else delete (document as { fonts?: unknown }).fonts
+		}
+	})
+
+	it("in the confirm, a space or a tab at a row's edge is visible", async () => {
+		const space = await mounted(commandAction(`${"x".repeat(55)} y`))
+		await find(space, "approve").trigger("click")
+		expect(rowTexts(space, "confirm-first-line")).toEqual([`${"x".repeat(55)}␠`, "y"])
+		space.unmount()
+
+		resetTalonActions()
+		const tabs = await mounted(commandAction(`${"x".repeat(54)}\t${"z".repeat(56)}\ty`))
+		await find(tabs, "approve").trigger("click")
+		const rows = find(tabs, "confirm-first-line").findAll('[data-testid="talon-command-row"]')
+		expect(rows).toHaveLength(3)
+		// A tab that ends a row and one that starts the next: each drawn with its marker.
+		expect(rows[0].findAll("span").at(-1)?.attributes("data-testid")).toBe("talon-command-tab")
+		expect(rows[2].findAll("span")[0]?.attributes("data-testid")).toBe("talon-command-tab")
+	})
+
+	it("in a parameter value, a space or a tab at a row's edge is visible", async () => {
+		const wrapper = await mounted(
+			collectAction({
+				args: {
+					hostname: "WIN-DC01",
+					artifact_name: "Windows.System.Pslist",
+					parameters: {
+						env: [
+							{ key: "ProcessRegex", value: `${"a".repeat(39)} b` },
+							{ key: "PathRegex", value: `${"a".repeat(40)}\tb` }
+						]
+					}
+				}
+			})
+		)
+		const [spaced, tabbed] = wrapper.findAll('[data-testid="talon-approval-parameter-text"]')
+		const texts = (el: typeof spaced) =>
+			el.findAll('[data-testid="talon-command-row"]').map(row => row.element.textContent?.replace(/\n$/, ""))
+		expect(texts(spaced)).toEqual([`${"a".repeat(39)}␠`, "b"])
+		expect(spaced.classes()).toContain("whitespace-pre")
+		const rows = tabbed.findAll('[data-testid="talon-command-row"]')
+		expect(rows).toHaveLength(2)
+		expect(rows[1].findAll("span")[0]?.attributes("data-testid")).toBe("talon-command-tab")
 	})
 })

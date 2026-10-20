@@ -66,7 +66,9 @@ export default defineComponent({
 		function measure() {
 			const el = box.value
 			if (!el) return
-			const charWidth = (probe.value?.getBoundingClientRect().width ?? 0) / 10
+			// Layout widths (`offsetWidth`, `clientWidth`), never `getBoundingClientRect`: a transform (NModal's
+			// scale-in) shrinks the latter while it animates, which would cut the rows too short.
+			const charWidth = (probe.value?.offsetWidth ?? 0) / 10
 			// Not inline: a table cell's width follows its content, so measuring it could feed back.
 			if (!props.inline && charWidth > 0 && el.clientWidth > 0) {
 				const style = typeof getComputedStyle === "function" ? getComputedStyle(el) : null
@@ -81,18 +83,26 @@ export default defineComponent({
 				wideOverflow.value = el.scrollWidth > el.clientWidth + 1
 			})
 		}
+		let unmounted = false
 		onMounted(() => {
 			measure()
 			if (typeof ResizeObserver !== "undefined" && box.value) {
 				observer = new ResizeObserver(() => measure())
 				observer.observe(box.value)
 			}
+			// A web font that loads late changes the glyph width: measure again once fonts are in.
+			if (typeof document !== "undefined" && document.fonts?.ready) {
+				document.fonts.ready.then(() => !unmounted && measure()).catch(() => {})
+			}
 		})
 		watch(
 			() => [props.text, props.columns],
 			() => nextTick(measure)
 		)
-		onBeforeUnmount(() => observer?.disconnect())
+		onBeforeUnmount(() => {
+			unmounted = true
+			observer?.disconnect()
+		})
 
 		function run(segment: CommandSegment, key: string): VNode | string {
 			const trailing = "trailing" in segment && segment.trailing ? ` ${TRAILING_MARK}` : ""
