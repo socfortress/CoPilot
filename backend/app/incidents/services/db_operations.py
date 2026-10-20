@@ -88,6 +88,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.middleware.customer_access import customer_access_handler
+from app.soc_management.models.sla import AlertSlaTracking
 from app.soc_management.services.lifecycle import SlaLifecycleRecorder
 
 
@@ -411,12 +412,20 @@ def _alert_criteria(
     verdict_reason: Optional[str] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
+    alert_name: Optional[str] = None,
+    opened_from: Optional[datetime] = None,
+    opened_before: Optional[datetime] = None,
 ) -> List[Any]:
     """WHERE clauses for the alert filter set, shared by the page and its count.
 
     Asset, tag and IoC criteria name the joined tables; both queries join them the
     same way. ``date_from`` / ``date_to`` bound ``alert_creation_time`` inclusively and
     must be naive UTC, like the column.
+
+    ``alert_name`` is an exact match (``alert_title`` searches). ``opened_from`` (inclusive)
+    and ``opened_before`` (exclusive) bound when the alert reached the SOC, its SLA clock's
+    ``opened_at``, which ingest never moves: the window the portal's Activity page counts
+    in (#1284), so a click on one of its slices lists exactly what it counted.
     """
     filters: List[Any] = []
     if assigned_to:
@@ -448,6 +457,15 @@ def _alert_criteria(
         filters.append(Alert.alert_creation_time >= date_from)
     if date_to:
         filters.append(Alert.alert_creation_time <= date_to)
+    if alert_name:
+        filters.append(Alert.alert_name == alert_name)
+    if opened_from or opened_before:
+        opened = select(AlertSlaTracking.alert_id)
+        if opened_from:
+            opened = opened.where(AlertSlaTracking.opened_at >= opened_from)
+        if opened_before:
+            opened = opened.where(AlertSlaTracking.opened_at < opened_before)
+        filters.append(Alert.id.in_(opened))
     return filters
 
 
@@ -467,6 +485,9 @@ async def alerts_total_multiple_filters(
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     visibility: Optional[List[Any]] = None,
+    alert_name: Optional[str] = None,
+    opened_from: Optional[datetime] = None,
+    opened_before: Optional[datetime] = None,
 ) -> int:
     """Count alerts matching the filter set.
 
@@ -489,6 +510,9 @@ async def alerts_total_multiple_filters(
         verdict_reason=verdict_reason,
         date_from=date_from,
         date_to=date_to,
+        alert_name=alert_name,
+        opened_from=opened_from,
+        opened_before=opened_before,
     )
 
     # Build the query with dynamic filters
@@ -2432,6 +2456,9 @@ async def list_alerts_multiple_filters(
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     visibility: Optional[List[Any]] = None,
+    alert_name: Optional[str] = None,
+    opened_from: Optional[datetime] = None,
+    opened_before: Optional[datetime] = None,
 ) -> List[AlertOut]:
     """List alerts with multiple filters including tag-based RBAC.
 
@@ -2464,6 +2491,9 @@ async def list_alerts_multiple_filters(
         verdict_reason=verdict_reason,
         date_from=date_from,
         date_to=date_to,
+        alert_name=alert_name,
+        opened_from=opened_from,
+        opened_before=opened_before,
     )
 
     if visibility is not None:

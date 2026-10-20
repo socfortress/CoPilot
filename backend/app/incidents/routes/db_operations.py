@@ -2276,6 +2276,12 @@ async def list_alerts_multiple_filters_endpoint(
     verdict_reason: Optional[str] = Query(None, description="False-positive reason; only meaningful alongside verdict=FALSE_POSITIVE"),
     date_from: Optional[datetime] = Query(None, description="Alerts created at or after this time (ISO 8601; without an offset, UTC)"),
     date_to: Optional[datetime] = Query(None, description="Alerts created at or before this time (ISO 8601; without an offset, UTC)"),
+    alert_name: Optional[str] = Query(None, description="Exact alert name (alert_title searches instead)"),
+    opened_from: Optional[datetime] = Query(
+        None,
+        description="Alerts that reached the SOC at or after this time: their SLA clock's opened_at, which ingest never moves",
+    ),
+    opened_before: Optional[datetime] = Query(None, description="Alerts that reached the SOC before this time (exclusive)"),
     page: int = Query(1, ge=1),
     page_size: int = Query(25, ge=1),
     order: str = Query("desc", pattern="^(asc|desc)$"),
@@ -2294,6 +2300,9 @@ async def list_alerts_multiple_filters_endpoint(
     date_from, date_to = to_naive_utc(date_from), to_naive_utc(date_to)
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=422, detail="date_from must not be after date_to")
+    opened_from, opened_before = to_naive_utc(opened_from), to_naive_utc(opened_before)
+    if opened_from and opened_before and opened_from >= opened_before:
+        raise HTTPException(status_code=422, detail="opened_from must be before opened_before")
 
     # Customers (the requested subset intersected with what the user may see — never
     # widened) and tag RBAC, built once for the page and its count.
@@ -2321,6 +2330,9 @@ async def list_alerts_multiple_filters_endpoint(
         verdict_reason=verdict_reason,
         date_from=date_from,
         date_to=date_to,
+        alert_name=alert_name,
+        opened_from=opened_from,
+        opened_before=opened_before,
         db=db,
         page=page,
         page_size=page_size,
@@ -2344,6 +2356,9 @@ async def list_alerts_multiple_filters_endpoint(
         verdict_reason=verdict_reason,
         date_from=date_from,
         date_to=date_to,
+        alert_name=alert_name,
+        opened_from=opened_from,
+        opened_before=opened_before,
         visibility=visibility,
         db=db,
     )
