@@ -264,8 +264,10 @@ export type CommandSegment =
 	| { kind: "tab"; text: string; trailing?: boolean }
 	/** Fewer than four spaces that end a line, kept as written and highlighted. */
 	| { kind: "trailing"; text: string }
-	/** Four or more spaces in a row, shown as `␠×N`; `trailing` when they end the line. */
+	/** Four or more spaces in a row, shown as `⟨␠×N⟩`; `trailing` when they end the line. */
 	| { kind: "spaces"; text: string; count: number; trailing: boolean }
+	/** A space where a row wraps (the last of a row or the first of the next), drawn as `␠`. */
+	| { kind: "edge"; text: string }
 	/** A character nobody can see, shown as `⟨U+000D⟩`; `trailing` when it ends the line. */
 	| { kind: "escape"; text: string; char: string; trailing?: boolean }
 
@@ -283,7 +285,7 @@ export function hasUnseenChars(text: string): boolean {
 	return UNSEEN_ANY.test(text)
 }
 
-/** Spaces in a row from this many on are shown as `␠×N`, so a long gap can't push text away. */
+/** Spaces in a row from this many on are shown as `⟨␠×N⟩`, so a long gap can't push text away. */
 export const SPACES_RUN = 4
 
 type CharClass = "tab" | "space" | "unseen" | "nonascii" | "ascii"
@@ -309,7 +311,7 @@ function lineSegments(line: string): CommandSegment[] {
 		if (!text) return
 		if (cls === "space") {
 			const count = text.length
-			if (count >= SPACES_RUN) push({ kind: "spaces", text: `␠×${count}`, count, trailing })
+			if (count >= SPACES_RUN) push({ kind: "spaces", text: `⟨␠×${count}⟩`, count, trailing })
 			else push(trailing ? { kind: "trailing", text } : { kind: "text", text })
 		} else if (cls === "nonascii") {
 			push(trailing ? { kind: "nonascii", text, trailing } : { kind: "nonascii", text })
@@ -351,26 +353,48 @@ function lineSegments(line: string): CommandSegment[] {
 
 /**
  * A command's lines, each as runs: plain text, non-ASCII runs, tabs, spaces (four or more as
- * `␠×N`), the whitespace that ends a line, and escapes for characters nobody can see. Joined,
- * the runs' texts are the command but for those escapes and `␠×N` marks; lines are joined by `\n`.
+ * `⟨␠×N⟩`), the whitespace that ends a line, and escapes for characters nobody can see. Joined,
+ * the runs' texts are the command but for those escapes and `⟨␠×N⟩` marks; lines are joined by `\n`.
  */
 export function commandSegments(command: string): CommandSegment[][] {
 	return command.split("\n").map(lineSegments)
 }
 
-/** Columns a box wraps a command line at, so nothing hides beyond its right edge. */
+/** Columns a box wraps a command line at, at most, so nothing hides beyond its right edge. */
 export const WRAP_COLUMNS = 72
+/** The fewest columns a box wraps at, however narrow it is (it then scrolls sideways, and says so). */
+export const MIN_WRAP_COLUMNS = 16
 const TAB_STOP = 4
+// Characters a monospace font draws two columns wide: East Asian wide and fullwidth, and emoji.
+const WIDE =
+	/[\u1100-\u115F\u2E80-\u303E\u3041-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6\u{1F300}-\u{1F64F}\u{1F900}-\u{1F9FF}\u{20000}-\u{3FFFD}]/u
 
 function charsOf(text: string): string[] {
 	return Array.from(text)
 }
 
+/** Columns one character takes in a monospace font. */
+export function charColumns(char: string): number {
+	return WIDE.test(char) ? 2 : 1
+}
+
+function textColumns(text: string): number {
+	return charsOf(text).reduce((sum, char) => sum + charColumns(char), 0)
+}
+
+/** Columns a run takes starting at column `col` (a tab to its next stop). */
+export function segmentColumns(segment: CommandSegment, col = 0): number {
+	return segment.kind === "tab" ? TAB_STOP - (col % TAB_STOP) : textColumns(segment.text)
+}
+
 /**
- * One line's runs cut into rows of at most `columns` columns (a tab to its next stop, an escape or a
- * `␠×N` mark as wide as it is shown and never cut). Every row after the first continues the line.
+ * One line's runs cut into rows of at most `columns` columns (a tab to its next stop, a wide
+ * character two; an escape or a `⟨␠×N⟩` mark is never cut). Every row after the first continues the
+ * line. A space where a row wraps (the last of a row, or the first of the next) would look like no
+ * space at all, so it is drawn as `␠` (an `edge` run).
  */
 export function wrapSegments(segments: CommandSegment[], columns: number = WRAP_COLUMNS): CommandSegment[][] {
+	const width = Math.max(1, Math.floor(columns))
 	const rows: CommandSegment[][] = [[]]
 	let col = 0
 	const newRow = () => {
@@ -379,22 +403,48 @@ export function wrapSegments(segments: CommandSegment[], columns: number = WRAP_
 	}
 	for (const segment of segments) {
 		if (segment.kind === "text" || segment.kind === "nonascii" || segment.kind === "trailing") {
-			let rest = charsOf(segment.text)
-			while (rest.length) {
-				if (col >= columns) newRow()
-				const take = rest.slice(0, columns - col)
-				rows[rows.length - 1].push({ ...segment, text: take.join("") })
-				col += take.length
-				rest = rest.slice(take.length)
+			let piece = ""
+			for (const char of charsOf(segment.text)) {
+				const w = charColumns(char)
+				if (col > 0 && col + w > width) {
+					if (piece) rows[rows.length - 1].push({ ...segment, text: piece })
+					piece = ""
+					newRow()
+				}
+				piece += char
+				col += w
 			}
+			if (piece) rows[rows.length - 1].push({ ...segment, text: piece })
 			continue
 		}
-		const width = segment.kind === "tab" ? TAB_STOP - (col % TAB_STOP) : charsOf(segment.text).length
-		if (col > 0 && col + width > columns) newRow()
+		let w = segmentColumns(segment, col)
+		if (col > 0 && col + w > width) {
+			newRow()
+			w = segmentColumns(segment, 0)
+		}
 		rows[rows.length - 1].push(segment)
-		col += width
+		col += w
+	}
+	// The spaces at each wrap, drawn: the last run of a row and the first of the next.
+	for (let i = 0; i < rows.length - 1; i++) {
+		markEdge(rows[i], "end")
+		markEdge(rows[i + 1], "start")
 	}
 	return rows
+}
+
+function markEdge(row: CommandSegment[], side: "start" | "end") {
+	const index = side === "start" ? 0 : row.length - 1
+	const segment = row[index]
+	if (!segment || segment.kind !== "text") return
+	const text = segment.text
+	if (side === "end" && text.endsWith(" ")) {
+		const rest = text.slice(0, -1)
+		row.splice(index, 1, ...(rest ? [{ ...segment, text: rest }] : []), { kind: "edge", text: "␠" })
+	} else if (side === "start" && text.startsWith(" ")) {
+		const rest = text.slice(1)
+		row.splice(index, 1, { kind: "edge", text: "␠" }, ...(rest ? [{ ...segment, text: rest }] : []))
+	}
 }
 
 /** How many tabs, and how many lines end in whitespace (tabs and every Zs): named beside the command. */
@@ -423,9 +473,10 @@ const SCRIPTS: [string, RegExp][] = [
 	["Katakana", /\p{Script=Katakana}/u],
 	["Hangul", /\p{Script=Hangul}/u]
 ]
-// Right-to-left scripts. Only scripts of Unicode 10 or earlier, so no browser rejects the pattern.
-const RTL =
-	/[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}\p{Script=Nko}\p{Script=Samaritan}\p{Script=Mandaic}\p{Script=Adlam}\p{Script=Mende_Kikakui}\p{Script=Imperial_Aramaic}\p{Script=Phoenician}\p{Script=Avestan}\p{Script=Old_South_Arabian}\p{Script=Old_North_Arabian}\p{Script=Nabataean}\p{Script=Palmyrene}\p{Script=Hatran}\p{Script=Kharoshthi}\p{Script=Manichaean}\p{Script=Psalter_Pahlavi}\p{Script=Inscriptional_Pahlavi}\p{Script=Inscriptional_Parthian}\p{Script=Lydian}\p{Script=Cypriot}\p{Script=Old_Hungarian}\p{Script=Old_Turkic}\p{Script=Meroitic_Cursive}\p{Script=Meroitic_Hieroglyphs}]/u
+// Right-to-left characters by code point: Hebrew to Arabic Extended (U+0590-08FF), the Hebrew and
+// Arabic presentation forms (FB1D-FDFF, FE70-FEFF), and the right-to-left blocks of planes 1
+// (10800-10FFF, 1E800-1EFFF). Ranges, not script names, so a script newer than the browser counts.
+const RTL = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u
 
 export interface Lookalikes {
 	/** Code points outside ASCII. */

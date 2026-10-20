@@ -216,9 +216,9 @@ describe("talon approval helpers", () => {
 		expect(commandSegments("a    b c  d     ")).toEqual([
 			[
 				{ kind: "text", text: "a" },
-				{ kind: "spaces", text: "␠×4", count: 4, trailing: false },
+				{ kind: "spaces", text: "⟨␠×4⟩", count: 4, trailing: false },
 				{ kind: "text", text: "b c  d" },
-				{ kind: "spaces", text: "␠×5", count: 5, trailing: true }
+				{ kind: "spaces", text: "⟨␠×5⟩", count: 5, trailing: true }
 			]
 		])
 		expect(commandSegments("Proc\u0435ss\u00A0")).toEqual([
@@ -278,15 +278,16 @@ describe("talon approval helpers", () => {
 				{ kind: "text", text: "abc" },
 				{ kind: "escape", text: "⟨U+00A0⟩", char: "\u00A0" },
 				{ kind: "tab", text: "\t" },
-				{ kind: "spaces", text: "␠×9", count: 9, trailing: true }
+				{ kind: "spaces", text: "⟨␠×9⟩", count: 9, trailing: true }
 			],
 			8
 		)
-		expect(mixed.map(row => row.map(s => s.kind))).toEqual([["text"], ["escape"], ["tab", "spaces"]])
+		// "⟨␠×9⟩" takes 5 columns: after the tab's 4 it doesn't fit in 8.
+		expect(mixed.map(row => row.map(s => s.kind))).toEqual([["text"], ["escape"], ["tab"], ["spaces"]])
 		expect(wrapSegments([], 8)).toEqual([[]])
 		// Code points, not UTF-16 units: an emoji is never split.
 		expect(
-			wrapSegments([{ kind: "nonascii", text: "\u{1F600}\u{1F600}\u{1F600}" }], 2).map(r => r[0].text)
+			wrapSegments([{ kind: "nonascii", text: "\u{1F600}\u{1F600}\u{1F600}" }], 4).map(r => r[0].text)
 		).toEqual(["\u{1F600}\u{1F600}", "\u{1F600}"])
 	})
 
@@ -296,6 +297,13 @@ describe("talon approval helpers", () => {
 		expect(lookalikes("\u03BFpen")).toEqual({ nonAscii: 1, scripts: ["Latin", "Greek"], rtl: false })
 		expect(lookalikes("echo \u05E9")).toEqual({ nonAscii: 1, scripts: ["Latin", "Hebrew"], rtl: true })
 		expect(lookalikes("\u0627").rtl).toBe(true)
+		// By code point, so a script newer than the browser's Unicode tables counts too.
+		expect(lookalikes("x\u{10D00}").rtl).toBe(true)
+		expect(lookalikes("\u{1E900}").rtl).toBe(true)
+		expect(lookalikes("\uFB1D").rtl).toBe(true)
+		expect(lookalikes("\uFE70").rtl).toBe(true)
+		expect(lookalikes("\u08FF").rtl).toBe(true)
+		expect(lookalikes("\u058F\u0900\uFB1C\u{107FF}\u{11000}").rtl).toBe(false)
 		expect(lookalikes("caf\u00E9")).toEqual({ nonAscii: 1, scripts: ["Latin"], rtl: false })
 		expect(lookalikeWarnings("caf\u00E9").map(w => w.flag)).toEqual(["non_ascii"])
 		expect(lookalikeWarnings("Get-Process")).toEqual([])

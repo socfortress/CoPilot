@@ -130,7 +130,12 @@
 								<TalonUntrusted :text="row.key" />
 							</td>
 							<td data-testid="talon-approval-parameter-value">
-								<TalonCommandText inline :text="row.value" test-id="talon-approval-parameter-text" />
+								<TalonCommandText
+									inline
+									:text="row.value"
+									:columns="40"
+									test-id="talon-approval-parameter-text"
+								/>
 							</td>
 						</tr>
 					</tbody>
@@ -401,6 +406,7 @@
 					<TalonCommandText
 						:text="commandFirst.text"
 						:first-line-number="commandFirst.line"
+						:columns="56"
 						:max-rows="6"
 						test-id="talon-approval-confirm-first-line"
 					/>

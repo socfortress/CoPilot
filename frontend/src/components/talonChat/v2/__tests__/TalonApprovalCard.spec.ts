@@ -540,9 +540,9 @@ describe("talon approval card: endpoint collections and commands", () => {
 		// Text nodes and the whitespace markers only.
 		expect(pre.findAll("*").every(el => el.element.tagName === "SPAN")).toBe(true)
 		// Wrapped, never scrolled sideways; the box scrolls up and down only, and says so.
-		expect(pre.classes()).toEqual(expect.arrayContaining(["whitespace-break-spaces", "break-all"]))
-		const box = find(wrapper, "command-text-box")
-		expect(box.classes()).toEqual(expect.arrayContaining(["overflow-y-auto", "overflow-x-hidden"]))
+		// Our rows are the only wrap: the browser never wraps a row again (at a space, say).
+		expect(pre.classes()).toContain("whitespace-pre")
+		expect(find(wrapper, "command-text-box").classes()).toContain("overflow-auto")
 		expect(find(wrapper, "command-text-scroll-cue").text()).toBe("40 lines, scroll to see all")
 		// One numbered line per command line, the number drawn by CSS, not text.
 		const lines = pre.findAll('[data-testid="talon-command-line"]')
@@ -839,17 +839,21 @@ describe("talon approval card: endpoint collections and commands", () => {
 		])
 		// The confirm's first line wraps the same way.
 		await find(wrapper, "approve").trigger("click")
-		const confirmRows = find(wrapper, "confirm-first-line").findAll('[data-testid="talon-command-row"]')
-		expect(confirmRows.length).toBe(rows.length)
+		// The dialog is narrower: its rows are cut at 56 columns, the same way.
+		const confirm = find(wrapper, "confirm-first-line")
+		expect(confirm.attributes("data-columns")).toBe("56")
+		const confirmRows = confirm.findAll('[data-testid="talon-command-row"]')
+		expect(confirmRows.length).toBe(Math.ceil(long.length / 56))
 		expect(confirmRows[1].attributes("data-gutter")).toBe("↪")
-		expect(find(wrapper, "confirm-first-line-box").classes()).toContain("overflow-x-hidden")
+		for (const row of confirmRows) expect([...(row.element.textContent ?? "")].length).toBeLessThanOrEqual(56)
+		expect(confirm.classes()).toContain("whitespace-pre")
 	})
 
 	it("a short command has no scroll cue; four or more spaces in a row show as ␠×N", async () => {
 		const wrapper = await mounted(commandAction("Get-Process      -Name x"))
 		expect(find(wrapper, "command-text-scroll-cue").exists()).toBe(false)
 		const spaces = find(wrapper, "command-text").get('[data-testid="talon-command-spaces"]')
-		expect(spaces.text()).toBe("␠×6")
+		expect(spaces.text()).toBe("⟨␠×6⟩")
 		expect(spaces.attributes("data-count")).toBe("6")
 		expect(find(wrapper, "whitespace").text()).toBe("Whitespace: 1 run of 4 or more spaces, shown as ␠×N.")
 	})
@@ -930,7 +934,7 @@ describe("talon approval card: endpoint collections and commands", () => {
 			})
 		)
 		const [first, second] = wrapper.findAll('[data-testid="talon-approval-parameter-text"]')
-		expect(first.element.textContent).toBe("4624⟨U+00A0⟩|4625␠×5x\t")
+		expect(first.element.textContent).toBe("4624⟨U+00A0⟩|4625⟨␠×5⟩x\t")
 		expect(first.find('[data-testid="talon-untrusted-escape"]').exists()).toBe(true)
 		expect(first.get('[data-testid="talon-command-spaces"]').attributes("data-count")).toBe("5")
 		expect(first.get('[data-testid="talon-command-tab"]').classes()).toContain("outline-dashed")
@@ -1012,5 +1016,112 @@ describe("talon approval card: endpoint collections and commands", () => {
 		resetTalonActions()
 		const powershell = await mounted(commandAction("Get-Process"))
 		expect(find(powershell, "shell-mismatch").exists()).toBe(false)
+	})
+
+	// ── re-review of #1285 ──
+
+	/** Each row's text, without the line's hidden newline. */
+	function rowTexts(wrapper: Wrapper, id = "command-text") {
+		return find(wrapper, id)
+			.findAll('[data-testid="talon-command-row"]')
+			.map(row => (row.element.textContent ?? "").replace(/\n$/, ""))
+	}
+
+	it("a space exactly at column 72 ends its row as a visible ␠", async () => {
+		const line = `${"x".repeat(71)} ${"y".repeat(10)}`
+		const wrapper = await mounted(commandAction(line))
+		expect(rowTexts(wrapper)).toEqual([`${"x".repeat(71)}␠`, "y".repeat(10)])
+		const edges = find(wrapper, "command-text").findAll('[data-testid="talon-command-edge"]')
+		expect(edges.map(edge => edge.text())).toEqual(["␠"])
+	})
+
+	it("a space at column 73 starts the next row as a visible ␠", async () => {
+		const line = `${"x".repeat(72)} y`
+		const wrapper = await mounted(commandAction(line))
+		expect(rowTexts(wrapper)).toEqual(["x".repeat(72), "␠y"])
+	})
+
+	it("a 2,000-character line shows every space: none at a row's edge, each one counted", async () => {
+		const words: string[] = []
+		for (let i = 0; words.join(" ").length < 2000; i++) words.push(`w${i % 7 === 0 ? "" : "o".repeat(i % 5)}`)
+		const line = words.join(" ").slice(0, 2000)
+		expect(line).toHaveLength(2000)
+		const wrapper = await mounted(commandAction(line))
+		const rows = rowTexts(wrapper)
+		for (const row of rows) {
+			expect(row.startsWith(" "), row).toBe(false)
+			expect(row.endsWith(" "), row).toBe(false)
+			expect([...row].length).toBeLessThanOrEqual(72)
+		}
+		const shown = rows.join("")
+		const spaces = (text: string) => (text.match(/ /g) ?? []).length
+		expect(spaces(shown) + (shown.match(/␠/g) ?? []).length).toBe(spaces(line))
+		// Put back, the rows are the line.
+		expect(shown.replaceAll("␠", " ")).toBe(line)
+	})
+
+	it("a 30-line command shows all 30 lines, and says the box scrolls", async () => {
+		const command = Array.from({ length: 30 }, (_, i) => `Get-Service -Name svc${i + 1}`).join("\n")
+		const wrapper = await mounted(commandAction(command))
+		const lines = find(wrapper, "command-text").findAll('[data-testid="talon-command-line"]')
+		expect(lines.map(line => line.attributes("data-line"))).toEqual(
+			Array.from({ length: 30 }, (_, i) => String(i + 1))
+		)
+		expect(lines.map(line => line.text())).toEqual(command.split("\n"))
+		expect(find(wrapper, "command-text-scroll-cue").text()).toBe("30 lines, scroll to see all")
+	})
+
+	it("⟨␠×N⟩ is delimited, so the digits after it can't run into its count", async () => {
+		const wrapper = await mounted(commandAction("Get-WinEvent -Id    4624"))
+		expect(find(wrapper, "command-text").element.textContent).toBe("Get-WinEvent -Id⟨␠×4⟩4624")
+		expect(find(wrapper, "command-text").get('[data-testid="talon-command-spaces"]').text()).toBe("⟨␠×4⟩")
+	})
+
+	it("in a box narrower than 72 columns the rows are cut to fit it; a row still too wide is cued", async () => {
+		const sizes = { box: 300, scroll: 300 }
+		const isBox = (el: Element) => (el as HTMLElement).dataset?.testid?.endsWith("-box") ?? false
+		const clientWidth = vi.spyOn(Element.prototype, "clientWidth", "get").mockImplementation(function (
+			this: Element
+		) {
+			return isBox(this) ? sizes.box : 0
+		})
+		const scrollWidth = vi.spyOn(Element.prototype, "scrollWidth", "get").mockImplementation(function (
+			this: Element
+		) {
+			return isBox(this) ? sizes.scroll : 0
+		})
+		const rect = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+			// The probe: ten zeros, 7 px each.
+			const width = (this as HTMLElement).dataset?.probe ? 70 : 0
+			return { width, height: 0, top: 0, left: 0, right: width, bottom: 0, x: 0, y: 0, toJSON: () => ({}) }
+		})
+		try {
+			const line = `${"a ".repeat(60)}end`
+			const wrapper = await mounted(commandAction(line))
+			await flushPromises()
+			// 300 px less a gutter of 2.5ch (17.5 px), at 7 px a column: 40 columns.
+			expect(find(wrapper, "command-text").attributes("data-columns")).toBe("40")
+			const rows = rowTexts(wrapper)
+			expect(rows.length).toBe(Math.ceil(line.length / 40))
+			for (const row of rows) {
+				expect([...row].length).toBeLessThanOrEqual(40)
+				expect(row.startsWith(" ") || row.endsWith(" ")).toBe(false)
+			}
+			expect(find(wrapper, "command-text-sideways-cue").exists()).toBe(false)
+			wrapper.unmount()
+
+			// A row wider than the box after all (a font with wider glyphs): the box says so.
+			sizes.scroll = 420
+			resetTalonActions()
+			const wide = await mounted(commandAction(line))
+			await flushPromises()
+			expect(find(wide, "command-text-sideways-cue").text()).toBe(
+				"A line is wider than the box: scroll sideways to see all of it."
+			)
+		} finally {
+			clientWidth.mockRestore()
+			scrollWidth.mockRestore()
+			rect.mockRestore()
+		}
 	})
 })
