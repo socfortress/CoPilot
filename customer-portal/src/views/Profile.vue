@@ -70,7 +70,7 @@
 
 <script lang="ts" setup>
 import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
@@ -89,8 +89,14 @@ const tabActive = ref(useRoute().query.tab === "notifications" ? "notifications"
 // Only while the user's customer has portal notifications on (#1282).
 const server = useServerNotifications()
 const notificationsOn = server.available
-onBeforeMount(() => {
-	void server.loadAvailability()
+// A link to the tab while notifications are off (or once they are switched off) shows Settings, never an empty page.
+function leaveHiddenTab() {
+	if (!notificationsOn.value && tabActive.value === "notifications") tabActive.value = "settings"
+}
+watch(notificationsOn, leaveHiddenTab)
+onBeforeMount(async () => {
+	await server.loadAvailability()
+	leaveHiddenTab()
 })
 const authStore = useAuthStore()
 
