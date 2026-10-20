@@ -5,6 +5,9 @@ from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_rou
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.me import customer_portal_me_router
+from app.customer_portal.routes.notifications import (
+    customer_portal_notifications_router,
+)
 from app.customer_portal.routes.settings import customer_portal_settings_router
 from app.customer_portal.routes.sla import customer_portal_sla_router
 
@@ -51,4 +54,10 @@ router.include_router(
     customer_portal_me_router,
     prefix="/customer_portal",
     tags=["Customer Portal Profile"],
+)
+# Portal users' email and in-app notifications (#1282) — opt-in per customer, each user's own choices
+router.include_router(
+    customer_portal_notifications_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Notifications"],
 )

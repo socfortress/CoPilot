@@ -536,6 +536,81 @@ class CustomerPortalSlaSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalNotificationSettings(SQLModel, table=True):
+    """Per-customer switch for portal users' email and in-app notifications (#1282).
+
+    **Opt-in** like the AI report and SLA switches: a customer with no row here sends
+    its portal users nothing. Read only through
+    ``app/customer_portal/services/notifications.py``.
+    """
+
+    __tablename__ = "customer_portal_notification_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # Cascades: deleting a customer takes its switch with it rather than being refused.
+    customer_code: str = Field(
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=False, unique=True, index=True),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)
+
+
+class CustomerPortalNotificationPref(SQLModel, table=True):
+    """A portal user's choice for one notification event (#1282).
+
+    One row per (user, event), written only when the user saves their choices: a
+    missing row reads as the defaults (in-app on, email off, alerts from High up).
+    ``email`` is ``off`` | ``immediate`` | ``digest``; ``min_severity`` applies to
+    new alerts only.
+    """
+
+    __tablename__ = "customer_portal_notification_pref"
+    __table_args__ = (UniqueConstraint("user_id", "event", name="uq_portal_notification_pref_user_event"),)
+
+    id: Optional[int] = Field(primary_key=True)
+    user_id: int = Field(sa_column=Column(ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    event: str = Field(max_length=40, nullable=False)
+    in_app: bool = Field(default=True, nullable=False)
+    email: str = Field(default="off", max_length=10, nullable=False)
+    min_severity: Optional[str] = Field(default=None, max_length=20, nullable=True)
+    updated_at: datetime = Field(default_factory=now_utc)
+
+
+class CustomerPortalNotification(SQLModel, table=True):
+    """One notification for one portal user (#1282): the bell's feed and the email queue.
+
+    Written once per (user, ``dedupe_key``), so a retried or concurrent emission never
+    notifies twice. ``in_app`` false keeps the row out of the bell (the user wants it
+    by email only). ``email_mode`` is ``none`` | ``immediate`` | ``digest`` and
+    ``email_status`` follows it: ``pending`` → ``sending`` (claimed) → ``sent`` |
+    ``failed`` | ``skipped``. Times are naive UTC.
+    """
+
+    __tablename__ = "customer_portal_notification"
+    __table_args__ = (UniqueConstraint("user_id", "dedupe_key", name="uq_portal_notification_user_dedupe"),)
+
+    id: Optional[int] = Field(primary_key=True)
+    user_id: int = Field(sa_column=Column(ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True))
+    customer_code: str = Field(
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=False, index=True),
+    )
+    event: str = Field(max_length=40, nullable=False)
+    entity_type: str = Field(max_length=20, nullable=False)
+    entity_id: int = Field(nullable=False)
+    dedupe_key: str = Field(max_length=191, nullable=False)
+    title: str = Field(max_length=255, nullable=False)
+    body: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    severity: Optional[str] = Field(default=None, max_length=20, nullable=True)
+    in_app: bool = Field(default=True, nullable=False)
+    created_at: datetime = Field(default_factory=now_utc, index=True)
+    read_at: Optional[datetime] = Field(default=None, nullable=True)
+    email_mode: str = Field(default="none", max_length=10, nullable=False)
+    email_status: Optional[str] = Field(default=None, max_length=10, nullable=True, index=True)
+    emailed_at: Optional[datetime] = Field(default=None, nullable=True)
+    email_error: Optional[str] = Field(default=None, max_length=500, nullable=True)
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 
