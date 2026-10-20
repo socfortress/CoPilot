@@ -1,4 +1,5 @@
 import type {
+	CustomerPortalActivitySettings,
 	CustomerPortalAiReportSettings,
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
@@ -58,6 +59,14 @@ type SlaSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalSlaSettings
 }
 
+export interface CustomerPortalActivitySettingsPayload {
+	enabled: boolean
+}
+
+type ActivitySettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalActivitySettings
+}
+
 export default {
 	/** Global settings with the inline logo, for the editor. The public `/settings` omits the logo bytes. */
 	getSettings(signal?: AbortSignal) {
@@ -100,5 +109,12 @@ export default {
 	/** Admin-only: shows or hides the portal's SLA page for this customer (#1187). */
 	setCustomerSlaSettings(customerCode: string, payload: CustomerPortalSlaSettingsPayload) {
 		return HttpClient.put<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, payload)
+	},
+	getCustomerActivitySettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<ActivitySettingsResponse>(`/customer_portal/activity/settings/${customerCode}`, { signal })
+	},
+	/** Admin-only: shows or hides the portal's Activity page for this customer (#1284). */
+	setCustomerActivitySettings(customerCode: string, payload: CustomerPortalActivitySettingsPayload) {
+		return HttpClient.put<ActivitySettingsResponse>(`/customer_portal/activity/settings/${customerCode}`, payload)
 	}
 }
