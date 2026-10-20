@@ -5,9 +5,15 @@ in its PRs): every artifact name, the parameters the model may set, and the para
 pins with their values. A change there needs the same change here, or CoPilot refuses the proposal.
 Mirrored from talon-analyst ``main`` at ``fb6991e``.
 
-A Talon collection (an approved ``collect_artifact``; EA-4b's service-account start route reuses
-``catalogue_violation``) names an artifact here, exactly as written, sets only its settable
-parameters, and sends every pinned parameter at its pinned value. CoPilot's analyst allowlist
+A Talon collection (an approved ``collect_artifact``) names an artifact here, exactly as written,
+sets only its settable parameters, and sends every pinned parameter at its pinned value.
+
+``TALON_AUTO_RUN`` is the stricter **auto-run subset** (talon-analyst ``AUTO_RUN``, D77; plan EA-4b):
+what an investigation collects without an approval, as the Talon service account, through
+``POST /api/artifacts/collect/start``. Each entry is a ``TALON_CATALOGUE`` entry with nothing
+settable (the model picks a kind, never a parameter) and the same pins, which turn the upload and
+hashing switches off. The service account is held to the admin's allowlist of these names
+(``talon_collections``), checked by ``auto_run_violation``. CoPilot's analyst allowlist
 (``collection_policy.ANALYST_ARTIFACTS``) is a different list, for people: it isn't used here, and
 admins and responders, who approve Talon's proposals, aren't held to it. Two further layers apply on
 top: no command, script, quarantine or remediation artifact (``is_response_artifact``), and the
@@ -17,6 +23,7 @@ artifact and its dependencies must resolve to Velociraptor's built-in definition
 from dataclasses import dataclass
 from dataclasses import field
 from types import MappingProxyType
+from typing import Collection
 from typing import FrozenSet
 from typing import Mapping
 from typing import Optional
@@ -70,6 +77,21 @@ TALON_CATALOGUE: Mapping[str, TalonArtifact] = MappingProxyType(
     },
 )
 
+#: The auto-run subset (talon-analyst ``talon.endpoint_catalogue.AUTO_RUN``, mirrored from its ``main``
+#: at ``690d55f``): process, network, service, scheduled-task and startup state, read-only, nothing
+#: settable, the upload and hashing switches pinned off. Linux has processes and network only.
+TALON_AUTO_RUN: Mapping[str, TalonArtifact] = MappingProxyType(
+    {
+        "Windows.System.Pslist": _entry(),
+        "Linux.Sys.Pslist": _entry(),
+        "Windows.Network.Netstat": _entry(),
+        "Linux.Network.Netstat": _entry(),
+        "Windows.System.Services": _entry((), {"Calculate_hashes": OFF, "CertificateInfo": OFF}),
+        "Windows.System.TaskScheduler": _entry((), {"AlsoUpload": OFF, "UploadCommands": OFF}),
+        "Windows.Sys.StartupItems": _entry((), {"AlsoUpload": OFF}),
+    },
+)
+
 #: Artifacts that take code, a script or a VQL query.
 SCRIPT_ARTIFACTS = frozenset(
     {"Windows.Execute.RemotePowerShellScript", "Linux.Execute.RemoteBashScript", "Generic.Client.VQL", "Windows.System.VBScript"},
@@ -89,12 +111,17 @@ def is_response_artifact(name: str) -> bool:
     return name in commands | SCRIPT_ARTIFACTS | quarantine or ".remediation." in name.lower()
 
 
-def catalogue_violation(name: str, parameters: Sequence[Tuple[str, str]]) -> Optional[str]:
+def catalogue_violation(
+    name: str,
+    parameters: Sequence[Tuple[str, str]],
+    catalogue: Mapping[str, TalonArtifact] = TALON_CATALOGUE,
+    label: str = "collection",
+) -> Optional[str]:
     """Why a Talon collection of ``name`` with ``parameters`` (``(key, value)`` pairs, each key
-    once) isn't one CoPilot runs, or None."""
-    entry = TALON_CATALOGUE.get(name)
+    once) isn't one CoPilot runs from ``catalogue``, or None."""
+    entry = catalogue.get(name)
     if entry is None or is_response_artifact(name):
-        return "not an artifact in Talon's collection catalogue"
+        return f"not an artifact in Talon's {label} catalogue"
     given = dict(parameters)
     for key in given:
         if key not in entry.settable and key not in entry.pinned:
@@ -105,4 +132,22 @@ def catalogue_violation(name: str, parameters: Sequence[Tuple[str, str]]) -> Opt
     return None
 
 
-__all__ = ["OFF", "SCRIPT_ARTIFACTS", "TALON_CATALOGUE", "TalonArtifact", "catalogue_violation", "is_response_artifact"]
+def auto_run_violation(name: str, parameters: Sequence[Tuple[str, str]], allowed: Collection[str]) -> Optional[str]:
+    """Why the Talon service account may not start ``name`` with ``parameters`` on the start route,
+    or None: it must be on the admin's allowlist (``allowed``, auto-run names only), an auto-run
+    artifact, and sent with exactly its pins (nothing else is settable)."""
+    if name not in allowed or name not in TALON_AUTO_RUN:
+        return "not an artifact on the Talon service account's allowlist"
+    return catalogue_violation(name, parameters, TALON_AUTO_RUN, "auto-run")
+
+
+__all__ = [
+    "OFF",
+    "SCRIPT_ARTIFACTS",
+    "TALON_AUTO_RUN",
+    "TALON_CATALOGUE",
+    "TalonArtifact",
+    "auto_run_violation",
+    "catalogue_violation",
+    "is_response_artifact",
+]

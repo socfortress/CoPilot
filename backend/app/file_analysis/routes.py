@@ -28,6 +28,9 @@ from sqlalchemy.future import select
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.velociraptor.utils.validation import validate_org_id
 from app.db.db_session import get_db
@@ -58,6 +61,8 @@ from app.middleware.customer_access import verify_optional_customer_code_access
 file_analysis_router = APIRouter()
 
 _ANALYST = Security(AuthHandler().require_any_scope("admin", "analyst"))
+# Starts a Velociraptor collection: never the Talon service account (talon-analyst EA-4b).
+_NOT_TALON_SERVICE = Depends(refuse_talon_service_account_dependency)
 _MAX_UPLOAD_MB = 100
 
 
@@ -176,7 +181,7 @@ async def velociraptor_agents(customer_code: str, session: AsyncSession = Depend
     return AgentsResponse(agents=agents, message=f"{len(agents)} agents for {customer_code}")
 
 
-@file_analysis_router.post("/velociraptor/enumerate", response_model=EnumerateResponse, dependencies=[_ANALYST])
+@file_analysis_router.post("/velociraptor/enumerate", response_model=EnumerateResponse, dependencies=[_ANALYST, _NOT_TALON_SERVICE])
 async def velociraptor_enumerate(
     body: EnumerateRequest,
     current_user: User = Depends(AuthHandler().get_current_user),
@@ -204,7 +209,7 @@ async def velociraptor_enumerate(
     )
 
 
-@file_analysis_router.post("/submit", response_model=SubmitResponse, dependencies=[_ANALYST])
+@file_analysis_router.post("/submit", response_model=SubmitResponse, dependencies=[_ANALYST, _NOT_TALON_SERVICE])
 async def submit(
     body: SubmitRequest,
     background: BackgroundTasks,
