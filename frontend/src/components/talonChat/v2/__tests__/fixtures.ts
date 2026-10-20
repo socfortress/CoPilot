@@ -62,6 +62,63 @@ export function quarantineAction(extra: Partial<TalonAction> = {}): TalonAction 
 	})
 }
 
+const HOST_TARGET = {
+	customer_code: "ACME",
+	agent_id: "001",
+	velociraptor_id: "C.1234567890abcdef",
+	hostname: "WIN-DC01",
+	os: "windows"
+}
+
+/** A catalogue collection (talon-analyst EA-3's record): CoPilot's `{env: [{key, value}]}` parameters. */
+export function collectAction(extra: Partial<TalonAction> = {}): TalonAction {
+	return talonAction({
+		action: "collect_artifact",
+		side_effect: "endpoint-action",
+		executes_through: "POST /api/artifacts/collect",
+		target: { ...HOST_TARGET },
+		args: {
+			hostname: "WIN-DC01",
+			velociraptor_id: "C.1234567890abcdef",
+			artifact_name: "Windows.System.Pslist",
+			parameters: {
+				env: [
+					{ key: "ProcessRegex", value: "powershell" },
+					{ key: "CalculateHashes", value: "N" }
+				]
+			}
+		},
+		provenance: { untrusted_seen: false, injection_detected: false, web_used: false, endpoint_output_used: false },
+		...extra
+	})
+}
+
+/** A command run as the shell's artifact (talon-analyst EA-3's record), verbatim. */
+export function commandAction(command: string, extra: Partial<TalonAction> = {}): TalonAction {
+	return talonAction({
+		action: "endpoint_command",
+		side_effect: "endpoint-action",
+		executes_through: "POST /api/artifacts/command",
+		target: { ...HOST_TARGET },
+		args: {
+			hostname: "WIN-DC01",
+			velociraptor_id: "C.1234567890abcdef",
+			artifact_name: "Windows.System.PowerShell",
+			command
+		},
+		provenance: {
+			untrusted_seen: false,
+			injection_detected: false,
+			web_used: false,
+			endpoint_output_used: false,
+			copied_from_output: false,
+			risk_labels: [],
+			shape: "read-only"
+		},
+		...extra
+	})
+}
+
 export function axiosError(status: number, data: unknown) {
 	return Object.assign(new Error("Request failed"), { isAxiosError: true, response: { status, data } })
 }
