@@ -8,6 +8,7 @@ import _castArray from "lodash/castArray"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { resetEventSearchMemory } from "@/components/eventSearch/useEventSearchMemory"
+import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
@@ -62,10 +63,11 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			useReportGenerationStore().reset()
-			// The next user may see other customers, whose AI report and SLA switches may
-			// be off: neither cached answer may outlive the session that asked.
+			// The next user may see other customers, whose AI report, SLA and Activity switches
+			// may be off: no cached answer may outlive the session that asked.
 			useAiReportsAvailability().reset()
 			useSlaAvailability().reset()
+			useActivityAvailability().reset()
 			// Event search's saved and recent searches are the user's own (#1258).
 			resetEventSearchMemory()
 			removePersistentSessionKey()
