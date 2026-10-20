@@ -65,6 +65,28 @@ class NotificationTrigger(str, Enum):
     # DISPATCH_TRIGGERS below for why routes must not accept it.
     TEMP_PASSWORD_ISSUED = "temp_password_issued"
 
+    # Not dispatch triggers either: the Customer Portal's own emails to its users
+    # (#1282). Each scopes a message template the same way, and is delivered over
+    # SMTP to the portal users who asked for it by
+    # `app/customer_portal/services/notification_email.py`, never through a route.
+    PORTAL_ALERT_CREATED = "portal_alert_created"
+    PORTAL_WAITING_ON_YOU = "portal_waiting_on_you"
+    PORTAL_CASE_CLOSED = "portal_case_closed"
+    PORTAL_REPORT_READY = "portal_report_ready"
+    PORTAL_DIGEST = "portal_digest"
+
+
+#: The portal users' email templates (#1282): template scopes, never route triggers.
+PORTAL_TRIGGERS = frozenset(
+    {
+        NotificationTrigger.PORTAL_ALERT_CREATED,
+        NotificationTrigger.PORTAL_WAITING_ON_YOU,
+        NotificationTrigger.PORTAL_CASE_CLOSED,
+        NotificationTrigger.PORTAL_REPORT_READY,
+        NotificationTrigger.PORTAL_DIGEST,
+    },
+)
+
 
 #: The triggers a notification *route* may fire on.
 #:
@@ -74,7 +96,9 @@ class NotificationTrigger(str, Enum):
 #: fires. Rejecting it at save time is the same reasoning as
 #: `assert_template_usable` — a mismatch caught here is a 400 the operator can
 #: act on, caught at send time it is an outage nobody sees.
-DISPATCH_TRIGGERS = frozenset(t for t in NotificationTrigger if t is not NotificationTrigger.TEMP_PASSWORD_ISSUED)
+DISPATCH_TRIGGERS = frozenset(
+    t for t in NotificationTrigger if t is not NotificationTrigger.TEMP_PASSWORD_ISSUED and t not in PORTAL_TRIGGERS
+)
 
 
 def _assert_route_trigger(v: Optional[NotificationTrigger]) -> Optional[NotificationTrigger]:

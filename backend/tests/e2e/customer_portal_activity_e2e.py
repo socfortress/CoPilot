@@ -469,7 +469,7 @@ async def main():
         async with AsyncSession(async_engine) as s:
             return bool((await s.execute(text("SHOW TABLES LIKE 'customer_portal_activity_settings'"))).first())
 
-    await asyncio.to_thread(command.downgrade, config, "f1278a0b1c2d")
+    await asyncio.to_thread(command.downgrade, config, "f1282a0b1c2d")
     check("downgrade drops the table", not await table_exists())
     await asyncio.to_thread(command.upgrade, config, "head")
     check("upgrade brings it back", await table_exists())

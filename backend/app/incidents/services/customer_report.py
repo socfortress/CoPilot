@@ -505,6 +505,10 @@ async def generate_customer_report(
         await session.commit()
         await session.refresh(report)
         logger.info(f"Generated incident report {report.id} for customer {request.customer_code}")
+        # The portal user who asked for it, or the customer's users if the SOC shared it (#1282).
+        from app.customer_portal.services.notification_events import notify_report_ready
+
+        notify_report_ready(report.id)
         return report
 
     except Exception as e:

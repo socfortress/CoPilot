@@ -18,6 +18,7 @@ from sqlalchemy.future import select
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
+from app.customer_portal.services.notification_events import notify_report_ready
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import Customers
@@ -282,6 +283,9 @@ async def set_report_visibility_endpoint(
         raise HTTPException(status_code=400, detail="Customer-generated reports are always visible to the customer.")
 
     await set_report_visibility(db, report, request.visible)
+    if request.visible:
+        # Shared with the customer after it was generated: their users hear of it now (#1282).
+        notify_report_ready(report_id)
     logger.info(
         f"{current_user.username} set report {report_id} visible_to_customer={request.visible} " f"for customer {report.customer_code}",
     )

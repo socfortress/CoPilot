@@ -34,6 +34,9 @@ from app.schedulers.services.invoke_palace_lesson_drainer import (
 from app.schedulers.services.invoke_palace_lesson_sweeper import (
     invoke_palace_lesson_sweeper,
 )
+from app.schedulers.services.invoke_portal_notification_digest import (
+    invoke_portal_notification_digest,
+)
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins,
 )
@@ -285,6 +288,14 @@ async def initialize_job_metadata():
                 "description": "Notifies internal routes when an alert's or case's SLA turns at risk or breaches, once per clock.",
             },
             {
+                "job_id": "invoke_portal_notification_digest",
+                # The portal users' daily email digest (#1282). Every 15 minutes, but it sends
+                # only from PORTAL_NOTIFICATION_DIGEST_HOUR (UTC) on, once per user per day.
+                "time_interval": 15,
+                "function": invoke_portal_notification_digest,
+                "description": "Sends portal users the daily digest of the notifications they chose to receive by email that way.",
+            },
+            {
                 "job_id": "prune_audit_log",
                 # Daily. Deletes audit_log rows older than AUDIT_LOG_RETENTION_DAYS (default 90)
                 # so the append-only audit trail can't grow without bound. See issue #943.
@@ -429,6 +440,7 @@ def get_function_by_name(function_name: str):
         "refresh_sidebar_health": refresh_sidebar_health,
         "refresh_sidebar_indicators": refresh_sidebar_indicators,
         "notify_sla_transitions": notify_sla_transitions,
+        "invoke_portal_notification_digest": invoke_portal_notification_digest,
         # Add other function mappings here
     }
     # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore

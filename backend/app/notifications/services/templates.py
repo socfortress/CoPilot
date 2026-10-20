@@ -397,6 +397,14 @@ def sample_event(trigger: str, customer_code: Optional[str]) -> NotificationEven
 
         return build_event(username="jdoe", customer_code=customer_code or "ACME")
 
+    # The portal users' emails (#1282) are about a notification, not an alert being
+    # routed: their own sample envelope, and their variables as extras in `preview`.
+    from app.customer_portal.services.notification_email import is_portal_trigger
+    from app.customer_portal.services.notification_email import preview_event
+
+    if is_portal_trigger(parsed.value):
+        return preview_event(parsed.value, customer_code or "ACME")
+
     entity_type = EntityType.ALERT
     if parsed == NotificationTrigger.CASE_ASSIGNED:
         entity_type = EntityType.CASE
@@ -496,6 +504,16 @@ async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
                 customer_name=await customer_name_for(session, payload.customer_code),
             ),
         )
+
+    from app.customer_portal.services.notification_email import is_portal_trigger
+
+    if is_portal_trigger(trigger):
+        from app.customer_portal.services.notification_email import customer_name_for
+        from app.customer_portal.services.notification_email import (
+            preview_extra_context,
+        )
+
+        extra.update(preview_extra_context(trigger, await customer_name_for(session, payload.customer_code)))
 
     try:
         body = render(payload.body_template, event, autoescape=autoescape, extra_context=extra)

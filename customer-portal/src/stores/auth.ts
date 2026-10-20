@@ -10,6 +10,7 @@ import Api from "@/api"
 import { resetEventSearchMemory } from "@/components/eventSearch/useEventSearchMemory"
 import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
+import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
@@ -68,6 +69,8 @@ export const useAuthStore = defineStore("auth", {
 			useAiReportsAvailability().reset()
 			useSlaAvailability().reset()
 			useActivityAvailability().reset()
+			// The bell's server notifications are the user's own (#1282).
+			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).
 			resetEventSearchMemory()
 			removePersistentSessionKey()

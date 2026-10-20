@@ -5,6 +5,7 @@ import alerts from "./endpoints/alerts"
 import auth from "./endpoints/auth"
 import cases from "./endpoints/cases"
 import caseTemplates from "./endpoints/caseTemplates"
+import notifications from "./endpoints/notifications"
 import portal from "./endpoints/portal"
 import reports from "./endpoints/reports"
 import siem from "./endpoints/siem"
@@ -21,6 +22,7 @@ export default {
 	caseTemplates,
 	siem,
 	sla,
+	notifications,
 	portal,
 	reports,
 	totp

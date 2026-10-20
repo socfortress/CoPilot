@@ -1,7 +1,7 @@
 """add customer portal activity settings
 
 Revision ID: f1284a0b1c2d
-Revises: f1278a0b1c2d
+Revises: f1282a0b1c2d
 Create Date: 2026-10-20 12:00:00.000000
 
 The per-customer switch for the Customer Portal's Activity page (#1284). Opt-in: a
@@ -17,7 +17,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f1284a0b1c2d"
-down_revision: Union[str, None] = "f1278a0b1c2d"
+down_revision: Union[str, None] = "f1282a0b1c2d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

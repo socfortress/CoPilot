@@ -4,12 +4,12 @@
 			v-for="item of listSanitized"
 			:key="item.id"
 			class="item flex"
-			:class="[{ pointer: !!item.actionRoute }, item.type]"
+			:class="[{ pointer: !!item.actionRoute }, item.accent ?? item.type]"
 			data-testid="notification-item"
 			@click.stop="item.actionRoute ? preformAction(item) : undefined"
 		>
 			<div class="icon-box">
-				<Icon :name="ReportIcon" :size="21" />
+				<Icon :name="item.icon || ReportIcon" :size="21" />
 				<n-tooltip v-if="!item.read" trigger="hover" class="p-0!" content-class="p-0!" placement="right">
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
@@ -29,7 +29,7 @@
 					</div>
 				</div>
 			</div>
-			<n-tooltip trigger="hover" class="p-0!" content-class="p-0!" placement="left">
+			<n-tooltip v-if="canDelete" trigger="hover" class="p-0!" content-class="p-0!" placement="left">
 				<template #trigger>
 					<div class="delete-btn" @click.stop="deleteOne(item.id)">
 						<Icon :name="DeleteIcon" :size="14" />
@@ -49,7 +49,8 @@ import _take from "lodash/take"
 import { NEmpty, NScrollbar, NTooltip } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
-import { openRoute, useNotifications } from "@/composables/common/useNotifications"
+import { useBell } from "@/composables/common/useBell"
+import { openRoute } from "@/composables/common/useNotifications"
 
 const props = defineProps<{
 	maxItems?: number
@@ -57,7 +58,9 @@ const props = defineProps<{
 const DeleteIcon = "carbon:trash-can"
 const ReportIcon = "carbon:document"
 
-const list = useNotifications().list
+const bell = useBell()
+const list = bell.list
+const canDelete = bell.canDelete
 
 const listSanitized = computed(() => {
 	if (props.maxItems) {
@@ -72,15 +75,15 @@ function preformAction(item: Notification) {
 }
 
 function setRead(id: string | number) {
-	useNotifications().setRead(id)
+	bell.setRead(id)
 }
 
 function deleteOne(id: string | number) {
-	useNotifications().deleteOne(id)
+	bell.deleteOne(id)
 }
 
 function formatDatetime(date: Date | string) {
-	return useNotifications().formatDatetime(date)
+	return bell.formatDatetime(date)
 }
 </script>
 
@@ -185,6 +188,17 @@ function formatDatetime(date: Date | string) {
 			}
 			.action-text {
 				color: var(--warning-color);
+			}
+		}
+		&.waiting {
+			.icon-box {
+				.n-icon {
+					background-color: rgba(var(--waiting-color-rgb) / 0.1);
+					color: var(--waiting-color);
+				}
+			}
+			.action-text {
+				color: var(--waiting-color);
 			}
 		}
 		&.error {

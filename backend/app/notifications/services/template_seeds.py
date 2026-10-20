@@ -279,6 +279,107 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
 ]
 
 
+# ── The Customer Portal's emails to its users (#1282) ────────────────────────
+#
+# One per `portal_*` trigger, each the only built-in for it (resolution falls back to
+# "the built-in" as one step). They share a frame: the customer's logo and colours,
+# a heading, the notification(s), a button into the portal when CUSTOMER_PORTAL_URL is
+# set, and a footer saying why the email came. Every `branding.*` access carries a
+# default, and `portal_url` / `item.url` are guarded: both are empty without the URL.
+
+
+def _portal_email(heading: str, content: str, button: str) -> str:
+    return "".join(
+        [
+            '<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;'
+            'max-width:560px;margin:0 auto;padding:24px;color:#374151">',
+            "{% if branding.logo %}"
+            '<img src="{{ branding.logo }}" alt="{{ branding.title | default(\'\') }}" '
+            'style="max-height:48px;margin-bottom:24px">'
+            "{% endif %}",
+            "<h2 style=\"color:{{ branding.accent | default('#1f2937') }};margin:0 0 16px\">",
+            heading,
+            "</h2>",
+            "<p>Hello {{ user_name }},</p>",
+            content,
+            "{% if link_url %}"
+            '<p style="margin:24px 0">'
+            '<a href="{{ link_url }}" style="background:{{ branding.accent_strong | default(\'#2563eb\') }};'
+            "color:{{ branding.accent_text | default('#ffffff') }};padding:10px 20px;border-radius:6px;"
+            'text-decoration:none;display:inline-block">',
+            button,
+            "</a></p>{% endif %}",
+            '<p style="color:#6b7280;font-size:12px;margin-top:32px">'
+            "You receive this because of your "
+            "{% if portal_url %}"
+            '<a href="{{ portal_url }}/profile?tab=notifications" style="color:#6b7280">notification settings</a>'
+            "{% else %}notification settings (Profile → Notifications){% endif %}"
+            " in the {{ customer_name or 'customer' }} portal.</p>"
+            "</div>",
+        ],
+    )
+
+
+_PORTAL_ITEM = '<p style="font-weight:600;margin:0 0 8px">{{ subject }}</p>' "{% if summary != subject %}<p>{{ summary }}</p>{% endif %}"
+
+PORTAL_TEMPLATES: List[Dict[str, Any]] = [
+    {
+        "name": "Portal — new alert",
+        "description": "Sent to a portal user, by their choice, when a new alert reaches their severity threshold.",
+        "trigger": "portal_alert_created",
+        "format": "html",
+        "subject_template": "{{ subject }}",
+        "body_template": _portal_email("A new {{ severity | lower }} alert", _PORTAL_ITEM, "Open the alert"),
+    },
+    {
+        "name": "Portal — waiting on you",
+        "description": "Sent to a portal user, by their choice, when the SOC puts an alert or a case on hold for their reply.",
+        "trigger": "portal_waiting_on_you",
+        "format": "html",
+        "subject_template": "{{ subject }}",
+        "body_template": _portal_email("The SOC is waiting on your reply", _PORTAL_ITEM, "Reply in the portal"),
+    },
+    {
+        "name": "Portal — case closed",
+        "description": "Sent to a portal user, by their choice, when one of their customer's cases is closed.",
+        "trigger": "portal_case_closed",
+        "format": "html",
+        "subject_template": "{{ subject }}",
+        "body_template": _portal_email("A case was closed", _PORTAL_ITEM, "Open the case"),
+    },
+    {
+        "name": "Portal — report ready",
+        "description": "Sent to a portal user, by their choice, when a report they can read has been generated or shared.",
+        "trigger": "portal_report_ready",
+        "format": "html",
+        "subject_template": "{{ subject }}",
+        "body_template": _portal_email("Your report is ready", _PORTAL_ITEM, "Go to the reports"),
+    },
+    {
+        "name": "Portal — daily summary",
+        "description": "The daily email holding every notification a portal user chose to receive as a summary.",
+        "trigger": "portal_digest",
+        "format": "html",
+        "subject_template": "Your daily summary: {{ item_count }} notification{{ 's' if item_count != 1 else '' }}",
+        "body_template": _portal_email(
+            "Your daily summary",
+            (
+                "<p>Here is what happened{% if customer_name %} at {{ customer_name }}{% endif %} since your last summary.</p>"
+                '<ul style="padding-left:20px">'
+                "{% for item in items %}"
+                '<li style="margin-bottom:8px">'
+                '{% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}'
+                '<br><span style="color:#6b7280;font-size:12px">{{ item.created_at }}</span>'
+                "</li>"
+                "{% endfor %}"
+                "</ul>"
+            ),
+            "Open the portal",
+        ),
+    },
+]
+
+
 async def seed_builtin_templates(async_engine) -> int:
     """Insert any missing built-in templates. Returns how many were added.
 
@@ -296,7 +397,7 @@ async def seed_builtin_templates(async_engine) -> int:
             )
             existing = set(result.scalars().all())
 
-            for spec in BUILTIN_TEMPLATES:
+            for spec in [*BUILTIN_TEMPLATES, *PORTAL_TEMPLATES]:
                 if spec["name"] in existing:
                     continue
                 session.add(

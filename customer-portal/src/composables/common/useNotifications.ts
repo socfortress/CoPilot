@@ -9,13 +9,18 @@ import dayjs from "@/utils/dayjs"
 import { secureLocalStorage } from "@/utils/secure-storage"
 import { useGlobalActions } from "./useGlobalActions"
 
-export type NotificationCategory = "report"
+export type NotificationCategory = "report" | "alert" | "case"
 export type NotificationType = "success" | "info" | "warning" | "error" | "default" | undefined
 
 export interface Notification {
 	id: number | string
 	category: NotificationCategory
 	type: NotificationType
+	/**
+	 * A colour of the bell's own, over the type's: "waiting" is the SOC waiting on the
+	 * customer, which keeps its status colour everywhere (#1278). Toasts still use the type.
+	 */
+	accent?: "waiting"
 	title: string
 	description: string
 	read: boolean
@@ -25,13 +30,20 @@ export interface Notification {
 	 * the list is persisted, and a function does not survive serialisation — that is
 	 * how a reloaded bell ends up with items that look clickable and do nothing.
 	 */
-	actionRoute?: { name: string; query?: Record<string, string> }
+	actionRoute?: { name: string; params?: Record<string, string>; query?: Record<string, string> }
 	actionTitle?: string
+	/** The list's icon; a report's document when unset. Written out in full (bundled icons). */
+	icon?: string
 }
 
 export interface PrependOptions {
 	/** Also pop a toast, not just add the item to the bell list. */
 	sendNotify?: boolean
+	/**
+	 * The toast alone: the bell already gets the item from the server (#1282), and a
+	 * local copy beside it would show the same news twice.
+	 */
+	toastOnly?: boolean
 }
 
 /**
@@ -43,7 +55,7 @@ const list = useStorage<Notification[]>("notifications-list", [], secureLocalSto
 /** Navigate to a notification's target. A push to the current page is a no-op. */
 export function openRoute(route: Notification["actionRoute"]) {
 	if (!route) return
-	router.push({ name: route.name, query: route.query }).catch(() => {})
+	router.push({ name: route.name, params: route.params, query: route.query }).catch(() => {})
 }
 
 export function useNotifications() {
@@ -116,6 +128,7 @@ export function useNotifications() {
 				toast = useGlobalActions().notification(notify)
 			}
 
+			if (options?.toastOnly) return
 			list.value = _uniqBy([newItem, ...list.value], o => o.id)
 		}
 	}

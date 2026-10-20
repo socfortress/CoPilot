@@ -90,6 +90,14 @@
 				<n-tab-pane name="Activity" tab="Activity" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalActivity :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane
+					name="Portal Notifications"
+					tab="Portal Notifications"
+					display-directive="show:lazy"
+					class="p-4!"
+				>
+					<CustomerPortalNotifications :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
 				</n-tab-pane>
@@ -213,6 +221,9 @@ const CustomerPortalAiReport = defineAsyncComponent(() => import("@/components/c
 const CustomerPortalSla = defineAsyncComponent(() => import("@/components/customerPortal/SlaSettings.vue"))
 // Per-customer switch for the portal's read-only Activity page (#1284).
 const CustomerPortalActivity = defineAsyncComponent(() => import("@/components/customerPortal/ActivitySettings.vue"))
+const CustomerPortalNotifications = defineAsyncComponent(
+	() => import("@/components/customerPortal/NotificationSettings.vue")
+)
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
 const CustomerWaf = defineAsyncComponent(() => import("@/components/customerWaf/CustomerWaf.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
