@@ -956,6 +956,12 @@ async def fetch_file_from_filestore(
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+def _command_target(run_command_body: RunCommandBody) -> str:
+    """What a log line may say about a command: its artifact, client and org, never the command."""
+    artifact = getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name)
+    return f"artifact {artifact}, client {run_command_body.velociraptor_id}, org {run_command_body.velociraptor_org}"
+
+
 async def start_remote_command(
     run_command_body: RunCommandBody,
     velociraptor_service: Optional[UniversalService] = None,
@@ -977,7 +983,7 @@ async def start_remote_command(
         validate_org_id(run_command_body.velociraptor_org)
         validate_client_id(run_command_body.velociraptor_id)
         validate_artifact_name(run_command_body.artifact_name)
-        logger.info(f"Running remote command on {run_command_body}")
+        logger.info(f"Running remote command: {_command_target(run_command_body)}")
         query = create_query(VQL_RUN_COMMAND)
         command = run_command_body.command if run_command_body.command is not None else ""
         env = collection_env(
@@ -990,16 +996,15 @@ async def start_remote_command(
             Command=command if literal else vql_string_literal_value(command),
         )
         flow = await velociraptor_service.execute_query_async(query, org_id=run_command_body.velociraptor_org, env=env)
-        logger.info(f"Successfully ran artifact collection on {flow}")
-
+        # Not the answer itself: Velociraptor echoes the collection's request, the command with it.
         flow_id = started_flow_id(flow)
-        logger.info(f"Extracted flow_id: {flow_id}")
+        logger.info(f"Started remote command flow {flow_id}: {_command_target(run_command_body)}")
         return flow_id
     except Exception as err:
-        logger.error(f"Failed to run artifact collection on {run_command_body}: {err}")
+        logger.error(f"Failed to run remote command ({_command_target(run_command_body)}): {type(err).__name__}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to run artifact collection on {run_command_body}: {err}",
+            detail=f"Failed to run the command ({_command_target(run_command_body)}): {err}",
         )
 
 
@@ -1011,8 +1016,8 @@ async def finish_remote_command(
     """Wait for a started command and read its results: what ``/command`` answers."""
     try:
         velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
-        completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=run_command_body.velociraptor_org)
-        logger.info(f"Successfully watched flow completion on {completed}")
+        await velociraptor_service.watch_flow_completion_async(flow_id, org_id=run_command_body.velociraptor_org)
+        logger.info(f"Remote command flow {flow_id} completed: {_command_target(run_command_body)}")
 
         results = await velociraptor_service.read_collection_results_async(
             client_id=run_command_body.velociraptor_id,
@@ -1021,7 +1026,7 @@ async def finish_remote_command(
             artifact=getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name),
         )
 
-        logger.info(f"Successfully read collection results on {results}")
+        logger.info(f"Read the results of remote command flow {flow_id}: {len(results.get('results') or [])} row(s)")
 
         return RunCommandResponse(
             success=results["success"],
@@ -1029,10 +1034,10 @@ async def finish_remote_command(
             results=results["results"],
         )
     except Exception as err:
-        logger.error(f"Failed to run artifact collection on {run_command_body}: {err}")
+        logger.error(f"Failed to run remote command flow {flow_id} ({_command_target(run_command_body)}): {type(err).__name__}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to run artifact collection on {run_command_body}: {err}",
+            detail=f"Failed to run the command ({_command_target(run_command_body)}): {err}",
         )
 
 

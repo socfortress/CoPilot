@@ -41,6 +41,9 @@ from app.connectors.velociraptor.services.artifacts import start_artifact_collec
 from app.connectors.velociraptor.services.artifacts import start_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
 from app.connectors.velociraptor.services.collection_policy import (
+    enforce_built_in_definitions,
+)
+from app.connectors.velociraptor.services.collection_policy import (
     enforce_collect_artifact_policy,
 )
 from app.db.db_session import get_db
@@ -338,6 +341,7 @@ async def start_collection_as(
     request: Optional[Request],
     session: AsyncSession,
     literal_values: bool = False,
+    require_built_in: bool = False,
 ) -> StartedFlow:
     """``/collect``'s checks and its ``ARTIFACT_COLLECT`` audit event, once, then the collection
     started without waiting: the flow id back. The route waits for it and reads its results after
@@ -349,7 +353,9 @@ async def start_collection_as(
     to it); the parameter names against the artifact's, in the host's org.
 
     `literal_values` (Talon v2): the parameter values are passed as written, not VQL-unescaped as
-    ``/collect``'s clients expect, so what runs is what the approver read.
+    ``/collect``'s clients expect, so what runs is what the approver read. `require_built_in`
+    (Talon v2): the artifact and its dependencies must be Velociraptor's built-in definitions in the
+    host's org, whatever the caller's role.
     """
     # The host is named in the body, so no path dependency can guard it: collecting an
     # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
@@ -381,6 +387,8 @@ async def start_collection_as(
         collect_artifact_body.velociraptor_org,
         collect_artifact_body.parameters,
     )
+    if require_built_in:
+        await enforce_built_in_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
 
     # Validate parameters if provided, against the definition in the host's org
     await validate_artifact_parameters(
@@ -652,7 +660,10 @@ async def run_command(
     Returns:
         RunCommandResponse: The response containing the result of the command execution.
     """
-    logger.info(f"Received request to run command {run_command_body}")
+    # Never the command itself in a log (or the audit): the artifact and the host only.
+    logger.info(
+        f"Received request to run {getattr(run_command_body.artifact_name, 'value', run_command_body.artifact_name)} on {run_command_body.hostname}",
+    )
     started = await start_command_as(current_user, run_command_body, request, session)
     return await finish_remote_command(run_command_body, started.flow_id)
 

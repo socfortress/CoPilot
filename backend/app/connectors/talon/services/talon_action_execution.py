@@ -21,7 +21,7 @@ failure runs nothing:
   beside the host's keys; a lock wait of at most 5 s, then it fails closed): exactly one row for the
   host name (compared with ``lower()`` *and* the column's collation, which is what the route's own
   lookup uses), whose canonical client id (``C.`` + 16 lowercase hex) is the record's, whose
-  customer is the record's, and no other row claiming that client id. CoPilot's Velociraptor
+  customer is the record's, in Velociraptor's root org, and no other row claiming that client id. CoPilot's Velociraptor
   routes resolve the host's client by name; this makes the row they find the proposal's.
 
 **The run** (``run``): CoPilot's existing route handlers, called directly under the approver
@@ -33,11 +33,12 @@ first. ``tests/test_talon_actions.py`` pins the handlers' signatures.
 **Collections and commands** (``collect_artifact``, ``endpoint_command``; talon-analyst EA-3, D74-D79,
 D84; plan EA-4). The shape (``plan_for``): the arguments name the record's host and client;
 ``endpoint_command``'s artifact is a ``CommandArtifactsEnum`` shell and its command at most
-``COMMAND_MAX`` characters; ``collect_artifact``'s is no command, script, quarantine or remediation
-artifact (those run through their own routes, cards and audit), with ``{"env": [{key, value}]}``
-parameters. The run is ``/collect``'s or ``/command``'s shared start function
+``COMMAND_MAX`` characters of plain text; ``collect_artifact``'s is in Talon's collection catalogue
+(``talon_catalogue``: only its settable parameters, every pin at its value, never a command, script,
+quarantine or remediation artifact), with ``{"env": [{key, value}]}`` parameters. The run is ``/collect``'s or ``/command``'s shared start function
 (``start_collection_as`` / ``start_command_as``: the routes' checks, among them the host's artifact
-list, the analyst artifact policy and the parameter names, and their audit event, once), which
+list, the analyst artifact policy, Velociraptor's built-in definitions in the host's org for a
+collection, and the parameter names, and their audit event, once), which
 starts the flow and doesn't wait (D84 a), and uploads nothing to MinIO (D84 b). The command and the
 parameter values reach Velociraptor as written (``literal_values``): the manual routes' VQL
 unescaping would run ``C:\\Users`` as ``C:Users``, which is not what the approver read. The result
@@ -47,6 +48,7 @@ never its text (D84 f, ``audited_args``); the mirror keeps it verbatim for the c
 """
 import hashlib
 import re
+import unicodedata
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
@@ -81,7 +83,7 @@ from app.connectors.velociraptor.schema.artifacts import ParameterKeyValue
 from app.connectors.velociraptor.schema.artifacts import QuarantineArtifactsEnum
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.services.artifacts import resolve_quarantine_artifact
+from app.connectors.velociraptor.services.talon_catalogue import catalogue_violation
 from app.connectors.velociraptor.utils.validation import validate_artifact_name
 from app.connectors.velociraptor.utils.validation import (
     validate_artifact_parameter_name,
@@ -114,11 +116,12 @@ NOT_ALLOWED = "this role may not decide this action"
 COMMAND_MAX = 2000
 PARAMETER_VALUE_MAX = 512
 PARAMETERS_MAX = 16
-COMMAND_ARTIFACTS = frozenset(a.value for a in CommandArtifactsEnum)
-#: Artifacts that take code, a script or a VQL query: never a Talon collection.
-SCRIPT_ARTIFACTS = frozenset(
-    {"Windows.Execute.RemotePowerShellScript", "Linux.Execute.RemoteBashScript", "Generic.Client.VQL", "Windows.System.VBScript"},
-)
+#: The shells talon-analyst offers (D75): PowerShell and bash; never cmd.
+COMMAND_ARTIFACTS = frozenset({CommandArtifactsEnum.windows_powershell.value, CommandArtifactsEnum.linux_bash.value})
+#: Characters a command or a parameter value may not hold (talon-analyst's ``plain_text_ok``): format
+#: (bidi controls, zero-width), control but newline and tab, surrogate, line and paragraph separators.
+_NOT_PLAIN = frozenset({"Cc", "Cf", "Cs", "Zl", "Zp"})
+_PLAIN_CONTROLS = frozenset("\n\t")
 #: The argument keys each flow action takes, exactly (talon-analyst ``talon.tools.artifacts``).
 FLOW_ARGS = {
     "collect_artifact": frozenset({"hostname", "velociraptor_id", "artifact_name", "parameters"}),
@@ -130,6 +133,7 @@ TALON_FLOW_ID = re.compile(r"F\.[A-Za-z0-9]{1,64}")
 STARTED = "Velociraptor flow started"
 NO_FLOW_ID = "Velociraptor gave no usable flow id"
 START_FAILED = "CoPilot could not start the collection"
+OTHER_CLIENT = "the flow started on another Velociraptor client than the proposal's"
 
 
 def canonical_client_id(value: object) -> Optional[str]:
@@ -246,10 +250,21 @@ def _flow_plan(action: str, args: Dict[str, Any], hostname: str, client: str) ->
         command = args.get("command")
         if not isinstance(command, str) or not 1 <= len(command) <= COMMAND_MAX:
             raise ProposalShape(f"not a command of at most {COMMAND_MAX} characters")
+        if not plain_text_ok(command):
+            raise ProposalShape("the command holds control or invisible characters")
         return Plan(action, hostname=hostname, velociraptor_id=client, artifact_name=artifact, command=command)
-    if not _artifact_name_ok(artifact) or not is_collection_artifact(artifact):
+    if not _artifact_name_ok(artifact):
         raise ProposalShape("not an artifact CoPilot collects for Talon")
-    return Plan(action, hostname=hostname, velociraptor_id=client, artifact_name=artifact, parameters=_parameters(args.get("parameters")))
+    parameters = _parameters(args.get("parameters"))
+    refused = catalogue_violation(artifact, parameters)
+    if refused is not None:
+        raise ProposalShape(refused)
+    return Plan(action, hostname=hostname, velociraptor_id=client, artifact_name=artifact, parameters=parameters)
+
+
+def plain_text_ok(text: str) -> bool:
+    """Whether ``text`` reads as it runs (talon-analyst's ``plain_text_ok``)."""
+    return not any(c not in _PLAIN_CONTROLS and unicodedata.category(c) in _NOT_PLAIN for c in text)
 
 
 def _artifact_name_ok(value: object) -> bool:
@@ -258,14 +273,6 @@ def _artifact_name_ok(value: object) -> bool:
     except HTTPException:
         return False
     return True
-
-
-def is_collection_artifact(name: str) -> bool:
-    """Whether a ``collect_artifact`` proposal may name ``name``: never a command, script, quarantine
-    or remediation artifact. A command is ``endpoint_command`` (its card, its hashed audit) and
-    quarantine is ``quarantine_host``; the configured quarantine overrides count too."""
-    quarantine = {a.value for a in QuarantineArtifactsEnum} | {resolve_quarantine_artifact(a.value) for a in QuarantineArtifactsEnum}
-    return name not in COMMAND_ARTIFACTS | SCRIPT_ARTIFACTS | quarantine and ".Remediation." not in name
 
 
 def _parameters(value: object) -> Tuple[Tuple[str, str], ...]:
@@ -283,6 +290,8 @@ def _parameters(value: object) -> Tuple[Tuple[str, str], ...]:
         key, text = item["key"], item["value"]
         if not isinstance(key, str) or not isinstance(text, str) or len(text) > PARAMETER_VALUE_MAX:
             raise ProposalShape("a parameter is not a short string")
+        if not plain_text_ok(text):
+            raise ProposalShape("a parameter holds control or invisible characters")
         try:
             validate_artifact_parameter_name(key)
         except HTTPException:
@@ -446,6 +455,8 @@ async def lock_and_recheck_host(plan: Plan, row: TalonActionRequest, session: As
         raise RecheckFailed("the host's Velociraptor client changed")
     if agent.customer_code != row.customer_code:
         raise RecheckFailed("the host belongs to another customer")
+    if agent.velociraptor_org != "root":
+        raise RecheckFailed("the host is not in Velociraptor's root org")
     if claimants != {agent.id}:
         raise RecheckFailed("another agent carries the host's Velociraptor client")
 
@@ -492,7 +503,7 @@ async def call_handler(plan: Plan, approver: Any, session: AsyncSession, request
             artifact_name=plan.artifact_name,
             parameters={"env": [ParameterKeyValue(key=key, value=value) for key, value in plan.parameters]} if plan.parameters else None,
         )
-        return await velociraptor_routes.start_collection_as(approver, body, request, session, literal_values=True)
+        return await velociraptor_routes.start_collection_as(approver, body, request, session, literal_values=True, require_built_in=True)
     if plan.action == "endpoint_command":
         body = RunCommandBody(hostname=plan.hostname, command=plan.command, artifact_name=CommandArtifactsEnum(plan.artifact_name))
         return await velociraptor_routes.start_command_as(approver, body, request, session, literal_values=True)
@@ -527,24 +538,28 @@ async def run(plan: Plan, approver: Any, session: AsyncSession, request: Optiona
         logger.error(f"Talon v2 action ({plan.action}) failed in CoPilot: {type(e).__name__}")
         return {"success": False, "message": "the action failed in CoPilot", "status_code": 500}
     if plan.action in FLOW_ACTIONS:
-        return started_result(response)
+        return started_result(response, plan)
     success = getattr(response, "success", True)
     message = _message(getattr(response, "message", "")) or "done"
     return {"success": bool(success), "message": message, "status_code": 200 if success else 500}
 
 
-def started_result(started: Any) -> Dict[str, Any]:
+def started_result(started: Any, plan: Plan) -> Dict[str, Any]:
     """A started flow as the result talon-analyst records: its flow id only in the form its resume
-    reads (``TALON_FLOW_ID``), else ``failed`` (it may have started; the message says so)."""
+    reads (``TALON_FLOW_ID``), on the plan's client, else ``failed`` (it may have started; the
+    message says so)."""
     flow_id = getattr(started, "flow_id", None)
     if not isinstance(flow_id, str) or not TALON_FLOW_ID.fullmatch(flow_id):
         logger.error("Talon v2 action: Velociraptor started a flow but gave no usable flow id")
         return {"success": False, "message": NO_FLOW_ID, "status_code": 500}
+    if canonical_client_id(getattr(started, "client_id", None)) != plan.velociraptor_id:
+        logger.error("Talon v2 action: the flow started on another client than the proposal's")
+        return {"success": False, "message": OTHER_CLIENT, "status_code": 500}
     return {
         "success": True,
         "message": STARTED,
         "status_code": 200,
         "flow_id": flow_id,
-        "client_id": getattr(started, "client_id", None),
+        "client_id": plan.velociraptor_id,
         "artifact": getattr(started, "artifact", None),
     }

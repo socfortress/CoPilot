@@ -479,6 +479,28 @@ def _refuse(user, artifact_name: str, reason: str):
     raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can only be collected by an admin or responder: {reason}")
 
 
+async def enforce_built_in_definitions(artifact_name: str, org_id: str) -> None:
+    """Refuse (403) unless the artifact and every dependency resolve to Velociraptor's built-in
+    definitions in `org_id` (rule 2 above, for everyone): a Talon collection, whose approver is an
+    admin or responder and so isn't held to the analyst allowlist (``talon_catalogue``)."""
+    from app.connectors.velociraptor.services.artifacts import (
+        get_artifact_policy_definitions,
+    )
+
+    definitions = [d for d in await get_artifact_policy_definitions(artifact_name, org_id) if isinstance(d, dict)]
+    names = {str(d.get("name")) for d in definitions}
+    reason = None
+    if artifact_name not in names:
+        reason = "its definition was not found in the host's Velociraptor org"
+    else:
+        custom = sorted(str(d.get("name")) for d in definitions if not is_shipped_definition(d))
+        if custom:
+            reason = f"{', '.join(custom)} is not Velociraptor's built-in definition in the host's org"
+    if reason is not None:
+        logger.warning(f"Refused a Talon collection of {artifact_name}: {reason}")
+        raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can't be collected for Talon: {reason}")
+
+
 async def enforce_collect_artifact_policy(user, artifact_name: str, org_id: str, parameters=None) -> None:
     """Refuse (403) an analyst's /collect unless the allowlist admits the artifact and parameters.
 
