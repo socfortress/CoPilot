@@ -7,6 +7,10 @@
  *
  * The shared records, the page's poll and the resume guard are in `actionCards.ts`. Every string a
  * proposal carries reaches the page as text, never as HTML or Markdown.
+ *
+ * Endpoint actions (talon-analyst's endpoint actions plan, EA-4): a collection's parameters as rows,
+ * a command's shell, counts, shape and risk labels, and its lines cut into runs so tabs, trailing
+ * spaces and characters nobody can see are shown (`commandSegments`).
  */
 import type { TalonAction, TalonActionProvenance } from "@/types/talonActions"
 import type { TalonV2ChatMessage, TalonV2ToolState } from "@/types/talonV2"
@@ -60,8 +64,11 @@ export function isWithdrawable(action: TalonAction): boolean {
 	return action.is_requester && action.state === "pending" && action.talon_status === "pending" && !action.expired
 }
 
+/** The actions whose target is a host (`{customer_code, agent_id, velociraptor_id, hostname}`). */
+const HOST_ACTIONS = new Set(["quarantine_host", "release_host", "collect_artifact", "endpoint_command"])
+
 export function isHostAction(action: Pick<TalonAction, "action">): boolean {
-	return action.action === "quarantine_host" || action.action === "release_host"
+	return HOST_ACTIONS.has(action.action)
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -69,11 +76,29 @@ const ACTION_LABELS: Record<string, string> = {
 	assign_alert: "Assign the alert",
 	comment_on_alert: "Comment on the alert",
 	quarantine_host: "Quarantine the host",
-	release_host: "Release the host from quarantine"
+	release_host: "Release the host from quarantine",
+	collect_artifact: "Collect a Velociraptor artifact",
+	endpoint_command: "Run a command on the endpoint"
 }
 
 export function actionLabel(action: string): string {
 	return ACTION_LABELS[action] ?? action
+}
+
+/**
+ * An endpoint action's kind for a list row: a collection with its artifact (untrusted text), a
+ * command with its shell (CoPilot's own name for the artifact); null for any other action.
+ */
+export function endpointKind(
+	action: Pick<TalonAction, "action" | "args">
+): { kind: "collection" | "command"; label: string; detail: string } | null {
+	const artifact = action.args?.artifact_name
+	const artifactText = typeof artifact === "string" ? artifact : ""
+	if (action.action === "collect_artifact") return { kind: "collection", label: "Collection", detail: artifactText }
+	if (action.action === "endpoint_command") {
+		return { kind: "command", label: "Command", detail: shellOf(artifact) ?? artifactText }
+	}
+	return null
 }
 
 const STATE_LABELS: Record<string, string> = {
@@ -110,7 +135,7 @@ export function stateTone(action: Pick<TalonAction, "state" | "expired">): State
 // ── provenance ───────────────────────────────────────────────────────────────
 
 export interface ProvenanceWarning {
-	flag: "injection_detected" | "untrusted_seen" | "web_used"
+	flag: "injection_detected" | "untrusted_seen" | "web_used" | "endpoint_output_used" | "copied_from_output"
 	severity: "error" | "warning"
 	text: string
 }
@@ -120,6 +145,10 @@ export const PROVENANCE_INJECTION =
 export const PROVENANCE_UNTRUSTED =
 	"Earlier in this thread Talon read text the injection defender flagged. The proposal may have been steered by it."
 export const PROVENANCE_WEB = "This thread used text from the web. The proposal may have been shaped by it."
+export const PROVENANCE_ENDPOINT_OUTPUT =
+	"This proposal was made after reading endpoint output. Text on the host may have steered it."
+export const PROVENANCE_COPIED =
+	"Parts of this command were copied from endpoint output. Read those parts closely: text on the host may have written them."
 
 export function provenanceWarnings(provenance: TalonActionProvenance | null | undefined): ProvenanceWarning[] {
 	const p = provenance ?? {}
@@ -129,7 +158,418 @@ export function provenanceWarnings(provenance: TalonActionProvenance | null | un
 	}
 	if (p.untrusted_seen === true) out.push({ flag: "untrusted_seen", severity: "warning", text: PROVENANCE_UNTRUSTED })
 	if (p.web_used === true) out.push({ flag: "web_used", severity: "warning", text: PROVENANCE_WEB })
+	if (p.copied_from_output === true) {
+		out.push({ flag: "copied_from_output", severity: "error", text: PROVENANCE_COPIED })
+	}
+	if (p.endpoint_output_used === true) {
+		out.push({ flag: "endpoint_output_used", severity: "warning", text: PROVENANCE_ENDPOINT_OUTPUT })
+	}
 	return out
+}
+
+// ── endpoint actions: collections and commands ───────────────────────────────
+
+/** talon-analyst's risk labels (`talon.endpoint_commands.RISK_PATTERNS`), in words. */
+const RISK_LABELS: Record<string, string> = {
+	network_fetch: "Network fetch",
+	delete_or_kill: "Deletes or kills",
+	registry_or_service: "Registry or service change",
+	account_change: "Account change",
+	persistence: "Persistence",
+	shutdown_or_reboot: "Shutdown or reboot"
+}
+
+export const RISK_LABELS_NOTE =
+	"Risk labels are heuristics talon-analyst's code computes from the command's text: they inform, they don't refuse, and a command can do harm without any."
+
+export interface RiskLabel {
+	/** The label as the record holds it (untrusted text when it isn't one talon-analyst defines). */
+	key: string
+	text: string
+	known: boolean
+}
+
+/** A command's risk labels from `provenance.risk_labels`, in the record's order; only strings, each once. */
+export function riskLabels(provenance: TalonActionProvenance | null | undefined): RiskLabel[] {
+	const raw = provenance?.risk_labels
+	if (!Array.isArray(raw)) return []
+	const out: RiskLabel[] = []
+	const seen = new Set<string>()
+	for (const label of raw) {
+		if (typeof label !== "string" || seen.has(label)) continue
+		seen.add(label)
+		const known = Object.hasOwn(RISK_LABELS, label)
+		out.push({ key: label, text: known ? RISK_LABELS[label] : label, known })
+	}
+	return out
+}
+
+export type CommandShape = "read-only" | "free-form" | "unknown"
+
+/**
+ * A command's shape (`provenance.shape`): `read-only` only when the record says exactly that;
+ * `free-form` when it says so; anything else (missing, another value) is `unknown`, shown with the
+ * same caution as free-form, never as read-only.
+ */
+export function commandShape(provenance: TalonActionProvenance | null | undefined): CommandShape {
+	const shape = provenance?.shape
+	if (shape === "read-only" || shape === "free-form") return shape
+	return "unknown"
+}
+
+/** The shell CoPilot's command artifact runs (`CommandArtifactsEnum`); null for any other artifact. */
+export function shellOf(artifact: unknown): string | null {
+	switch (artifact) {
+		case "Windows.System.PowerShell":
+			return "PowerShell"
+		case "Linux.Sys.BashShell":
+			return "bash"
+		case "Windows.System.CmdShell":
+			return "cmd"
+		default:
+			return null
+	}
+}
+
+/**
+ * A command's size as talon-analyst measures it (`check_command`): characters are code points, and
+ * lines are counted without the newlines that end the command.
+ */
+export function commandCounts(command: string): { lines: number; chars: number } {
+	return { lines: command.replace(/\n+$/, "").split("\n").length, chars: [...command].length }
+}
+
+/** "1 line, 12 characters" / "40 lines, 1,203 characters". */
+export function countsText(command: string): string {
+	const { lines, chars } = commandCounts(command)
+	return `${lines} ${lines === 1 ? "line" : "lines"}, ${chars.toLocaleString("en-US")} ${chars === 1 ? "character" : "characters"}`
+}
+
+/**
+ * The command's first line that isn't blank (only spaces and tabs), as written, with its number
+ * (from 1). A command of blank lines only gives its first line.
+ */
+export function firstContentLine(command: string): { line: number; text: string } {
+	const lines = command.split("\n")
+	const index = lines.findIndex(line => !/^[\t\p{Zs}]*$/u.test(line))
+	return index < 0 ? { line: 1, text: lines[0] ?? "" } : { line: index + 1, text: lines[index] }
+}
+
+export type CommandSegment =
+	/** Printable ASCII, and runs of fewer than four spaces inside a line. */
+	| { kind: "text"; text: string }
+	/** Visible characters outside ASCII, highlighted: a look-alike letter can hide among them. */
+	| { kind: "nonascii"; text: string; trailing?: boolean }
+	/** A tab, kept as the tab itself and marked. */
+	| { kind: "tab"; text: string; trailing?: boolean }
+	/** Fewer than four spaces that end a line, kept as written and highlighted. */
+	| { kind: "trailing"; text: string }
+	/** Four or more spaces in a row, shown as `⟨␠×N⟩`; `trailing` when they end the line. */
+	| { kind: "spaces"; text: string; count: number; trailing: boolean }
+	/** A space where a row wraps (the last of a row or the first of the next), drawn as `␠`. */
+	| { kind: "edge"; text: string }
+	/** A character nobody can see, shown as `⟨U+000D⟩`; `trailing` when it ends the line. */
+	| { kind: "escape"; text: string; char: string; trailing?: boolean }
+
+/**
+ * Characters a reader can't see or can't tell from a space: format (Cf), control (Cc) but tab and
+ * newline, surrogates, the line and paragraph separators, every space separator (Zs) but U+0020,
+ * every default-ignorable code point (variation selectors, Hangul fillers…), and U+2800 (the
+ * braille blank).
+ */
+const UNSEEN_CHAR = /[\p{Cf}\p{Cs}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}\u2800]|(?![\t\n])\p{Cc}|(?! )\p{Zs}/u
+const UNSEEN_ANY = new RegExp(UNSEEN_CHAR.source, "u")
+
+/** The text holds a character nobody can see (talon-analyst refuses those in a command). */
+export function hasUnseenChars(text: string): boolean {
+	return UNSEEN_ANY.test(text)
+}
+
+/** Spaces in a row from this many on are shown as `⟨␠×N⟩`, so a long gap can't push text away. */
+export const SPACES_RUN = 4
+
+type CharClass = "tab" | "space" | "unseen" | "nonascii" | "ascii"
+
+function classOf(char: string): CharClass {
+	if (char === "\t") return "tab"
+	if (char === " ") return "space"
+	if (UNSEEN_CHAR.test(char)) return "unseen"
+	return /[^\x20-\x7E]/.test(char) ? "nonascii" : "ascii"
+}
+
+/** One line (no `\n`) as runs; the whitespace that ends it (tabs and every Zs) is marked trailing. */
+function lineSegments(line: string): CommandSegment[] {
+	const tail = /[\t\p{Zs}]+$/u.exec(line)
+	const trailingFrom = tail ? tail.index : line.length
+	const out: CommandSegment[] = []
+	const push = (segment: CommandSegment) => {
+		const last = out.at(-1)
+		if (segment.kind === "text" && last?.kind === "text") last.text += segment.text
+		else out.push(segment)
+	}
+	const flush = (cls: CharClass, text: string, trailing: boolean) => {
+		if (!text) return
+		if (cls === "space") {
+			const count = text.length
+			if (count >= SPACES_RUN) push({ kind: "spaces", text: `⟨␠×${count}⟩`, count, trailing })
+			else push(trailing ? { kind: "trailing", text } : { kind: "text", text })
+		} else if (cls === "nonascii") {
+			push(trailing ? { kind: "nonascii", text, trailing } : { kind: "nonascii", text })
+		} else {
+			push({ kind: "text", text })
+		}
+	}
+	let run = ""
+	let runClass: CharClass | null = null
+	let runTrailing = false
+	let index = 0
+	for (const char of line) {
+		const cls = classOf(char)
+		const trailing = index >= trailingFrom
+		index += char.length
+		if (cls === "tab" || cls === "unseen") {
+			if (runClass) flush(runClass, run, runTrailing)
+			run = ""
+			runClass = null
+			if (cls === "tab") {
+				push(trailing ? { kind: "tab", text: "\t", trailing } : { kind: "tab", text: "\t" })
+			} else {
+				const escape = { kind: "escape" as const, text: escapeOf(char), char }
+				push(trailing ? { ...escape, trailing } : escape)
+			}
+			continue
+		}
+		if (cls !== runClass || trailing !== runTrailing) {
+			if (runClass) flush(runClass, run, runTrailing)
+			run = ""
+			runClass = cls
+			runTrailing = trailing
+		}
+		run += char
+	}
+	if (runClass) flush(runClass, run, runTrailing)
+	return out
+}
+
+/**
+ * A command's lines, each as runs: plain text, non-ASCII runs, tabs, spaces (four or more as
+ * `⟨␠×N⟩`), the whitespace that ends a line, and escapes for characters nobody can see. Joined,
+ * the runs' texts are the command but for those escapes and `⟨␠×N⟩` marks; lines are joined by `\n`.
+ */
+export function commandSegments(command: string): CommandSegment[][] {
+	return command.split("\n").map(lineSegments)
+}
+
+/** Columns a box wraps a command line at, at most, so nothing hides beyond its right edge. */
+export const WRAP_COLUMNS = 72
+/** The fewest columns a box wraps at, however narrow it is (it then scrolls sideways, and says so). */
+export const MIN_WRAP_COLUMNS = 16
+const TAB_STOP = 4
+// Characters a monospace font draws two columns wide: East Asian wide and fullwidth, and emoji.
+const WIDE =
+	/[\u1100-\u115F\u2E80-\u303E\u3041-\u33FF\u3400-\u4DBF\u4E00-\u9FFF\uA000-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60\uFFE0-\uFFE6\u{1F300}-\u{1F64F}\u{1F900}-\u{1F9FF}\u{20000}-\u{3FFFD}]/u
+
+function charsOf(text: string): string[] {
+	return Array.from(text)
+}
+
+/** Columns one character takes in a monospace font. */
+export function charColumns(char: string): number {
+	return WIDE.test(char) ? 2 : 1
+}
+
+function textColumns(text: string): number {
+	return charsOf(text).reduce((sum, char) => sum + charColumns(char), 0)
+}
+
+/** Columns a run takes starting at column `col` (a tab to its next stop). */
+export function segmentColumns(segment: CommandSegment, col = 0): number {
+	return segment.kind === "tab" ? TAB_STOP - (col % TAB_STOP) : textColumns(segment.text)
+}
+
+/**
+ * One line's runs cut into rows of at most `columns` columns (a tab to its next stop, a wide
+ * character two; an escape or a `⟨␠×N⟩` mark is never cut). Every row after the first continues the
+ * line. A space where a row wraps (the last of a row, or the first of the next) would look like no
+ * space at all, so it is drawn as `␠` (an `edge` run).
+ */
+export function wrapSegments(segments: CommandSegment[], columns: number = WRAP_COLUMNS): CommandSegment[][] {
+	const width = Math.max(1, Math.floor(columns))
+	const rows: CommandSegment[][] = [[]]
+	let col = 0
+	const newRow = () => {
+		rows.push([])
+		col = 0
+	}
+	for (const segment of segments) {
+		if (segment.kind === "text" || segment.kind === "nonascii" || segment.kind === "trailing") {
+			let piece = ""
+			for (const char of charsOf(segment.text)) {
+				const w = charColumns(char)
+				if (col > 0 && col + w > width) {
+					if (piece) rows[rows.length - 1].push({ ...segment, text: piece })
+					piece = ""
+					newRow()
+				}
+				piece += char
+				col += w
+			}
+			if (piece) rows[rows.length - 1].push({ ...segment, text: piece })
+			continue
+		}
+		let w = segmentColumns(segment, col)
+		if (col > 0 && col + w > width) {
+			newRow()
+			w = segmentColumns(segment, 0)
+		}
+		rows[rows.length - 1].push(segment)
+		col += w
+	}
+	// The spaces at each wrap, drawn: the last run of a row and the first of the next.
+	for (let i = 0; i < rows.length - 1; i++) {
+		markEdge(rows[i], "end")
+		markEdge(rows[i + 1], "start")
+	}
+	return rows
+}
+
+function markEdge(row: CommandSegment[], side: "start" | "end") {
+	const index = side === "start" ? 0 : row.length - 1
+	const segment = row[index]
+	if (!segment || segment.kind !== "text") return
+	const text = segment.text
+	if (side === "end" && text.endsWith(" ")) {
+		const rest = text.slice(0, -1)
+		row.splice(index, 1, ...(rest ? [{ ...segment, text: rest }] : []), { kind: "edge", text: "␠" })
+	} else if (side === "start" && text.startsWith(" ")) {
+		const rest = text.slice(1)
+		row.splice(index, 1, { kind: "edge", text: "␠" }, ...(rest ? [{ ...segment, text: rest }] : []))
+	}
+}
+
+/** How many tabs, and how many lines end in whitespace (tabs and every Zs): named beside the command. */
+export function whitespaceCounts(command: string): { tabs: number; trailingLines: number; spaceRuns: number } {
+	return {
+		tabs: (command.match(/\t/g) ?? []).length,
+		trailingLines: command.split("\n").filter(line => /[\t\p{Zs}]$/u.test(line)).length,
+		spaceRuns: (command.match(new RegExp(` {${SPACES_RUN},}`, "g")) ?? []).length
+	}
+}
+
+// ── look-alike characters ─────────────────────────────────────────────────────
+
+const SCRIPTS: [string, RegExp][] = [
+	["Latin", /\p{Script=Latin}/u],
+	["Greek", /\p{Script=Greek}/u],
+	["Cyrillic", /\p{Script=Cyrillic}/u],
+	["Armenian", /\p{Script=Armenian}/u],
+	["Georgian", /\p{Script=Georgian}/u],
+	["Cherokee", /\p{Script=Cherokee}/u],
+	["Coptic", /\p{Script=Coptic}/u],
+	["Hebrew", /\p{Script=Hebrew}/u],
+	["Arabic", /\p{Script=Arabic}/u],
+	["Han", /\p{Script=Han}/u],
+	["Hiragana", /\p{Script=Hiragana}/u],
+	["Katakana", /\p{Script=Katakana}/u],
+	["Hangul", /\p{Script=Hangul}/u]
+]
+// Right-to-left characters by code point: Hebrew to Arabic Extended (U+0590-08FF), the Hebrew and
+// Arabic presentation forms (FB1D-FDFF, FE70-FEFF), and the right-to-left blocks of planes 1
+// (10800-10FFF, 1E800-1EFFF). Ranges, not script names, so a script newer than the browser counts.
+const RTL = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF\u{10800}-\u{10FFF}\u{1E800}-\u{1EFFF}]/u
+
+export interface Lookalikes {
+	/** Code points outside ASCII. */
+	nonAscii: number
+	/** The scripts of its letters, in `SCRIPTS` order, "another script" last. */
+	scripts: string[]
+	/** It holds characters of a right-to-left script. */
+	rtl: boolean
+}
+
+export function lookalikes(text: string): Lookalikes {
+	let nonAscii = 0
+	let rtl = false
+	const found = new Set<string>()
+	for (const char of text) {
+		if ((char.codePointAt(0) ?? 0) > 127) nonAscii++
+		if (RTL.test(char)) rtl = true
+		if (!/\p{L}/u.test(char)) continue
+		const script = SCRIPTS.find(([, pattern]) => pattern.test(char))
+		found.add(script ? script[0] : "another script")
+	}
+	const order = [...SCRIPTS.map(([name]) => name), "another script"]
+	return { nonAscii, scripts: order.filter(name => found.has(name)), rtl }
+}
+
+export interface LookalikeWarning {
+	flag: "non_ascii" | "mixed_scripts" | "rtl"
+	text: string
+}
+
+/** What a command or a parameter value holds that can make it read as something it isn't. */
+export function lookalikeWarnings(text: string, what = "This command"): LookalikeWarning[] {
+	const found = lookalikes(text)
+	const out: LookalikeWarning[] = []
+	if (found.nonAscii) {
+		out.push({
+			flag: "non_ascii",
+			text: `${what} holds ${found.nonAscii} non-ASCII ${found.nonAscii === 1 ? "character" : "characters"}, highlighted: a look-alike letter can make it read as something it isn't.`
+		})
+	}
+	if (found.scripts.length > 1) {
+		out.push({
+			flag: "mixed_scripts",
+			text: `${what} mixes scripts (${found.scripts.join(", ")}): letters of different alphabets can look the same.`
+		})
+	}
+	if (found.rtl) {
+		out.push({
+			flag: "rtl",
+			text: `${what} holds right-to-left characters: they can change the order it is drawn in.`
+		})
+	}
+	return out
+}
+
+/** The OS a command artifact's shell runs on, as `target.os` names it; null for an unknown shell. */
+export function shellOs(artifact: unknown): "windows" | "linux" | null {
+	if (artifact === "Windows.System.PowerShell" || artifact === "Windows.System.CmdShell") return "windows"
+	if (artifact === "Linux.Sys.BashShell") return "linux"
+	return null
+}
+
+/** Whether the record lists risk labels at all (a list, even empty), as against not labelling them. */
+export function riskLabelled(provenance: TalonActionProvenance | null | undefined): boolean {
+	return Array.isArray(provenance?.risk_labels)
+}
+
+export interface ParameterRow {
+	key: string
+	value: string
+}
+
+/**
+ * A collection's parameters, as CoPilot sends them to Velociraptor (`{env: [{key, value}]}`), one
+ * row each, in the record's order. `ok` is false when the record holds them in another shape: the
+ * card then shows them raw.
+ */
+export function collectionParameters(parameters: unknown): { ok: boolean; rows: ParameterRow[] } {
+	if (parameters === undefined || parameters === null) return { ok: true, rows: [] }
+	if (typeof parameters !== "object" || Array.isArray(parameters)) return { ok: false, rows: [] }
+	const keys = Object.keys(parameters)
+	const env = (parameters as { env?: unknown }).env
+	if (keys.length !== 1 || keys[0] !== "env" || !Array.isArray(env)) return { ok: false, rows: [] }
+	const rows: ParameterRow[] = []
+	for (const item of env) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) return { ok: false, rows: [] }
+		const { key, value } = item as { key?: unknown; value?: unknown }
+		if (typeof key !== "string" || Object.keys(item).some(k => k !== "key" && k !== "value")) {
+			return { ok: false, rows: [] }
+		}
+		rows.push({ key, value: typeof value === "string" ? value : (JSON.stringify(value) ?? String(value)) })
+	}
+	return { ok: true, rows }
 }
 
 // ── untrusted text ───────────────────────────────────────────────────────────

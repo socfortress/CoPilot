@@ -86,8 +86,8 @@ one instrumentation point.
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |
 | `response.quarantine` | `velociraptor/services/artifacts.py:quarantine_host` | `agent` / client_id | details = action (quarantine/remove) |
-| `response.command_execute` | `…artifacts.py:run_remote_command` | `agent` / client_id | details = artifact (NOT raw command) |
-| `artifact.collect` | `…artifacts.py:run_artifact_collection` | `agent` / client_id | new = {artifact_name} |
+| `response.command_execute` | `velociraptor/routes/artifacts.py:start_command_as` (`/command`, an approved Talon `endpoint_command`) | `agent` / client_id | details = artifact (NOT raw command) |
+| `artifact.collect` | `velociraptor/routes/artifacts.py:start_collection_as` (`/collect`, an approved Talon `collect_artifact`) | `agent` / client_id | new = {artifact_name} |
 | `case.create` | `app/incidents` case create | `case` / case_id | new = {case_name, customer_code} |
 | `datastore.file_create` | `app/data_store` upload | `file` / object_key | + bucket, customer_code |
 | `datastore.file_delete` | `app/data_store` delete | `file` / object_key | |
