@@ -54,6 +54,9 @@ class TalonCollectionSettingsResponse(BaseModel):
     connector_name: str
     service_username: str = Field(..., description="The CoPilot user held to the allowlist (talon-analyst's service account)")
     service_username_configured: Optional[str] = Field(None, description="The name an admin set; null means the default")
+    service_user_exists: bool = Field(..., description="Whether exactly one CoPilot user has that name now")
+    service_user_id: Optional[int] = Field(None, description="That user's id now, if one")
+    recorded_service_user_id: Optional[int] = Field(None, description="The id recorded at the last save, held to the gate too")
     allowed_artifacts: Optional[List[str]] = Field(None, description="The auto-run artifacts it may start; null: none")
     auto_run_catalogue: Dict[str, Dict[str, str]] = Field(..., description="Every auto-run artifact CoPilot knows, with its pins")
     updated_by_user_id: Optional[int] = None

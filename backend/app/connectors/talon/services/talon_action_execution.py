@@ -75,6 +75,9 @@ from app.connectors.talon.services.talon_action_sync import APPROVER_ROLES
 from app.connectors.talon.services.talon_action_sync import FLOW_ACTIONS
 from app.connectors.talon.services.talon_action_sync import HOST_ACTIONS
 from app.connectors.talon.services.talon_action_sync import QUARANTINE_ACTIONS
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account,
+)
 from app.connectors.velociraptor.routes import artifacts as velociraptor_routes
 from app.connectors.velociraptor.schema.artifacts import ActionEnum
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -321,9 +324,11 @@ def audited_args(action: str, args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def check_d47(user: Any, row: TalonActionRequest, session: AsyncSession) -> None:
-    """Raise 403/404 unless ``user`` may decide ``row`` (module docstring)."""
+    """Raise 403/404 unless ``user`` may decide ``row`` (module docstring). The Talon service account
+    never decides one, whatever its role (``talon_service_account``)."""
     if not role_may_decide(row.action, user):
         raise HTTPException(status_code=403, detail=NOT_ALLOWED)
+    await refuse_talon_service_account(user, session)
     await customer_access_handler.enforce_customer_access(user, row.customer_code, session)
     target = row.target or {}
     if row.action in ALERT_ACTIONS:

@@ -416,10 +416,8 @@ def is_shipped_definition(definition: dict) -> bool:
     return definition.get("compiled_in") is True
 
 
-def read_only_violation(definition: Optional[dict]) -> Optional[str]:
-    """Why the definition does not look like a read-only collection (rule 4), or None."""
-    if not definition:
-        return "its definition was not found in the host's Velociraptor org"
+def structure_violation(definition: dict) -> Optional[str]:
+    """Rule 4's declarations: no permission beyond the read-only ones, no imports, no tools."""
     for field in ("required_permissions", "implied_permissions"):
         elevated = {str(p) for p in (definition.get(field) or [])} - READ_ONLY_PERMISSIONS
         if elevated:
@@ -428,6 +426,16 @@ def read_only_violation(definition: Optional[dict]) -> Optional[str]:
         return "its definition imports other artifacts"
     if definition.get("tools"):
         return "its definition fetches tools"
+    return None
+
+
+def read_only_violation(definition: Optional[dict]) -> Optional[str]:
+    """Why the definition does not look like a read-only collection (rule 4), or None."""
+    if not definition:
+        return "its definition was not found in the host's Velociraptor org"
+    reason = structure_violation(definition)
+    if reason is not None:
+        return reason
     for vql in _vql_views(_definition_vql(definition)):
         call = _FORBIDDEN_CALL.search(vql)
         if call:
@@ -479,6 +487,17 @@ def _refuse(user, artifact_name: str, reason: str):
     raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can only be collected by an admin or responder: {reason}")
 
 
+def built_in_violation(artifact_name: str, definitions: List[dict]) -> Optional[str]:
+    """Why the artifact and its dependencies, as the host's org resolves them, aren't all
+    Velociraptor's built-in definitions (rule 2), or None."""
+    if artifact_name not in {str(d.get("name")) for d in definitions}:
+        return "its definition was not found in the host's Velociraptor org"
+    custom = sorted(str(d.get("name")) for d in definitions if not is_shipped_definition(d))
+    if custom:
+        return f"{', '.join(custom)} is not Velociraptor's built-in definition in the host's org"
+    return None
+
+
 async def enforce_built_in_definitions(artifact_name: str, org_id: str) -> None:
     """Refuse (403) unless the artifact and every dependency resolve to Velociraptor's built-in
     definitions in `org_id` (rule 2 above, for everyone): a Talon collection, whose approver is an
@@ -488,14 +507,33 @@ async def enforce_built_in_definitions(artifact_name: str, org_id: str) -> None:
     )
 
     definitions = [d for d in await get_artifact_policy_definitions(artifact_name, org_id) if isinstance(d, dict)]
-    names = {str(d.get("name")) for d in definitions}
-    reason = None
-    if artifact_name not in names:
-        reason = "its definition was not found in the host's Velociraptor org"
-    else:
-        custom = sorted(str(d.get("name")) for d in definitions if not is_shipped_definition(d))
-        if custom:
-            reason = f"{', '.join(custom)} is not Velociraptor's built-in definition in the host's org"
+    reason = built_in_violation(artifact_name, definitions)
+    if reason is not None:
+        logger.warning(f"Refused a Talon collection of {artifact_name}: {reason}")
+        raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can't be collected for Talon: {reason}")
+
+
+async def enforce_auto_run_definitions(artifact_name: str, org_id: str) -> None:
+    """The Talon service account's definition check (talon-analyst EA-4b), in place of the analyst
+    allowlist: the artifact and every dependency resolve to Velociraptor's built-in definitions in
+    `org_id` (rule 2), and each declares no permission beyond the read-only ones, no imports and no
+    tools (rule 4's declarations). Rule 4's VQL scan is not applied: the auto-run artifacts upload
+    behind switches their pins turn off (``TaskScheduler``, ``StartupItems``), and
+    ``StartupItems``' dependency ``Windows.Forensics.Lnk`` calls ``eval()`` and ``upload()`` under its
+    own parameters. Those definitions were reviewed as shipped, and talon-analyst's
+    ``check_catalogue`` re-checks them against the server after a Velociraptor upgrade."""
+    from app.connectors.velociraptor.services.artifacts import (
+        get_artifact_policy_definitions,
+    )
+
+    definitions = [d for d in await get_artifact_policy_definitions(artifact_name, org_id) if isinstance(d, dict)]
+    reason = built_in_violation(artifact_name, definitions)
+    for definition in definitions if reason is None else []:
+        found = structure_violation(definition)
+        if found is not None:
+            name = str(definition.get("name"))
+            reason = found if name == artifact_name else f"its dependency {name}: {found}"
+            break
     if reason is not None:
         logger.warning(f"Refused a Talon collection of {artifact_name}: {reason}")
         raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can't be collected for Talon: {reason}")

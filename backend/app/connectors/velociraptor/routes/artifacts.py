@@ -15,6 +15,12 @@ from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account,
+)
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -41,6 +47,9 @@ from app.connectors.velociraptor.services.artifacts import run_file_collection
 from app.connectors.velociraptor.services.artifacts import start_artifact_collection
 from app.connectors.velociraptor.services.artifacts import start_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
+from app.connectors.velociraptor.services.collection_policy import (
+    enforce_auto_run_definitions,
+)
 from app.connectors.velociraptor.services.collection_policy import (
     enforce_built_in_definitions,
 )
@@ -362,11 +371,16 @@ async def start_collection_as(
 
     `analyst_policy=False` (only the Talon service account on ``/collect/start``, talon-analyst
     EA-4b): the analyst allowlist is replaced by the stricter auto-run allowlist the caller has
-    already checked (``talon_catalogue.auto_run_violation``); pass `require_built_in` with it.
+    already checked (``talon_catalogue.auto_run_violation``) and by
+    ``enforce_auto_run_definitions``; pass `require_built_in` with it. With the analyst policy (every
+    other caller: ``/collect``, an approved Talon collection) the Talon service account is refused,
+    whatever its role, so its allowlist can't be stepped around (``talon_service_account``).
     `limits`: the flow's resource limits on the endpoint (``FlowLimits``).
     """
     if not analyst_policy and not require_built_in:
         raise ValueError("the analyst artifact policy is only replaced together with require_built_in")
+    if analyst_policy:
+        await refuse_talon_service_account(current_user, session)
     # The host is named in the body, so no path dependency can guard it: collecting an
     # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
     await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
@@ -398,7 +412,9 @@ async def start_collection_as(
             collect_artifact_body.velociraptor_org,
             collect_artifact_body.parameters,
         )
-    if require_built_in:
+    if not analyst_policy:
+        await enforce_auto_run_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
+    elif require_built_in:
         await enforce_built_in_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
 
     # Validate parameters if provided, against the definition in the host's org
@@ -653,7 +669,7 @@ async def collect_artifact(
     "/command",
     response_model=RunCommandResponse,
     description="Run a remote command",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder")), Depends(refuse_talon_service_account_dependency)],
 )
 async def run_command(
     run_command_body: RunCommandBody,
@@ -683,7 +699,7 @@ async def run_command(
     "/quarantine",
     response_model=QuarantineResponse,
     description="Quarantine a host, or release it (action=remove_quarantine)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder")), Depends(refuse_talon_service_account_dependency)],
 )
 async def quarantine(
     quarantine_body: QuarantineBody,
@@ -754,6 +770,7 @@ async def quarantine(
     description="Collect a file from an agent using agent ID",
     dependencies=[
         Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(refuse_talon_service_account_dependency),
         Depends(verify_agent_id_access),
     ],
 )

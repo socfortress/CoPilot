@@ -24,10 +24,12 @@ Pinned here:
 Run with: cd backend && python -m pytest tests/test_talon_collect_start.py
 """
 
+import importlib.util
 import json
 import os
 from contextlib import ExitStack
 from contextlib import contextmanager
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -43,6 +45,7 @@ import tests.test_talon_actions as harness  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
+from app.connectors.talon.services import talon_service_account  # noqa: E402
 from app.connectors.velociraptor.routes import artifacts as velociraptor_routes  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import ArtifactParameter  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import Artifacts  # noqa: E402
@@ -277,7 +280,8 @@ def test_another_client_claiming_the_hosts_client_id_is_refused():
 def test_an_artifact_outside_the_hosts_list_is_a_400(name, artifact):
     payload = body(artifact, SERVICES_PINS if artifact == "Windows.System.Services" else None)
     response, vr, ctx = call(start_scenario(name, payload, host_artifacts=["Windows.System.Pslist"]))
-    assert response.status_code == 400 and "does not apply" in response.json()["message"]
+    assert response.status_code == 400 and response.json()["message"] == talon_collections.NOT_APPLICABLE
+    assert artifact not in response.text and HOST not in response.text  # a fixed text, no echo
     assert vr.starts == [] and collect_audits(ctx) == []
 
 
@@ -371,7 +375,7 @@ def test_a_custom_definition_is_refused_for_the_service_account():
 )
 def test_the_service_account_outside_its_allowlist_or_with_a_changed_pin_is_a_403(payload, allowed):
     response, vr, ctx = call(start_scenario(SERVICE, payload, allowed=allowed))
-    assert response.status_code == 403 and "Talon service account" in response.json()["message"]
+    assert response.status_code == 403 and response.json()["message"] == talon_collections.SERVICE_REFUSED
     assert vr.starts == [] and collect_audits(ctx) == []
 
 
@@ -616,11 +620,14 @@ def test_the_setting_is_an_admins_and_audited():
     assert row.collect_allowed_artifacts == ["Linux.Sys.Pslist", "Windows.System.Pslist"] and row.v2_enabled is True
     ((event,),) = [[c.kwargs for c in ctx.audit.await_args_list]]
     assert event["action"] == AuditAction.CONNECTOR_UPDATE and event["actor_username"] == "admin"
-    assert event["old_value"] == {"collect_service_username": None, "collect_allowed_artifacts": None}
+    assert event["old_value"] == {"collect_service_username": None, "collect_service_user_id": None, "collect_allowed_artifacts": None}
     assert event["new_value"] == {
         "collect_service_username": "svc",
+        "collect_service_user_id": 21,
         "collect_allowed_artifacts": ["Linux.Sys.Pslist", "Windows.System.Pslist"],
     }
+    assert put.json()["service_user_exists"] is True and put.json()["service_user_id"] == 21
+    assert before.json()["service_user_exists"] is True and before.json()["service_user_id"] == 20
 
 
 def test_setting_the_allowlist_without_a_row_leaves_talon_v2_off():
@@ -644,3 +651,298 @@ def test_a_service_username_that_isnt_a_plain_name_is_refused(username):
             return await client.put(SETTINGS, json={"service_username": username, "allowed_artifacts": []}, headers=as_user("admin"))
 
     assert call(scenario).status_code == 400
+
+
+# ── review of #1287: the service account on every other route that starts something ─────────
+
+
+_HARNESS_APP = harness._app
+
+
+def _full_app(db):
+    """The harness's app plus the Velociraptor routes."""
+    from app.routers import velociraptor
+
+    app = _HARNESS_APP(db)
+    app.include_router(velociraptor.router)
+    return app
+
+
+def full_call(scenario, **kwargs):
+    with patch.object(harness, "_app", _full_app):
+        return call(scenario, **kwargs)
+
+
+def manual_scenario(name, path, payload, username=None):
+    from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+
+    done = CollectArtifactResponse(success=True, message="collected", results=[])
+
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            waited = []
+
+            async def finish(*args, **kwargs):
+                waited.append(args)
+                return done
+
+            stack.enter_context(patch.object(velociraptor_routes, "finish_artifact_collection", finish))
+            stack.enter_context(patch.object(velociraptor_routes, "run_file_collection", finish))
+            await configure(ctx, username=username)
+            response = await client.post(path, json=payload, headers=as_user(name))
+        return response, vr, waited, ctx
+
+    return scenario
+
+
+COLLECT = {"hostname": HOST, "artifact_name": "Windows.System.Pslist"}
+FILE = ("/artifacts/collect/file/agent/021", {"file": "C:\\Windows\\Temp\\x.txt"})
+
+
+@pytest.mark.parametrize("name", [SERVICE, "svc"])
+def test_the_service_account_is_refused_on_collect_and_file_collection(name):
+    # `svc` is the configured name; `talon-analyst` is held either way.
+    for path, payload in [("/artifacts/collect", COLLECT), FILE]:
+        response, vr, waited, ctx = full_call(manual_scenario(name, path, payload, username="svc"))
+        assert response.status_code == 403 and response.json()["message"] == talon_service_account.REFUSED, path
+        assert vr.starts == [] and waited == [] and collect_audits(ctx) == []
+
+
+def test_the_service_account_is_refused_on_collect_whatever_its_role():
+    with patch.dict(harness.SCOPES, {SERVICE: ["admin"]}), patch.dict(harness.USERS, {SERVICE: (20, 1, [])}):
+        with patch.object(harness, "_app", _full_app):
+            response, vr, waited, ctx = harness.call(manual_scenario(SERVICE, "/artifacts/collect", COLLECT))
+    assert response.status_code == 403 and vr.starts == []
+
+
+def test_ordinary_analysts_are_unaffected_on_collect_and_file_collection():
+    response, vr, waited, ctx = full_call(manual_scenario("ana", "/artifacts/collect", COLLECT))
+    assert response.status_code == 200 and len(vr.starts) == 1 and len(waited) == 1
+    response, vr, waited, ctx = full_call(manual_scenario("ana", *FILE))
+    assert response.status_code == 200 and len(waited) == 1
+
+
+def test_the_service_account_is_held_by_its_recorded_id_after_a_rename():
+    async def scenario(client, ctx):
+        with patch.object(talon_collections, "record_audit_event", ctx.audit):
+            put = await client.put(SETTINGS, json={"service_username": "svc", "allowed_artifacts": ALL_AUTO_RUN}, headers=as_user("admin"))
+        async with ctx.db.session() as session:
+            row = await session.get(TalonConnectorSettings, 1)
+        renamed = SimpleNamespace(id=21, username="renamed", role_id=2)
+        stranger = SimpleNamespace(id=2, username="ana", role_id=2)
+        return put, row, renamed, stranger
+
+    put, row, renamed, stranger = call(scenario)
+    assert put.status_code == 200 and row.collect_service_user_id == 21
+    assert talon_service_account.is_service_account(renamed, row)  # the id still matches
+    assert not talon_service_account.is_service_account(stranger, row)
+
+
+def test_get_reports_a_configured_user_that_does_not_exist():
+    async def scenario(client, ctx):
+        with patch.object(talon_collections, "record_audit_event", ctx.audit):
+            put = await client.put(SETTINGS, json={"service_username": "ghost", "allowed_artifacts": []}, headers=as_user("admin"))
+        return put, await client.get(SETTINGS, headers=as_user("admin"))
+
+    put, got = call(scenario)
+    assert got.json()["service_user_exists"] is False and got.json()["service_user_id"] is None
+    assert got.json()["recorded_service_user_id"] is None and got.json()["service_username"] == "ghost"
+
+
+@pytest.mark.parametrize("username, warned", [("ghost", True), ("svc", False), (None, False)])
+def test_startup_warns_when_no_user_has_the_configured_name(username, warned):
+    lines = []
+
+    async def scenario(client, ctx):
+        if username is not None:
+            await configure(ctx, allowed=[], username=username)
+        sink = logger.add(lambda message: lines.append(str(message)), level="WARNING")
+        try:
+            await talon_service_account.warn_if_service_user_missing(ctx.db.engine)
+        finally:
+            logger.remove(sink)
+
+    call(scenario)
+    assert bool([line for line in lines if "no single CoPilot user is named" in line]) is warned
+
+
+# Every route but /collect (whose shared start function refuses it) that starts endpoint work and
+# that the service account's analyst role, or any role, reaches.
+REFUSING_ROUTES = [
+    ("app.connectors.velociraptor.routes.artifacts", "velociraptor_artifacts_router", "/collect/file/agent/{agent_id}", "POST"),
+    ("app.connectors.velociraptor.routes.artifacts", "velociraptor_artifacts_router", "/command", "POST"),
+    ("app.connectors.velociraptor.routes.artifacts", "velociraptor_artifacts_router", "/quarantine", "POST"),
+    ("app.file_analysis.routes", "file_analysis_router", "/velociraptor/enumerate", "POST"),
+    ("app.file_analysis.routes", "file_analysis_router", "/submit", "POST"),
+    ("app.agents.routes.agents", "agents_router", "/{agent_id}/delete", "DELETE"),
+    ("app.agents.routes.agents", "agents_router", "/bulk/delete", "POST"),
+    ("app.agents.routes.agents", "agents_router", "/bulk/delete/filter", "POST"),
+    ("app.integrations.copilot_mcp.routes.copilot_mcp", "copilot_mcp_router", "/query", "POST"),
+    ("app.integrations.copilot_action.routes.copilot_action", "copilot_action_router", "/invoke", "POST"),
+]
+
+
+@pytest.mark.parametrize("module, router, path, method", REFUSING_ROUTES)
+def test_every_other_route_that_starts_something_refuses_the_service_account(module, router, path, method):
+    import importlib
+
+    routes = [r for r in getattr(importlib.import_module(module), router).routes if r.path == path and method in r.methods]
+    assert len(routes) == 1
+    dependencies = [d.dependency for d in routes[0].dependencies]
+    assert talon_service_account.refuse_talon_service_account_dependency in dependencies
+
+
+def test_the_service_account_never_decides_a_talon_action():
+    from app.connectors.talon.services import talon_action_execution as execution
+
+    async def scenario(client, ctx):
+        await configure(ctx)
+        row = SimpleNamespace(action="comment_on_alert", customer_code=ACME, target={"alert_id": ctx.alert_id})
+        async with ctx.db.session() as session:
+            with pytest.raises(HTTPException) as refused:
+                await execution.check_d47(SimpleNamespace(id=20, username=SERVICE, role_id=2), row, session)
+        return refused.value
+
+    refused = call(scenario)
+    assert refused.status_code == 403 and refused.detail == talon_service_account.REFUSED
+
+
+# ── the definition check, the analyst policy, fixed texts and logs ─────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "extra, dependency",
+    [
+        ({"tools": [{"name": "autorunsc"}]}, False),
+        ({"imports": ["X"]}, False),
+        ({"required_permissions": ["EXECVE"]}, False),
+        ({"tools": [{"name": "t"}]}, True),
+    ],
+)
+def test_a_definition_with_tools_imports_or_elevated_permissions_is_refused_for_the_service_account(extra, dependency):
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+
+            async def lookup(artifact_name, org_id):
+                own = {"name": artifact_name, "compiled_in": True, **({} if dependency else extra)}
+                dep = {"name": "Windows.Forensics.Lnk", "compiled_in": True, **(extra if dependency else {})}
+                return [own, dep]
+
+            stack.enter_context(patch.object(artifacts_service, "get_artifact_policy_definitions", lookup))
+            await configure(ctx)
+            response = await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE))
+        return response, vr
+
+    response, vr = call(scenario)
+    assert response.status_code == 403 and vr.starts == []
+    assert response.json()["message"] == talon_collections.POLICY_REFUSED
+
+
+def test_the_service_accounts_definition_check_lets_pinned_uploads_and_eval_through():
+    # TaskScheduler's guarded upload() and StartupItems' dependency's eval()/upload(): no tools,
+    # imports or elevated permissions, built in. Rule 4's VQL scan is the recorded residual.
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+
+            async def lookup(artifact_name, org_id):
+                vql = "SELECT if(condition=AlsoUpload, then=upload(file=OSPath)) FROM scope()"
+                return [
+                    {"name": artifact_name, "compiled_in": True, "sources": [{"query": vql}]},
+                    {"name": "Windows.Forensics.Lnk", "compiled_in": True, "sources": [{"query": "SELECT eval(func=x) FROM scope()"}]},
+                ]
+
+            stack.enter_context(patch.object(artifacts_service, "get_artifact_policy_definitions", lookup))
+            await configure(ctx)
+            response = await client.post(
+                ROUTE,
+                json=body("Windows.Sys.StartupItems", [{"key": "AlsoUpload", "value": "N"}]),
+                headers=as_user(SERVICE),
+            )
+        return response, vr
+
+    response, vr = call(scenario)
+    assert response.status_code == 200 and len(vr.starts) == 1
+
+
+@pytest.mark.parametrize("artifact", ["Windows.System.TaskScheduler", "Windows.Sys.StartupItems"])
+def test_an_ordinary_analyst_is_held_to_the_analyst_allowlist_on_the_start_route(artifact):
+    pins = talon_catalogue.TALON_AUTO_RUN[artifact].pinned
+    response, vr, ctx = call(start_scenario("ana", body(artifact, [{"key": k, "value": v} for k, v in pins.items()])))
+    assert response.status_code == 403 and response.json()["message"] == talon_collections.POLICY_REFUSED
+    assert artifact not in response.text and vr.starts == []
+
+
+@pytest.mark.parametrize("hostname", ["WIN'ACME", "WIN`ACME", "a\\b", "x\ny"])
+def test_a_host_name_that_could_break_a_query_is_a_fixed_400(hostname):
+    response, vr, ctx = call(start_scenario("ana", body(hostname=hostname)))
+    assert response.status_code == 400 and response.json()["message"] == talon_collections.BAD_REQUEST and vr.starts == []
+
+
+@pytest.mark.parametrize("name, payload", [("globex_ana", body()), ("ana", body("Bad Name!")), ("ana", body(hostname="NO-SUCH-HOST"))])
+def test_a_refusal_echoes_nothing_and_is_logged_before_any_start_line(name, payload):
+    lines = []
+
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            await configure(ctx)
+            sink = logger.add(lambda message: lines.append(str(message)), level="DEBUG")
+            try:
+                response = await client.post(ROUTE, json=payload, headers=as_user(name))
+            finally:
+                logger.remove(sink)
+        return response, vr
+
+    response, vr = call(scenario)
+    assert response.status_code in (400, 403, 404) and vr.starts == []
+    assert payload["hostname"] not in response.text and payload["artifact_name"] not in response.text
+    assert not [line for line in lines if "Collection start:" in line]
+
+
+# ── the migration ─────────────────────────────────────────────────────────────
+
+
+def test_the_migration_upgrades_and_downgrades():
+    import sqlalchemy as sa
+
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+
+    path = Path(__file__).parent.parent / "alembic" / "versions" / "e4b2c0d1a7f3_add_talon_collect_service_gate.py"
+    spec = importlib.util.spec_from_file_location("ea4b_migration", path)
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    assert (migration.revision, migration.down_revision) == ("e4b2c0d1a7f3", "f1282a0b1c2d")
+
+    engine = sa.create_engine("sqlite://")
+    with engine.begin() as conn:
+        conn.execute(
+            sa.text("CREATE TABLE talon_connector_settings (id INTEGER PRIMARY KEY, connector_name VARCHAR(256), v2_enabled BOOLEAN)"),
+        )
+        conn.execute(sa.text("INSERT INTO talon_connector_settings (connector_name, v2_enabled) VALUES ('Talon', 1)"))
+
+        def columns():
+            return {c["name"] for c in sa.inspect(conn).get_columns("talon_connector_settings")}
+
+        with patch.object(migration, "op", Operations(MigrationContext.configure(conn))):
+            migration.upgrade()
+            assert columns() == {
+                "id",
+                "connector_name",
+                "v2_enabled",
+                "collect_service_username",
+                "collect_service_user_id",
+                "collect_allowed_artifacts",
+            }
+            row = conn.execute(
+                sa.text(
+                    "SELECT collect_service_username, collect_service_user_id, collect_allowed_artifacts FROM talon_connector_settings",
+                ),
+            ).one()
+            assert tuple(row) == (None, None, None)  # unset: the service account starts nothing
+            migration.downgrade()
+            assert columns() == {"id", "connector_name", "v2_enabled"}
+        assert conn.execute(sa.text("SELECT connector_name, v2_enabled FROM talon_connector_settings")).one() == ("Talon", 1)

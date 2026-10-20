@@ -11,8 +11,9 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
 1. the shape: a root-org client id (``C.`` and 16 hex digits), parameters as an ``env`` list of
    short plain-text values, each name once (400);
 2. ``enforce_hostname_access`` on the host (403/404);
-3. the artifact. **The Talon service account** (``is_service_account``: the user named by
-   ``talon_connector_settings.collect_service_username``, or ``talon-analyst``, whatever its role)
+3. the artifact. **The Talon service account** (``talon_service_account.is_service_account``: the
+   user id recorded with the setting, the user named by ``collect_service_username``, and
+   ``talon-analyst``, whatever its role; every other route that starts endpoint work refuses it)
    must name an artifact on the admin's allowlist (``collect_allowed_artifacts``) with exactly its
    pins and nothing else (``talon_catalogue.auto_run_violation``), else 403; **with the allowlist
    unset it starts nothing** (403). Everyone else: no command, script, quarantine or remediation
@@ -22,14 +23,16 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
    carrying the body's client id, in the root org, no other row claiming that client (409);
 5. ``/collect``'s shared start function (``routes.artifacts.start_collection_as``), under the locks:
    the caller's access to every row of the host, the host's artifact list (400), the analyst policy
-   (for the service account: the auto-run allowlist instead, plus Velociraptor's built-in
-   definitions in the host's org), the parameter names, the ``ARTIFACT_COLLECT`` audit event once
+   (for the service account: the auto-run allowlist instead, plus
+   ``collection_policy.enforce_auto_run_definitions``: built-in definitions, no tools, imports or
+   elevated permissions, for the artifact and its dependencies), the parameter names, the ``ARTIFACT_COLLECT`` audit event once
    with the caller as the actor, and EA-1's parameterized start with the resource limits
    (``collect_start_limits``) as ``collect_client`` arguments. No wait, no MinIO upload, no rows.
 
 The answer is ``{success, message, flow_id, client_id, artifact}``; ``flow_id`` only in
-talon-analyst's ``F.[A-Za-z0-9]{1,64}`` form. A server error starting the flow is a fixed text: the
-start's own text could name the request. Nothing here logs a parameter value.
+talon-analyst's ``F.[A-Za-z0-9]{1,64}`` form. Every refusal is a fixed text with its status (never
+the host, the artifact or a value back), and a server error starting the flow is "CoPilot could not
+start the collection". Only validated values are logged; never a parameter value.
 
 **The setting** is an admin's (by ``role_id``), on the Talon connector's ``talon_connector_settings``
 row beside the "Talon v2" switch: ``GET``/``PUT /api/talon/v2/settings/collections``, audited
@@ -59,7 +62,11 @@ from app.connectors.talon.schema.talon_collections import (
     TalonCollectionSettingsResponse,
 )
 from app.connectors.talon.services import talon_action_execution as execution
-from app.connectors.talon.services.talon_v2 import get_settings_row
+from app.connectors.talon.services.talon_service_account import DEFAULT_SERVICE_USERNAME
+from app.connectors.talon.services.talon_service_account import effective_username
+from app.connectors.talon.services.talon_service_account import is_service_account
+from app.connectors.talon.services.talon_service_account import settings_row
+from app.connectors.talon.services.talon_service_account import user_id_for
 from app.connectors.talon.utils.v2_client import TALON_CONNECTOR
 from app.connectors.velociraptor.routes import artifacts as velociraptor_routes
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -70,12 +77,10 @@ from app.connectors.velociraptor.services.talon_catalogue import TALON_AUTO_RUN
 from app.connectors.velociraptor.services.talon_catalogue import auto_run_violation
 from app.connectors.velociraptor.services.talon_catalogue import is_response_artifact
 from app.connectors.velociraptor.utils.universal import _positive_int_from_env
+from app.connectors.velociraptor.utils.validation import validate_artifact_name
+from app.connectors.velociraptor.utils.validation import validate_hostname
 from app.middleware.customer_access import enforce_hostname_access
 from app.time_utils import now_utc
-
-#: The service user's name in CoPilot's docs (CLAUDE.md, "AI analyst pipeline"): always held to the
-#: gate, so the gate holds before an admin names the user.
-DEFAULT_SERVICE_USERNAME = "talon-analyst"
 
 #: The resource limits' settings (environment), their defaults and their ceilings. The timeout is
 #: at most 300 s: talon-analyst's one-collection-per-host lock assumes a flow ends by then.
@@ -94,6 +99,14 @@ NOT_CLIENT = "velociraptor_id must be the host's root-org Velociraptor client id
 UNSET = "the Talon service account has no collection allowlist in CoPilot (Talon v2 settings, collections)"
 RESPONSE_ARTIFACT = "command, script, quarantine and remediation artifacts can't be started here"
 ADMIN_ONLY = "Only an admin may read or change the Talon collection setting"
+#: This route's refusals are fixed texts: never the host, the artifact or a value back.
+BAD_REQUEST = "not started: the request is not one CoPilot can start (host, artifact or parameters)"
+NOT_APPLICABLE = "not started: the artifact or its parameters don't apply to this host"
+NO_ACCESS = "not started: no access to this host"
+NOT_FOUND = "not started: the host or its Velociraptor client was not found"
+SERVICE_REFUSED = "The Talon service account may not start this collection"
+POLICY_REFUSED = "not started: this artifact can't be collected by this user"
+FIXED_BY_STATUS = {400: NOT_APPLICABLE, 403: POLICY_REFUSED, 404: NOT_FOUND}
 
 
 def collect_start_limits() -> FlowLimits:
@@ -109,20 +122,7 @@ def collect_start_limits() -> FlowLimits:
     return FlowLimits(**values)
 
 
-# ── who the gate holds ────────────────────────────────────────────────────────
-
-
-def service_usernames(row: Optional[TalonConnectorSettings]) -> FrozenSet[str]:
-    """The names held to the gate, case-folded: ``talon-analyst`` and the configured one."""
-    names = {DEFAULT_SERVICE_USERNAME}
-    if row is not None and row.collect_service_username:
-        names.add(row.collect_service_username)
-    return frozenset(name.casefold() for name in names)
-
-
-def is_service_account(user: Any, row: Optional[TalonConnectorSettings]) -> bool:
-    username = getattr(user, "username", None)
-    return isinstance(username, str) and username.casefold() in service_usernames(row)
+# ── who the gate holds (``talon_service_account``) ────────────────────────────
 
 
 def allowed_artifacts(row: Optional[TalonConnectorSettings]) -> Optional[FrozenSet[str]]:
@@ -137,27 +137,39 @@ def allowed_artifacts(row: Optional[TalonConnectorSettings]) -> Optional[FrozenS
 
 def _parameters(value: Optional[Dict[str, Any]]) -> Tuple[Tuple[str, str], ...]:
     """The body's parameters as ``(key, value)`` pairs (an approved collection's rules: an ``env``
-    list, each name once, each value a short plain string); a 400 with a fixed text otherwise."""
+    list, each name once, each value a short plain string); a fixed 400 otherwise."""
     if value is None:
         return ()
     try:
         return execution._parameters(value)
-    except execution.ProposalShape as e:
-        raise HTTPException(status_code=400, detail=f"Invalid parameters: {e}") from None
+    except execution.ProposalShape:
+        raise HTTPException(status_code=400, detail=BAD_REQUEST) from None
+
+
+def _fixed(e: HTTPException, default: str) -> HTTPException:
+    """A refusal from CoPilot's own checks, with its status and a fixed text (theirs name the host,
+    the artifact or a parameter)."""
+    if e.status_code >= 500:
+        return HTTPException(status_code=e.status_code, detail=START_FAILED)
+    return HTTPException(status_code=e.status_code, detail=FIXED_BY_STATUS.get(e.status_code, default))
 
 
 async def start(user: User, body: CollectStartBody, request: Optional[Request], session: AsyncSession) -> CollectStartResponse:
     """Start one collection and answer its flow id (module docstring)."""
     parameters = _parameters(body.parameters)
     client = execution.canonical_client_id(body.velociraptor_id)
+    try:
+        hostname, artifact = validate_hostname(body.hostname), validate_artifact_name(body.artifact_name)
+    except HTTPException:
+        raise HTTPException(status_code=400, detail=BAD_REQUEST) from None
     if client is None:
         raise HTTPException(status_code=400, detail=NOT_CLIENT)
-    hostname, artifact = body.hostname, body.artifact_name
-    # Never the parameters: their names are logged by the parameter check, their values nowhere.
-    logger.info(f"Collection start: {artifact} on {hostname} ({client}) for user {getattr(user, 'username', '?')}")
 
-    await enforce_hostname_access(user, hostname, session)
-    row = await get_settings_row(session, TALON_CONNECTOR)
+    try:
+        await enforce_hostname_access(user, hostname, session)
+    except HTTPException as e:
+        raise HTTPException(status_code=e.status_code, detail=NO_ACCESS if e.status_code == 403 else NOT_FOUND) from None
+    row = await settings_row(session)
     service = is_service_account(user, row)
     if service:
         allowed = allowed_artifacts(row)
@@ -166,8 +178,9 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
             raise HTTPException(status_code=403, detail=UNSET)
         refused = auto_run_violation(artifact, parameters, allowed)
         if refused is not None:
+            # The artifact name is validated (``validate_artifact_name``); a value never reaches here.
             logger.warning(f"Refused a collection start of {artifact} by the Talon service account {user.username}: {refused}")
-            raise HTTPException(status_code=403, detail=f"The Talon service account may not start this collection: {refused}")
+            raise HTTPException(status_code=403, detail=SERVICE_REFUSED)
     elif is_response_artifact(artifact) or artifact in response_artifacts():
         raise HTTPException(status_code=403, detail=RESPONSE_ARTIFACT)
 
@@ -179,6 +192,10 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
             await execution.lock_and_check_host(session, hostname, client)
         except execution.RecheckFailed as e:
             raise HTTPException(status_code=409, detail=f"not started: {e}") from None
+        # Every value logged here is validated: the host is the agents row's, the client canonical,
+        # the artifact a name. Never the parameters: their names are logged by the parameter check,
+        # their values nowhere.
+        logger.info(f"Collection start: {artifact} on {hostname} ({client}) for user {getattr(user, 'username', '?')}")
         collect_body = CollectArtifactBody(
             hostname=hostname,
             artifact_name=artifact,
@@ -200,8 +217,7 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
         except HTTPException as e:
             if e.status_code >= 500:
                 logger.error(f"Collection start of {artifact} on {client} failed in CoPilot (HTTP {e.status_code})")
-                raise HTTPException(status_code=e.status_code, detail=START_FAILED) from None
-            raise
+            raise _fixed(e, POLICY_REFUSED) from None
     finally:
         await session.rollback()  # releases the host's locks
     return started_response(started, client)
@@ -229,15 +245,23 @@ def require_admin(user: User) -> None:
         raise HTTPException(status_code=403, detail=ADMIN_ONLY)
 
 
-def _settings_response(row: Optional[TalonConnectorSettings], message: str) -> TalonCollectionSettingsResponse:
+def _settings_response(
+    row: Optional[TalonConnectorSettings],
+    message: str,
+    exists: bool,
+    user_id: Optional[int],
+) -> TalonCollectionSettingsResponse:
     configured = row.collect_service_username if row is not None else None
     listed = allowed_artifacts(row)
     return TalonCollectionSettingsResponse(
         success=True,
         message=message,
         connector_name=TALON_CONNECTOR,
-        service_username=configured or DEFAULT_SERVICE_USERNAME,
+        service_username=effective_username(row),
         service_username_configured=configured,
+        service_user_exists=exists,
+        service_user_id=user_id,
+        recorded_service_user_id=row.collect_service_user_id if row is not None else None,
         allowed_artifacts=sorted(listed) if listed is not None else None,
         auto_run_catalogue={name: dict(entry.pinned) for name, entry in TALON_AUTO_RUN.items()},
         updated_by_user_id=row.updated_by_user_id if row is not None else None,
@@ -245,9 +269,14 @@ def _settings_response(row: Optional[TalonConnectorSettings], message: str) -> T
     )
 
 
+async def _describe(session: AsyncSession, row: Optional[TalonConnectorSettings], message: str) -> TalonCollectionSettingsResponse:
+    user_id = await user_id_for(session, effective_username(row))
+    return _settings_response(row, message, user_id is not None, user_id)
+
+
 async def get_settings(user: User, session: AsyncSession) -> TalonCollectionSettingsResponse:
     require_admin(user)
-    return _settings_response(await get_settings_row(session, TALON_CONNECTOR), "Talon collection setting retrieved")
+    return await _describe(session, await settings_row(session), "Talon collection setting retrieved")
 
 
 def _clean_username(value: Optional[str]) -> Optional[str]:
@@ -280,13 +309,16 @@ async def update_settings(
     """Set the service account's name and allowlist (admin only), audited with the old and new values."""
     require_admin(user)
     username, listed = _clean_username(service_username), _clean_artifacts(artifacts)
-    row = await get_settings_row(session, TALON_CONNECTOR)
+    row = await settings_row(session)
     old = {
         "collect_service_username": row.collect_service_username if row is not None else None,
+        "collect_service_user_id": row.collect_service_user_id if row is not None else None,
         "collect_allowed_artifacts": row.collect_allowed_artifacts if row is not None else None,
     }
-    new = {"collect_service_username": username, "collect_allowed_artifacts": listed}
-    row = await _store(session, username, listed, user.id)
+    # The id of the one user with the name, recorded so a rename keeps it in the gate.
+    service_user_id = await user_id_for(session, username or DEFAULT_SERVICE_USERNAME)
+    new = {"collect_service_username": username, "collect_service_user_id": service_user_id, "collect_allowed_artifacts": listed}
+    row = await _store(session, username, service_user_id, listed, user.id)
     await record_audit_event(
         action=AuditAction.CONNECTOR_UPDATE,
         actor_user_id=user.id,
@@ -298,18 +330,25 @@ async def update_settings(
         request=request,
         details=f"Talon collection setting changed for connector '{TALON_CONNECTOR}'",
     )
-    return _settings_response(row, "Talon collection setting saved")
+    return await _describe(session, row, "Talon collection setting saved")
 
 
-async def _store(session: AsyncSession, username: Optional[str], artifacts: Optional[List[str]], user_id: int) -> TalonConnectorSettings:
+async def _store(
+    session: AsyncSession,
+    username: Optional[str],
+    service_user_id: Optional[int],
+    artifacts: Optional[List[str]],
+    user_id: int,
+) -> TalonConnectorSettings:
     """Upsert the row (a new row leaves "Talon v2" off). Two admins creating it at once: the loser
     updates the winner's row."""
     for attempt in range(2):
-        row = await get_settings_row(session, TALON_CONNECTOR)
+        row = await settings_row(session)
         if row is None:
             row = TalonConnectorSettings(connector_name=TALON_CONNECTOR)
             session.add(row)
         row.collect_service_username = username
+        row.collect_service_user_id = service_user_id
         row.collect_allowed_artifacts = artifacts
         row.updated_by_user_id = user_id
         row.updated_at = now_utc()

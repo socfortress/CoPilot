@@ -24,6 +24,9 @@ from loguru import logger  # noqa: E402
 
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.blocking import configure_thread_limit
+from app.connectors.talon.services.talon_service_account import (  # noqa: E402
+    warn_if_service_user_missing,
+)
 from app.customer_portal.services.settings import ensure_default_portal_settings
 from app.data_store.data_store_setup import create_buckets
 from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
@@ -158,6 +161,8 @@ async def lifespan(_app: FastAPI):
     await create_available_network_connectors(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
+    # Talon's collection setting names a service account no user has: warn (never fatal; EA-4b).
+    await warn_if_service_user_missing(async_engine)
     # Built-in message templates (#1038). Idempotent by name, and never fatal —
     # notifications work without them, they just start from a blank editor.
     await seed_builtin_templates(async_engine)
