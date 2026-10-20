@@ -93,8 +93,8 @@
 		<n-form-item label="Subject (optional)" :show-feedback="false">
 			<n-input v-model:value="form.subject_template" :placeholder="subjectPlaceholder" />
 		</n-form-item>
-		<div class="text-secondary mb-4 text-xs">
-			Used as the email subject and the Teams card title. Channels without a subject ignore it.
+		<div class="text-secondary mb-4 text-xs" data-testid="template-subject-hint">
+			{{ subjectHint }}
 		</div>
 
 		<n-form-item label="Body" path="body_template" :show-feedback="!!fieldErrors.body_template">
@@ -241,7 +241,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { isPortalTrigger, NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
-import { snippetsForTrigger, variablesForTrigger } from "./templateVariables"
+import { snippetsForTrigger, subjectHintForTrigger, variablesForTrigger } from "./templateVariables"
 
 // The editor for a named, reusable template.
 //
@@ -313,6 +313,7 @@ const variables = computed(() => variablesForTrigger(form.trigger ?? null))
 const snippets = computed(() => snippetsForTrigger(form.trigger ?? null))
 const isTempPassword = computed(() => form.trigger === "temp_password_issued")
 const isPortal = computed(() => isPortalTrigger(form.trigger))
+const subjectHint = computed(() => subjectHintForTrigger(form.trigger ?? null))
 /** Triggers whose templates only ever go out as an email, never on a route. */
 const isEmailOnly = computed(() => isTempPassword.value || isPortal.value)
 

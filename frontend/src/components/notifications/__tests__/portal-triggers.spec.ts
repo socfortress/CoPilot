@@ -6,7 +6,7 @@ import {
 	NOTIFICATION_TRIGGER_LABELS,
 	PORTAL_TRIGGERS
 } from "@/types/notifications"
-import { PORTAL_SNIPPETS, snippetsForTrigger, variablesForTrigger } from "../templateVariables"
+import { PORTAL_SNIPPETS, snippetsForTrigger, subjectHintForTrigger, variablesForTrigger } from "../templateVariables"
 
 /** The Customer Portal's emails to its users (#1282): template scopes, never routes. */
 describe("portal email triggers", () => {
@@ -38,5 +38,16 @@ describe("portal email triggers", () => {
 		expect(snippetsForTrigger("portal_waiting_on_you")).toBe(PORTAL_SNIPPETS)
 		expect(PORTAL_SNIPPETS.map(s => s.source).join("\n")).toContain("{% for item in items %}")
 		expect(snippetsForTrigger("alert_created")).not.toBe(PORTAL_SNIPPETS)
+	})
+
+	it("describe the subject as an email's only, with no word about Teams cards", () => {
+		for (const trigger of PORTAL_TRIGGERS) {
+			const hint = subjectHintForTrigger(trigger)
+			expect(hint).toContain("email's subject")
+			expect(hint).not.toMatch(/Teams|Channels/)
+		}
+		expect(subjectHintForTrigger("temp_password_issued")).not.toMatch(/Teams|Channels/)
+		expect(subjectHintForTrigger("alert_created")).toContain("Teams card title")
+		expect(subjectHintForTrigger(null)).toContain("Teams card title")
 	})
 })
