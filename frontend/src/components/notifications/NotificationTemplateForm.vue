@@ -11,13 +11,16 @@
 		</div>
 
 		<div class="text-secondary mb-3 text-xs">
-			<template v-if="isTempPassword && form.format === 'json'">
+			<template v-if="isEmailOnly && form.format === 'json'">
 				A JSON template cannot be sent as an email — pick HTML or plain text, or this template won't be offered
 				when sending.
 			</template>
 			<template v-else-if="isTempPassword && form.format === 'html'">
 				Sent as HTML with a plain-text part generated from it automatically, so a text-only client still shows
 				the password. Values are escaped automatically.
+			</template>
+			<template v-else-if="isPortal && form.format === 'html'">
+				Sent as HTML with a plain-text part generated from it automatically. Values are escaped automatically.
 			</template>
 			<template v-else-if="form.format === 'html'">
 				Only
@@ -60,7 +63,17 @@
 			and would leave an operator waiting for an email that only ever goes
 			out when an admin presses Send.
 		-->
-		<div v-if="isTempPassword" class="text-secondary mb-4 text-xs">
+		<div v-if="isPortal" class="text-secondary mb-4 text-xs" data-testid="portal-template-hint">
+			This is an email the
+			<strong>Customer Portal</strong>
+			sends its users who chose to receive it, from
+			<strong>Customers → Portal Notifications</strong>
+			and each user's profile. It is not a notification route. Set
+			<strong>Customer</strong>
+			to give one customer their own wording or language; leave it empty for the shared default. The most specific
+			one wins, and a template that fails to render sends a plain-text email instead.
+		</div>
+		<div v-else-if="isTempPassword" class="text-secondary mb-4 text-xs">
 			This is the email an admin sends from
 			<strong>Customers → Security → Email temp password</strong>
 			. It is not a notification route and fires only on that action. Set
@@ -226,7 +239,7 @@ import {
 import { computed, onBeforeMount, reactive, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
+import { isPortalTrigger, NOTIFICATION_TRIGGER_LABELS } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
 import { snippetsForTrigger, variablesForTrigger } from "./templateVariables"
 
@@ -299,6 +312,9 @@ const customerOptions = computed(() =>
 const variables = computed(() => variablesForTrigger(form.trigger ?? null))
 const snippets = computed(() => snippetsForTrigger(form.trigger ?? null))
 const isTempPassword = computed(() => form.trigger === "temp_password_issued")
+const isPortal = computed(() => isPortalTrigger(form.trigger))
+/** Triggers whose templates only ever go out as an email, never on a route. */
+const isEmailOnly = computed(() => isTempPassword.value || isPortal.value)
 
 // A placeholder showing alert variables is worse than none on a password email
 // — it reads as the suggested shape. Bound rather than inlined in the template
@@ -306,7 +322,9 @@ const isTempPassword = computed(() => form.trigger === "temp_password_issued")
 const subjectPlaceholder = computed(() =>
 	isTempPassword.value
 		? "Your temporary {{ customer_name or 'CoPilot' }} password"
-		: "{{ severity }} alert on {{ customer_code }}"
+		: isPortal.value
+			? "{{ subject }}"
+			: "{{ severity }} alert on {{ customer_code }}"
 )
 
 const rules: FormRules = {

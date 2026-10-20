@@ -3,6 +3,7 @@ import type {
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
+	CustomerPortalNotificationSettings,
 	CustomerPortalSettings,
 	CustomerPortalSlaSettings
 } from "@/types/customer-portal"
@@ -55,6 +56,18 @@ type SlaSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalSlaSettings
 }
 
+export interface CustomerPortalNotificationSettingsPayload {
+	enabled: boolean
+}
+
+type NotificationSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalNotificationSettings
+	/** Whether SMTP is configured: without it, portal users get the bell only. */
+	email_configured: boolean
+	/** The UTC hour of the daily summary. */
+	digest_hour_utc: number
+}
+
 export default {
 	/** Global settings with the inline logo, for the editor. The public `/settings` omits the logo bytes. */
 	getSettings(signal?: AbortSignal) {
@@ -97,5 +110,14 @@ export default {
 	/** Admin-only: shows or hides the portal's SLA page for this customer (#1187). */
 	setCustomerSlaSettings(customerCode: string, payload: CustomerPortalSlaSettingsPayload) {
 		return HttpClient.put<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, payload)
+	},
+	getCustomerNotificationSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<NotificationSettingsResponse>(`/customer_portal/notifications/settings/${customerCode}`, {
+			signal
+		})
+	},
+	/** Admin-only: turns portal users' notifications on or off for this customer (#1282). */
+	setCustomerNotificationSettings(customerCode: string, payload: CustomerPortalNotificationSettingsPayload) {
+		return HttpClient.put<NotificationSettingsResponse>(`/customer_portal/notifications/settings/${customerCode}`, payload)
 	}
 }

@@ -1,5 +1,5 @@
 import type { NotificationTrigger } from "@/types/notifications"
-import { SLA_TRIGGERS } from "@/types/notifications"
+import { isPortalTrigger, SLA_TRIGGERS } from "@/types/notifications"
 
 // The variables a notification template can reference, mirroring
 // `build_context` in app/notifications/services/rendering.py.
@@ -158,6 +158,52 @@ const TEMP_PASSWORD_VARIABLES: TemplateVariable[] = [
 	}
 ]
 
+// The Customer Portal's emails to its users (#1282): top-level extras supplied by
+// `build_extra_context` in app/customer_portal/services/notification_email.py, plus the
+// envelope fields that mean something there. EXCLUSIVE, like the password email's list:
+// alert-route variables (IOCs, the AI report, the assignee) are never set on these.
+const PORTAL_VARIABLES: TemplateVariable[] = [
+	{ name: "user_name", description: "Username of the portal user the email is for.", example: "jdoe" },
+	{
+		name: "customer_name",
+		description: "The customer's display name. Empty in a summary covering several customers.",
+		example: "Acme Corp"
+	},
+	{ name: "organization_name", description: "Alias for customer_name." },
+	{
+		name: "subject",
+		description: "The notification's title. In the daily summary, the summary's own title.",
+		example: "The SOC is waiting on your reply: Suspicious login"
+	},
+	{ name: "summary", description: "The notification's text, or its title when it has none." },
+	{ name: "severity", description: "The alert's severity; Informational for cases and reports.", example: "High" },
+	{
+		name: "link_url",
+		description: "Where the item lives in the portal, from CUSTOMER_PORTAL_URL. Empty when that is unset.",
+		example: "https://portal.example.com/alerts/4821"
+	},
+	{
+		name: "portal_url",
+		description: "The portal's address (CUSTOMER_PORTAL_URL). Empty when unset — guard it with {% if %}.",
+		example: "https://portal.example.com"
+	},
+	{
+		name: "items",
+		description:
+			"The notifications in this email — one, or the whole day in the summary. Each has title, body, " +
+			"severity, url, created_at and event.",
+		example: "{% for item in items %}…{% endfor %}"
+	},
+	{ name: "item_count", description: "How many notifications the email holds.", example: "3" },
+	{
+		name: "branding.…",
+		description:
+			"The customer's logo and brand colours, resolved the same way a PDF report's are. Keys: logo, title, " +
+			"accent, accent_strong, accent_soft, accent_text.",
+		example: "branding.accent_strong"
+	}
+]
+
 const ASSIGNMENT_TRIGGERS: NotificationTrigger[] = ["alert_assigned", "case_assigned", "case_task_assigned"]
 
 /** Variables worth showing for a given trigger, most relevant first. */
@@ -167,6 +213,7 @@ export function variablesForTrigger(trigger: NotificationTrigger | null): Templa
 	// set would advertise `summary` and `link_url` as usable when they carry
 	// alert-shaped placeholder text nobody wants in a credentials email.
 	if (trigger === "temp_password_issued") return TEMP_PASSWORD_VARIABLES
+	if (isPortalTrigger(trigger)) return PORTAL_VARIABLES
 
 	// The report rides alert-shaped events: investigation_complete carries one,
 	// and a manual send can attach one to any alert. Assignment triggers never
@@ -242,7 +289,33 @@ export const TEMP_PASSWORD_SNIPPETS: { label: string; source: string }[] = [
 	}
 ]
 
+// The portal emails' own snippets (#1282).
+export const PORTAL_SNIPPETS: { label: string; source: string }[] = [
+	{
+		label: "Greeting",
+		source: "Hello {{ user_name }},"
+	},
+	{
+		label: "Link to the item, when configured",
+		source: '{% if link_url %}<a href="{{ link_url }}">Open it in the portal</a>{% endif %}'
+	},
+	{
+		label: "Every notification",
+		source: "{% for item in items %}• {{ item.title }}{% if item.url %} — {{ item.url }}{% endif %}\n{% endfor %}"
+	},
+	{
+		label: "Organization name, with fallback",
+		source: "{{ customer_name or 'your organization' }}"
+	},
+	{
+		label: "Brand colour",
+		source: '<span style="color:{{ branding.accent_strong }}">…</span>'
+	}
+]
+
 /** Snippets worth offering for a given trigger. */
 export function snippetsForTrigger(trigger: NotificationTrigger | null): { label: string; source: string }[] {
-	return trigger === "temp_password_issued" ? TEMP_PASSWORD_SNIPPETS : SNIPPETS
+	if (trigger === "temp_password_issued") return TEMP_PASSWORD_SNIPPETS
+	if (isPortalTrigger(trigger)) return PORTAL_SNIPPETS
+	return SNIPPETS
 }
