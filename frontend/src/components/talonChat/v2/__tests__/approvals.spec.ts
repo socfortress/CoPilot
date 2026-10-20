@@ -3,14 +3,27 @@
  * inside its result window) or are read slowly; untrusted text with its invisible and
  * direction-changing characters escaped; a comment's links (never holding such a character, their
  * hosts in punycode); CoPilot's times and the expiry by its own clock; a thread's open calls.
+ * Endpoint actions (EA-4): labels, host targets, risk labels, the shape, a command's counts, first
+ * line and runs (tabs, trailing spaces, unseen characters), a collection's parameters.
  */
+import type { TalonActionProvenance } from "@/types/talonActions"
 import type { TalonV2ChatMessage } from "@/types/talonV2"
 import { describe, expect, it } from "vitest"
 import {
+	actionLabel,
 	blocksThread,
+	collectionParameters,
+	commandCounts,
+	commandSegments,
+	commandShape,
+	countsText,
+	endpointKind,
 	escapeOf,
 	expiryDeadline,
+	firstLine,
 	hasHiddenChars,
+	hasUnseenChars,
+	isHostAction,
 	isWithdrawable,
 	linkSegments,
 	openApprovals,
@@ -18,11 +31,14 @@ import {
 	pollClass,
 	provenanceWarnings,
 	punycodeLink,
+	riskLabels,
 	safeSegments,
+	shellOf,
 	stateLabel,
-	timeLeft
+	timeLeft,
+	whitespaceCounts
 } from "../approvals"
-import { naiveUtc, talonAction } from "./fixtures"
+import { collectAction, commandAction, naiveUtc, talonAction } from "./fixtures"
 
 const RLO = "\u202E"
 
@@ -78,6 +94,158 @@ describe("talon approval helpers", () => {
 		expect(provenanceWarnings({ injection_detected: "yes" as unknown as boolean })).toEqual([])
 		expect(provenanceWarnings(null)).toEqual([])
 		expect(provenanceWarnings({ web_used: true }).map(w => w.flag)).toEqual(["web_used"])
+		expect(
+			provenanceWarnings({ endpoint_output_used: true, copied_from_output: true }).map(w => [w.flag, w.severity])
+		).toEqual([
+			["copied_from_output", "error"],
+			["endpoint_output_used", "warning"]
+		])
+		expect(
+			provenanceWarnings({
+				endpoint_output_used: "true",
+				copied_from_output: 1
+			} as unknown as TalonActionProvenance)
+		).toEqual([])
+	})
+
+	it("collections and commands are host actions, with their own labels", () => {
+		for (const action of ["quarantine_host", "release_host", "collect_artifact", "endpoint_command"]) {
+			expect(isHostAction({ action }), action).toBe(true)
+		}
+		for (const action of ["set_alert_status", "assign_alert", "comment_on_alert", "something_else"]) {
+			expect(isHostAction({ action }), action).toBe(false)
+		}
+		expect(actionLabel("collect_artifact")).toBe("Collect a Velociraptor artifact")
+		expect(actionLabel("endpoint_command")).toBe("Run a command on the endpoint")
+		expect(endpointKind(collectAction())).toEqual({
+			kind: "collection",
+			label: "Collection",
+			detail: "Windows.System.Pslist"
+		})
+		expect(endpointKind(commandAction("x"))).toEqual({ kind: "command", label: "Command", detail: "PowerShell" })
+		expect(endpointKind(talonAction())).toBeNull()
+	})
+
+	it("the shells by CoPilot's command artifacts; anything else is none", () => {
+		expect(shellOf("Windows.System.PowerShell")).toBe("PowerShell")
+		expect(shellOf("Linux.Sys.BashShell")).toBe("bash")
+		expect(shellOf("Windows.System.CmdShell")).toBe("cmd")
+		expect(shellOf("Windows.System.Pslist")).toBeNull()
+		expect(shellOf(undefined)).toBeNull()
+	})
+
+	it("risk labels: known ones in words, unknown ones as written, each once, strings only", () => {
+		expect(riskLabels({ risk_labels: ["network_fetch", "made_up", "network_fetch", 3, null] })).toEqual([
+			{ key: "network_fetch", text: "Network fetch", known: true },
+			{ key: "made_up", text: "made_up", known: false }
+		])
+		expect(
+			riskLabels({
+				risk_labels: [
+					"delete_or_kill",
+					"registry_or_service",
+					"account_change",
+					"persistence",
+					"shutdown_or_reboot"
+				]
+			}).map(r => r.text)
+		).toEqual([
+			"Deletes or kills",
+			"Registry or service change",
+			"Account change",
+			"Persistence",
+			"Shutdown or reboot"
+		])
+		expect(riskLabels({ risk_labels: "network_fetch" })).toEqual([])
+		expect(riskLabels({ risk_labels: ["toString", "constructor"] }).every(r => !r.known)).toBe(true)
+		expect(riskLabels(null)).toEqual([])
+	})
+
+	it("the shape is read-only only when the record says exactly that", () => {
+		expect(commandShape({ shape: "read-only" })).toBe("read-only")
+		expect(commandShape({ shape: "free-form" })).toBe("free-form")
+		for (const shape of [undefined, null, "", "READ-ONLY", "read only", true]) {
+			expect(commandShape({ shape }), String(shape)).toBe("unknown")
+		}
+		expect(commandShape(undefined)).toBe("unknown")
+	})
+
+	it("a command's counts as talon-analyst measures them, and its first line", () => {
+		expect(commandCounts("Get-Process")).toEqual({ lines: 1, chars: 11 })
+		expect(commandCounts("a\nb\nc\n\n")).toEqual({ lines: 3, chars: 7 })
+		expect(commandCounts("\u{1F600}")).toEqual({ lines: 1, chars: 1 })
+		expect(countsText("a")).toBe("1 line, 1 character")
+		expect(countsText(`${"x".repeat(1999)}\n`)).toBe("1 line, 2,000 characters")
+		expect(firstLine("one\ntwo")).toBe("one")
+		expect(firstLine("\ntwo")).toBe("")
+		expect(firstLine("only")).toBe("only")
+	})
+
+	it("a command's runs mark tabs, trailing spaces and unseen characters, and keep the text", () => {
+		const command = "a\tb  \n  \t \nc\rd\u202Ee\n"
+		const lines = commandSegments(command)
+		expect(lines).toEqual([
+			[
+				{ kind: "text", text: "a" },
+				{ kind: "tab", text: "\t" },
+				{ kind: "text", text: "b" },
+				{ kind: "trailing", text: "  " }
+			],
+			[
+				{ kind: "trailing", text: "  " },
+				{ kind: "tab", text: "\t" },
+				{ kind: "trailing", text: " " }
+			],
+			[
+				{ kind: "text", text: "c" },
+				{ kind: "escape", text: "⟨U+000D⟩", char: "\r" },
+				{ kind: "text", text: "d" },
+				{ kind: "escape", text: "⟨U+202E⟩", char: "\u202E" },
+				{ kind: "text", text: "e" }
+			],
+			[]
+		])
+		const plain = "Get-Process | Select-Object -First 5 \n\tWhere-Object {$_.CPU -gt 1}"
+		expect(
+			commandSegments(plain)
+				.map(line => line.map(s => s.text).join(""))
+				.join("\n")
+		).toBe(plain)
+		expect(whitespaceCounts(command)).toEqual({ tabs: 2, trailingLines: 2 })
+		expect(hasUnseenChars("a\tb\nc")).toBe(false)
+		for (const char of ["\r", "\u0000", "\u001B", "\u202E", "\u200B", "\u2028", "\u2029", "\uD800"]) {
+			expect(hasUnseenChars(`a${char}b`), JSON.stringify(char)).toBe(true)
+		}
+	})
+
+	it("a collection's parameters as rows; any other shape is not ok", () => {
+		expect(
+			collectionParameters({
+				env: [
+					{ key: "ProcessRegex", value: "x" },
+					{ key: "Limit", value: 5 }
+				]
+			})
+		).toEqual({
+			ok: true,
+			rows: [
+				{ key: "ProcessRegex", value: "x" },
+				{ key: "Limit", value: "5" }
+			]
+		})
+		expect(collectionParameters(undefined)).toEqual({ ok: true, rows: [] })
+		expect(collectionParameters({ env: [] })).toEqual({ ok: true, rows: [] })
+		for (const odd of [
+			{ ProcessRegex: "x" },
+			{ env: [{ key: "a", value: "b" }], extra: 1 },
+			{ env: [{ key: 1, value: "b" }] },
+			{ env: [{ key: "a", value: "b", note: "c" }] },
+			{ env: "a" },
+			["a"],
+			"a"
+		]) {
+			expect(collectionParameters(odd).ok, JSON.stringify(odd)).toBe(false)
+		}
 	})
 
 	it.each([

@@ -7,6 +7,10 @@
  *
  * The shared records, the page's poll and the resume guard are in `actionCards.ts`. Every string a
  * proposal carries reaches the page as text, never as HTML or Markdown.
+ *
+ * Endpoint actions (talon-analyst's endpoint actions plan, EA-4): a collection's parameters as rows,
+ * a command's shell, counts, shape and risk labels, and its lines cut into runs so tabs, trailing
+ * spaces and characters nobody can see are shown (`commandSegments`).
  */
 import type { TalonAction, TalonActionProvenance } from "@/types/talonActions"
 import type { TalonV2ChatMessage, TalonV2ToolState } from "@/types/talonV2"
@@ -60,8 +64,11 @@ export function isWithdrawable(action: TalonAction): boolean {
 	return action.is_requester && action.state === "pending" && action.talon_status === "pending" && !action.expired
 }
 
+/** The actions whose target is a host (`{customer_code, agent_id, velociraptor_id, hostname}`). */
+const HOST_ACTIONS = new Set(["quarantine_host", "release_host", "collect_artifact", "endpoint_command"])
+
 export function isHostAction(action: Pick<TalonAction, "action">): boolean {
-	return action.action === "quarantine_host" || action.action === "release_host"
+	return HOST_ACTIONS.has(action.action)
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -69,11 +76,29 @@ const ACTION_LABELS: Record<string, string> = {
 	assign_alert: "Assign the alert",
 	comment_on_alert: "Comment on the alert",
 	quarantine_host: "Quarantine the host",
-	release_host: "Release the host from quarantine"
+	release_host: "Release the host from quarantine",
+	collect_artifact: "Collect a Velociraptor artifact",
+	endpoint_command: "Run a command on the endpoint"
 }
 
 export function actionLabel(action: string): string {
 	return ACTION_LABELS[action] ?? action
+}
+
+/**
+ * An endpoint action's kind for a list row: a collection with its artifact (untrusted text), a
+ * command with its shell (CoPilot's own name for the artifact); null for any other action.
+ */
+export function endpointKind(
+	action: Pick<TalonAction, "action" | "args">
+): { kind: "collection" | "command"; label: string; detail: string } | null {
+	const artifact = action.args?.artifact_name
+	const artifactText = typeof artifact === "string" ? artifact : ""
+	if (action.action === "collect_artifact") return { kind: "collection", label: "Collection", detail: artifactText }
+	if (action.action === "endpoint_command") {
+		return { kind: "command", label: "Command", detail: shellOf(artifact) ?? artifactText }
+	}
+	return null
 }
 
 const STATE_LABELS: Record<string, string> = {
@@ -110,7 +135,7 @@ export function stateTone(action: Pick<TalonAction, "state" | "expired">): State
 // ── provenance ───────────────────────────────────────────────────────────────
 
 export interface ProvenanceWarning {
-	flag: "injection_detected" | "untrusted_seen" | "web_used"
+	flag: "injection_detected" | "untrusted_seen" | "web_used" | "endpoint_output_used" | "copied_from_output"
 	severity: "error" | "warning"
 	text: string
 }
@@ -120,6 +145,10 @@ export const PROVENANCE_INJECTION =
 export const PROVENANCE_UNTRUSTED =
 	"Earlier in this thread Talon read text the injection defender flagged. The proposal may have been steered by it."
 export const PROVENANCE_WEB = "This thread used text from the web. The proposal may have been shaped by it."
+export const PROVENANCE_ENDPOINT_OUTPUT =
+	"This proposal was made after reading endpoint output. Text on the host may have steered it."
+export const PROVENANCE_COPIED =
+	"Parts of this command were copied from endpoint output. Read those parts closely: text on the host may have written them."
 
 export function provenanceWarnings(provenance: TalonActionProvenance | null | undefined): ProvenanceWarning[] {
 	const p = provenance ?? {}
@@ -129,7 +158,184 @@ export function provenanceWarnings(provenance: TalonActionProvenance | null | un
 	}
 	if (p.untrusted_seen === true) out.push({ flag: "untrusted_seen", severity: "warning", text: PROVENANCE_UNTRUSTED })
 	if (p.web_used === true) out.push({ flag: "web_used", severity: "warning", text: PROVENANCE_WEB })
+	if (p.copied_from_output === true) {
+		out.push({ flag: "copied_from_output", severity: "error", text: PROVENANCE_COPIED })
+	}
+	if (p.endpoint_output_used === true) {
+		out.push({ flag: "endpoint_output_used", severity: "warning", text: PROVENANCE_ENDPOINT_OUTPUT })
+	}
 	return out
+}
+
+// ── endpoint actions: collections and commands ───────────────────────────────
+
+/** talon-analyst's risk labels (`talon.endpoint_commands.RISK_PATTERNS`), in words. */
+const RISK_LABELS: Record<string, string> = {
+	network_fetch: "Network fetch",
+	delete_or_kill: "Deletes or kills",
+	registry_or_service: "Registry or service change",
+	account_change: "Account change",
+	persistence: "Persistence",
+	shutdown_or_reboot: "Shutdown or reboot"
+}
+
+export const RISK_LABELS_NOTE =
+	"Risk labels are heuristics talon-analyst's code computes from the command's text: they inform, they don't refuse, and a command can do harm without any."
+
+export interface RiskLabel {
+	/** The label as the record holds it (untrusted text when it isn't one talon-analyst defines). */
+	key: string
+	text: string
+	known: boolean
+}
+
+/** A command's risk labels from `provenance.risk_labels`, in the record's order; only strings, each once. */
+export function riskLabels(provenance: TalonActionProvenance | null | undefined): RiskLabel[] {
+	const raw = provenance?.risk_labels
+	if (!Array.isArray(raw)) return []
+	const out: RiskLabel[] = []
+	const seen = new Set<string>()
+	for (const label of raw) {
+		if (typeof label !== "string" || seen.has(label)) continue
+		seen.add(label)
+		const known = Object.hasOwn(RISK_LABELS, label)
+		out.push({ key: label, text: known ? RISK_LABELS[label] : label, known })
+	}
+	return out
+}
+
+export type CommandShape = "read-only" | "free-form" | "unknown"
+
+/**
+ * A command's shape (`provenance.shape`): `read-only` only when the record says exactly that;
+ * `free-form` when it says so; anything else (missing, another value) is `unknown`, shown with the
+ * same caution as free-form, never as read-only.
+ */
+export function commandShape(provenance: TalonActionProvenance | null | undefined): CommandShape {
+	const shape = provenance?.shape
+	if (shape === "read-only" || shape === "free-form") return shape
+	return "unknown"
+}
+
+/** The shell CoPilot's command artifact runs (`CommandArtifactsEnum`); null for any other artifact. */
+export function shellOf(artifact: unknown): string | null {
+	switch (artifact) {
+		case "Windows.System.PowerShell":
+			return "PowerShell"
+		case "Linux.Sys.BashShell":
+			return "bash"
+		case "Windows.System.CmdShell":
+			return "cmd"
+		default:
+			return null
+	}
+}
+
+/**
+ * A command's size as talon-analyst measures it (`check_command`): characters are code points, and
+ * lines are counted without the newlines that end the command.
+ */
+export function commandCounts(command: string): { lines: number; chars: number } {
+	return { lines: command.replace(/\n+$/, "").split("\n").length, chars: [...command].length }
+}
+
+/** "1 line, 12 characters" / "40 lines, 1,203 characters". */
+export function countsText(command: string): string {
+	const { lines, chars } = commandCounts(command)
+	return `${lines} ${lines === 1 ? "line" : "lines"}, ${chars.toLocaleString("en-US")} ${chars === 1 ? "character" : "characters"}`
+}
+
+/** The command's first line, as written (empty when it starts with a newline). */
+export function firstLine(command: string): string {
+	return command.split("\n", 1)[0] ?? ""
+}
+
+export type CommandSegment =
+	| { kind: "text"; text: string }
+	/** A tab, kept as the tab itself and marked. */
+	| { kind: "tab"; text: string }
+	/** The spaces that end a line, kept as written and marked. */
+	| { kind: "trailing"; text: string }
+	/** A character nobody can see (format or control, but tab and newline), shown as `⟨U+000D⟩`. */
+	| { kind: "escape"; text: string; char: string }
+
+// Format (Cf), control (Cc) but tab and newline, surrogates, and the line and paragraph separators.
+const UNSEEN = /[\p{Cf}\p{Cs}\u2028\u2029]|(?![\t\n])\p{Cc}/u
+const TAB_OR_UNSEEN = /[\t\p{Cf}\p{Cs}\u2028\u2029]|(?![\t\n])\p{Cc}/gu
+
+/** The command holds a character nobody can see (talon-analyst refuses those, so it shouldn't). */
+export function hasUnseenChars(command: string): boolean {
+	return UNSEEN.test(command)
+}
+
+function lineRuns(text: string, out: CommandSegment[]) {
+	let last = 0
+	for (const match of text.matchAll(TAB_OR_UNSEEN)) {
+		const start = match.index ?? 0
+		if (start > last) out.push({ kind: "text", text: text.slice(last, start) })
+		if (match[0] === "\t") out.push({ kind: "tab", text: "\t" })
+		else out.push({ kind: "escape", text: escapeOf(match[0]), char: match[0] })
+		last = start + match[0].length
+	}
+	if (last < text.length) out.push({ kind: "text", text: text.slice(last) })
+}
+
+/**
+ * A command's lines, each as runs: plain text, tabs, the spaces and tabs that end a line, and
+ * escapes for characters nobody can see. Joined, the runs' texts are the command exactly, but for
+ * those escapes; the lines are joined by `\n`.
+ */
+export function commandSegments(command: string): CommandSegment[][] {
+	return command.split("\n").map(line => {
+		const out: CommandSegment[] = []
+		const end = /[ \t]+$/.exec(line)
+		const body = end ? line.slice(0, end.index) : line
+		lineRuns(body, out)
+		if (end) {
+			// A tab at the end stays a tab; the spaces around it are trailing.
+			for (const part of end[0].split(/(\t)/)) {
+				if (part === "\t") out.push({ kind: "tab", text: "\t" })
+				else if (part) out.push({ kind: "trailing", text: part })
+			}
+		}
+		return out
+	})
+}
+
+/** How many tabs, and how many lines end in spaces or tabs: the card names them beside the command. */
+export function whitespaceCounts(command: string): { tabs: number; trailingLines: number } {
+	return {
+		tabs: (command.match(/\t/g) ?? []).length,
+		trailingLines: command.split("\n").filter(line => /[ \t]$/.test(line)).length
+	}
+}
+
+export interface ParameterRow {
+	key: string
+	value: string
+}
+
+/**
+ * A collection's parameters, as CoPilot sends them to Velociraptor (`{env: [{key, value}]}`), one
+ * row each, in the record's order. `ok` is false when the record holds them in another shape: the
+ * card then shows them raw.
+ */
+export function collectionParameters(parameters: unknown): { ok: boolean; rows: ParameterRow[] } {
+	if (parameters === undefined || parameters === null) return { ok: true, rows: [] }
+	if (typeof parameters !== "object" || Array.isArray(parameters)) return { ok: false, rows: [] }
+	const keys = Object.keys(parameters)
+	const env = (parameters as { env?: unknown }).env
+	if (keys.length !== 1 || keys[0] !== "env" || !Array.isArray(env)) return { ok: false, rows: [] }
+	const rows: ParameterRow[] = []
+	for (const item of env) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) return { ok: false, rows: [] }
+		const { key, value } = item as { key?: unknown; value?: unknown }
+		if (typeof key !== "string" || Object.keys(item).some(k => k !== "key" && k !== "value")) {
+			return { ok: false, rows: [] }
+		}
+		rows.push({ key, value: typeof value === "string" ? value : (JSON.stringify(value) ?? String(value)) })
+	}
+	return { ok: true, rows }
 }
 
 // ── untrusted text ───────────────────────────────────────────────────────────

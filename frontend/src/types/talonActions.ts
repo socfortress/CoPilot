@@ -28,7 +28,13 @@ export type TalonActionState =
 	| "unreported"
 
 export type TalonActionName =
-	"set_alert_status" | "assign_alert" | "comment_on_alert" | "quarantine_host" | "release_host"
+	| "set_alert_status"
+	| "assign_alert"
+	| "comment_on_alert"
+	| "quarantine_host"
+	| "release_host"
+	| "collect_artifact"
+	| "endpoint_command"
 
 export interface TalonActionProvenance {
 	/** The thread had read text the injection defender flagged, before this turn. */
@@ -37,6 +43,17 @@ export interface TalonActionProvenance {
 	injection_detected?: boolean
 	/** The thread used web text. */
 	web_used?: boolean
+	/** Endpoint actions (EA-3): the turn read the rows of one of the thread's own Velociraptor flows. */
+	endpoint_output_used?: boolean
+	/** A command only: a run of 24 or more of its characters appears in that endpoint output. */
+	copied_from_output?: boolean
+	/**
+	 * A command only: talon-analyst's heuristic risk labels (`network_fetch`, `delete_or_kill`,
+	 * `registry_or_service`, `account_change`, `persistence`, `shutdown_or_reboot`). They inform.
+	 */
+	risk_labels?: unknown
+	/** A command only: `read-only` (a plain read or a pipeline of reads) or `free-form`. */
+	shape?: unknown
 	[key: string]: unknown
 }
 
@@ -58,9 +75,16 @@ export interface TalonAction {
 	action: TalonActionName | string
 	side_effect: "external-action" | "endpoint-action" | string
 	executes_through?: string | null
-	/** `{alert_id}` for an alert action; `{customer_code, agent_id, velociraptor_id, hostname}` for a host. */
+	/**
+	 * `{alert_id}` for an alert action; `{customer_code, agent_id, velociraptor_id, hostname}` for a
+	 * host, plus `os` (`windows`, `linux`) for a collection or a command.
+	 */
 	target: Record<string, unknown>
-	/** CoPilot's arguments for the route that runs it (a comment is in `args.comment`). */
+	/**
+	 * CoPilot's arguments for the route that runs it (a comment is in `args.comment`). A collection:
+	 * `{hostname, velociraptor_id, artifact_name, parameters: {env: [{key, value}]}}`; a command:
+	 * `{hostname, velociraptor_id, artifact_name, command}`, the command verbatim.
+	 */
 	args: Record<string, unknown>
 	/** The model's reason as one plain line: untrusted, shown as text. */
 	reason: string

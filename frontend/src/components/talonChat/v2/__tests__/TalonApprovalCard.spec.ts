@@ -7,15 +7,37 @@
  * target and customer from the record, which the button row shows too. A decision in flight
  * disables the buttons of every card of the proposal; a lost answer says so until a read shows what
  * happened; a confirm closes when the record moves on; a 404 hides the old record.
+ *
+ * Endpoint actions (talon-analyst's endpoint actions plan, EA-4): a command is a `<pre>` of text
+ * nodes, whole, its counts shown and its tabs and trailing spaces marked, never markup, Markdown or
+ * links; its shell, shape and risk labels; a collection's parameters as a table; the new provenance
+ * banners; the confirm names the host and the command's first line.
  */
 import type { TalonAction } from "@/types/talonActions"
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import { DECISION_LOST, knownAction, resetTalonActions, TALON_CARDS_FAST_MS } from "../actionCards"
-import { HIDDEN_CHARS_WARNING, PROVENANCE_INJECTION, PROVENANCE_UNTRUSTED, PROVENANCE_WEB } from "../approvals"
+import {
+	HIDDEN_CHARS_WARNING,
+	PROVENANCE_COPIED,
+	PROVENANCE_ENDPOINT_OUTPUT,
+	PROVENANCE_INJECTION,
+	PROVENANCE_UNTRUSTED,
+	PROVENANCE_WEB,
+	RISK_LABELS_NOTE
+} from "../approvals"
 import TalonApprovalCard from "../TalonApprovalCard.vue"
-import { APPROVAL_ID, axiosError, listOf, quarantineAction, response, talonAction } from "./fixtures"
+import {
+	APPROVAL_ID,
+	axiosError,
+	collectAction,
+	commandAction,
+	listOf,
+	quarantineAction,
+	response,
+	talonAction
+} from "./fixtures"
 
 const get = vi.fn()
 const list = vi.fn()
@@ -479,5 +501,301 @@ describe("talon approval card", () => {
 		resetTalonActions()
 		const unknown = await mounted(talonAction({ expires_in_seconds: undefined, expires_at: "not a time" }))
 		expect(find(unknown, "expiry").text()).toBe("Expiry unknown")
+	})
+})
+
+/** 40 lines: markup, Markdown, a link, a URL, a tab, and trailing spaces on six of them. */
+const HOSTILE_COMMAND = [
+	"<script>alert(1)</script>",
+	"Get-Process | Select-Object -First 50 **bold**   ",
+	"# [x](https://evil.invalid/y) and https://evil.invalid/a?b=1  ",
+	"\tWrite-Output 'tabbed'",
+	'<img src=x onerror="alert(1)"> <a href="https://evil.invalid">click</a>',
+	...Array.from({ length: 35 }, (_, i) => `Get-Service -Name svc${i + 1}${i % 10 === 0 ? " " : ""}`)
+].join("\n")
+
+describe("talon approval card: endpoint collections and commands", () => {
+	beforeEach(() => {
+		resetTalonActions()
+		for (const fn of [get, list, approve, deny, withdraw]) fn.mockReset()
+		list.mockResolvedValue(listOf([]))
+	})
+
+	it("a command with markup, Markdown, links, 40 lines and trailing spaces renders as literal text, whole", async () => {
+		expect(HOSTILE_COMMAND.split("\n")).toHaveLength(40)
+		const wrapper = await mounted(commandAction(HOSTILE_COMMAND))
+		expect(find(wrapper, "title").text()).toBe("Run a command on the endpoint")
+
+		const pre = find(wrapper, "command-text")
+		expect(pre.element.tagName).toBe("PRE")
+		// Every character, every line, in order: the box's text is the command.
+		expect(pre.element.textContent).toBe(HOSTILE_COMMAND)
+		expect(pre.element.innerHTML).toContain("&lt;script&gt;alert(1)&lt;/script&gt;")
+		for (const tag of ["script", "img", "a", "strong", "em", "code", "p", "ul", "li"]) {
+			expect(pre.find(tag).exists(), tag).toBe(false)
+		}
+		expect(pre.find("[href]").exists()).toBe(false)
+		expect(pre.find("[src]").exists()).toBe(false)
+		expect(pre.find('[data-testid="talon-untrusted-link"]').exists()).toBe(false)
+		// Text nodes and the whitespace markers only.
+		expect(pre.findAll("*").every(el => el.element.tagName === "SPAN")).toBe(true)
+		// Scrolled within a fixed height, never wrapped.
+		expect(pre.classes()).toEqual(expect.arrayContaining(["whitespace-pre", "overflow-auto", "max-h-80"]))
+
+		const trailing = pre.findAll('[data-testid="talon-command-trailing"]')
+		expect(trailing.map(el => el.element.textContent)).toEqual(["   ", "  ", " ", " ", " ", " "])
+		const tabs = pre.findAll('[data-testid="talon-command-tab"]')
+		expect(tabs.map(el => el.element.textContent)).toEqual(["\t"])
+
+		expect(find(wrapper, "command-counts").text()).toBe(
+			`40 lines, ${HOSTILE_COMMAND.length.toLocaleString("en-US")} characters`
+		)
+		expect(find(wrapper, "whitespace").text()).toBe(
+			"Whitespace: 1 tab, marked →; 6 lines end in spaces or tabs, highlighted."
+		)
+		// The argument list doesn't repeat it inline.
+		expect(find(wrapper, "arg-command").text()).toBe("shown below")
+		expect(find(wrapper, "shell").text()).toBe("PowerShell")
+		expect(find(wrapper, "shell-artifact").text()).toBe("Windows.System.PowerShell")
+		expect(find(wrapper, "hostname").text()).toBe("WIN-DC01")
+		expect(find(wrapper, "agent").text()).toBe("· agent 001")
+		expect(find(wrapper, "client").text()).toBe("· C.1234567890abcdef")
+		expect(find(wrapper, "os").text()).toBe("· windows")
+		expect(find(wrapper, "hidden-chars").exists()).toBe(false)
+	})
+
+	it("a command's invisible and control characters are escaped, with the warning", async () => {
+		const wrapper = await mounted(commandAction(`Get-Process\r\nGet-${RLO}Service`))
+		const pre = find(wrapper, "command-text")
+		expect(pre.element.textContent).toBe("Get-Process⟨U+000D⟩\nGet-⟨U+202E⟩Service")
+		expect(pre.element.textContent).not.toMatch(/[\r\u202E]/)
+		expect(find(wrapper, "hidden-chars").text()).toBe(HIDDEN_CHARS_WARNING)
+	})
+
+	it("a collection shows its artifact and its parameters as a table of literal text", async () => {
+		const wrapper = await mounted(
+			collectAction({
+				args: {
+					hostname: "WIN-DC01",
+					velociraptor_id: "C.1234567890abcdef",
+					artifact_name: "Windows.System.Pslist",
+					parameters: {
+						env: [
+							{ key: "ProcessRegex", value: "<b>x</b> **y** [z](https://evil.invalid)" },
+							{ key: "CalculateHashes", value: "N" }
+						]
+					}
+				}
+			})
+		)
+		expect(find(wrapper, "title").text()).toBe("Collect a Velociraptor artifact")
+		expect(find(wrapper, "artifact").text()).toBe("Windows.System.Pslist")
+		expect(find(wrapper, "hostname").text()).toBe("WIN-DC01")
+		const table = find(wrapper, "parameters")
+		expect(table.element.tagName).toBe("TABLE")
+		expect(table.findAll("th").map(th => th.text())).toEqual(["Parameter", "Value"])
+		const rows = table.findAll('[data-testid="talon-approval-parameter"]')
+		expect(rows.map(row => row.get('[data-testid="talon-approval-parameter-key"]').text())).toEqual([
+			"ProcessRegex",
+			"CalculateHashes"
+		])
+		const values = rows.map(row => row.get('[data-testid="talon-approval-parameter-value"]'))
+		expect(values.map(value => value.text())).toEqual(["<b>x</b> **y** [z](https://evil.invalid)", "N"])
+		for (const tag of ["b", "strong", "a"]) expect(table.find(tag).exists(), tag).toBe(false)
+		expect(values[0].find("bdi").exists()).toBe(true)
+		expect(find(wrapper, "arg-parameters").text()).toBe("shown below")
+		expect(find(wrapper, "command").exists()).toBe(false)
+	})
+
+	it("a collection with no parameters says so; parameters in another shape are shown raw, with a note", async () => {
+		const none = await mounted(
+			collectAction({
+				args: { hostname: "WIN-DC01", artifact_name: "Windows.System.Pslist", parameters: { env: [] } }
+			})
+		)
+		expect(find(none, "parameters-none").text()).toBe("None: the artifact runs with its own defaults.")
+		expect(find(none, "parameters").exists()).toBe(false)
+		none.unmount()
+
+		resetTalonActions()
+		const odd = await mounted(
+			collectAction({
+				args: {
+					hostname: "WIN-DC01",
+					artifact_name: "Windows.System.Pslist",
+					parameters: { ProcessRegex: "x" }
+				}
+			})
+		)
+		expect(find(odd, "parameters").exists()).toBe(false)
+		expect(find(odd, "parameters-raw-note").exists()).toBe(true)
+		expect(find(odd, "parameters-raw").text()).toBe('{\n  "ProcessRegex": "x"\n}')
+	})
+
+	it("a command's risk labels, its free-form shape and the endpoint-output banners render", async () => {
+		const wrapper = await mounted(
+			commandAction("Invoke-WebRequest https://x.invalid/a -OutFile C:\\t\\a\nRemove-Item C:\\t\\a", {
+				provenance: {
+					untrusted_seen: true,
+					injection_detected: false,
+					web_used: false,
+					endpoint_output_used: true,
+					copied_from_output: true,
+					risk_labels: ["network_fetch", "delete_or_kill", "persistence", "made_up"],
+					shape: "free-form"
+				}
+			})
+		)
+		const risks = wrapper.findAll('[data-testid="talon-approval-risk"]')
+		expect(risks.map(r => r.text())).toEqual(["Network fetch", "Deletes or kills", "Persistence", "made_up"])
+		expect(risks.map(r => r.attributes("data-risk"))).toEqual([
+			"network_fetch",
+			"delete_or_kill",
+			"persistence",
+			"made_up"
+		])
+		expect(find(wrapper, "risks-none").exists()).toBe(false)
+		expect(find(wrapper, "risks-note").text()).toBe(RISK_LABELS_NOTE)
+
+		expect(find(wrapper, "shape").text()).toBe("free-form")
+		expect(find(wrapper, "shape").attributes("data-shape")).toBe("free-form")
+		expect(find(wrapper, "shape-note").classes()).toContain("text-warning")
+		expect(find(wrapper, "shape-note").text()).toContain("Free-form")
+
+		const banners = wrapper.findAll('[data-testid="talon-approval-provenance"]')
+		expect(banners.map(b => b.attributes("data-flag"))).toEqual([
+			"untrusted_seen",
+			"copied_from_output",
+			"endpoint_output_used"
+		])
+		expect(banners.map(b => b.text())).toEqual([
+			PROVENANCE_UNTRUSTED,
+			PROVENANCE_COPIED,
+			PROVENANCE_ENDPOINT_OUTPUT
+		])
+	})
+
+	it("a read-only command with no labels says so; a missing shape is never read-only", async () => {
+		const plain = await mounted(commandAction("Get-Process | Select-Object -First 50"))
+		expect(find(plain, "shape").text()).toBe("read-only")
+		expect(find(plain, "shape-note").classes()).not.toContain("text-warning")
+		expect(find(plain, "risks-none").text()).toBe("none matched")
+		expect(plain.findAll('[data-testid="talon-approval-risk"]')).toHaveLength(0)
+		expect(plain.findAll('[data-testid="talon-approval-provenance"]')).toHaveLength(0)
+		expect(find(plain, "whitespace").exists()).toBe(false)
+		plain.unmount()
+
+		resetTalonActions()
+		const unlabelled = await mounted(
+			commandAction("Get-Process", { provenance: { risk_labels: "network_fetch", shape: "READ-ONLY" } })
+		)
+		expect(find(unlabelled, "shape").text()).toBe("shape not labelled")
+		expect(find(unlabelled, "shape").attributes("data-shape")).toBe("unknown")
+		expect(find(unlabelled, "shape-note").classes()).toContain("text-warning")
+		expect(find(unlabelled, "risks-none").exists()).toBe(true)
+	})
+
+	it("a collection carries the provenance banners too", async () => {
+		const wrapper = await mounted(
+			collectAction({
+				provenance: { untrusted_seen: true, endpoint_output_used: true, injection_detected: true }
+			})
+		)
+		expect(
+			wrapper.findAll('[data-testid="talon-approval-provenance"]').map(b => b.attributes("data-flag"))
+		).toEqual(["injection_detected", "untrusted_seen", "endpoint_output_used"])
+		expect(find(wrapper, "provenance").text()).toBe(PROVENANCE_INJECTION)
+	})
+
+	it("approving a command confirms first, naming the host, the customer and the command's first line", async () => {
+		const wrapper = await mounted(commandAction(HOSTILE_COMMAND))
+		const summary = "Approve: run a PowerShell command on WIN-DC01 (agent 001) for customer ACME"
+		expect(find(wrapper, "summary").text()).toBe(summary)
+		expect(find(wrapper, "approve").attributes("aria-label")).toBe(summary)
+
+		await find(wrapper, "approve").trigger("click")
+		expect(approve).not.toHaveBeenCalled()
+		const text = find(wrapper, "confirm-text")
+		expect(text.text()).toContain("Run a command on the endpoint")
+		expect(text.text()).toContain(summary)
+		expect(find(wrapper, "confirm-first-line-label").text()).toBe(
+			`Its first line (40 lines, ${HOSTILE_COMMAND.length.toLocaleString("en-US")} characters in all):`
+		)
+		const first = find(wrapper, "confirm-first-line")
+		expect(first.element.tagName).toBe("PRE")
+		expect(first.element.textContent).toBe("<script>alert(1)</script>")
+		expect(first.find("script").exists()).toBe(false)
+		expect(find(wrapper, "confirm-more").text()).toBe(
+			"and 39 more lines: read the whole command on the card before running it."
+		)
+		expect(text.text()).toContain("SYSTEM on Windows")
+		expect(find(wrapper, "confirm-run").text()).toBe("Run the command")
+
+		approve.mockResolvedValueOnce(
+			response(
+				commandAction(HOSTILE_COMMAND, {
+					state: "executed",
+					talon_status: "executed",
+					can_decide: false,
+					execution_result: { success: true, message: "Command started", flow_id: "F.ABC123" }
+				})
+			)
+		)
+		await find(wrapper, "confirm-run").trigger("click")
+		await flushPromises()
+		expect(approve).toHaveBeenCalledTimes(1)
+		expect(approve).toHaveBeenCalledWith(APPROVAL_ID)
+		expect(find(wrapper, "status").text()).toBe("Executed")
+		expect(find(wrapper, "flow").text()).toBe("Velociraptor flow F.ABC123")
+	})
+
+	it("the confirm's first line keeps its trailing spaces visible; a one-line command has no more lines", async () => {
+		const two = await mounted(commandAction("Get-Process   \nGet-Service"))
+		await find(two, "approve").trigger("click")
+		const first = find(two, "confirm-first-line")
+		expect(first.element.textContent).toBe("Get-Process   ")
+		expect(first.findAll('[data-testid="talon-command-trailing"]').map(el => el.element.textContent)).toEqual([
+			"   "
+		])
+		expect(find(two, "confirm-more").text()).toBe(
+			"and 1 more line: read the whole command on the card before running it."
+		)
+		two.unmount()
+
+		resetTalonActions()
+		const one = await mounted(commandAction("Get-Process"))
+		await find(one, "approve").trigger("click")
+		expect(find(one, "confirm-first-line").element.textContent).toBe("Get-Process")
+		expect(find(one, "confirm-first-line-label").text()).toBe("Its first line (1 line, 11 characters in all):")
+		expect(find(one, "confirm-more").exists()).toBe(false)
+	})
+
+	it("approving a collection confirms first, naming the artifact, the host and the customer", async () => {
+		const wrapper = await mounted(collectAction())
+		const summary = "Approve: collect Windows.System.Pslist on WIN-DC01 (agent 001) for customer ACME"
+		expect(find(wrapper, "summary").text()).toBe(summary)
+		await find(wrapper, "approve").trigger("click")
+		expect(find(wrapper, "confirm-text").text()).toContain("Collect a Velociraptor artifact")
+		expect(find(wrapper, "confirm-text").text()).toContain(summary)
+		expect(find(wrapper, "confirm-command").exists()).toBe(false)
+		expect(find(wrapper, "confirm-run").text()).toBe("Collect")
+		expect(approve).not.toHaveBeenCalled()
+	})
+
+	it("a command of a shell CoPilot doesn't name is shown by its artifact", async () => {
+		const wrapper = await mounted(
+			commandAction("dir", {
+				args: {
+					hostname: "WIN-DC01",
+					velociraptor_id: "C.1234567890abcdef",
+					artifact_name: "Odd.Artifact",
+					command: "dir"
+				}
+			})
+		)
+		expect(find(wrapper, "shell").text()).toBe("not a known shell")
+		expect(find(wrapper, "summary").text()).toBe(
+			"Approve: run a command (Odd.Artifact) on WIN-DC01 (agent 001) for customer ACME"
+		)
 	})
 })

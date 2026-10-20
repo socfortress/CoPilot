@@ -58,6 +58,20 @@
 				<span class="font-semibold" data-testid="talon-approvals-row-action">
 					{{ actionLabel(row.action) }}
 				</span>
+				<n-tag
+					v-if="endpointKind(row)"
+					size="small"
+					:type="endpointKind(row)?.kind === 'command' ? 'warning' : 'info'"
+					:bordered="false"
+					data-testid="talon-approvals-row-kind"
+					:data-kind="endpointKind(row)?.kind"
+				>
+					{{ endpointKind(row)?.label }}
+					<template v-if="endpointKind(row)?.detail">
+						·
+						<TalonUntrusted class="font-mono" :text="endpointKind(row)?.detail" />
+					</template>
+				</n-tag>
 				<span class="text-secondary font-mono" data-testid="talon-approvals-row-target">
 					<TalonUntrusted :text="targetOf(row)" />
 				</span>
@@ -111,7 +125,8 @@
 // Talon's chat action proposals waiting in CoPilot, from CoPilot's mirror. "Pending" is the shared,
 // polled list (`useTalonApprovals`): what the user may decide now and their own that wait. "Mine"
 // is every proposal of theirs, read when shown. A row opens its approval card, which reads the
-// record from talon-analyst again and decides it. Every value is text.
+// record from talon-analyst again and decides it. A collection or a command (EA-4) shows its kind,
+// with the artifact or the shell. Every value is text.
 import type { TalonAction, TalonActionScope } from "@/types/talonActions"
 import axios from "axios"
 import { NAlert, NButton, NModal, NSpin, NTag } from "naive-ui"
@@ -121,7 +136,7 @@ import { refusalDetail } from "@/api/endpoints/talonV2"
 import { TALON_V2_FAILED } from "@/api/talonV2Parser"
 import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import { refreshApprovals, useTalonApprovals } from "@/composables/useTalonApprovals"
-import { actionLabel, hasHiddenChars, isHostAction, stateLabel } from "./approvals"
+import { actionLabel, endpointKind, hasHiddenChars, isHostAction, stateLabel } from "./approvals"
 import TalonApprovalCard from "./TalonApprovalCard.vue"
 import TalonUntrusted from "./TalonUntrusted"
 
@@ -148,7 +163,12 @@ function targetOf(row: TalonAction): string {
 /** The row's values hold invisible or direction-changing characters (its card says which). */
 function hiddenIn(row: TalonAction): boolean {
 	const values = [row.customer_code, row.reason, ...Object.values(row.target ?? {}), ...Object.values(row.args ?? {})]
-	return values.some(value => typeof value === "string" && hasHiddenChars(value))
+	return values.some(
+		value =>
+			(typeof value === "string" && hasHiddenChars(value)) ||
+			// A collection's parameters (`{env: [{key, value}]}`): JSON keeps format characters as they are.
+			(!!value && typeof value === "object" && hasHiddenChars(JSON.stringify(value)))
+	)
 }
 
 async function loadMine() {
