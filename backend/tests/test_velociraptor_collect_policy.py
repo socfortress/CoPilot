@@ -169,13 +169,20 @@ def collect(monkeypatch):
     async def audit(**kwargs):
         return None
 
-    async def run_collection(body, session):
+    # The routes start the flow (start_collection_as / start_command_as), then wait for it.
+    async def start_collection(body, literal_values=False):
         calls["collections"].append(body.artifact_name)
         calls["targets"].append((body.velociraptor_id, body.velociraptor_org))
+        return "F.COLLECTED"
+
+    async def finish_collection(body, flow_id, session):
         return CollectArtifactResponse(success=True, message="collected", results=[])
 
-    async def run_command(body):
+    async def start_command(body, literal=False):
         calls["commands"].append((body.velociraptor_id, body.velociraptor_org))
+        return "F.RAN"
+
+    async def finish_command(body, flow_id):
         return RunCommandResponse(success=True, message="ran", results=[])
 
     async def quarantine_host(body):
@@ -199,8 +206,10 @@ def collect(monkeypatch):
     monkeypatch.setattr(routes, "get_all_artifacts_for_hostname", host_artifacts)
     monkeypatch.setattr(routes, "validate_artifact_parameters", no_parameter_check)
     monkeypatch.setattr(routes, "record_audit_event", audit)
-    monkeypatch.setattr(routes, "run_artifact_collection", run_collection)
-    monkeypatch.setattr(routes, "run_remote_command", run_command)
+    monkeypatch.setattr(routes, "start_artifact_collection", start_collection)
+    monkeypatch.setattr(routes, "finish_artifact_collection", finish_collection)
+    monkeypatch.setattr(routes, "start_remote_command", start_command)
+    monkeypatch.setattr(routes, "finish_remote_command", finish_command)
     monkeypatch.setattr(routes, "quarantine_host", quarantine_host)
     monkeypatch.setattr(routes, "update_agent_quarantine_status", quarantine_status)
     monkeypatch.setattr(artifacts_service, "get_artifact_policy_definitions", policy_definitions)

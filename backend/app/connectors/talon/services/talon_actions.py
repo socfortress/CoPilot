@@ -14,8 +14,10 @@ M5-11, §8 "v2 API" Actions, §9.5, D46, D47, INV-ACT-1).
    ``claim_lost``, and CoPilot posts ``failed`` "not run: …" (decision f), retried by the job;
 5. the re-checks just before running (``recheck``); a failure ends ``failed``, nothing run;
 6. the run, synchronously, through CoPilot's own route handler under the approver (decisions d, e);
-7. the result, ``executed`` or ``failed`` with ``{success, message, status_code}``, posted inline
-   up to 3 times; then ``next_attempt_at`` hands it to ``invoke_talon_action_outcomes``.
+   a collection or a command only starts its Velociraptor flow (talon-analyst D84 a);
+7. the result, ``executed`` or ``failed`` with ``{success, message, status_code}`` (plus ``flow_id``,
+   ``client_id`` and ``artifact`` for a started flow), posted inline up to 3 times; then
+   ``next_attempt_at`` hands it to ``invoke_talon_action_outcomes``.
 
 **Deny** takes steps 1–4 with ``outcome: "denied"`` and runs nothing. A denial whose answer was
 lost is tried again with the same ``copilot_ref`` (a replay is harmless: it runs nothing), and if it
@@ -597,7 +599,8 @@ async def _execute(row, plan, user, session, request) -> Dict[str, Any]:
         ok=after == "executed",
         details="Run in CoPilot" if ran else f"Not run: {outcome.get('message')}",
         request=request,
-        extra={"args": row.args, "result": outcome},
+        # A command is kept as its SHA-256 and length, never its text (talon-analyst D84 f).
+        extra={"args": execution.audited_args(row.action, row.args or {}), "result": outcome},
     )
     return outcome
 

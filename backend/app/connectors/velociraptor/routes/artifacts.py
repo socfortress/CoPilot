@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -25,6 +27,8 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.services.artifacts import finish_artifact_collection
+from app.connectors.velociraptor.services.artifacts import finish_remote_command
 from app.connectors.velociraptor.services.artifacts import get_artifact_by_name
 from app.connectors.velociraptor.services.artifacts import (
     get_artifact_parameters_by_prefix_service,
@@ -32,9 +36,9 @@ from app.connectors.velociraptor.services.artifacts import (
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import resolve_quarantine_artifact
-from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_file_collection
-from app.connectors.velociraptor.services.artifacts import run_remote_command
+from app.connectors.velociraptor.services.artifacts import start_artifact_collection
+from app.connectors.velociraptor.services.artifacts import start_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
 from app.connectors.velociraptor.services.collection_policy import (
     enforce_collect_artifact_policy,
@@ -318,6 +322,142 @@ async def update_agent_quarantine_status(
     return None
 
 
+@dataclass(frozen=True)
+class StartedFlow:
+    """A Velociraptor flow a collection or command started: its validated id, and where it runs."""
+
+    flow_id: str
+    client_id: str
+    org_id: str
+    artifact: str
+
+
+async def start_collection_as(
+    current_user: User,
+    collect_artifact_body: CollectArtifactBody,
+    request: Optional[Request],
+    session: AsyncSession,
+    literal_values: bool = False,
+) -> StartedFlow:
+    """``/collect``'s checks and its ``ARTIFACT_COLLECT`` audit event, once, then the collection
+    started without waiting: the flow id back. The route waits for it and reads its results after
+    this; an approved Talon v2 ``collect_artifact`` doesn't (talon-analyst D84 a).
+
+    The checks, in order: the caller's access to the host (it is named in the body, so no path
+    dependency guards it); the one agent the host name resolves to; the artifact in the host's OS
+    list; the analyst artifact policy (``collection_policy``; admins and responders are not held
+    to it); the parameter names against the artifact's, in the host's org.
+
+    `literal_values` (Talon v2): the parameter values are passed as written, not VQL-unescaped as
+    ``/collect``'s clients expect, so what runs is what the approver read.
+    """
+    # The host is named in the body, so no path dependency can guard it: collecting an
+    # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
+    await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
+    target = await resolve_target_host(session, current_user, collect_artifact_body.hostname)
+    result = await get_all_artifacts_for_hostname(
+        collect_artifact_body.hostname,
+        session,
+    )
+    artifact_names = [artifact.name for artifact in result.artifacts]
+
+    if collect_artifact_body.artifact_name not in artifact_names:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
+        )
+
+    collect_artifact_body.velociraptor_id, collect_artifact_body.velociraptor_org = velociraptor_target(
+        target,
+        collect_artifact_body.hostname,
+    )
+
+    # The host's artifact list includes the command and remediation artifacts, which /command
+    # and /quarantine keep to admins and responders: an analyst may only collect what the
+    # analyst allowlist admits, judged by the definition in the host's own org.
+    await enforce_collect_artifact_policy(
+        current_user,
+        collect_artifact_body.artifact_name,
+        collect_artifact_body.velociraptor_org,
+        collect_artifact_body.parameters,
+    )
+
+    # Validate parameters if provided, against the definition in the host's org
+    await validate_artifact_parameters(
+        collect_artifact_body.artifact_name,
+        collect_artifact_body.parameters,
+        collect_artifact_body.velociraptor_org,
+    )
+
+    await record_audit_event(
+        action=AuditAction.ARTIFACT_COLLECT,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="agent",
+        entity_id=collect_artifact_body.hostname,
+        new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
+        request=request,
+    )
+    flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values)
+    return StartedFlow(
+        flow_id=flow_id,
+        client_id=collect_artifact_body.velociraptor_id,
+        org_id=collect_artifact_body.velociraptor_org,
+        artifact=collect_artifact_body.artifact_name,
+    )
+
+
+async def start_command_as(
+    current_user: User,
+    run_command_body: RunCommandBody,
+    request: Optional[Request],
+    session: AsyncSession,
+    literal_values: bool = False,
+) -> StartedFlow:
+    """``/command``'s checks and its ``RESPONSE_COMMAND_EXECUTE`` audit event (the artifact and the
+    client, never the command), once, then the command started without waiting: the flow id back.
+    The route waits for it and reads its results after this; an approved Talon v2
+    ``endpoint_command`` doesn't (talon-analyst D84 a). The caller's role is the route's
+    ``Security`` dependency (admin, responder), or D47 for Talon.
+
+    `literal_values` (Talon v2): the command is passed exactly as written, not VQL-unescaped as
+    ``/command``'s clients expect, so what runs is what the approver read.
+    """
+    # A responder is scoped to their customers (#1219): the host is named in the body.
+    await enforce_hostname_access(current_user, run_command_body.hostname, session)
+    target = await resolve_target_host(session, current_user, run_command_body.hostname)
+    result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
+    artifact_names = [artifact.name for artifact in result.artifacts]
+    if run_command_body.artifact_name not in artifact_names:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Artifact name {run_command_body.artifact_name.value} does not apply for hostname {run_command_body.hostname} or does not exist",
+        )
+    # Add the velociraptor_id to the run_command_body object
+    run_command_body.velociraptor_id, run_command_body.velociraptor_org = velociraptor_target(target, run_command_body.hostname)
+    artifact = getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name)
+    await record_audit_event(
+        action=AuditAction.RESPONSE_COMMAND_EXECUTE,
+        actor_user_id=current_user.id,
+        actor_username=current_user.username,
+        entity_type="agent",
+        entity_id=run_command_body.hostname,
+        # Record the artifact + host only; the raw command is intentionally NOT stored.
+        new_value={
+            "artifact_name": artifact,
+            "velociraptor_id": run_command_body.velociraptor_id,
+        },
+        request=request,
+    )
+    flow_id = await start_remote_command(run_command_body, literal=literal_values)
+    return StartedFlow(
+        flow_id=flow_id,
+        client_id=run_command_body.velociraptor_id,
+        org_id=run_command_body.velociraptor_org,
+        artifact=artifact,
+    )
+
+
 @velociraptor_artifacts_router.get(
     "",
     response_model=ArtifactsResponse,
@@ -486,55 +626,8 @@ async def collect_artifact(
         CollectArtifactResponse: The response containing the collected artifact.
     """
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
-    # The host is named in the body, so no path dependency can guard it: collecting an
-    # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
-    await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
-    target = await resolve_target_host(session, current_user, collect_artifact_body.hostname)
-    result = await get_all_artifacts_for_hostname(
-        collect_artifact_body.hostname,
-        session,
-    )
-    artifact_names = [artifact.name for artifact in result.artifacts]
-
-    if collect_artifact_body.artifact_name not in artifact_names:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
-        )
-
-    collect_artifact_body.velociraptor_id, collect_artifact_body.velociraptor_org = velociraptor_target(
-        target,
-        collect_artifact_body.hostname,
-    )
-
-    # The host's artifact list includes the command and remediation artifacts, which /command
-    # and /quarantine keep to admins and responders: an analyst may only collect what the
-    # analyst allowlist admits, judged by the definition in the host's own org.
-    await enforce_collect_artifact_policy(
-        current_user,
-        collect_artifact_body.artifact_name,
-        collect_artifact_body.velociraptor_org,
-        collect_artifact_body.parameters,
-    )
-
-    # Validate parameters if provided, against the definition in the host's org
-    await validate_artifact_parameters(
-        collect_artifact_body.artifact_name,
-        collect_artifact_body.parameters,
-        collect_artifact_body.velociraptor_org,
-    )
-
-    await record_audit_event(
-        action=AuditAction.ARTIFACT_COLLECT,
-        actor_user_id=current_user.id,
-        actor_username=current_user.username,
-        entity_type="agent",
-        entity_id=collect_artifact_body.hostname,
-        new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
-        request=request,
-    )
-    # Assuming run_artifact_collection is an async function and takes a session as a parameter
-    return await run_artifact_collection(collect_artifact_body, session)
+    started = await start_collection_as(current_user, collect_artifact_body, request, session)
+    return await finish_artifact_collection(collect_artifact_body, started.flow_id, session)
 
 
 @velociraptor_artifacts_router.post(
@@ -560,33 +653,8 @@ async def run_command(
         RunCommandResponse: The response containing the result of the command execution.
     """
     logger.info(f"Received request to run command {run_command_body}")
-    # A responder is scoped to their customers (#1219): the host is named in the body.
-    await enforce_hostname_access(current_user, run_command_body.hostname, session)
-    target = await resolve_target_host(session, current_user, run_command_body.hostname)
-    result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
-    artifact_names = [artifact.name for artifact in result.artifacts]
-    if run_command_body.artifact_name not in artifact_names:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Artifact name {run_command_body.artifact_name.value} does not apply for hostname {run_command_body.hostname} or does not exist",
-        )
-    # Add the velociraptor_id to the run_command_body object
-    run_command_body.velociraptor_id, run_command_body.velociraptor_org = velociraptor_target(target, run_command_body.hostname)
-    await record_audit_event(
-        action=AuditAction.RESPONSE_COMMAND_EXECUTE,
-        actor_user_id=current_user.id,
-        actor_username=current_user.username,
-        entity_type="agent",
-        entity_id=run_command_body.hostname,
-        # Record the artifact + host only; the raw command is intentionally NOT stored.
-        new_value={
-            "artifact_name": getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name),
-            "velociraptor_id": run_command_body.velociraptor_id,
-        },
-        request=request,
-    )
-    # Run the command
-    return await run_remote_command(run_command_body)
+    started = await start_command_as(current_user, run_command_body, request, session)
+    return await finish_remote_command(run_command_body, started.flow_id)
 
 
 @velociraptor_artifacts_router.post(

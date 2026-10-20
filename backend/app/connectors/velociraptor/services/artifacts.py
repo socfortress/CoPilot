@@ -121,7 +121,7 @@ async def declared_artifact_parameter_names(artifact_name: str, org_id: str = "r
     return {param.name for param in (artifact_response.artifacts[0].parameters or [])}
 
 
-def build_parameter_env(requested: Dict[str, str], declared: set, artifact_name: str, drop_undeclared: bool = False):
+def build_parameter_env(requested: Dict[str, str], declared: set, artifact_name: str, drop_undeclared: bool = False, literal: bool = False):
     """The ``env=dict(...)`` body and query variables for the requested artifact parameters.
 
     A name is only written into the query (as a backtick-quoted identifier, since VQL's
@@ -130,6 +130,8 @@ def build_parameter_env(requested: Dict[str, str], declared: set, artifact_name:
     400, or -- with `drop_undeclared`, for the admin/responder CoPilot Actions path -- left
     out with a warning, as Velociraptor itself ignored it before; it never reaches the query.
     Each value goes into its own variable, ``Param<n>``, and is never part of the query text.
+    With `literal` (an approved Talon v2 collection, whose values are the text the approver
+    read) each value is passed as it is, without the VQL unescaping kept for the manual routes.
     """
     parts = []
     env = {}
@@ -151,7 +153,7 @@ def build_parameter_env(requested: Dict[str, str], declared: set, artifact_name:
         parts.append(f"`{name}`={variable}")
         # The value used to be written between single quotes, so keep its VQL escapes meaning
         # what they meant (see vql_string_literal_value).
-        env[variable] = vql_string_literal_value(value)
+        env[variable] = value if literal else vql_string_literal_value(value)
     return ", ".join(parts), env
 
 
@@ -397,46 +399,37 @@ async def get_artifact_parameters_by_prefix_service(
         )
 
 
-async def run_artifact_collection(
+def started_flow_id(flow: dict) -> str:
+    """The flow id a ``collect_client`` query started, validated (``F.`` and alphanumerics), or a
+    500 when the answer carries no usable one."""
+    flow_id = extract_flow_id(flow)
+    try:
+        return validate_flow_id(flow_id)
+    except HTTPException:
+        logger.error(f"Could not find flow_id in results: {(flow.get('results') or [None])[0]}")
+        raise HTTPException(status_code=500, detail="Failed to extract flow ID from results") from None
+
+
+async def start_artifact_collection(
     collect_artifact_body: CollectArtifactBody,
-    session: AsyncSession,
     drop_undeclared_parameters: bool = False,
-) -> CollectArtifactResponse:
+    velociraptor_service: Optional[UniversalService] = None,
+    literal_values: bool = False,
+) -> str:
+    """Start an artifact collection on a client and return its flow id, without waiting for it.
+
+    The caller has checked the host, the artifact and its parameter names (``/collect``'s
+    checks, ``routes.artifacts.start_collection_as``). The org, client, artifact and every
+    parameter value are query variables of a constant template (GHSA-5542-j2fc-gqjm).
+    `literal_values`: the values are passed as written (``build_parameter_env``).
     """
-    Run an artifact collection on a client with optional parameters and upload results to MinIO.
-
-    Args:
-        collect_artifact_body: The body of the request with optional parameters.
-        session: Database session for storing metadata.
-
-    Returns:
-        CollectArtifactResponse: A dictionary containing the success status, message and results.
-    """
-    from sqlalchemy import select
-
-    from app.db.universal_models import AgentDataStore
-    from app.db.universal_models import Agents
-
     # Validate the identifier fields (GHSA-5542-j2fc-gqjm). They and every parameter value are
     # passed as query variables; parameter names are checked against the artifact below.
     validate_org_id(collect_artifact_body.velociraptor_org)
     validate_client_id(collect_artifact_body.velociraptor_id)
     validate_artifact_name(collect_artifact_body.artifact_name)
-
-    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
-        # Get agent details from database
-        result = await session.execute(
-            select(Agents).where(Agents.velociraptor_id == collect_artifact_body.velociraptor_id),
-        )
-        agent = result.scalars().first()
-
-        if not agent:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Agent with velociraptor_id {collect_artifact_body.velociraptor_id} not found",
-            )
-
+        velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
         env = collection_env(
             collect_artifact_body.velociraptor_org,
             collect_artifact_body.velociraptor_id,
@@ -456,6 +449,7 @@ async def run_artifact_collection(
                 declared,
                 collect_artifact_body.artifact_name,
                 drop_undeclared=drop_undeclared_parameters,
+                literal=literal_values,
             )
             query = create_query(VQL_COLLECT_WITH_ENV.format(env=env_body))
             env.update(parameter_env)
@@ -471,17 +465,50 @@ async def run_artifact_collection(
                 status_code=500,
                 detail="Query execution did not return any results",
             )
-
-        flow_id = extract_flow_id(flow)
-
-        if not flow_id:
-            logger.error(f"Could not find flow_id in results: {flow['results'][0]}")
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to extract flow ID from results",
-            )
-
+        flow_id = started_flow_id(flow)
         logger.info(f"Extracted flow_id: {flow_id}")
+        return flow_id
+    except HTTPException as he:  # Catch HTTPException separately to propagate the original message
+        logger.error(f"HTTPException while starting artifact collection on {collect_artifact_body}: {he.detail}")
+        raise he
+    except Exception as err:
+        logger.error(f"Failed to run artifact collection on {collect_artifact_body}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
+
+
+async def _agent_for_client(session: AsyncSession, velociraptor_id: str):
+    from sqlalchemy import select
+
+    from app.db.universal_models import Agents
+
+    result = await session.execute(select(Agents).where(Agents.velociraptor_id == velociraptor_id))
+    agent = result.scalars().first()
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with velociraptor_id {velociraptor_id} not found",
+        )
+    return agent
+
+
+async def finish_artifact_collection(
+    collect_artifact_body: CollectArtifactBody,
+    flow_id: str,
+    session: AsyncSession,
+    velociraptor_service: Optional[UniversalService] = None,
+    agent=None,
+) -> CollectArtifactResponse:
+    """Wait for a started collection, read its results and upload the flow's files to MinIO:
+    what ``/collect`` answers after ``start_artifact_collection``."""
+    from app.db.universal_models import AgentDataStore
+
+    try:
+        velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
+        if agent is None:
+            agent = await _agent_for_client(session, collect_artifact_body.velociraptor_id)
 
         completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
@@ -561,6 +588,44 @@ async def run_artifact_collection(
             status_code=500,
             detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
         )
+
+
+async def run_artifact_collection(
+    collect_artifact_body: CollectArtifactBody,
+    session: AsyncSession,
+    drop_undeclared_parameters: bool = False,
+) -> CollectArtifactResponse:
+    """
+    Run an artifact collection on a client with optional parameters and upload results to MinIO:
+    ``start_artifact_collection``, then ``finish_artifact_collection`` (the wait, the results and
+    the upload).
+
+    Args:
+        collect_artifact_body: The body of the request with optional parameters.
+        session: Database session for storing metadata.
+
+    Returns:
+        CollectArtifactResponse: A dictionary containing the success status, message and results.
+    """
+    # Validate the identifier fields (GHSA-5542-j2fc-gqjm) before anything is looked up.
+    validate_org_id(collect_artifact_body.velociraptor_org)
+    validate_client_id(collect_artifact_body.velociraptor_id)
+    validate_artifact_name(collect_artifact_body.artifact_name)
+
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    try:
+        agent = await _agent_for_client(session, collect_artifact_body.velociraptor_id)
+    except HTTPException as he:
+        logger.error(f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}")
+        raise he
+    except Exception as err:
+        logger.error(f"Failed to run artifact collection on {collect_artifact_body}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
+    flow_id = await start_artifact_collection(collect_artifact_body, drop_undeclared_parameters, velociraptor_service)
+    return await finish_artifact_collection(collect_artifact_body, flow_id, session, velociraptor_service, agent)
 
 
 async def run_file_collection(
@@ -891,19 +956,21 @@ async def fetch_file_from_filestore(
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
-    """
-    Run a remote command on a client.
+async def start_remote_command(
+    run_command_body: RunCommandBody,
+    velociraptor_service: Optional[UniversalService] = None,
+    literal: bool = False,
+) -> str:
+    """Start a command (a collection of its shell's artifact) on a client and return its flow id,
+    without waiting for it. The command is a query variable, never part of the query text.
 
-    Args:
-        run_analyzer_body (RunAnalyzerBody): The body of the request.
-
-    Returns:
-        RunAnalyzerResponse: A dictionary containing the success status and a message.
+    `literal`: the command is passed exactly as written (an approved Talon v2 command, which the
+    approver read verbatim), without the VQL unescaping ``/command`` keeps for its clients.
+    Any failure is a 500, as ``/command`` has always answered.
     """
-    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
-        run_command_body.artifact_name = run_command_body.artifact_name.value
+        velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
+        run_command_body.artifact_name = getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name)
         # Validate the identifier fields (GHSA-5542-j2fc-gqjm); artifact_name is already an
         # enum. The free-form `command` is passed, like them, as a query variable and is never
         # part of the query text.
@@ -918,17 +985,32 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
             run_command_body.velociraptor_id,
             run_command_body.artifact_name,
             # The command used to be written between single quotes; keep its VQL escapes
-            # meaning what they meant (see vql_string_literal_value).
-            Command=vql_string_literal_value(command),
+            # meaning what they meant (see vql_string_literal_value), except for a command
+            # passed literally.
+            Command=command if literal else vql_string_literal_value(command),
         )
         flow = await velociraptor_service.execute_query_async(query, org_id=run_command_body.velociraptor_org, env=env)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
-        flow_id = extract_flow_id(flow)
-        if not flow_id:
-            raise HTTPException(status_code=500, detail="Failed to extract flow ID from results")
+        flow_id = started_flow_id(flow)
         logger.info(f"Extracted flow_id: {flow_id}")
+        return flow_id
+    except Exception as err:
+        logger.error(f"Failed to run artifact collection on {run_command_body}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {run_command_body}: {err}",
+        )
 
+
+async def finish_remote_command(
+    run_command_body: RunCommandBody,
+    flow_id: str,
+    velociraptor_service: Optional[UniversalService] = None,
+) -> RunCommandResponse:
+    """Wait for a started command and read its results: what ``/command`` answers."""
+    try:
+        velociraptor_service = velociraptor_service or await UniversalService.create("Velociraptor")
         completed = await velociraptor_service.watch_flow_completion_async(flow_id, org_id=run_command_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
@@ -936,7 +1018,7 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
             client_id=run_command_body.velociraptor_id,
             flow_id=flow_id,
             org_id=run_command_body.velociraptor_org,
-            artifact=run_command_body.artifact_name,
+            artifact=getattr(run_command_body.artifact_name, "value", run_command_body.artifact_name),
         )
 
         logger.info(f"Successfully read collection results on {results}")
@@ -952,6 +1034,21 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
             status_code=500,
             detail=f"Failed to run artifact collection on {run_command_body}: {err}",
         )
+
+
+async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
+    """
+    Run a remote command on a client: ``start_remote_command``, then ``finish_remote_command``.
+
+    Args:
+        run_command_body (RunCommandBody): The body of the request.
+
+    Returns:
+        RunCommandResponse: The success status, a message and the command's results.
+    """
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    flow_id = await start_remote_command(run_command_body, velociraptor_service)
+    return await finish_remote_command(run_command_body, flow_id, velociraptor_service)
 
 
 # Built-in Velociraptor quarantine artifacts. Velociraptor 0.76.x+ added a

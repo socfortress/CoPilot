@@ -61,9 +61,19 @@ ACTION_CLASSES: Dict[str, str] = {
     "comment_on_alert": "external-action",
     "quarantine_host": "endpoint-action",
     "release_host": "endpoint-action",
+    # talon-analyst's EA-3 proposals (D74-D79, D84): a Velociraptor collection of a catalogue
+    # artifact, and a command run as a collection of its shell's artifact. CoPilot starts the flow
+    # and doesn't wait (D84 a).
+    "collect_artifact": "endpoint-action",
+    "endpoint_command": "endpoint-action",
 }
 ALERT_ACTIONS = frozenset({"set_alert_status", "assign_alert", "comment_on_alert"})
-HOST_ACTIONS = frozenset({"quarantine_host", "release_host"})
+QUARANTINE_ACTIONS = frozenset({"quarantine_host", "release_host"})
+#: The proposals CoPilot runs by starting a Velociraptor flow and reporting its id (EA-4).
+FLOW_ACTIONS = frozenset({"collect_artifact", "endpoint_command"})
+#: Every action whose target is a host: D47's ``enforce_hostname_access`` and the re-check under
+#: the ``agents`` lock (``lock_and_recheck_host``) apply to each of them.
+HOST_ACTIONS = QUARANTINE_ACTIONS | FLOW_ACTIONS
 #: D47: the CoPilot roles (``RoleEnum(role_id).name``, never the token's scopes) that may decide an
 #: action of each class. talon-analyst checks the same (``talon.actions.APPROVER_ROLES``).
 APPROVER_ROLES: Dict[str, frozenset] = {
@@ -350,7 +360,9 @@ __all__ = [
     "ACTION_CLASSES",
     "ALERT_ACTIONS",
     "APPROVER_ROLES",
+    "FLOW_ACTIONS",
     "HOST_ACTIONS",
+    "QUARANTINE_ACTIONS",
     "ProposalProblem",
     "SyncResult",
     "expired_locally",
