@@ -20,7 +20,9 @@ stepped around (``refuse_talon_service_account``):
 Routes that only read stay open to it. **Who it is**: the user whose id the setting recorded when an
 admin last saved it (``collect_service_user_id``, so a rename doesn't take it out), the user named
 by ``collect_service_username``, and the user named ``talon-analyst``, names compared
-case-insensitively, whatever the role.
+case-insensitively, whatever the role. The recorded id is cleared when that user is deleted
+(``forget_deleted_user``) and, at startup, when it no longer belongs to a user with the name
+(``recheck_recorded_user_id``), so a reused id never gates someone else.
 """
 from typing import Any
 from typing import FrozenSet
@@ -31,6 +33,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import func
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import User
@@ -95,13 +98,46 @@ async def user_id_for(session: AsyncSession, username: str) -> Optional[int]:
     return matches[0] if len(matches) == 1 else None
 
 
+async def recheck_recorded_user_id(session: AsyncSession, row: TalonConnectorSettings) -> bool:
+    """Clear the recorded service-user id unless it still belongs to a user with the service
+    account's name, so a reused id never gates someone else. True when it was cleared."""
+    recorded = row.collect_service_user_id
+    if recorded is None:
+        return False
+    user = await session.get(User, recorded)
+    name = effective_username(row)
+    if user is not None and isinstance(user.username, str) and user.username.casefold() == name.casefold():
+        return False
+    row.collect_service_user_id = None
+    await session.commit()
+    logger.warning(
+        f"Talon collection setting: the recorded service-account user id {recorded} no longer belongs to a user named '{name}'; "
+        "cleared. If the account was renamed, save the setting again with its new name.",
+    )
+    return True
+
+
+async def forget_deleted_user(session: AsyncSession, user_id: int) -> None:
+    """A deleted user's id is no longer the service account's (``auth.services.universal.delete_user``,
+    in its transaction): cleared, so the id, if ever reused, gates nobody."""
+    await session.execute(
+        update(TalonConnectorSettings)
+        .where(TalonConnectorSettings.collect_service_user_id == user_id)
+        .values(collect_service_user_id=None),
+    )
+
+
 async def warn_if_service_user_missing(engine) -> None:
-    """At startup: once the collection setting is in use, warn when no user has the service
-    account's name (the allowlist then guards nobody by name). Never fatal."""
+    """At startup: re-check the recorded user id (``recheck_recorded_user_id``), and once the
+    collection setting is in use, warn when no user has the service account's name (the allowlist
+    then guards nobody by name). Never fatal."""
     try:
-        async with AsyncSession(engine) as session:
+        async with AsyncSession(engine, expire_on_commit=False) as session:
             row = await settings_row(session)
-            if row is None or (row.collect_service_username is None and row.collect_allowed_artifacts is None):
+            if row is None:
+                return
+            await recheck_recorded_user_id(session, row)
+            if row.collect_service_username is None and row.collect_allowed_artifacts is None:
                 return
             name = effective_username(row)
             if await user_id_for(session, name) is None:

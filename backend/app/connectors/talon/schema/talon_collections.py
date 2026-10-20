@@ -59,6 +59,14 @@ class TalonCollectionSettingsResponse(BaseModel):
     recorded_service_user_id: Optional[int] = Field(None, description="The id recorded at the last save, held to the gate too")
     allowed_artifacts: Optional[List[str]] = Field(None, description="The auto-run artifacts it may start; null: none")
     auto_run_catalogue: Dict[str, Dict[str, str]] = Field(..., description="Every auto-run artifact CoPilot knows, with its pins")
+    definition_hashes: Dict[str, Dict[str, str]] = Field(
+        default_factory=dict,
+        description="Per allowed artifact, the SHA-256 of its and its dependencies' definitions, as saved",
+    )
+    definitions_match: Dict[str, Optional[bool]] = Field(
+        default_factory=dict,
+        description="Per allowed artifact, whether Velociraptor's definitions still have those hashes (null: unreadable)",
+    )
     updated_by_user_id: Optional[int] = None
     updated_at: Optional[datetime] = None
 

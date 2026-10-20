@@ -42,7 +42,10 @@ accessor, output or an execute/delete/kill/upload/dump toggle. To let analysts c
 artifact, review what it calls and add it here with the parameters they may set; rules 2 and 4
 still apply to it at run time. Admins and responders are not restricted by this module.
 """
+import hashlib
+import json
 import re
+import time
 from typing import Dict
 from typing import FrozenSet
 from typing import List
@@ -513,6 +516,43 @@ async def enforce_built_in_definitions(artifact_name: str, org_id: str) -> None:
         raise HTTPException(status_code=403, detail=f"Artifact {artifact_name} can't be collected for Talon: {reason}")
 
 
+#: How long the Talon service account's definition reads are reused: one Velociraptor read per
+#: artifact and org a minute, however many collections start (``auto_run_definitions``).
+AUTO_RUN_DEFINITIONS_TTL_SECONDS = 60.0
+_auto_run_definitions_cache: Dict[tuple, tuple] = {}
+
+
+def clear_auto_run_definitions_cache() -> None:
+    _auto_run_definitions_cache.clear()
+
+
+async def auto_run_definitions(artifact_name: str, org_id: str, fresh: bool = False) -> List[dict]:
+    """The artifact's and its dependencies' definitions in `org_id` (``deps=true``), reused for
+    ``AUTO_RUN_DEFINITIONS_TTL_SECONDS``; `fresh` reads them again (an admin saving the pins)."""
+    from app.connectors.velociraptor.services.artifacts import (
+        get_artifact_policy_definitions,
+    )
+
+    key = (artifact_name, org_id)
+    now = time.monotonic()
+    cached = _auto_run_definitions_cache.get(key)
+    if not fresh and cached is not None and cached[0] > now:
+        return cached[1]
+    definitions = [d for d in await get_artifact_policy_definitions(artifact_name, org_id) if isinstance(d, dict)]
+    _auto_run_definitions_cache[key] = (now + AUTO_RUN_DEFINITIONS_TTL_SECONDS, definitions)
+    return definitions
+
+
+def definition_hashes(definitions: List[dict]) -> Dict[str, str]:
+    """Each definition's SHA-256, by name: of its canonical JSON (keys sorted), every field the
+    policy read returns (VQL, parameters, permissions, imports, tools, ``compiled_in``)."""
+    out = {}
+    for definition in definitions:
+        canonical = json.dumps(definition, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str)
+        out[str(definition.get("name"))] = hashlib.sha256(canonical.encode("utf-8", "surrogatepass")).hexdigest()
+    return out
+
+
 async def enforce_auto_run_definitions(artifact_name: str, org_id: str) -> None:
     """The Talon service account's definition check (talon-analyst EA-4b), in place of the analyst
     allowlist: the artifact and every dependency resolve to Velociraptor's built-in definitions in
@@ -520,13 +560,13 @@ async def enforce_auto_run_definitions(artifact_name: str, org_id: str) -> None:
     tools (rule 4's declarations). Rule 4's VQL scan is not applied: the auto-run artifacts upload
     behind switches their pins turn off (``TaskScheduler``, ``StartupItems``), and
     ``StartupItems``' dependency ``Windows.Forensics.Lnk`` calls ``eval()`` and ``upload()`` under its
-    own parameters. Those definitions were reviewed as shipped, and talon-analyst's
-    ``check_catalogue`` re-checks them against the server after a Velociraptor upgrade."""
-    from app.connectors.velociraptor.services.artifacts import (
-        get_artifact_policy_definitions,
-    )
-
-    definitions = [d for d in await get_artifact_policy_definitions(artifact_name, org_id) if isinstance(d, dict)]
+    own parameters. What covers that is the **definition pin**: an admin saving the service
+    account's allowlist stores each definition's SHA-256 (``definition_hashes``), and a start whose
+    definitions differ is refused until an admin reviews them and saves again
+    (``talon_collections``), so a Velociraptor upgrade that changes one stops the service account
+    rather than running unreviewed VQL. (talon-analyst's ``check_catalogue`` checks names, parameters
+    and switches, not the VQL.) Reads come from ``auto_run_definitions``, reused for a minute."""
+    definitions = await auto_run_definitions(artifact_name, org_id)
     reason = built_in_violation(artifact_name, definitions)
     for definition in definitions if reason is None else []:
         found = structure_violation(definition)

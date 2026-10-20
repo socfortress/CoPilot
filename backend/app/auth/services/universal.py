@@ -316,6 +316,12 @@ async def delete_user(user_id: int, session: AsyncSession):
         from app.middleware.customer_access import customer_access_handler
 
         await session.execute(sql_delete(UserCustomerAccess).where(UserCustomerAccess.user_id == user_id))
+        # If this was the Talon service account, its recorded id must gate nobody else later (EA-4b).
+        from app.connectors.talon.services.talon_service_account import (
+            forget_deleted_user,
+        )
+
+        await forget_deleted_user(session, user_id)
 
         await session.delete(user)
         await session.commit()

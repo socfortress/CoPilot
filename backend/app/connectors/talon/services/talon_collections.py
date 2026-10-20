@@ -16,7 +16,9 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
    ``talon-analyst``, whatever its role; every other route that starts endpoint work refuses it)
    must name an artifact on the admin's allowlist (``collect_allowed_artifacts``) with exactly its
    pins and nothing else (``talon_catalogue.auto_run_violation``), else 403; **with the allowlist
-   unset it starts nothing** (403). Everyone else: no command, script, quarantine or remediation
+   unset it starts nothing** (403); and the artifact's and its dependencies' definitions must have
+   the SHA-256s saved with the allowlist (``collect_definition_hashes``), else 403 until an admin
+   reviews the change and saves again. Everyone else: no command, script, quarantine or remediation
    artifact (403), then ``/collect``'s own analyst policy as usual;
 4. in a fresh transaction, the host's ``agents`` rows locked and checked as for an approved Talon
    action (``talon_action_execution.lock_and_check_host``): exactly one row with the host name,
@@ -72,7 +74,11 @@ from app.connectors.velociraptor.routes import artifacts as velociraptor_routes
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import ParameterKeyValue
 from app.connectors.velociraptor.services.artifacts import FlowLimits
+from app.connectors.velociraptor.services.collection_policy import auto_run_definitions
+from app.connectors.velociraptor.services.collection_policy import built_in_violation
+from app.connectors.velociraptor.services.collection_policy import definition_hashes
 from app.connectors.velociraptor.services.collection_policy import response_artifacts
+from app.connectors.velociraptor.services.collection_policy import structure_violation
 from app.connectors.velociraptor.services.talon_catalogue import TALON_AUTO_RUN
 from app.connectors.velociraptor.services.talon_catalogue import auto_run_violation
 from app.connectors.velociraptor.services.talon_catalogue import is_response_artifact
@@ -106,6 +112,14 @@ NO_ACCESS = "not started: no access to this host"
 NOT_FOUND = "not started: the host or its Velociraptor client was not found"
 SERVICE_REFUSED = "The Talon service account may not start this collection"
 POLICY_REFUSED = "not started: this artifact can't be collected by this user"
+DEFINITION_CHANGED = (
+    "The Talon service account may not start this collection: its Velociraptor definition changed since the setting was saved; "
+    "an admin must review it and save the Talon collection setting again"
+)
+DEFINITIONS_UNREADABLE = "Velociraptor's artifact definitions could not be read, so the Talon collection setting was not saved"
+DEFINITION_REFUSED = "allowed_artifacts names an artifact whose definition in Velociraptor's root org can't be pinned (not found, not built in, or not read-only)"
+#: The org the service account collects in: ``lock_and_check_host`` refuses any other.
+ROOT_ORG = "root"
 FIXED_BY_STATUS = {400: NOT_APPLICABLE, 403: POLICY_REFUSED, 404: NOT_FOUND}
 
 
@@ -154,6 +168,45 @@ def _fixed(e: HTTPException, default: str) -> HTTPException:
     return HTTPException(status_code=e.status_code, detail=FIXED_BY_STATUS.get(e.status_code, default))
 
 
+async def current_hashes(artifact: str, fresh: bool = False) -> Dict[str, str]:
+    """The SHA-256s of the artifact's and its dependencies' definitions in the root org (cached a
+    minute, ``collection_policy.auto_run_definitions``)."""
+    return definition_hashes(await auto_run_definitions(artifact, ROOT_ORG, fresh=fresh))
+
+
+async def check_definition_pin(row: Optional[TalonConnectorSettings], artifact: str) -> None:
+    """403 unless the artifact's definitions are exactly the ones an admin saved the setting with."""
+    stored = ((row.collect_definition_hashes if row is not None else None) or {}).get(artifact)
+    try:
+        current = await current_hashes(artifact)
+    except HTTPException as e:
+        logger.error(f"Collection start: the definitions of {artifact} could not be read (HTTP {e.status_code})")
+        raise HTTPException(status_code=e.status_code if e.status_code >= 500 else 502, detail=START_FAILED) from None
+    if not stored or current != stored:
+        logger.warning(f"Refused a collection start of {artifact} by the Talon service account: its definitions differ from the saved pin")
+        raise HTTPException(status_code=403, detail=DEFINITION_CHANGED)
+
+
+async def pin_definitions(artifacts: Optional[List[str]]) -> Optional[Dict[str, Dict[str, str]]]:
+    """Read each allowed artifact's definitions afresh and return their hashes; refuse to save one
+    the start route would refuse (``enforce_auto_run_definitions``) or that can't be read."""
+    if artifacts is None:
+        return None
+    pins = {}
+    for artifact in artifacts:
+        try:
+            definitions = await auto_run_definitions(artifact, ROOT_ORG, fresh=True)
+        except HTTPException as e:
+            logger.error(f"Talon collection setting: the definitions of {artifact} could not be read (HTTP {e.status_code})")
+            raise HTTPException(status_code=502, detail=DEFINITIONS_UNREADABLE) from None
+        reason = built_in_violation(artifact, definitions) or next(filter(None, (structure_violation(d) for d in definitions)), None)
+        if reason is not None:
+            logger.warning(f"Talon collection setting: {artifact} can't be pinned: {reason}")
+            raise HTTPException(status_code=400, detail=DEFINITION_REFUSED)
+        pins[artifact] = definition_hashes(definitions)
+    return pins
+
+
 async def start(user: User, body: CollectStartBody, request: Optional[Request], session: AsyncSession) -> CollectStartResponse:
     """Start one collection and answer its flow id (module docstring)."""
     parameters = _parameters(body.parameters)
@@ -181,6 +234,7 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
             # The artifact name is validated (``validate_artifact_name``); a value never reaches here.
             logger.warning(f"Refused a collection start of {artifact} by the Talon service account {user.username}: {refused}")
             raise HTTPException(status_code=403, detail=SERVICE_REFUSED)
+        await check_definition_pin(row, artifact)
     elif is_response_artifact(artifact) or artifact in response_artifacts():
         raise HTTPException(status_code=403, detail=RESPONSE_ARTIFACT)
 
@@ -271,7 +325,17 @@ def _settings_response(
 
 async def _describe(session: AsyncSession, row: Optional[TalonConnectorSettings], message: str) -> TalonCollectionSettingsResponse:
     user_id = await user_id_for(session, effective_username(row))
-    return _settings_response(row, message, user_id is not None, user_id)
+    response = _settings_response(row, message, user_id is not None, user_id)
+    stored = (row.collect_definition_hashes if row is not None else None) or {}
+    response.definition_hashes = stored
+    matches: Dict[str, Optional[bool]] = {}
+    for artifact in response.allowed_artifacts or []:
+        try:
+            matches[artifact] = bool(stored.get(artifact)) and await current_hashes(artifact) == stored.get(artifact)
+        except HTTPException:
+            matches[artifact] = None  # Velociraptor couldn't be read
+    response.definitions_match = matches
+    return response
 
 
 async def get_settings(user: User, session: AsyncSession) -> TalonCollectionSettingsResponse:
@@ -317,8 +381,16 @@ async def update_settings(
     }
     # The id of the one user with the name, recorded so a rename keeps it in the gate.
     service_user_id = await user_id_for(session, username or DEFAULT_SERVICE_USERNAME)
-    new = {"collect_service_username": username, "collect_service_user_id": service_user_id, "collect_allowed_artifacts": listed}
-    row = await _store(session, username, service_user_id, listed, user.id)
+    # The definitions as Velociraptor has them now: what the admin is approving.
+    pins = await pin_definitions(listed)
+    old["collect_definition_hashes"] = row.collect_definition_hashes if row is not None else None
+    new = {
+        "collect_service_username": username,
+        "collect_service_user_id": service_user_id,
+        "collect_allowed_artifacts": listed,
+        "collect_definition_hashes": pins,
+    }
+    row = await _store(session, username, service_user_id, listed, pins, user.id)
     await record_audit_event(
         action=AuditAction.CONNECTOR_UPDATE,
         actor_user_id=user.id,
@@ -338,6 +410,7 @@ async def _store(
     username: Optional[str],
     service_user_id: Optional[int],
     artifacts: Optional[List[str]],
+    pins: Optional[Dict[str, Dict[str, str]]],
     user_id: int,
 ) -> TalonConnectorSettings:
     """Upsert the row (a new row leaves "Talon v2" off). Two admins creating it at once: the loser
@@ -350,6 +423,7 @@ async def _store(
         row.collect_service_username = username
         row.collect_service_user_id = service_user_id
         row.collect_allowed_artifacts = artifacts
+        row.collect_definition_hashes = pins
         row.updated_by_user_id = user_id
         row.updated_at = now_utc()
         try:

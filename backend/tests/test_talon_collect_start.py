@@ -50,6 +50,7 @@ from app.connectors.velociraptor.routes import artifacts as velociraptor_routes 
 from app.connectors.velociraptor.schema.artifacts import ArtifactParameter  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import Artifacts  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse  # noqa: E402
+from app.connectors.velociraptor.services import collection_policy  # noqa: E402
 from app.connectors.velociraptor.services import talon_catalogue  # noqa: E402
 from app.connectors.velociraptor.services.artifacts import FlowLimits  # noqa: E402
 from app.connectors.velociraptor.utils import universal  # noqa: E402
@@ -123,14 +124,37 @@ def call(scenario, **kwargs):
         return harness.call(scenario, **kwargs)
 
 
-async def configure(ctx, allowed=ALL_AUTO_RUN, username=None):
+async def pins_for(allowed):
+    """What a PUT would store: the hashes of the definitions Velociraptor (the fake patched now)
+    gives for each artifact."""
+    return {
+        a: collection_policy.definition_hashes(await artifacts_service.get_artifact_policy_definitions(a, "root")) for a in allowed or []
+    }
+
+
+async def configure(ctx, allowed=ALL_AUTO_RUN, username=None, hashes=None):
+    pins = hashes if hashes is not None else (await pins_for(allowed) if allowed is not None else None)
     async with ctx.db.session() as session:
         await session.execute(
             update(TalonConnectorSettings)
             .where(TalonConnectorSettings.connector_name == "Talon")
-            .values(collect_allowed_artifacts=allowed, collect_service_username=username),
+            .values(collect_allowed_artifacts=allowed, collect_service_username=username, collect_definition_hashes=pins),
         )
         await session.commit()
+
+
+@pytest.fixture(autouse=True)
+def built_in_velociraptor_definitions():
+    """By default Velociraptor's definitions are built in, with no dependencies (a scenario's own
+    fake replaces this); the service account's definition cache starts empty in every test."""
+
+    async def lookup(artifact_name, org_id):
+        return [{"name": artifact_name, "compiled_in": True}]
+
+    collection_policy.clear_auto_run_definitions_cache()
+    with patch.object(artifacts_service, "get_artifact_policy_definitions", lookup):
+        yield
+    collection_policy.clear_auto_run_definitions_cache()
 
 
 async def add_agents(ctx, *rows):
@@ -210,7 +234,8 @@ def test_an_assigned_analyst_starts_a_flow_and_gets_its_id_never_rows():
     assert kwargs == {"literal_values": False, "limits": talon_collections.collect_start_limits()}
     assert vr.finishes == []  # never waited for, read or uploaded
     # The analyst policy read the definition in the host's org; nothing else was looked up.
-    assert vr.definitions.lookups == [("Windows.System.Pslist", "root")]
+    # (After configure's reads, one per allowed artifact, as an admin's save makes them.)
+    assert vr.definitions.lookups[len(ALL_AUTO_RUN) :] == [("Windows.System.Pslist", "root")]
 
 
 def test_the_audit_event_names_the_caller_once():
@@ -341,7 +366,8 @@ def test_the_service_account_starts_its_allowlists_artifacts_with_their_pins(pay
     # Its pins as written, the auto-run gate instead of the analyst allowlist (TaskScheduler and
     # StartupItems aren't on it), Velociraptor's built-in definitions required, and the limits.
     assert kwargs == {"literal_values": True, "limits": talon_collections.collect_start_limits()}
-    assert vr.definitions.lookups == [(payload["artifact_name"], "root")]
+    # One read for the pin check and the definition check together (cached), after configure's.
+    assert vr.definitions.lookups[len(ALL_AUTO_RUN) :] == [(payload["artifact_name"], "root")]
 
 
 def test_a_custom_definition_is_refused_for_the_service_account():
@@ -620,12 +646,23 @@ def test_the_setting_is_an_admins_and_audited():
     assert row.collect_allowed_artifacts == ["Linux.Sys.Pslist", "Windows.System.Pslist"] and row.v2_enabled is True
     ((event,),) = [[c.kwargs for c in ctx.audit.await_args_list]]
     assert event["action"] == AuditAction.CONNECTOR_UPDATE and event["actor_username"] == "admin"
-    assert event["old_value"] == {"collect_service_username": None, "collect_service_user_id": None, "collect_allowed_artifacts": None}
+    assert event["old_value"] == {
+        "collect_service_username": None,
+        "collect_service_user_id": None,
+        "collect_allowed_artifacts": None,
+        "collect_definition_hashes": None,
+    }
+    pins = {
+        a: collection_policy.definition_hashes([{"name": a, "compiled_in": True}]) for a in ["Linux.Sys.Pslist", "Windows.System.Pslist"]
+    }
     assert event["new_value"] == {
         "collect_service_username": "svc",
         "collect_service_user_id": 21,
         "collect_allowed_artifacts": ["Linux.Sys.Pslist", "Windows.System.Pslist"],
+        "collect_definition_hashes": pins,
     }
+    assert after.json()["definition_hashes"] == pins
+    assert after.json()["definitions_match"] == {"Linux.Sys.Pslist": True, "Windows.System.Pslist": True}
     assert put.json()["service_user_exists"] is True and put.json()["service_user_id"] == 21
     assert before.json()["service_user_exists"] is True and before.json()["service_user_id"] == 20
 
@@ -936,13 +973,239 @@ def test_the_migration_upgrades_and_downgrades():
                 "collect_service_username",
                 "collect_service_user_id",
                 "collect_allowed_artifacts",
+                "collect_definition_hashes",
             }
             row = conn.execute(
                 sa.text(
-                    "SELECT collect_service_username, collect_service_user_id, collect_allowed_artifacts FROM talon_connector_settings",
+                    "SELECT collect_service_username, collect_service_user_id, collect_allowed_artifacts, collect_definition_hashes "
+                    "FROM talon_connector_settings",
                 ),
             ).one()
-            assert tuple(row) == (None, None, None)  # unset: the service account starts nothing
+            assert tuple(row) == (None, None, None, None)  # unset: the service account starts nothing
             migration.downgrade()
             assert columns() == {"id", "connector_name", "v2_enabled"}
         assert conn.execute(sa.text("SELECT connector_name, v2_enabled FROM talon_connector_settings")).one() == ("Talon", 1)
+
+
+# ── re-review of #1287: the definition pin and a stale user id ─────────────────────────────────
+
+
+def changed_definitions(stack, changed):
+    """Velociraptor's definitions as after an upgrade: `changed` artifacts' VQL differs."""
+    lookups = []
+
+    async def lookup(artifact_name, org_id):
+        lookups.append((artifact_name, org_id))
+        definition = {"name": artifact_name, "compiled_in": True}
+        if artifact_name in changed:
+            definition["sources"] = [{"query": "SELECT * FROM info()"}]
+        return [definition]
+
+    stack.enter_context(patch.object(artifacts_service, "get_artifact_policy_definitions", lookup))
+    return lookups
+
+
+def test_a_definition_that_changed_since_the_setting_was_saved_is_refused_until_an_admin_saves_again():
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            await configure(ctx)  # pinned against the definitions as they were
+            changed_definitions(stack, {"Windows.System.Services"})  # Velociraptor upgraded
+            collection_policy.clear_auto_run_definitions_cache()
+            refused = await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE))
+            other = await client.post(ROUTE, json=body("Windows.System.Pslist"), headers=as_user(SERVICE))
+            analyst = await client.post(ROUTE, json=body("Windows.System.DNSCache"), headers=as_user("ana"))
+            with patch.object(talon_collections, "record_audit_event", ctx.audit):
+                seen = await client.get(SETTINGS, headers=as_user("admin"))
+                await client.put(SETTINGS, json={"service_username": None, "allowed_artifacts": ALL_AUTO_RUN}, headers=as_user("admin"))
+            again = await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE))
+        return refused, other, analyst, seen, again, vr
+
+    refused, other, analyst, seen, again, vr = call(scenario)
+    assert refused.status_code == 403 and refused.json()["message"] == talon_collections.DEFINITION_CHANGED
+    assert "Windows.System.Services" not in refused.text
+    assert other.status_code == 200  # an unchanged artifact still starts
+    assert analyst.status_code == 200  # other users are unaffected
+    assert seen.json()["definitions_match"]["Windows.System.Services"] is False
+    assert seen.json()["definitions_match"]["Windows.System.Pslist"] is True
+    assert set(seen.json()["definition_hashes"]["Windows.System.Services"]) == {"Windows.System.Services"}
+    assert again.status_code == 200  # reviewed and saved again
+    assert [started["artifact_name"] for _, started, _ in vr.starts] == [
+        "Windows.System.Pslist",
+        "Windows.System.DNSCache",
+        "Windows.System.Services",
+    ]
+
+
+def test_a_dependency_that_changed_is_refused_too():
+    async def scenario(client, ctx):
+        state = {"dep": "v1"}
+
+        async def lookup(artifact_name, org_id):
+            return [
+                {"name": artifact_name, "compiled_in": True},
+                {"name": "Windows.Forensics.Lnk", "compiled_in": True, "export": state["dep"]},
+            ]
+
+        with ExitStack() as stack:
+            Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            stack.enter_context(patch.object(artifacts_service, "get_artifact_policy_definitions", lookup))
+            await configure(ctx)
+            state["dep"] = "v2"
+            collection_policy.clear_auto_run_definitions_cache()
+            return await client.post(
+                ROUTE,
+                json=body("Windows.Sys.StartupItems", [{"key": "AlsoUpload", "value": "N"}]),
+                headers=as_user(SERVICE),
+            )
+
+    response = call(scenario)
+    assert response.status_code == 403 and response.json()["message"] == talon_collections.DEFINITION_CHANGED
+
+
+def test_no_stored_pin_is_refused():
+    response, vr, ctx = call(_no_pin_scenario())
+    assert response.status_code == 403 and response.json()["message"] == talon_collections.DEFINITION_CHANGED and vr.starts == []
+
+
+def _no_pin_scenario():
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            await configure(ctx, hashes={})
+            return await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE)), vr, ctx
+
+    return scenario
+
+
+def test_definition_reads_are_cached_between_starts():
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            await configure(ctx)
+            before = len(vr.definitions.lookups)
+            answers = [await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE)) for _ in range(3)]
+        return answers, vr.definitions.lookups[before:]
+
+    answers, lookups = call(scenario)
+    assert [a.status_code for a in answers] == [200, 200, 200]
+    assert lookups == [("Windows.System.Services", "root")]  # one read for three starts
+
+
+def test_saving_reads_the_definitions_afresh():
+    async def scenario(client, ctx):
+        with ExitStack() as stack:
+            vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
+            await collection_policy.auto_run_definitions("Windows.System.Pslist", "root")  # cached
+            before = len(vr.definitions.lookups)
+            with patch.object(talon_collections, "record_audit_event", ctx.audit):
+                put = await client.put(
+                    SETTINGS,
+                    json={"service_username": None, "allowed_artifacts": ["Windows.System.Pslist"]},
+                    headers=as_user("admin"),
+                )
+        return put, vr.definitions.lookups[before:]
+
+    put, lookups = call(scenario)
+    assert put.status_code == 200 and ("Windows.System.Pslist", "root") in lookups
+
+
+@pytest.mark.parametrize("failure, status", [("unreadable", 502), ("custom", 400), ("tools", 400)])
+def test_a_definition_that_cant_be_pinned_saves_nothing(failure, status):
+    async def scenario(client, ctx):
+        async def lookup(artifact_name, org_id):
+            if failure == "unreadable":
+                raise HTTPException(status_code=500, detail="Failed to get artifact")
+            return [
+                {"name": artifact_name, "compiled_in": failure != "custom", **({"tools": [{"name": "x"}]} if failure == "tools" else {})},
+            ]
+
+        with patch.object(artifacts_service, "get_artifact_policy_definitions", lookup):
+            with patch.object(talon_collections, "record_audit_event", ctx.audit):
+                put = await client.put(
+                    SETTINGS,
+                    json={"service_username": None, "allowed_artifacts": ["Windows.System.Pslist"]},
+                    headers=as_user("admin"),
+                )
+        async with ctx.db.session() as session:
+            row = await session.get(TalonConnectorSettings, 1)
+        return put, row, ctx
+
+    put, row, ctx = call(scenario)
+    assert put.status_code == status and row.collect_allowed_artifacts is None and row.collect_definition_hashes is None
+    assert ctx.audit.await_args_list == []
+
+
+def test_definition_hashes_cover_every_field_and_ignore_key_order():
+    one = collection_policy.definition_hashes([{"name": "A", "sources": [{"query": "SELECT 1"}], "compiled_in": True}])
+    same = collection_policy.definition_hashes([{"compiled_in": True, "sources": [{"query": "SELECT 1"}], "name": "A"}])
+    other = collection_policy.definition_hashes([{"name": "A", "sources": [{"query": "SELECT 2"}], "compiled_in": True}])
+    assert one == same and one != other and len(one["A"]) == 64
+
+
+async def _record_id(ctx, user_id, username=None):
+    async with ctx.db.session() as session:
+        await session.execute(
+            update(TalonConnectorSettings)
+            .where(TalonConnectorSettings.connector_name == "Talon")
+            .values(collect_service_user_id=user_id, collect_service_username=username, collect_allowed_artifacts=[]),
+        )
+        await session.commit()
+
+
+@pytest.mark.parametrize(
+    "recorded, username, cleared",
+    [
+        (20, None, False),  # talon-analyst, still named so
+        (21, "svc", False),
+        (2, None, True),  # the id is now `ana`'s: never gate her
+        (99, None, True),  # no such user any more
+        (21, None, True),  # `svc`, but the setting's name is talon-analyst
+    ],
+)
+def test_startup_clears_a_recorded_id_that_no_longer_belongs_to_the_service_account(recorded, username, cleared):
+    lines = []
+
+    async def scenario(client, ctx):
+        await _record_id(ctx, recorded, username)
+        sink = logger.add(lambda message: lines.append(str(message)), level="WARNING")
+        try:
+            await talon_service_account.warn_if_service_user_missing(ctx.db.engine)
+        finally:
+            logger.remove(sink)
+        async with ctx.db.session() as session:
+            return await session.get(TalonConnectorSettings, 1)
+
+    row = call(scenario)
+    assert (row.collect_service_user_id is None) is cleared and (row.collect_service_user_id == recorded) is not cleared
+    assert bool([line for line in lines if "no longer belongs" in line]) is cleared
+
+
+def test_deleting_the_service_user_clears_its_recorded_id():
+    from app.auth.services.universal import delete_user
+
+    async def scenario(client, ctx):
+        await _record_id(ctx, 21, "svc")
+        async with ctx.db.session() as session:
+            await delete_user(21, session)
+        async with ctx.db.session() as session:
+            row = await session.get(TalonConnectorSettings, 1)
+        reused = SimpleNamespace(id=21, username="someone-else", role_id=2)
+        return row, reused
+
+    row, reused = call(scenario)
+    assert row.collect_service_user_id is None
+    assert not talon_service_account.is_service_account(reused, row)  # a reused id gates nobody
+
+
+def test_deleting_another_user_keeps_the_recorded_id():
+    from app.auth.services.universal import delete_user
+
+    async def scenario(client, ctx):
+        await _record_id(ctx, 21, "svc")
+        async with ctx.db.session() as session:
+            await delete_user(2, session)
+        async with ctx.db.session() as session:
+            return await session.get(TalonConnectorSettings, 1)
+
+    assert call(scenario).collect_service_user_id == 21

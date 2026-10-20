@@ -10,6 +10,7 @@ column (that table is cached in-process, ``app/connectors/cache.py``). Read and 
 through ``app/connectors/talon/services/talon_v2.py``.
 """
 from datetime import datetime
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -41,6 +42,10 @@ class TalonConnectorSettings(SQLModel, table=True):
     # setting: held to the gate too, so a rename doesn't take the account out of it.
     collect_service_user_id: Optional[int] = Field(default=None, nullable=True)
     collect_allowed_artifacts: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    # ``{artifact: {definition name: SHA-256}}`` for each allowed artifact and its dependencies, read
+    # from Velociraptor when an admin saved the allowlist: a start whose definitions differ is refused
+    # until an admin reviews them and saves again (``collection_policy.definition_hashes``).
+    collect_definition_hashes: Optional[Dict[str, Dict[str, str]]] = Field(default=None, sa_column=Column(JSON, nullable=True))
     updated_by_user_id: Optional[int] = Field(default=None, nullable=True)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)
 
