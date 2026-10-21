@@ -153,7 +153,10 @@ describe("exposure page (#1289)", () => {
 			"CVE-2026-0002"
 		])
 
-		await wrapper.findAll(".n-tabs-tab").find(t => t.text() === "Compliance")!.trigger("click")
+		await wrapper
+			.findAll(".n-tabs-tab")
+			.find(t => t.text() === "Compliance")!
+			.trigger("click")
 		await flushPromises()
 		expect(router.currentRoute.value.query).toEqual({ tab: "compliance" })
 		expect(api.getCompliance).toHaveBeenCalledTimes(1)
@@ -176,7 +179,9 @@ describe("exposure vulnerabilities", () => {
 			expect.any(AbortSignal)
 		)
 		expect(wrapper.get("[data-testid=exposure-severity-High]").attributes("aria-pressed")).toBe("true")
-		expect(wrapper.get("[data-testid=exposure-severity-All] [data-testid=exposure-severity-count]").text()).toBe("2")
+		expect(wrapper.get("[data-testid=exposure-severity-All] [data-testid=exposure-severity-count]").text()).toBe(
+			"2"
+		)
 		expect(wrapper.get("[data-testid=exposure-totals]").text()).toBe("2 CVEs on 2 agents · 3 findings")
 		expect((wrapper.get("[data-testid=exposure-search] input").element as HTMLInputElement).value).toBe("openssl")
 	})
@@ -216,7 +221,10 @@ describe("exposure vulnerabilities", () => {
 		expect(wrapper.get("[data-testid=exposure-range]").text()).toBe("1–25 of 60 CVEs")
 		expect(wrapper.find("[data-testid=exposure-truncated]").exists()).toBe(true)
 
-		await wrapper.findAll("[data-testid=exposure-pagination] .n-pagination-item").find(i => i.text() === "2")!.trigger("click")
+		await wrapper
+			.findAll("[data-testid=exposure-pagination] .n-pagination-item")
+			.find(i => i.text() === "2")!
+			.trigger("click")
 		await flushPromises()
 		expect(router.currentRoute.value.query).toEqual({ page: "2" })
 	})
@@ -231,7 +239,9 @@ describe("exposure vulnerabilities", () => {
 
 		api.getVulnerabilities.mockImplementation(() => respond(vulnerabilities({ cves: [], total_cves: 0 })))
 		const filtered = await mountPage({ severity: "Low" })
-		expect(filtered.wrapper.get("[data-testid=exposure-empty]").text()).toContain("No vulnerability matches the filters")
+		expect(filtered.wrapper.get("[data-testid=exposure-empty]").text()).toContain(
+			"No vulnerability matches the filters"
+		)
 	})
 
 	it("says the page is not published instead of empty figures", async () => {
@@ -246,10 +256,14 @@ describe("exposure vulnerabilities", () => {
 			respond(vulnerabilities({ error: "Could not read the vulnerabilities from Wazuh", cves: [] }))
 		)
 		const { wrapper } = await mountPage()
-		expect(wrapper.get("[data-testid=exposure-error]").text()).toContain("Could not read the vulnerabilities from Wazuh")
+		expect(wrapper.get("[data-testid=exposure-error]").text()).toContain(
+			"Could not read the vulnerabilities from Wazuh"
+		)
 		expect(wrapper.find("[data-testid=exposure-totals]").exists()).toBe(false)
 		// No count reads as "none found" while Wazuh could not be read.
-		expect(wrapper.get("[data-testid=exposure-severity-All] [data-testid=exposure-severity-count]").text()).toBe("—")
+		expect(wrapper.get("[data-testid=exposure-severity-All] [data-testid=exposure-severity-count]").text()).toBe(
+			"—"
+		)
 
 		await wrapper.get("[data-testid=exposure-error] button").trigger("click")
 		await flushPromises()
@@ -258,7 +272,10 @@ describe("exposure vulnerabilities", () => {
 	})
 
 	it("exports the filter on screen, and warns when the CSV was cut", async () => {
-		api.exportVulnerabilities.mockResolvedValue({ data: new Blob(["csv"]), headers: { "x-export-truncated": "true" } })
+		api.exportVulnerabilities.mockResolvedValue({
+			data: new Blob(["csv"]),
+			headers: { "x-export-truncated": "true" }
+		})
 		const { wrapper } = await mountPage({ severity: "Critical", q: "openssl" })
 		await wrapper.get("[data-testid=exposure-export]").trigger("click")
 		await flushPromises()
@@ -268,7 +285,9 @@ describe("exposure vulnerabilities", () => {
 	})
 
 	it("says when the export failed", async () => {
-		api.exportVulnerabilities.mockRejectedValue({ response: { data: { detail: "Could not read the vulnerabilities" } } })
+		api.exportVulnerabilities.mockRejectedValue({
+			response: { data: { detail: "Could not read the vulnerabilities" } }
+		})
 		const { wrapper } = await mountPage()
 		await wrapper.get("[data-testid=exposure-export]").trigger("click")
 		await flushPromises()
@@ -290,6 +309,9 @@ describe("exposure CVE drawer", () => {
 		expect(drawer.querySelector("[data-testid=exposure-cve-epss]")!.textContent!.trim()).toBe("50.0%")
 		const link = drawer.querySelector<HTMLAnchorElement>("[data-testid=exposure-cve-agent-link]")!
 		expect(link.getAttribute("href")).toBe("/agents/001?tab=vulnerabilities&search=CVE-2026-0001")
+		// The whole row is the link: the package and its version too, not only the name.
+		expect(link.textContent).toContain("web-01")
+		expect(link.textContent).toContain("openssl 3.0.2")
 		// Only the web link is a link; the other reference is text.
 		expect([...drawer.querySelectorAll("a[target=_blank]")].map(a => a.getAttribute("href"))).toEqual([
 			"https://nvd.nist.gov/vuln/detail/CVE-2026-0001"
@@ -307,7 +329,9 @@ describe("exposure CVE drawer", () => {
 		api.getCve.mockRejectedValueOnce({ response: { data: { detail: "Vulnerability not found" } } })
 		await wrapper.get("[data-testid=exposure-cve-row][data-cve='CVE-2026-0002']").trigger("click")
 		await flushPromises()
-		expect(document.querySelector("[data-testid=exposure-cve-error]")!.textContent).toContain("Vulnerability not found")
+		expect(document.querySelector("[data-testid=exposure-cve-error]")!.textContent).toContain(
+			"Vulnerability not found"
+		)
 	})
 })
 
@@ -315,11 +339,15 @@ describe("exposure compliance", () => {
 	it("shows the figures, the weakest policy first, and says which agents Wazuh could not answer for", async () => {
 		api.getCompliance.mockImplementation(() => respond(compliance({ unavailable_agents: 1 })))
 		const { wrapper } = await mountPage({ tab: "compliance" })
-		expect(wrapper.get("[data-testid=exposure-compliance-score] [data-testid=exposure-compliance-value]").text()).toBe("55%")
-		expect(wrapper.get("[data-testid=exposure-compliance-agents] [data-testid=exposure-compliance-value]").text()).toBe(
-			"2 / 3"
+		expect(
+			wrapper.get("[data-testid=exposure-compliance-score] [data-testid=exposure-compliance-value]").text()
+		).toBe("55%")
+		expect(
+			wrapper.get("[data-testid=exposure-compliance-agents] [data-testid=exposure-compliance-value]").text()
+		).toBe("2 / 3")
+		expect(wrapper.get("[data-testid=exposure-compliance-policies]").text()).toContain(
+			"1 policy with agents below 50%"
 		)
-		expect(wrapper.get("[data-testid=exposure-compliance-policies]").text()).toContain("1 policy with agents below 50%")
 		expect(wrapper.get("[data-testid=exposure-compliance-unavailable]").text()).toContain("1 agent")
 		expect(wrapper.findAll("[data-testid=exposure-policy-score]").map(s => s.text())).toEqual(["38%", "81%"])
 		expect(wrapper.find("[data-testid=exposure-read-at]").exists()).toBe(true)
@@ -355,6 +383,9 @@ describe("exposure compliance", () => {
 		expect(wrapper.get("[data-testid=exposure-policy-agent-link]").attributes("href")).toBe(
 			"/agents/002?tab=sca&policy=cis_win"
 		)
+		// The whole row is the link, under a header that names what it lists.
+		expect(wrapper.get("[data-testid=exposure-policy-agent-link]").text()).toMatch(/dc-01[\s\S]*38%[\s\S]*20/)
+		expect(wrapper.get("[data-testid=exposure-policy-agents]").text()).toContain("Agents on this policy · 1")
 
 		await row.trigger("click")
 		expect(wrapper.find("[data-testid=exposure-policy-agents]").exists()).toBe(false)
@@ -386,9 +417,12 @@ describe("exposure compliance", () => {
 		)
 		const { wrapper } = await mountPage({ tab: "compliance" })
 		expect(wrapper.get("[data-testid=exposure-compliance-error]").text()).toContain("Could not read the compliance")
-		expect(
-			wrapper.findAll("[data-testid=exposure-compliance-value]").map(v => v.text())
-		).toEqual(["—", "—", "—", "—"])
+		expect(wrapper.findAll("[data-testid=exposure-compliance-value]").map(v => v.text())).toEqual([
+			"—",
+			"—",
+			"—",
+			"—"
+		])
 	})
 
 	it("says the page is not published", async () => {

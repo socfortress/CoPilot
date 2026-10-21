@@ -10,7 +10,9 @@
 					class="border-default bg-default flex min-w-0 flex-col gap-1.5 rounded-lg border px-3 py-2.5"
 					:data-testid="`exposure-compliance-${card.key}`"
 				>
-					<span class="text-tertiary text-xxs truncate font-medium tracking-[0.12em] uppercase">{{ card.label }}</span>
+					<span class="text-tertiary text-xxs truncate font-medium tracking-[0.12em] uppercase">
+						{{ card.label }}
+					</span>
 					<span
 						class="font-mono text-lg leading-none font-semibold tabular-nums"
 						:class="known ? card.tone : 'text-tertiary'"
@@ -70,11 +72,20 @@
 					data-testid="exposure-compliance-empty"
 				/>
 				<div v-else class="divide-border flex flex-col divide-y" :class="{ 'opacity-60': loading }">
-					<div v-for="policy of data.policies" :key="policy.policy_id" data-testid="exposure-policy">
+					<!-- An open policy and its agents read as one group: one surface, one accent bar down its side. -->
+					<div
+						v-for="policy of data.policies"
+						:key="policy.policy_id"
+						class="transition-colors"
+						:class="{
+							'bg-secondary/40 shadow-[inset_3px_0_0_var(--primary-color)]': open === policy.policy_id
+						}"
+						data-testid="exposure-policy"
+					>
 						<button
 							type="button"
 							class="group hover:bg-secondary/50 focus-visible:outline-primary grid w-full cursor-pointer items-center gap-x-3 gap-y-1.5 px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 @3xl:gap-x-4 @3xl:gap-y-0"
-							:class="[COLUMNS_ROW, { 'bg-secondary/50': open === policy.policy_id }]"
+							:class="COLUMNS_ROW"
 							:aria-expanded="open === policy.policy_id"
 							:data-policy="policy.policy_id"
 							data-testid="exposure-policy-row"
@@ -87,7 +98,10 @@
 								<span class="text-tertiary truncate font-mono text-xs">{{ policy.policy_id }}</span>
 							</span>
 							<span class="flex min-w-0 items-center gap-2 [grid-area:score]">
-								<span class="bg-secondary h-1.5 min-w-12 flex-1 overflow-hidden rounded-full" aria-hidden="true">
+								<span
+									class="bg-secondary h-1.5 min-w-12 flex-1 overflow-hidden rounded-full"
+									aria-hidden="true"
+								>
 									<span
 										class="block h-full rounded-full"
 										:class="SCORE_COLORS[scoreLevel(policy.average_score)]"
@@ -112,7 +126,9 @@
 								<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">below</span>
 								{{ policy.agents_below.toLocaleString() }}
 							</span>
-							<span class="text-secondary hidden text-right font-mono text-sm tabular-nums [grid-area:failed] @3xl:block">
+							<span
+								class="text-secondary hidden text-right font-mono text-sm tabular-nums [grid-area:failed] @3xl:block"
+							>
 								{{ policy.failed.toLocaleString() }}
 							</span>
 							<Icon
@@ -123,55 +139,76 @@
 							/>
 						</button>
 
-						<div
-							v-if="open === policy.policy_id"
-							class="bg-secondary/30 border-default border-y px-4 py-3"
-							data-testid="exposure-policy-agents"
-						>
-							<n-skeleton v-if="agentsLoading" text :repeat="3" />
-							<n-alert v-else-if="agentsError" type="error" :bordered="false">{{ agentsError }}</n-alert>
-							<ul v-else class="m-0 flex list-none flex-col gap-1.5 p-0">
-								<li
-									v-for="agent of agents"
-									:key="agent.agent_id"
-									class="grid items-center gap-x-3 gap-y-1 @3xl:gap-x-4"
-									:class="AGENT_ROW"
-									data-testid="exposure-policy-agent"
-								>
+						<div v-if="open === policy.policy_id" class="pb-2" data-testid="exposure-policy-agents">
+							<p
+								class="text-tertiary text-xxs m-0 px-4 pb-1.5 pl-9 font-medium tracking-[0.12em] uppercase"
+							>
+								Agents on this policy · {{ agentsLoading ? "…" : agents.length.toLocaleString() }},
+								weakest first
+							</p>
+							<n-skeleton v-if="agentsLoading" text :repeat="3" class="px-4 pl-9" />
+							<n-alert v-else-if="agentsError" type="error" :bordered="false" class="mx-4">
+								{{ agentsError }}
+							</n-alert>
+							<ul v-else class="m-0 flex list-none flex-col p-0">
+								<li v-for="agent of agents" :key="agent.agent_id" data-testid="exposure-policy-agent">
+									<!-- The whole row opens the agent's SCA on this policy. -->
 									<RouterLink
 										:to="agentLink(agent.agent_id, { tab: 'sca', policy: policy.policy_id })"
-										class="text-default hover:text-primary truncate text-sm no-underline transition-colors [grid-area:name]"
+										class="group/agent hover:bg-secondary/70 focus-visible:outline-primary grid items-center gap-x-3 gap-y-1 px-4 py-1.5 no-underline transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 @3xl:gap-x-4"
+										:class="AGENT_ROW"
 										data-testid="exposure-policy-agent-link"
 									>
-										<bdi>{{ agent.hostname }}</bdi>
-									</RouterLink>
-									<span class="flex min-w-0 items-center gap-2 [grid-area:score]">
-										<span class="bg-secondary h-1 min-w-12 flex-1 overflow-hidden rounded-full" aria-hidden="true">
+										<span class="flex min-w-0 items-center gap-2 [grid-area:name]">
+											<!-- An elbow from the policy above: this row belongs to it. -->
 											<span
-												class="block h-full rounded-full"
-												:class="SCORE_COLORS[scoreLevel(agent.score)]"
-												:style="{ width: `${Math.max(1, agent.score)}%` }"
+												class="border-tertiary/50 ml-1.5 h-3 w-3 shrink-0 -translate-y-1 rounded-bl-sm border-b border-l"
+												aria-hidden="true"
 											/>
+											<span
+												class="text-default group-hover/agent:text-primary truncate text-sm transition-colors"
+											>
+												<bdi>{{ agent.hostname }}</bdi>
+											</span>
+										</span>
+										<span class="flex min-w-0 items-center gap-2 [grid-area:score]">
+											<span
+												class="bg-secondary h-1 min-w-12 flex-1 overflow-hidden rounded-full"
+												aria-hidden="true"
+											>
+												<span
+													class="block h-full rounded-full"
+													:class="SCORE_COLORS[scoreLevel(agent.score)]"
+													:style="{ width: `${Math.max(1, agent.score)}%` }"
+												/>
+											</span>
+											<span
+												class="w-14 shrink-0 text-right font-mono text-sm font-semibold tabular-nums"
+												:class="SCORE_TEXT[scoreLevel(agent.score)]"
+											>
+												{{ agent.score }}%
+											</span>
 										</span>
 										<span
-											class="w-14 shrink-0 text-right font-mono text-sm font-semibold tabular-nums"
-											:class="SCORE_TEXT[scoreLevel(agent.score)]"
+											class="text-secondary text-right font-mono text-xs tabular-nums [grid-area:failed] @3xl:text-sm"
 										>
-											{{ agent.score }}%
+											{{ agent.failed.toLocaleString() }}
+											<span class="@3xl:hidden">failed</span>
 										</span>
-									</span>
-									<span class="text-secondary text-right font-mono text-xs tabular-nums [grid-area:failed] @3xl:text-sm">
-										{{ agent.failed.toLocaleString() }}<span class="@3xl:hidden"> failed</span>
-									</span>
+									</RouterLink>
 								</li>
 							</ul>
 						</div>
 					</div>
 				</div>
 
-				<p v-if="data?.read_at" class="text-tertiary border-default border-t px-4 py-2 text-xs" data-testid="exposure-read-at">
-					Read from Wazuh at {{ formatDate(data.read_at, dFormats.datetime, { tz: true }) }}; refreshed every few
-					minutes.
+				<p
+					v-if="data?.read_at"
+					class="text-tertiary border-default border-t px-4 py-2 text-xs"
+					data-testid="exposure-read-at"
+				>
+					Read from Wazuh at {{ formatDate(data.read_at, dFormats.datetime, { tz: true }) }}; refreshed every
+					few minutes.
 				</p>
 			</section>
 		</template>
@@ -282,7 +319,11 @@ function toggle(policyId: string) {
 	agentsError.value = null
 	run(
 		async signal => {
-			const response = await Api.exposure.getPolicyAgents(policyId, customerFilterStore.queryCustomerCodes, signal)
+			const response = await Api.exposure.getPolicyAgents(
+				policyId,
+				customerFilterStore.queryCustomerCodes,
+				signal
+			)
 			if (signal.aborted) return
 			agents.value = response.data.agents
 			agentsError.value = response.data.error
