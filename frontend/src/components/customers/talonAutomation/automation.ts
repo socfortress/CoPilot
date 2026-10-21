@@ -20,6 +20,9 @@ export const LEVEL_TEXT: Record<TalonAutomationLevel, { title: string; detail: s
 	}
 }
 
+/** Modes CoPilot accepts but that do nothing yet: tagged "Not available yet". */
+export const UNAVAILABLE_MODES: readonly TalonAutomationMode[] = ["propose"]
+
 export const MODE_TEXT: Record<TalonAutomationMode, { label: string; detail: string }> = {
 	off: { label: "Off", detail: "Nothing at this level runs or is recorded." },
 	shadow: {
@@ -28,7 +31,7 @@ export const MODE_TEXT: Record<TalonAutomationMode, { label: string; detail: str
 	},
 	propose: {
 		label: "Propose",
-		detail: "The investigation records an approval card for an analyst and never waits. Until investigation proposals are built, it is recorded as shadow."
+		detail: "Propose isn't built yet (AP-5): nothing runs or is recorded."
 	},
 	auto: {
 		label: "Auto",

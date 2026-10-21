@@ -18,6 +18,9 @@
 		<n-alert v-if="failure" type="error" :bordered="false" size="small" data-testid="automation-error">
 			{{ failure.detail }}
 		</n-alert>
+		<n-alert v-if="rereadNote" type="info" :bordered="false" size="small" data-testid="automation-reread">
+			{{ rereadNote }}
+		</n-alert>
 
 		<n-spin :show="loading">
 			<div v-if="policy" class="flex flex-col gap-4">
@@ -78,6 +81,15 @@
 								:data-testid="`automation-level-${level}-${mode}`"
 							>
 								{{ MODE_TEXT[mode].label }}
+								<n-tag
+									v-if="UNAVAILABLE_MODES.includes(mode)"
+									size="tiny"
+									:bordered="false"
+									class="ml-1"
+									:data-testid="`automation-level-${level}-${mode}-unavailable`"
+								>
+									Not available yet
+								</n-tag>
 							</n-radio-button>
 						</n-radio-group>
 						<p class="text-secondary text-xs" :data-testid="`automation-level-${level}-mode-text`">
@@ -177,6 +189,14 @@
 					<div class="flex gap-2">
 						<n-button
 							size="small"
+							:disabled="saving || loading"
+							data-testid="automation-reload"
+							@click="load()"
+						>
+							Reload
+						</n-button>
+						<n-button
+							size="small"
 							:disabled="!dirty || saving"
 							data-testid="automation-reset"
 							@click="reset()"
@@ -241,6 +261,7 @@ import {
 	AUTOMATION_LEVELS,
 	AUTOMATION_MODES,
 	buildPolicyUpdate,
+	isVersionConflict,
 	modeKey,
 	modesOf,
 	RISK_LEVELS,
@@ -249,7 +270,7 @@ import {
 import { talonFailure } from "@/api/endpoints/talonUsage"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils/format"
-import { capLabel, LEVEL_TEXT, MODE_TEXT } from "./automation"
+import { capLabel, LEVEL_TEXT, MODE_TEXT, UNAVAILABLE_MODES } from "./automation"
 import TalonAutomationRiskDialog from "./TalonAutomationRiskDialog.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()
@@ -260,6 +281,8 @@ const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const saving = ref(false)
 const failure = ref<TalonFailure | null>(null)
+/** Set after a stale-version 409: the policy was read again and the admin's edit kept. */
+const rereadNote = ref<string | null>(null)
 const policy = ref<TalonAutomationPolicy | null>(null)
 
 const modes = reactive<TalonAutomationModes>({
@@ -304,16 +327,30 @@ const capsValid = computed(() =>
 
 let controller: AbortController | null = null
 
-async function load() {
+/**
+ * Read the policy. `keepEdit`: after a stale-version 409, take the current row (and its version)
+ * but keep the admin's modes and overrides, so they review them against it and save again.
+ */
+async function load(options: { keepEdit?: boolean } = {}) {
 	controller?.abort()
 	controller = new AbortController()
 	const signal = controller.signal
 	loading.value = true
-	failure.value = null
+	if (!options.keepEdit) {
+		failure.value = null
+		rereadNote.value = null
+	}
 	try {
 		const res = await Api.talonAutomation.getPolicy(customerCode, signal)
 		policy.value = res.data
-		reset()
+		if (options.keepEdit) {
+			for (const name of capNames.value) {
+				if (!(name in capOverrides)) capOverrides[name] = storedOverride(name)
+			}
+			rereadNote.value = `The policy was read again (version ${res.data.version}). Your edit is kept: review it against the current values, then save again.`
+		} else {
+			reset()
+		}
 	} catch (err) {
 		if (signal.aborted) return
 		failure.value = talonFailure(err)
@@ -338,6 +375,8 @@ async function save(acknowledgeRisk: boolean) {
 	if (!current || saving.value) return
 	saving.value = true
 	failure.value = null
+	rereadNote.value = null
+	let conflict = false
 	try {
 		const body = buildPolicyUpdate(current, modes, capOverrides, acknowledgeRisk)
 		const res = await Api.talonAutomation.putPolicy(customerCode, body)
@@ -345,14 +384,20 @@ async function save(acknowledgeRisk: boolean) {
 		reset()
 		message.success("Automation policy saved")
 	} catch (err) {
-		// The edit stays; a 409 (another admin's change, or the service user unassigned) says so.
+		// The edit stays. Another admin's change (a stale-version 409): read the policy again.
 		failure.value = talonFailure(err)
+		conflict = isVersionConflict(failure.value)
 	} finally {
 		riskLevels.value = []
 		saving.value = false
 	}
+	if (conflict) await load({ keepEdit: true })
 }
 
-watch(() => customerCode, load, { immediate: true })
+watch(
+	() => customerCode,
+	() => load(),
+	{ immediate: true }
+)
 onBeforeUnmount(() => controller?.abort())
 </script>

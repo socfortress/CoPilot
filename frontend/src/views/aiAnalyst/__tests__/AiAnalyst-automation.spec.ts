@@ -1,7 +1,6 @@
 /**
  * The AI Analyst page's Settings tab, which holds the global automation switch (talon-analyst D85,
- * plan AP-2): an admin's only, whatever "Talon v2" says (CoPilot serves the switch either way), and
- * mounted when first opened.
+ * plan AP-2): an admin's only, behind the "Talon v2" setting (D54), and mounted when first opened.
  */
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
@@ -87,7 +86,7 @@ describe("aI Analyst settings tab", () => {
 		getAvailability.mockReset().mockResolvedValue({ data: { success: true, enabled: true } })
 	})
 
-	it("an admin: the tab, its switch mounted when first opened", async () => {
+	it("an admin with v2 on: the tab, its switch mounted when first opened", async () => {
 		signInAs(AuthUserRole.Admin)
 		const wrapper = render()
 		await settle()
@@ -98,13 +97,12 @@ describe("aI Analyst settings tab", () => {
 		expect(wrapper.find('[data-testid="TalonAutomationSettings"]').exists()).toBe(true)
 	})
 
-	it("an admin with v2 off: the tab still", async () => {
+	it("an admin with v2 off: no tab", async () => {
 		signInAs(AuthUserRole.Admin)
 		getAvailability.mockResolvedValue({ data: { success: true, enabled: false } })
 		const wrapper = render()
 		await settle()
-		expect(wrapper.find('[data-pane="settings"]').exists()).toBe(true)
-		expect(wrapper.find('[data-pane="budgets"]').exists()).toBe(false)
+		expect(wrapper.find('[data-pane="settings"]').exists()).toBe(false)
 	})
 
 	for (const role of [AuthUserRole.Analyst, AuthUserRole.Responder]) {

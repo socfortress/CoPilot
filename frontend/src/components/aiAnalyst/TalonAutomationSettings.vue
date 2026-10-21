@@ -43,9 +43,10 @@
 </template>
 
 <script setup lang="ts">
+// The AI Analyst page's Settings tab (admins only, with "Talon v2" on, D54): the global
+// `automation_enabled` switch on the Talon connector's settings (talon-analyst D85, plan AP-2;
+// CoPilot's `GET`/`PUT /api/talon/v2/settings/automation`).
 import type { TalonAutomationSettings } from "@/api/endpoints/talonAutomation"
-// The AI Analyst page's Settings tab (admins only, with "Talon v2" on): the global
-// `automation_enabled` switch on the Talon connector's settings (talon-analyst D85, plan AP-2).
 import type { TalonFailure } from "@/api/endpoints/talonUsage"
 import { NAlert, NCard, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeUnmount, onMounted, ref } from "vue"

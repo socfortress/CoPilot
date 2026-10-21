@@ -38,9 +38,8 @@
 			<n-tab-pane v-if="talonV2Available && isAdmin" name="budgets" tab="Budgets" display-directive="show:lazy">
 				<TalonBudgets v-if="visited.has('budgets')" class="pt-6" />
 			</n-tab-pane>
-			<!-- The global automation switch (talon-analyst D85, AP-2): an admin's only, whatever "Talon v2"
-			says (CoPilot serves it either way, so automation is set up before v2 is turned on). -->
-			<n-tab-pane v-if="isAdmin" name="settings" tab="Settings" display-directive="show:lazy">
+			<!-- The global automation switch (talon-analyst D85, AP-2): an admin's only, behind "Talon v2" (D54). -->
+			<n-tab-pane v-if="talonV2Available && isAdmin" name="settings" tab="Settings" display-directive="show:lazy">
 				<TalonAutomationSettings v-if="visited.has('settings')" class="pt-6" />
 			</n-tab-pane>
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">

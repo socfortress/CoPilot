@@ -61,9 +61,9 @@
 				<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
 					<CustomerAITriggers :customer-code="customer.customer_code" />
 				</n-tab-pane>
-				<!-- Talon's automation policy (talon-analyst D85, AP-2): admins only, whatever "Talon v2" says. -->
+				<!-- Talon's automation policy (talon-analyst D85, AP-2): admins only, behind "Talon v2" (D54). -->
 				<n-tab-pane
-					v-if="isAdmin"
+					v-if="showAutomation"
 					name="AI Automation"
 					tab="AI Automation"
 					display-directive="show:lazy"
@@ -189,6 +189,7 @@ import { NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
 import { useRouteQueryParam } from "@/composables/useNavigation"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useAuthStore } from "@/stores/auth"
 
 const props = defineProps<{
@@ -243,6 +244,9 @@ const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWo
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const isAdmin = computed(() => useAuthStore().isAdmin)
+// The AI Automation tab: an admin's, behind "Talon v2" (D54). No one else asks for availability.
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(isAdmin)
+const showAutomation = computed(() => isAdmin.value && talonV2Available.value)
 
 const loadingDeleteModel = computed({
 	get: () => props.loadingDelete ?? false,

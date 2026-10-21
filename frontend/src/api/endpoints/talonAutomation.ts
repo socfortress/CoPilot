@@ -37,6 +37,15 @@ export const RISK_LEVELS: readonly TalonAutomationLevel[] = [3, 4]
 
 export type TalonAutomationModes = Record<`level_${TalonAutomationLevel}_mode`, TalonAutomationMode>
 
+/** CoPilot's 409 when another admin saved since the policy was read (`VERSION_CHANGED`). */
+export const VERSION_CHANGED_TEXT =
+	"The automation policy changed since it was read; read it again and review the change"
+
+/** Whether a refusal is the stale-version 409 (the other 409 is an unassigned customer). */
+export function isVersionConflict(failure: { status: number | null; detail: string }): boolean {
+	return failure.status === 409 && failure.detail === VERSION_CHANGED_TEXT
+}
+
 export type TalonAutomationFileOs = "windows" | "linux"
 
 /** `GET`/`PUT /talon/v2/automation/{customer_code}`'s answer (`TalonAutomationPolicyResponse`). */

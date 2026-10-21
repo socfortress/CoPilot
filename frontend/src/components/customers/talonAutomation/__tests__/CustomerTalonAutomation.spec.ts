@@ -121,6 +121,12 @@ describe("customer AI Automation tab", () => {
 		expect(checked(wrapper, 3)).toEqual(["off"])
 		expect(wrapper.get('[data-testid="automation-help"]').text()).toMatch(/suggest\s+shadow\s+first/)
 		expect(wrapper.find('[data-testid="automation-would-have-run"]').exists()).toBe(true)
+		// Propose isn't built yet (AP-5): tagged at every level.
+		for (const level of [1, 2, 3, 4]) {
+			expect(wrapper.get(`[data-testid="automation-level-${level}-propose-unavailable"]`).text()).toBe(
+				"Not available yet"
+			)
+		}
 		// Only level 1 is startable today; 2-4 are marked, and still settable.
 		expect(wrapper.find('[data-testid="automation-level-1-unavailable"]').exists()).toBe(false)
 		for (const level of [2, 3, 4]) {
@@ -279,5 +285,115 @@ describe("customer AI Automation tab", () => {
 		await flushPromises()
 		expect(wrapper.find('[data-testid="automation-switch-off"]').exists()).toBe(true)
 		expect(wrapper.find('[data-testid="automation-unassigned"]').exists()).toBe(true)
+	})
+
+	it("moving level 3 from off to propose asks for the acknowledgement", async () => {
+		const wrapper = render()
+		await flushPromises()
+		await choose(wrapper, 3, "propose")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.find('[data-testid="automation-risk-dialog"]').exists()).toBe(true)
+		expect(putPolicy).not.toHaveBeenCalled()
+	})
+
+	it("after a tick, a cancel and a reopen, the box is unticked again", async () => {
+		const wrapper = render()
+		await flushPromises()
+		await choose(wrapper, 4, "shadow")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		await wrapper.get('[data-testid="automation-risk-ack"]').trigger("click")
+		await nextTick()
+		expect(wrapper.get('[data-testid="automation-risk-ack"]').classes()).toContain("n-checkbox--checked")
+		expect(wrapper.get('[data-testid="automation-risk-confirm"]').attributes("disabled")).toBeUndefined()
+		await wrapper.get('[data-testid="automation-risk-cancel"]').trigger("click")
+		await flushPromises()
+
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.get('[data-testid="automation-risk-ack"]').classes()).not.toContain("n-checkbox--checked")
+		expect(wrapper.get('[data-testid="automation-risk-confirm"]').attributes("disabled")).toBeDefined()
+		await wrapper.get('[data-testid="automation-risk-confirm"]').trigger("click")
+		await flushPromises()
+		expect(putPolicy).not.toHaveBeenCalled()
+	})
+
+	it("can't confirm the risk when CoPilot sent no risk text", async () => {
+		getPolicy.mockResolvedValue({ data: policy({ risk_acknowledgement_text: "  " }) })
+		const wrapper = render()
+		await flushPromises()
+		await choose(wrapper, 3, "shadow")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.find('[data-testid="automation-risk-text-missing"]').exists()).toBe(true)
+		await wrapper.get('[data-testid="automation-risk-ack"]').trigger("click")
+		await nextTick()
+		expect(wrapper.get('[data-testid="automation-risk-confirm"]').attributes("disabled")).toBeDefined()
+		await wrapper.get('[data-testid="automation-risk-confirm"]').trigger("click")
+		await flushPromises()
+		expect(putPolicy).not.toHaveBeenCalled()
+	})
+
+	it("on a stale-version 409, reads the policy again and keeps the edit for review", async () => {
+		putPolicy.mockRejectedValueOnce(
+			Object.assign(new Error("refused"), {
+				isAxiosError: true,
+				response: {
+					status: 409,
+					data: {
+						success: false,
+						message: "The automation policy changed since it was read; read it again and review the change"
+					}
+				}
+			})
+		)
+		const wrapper = render()
+		await flushPromises()
+		getPolicy.mockResolvedValue({ data: policy({ level_1_mode: "shadow", version: 5 }) })
+		await choose(wrapper, 2, "shadow")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+
+		expect(getPolicy).toHaveBeenCalledTimes(2)
+		expect(wrapper.get('[data-testid="automation-reread"]').text()).toContain("version 5")
+		// The admin's edit is kept (level 1 as they left it, level 2 as they set it), against version 5.
+		expect(checked(wrapper, 1)).toEqual(["auto"])
+		expect(checked(wrapper, 2)).toEqual(["shadow"])
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(lastBody()).toMatchObject({ level_1_mode: "auto", level_2_mode: "shadow", expected_version: 5 })
+	})
+
+	it("an unassigned-customer 409 doesn't read the policy again", async () => {
+		putPolicy.mockRejectedValue(
+			Object.assign(new Error("refused"), {
+				isAxiosError: true,
+				response: {
+					status: 409,
+					data: {
+						success: false,
+						message: "No level can be raised: the Talon service user isn't assigned to this customer"
+					}
+				}
+			})
+		)
+		const wrapper = render()
+		await flushPromises()
+		await choose(wrapper, 2, "shadow")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(getPolicy).toHaveBeenCalledTimes(1)
+		expect(wrapper.find('[data-testid="automation-reread"]').exists()).toBe(false)
+	})
+
+	it("reload reads the policy again and drops the edit", async () => {
+		const wrapper = render()
+		await flushPromises()
+		await choose(wrapper, 2, "auto")
+		await wrapper.get('[data-testid="automation-reload"]').trigger("click")
+		await flushPromises()
+		expect(getPolicy).toHaveBeenCalledTimes(2)
+		expect(checked(wrapper, 2)).toEqual(["off"])
 	})
 })
