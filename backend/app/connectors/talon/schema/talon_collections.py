@@ -3,6 +3,10 @@
 
 The start body is strict (``extra="forbid"``). Its ``parameters`` are checked by the service, with
 fixed texts, never echoing a value: a validation error's answer would carry the value back.
+``alert_id`` and ``job_id`` (talon-analyst plan AP-2a) are optional for now: with ``alert_id``, the
+Talon service account's start is bound to CoPilot's own record of that alert
+(``services/talon_triggers.py``); ``job_id`` is recorded in the audit event, never trusted. Other
+callers' starts ignore both.
 """
 from datetime import datetime
 from typing import Any
@@ -28,6 +32,8 @@ class CollectStartBody(BaseModel):
                 "velociraptor_id": "C.0123456789abcdef",
                 "artifact_name": "Windows.System.Services",
                 "parameters": {"env": [{"key": "Calculate_hashes", "value": "N"}, {"key": "CertificateInfo", "value": "N"}]},
+                "alert_id": 1234,
+                "job_id": "copilot-inv-1234-1761048000000",
             },
         },
     )
@@ -36,6 +42,19 @@ class CollectStartBody(BaseModel):
     velociraptor_id: str = Field(..., min_length=1, max_length=64, description="The host's root-org Velociraptor client id")
     artifact_name: str = Field(..., min_length=1, max_length=256, description="The artifact to collect")
     parameters: Optional[Dict[str, Any]] = Field(None, description='{"env": [{"key": name, "value": text}]}, or none')
+    alert_id: Optional[int] = Field(
+        None,
+        ge=1,
+        le=2147483647,
+        description="The alert the investigation is about: the Talon service account's start is bound to CoPilot's record of it",
+    )
+    job_id: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=64,
+        pattern=r"^[A-Za-z0-9._:-]+$",
+        description="talon-analyst's job id, recorded in the audit event, never trusted",
+    )
 
 
 class CollectStartResponse(BaseModel):

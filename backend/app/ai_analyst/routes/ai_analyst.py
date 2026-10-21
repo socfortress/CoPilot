@@ -531,6 +531,7 @@ async def replay_report_route(
     report_id: int,
     request: ReplayRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> ReplayResponse:
     """
     Triggers Talon POST /investigate with template_override. The new run will
@@ -557,6 +558,7 @@ async def replay_report_route(
         customer_code=request.customer_code,
         template_override=request.template_override,
         sender=request.sender,
+        user=current_user,
     )
     return ReplayResponse(
         success=True,

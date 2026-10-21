@@ -23,12 +23,20 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
 4. in a fresh transaction, the host's ``agents`` rows locked and checked as for an approved Talon
    action (``talon_action_execution.lock_and_check_host``): exactly one row with the host name,
    carrying the body's client id, in the root org, no other row claiming that client (409);
-5. ``/collect``'s shared start function (``routes.artifacts.start_collection_as``), under the locks:
+5. for the service account when the body names ``alert_id`` (talon-analyst plan AP-2a), the binding
+   to CoPilot's own record of what it sent Talon (``talon_triggers``; the alert's records locked
+   before the host): the alert's newest record sent within 2 hours, from the alert pipeline or an
+   analyst (never the customer portal or a replay), the host one of the alert's assets as they were
+   when it was sent and of the alert's customer, and the per-alert cap (403, 429 over the cap).
+   Without ``alert_id`` the start is as before, until talon-analyst's AP-1 sends it everywhere;
+   everyone else's ``alert_id`` and ``job_id`` are ignored;
+6. ``/collect``'s shared start function (``routes.artifacts.start_collection_as``), under the locks:
    the caller's access to every row of the host, the host's artifact list (400), the analyst policy
    (for the service account: the auto-run allowlist instead, plus
    ``collection_policy.enforce_auto_run_definitions``: built-in definitions, no tools, imports or
    elevated permissions, for the artifact and its dependencies), the parameter names, the ``ARTIFACT_COLLECT`` audit event once
-   with the caller as the actor, and EA-1's parameterized start with the resource limits
+   with the caller as the actor (bound to an alert, its ``new_value`` also names the alert, the job id
+   as sent, and the trigger: its id, source and user), and EA-1's parameterized start with the resource limits
    (``collect_start_limits``) as ``collect_client`` arguments. No wait, no MinIO upload, no rows.
 
 The answer is ``{success, message, flow_id, client_id, artifact}``; ``flow_id`` only in
@@ -64,6 +72,7 @@ from app.connectors.talon.schema.talon_collections import (
     TalonCollectionSettingsResponse,
 )
 from app.connectors.talon.services import talon_action_execution as execution
+from app.connectors.talon.services import talon_triggers
 from app.connectors.talon.services.talon_service_account import DEFAULT_SERVICE_USERNAME
 from app.connectors.talon.services.talon_service_account import effective_username
 from app.connectors.talon.services.talon_service_account import is_service_account
@@ -242,14 +251,22 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
     # start function's own reads then see the rows as they were locked).
     await session.rollback()
     try:
+        # The service account's start bound to an alert: the alert's trigger records locked first,
+        # then the host, and only then a plain read (the binding's checks and the start's own).
+        bound_to = body.alert_id if service else None
+        triggers = await talon_triggers.lock_triggers(session, bound_to) if bound_to is not None else None
         try:
-            await execution.lock_and_check_host(session, hostname, client)
+            agent = await execution.lock_and_check_host(session, hostname, client)
         except execution.RecheckFailed as e:
             raise HTTPException(status_code=409, detail=f"not started: {e}") from None
+        binding = None
+        if bound_to is not None:
+            binding = await talon_triggers.check(session, triggers, bound_to, hostname, client, agent.customer_code)
         # Every value logged here is validated: the host is the agents row's, the client canonical,
-        # the artifact a name. Never the parameters: their names are logged by the parameter check,
-        # their values nowhere.
-        logger.info(f"Collection start: {artifact} on {hostname} ({client}) for user {getattr(user, 'username', '?')}")
+        # the artifact a name, the alert an integer. Never the parameters: their names are logged by
+        # the parameter check, their values nowhere.
+        bound = f", bound to alert {binding.alert_id} ({binding.source})" if binding else ""
+        logger.info(f"Collection start: {artifact} on {hostname} ({client}) for user {getattr(user, 'username', '?')}{bound}")
         collect_body = CollectArtifactBody(
             hostname=hostname,
             artifact_name=artifact,
@@ -267,6 +284,7 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
                 require_built_in=service,
                 analyst_policy=not service,
                 limits=collect_start_limits(),
+                audit_values=binding.audit_values(body.job_id) if binding else None,
             )
         except HTTPException as e:
             if e.status_code >= 500:

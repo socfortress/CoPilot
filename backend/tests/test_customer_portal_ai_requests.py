@@ -186,7 +186,7 @@ def test_the_request_is_recorded_before_talon_is_called():
     order = []
     session = _Session()
     session.commit = AsyncMock(side_effect=lambda: order.append("commit"))
-    talon = AsyncMock(side_effect=lambda *_: order.append("talon"))
+    talon = AsyncMock(side_effect=lambda *_, **__: order.append("talon"))
     alert = SimpleNamespace(id=5, customer_code="ACME")
     with patch.object(svc, "ensure_alert_visible", AsyncMock(return_value=alert)), patch.object(
         svc,
@@ -361,7 +361,7 @@ def test_the_ingest_trigger_hands_talon_off_instead_of_waiting():
     async def scenario():
         release = asyncio.Event()
 
-        async def slow_talon(*_):
+        async def slow_talon(*_, **__):
             await release.wait()
 
         with patch.object(ingest, "get_customer_ai_trigger", AsyncMock(return_value=[SimpleNamespace(enabled=True)])), patch.object(

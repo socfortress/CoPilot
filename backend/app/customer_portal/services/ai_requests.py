@@ -38,6 +38,7 @@ from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.services.talon import investigate_alert
+from app.connectors.talon.services.talon_triggers import PORTAL as PORTAL_TRIGGER
 from app.customer_portal.services.ai_reports import count_recent_requests
 from app.customer_portal.services.ai_reports import ensure_alert_visible
 from app.customer_portal.services.ai_reports import requests_allowed
@@ -151,7 +152,11 @@ async def request_alert_analysis(alert_id: int, user: User, session: AsyncSessio
     await session.refresh(request)
 
     try:
-        await investigate_alert(TalonInvestigateRequest(alert_id=alert_id, customer_code=customer_code, sender=PORTAL_SENDER))
+        await investigate_alert(
+            TalonInvestigateRequest(alert_id=alert_id, customer_code=customer_code, sender=PORTAL_SENDER),
+            source=PORTAL_TRIGGER,
+            user=user,
+        )
     except Exception as e:  # noqa: BLE001 - Talon's error text is SOC plumbing, never shown to the customer
         logger.error(f"Talon refused the portal request for alert {alert_id} ({customer_code}): {e}")
         await session.execute(delete(CustomerPortalAiRequest).where(CustomerPortalAiRequest.id == request.id))

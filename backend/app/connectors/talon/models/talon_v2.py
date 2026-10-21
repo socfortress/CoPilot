@@ -1,5 +1,6 @@
-"""The "Talon v2" setting (talon-analyst SPEC §5.3, D54; plan M5-5a, decision a), and the mirror of
-talon-analyst's action proposals (``talon_action_request``, plan M5-11a).
+"""The "Talon v2" setting (talon-analyst SPEC §5.3, D54; plan M5-5a, decision a), the mirror of
+talon-analyst's action proposals (``talon_action_request``, plan M5-11a), and CoPilot's own record of
+every alert it sends to Talon (``talon_investigation_trigger``, talon-analyst plan AP-2a).
 
 One row per Talon connector, keyed by the connector's name, so a second connector (the pilot's
 "Talon Next", D53) gets a row of its own. A missing row reads as off: every declared v2 proxy route answers 404
@@ -16,6 +17,7 @@ from typing import Optional
 
 from sqlalchemy import JSON
 from sqlalchemy import Column
+from sqlalchemy import Index
 from sqlalchemy import Text
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -139,3 +141,38 @@ class TalonActionRequest(SQLModel, table=True):
     synced_at: datetime = Field(default_factory=now_utc, nullable=False)
     created_at: datetime = Field(default_factory=now_utc, nullable=False)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)
+
+
+# ── what CoPilot sent to Talon (talon-analyst plan AP-2a; SPEC D85 (l), D86 (j)) ──────────────────
+
+#: Who sent an alert to Talon, set by the calling code path (never parsed from ``sender``):
+#: CoPilot's alert pipeline, an analyst's "Investigate with AI Analyst", the customer portal
+#: (#1215), or a report replay. Only the first two may lead to an automated endpoint action.
+TRIGGER_SOURCES = ("pipeline", "analyst", "portal", "replay")
+#: The sources an automated collection may be bound to; a portal request or a replay never is.
+AUTOMATION_SOURCES = frozenset({"pipeline", "analyst"})
+
+
+class TalonInvestigationTrigger(SQLModel, table=True):
+    """One row per ``POST /investigate`` CoPilot sends to Talon, written by CoPilot itself before the
+    call (``services/talon_triggers.py``). It is what binds the Talon service account's automated
+    collections to an alert (``/api/artifacts/collect/start``): never ``ai_analyst_job`` or its
+    ``triggered_by``, which talon-analyst writes. ``customer_code`` is the alert's, not a foreign key
+    (the record outlives the customer, like ``audit_log``)."""
+
+    __tablename__ = "talon_investigation_trigger"
+    __table_args__ = (Index("ix_talon_investigation_trigger_alert_id_sent_at", "alert_id", "sent_at"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    alert_id: int = Field(nullable=False)
+    customer_code: str = Field(max_length=64, nullable=False)
+    #: One of ``TRIGGER_SOURCES``; ``replay`` marks a replay.
+    source: str = Field(max_length=16, nullable=False)
+    #: The CoPilot user who asked (an analyst, a portal user, whoever replayed); null for the pipeline.
+    user_id: Optional[int] = Field(default=None, nullable=True)
+    username: Optional[str] = Field(default=None, max_length=256, nullable=True)
+    #: The alert's assets when it was sent, ``[{"asset_name", "velociraptor_id"}]``: the only hosts an
+    #: automated collection bound to this record may target (an asset added later, by anyone, isn't).
+    assets: List[Dict[str, Optional[str]]] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    #: Naive UTC, as the ``DATETIME`` columns hold.
+    sent_at: datetime = Field(nullable=False)

@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -354,6 +356,7 @@ async def start_collection_as(
     require_built_in: bool = False,
     analyst_policy: bool = True,
     limits: Optional[FlowLimits] = None,
+    audit_values: Optional[Dict[str, Any]] = None,
 ) -> StartedFlow:
     """``/collect``'s checks and its ``ARTIFACT_COLLECT`` audit event, once, then the collection
     started without waiting: the flow id back. The route waits for it and reads its results after
@@ -375,7 +378,9 @@ async def start_collection_as(
     ``enforce_auto_run_definitions``; pass `require_built_in` with it. With the analyst policy (every
     other caller: ``/collect``, an approved Talon collection) the Talon service account is refused,
     whatever its role, so its allowlist can't be stepped around (``talon_service_account``).
-    `limits`: the flow's resource limits on the endpoint (``FlowLimits``).
+    `limits`: the flow's resource limits on the endpoint (``FlowLimits``). `audit_values`: more
+    validated values for the audit event's ``new_value`` (a bound Talon start's alert and trigger,
+    ``talon_triggers.Binding``).
     """
     if not analyst_policy and not require_built_in:
         raise ValueError("the analyst artifact policy is only replaced together with require_built_in")
@@ -430,7 +435,11 @@ async def start_collection_as(
         actor_username=current_user.username,
         entity_type="agent",
         entity_id=collect_artifact_body.hostname,
-        new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
+        new_value={
+            "artifact_name": collect_artifact_body.artifact_name,
+            "velociraptor_id": collect_artifact_body.velociraptor_id,
+            **(audit_values or {}),
+        },
         request=request,
     )
     flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values, limits=limits)
