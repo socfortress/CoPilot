@@ -13,13 +13,14 @@
 				testid="exposure-severity"
 			/>
 
-			<div class="flex flex-wrap items-center gap-2">
+			<!-- Narrow: the search on a row of its own, the totals and the export below it. -->
+			<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 @xl:flex @xl:flex-wrap">
 				<n-input
 					v-model:value="searchInput"
 					size="small"
 					clearable
 					placeholder="Search a CVE id or a package"
-					class="min-w-0 flex-1 @2xl:max-w-80!"
+					class="col-span-2 min-w-0 @xl:flex-1 @2xl:max-w-80!"
 					:maxlength="100"
 					data-testid="exposure-search"
 				>
@@ -27,7 +28,8 @@
 				</n-input>
 				<span
 					v-if="data && !data.error"
-					class="text-tertiary font-mono text-xs whitespace-nowrap tabular-nums"
+					class="text-tertiary min-w-0 truncate font-mono text-xs tabular-nums"
+					:title="totalsLine(data.totals)"
 					data-testid="exposure-totals"
 				>
 					{{ totalsLine(data.totals) }}
@@ -35,7 +37,7 @@
 				<n-button
 					size="small"
 					secondary
-					class="ml-auto! shrink-0"
+					class="col-start-2 shrink-0 justify-self-end @xl:ml-auto!"
 					:loading="exporting"
 					:disabled="!data?.totals.findings"
 					data-testid="exposure-export"
@@ -91,18 +93,23 @@
 						v-for="row of data.cves"
 						:key="row.cve_id"
 						type="button"
-						class="group hover:bg-secondary/50 focus-visible:outline-primary grid w-full cursor-pointer items-center gap-x-3 gap-y-1.5 px-4 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 @3xl:gap-x-4 @3xl:gap-y-0"
+						class="group hover:bg-secondary/50 focus-visible:outline-primary grid w-full cursor-pointer items-start gap-x-3 gap-y-1.5 px-4 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 @3xl:gap-x-4 @3xl:gap-y-0"
 						:class="COLUMNS_ROW"
 						:data-cve="row.cve_id"
 						data-testid="exposure-cve-row"
 						@click="openCve(row.cve_id)"
 					>
-						<span class="[grid-area:sev]">
+						<!-- Everything sits on the CVE id's line: the chip, the figures and the chevron. -->
+						<span class="flex h-5 items-center [grid-area:sev]">
 							<span :class="[CHIP, severityClasses(row.severity)]">{{ row.severity ?? "unknown" }}</span>
 						</span>
 						<span class="flex min-w-0 flex-col gap-0.5 leading-tight [grid-area:vuln]">
 							<span class="text-default truncate font-mono text-sm">{{ row.cve_id }}</span>
-							<span v-if="row.packages.length" class="text-secondary truncate text-xs" :title="row.packages.join(', ')">
+							<span
+								v-if="row.packages.length"
+								class="text-secondary truncate text-xs"
+								:title="row.packages.join(', ')"
+							>
 								<bdi>{{ row.packages.join(", ") }}</bdi>
 							</span>
 						</span>
@@ -110,7 +117,10 @@
 							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">agents</span>
 							{{ row.hosts.toLocaleString() }}
 						</span>
-						<span class="text-right font-mono text-sm tabular-nums [grid-area:cvss]" :class="cvssClass(row.cvss)">
+						<span
+							class="text-right font-mono text-sm tabular-nums [grid-area:cvss]"
+							:class="cvssClass(row.cvss)"
+						>
 							<span class="text-tertiary mr-1 text-xs font-normal uppercase @3xl:hidden">cvss</span>
 							{{ formatCvss(row.cvss) }}
 						</span>
@@ -118,13 +128,15 @@
 							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">epss</span>
 							{{ formatEpss(row.epss) }}
 						</span>
-						<span class="text-secondary hidden text-xs whitespace-nowrap [grid-area:seen] @3xl:block">
+						<span
+							class="text-secondary hidden text-xs leading-5 whitespace-nowrap [grid-area:seen] @3xl:block"
+						>
 							{{ row.first_detected ? formatDate(row.first_detected, dFormats.date, { tz: true }) : "—" }}
 						</span>
 						<Icon
 							name="carbon:chevron-right"
 							:size="14"
-							class="text-tertiary group-hover:text-default justify-self-end [grid-area:chev]"
+							class="text-tertiary group-hover:text-default mt-[3px] justify-self-end [grid-area:chev]"
 						/>
 					</button>
 				</div>
@@ -272,7 +284,10 @@ async function exportCsv() {
 	exporting.value = true
 	try {
 		const { severity, search } = state.value
-		const response = await Api.exposure.exportVulnerabilities({ severity, search }, customerFilterStore.queryCustomerCodes)
+		const response = await Api.exposure.exportVulnerabilities(
+			{ severity, search },
+			customerFilterStore.queryCustomerCodes
+		)
 		saveAs(response.data, exportFilename({ severity, search }))
 		if (response.headers?.["x-export-truncated"] === "true") {
 			message.warning("The CSV holds the first 100,000 findings: narrow the severity or the search for the rest.")
