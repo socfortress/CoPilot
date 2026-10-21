@@ -176,3 +176,20 @@ class TalonInvestigationTrigger(SQLModel, table=True):
     assets: List[Dict[str, Optional[str]]] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
     #: Naive UTC, as the ``DATETIME`` columns hold.
     sent_at: datetime = Field(nullable=False)
+
+
+class TalonAutomationAlertCap(SQLModel, table=True):
+    """The per-alert cap on the Talon service account's bound collections (talon-analyst plan AP-2a;
+    ``services/talon_triggers.py:reserve``): one row per alert, its window and the starts in it.
+    A start takes a slot with one guarded ``UPDATE`` (only while ``starts`` is under the cap, or the
+    window has passed), committed before the flow starts; no slot, no start. Never the audit log,
+    whose writes are best-effort. AP-2's ``talon_automation_start`` keeps the per-start detail."""
+
+    __tablename__ = "talon_automation_alert_cap"
+
+    alert_id: int = Field(primary_key=True, sa_column_kwargs={"autoincrement": False})
+    customer_code: str = Field(max_length=64, nullable=False)
+    #: Before ``window_started_at`` in the table, so MySQL's left-to-right ``SET`` reads the old window.
+    starts: int = Field(default=0, nullable=False)
+    #: Naive UTC: the first start of the current window.
+    window_started_at: datetime = Field(nullable=False)

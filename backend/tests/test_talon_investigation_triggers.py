@@ -2,8 +2,7 @@
 automated collections to it (talon-analyst plan AP-2a; ``services/talon_triggers.py``).
 
 The harness is ``test_talon_collect_start``'s (real routers, a real in-memory database), with the
-trigger and audit tables added. The ``ARTIFACT_COLLECT`` audit event, mocked there, is written to
-the test database here, since the per-alert cap counts those rows.
+trigger and cap tables added.
 
 Pinned here:
 - every sender writes a record before the call, with its kind and user: the alert pipeline, an
@@ -13,12 +12,14 @@ Pinned here:
 - the service account's start with ``alert_id`` is refused with no record, a portal or replay
   record (also when newer than a pipeline one), an expired window, another host (an asset added
   after the send included), an asset's other client, another customer's host, and over the
-  per-alert cap (a new job doesn't reset it); each refusal a fixed text, starting nothing;
+  per-alert cap (a new job doesn't reset it; the audit write failing doesn't loosen it; two
+  concurrent starts at the cap minus one start one flow; a slot that can't be recorded is no
+  start); each refusal a fixed text, starting nothing;
 - it is accepted with a pipeline or an analyst record (a re-trigger reopens the window), and its
   audit event names the alert, the job and the trigger;
 - ``alert_id`` and ``job_id`` are no longer a 422; other users, and the service account without
   ``alert_id``, are unchanged;
-- the migration has a single head (``test_alembic_single_head``), its table is the model's.
+- the migration has a single head (``test_alembic_single_head``), its tables are the models'.
 
 Run with: cd backend && python -m pytest tests/test_talon_investigation_triggers.py
 """
@@ -47,7 +48,7 @@ import tests.test_talon_actions as harness  # noqa: E402
 from app.ai_analyst.routes import ai_analyst as ai_analyst_routes  # noqa: E402
 from app.ai_analyst.schema.ai_analyst import ReplayRequest  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
-from app.audit.models.audit import AuditLog  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
 from app.connectors.talon.services import talon_triggers  # noqa: E402
@@ -81,7 +82,7 @@ JOB = "copilot-inv-1-1761048000000"
 class _Db(harness._Db):
     async def create(self):
         await super().create()
-        tables = [TalonInvestigationTrigger.__table__, AuditLog.__table__, CustomerPortalAiRequest.__table__]
+        tables = [TalonInvestigationTrigger.__table__, TalonAutomationAlertCap.__table__, CustomerPortalAiRequest.__table__]
         async with self.engine.begin() as conn:
             await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
         return self
@@ -134,31 +135,11 @@ async def triggers(ctx):
         return (await session.execute(select(TalonInvestigationTrigger).order_by(TalonInvestigationTrigger.id))).scalars().all()
 
 
-def audit_into(ctx):
-    """``record_audit_event`` writing its row to the test database, as the real one does."""
-
-    async def write(**kwargs):
-        async with ctx.db.session() as session:
-            session.add(
-                AuditLog(
-                    action=kwargs["action"].value,
-                    actor_user_id=kwargs.get("actor_user_id"),
-                    actor_username=kwargs.get("actor_username"),
-                    entity_type=kwargs.get("entity_type"),
-                    entity_id=str(kwargs.get("entity_id")),
-                    new_value=kwargs.get("new_value"),
-                ),
-            )
-            await session.commit()
-
-    return write
-
-
 def collect_audits(ctx):
     return [c.kwargs for c in ctx.quarantine_audit.await_args_list if c.kwargs["action"] == AuditAction.ARTIFACT_COLLECT]
 
 
-def scenario_for(name, payloads, setup=None):
+def scenario_for(name, payloads, setup=None, concurrent=False):
     """Configure the allowlist, seed with ``setup(ctx)`` (which may return the payloads, given the
     seeded alert ids), then post each payload as ``name``."""
 
@@ -166,11 +147,13 @@ def scenario_for(name, payloads, setup=None):
         with ExitStack() as stack:
             vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
             stack.enter_context(patch.object(talon_triggers, "new_session", ctx.db.session))
-            ctx.quarantine_audit.side_effect = audit_into(ctx)
             await configure(ctx)
             await add_asset(ctx, ctx.alert_id)
             sent = (await setup(ctx) if setup is not None else None) or payloads(ctx)
-            responses = [await client.post(ROUTE, json=p, headers=as_user(name)) for p in sent]
+            if concurrent:
+                responses = list(await asyncio.gather(*(client.post(ROUTE, json=p, headers=as_user(name)) for p in sent)))
+            else:
+                responses = [await client.post(ROUTE, json=p, headers=as_user(name)) for p in sent]
         return responses, vr, ctx
 
     return scenario
@@ -184,8 +167,8 @@ def with_triggers(*specs):
     return setup
 
 
-def start(name, payloads, setup=None):
-    return call(scenario_for(name, payloads, setup))
+def start(name, payloads, setup=None, concurrent=False):
+    return call(scenario_for(name, payloads, setup, concurrent))
 
 
 # ── every sender writes a record ──────────────────────────────────────────────
@@ -486,20 +469,126 @@ def test_the_per_alert_cap_counts_every_job_together():
     assert len(vr.starts) == talon_triggers.PER_ALERT_CAP == len(collect_audits(ctx))
 
 
-def test_the_cap_counts_only_this_alerts_starts_in_the_window():
+async def set_cap(ctx, alert_id, starts, ago=timedelta(minutes=10)):
+    async with ctx.db.session() as session:
+        session.add(
+            TalonAutomationAlertCap(alert_id=alert_id, customer_code=ACME, starts=starts, window_started_at=talon_triggers.utcnow() - ago),
+        )
+        await session.commit()
+
+
+async def cap_of(ctx, alert_id):
+    async with ctx.db.session() as session:
+        return await session.get(TalonAutomationAlertCap, alert_id)
+
+
+def test_the_cap_holds_when_the_audit_write_fails():
+    """The audit write is best-effort (``record_audit_event`` logs and swallows its failures): the
+    cap never reads it."""
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from app.audit.services import audit as audit_service
+
     async def setup(ctx):
         await add_trigger(ctx, ctx.alert_id, "pipeline")
-        async with ctx.db.session() as session:
-            old = talon_triggers.utcnow() - talon_triggers.WINDOW - timedelta(minutes=1)
-            for alert_id, moment in ((ctx.alert_id, old), (ctx.alert_id, old), (ctx.alert_id + 100, None), (ctx.alert_id + 100, None)):
-                row = AuditLog(action=AuditAction.ARTIFACT_COLLECT.value, new_value={"alert_id": alert_id})
-                if moment is not None:
-                    row.timestamp = moment
-                session.add(row)
-            await session.commit()
+        ctx.quarantine_audit.side_effect = audit_service.record_audit_event  # the real one
+
+    broken = create_async_engine("sqlite+aiosqlite:////nonexistent-dir/audit.db")
+    jobs = ["copilot-inv-1-1", "copilot-inv-1-2", "copilot-inv-1-3"]
+    with patch.object(audit_service, "async_engine", broken):
+        responses, vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id, job) for job in jobs], setup)
+    assert [r.status_code for r in responses] == [200, 200, 429] and len(vr.starts) == talon_triggers.PER_ALERT_CAP
+
+
+def test_two_concurrent_starts_at_the_cap_minus_one_start_at_most_one_flow():
+    async def setup(ctx):
+        await add_trigger(ctx, ctx.alert_id, "pipeline")
+        await set_cap(ctx, ctx.alert_id, talon_triggers.PER_ALERT_CAP - 1)
+
+    responses, vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id, f"copilot-inv-1-{n}") for n in (1, 2)], setup, True)
+    assert sorted(r.status_code for r in responses) == [200, 429] and len(vr.starts) == 1
+
+
+def test_concurrent_reservations_on_separate_connections_take_exactly_the_cap(tmp_path):
+    """``reserve`` alone, many at once, each in its own connection to one database file: exactly
+    ``PER_ALERT_CAP`` slots are taken, the rest refused (the row created once, by whichever wins)."""
+    from sqlalchemy.ext.asyncio import AsyncSession as Session
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    async def run():
+        engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'cap.db'}", connect_args={"timeout": 30})
+        async with engine.begin() as conn:
+            await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=[TalonAutomationAlertCap.__table__]))
+        factory = async_sessionmaker(engine, class_=Session, expire_on_commit=False)
+        binding = talon_triggers.Binding(alert_id=7, customer_code=ACME, trigger_id=1, source="pipeline", user_id=None, username=None)
+
+        async def one():
+            try:
+                await talon_triggers.reserve(binding)
+                return 200
+            except HTTPException as e:
+                return e.status_code
+
+        try:
+            with patch.object(talon_triggers, "new_session", factory):
+                outcomes = await asyncio.gather(*(one() for _ in range(6)))
+                async with factory() as session:
+                    row = await session.get(TalonAutomationAlertCap, 7)
+            return outcomes, row
+        finally:
+            await engine.dispose()
+
+    outcomes, row = asyncio.run(run())
+    assert sorted(outcomes) == [200] * talon_triggers.PER_ALERT_CAP + [429] * (6 - talon_triggers.PER_ALERT_CAP)
+    assert row.starts == talon_triggers.PER_ALERT_CAP
+
+
+def test_a_passed_window_starts_a_new_one():
+    async def setup(ctx):
+        await add_trigger(ctx, ctx.alert_id, "pipeline")
+        await set_cap(ctx, ctx.alert_id, talon_triggers.PER_ALERT_CAP, ago=talon_triggers.WINDOW + timedelta(minutes=1))
 
     (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
     assert response.status_code == 200
+
+
+def test_the_cap_is_per_alert():
+    async def setup(ctx):
+        await add_trigger(ctx, ctx.alert_id, "pipeline")
+        await set_cap(ctx, ctx.alert_id + 100, talon_triggers.PER_ALERT_CAP)
+
+    (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
+    assert response.status_code == 200
+
+
+def test_a_slot_that_cant_be_recorded_is_no_start():
+    async def broken(*args, **kwargs):
+        raise RuntimeError("database down")
+
+    with patch.object(talon_triggers, "_take_slot", broken):
+        (response,), vr, ctx = start(
+            SERVICE,
+            lambda ctx: [bound(SERVICES, ctx.alert_id)],
+            with_triggers(("pipeline", timedelta(minutes=5))),
+        )
+    refused(response, vr, ctx, 500, talon_triggers.CAP_UNRECORDED)
+
+
+def test_a_refused_binding_takes_no_slot():
+    async def check(ctx):
+        return await cap_of(ctx, ctx.alert_id)
+
+    async def scenario(client, ctx):
+        responses, vr, _ = await scenario_for(
+            SERVICE,
+            lambda ctx: [bound(SERVICES, ctx.alert_id)],
+            with_triggers(("portal", timedelta(minutes=1))),
+        )(client, ctx)
+        return responses, await check(ctx)
+
+    (response,), row = call(scenario)
+    assert response.status_code == 403 and row is None
 
 
 # ── the body, and everyone else ───────────────────────────────────────────────
@@ -545,6 +634,8 @@ def test_the_migration_creates_the_models_table_on_the_single_head():
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
     assert migration.down_revision == "f1289a0b1c2d" and migration.TABLE == TalonInvestigationTrigger.__tablename__
+    assert migration.CAP_TABLE == TalonAutomationAlertCap.__tablename__
+    assert [c.name for c in TalonAutomationAlertCap.__table__.columns] == ["alert_id", "customer_code", "starts", "window_started_at"]
     table = TalonInvestigationTrigger.__table__
     assert {c.name for c in table.columns} == {"id", "alert_id", "customer_code", "source", "user_id", "username", "assets", "sent_at"}
     assert {i.name for i in table.indexes} == {migration.INDEX}

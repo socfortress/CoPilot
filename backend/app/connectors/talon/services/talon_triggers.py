@@ -18,21 +18,21 @@ If the row can't be written, a ``portal`` or ``replay`` send is refused (a missi
 older pipeline or analyst row as the alert's newest, and with it an automation window), while a
 ``pipeline`` or ``analyst`` send goes ahead: without its row, nothing can be bound to it.
 
-**The binding** (``lock_triggers`` then ``check``, called by ``/api/artifacts/collect/start`` for the
-Talon service account when the body names ``alert_id``), all in the start's own transaction, around
-the host's lock:
+**The binding** (``check``, then ``reserve``, called by ``/api/artifacts/collect/start`` for the Talon
+service account when the body names ``alert_id``, once the host's ``agents`` row is locked):
 
 1. the alert exists, and its newest row for the alert's customer was sent within ``WINDOW``;
 2. that row's source is ``pipeline`` or ``analyst`` (a portal request or a replay is refused);
 3. the host is one of the alert's assets in that row (by name, as ``agents`` matches it, and with the
    asset's Velociraptor client, when it has one), and its locked ``agents`` row is the alert's
    customer's;
-4. fewer than ``PER_ALERT_CAP`` collections bound to the alert started in the last ``WINDOW``, all
-   jobs together (a new ``ai_analyst_job`` never resets it), counted from the ``ARTIFACT_COLLECT``
-   audit rows whose ``new_value`` names the alert, until AP-2's ``talon_automation_start`` exists.
+4. a slot under ``PER_ALERT_CAP`` for the alert's current ``WINDOW``, every job together (a new
+   ``ai_analyst_job`` never resets it), taken from ``talon_automation_alert_cap`` by one guarded
+   ``UPDATE`` and committed before the flow starts; a slot that can't be recorded is no start. Never
+   counted from the audit log, whose writes are best-effort. The window starts at the alert's first
+   bound start and lasts ``WINDOW``.
 
-The alert's rows are locked for the start's transaction (``FOR UPDATE``, before the host's), so two
-starts for one alert are counted one after the other. Every refusal is a fixed text with no part of the request.
+Every refusal is a fixed text with no part of the request.
 """
 from dataclasses import dataclass
 from datetime import datetime
@@ -44,14 +44,16 @@ from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import case
+from sqlalchemy import or_
 from sqlalchemy import select
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.audit.models.audit import AuditAction
-from app.audit.models.audit import AuditLog
 from app.connectors.talon.models.talon_v2 import AUTOMATION_SOURCES
 from app.connectors.talon.models.talon_v2 import TRIGGER_SOURCES
+from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger
 from app.db.db_session import AsyncSessionLocal
 from app.incidents.models import Alert
@@ -71,6 +73,7 @@ PORTAL_TRIGGER = "not started: this alert was last sent to Talon from the custom
 REPLAY_TRIGGER = "not started: this alert was last sent to Talon as a replay, which never leads to an automated action"
 NOT_ALERT_HOST = "not started: the host is not one of the alert's assets"
 ALERT_CAP = "not started: this alert has reached its cap of automated collections"
+CAP_UNRECORDED = "not started: CoPilot could not record the start against this alert's cap"
 NOT_RECORDED = "CoPilot could not record the investigation request, so it was not sent"
 
 _REFUSED_SOURCE = {PORTAL: PORTAL_TRIGGER, REPLAY: REPLAY_TRIGGER}
@@ -173,60 +176,27 @@ def _host_is_an_asset(assets: Any, hostname: str, client: str) -> bool:
     return False
 
 
-async def started_for_alert(session: AsyncSession, alert_id: int, since: datetime) -> int:
-    """Collections bound to the alert since ``since``: its ``ARTIFACT_COLLECT`` audit rows (only a
-    bound start writes ``alert_id`` into one)."""
-    return (
-        await session.execute(
-            select(func.count())
-            .select_from(AuditLog)
-            .where(
-                AuditLog.action == AuditAction.ARTIFACT_COLLECT.value,
-                AuditLog.timestamp >= since,
-                AuditLog.new_value["alert_id"].as_integer() == alert_id,
-            ),
-        )
-    ).scalar_one()
-
-
-async def lock_triggers(session: AsyncSession, alert_id: int) -> List[TalonInvestigationTrigger]:
-    """The alert's records, newest first, locked for ``session``'s transaction (``FOR UPDATE``): a
-    second start for the alert waits here until the first's transaction ends. Call it first in the
-    transaction, before the host's lock: under REPEATABLE READ the snapshot is taken by the first
-    plain read, which must come after every lock, so that ``check`` counts the audit rows of a start
-    that held these locks before us and the start function sees the host as it was locked."""
-    return list(
-        (
-            await session.execute(
-                select(TalonInvestigationTrigger)
-                .where(TalonInvestigationTrigger.alert_id == alert_id)
-                .order_by(TalonInvestigationTrigger.sent_at.desc(), TalonInvestigationTrigger.id.desc())
-                .with_for_update(),
-            )
-        )
-        .scalars()
-        .all(),
-    )
-
-
-async def check(
-    session: AsyncSession,
-    rows: List[TalonInvestigationTrigger],
-    alert_id: int,
-    hostname: str,
-    client: str,
-    host_customer: Optional[str],
-) -> Binding:
-    """The binding (module docstring) from the alert's locked records (``lock_triggers``), once the
-    host's ``agents`` row (of ``host_customer``) is locked too. ``hostname`` is validated and
-    ``client`` canonical. A fixed 403 (429 over the cap) otherwise."""
+async def check(session: AsyncSession, alert_id: int, hostname: str, client: str, host_customer: Optional[str]) -> Binding:
+    """Checks 1-3 of the binding (module docstring), in ``session``'s transaction once the host's
+    ``agents`` row (of ``host_customer``) is locked: its plain reads come after the lock, so the
+    start function sees the host as it was locked. ``hostname`` is validated and ``client``
+    canonical. A fixed 403 otherwise; the cap is ``reserve``'s."""
     customer_code = (await session.execute(select(Alert.customer_code).where(Alert.id == alert_id))).scalars().first()
     if customer_code is None:
         logger.warning(f"Refused a bound collection start for alert {alert_id}: no such alert")
         raise HTTPException(status_code=403, detail=NO_TRIGGER)
-    since = utcnow() - WINDOW
-    newest = next((row for row in rows if row.customer_code == customer_code), None)
-    if newest is None or newest.sent_at < since:
+    newest = (
+        (
+            await session.execute(
+                select(TalonInvestigationTrigger)
+                .where(TalonInvestigationTrigger.alert_id == alert_id, TalonInvestigationTrigger.customer_code == customer_code)
+                .order_by(TalonInvestigationTrigger.sent_at.desc(), TalonInvestigationTrigger.id.desc()),
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if newest is None or newest.sent_at < utcnow() - WINDOW:
         logger.warning(f"Refused a bound collection start for alert {alert_id}: CoPilot sent it no investigation in the window")
         raise HTTPException(status_code=403, detail=NO_TRIGGER)
     if newest.source not in AUTOMATION_SOURCES:
@@ -235,9 +205,6 @@ async def check(
     if host_customer != customer_code or not _host_is_an_asset(newest.assets, hostname, client):
         logger.warning(f"Refused a bound collection start for alert {alert_id}: {hostname} ({client}) is not one of its assets")
         raise HTTPException(status_code=403, detail=NOT_ALERT_HOST)
-    if await started_for_alert(session, alert_id, since) >= PER_ALERT_CAP:
-        logger.warning(f"Refused a bound collection start for alert {alert_id}: the per-alert cap ({PER_ALERT_CAP}) is reached")
-        raise HTTPException(status_code=429, detail=ALERT_CAP)
     return Binding(
         alert_id=alert_id,
         customer_code=customer_code,
@@ -246,3 +213,59 @@ async def check(
         user_id=newest.user_id,
         username=newest.username,
     )
+
+
+async def _take_slot(session: AsyncSession, alert_id: int, customer_code: str, now: datetime) -> bool:
+    """One guarded UPDATE: a slot while the window holds fewer than the cap, or a new window once it
+    has passed. Atomic on its own, so two starts at the cap minus one can't both take the last slot."""
+    expired = TalonAutomationAlertCap.window_started_at < now - WINDOW
+    result = await session.execute(
+        update(TalonAutomationAlertCap).where(
+            TalonAutomationAlertCap.alert_id == alert_id,
+            or_(expired, TalonAutomationAlertCap.starts < PER_ALERT_CAP),
+        )
+        # ``starts`` first: MySQL assigns left to right, so it must read the old window.
+        .ordered_values(
+            (TalonAutomationAlertCap.starts, case((expired, 1), else_=TalonAutomationAlertCap.starts + 1)),
+            (TalonAutomationAlertCap.window_started_at, case((expired, now), else_=TalonAutomationAlertCap.window_started_at)),
+        ),
+    )
+    return result.rowcount == 1
+
+
+async def reserve(binding: Binding) -> None:
+    """Check 4: take one of the alert's ``PER_ALERT_CAP`` slots for this ``WINDOW``, every job
+    together (a new ``ai_analyst_job`` never resets it), in a session of its own, committed before
+    the flow starts. Over the cap, a fixed 429; if the slot can't be recorded, a fixed 500 and no
+    start. A slot is spent once taken, whether the start then succeeds or not."""
+    try:
+        async with new_session() as session:
+            for _ in range(2):
+                now = utcnow()
+                if await _take_slot(session, binding.alert_id, binding.customer_code, now):
+                    await session.commit()
+                    return
+                if await session.get(TalonAutomationAlertCap, binding.alert_id) is not None:
+                    await session.rollback()
+                    logger.warning(
+                        f"Refused a bound collection start for alert {binding.alert_id}: the per-alert cap ({PER_ALERT_CAP}) is reached",
+                    )
+                    raise HTTPException(status_code=429, detail=ALERT_CAP)
+                session.add(
+                    TalonAutomationAlertCap(
+                        alert_id=binding.alert_id,
+                        customer_code=binding.customer_code,
+                        starts=1,
+                        window_started_at=now,
+                    ),
+                )
+                try:
+                    await session.commit()
+                    return
+                except IntegrityError:  # a concurrent start created the row: take a slot from it
+                    await session.rollback()
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001 - no slot recorded, no start
+        logger.error(f"Could not record a bound collection start for alert {binding.alert_id}: {type(e).__name__}")
+    raise HTTPException(status_code=500, detail=CAP_UNRECORDED)
