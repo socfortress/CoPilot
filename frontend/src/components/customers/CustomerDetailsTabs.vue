@@ -61,6 +61,16 @@
 				<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
 					<CustomerAITriggers :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<!-- Talon's automation policy (talon-analyst D85, AP-2): admins only, behind "Talon v2" (D54). -->
+				<n-tab-pane
+					v-if="showAutomation"
+					name="AI Automation"
+					tab="AI Automation"
+					display-directive="show:lazy"
+					class="p-4!"
+				>
+					<CustomerTalonAutomation :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane
 					name="Notifications"
 					tab="Notifications"
@@ -179,6 +189,7 @@ import { NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
 import { useRouteQueryParam } from "@/composables/useNavigation"
+import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useAuthStore } from "@/stores/auth"
 
 const props = defineProps<{
@@ -210,6 +221,7 @@ const CustomerNotificationsWorkflows = defineAsyncComponent(
 	() => import("./notifications/CustomerNotificationsWorkflows.vue")
 )
 const CustomerAITriggers = defineAsyncComponent(() => import("./aiTriggers/CustomerAITriggers.vue"))
+const CustomerTalonAutomation = defineAsyncComponent(() => import("./talonAutomation/CustomerTalonAutomation.vue"))
 const CustomerAiNotifications = defineAsyncComponent(() => import("./aiNotifications/CustomerAiNotifications.vue"))
 const CustomerEventSources = defineAsyncComponent(() => import("./eventSources/CustomerEventSources.vue"))
 const CustomerReporting = defineAsyncComponent(() => import("./reporting/CustomerReporting.vue"))
@@ -232,6 +244,9 @@ const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWo
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const isAdmin = computed(() => useAuthStore().isAdmin)
+// The AI Automation tab: an admin's, behind "Talon v2" (D54). No one else asks for availability.
+const { available: talonV2Available } = useTalonV2AvailabilityWhen(isAdmin)
+const showAutomation = computed(() => isAdmin.value && talonV2Available.value)
 
 const loadingDeleteModel = computed({
 	get: () => props.loadingDelete ?? false,
@@ -247,6 +262,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"Network Connectors",
 	"Notification Workflows",
 	"AI Triggers",
+	"AI Automation",
 	"Notifications",
 	"Event Sources",
 	"Reporting",
