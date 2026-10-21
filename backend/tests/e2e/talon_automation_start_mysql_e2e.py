@@ -22,7 +22,8 @@ What it proves, each reservation on its own connection, all at once:
 - two customers' reservations don't wait on each other's caps;
 - every reservation has its start row and its audit row, and a refused one leaves neither and gives
   its alert's slot back;
-- a policy turned off while reservations wait for its lock stops the ones after it.
+- a policy lowered through ``update_policy`` (the admin's PUT) while reservations wait for its lock
+  stops the ones after it, and the change and its audit row commit together.
 """
 import asyncio
 import os
@@ -39,22 +40,32 @@ from types import SimpleNamespace  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from sqlalchemy import func  # noqa: E402
 from sqlalchemy import select  # noqa: E402
-from sqlalchemy import update  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 from sqlalchemy.ext.asyncio import async_sessionmaker  # noqa: E402
 from sqlalchemy.ext.asyncio import create_async_engine  # noqa: E402
 
 from app.audit.models.audit import AuditLog  # noqa: E402
+from app.auth.models.users import Role  # noqa: E402
+from app.auth.models.users import RoleEnum  # noqa: E402
+from app.auth.models.users import User  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonAutomationPolicy  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonAutomationStart  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
+from app.connectors.talon.schema.talon_automation import (  # noqa: E402
+    TalonAutomationPolicyUpdate,
+)
 from app.connectors.talon.services import talon_automation as automation  # noqa: E402
 from app.connectors.talon.services import talon_triggers  # noqa: E402
 from app.db.db_session import SQLALCHEMY_DATABASE_URI  # noqa: E402
+from app.db.universal_models import Customers  # noqa: E402
 
 USER = SimpleNamespace(id=20, username="talon-analyst")
+ADMIN = SimpleNamespace(id=1, username="e2e-admin", role_id=RoleEnum.admin)
 TABLES = [
+    Role.__table__,
+    User.__table__,
+    Customers.__table__,
     TalonConnectorSettings.__table__,
     TalonAutomationPolicy.__table__,
     TalonAutomationStart.__table__,
@@ -111,6 +122,7 @@ async def main() -> int:
         async with factory() as session:
             session.add(TalonConnectorSettings(connector_name="Talon", automation_enabled=True))
             for code, caps in policies.items():
+                session.add(Customers(customer_code=code, customer_name=code))
                 session.add(TalonAutomationPolicy(customer_code=code, level_1_mode="auto", caps=caps))
             await session.commit()
 
@@ -152,16 +164,20 @@ async def main() -> int:
             await admin.execute(select(TalonAutomationPolicy).where(TalonAutomationPolicy.customer_code == "E2E_A").with_for_update())
             waiting = [asyncio.create_task(reserve("E2E_A", 5000 + i, f"C.c{i:015x}")) for i in range(4)]
             await asyncio.sleep(1.0)
-            await admin.execute(
-                update(TalonAutomationPolicy).where(TalonAutomationPolicy.customer_code == "E2E_A").values(level_1_mode="off"),
-            )
-            await admin.commit()
+            # The admin's PUT, in the session already holding the row's lock: it commits the
+            # lowered level and its audit row together, and only then do the waiting ones read it.
+            modes = {f"level_{n}_mode": "off" for n in (1, 2, 3, 4)}
+            answer = await automation.update_policy(ADMIN, admin, "E2E_A", TalonAutomationPolicyUpdate(**modes, expected_version=1))
         outcomes = await asyncio.gather(*waiting)
         check(
-            "reservations waiting on the lock see the policy turned off",
-            all(o != 200 and o[1] == automation.LEVEL_OFF for o in outcomes) and await count(TalonAutomationStart) == 0,
+            "reservations waiting on the lock see the policy lowered by update_policy",
+            answer.version == 2
+            and all(o != 200 and o[1] == automation.LEVEL_OFF for o in outcomes)
+            and await count(TalonAutomationStart) == 0,
             str(outcomes),
         )
+        audited = await count(AuditLog, AuditLog.action == "talon_automation.policy_update", AuditLog.entity_id == "E2E_A")
+        check("the lowered policy's audit row committed with it", audited == 1, f"rows={audited}")
     finally:
         async with engine.begin() as conn:
             await conn.run_sync(lambda c: [t.drop(c, checkfirst=True) for t in reversed(TABLES)])

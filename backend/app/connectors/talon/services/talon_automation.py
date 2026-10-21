@@ -37,7 +37,11 @@ no start (500 ``CAP_UNRECORDED``). A refusal there rolls everything back, the al
 After the start the row gets its flow id (``finish_start``). Over a cap is a fixed 429.
 
 A dry run counts its own ``shadow`` rows instead (so the would-have-run list shows what ``auto``
-would have done, "capped" included) and never counts against the ``auto`` caps.
+would have done, "capped" included) and never counts against the ``auto`` caps. At most
+``DRY_RUNS_PER_CUSTOMER_HOUR`` dry runs are recorded per customer per hour (429, unrecorded).
+
+Every change of the policy or the switch writes its audit row in the change's own transaction
+(``_audit_row``), so a change can't commit without it; a refused change is audited as a failure.
 """
 from datetime import datetime
 from datetime import timedelta
@@ -110,6 +114,9 @@ HOUR = timedelta(hours=1)
 #: What ``auto`` and the dry run count.
 COUNTED_AUTO = ("reserved", "started", "failed", "unknown")
 WOULD_START = "would_start"
+#: The bound on recorded dry runs per customer per hour (every verdict): over it, a 429, unrecorded.
+#: Well above what ``auto``'s caps let through (10 an hour), so it only stops a flood.
+DRY_RUNS_PER_CUSTOMER_HOUR = 60
 RANK = {mode: rank for rank, mode in enumerate(AUTOMATION_MODES)}
 
 #: The honest risk (D85), acknowledged by the admin who raises level 3 or 4.
@@ -131,6 +138,7 @@ LEVEL_NOT_AVAILABLE = "not started: CoPilot can't start this level's automated a
 HOST_CAP = "not started: this host has reached its hourly cap of automated starts"
 CUSTOMER_CAP = "not started: this customer has reached its hourly cap of automated collections"
 DRY_RUN_UNRECORDED = "CoPilot could not record the dry run"
+DRY_RUN_CAP = "not recorded: this customer has reached its hourly bound on dry runs"
 #: The routes' own refusals.
 ADMIN_ONLY = "Only an admin may read or change the Talon automation policy"
 SERVICE_REFUSED = "The Talon service account may not read or change the Talon automation policy"
@@ -334,14 +342,12 @@ async def reserve_start(
             session.add(row)
             await session.flush()
             session.add(
-                AuditLog(
-                    action=AuditAction.TALON_AUTOMATION_START.value,
-                    actor_user_id=getattr(user, "id", None),
-                    actor_username=getattr(user, "username", None),
+                _audit_row(
+                    user=user,
+                    action=AuditAction.TALON_AUTOMATION_START,
                     customer_code=customer_code,
                     entity_type="talon_automation_start",
                     entity_id=str(row.id),
-                    result=AuditResult.SUCCESS.value,
                     new_value={
                         "automation_start_id": row.id,
                         "level": level,
@@ -352,7 +358,7 @@ async def reserve_start(
                         "policy_version": row.policy_version,
                         **binding.audit_values(job_id),
                     },
-                    source_ip=_client_ip(request),
+                    request=request,
                     details=f"Automated level {level} start reserved for alert {binding.alert_id} ({binding.source})",
                 ),
             )
@@ -423,7 +429,18 @@ async def record_dry_run(
     None, and the policy it was checked against. 500 ``DRY_RUN_UNRECORDED`` if it can't be written."""
     try:
         async with talon_triggers.new_session() as session:
-            policy = await policy_row(session, customer_code)
+            # The customer's row locked (when there is one), so the bound below is exact.
+            policy = await policy_row(session, customer_code, lock=True)
+            recorded = await _count(
+                session,
+                TalonAutomationStart.mode == "shadow",
+                TalonAutomationStart.customer_code == customer_code,
+                TalonAutomationStart.created_at >= utcnow() - HOUR,
+            )
+            if recorded >= DRY_RUNS_PER_CUSTOMER_HOUR:
+                await session.rollback()
+                logger.warning(f"Refused a dry run for alert {alert_id}: {customer_code} has {recorded} dry runs in the last hour")
+                raise HTTPException(status_code=429, detail=DRY_RUN_CAP)
             if refusal is None:
                 try:
                     check_policy(await settings_row(session), policy, level, dry_run=True)
@@ -450,6 +467,8 @@ async def record_dry_run(
             session.add(row)
             await session.commit()
             return row.id, refusal, policy
+    except HTTPException:
+        raise
     except Exception as e:  # noqa: BLE001 - a dry run CoPilot couldn't record is no answer
         logger.error(f"Could not record a dry run for alert {alert_id}: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=DRY_RUN_UNRECORDED) from None
@@ -615,6 +634,49 @@ def _clean_caps(value: Optional[Dict[str, int]]) -> Optional[Dict[str, int]]:
     return dict(sorted(value.items()))
 
 
+def _audit_row(
+    *,
+    user: Any,
+    action: AuditAction,
+    entity_type: str,
+    entity_id: str,
+    customer_code: Optional[str] = None,
+    old_value: Optional[Dict[str, Any]] = None,
+    new_value: Optional[Dict[str, Any]] = None,
+    request: Optional[Request] = None,
+    details: Optional[str] = None,
+) -> AuditLog:
+    """An ``audit_log`` row to add to the change's own session, so the change and its audit commit
+    together or not at all (``record_audit_event`` writes in a session of its own, best effort)."""
+    return AuditLog(
+        action=action.value,
+        actor_user_id=getattr(user, "id", None),
+        actor_username=getattr(user, "username", None),
+        customer_code=customer_code,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        result=AuditResult.SUCCESS.value,
+        old_value=old_value,
+        new_value=new_value,
+        source_ip=_client_ip(request),
+        details=details,
+    )
+
+
+async def _audit_refusal(user: Any, e: HTTPException, request: Optional[Request], **where: Any) -> None:
+    """A refused change, audited as a failure (as ``talon_budget.update`` is). Nothing changed, so
+    best effort is enough here."""
+    await record_audit_event(
+        action=AuditAction.TALON_AUTOMATION_POLICY_UPDATE,
+        actor_user_id=getattr(user, "id", None),
+        actor_username=getattr(user, "username", None),
+        result=AuditResult.FAILURE,
+        request=request,
+        details=f"Refused (HTTP {e.status_code}): {e.detail}",
+        **where,
+    )
+
+
 async def update_policy(
     user: User,
     session: AsyncSession,
@@ -623,7 +685,22 @@ async def update_policy(
     request: Optional[Request] = None,
 ) -> TalonAutomationPolicyResponse:
     """Replace the customer's policy (module docstring), under its row locked, audited with the old
-    and new values."""
+    and new values in the same transaction; every refusal audited as a failure."""
+    where = {"customer_code": customer_code[:50], "entity_type": "talon_automation_policy", "entity_id": customer_code[:256]}
+    try:
+        return await _update_policy(user, session, customer_code, body, request)
+    except HTTPException as e:
+        await _audit_refusal(user, e, request, new_value=body.model_dump(), **where)
+        raise
+
+
+async def _update_policy(
+    user: User,
+    session: AsyncSession,
+    customer_code: str,
+    body: TalonAutomationPolicyUpdate,
+    request: Optional[Request],
+) -> TalonAutomationPolicyResponse:
     await _refuse_non_admin(user, session)
     await _require_customer(session, customer_code)
     artifacts, globs, caps = _clean_artifacts(body.level_2_artifacts), _clean_globs(body.file_allow_globs), _clean_caps(body.caps)
@@ -633,7 +710,7 @@ async def update_policy(
         old = _snapshot(row)
         current = {level: row.mode(level) if row is not None else "off" for level in AUTOMATION_LEVELS}
         raised = [level for level in AUTOMATION_LEVELS if RANK[modes[level]] > RANK[current[level]]]
-        if body.expected_version is not None and body.expected_version != old["version"]:
+        if body.expected_version != old["version"]:
             await session.rollback()
             raise HTTPException(status_code=409, detail=VERSION_CHANGED)
         risky = [level for level in raised if level in (3, 4)]
@@ -656,7 +733,22 @@ async def update_policy(
             row.risk_acknowledged_by_user_id = row.risk_acknowledged_by_username = row.risk_acknowledged_at = None
         row.version = (row.version or 0) + 1
         row.updated_by_user_id, row.updated_by_username, row.updated_at = user.id, user.username, now
-        new = {**_snapshot(row), "acknowledge_risk": bool(risky)}
+        session.add(
+            _audit_row(
+                user=user,
+                action=AuditAction.TALON_AUTOMATION_POLICY_UPDATE,
+                customer_code=customer_code,
+                entity_type="talon_automation_policy",
+                entity_id=customer_code,
+                old_value=old,
+                new_value={**_snapshot(row), "acknowledge_risk": bool(risky)},
+                request=request,
+                details=(
+                    f"Talon automation policy for {customer_code} set to version {row.version}"
+                    + (f"; the risk of level(s) {', '.join(map(str, risky))} acknowledged" if risky else "")
+                ),
+            ),
+        )
         try:
             await session.commit()
         except IntegrityError:  # another admin created the row first: read it again
@@ -664,21 +756,6 @@ async def update_policy(
             if attempt:
                 raise
             continue
-        await record_audit_event(
-            action=AuditAction.TALON_AUTOMATION_POLICY_UPDATE,
-            actor_user_id=user.id,
-            actor_username=user.username,
-            customer_code=customer_code,
-            entity_type="talon_automation_policy",
-            entity_id=customer_code,
-            old_value=old,
-            new_value=new,
-            request=request,
-            details=(
-                f"Talon automation policy for {customer_code} set to version {row.version}"
-                + (f"; the risk of level(s) {', '.join(map(str, risky))} acknowledged" if risky else "")
-            ),
-        )
         return await _describe(session, customer_code, row, "Talon automation policy saved")
     raise AssertionError("unreachable")
 
@@ -708,10 +785,23 @@ async def update_switch(
     enabled: bool,
     request: Optional[Request] = None,
 ) -> TalonAutomationSwitchResponse:
-    """Turn every automated start on or off (a new settings row leaves "Talon v2" off), audited."""
-    await _refuse_non_admin(user, session)
+    """Turn every automated start on or off (a new settings row leaves "Talon v2" off), under the
+    settings row locked, audited in the same transaction; a refusal audited as a failure."""
+    try:
+        await _refuse_non_admin(user, session)
+    except HTTPException as e:
+        await _audit_refusal(
+            user,
+            e,
+            request,
+            entity_type="connector",
+            entity_id=TALON_CONNECTOR,
+            new_value={"automation_enabled": enabled},
+        )
+        raise
     for attempt in range(2):
-        row = await settings_row(session)
+        query = select(TalonConnectorSettings).where(TalonConnectorSettings.connector_name == TALON_CONNECTOR).with_for_update()
+        row = (await session.execute(query)).scalars().first()
         old = bool(row is not None and row.automation_enabled)
         if row is None:
             row = TalonConnectorSettings(connector_name=TALON_CONNECTOR)
@@ -719,6 +809,18 @@ async def update_switch(
         row.automation_enabled = enabled
         row.updated_by_user_id = user.id
         row.updated_at = now_utc()
+        session.add(
+            _audit_row(
+                user=user,
+                action=AuditAction.TALON_AUTOMATION_POLICY_UPDATE,
+                entity_type="connector",
+                entity_id=TALON_CONNECTOR,
+                old_value={"automation_enabled": old},
+                new_value={"automation_enabled": enabled},
+                request=request,
+                details=f"Talon automation turned {'on' if enabled else 'off'} for connector '{TALON_CONNECTOR}'",
+            ),
+        )
         try:
             await session.commit()
             break
@@ -726,15 +828,4 @@ async def update_switch(
             await session.rollback()
             if attempt:
                 raise
-    await record_audit_event(
-        action=AuditAction.TALON_AUTOMATION_POLICY_UPDATE,
-        actor_user_id=user.id,
-        actor_username=user.username,
-        entity_type="connector",
-        entity_id=TALON_CONNECTOR,
-        old_value={"automation_enabled": old},
-        new_value={"automation_enabled": enabled},
-        request=request,
-        details=f"Talon automation turned {'on' if enabled else 'off'} for connector '{TALON_CONNECTOR}'",
-    )
     return _switch_response(row, f"Talon automation turned {'on' if enabled else 'off'}")

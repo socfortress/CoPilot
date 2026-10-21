@@ -49,10 +49,13 @@ class TalonAutomationPolicyUpdate(BaseModel):
     file_allow_globs: Optional[Dict[FileOs, List[str]]] = Field(None, description="Level 2 file allow globs per OS, stored for later")
     caps: Optional[Dict[str, StrictInt]] = Field(None, description="Cap overrides by name, each between 0 and its default")
     acknowledge_risk: StrictBool = Field(False, description="Required (true) to raise level 3 or 4; recorded with the admin")
-    expected_version: Optional[StrictInt] = Field(
-        None,
+    expected_version: StrictInt = Field(
+        ...,
         ge=0,
-        description="The version the admin read (0: no row yet); another version is a 409, so a concurrent change is never overwritten unseen",
+        description=(
+            "Required: the version the admin read (GET's version; 0 when the customer has no row yet, so the first PUT sends 0). "
+            "Another version is a 409, so a concurrent change is never overwritten unseen"
+        ),
     )
 
 

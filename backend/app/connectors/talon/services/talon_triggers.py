@@ -286,7 +286,11 @@ async def ensure_cap_row(session: AsyncSession, binding: Binding) -> None:
 
 
 async def reserve(binding: Binding) -> None:
-    """Check 4: take one of the alert's ``PER_ALERT_CAP`` slots for this ``WINDOW``, every job
+    """**Not on any route since AP-2**: ``talon_automation.reserve_start`` takes the slot inside its
+    own transaction (``ensure_cap_row`` and ``_take_slot``). Kept, with AP-2a's tests and
+    ``tests/e2e/talon_alert_cap_mysql_e2e.py``, as the slot's reference behaviour on its own.
+
+    Check 4: take one of the alert's ``PER_ALERT_CAP`` slots for this ``WINDOW``, every job
     together (a new ``ai_analyst_job`` never resets it), in a session of its own, committed before
     the flow starts. Over the cap, a fixed 429; if the slot can't be recorded, a fixed 500 and no
     start. A slot is spent once taken, whether the start then succeeds or not.

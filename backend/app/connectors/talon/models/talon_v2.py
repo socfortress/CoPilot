@@ -306,7 +306,7 @@ class TalonAutomationStart(SQLModel, table=True):
     flow_id: Optional[str] = Field(default=None, max_length=80, nullable=True)
     #: One of ``START_VERDICTS``.
     verdict: str = Field(max_length=16, nullable=False)
-    #: Why a dry run was refused, or a start failed (``talon_automation.REFUSAL_CODES``).
+    #: Why a dry run was refused, or a start failed (``talon_automation.code_and_text``; ``HTTP_<status>`` for a start that failed).
     code: Optional[str] = Field(default=None, max_length=32, nullable=True)
     #: The policy row's ``version`` the start or dry run was checked against.
     policy_version: Optional[int] = Field(default=None, nullable=True)

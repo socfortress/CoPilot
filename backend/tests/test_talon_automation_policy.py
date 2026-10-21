@@ -87,8 +87,20 @@ def policy_url(code=ACME):
     return f"/talon/v2/automation/{code}"
 
 
-def put_body(level_1="off", level_2="off", level_3="off", level_4="off", **extra):
-    return {"level_1_mode": level_1, "level_2_mode": level_2, "level_3_mode": level_3, "level_4_mode": level_4, **extra}
+def put_body(level_1="off", level_2="off", level_3="off", level_4="off", v=1, **extra):
+    """A policy PUT; ``v`` is ``expected_version`` (ACME's seeded row is at 1; no row is 0)."""
+    modes = {"level_1_mode": level_1, "level_2_mode": level_2, "level_3_mode": level_3, "level_4_mode": level_4}
+    return {**modes, "expected_version": v, **extra}
+
+
+def policy_audits(ctx):
+    """The policy and switch changes' audit rows, written in the changes' own transactions."""
+    return [a for a in ctx.audit_rows if a.action == AuditAction.TALON_AUTOMATION_POLICY_UPDATE.value]
+
+
+def refusal_audits(ctx):
+    """Refused changes, audited as failures through ``record_audit_event``."""
+    return [c.kwargs for c in ctx.audit.await_args_list]
 
 
 SERVICES_BOUND = {**SERVICES, "job_id": JOB}
@@ -494,6 +506,14 @@ def test_dry_runs_are_capped_by_their_own_rows_never_the_auto_ones():
     assert [(r.mode, r.verdict) for r in ctx.starts_after] == [("shadow", "would_start")] * 2 + [("auto", "started")] * 2
 
 
+def test_dry_runs_are_bounded_per_customer_per_hour():
+    with patch.object(automation, "DRY_RUNS_PER_CUSTOMER_HOUR", 3):
+        responses, vr, ctx = dry_runs(SERVICES_BOUND, SERVICES_BOUND, SERVICES_BOUND, SERVICES_BOUND, setup=policy(level_1="shadow"))
+    assert [r.status_code for r in responses] == [200, 200, 200, 429]  # refused verdicts count too (the third is ALERT_CAP)
+    assert message(responses[3]) == automation.DRY_RUN_CAP and len(ctx.starts_after) == 3 and vr.starts == []
+    assert automation.DRY_RUNS_PER_CUSTOMER_HOUR == 60
+
+
 def test_a_dry_run_is_the_service_accounts_and_behind_talon_v2():
     (response,), vr, ctx = dry_runs(SERVICES_BOUND, name="ana")
     assert response.status_code == 403 and message(response) == talon_collections.DRY_RUN_SERVICE_ONLY and ctx.starts_after == []
@@ -541,7 +561,7 @@ def test_no_row_reads_as_every_level_off():
 @pytest.mark.parametrize("mode", ["shadow", "propose", "auto"])
 def test_any_mode_can_be_set_directly(mode):
     responses, vr, ctx = run(
-        [("admin", "PUT", policy_url(), put_body(level_1=mode, level_2=mode)), ("admin", "GET", policy_url(), None)],
+        [("admin", "PUT", policy_url(), put_body(level_1=mode, level_2=mode, v=0)), ("admin", "GET", policy_url(), None)],
         setup=policy(level_1=None),
     )
     put, get = responses
@@ -549,19 +569,19 @@ def test_any_mode_can_be_set_directly(mode):
     assert get.json()["version"] == 1 and get.json()["updated_by_username"] == "admin" and get.json()["exists"] is True
 
 
-def test_a_put_is_audited_with_the_old_and_new_values():
+def test_a_put_is_audited_with_the_old_and_new_values_in_its_transaction():
     responses, vr, ctx = run(
         [
-            ("admin", "PUT", policy_url(), put_body(level_1="shadow")),
-            ("admin", "PUT", policy_url(), put_body(level_1="auto", caps={"per_host_hour": 3}, expected_version=1)),
+            ("admin", "PUT", policy_url(), put_body(level_1="shadow", v=0)),
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", caps={"per_host_hour": 3}, v=1)),
         ],
         setup=policy(level_1=None),
     )
     assert [r.status_code for r in responses] == [200, 200] and responses[1].json()["version"] == 2
     assert responses[1].json()["effective_caps"]["per_host_hour"] == 3
-    first, second = [c.kwargs for c in ctx.audit.await_args_list]
-    assert first["action"] == AuditAction.TALON_AUTOMATION_POLICY_UPDATE and first["customer_code"] == ACME
-    assert first["old_value"] == {
+    first, second = policy_audits(ctx)
+    assert (first.customer_code, first.entity_type, first.entity_id, first.result) == (ACME, "talon_automation_policy", ACME, "success")
+    assert first.old_value == {
         "exists": False,
         "level_1_mode": "off",
         "level_2_mode": "off",
@@ -569,27 +589,54 @@ def test_a_put_is_audited_with_the_old_and_new_values():
         "level_4_mode": "off",
         "version": 0,
     }
-    assert first["new_value"]["level_1_mode"] == "shadow" and first["new_value"]["version"] == 1
-    assert second["old_value"]["level_1_mode"] == "shadow" and second["old_value"]["caps"] is None
-    assert second["new_value"]["level_1_mode"] == "auto" and second["new_value"]["caps"] == {"per_host_hour": 3}
-    assert second["new_value"]["acknowledge_risk"] is False and second["actor_username"] == "admin"
+    assert first.new_value["level_1_mode"] == "shadow" and first.new_value["version"] == 1
+    assert second.old_value["level_1_mode"] == "shadow" and second.old_value["caps"] is None
+    assert second.new_value["level_1_mode"] == "auto" and second.new_value["caps"] == {"per_host_hour": 3}
+    assert second.new_value["acknowledge_risk"] is False and second.actor_username == "admin"
+    assert refusal_audits(ctx) == []
 
 
-def test_another_version_is_a_409():
-    (response,), vr, ctx = run([("admin", "PUT", policy_url(), put_body(level_1="off", expected_version=0))])
-    assert response.status_code == 409 and message(response) == automation.VERSION_CHANGED  # ACME's row is at 1
-    assert ctx.audit.await_args_list == []
+def test_a_change_whose_audit_row_cant_be_written_isnt_made():
+    def broken(**kwargs):
+        raise RuntimeError("audit table gone")
+
+    async def scenario(client, ctx):
+        await set_policy(ctx)
+        with patch.object(automation, "_audit_row", broken):
+            with pytest.raises(RuntimeError):  # the test client raises the app's exception
+                await client.put(policy_url(), json=put_body(level_1="shadow"), headers=as_user("admin"))
+        async with ctx.db.session() as session:
+            return await session.get(TalonAutomationPolicy, ACME)
+
+    row = call(scenario)
+    assert (row.level_1_mode, row.version) == ("auto", 1)  # unchanged
+
+
+def test_expected_version_is_required_and_checked():
+    responses, vr, ctx = run(
+        [
+            ("admin", "PUT", policy_url(), {k: v for k, v in put_body(level_1="off").items() if k != "expected_version"}),
+            ("admin", "PUT", policy_url(), put_body(level_1="off", v=0)),  # ACME's row is at 1
+        ],
+    )
+    missing, stale = responses
+    assert missing.status_code == 422
+    assert stale.status_code == 409 and message(stale) == automation.VERSION_CHANGED
+    assert policy_audits(ctx) == []
+    (refused,) = refusal_audits(ctx)
+    assert refused["action"] == AuditAction.TALON_AUTOMATION_POLICY_UPDATE and refused["result"].value == "failure"
+    assert refused["customer_code"] == ACME and "409" in refused["details"] and refused["new_value"]["expected_version"] == 0
 
 
 @pytest.mark.parametrize("level", ["level_3", "level_4"])
 def test_raising_level_3_or_4_needs_the_acknowledgement(level):
     responses, vr, ctx = run(
         [
-            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"})),
-            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"}, acknowledge_risk=True)),
-            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "auto"})),  # shadow → auto is a raise too
-            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"})),  # lowering needs nothing
-            ("admin", "PUT", policy_url(), put_body(level_1="auto")),
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"}, v=1)),
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"}, acknowledge_risk=True, v=1)),
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "auto"}, v=2)),  # shadow → auto is a raise too
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", **{level: "shadow"}, v=2)),  # lowering needs nothing
+            ("admin", "PUT", policy_url(), put_body(level_1="auto", v=3)),
         ],
     )
     refused, acknowledged, again, lowered, off = responses
@@ -598,9 +645,10 @@ def test_raising_level_3_or_4_needs_the_acknowledgement(level):
     assert acknowledged.json()["risk_acknowledged_at"] is not None
     assert again.status_code == 400 and lowered.status_code == 200 and off.status_code == 200
     assert off.json()["risk_acknowledged_by_username"] is None  # both off: the next raise asks again
-    audits = [c.kwargs for c in ctx.audit.await_args_list]
-    assert len(audits) == 3 and audits[0]["new_value"]["acknowledge_risk"] is True
-    assert audits[0]["new_value"]["risk_acknowledged_by_username"] == "admin"
+    audits = policy_audits(ctx)
+    assert len(audits) == 3 and audits[0].new_value["acknowledge_risk"] is True
+    assert audits[0].new_value["risk_acknowledged_by_username"] == "admin"
+    assert [a["details"] for a in refusal_audits(ctx)] == [f"Refused (HTTP 400): {automation.RISK_NOT_ACKNOWLEDGED}"] * 2
 
 
 def test_an_unassigned_customer_cant_be_raised_but_can_be_lowered():
@@ -612,7 +660,7 @@ def test_an_unassigned_customer_cant_be_raised_but_can_be_lowered():
             ("admin", "GET", policy_url(GLOBEX), None),
             ("admin", "PUT", policy_url(GLOBEX), put_body(level_1="auto", level_2="shadow")),
             ("admin", "PUT", policy_url(GLOBEX), put_body(level_1="auto")),  # nothing raised
-            ("admin", "PUT", policy_url(GLOBEX), put_body(level_1="off")),
+            ("admin", "PUT", policy_url(GLOBEX), put_body(level_1="off", v=2)),
         ],
         setup=setup,
     )
@@ -620,12 +668,13 @@ def test_an_unassigned_customer_cant_be_raised_but_can_be_lowered():
     assert get.json()["service_user_assigned"] is False
     assert raised.status_code == 409 and message(raised) == automation.SERVICE_USER_UNASSIGNED
     assert kept.status_code == 200 and lowered.status_code == 200 and lowered.json()["level_1_mode"] == "off"
+    assert [a["customer_code"] for a in refusal_audits(ctx)] == [GLOBEX]
 
 
 def test_the_service_account_as_an_admin_is_refused_on_every_policy_route():
     async def scenario(client, ctx):
         with patch.object(automation, "record_audit_event", ctx.audit):
-            return [
+            responses = [
                 await client.request(method, route, json=payload, headers=as_user(SERVICE))
                 for method, route, payload in [
                     ("GET", policy_url(), None),
@@ -634,18 +683,25 @@ def test_the_service_account_as_an_admin_is_refused_on_every_policy_route():
                     ("PUT", SWITCH, {"automation_enabled": True}),
                 ]
             ]
+        return responses, ctx
 
     with patch.dict(harness.SCOPES, {SERVICE: ["admin"]}), patch.dict(harness.USERS, {SERVICE: (20, 1, [])}):
-        responses = call(scenario, users=False)
+        responses, ctx = call(scenario, users=False)
     assert [r.status_code for r in responses] == [403] * 4
     assert {message(r) for r in responses} == {automation.SERVICE_REFUSED}
+    # The two PUTs are audited as refused, with the service account as the actor.
+    assert [(a["actor_username"], a["result"].value, a["entity_type"]) for a in refusal_audits(ctx)] == [
+        (SERVICE, "failure", "talon_automation_policy"),
+        (SERVICE, "failure", "connector"),
+    ]
 
 
-@pytest.mark.parametrize("name, status", [("ana", 403), ("demoted", 403), ("resp", 403), (SERVICE, 403)])
-def test_only_an_admin_reads_or_changes_the_policy(name, status):
+@pytest.mark.parametrize("name, audited", [("ana", False), ("demoted", True), ("resp", False), (SERVICE, False)])
+def test_only_an_admin_reads_or_changes_the_policy(name, audited):
     responses, vr, ctx = run([(name, "GET", policy_url(), None), (name, "PUT", policy_url(), put_body(level_1="off"))])
-    assert [r.status_code for r in responses] == [status, status]
-    assert ctx.audit.await_args_list == []
+    assert [r.status_code for r in responses] == [403, 403] and policy_audits(ctx) == []
+    # A token without the admin scope is refused before the service; a demoted admin's reaches it.
+    assert [a["details"] for a in refusal_audits(ctx)] == ([f"Refused (HTTP 403): {automation.ADMIN_ONLY}"] if audited else [])
 
 
 @pytest.mark.parametrize(
@@ -668,18 +724,20 @@ def test_the_customer_must_exist_exactly(code, status):
         ({"file_allow_globs": {"windows": [" C:\\x"]}}, automation.BAD_GLOBS),
     ],
 )
-def test_a_bad_policy_is_a_400(extra, text):
+def test_a_bad_policy_is_a_400_audited_as_refused(extra, text):
     (response,), vr, ctx = run([("admin", "PUT", policy_url(), put_body(level_1="auto", **extra))])
     assert response.status_code == 400 and message(response) == text
+    assert [a["details"] for a in refusal_audits(ctx)] == [f"Refused (HTTP 400): {text}"] and policy_audits(ctx) == []
 
 
 @pytest.mark.parametrize(
     "payload",
     [
         put_body(level_1="on"),
-        {"level_1_mode": "auto"},  # every mode, every time
+        {"level_1_mode": "auto", "expected_version": 1},  # every mode, every time
         put_body(caps={"per_alert": True}),
         put_body(acknowledge_risk="yes"),
+        put_body(v=-1),
         {**put_body(), "extra": 1},
     ],
 )
@@ -702,7 +760,7 @@ def test_level_2_lists_and_globs_are_stored_for_later():
 # ── the global switch ─────────────────────────────────────────────────────────
 
 
-def test_the_switch_is_an_admins_and_audited():
+def test_the_switch_is_an_admins_and_audited_in_its_transaction():
     responses, vr, ctx = run(
         [
             ("admin", "GET", SWITCH, None),
@@ -719,9 +777,26 @@ def test_the_switch_is_an_admins_and_audited():
     assert put.status_code == 200 and put.json()["automation_enabled"] is True
     assert (analyst.status_code, demoted.status_code, malformed.status_code) == (403, 403, 422)
     assert after.json()["automation_enabled"] is True and after.headers["cache-control"] == "no-store"
-    (audit,) = [c.kwargs for c in ctx.audit.await_args_list]
-    assert audit["action"] == AuditAction.TALON_AUTOMATION_POLICY_UPDATE and audit["entity_type"] == "connector"
-    assert (audit["old_value"], audit["new_value"]) == ({"automation_enabled": False}, {"automation_enabled": True})
+    (audit,) = policy_audits(ctx)
+    assert (audit.entity_type, audit.entity_id, audit.actor_username) == ("connector", "Talon", "admin")
+    assert (audit.old_value, audit.new_value) == ({"automation_enabled": False}, {"automation_enabled": True})
+    (refused,) = refusal_audits(ctx)  # the demoted admin's
+    assert refused["actor_username"] == "demoted" and refused["new_value"] == {"automation_enabled": False}
+
+
+def test_a_switch_change_whose_audit_row_cant_be_written_isnt_made():
+    def broken(**kwargs):
+        raise RuntimeError("audit table gone")
+
+    async def scenario(client, ctx):
+        await set_policy(ctx, automation=False)
+        with patch.object(automation, "_audit_row", broken):
+            with pytest.raises(RuntimeError):
+                await client.put(SWITCH, json={"automation_enabled": True}, headers=as_user("admin"))
+        async with ctx.db.session() as session:
+            return (await session.execute(select(TalonConnectorSettings))).scalars().one().automation_enabled
+
+    assert call(scenario) is False
 
 
 def test_turning_the_switch_off_stops_the_next_start():
@@ -736,28 +811,58 @@ def test_turning_the_switch_off_stops_the_next_start():
     assert len(vr.starts) == 1
 
 
+def test_the_switch_turned_off_during_a_start_stops_it_in_the_reservation():
+    """The switch is read again under the policy row's lock: turned off between the first check and
+    the reservation, nothing starts."""
+    real_check = talon_triggers.check
+    seen = {}
+
+    async def check(*args, **kwargs):
+        binding = await real_check(*args, **kwargs)
+        async with seen["ctx"].db.session() as session:
+            await session.execute(update(TalonConnectorSettings).values(automation_enabled=False))
+            await session.commit()
+        return binding
+
+    async def setup(ctx):
+        seen["ctx"] = ctx
+
+    with patch.object(talon_triggers, "check", check):
+        (response,), vr, ctx = starts(SERVICES_BOUND, setup=setup)
+    assert response.status_code == 403 and message(response) == automation.AUTOMATION_OFF
+    assert vr.starts == [] and ctx.starts_after == [] and ctx.cap.starts == 0
+
+
 def test_the_switch_and_policy_routes_answer_whatever_talon_v2_says():
     async def scenario(client, ctx):
         with patch.object(automation, "record_audit_event", AsyncMock()):
             return [
                 await client.get(SWITCH, headers=as_user("admin")),
                 await client.get(policy_url(), headers=as_user("admin")),
-                await client.put(policy_url(), json=put_body(level_1="auto"), headers=as_user("admin")),
+                await client.put(policy_url(), json=put_body(level_1="auto", v=0), headers=as_user("admin")),
             ]
 
     assert [r.status_code for r in call(scenario, enabled=False)] == [200, 200, 200]
 
 
-def test_the_deploy_calls_are_idempotent():
-    """The deploy step: the switch on and the customer's level 1 on ``auto``, the same
-    PUTs again changing only the version."""
+def test_the_rollout_calls():
+    """AP-10 step 2 (the PR body): the customer's row first (``expected_version`` 0), then the switch;
+    each can be run again (the row with the version the GET reads) without changing the levels."""
     calls = [
+        ("admin", "PUT", policy_url(), put_body(level_1="auto", v=0)),
         ("admin", "PUT", SWITCH, {"automation_enabled": True}),
-        ("admin", "PUT", policy_url(), put_body(level_1="auto")),
+        ("admin", "PUT", policy_url(), put_body(level_1="auto", v=1)),
+        ("admin", "PUT", SWITCH, {"automation_enabled": True}),
+        (SERVICE, "POST", ROUTE, SERVICES_BOUND),
     ]
-    responses, vr, ctx = run(calls * 2 + [(SERVICE, "POST", ROUTE, SERVICES_BOUND)], setup=policy(level_1=None, automation=False))
+    responses, vr, ctx = run(calls, setup=policy(level_1=None, automation=False))
     assert [r.status_code for r in responses] == [200] * 5
-    assert responses[3].json()["level_1_mode"] == "auto" and responses[3].json()["version"] == 2
+    assert responses[2].json()["level_1_mode"] == "auto" and responses[2].json()["version"] == 2
+
+
+def test_deployed_with_the_switch_off_and_no_row_nothing_starts():
+    (response,), vr, ctx = starts(SERVICES_BOUND, setup=policy(level_1=None, automation=False))
+    assert response.status_code == 403 and message(response) == automation.AUTOMATION_OFF and vr.starts == []
 
 
 # ── the migration ─────────────────────────────────────────────────────────────
