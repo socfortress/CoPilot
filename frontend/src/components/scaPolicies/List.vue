@@ -8,11 +8,13 @@
 			>
 				Wazuh Security Configuration Assessment (SCA)
 			</a>
-			. Deploy policy
+			<span>.</span>
+			Deploy policy
 			<code>.yml</code>
 			files to your endpoints under
 			<code>/var/ossec/ruleset/sca/</code>
-			, set ownership, and restart the Wazuh agent. See
+			<span>,</span>
+			set ownership, and restart the Wazuh agent. See
 			<a href="https://github.com/socfortress/CoPilot-SCA" target="_blank">CoPilot-SCA</a>
 			for available policies.
 		</n-alert>

@@ -277,10 +277,30 @@ async def main():
         status, body = await trend(headers=admin, range="30d", customer_codes=[CUST_B])
         totals = [sum(v[i] for v in answered(body).values()) for i in range(4)]
         check("the SOC asking for B gets B's", totals == [b_alerts, 0, b_cases, 0], str(totals))
+        # The SOC without a filter sees every customer: on a shared database other suites' rows
+        # count too, so what the rest of it adds is read by asking for those customers by code.
+        async with AsyncSession(async_engine) as s:
+            others = sorted(
+                {
+                    code
+                    for model in (Alert, Case)
+                    for code in (await s.execute(select(model.customer_code).distinct())).scalars()
+                    if code and code not in (CUST_A, CUST_B)
+                },
+            )
+        rest = [0, 0, 0, 0]
+        if others:
+            status, body = await trend(headers=admin, range="30d", customer_codes=others)
+            rest = [sum(v[i] for v in answered(body).values()) for i in range(4)]
         status, body = await trend(headers=admin, range="30d")
         totals = [sum(v[i] for v in answered(body).values()) for i in range(4)]
         a = [sum(v[i] for v in want.values()) for i in range(4)]
-        check("and without a filter, both", totals == [a[0] + b_alerts, a[1], a[2] + b_cases, a[3]], f"{totals} vs {a}")
+        both = [a[0] + b_alerts, a[1], a[2] + b_cases, a[3]]
+        check(
+            "and without a filter, both (and every other customer's)",
+            totals == [both[i] + rest[i] for i in range(4)],
+            f"{totals} vs {both} + {rest} from {len(others)} other customer(s)",
+        )
 
         print("\n=== D) a tag-restricted analyst ===")
         settings_id, previous = await add_tag_analyst()

@@ -19,15 +19,16 @@ vi.mock("@/api", () => ({
 function mountList(initial: Partial<AlertsFilters> = {}) {
 	const filters = ref<AlertsFilters>({ ...EMPTY_ALERTS_FILTERS, ...initial })
 	const changes: Partial<AlertsFilters>[] = []
+	// The component under test, inside the message provider it needs.
+	const content = () =>
+		h(AlertsList, {
+			filters: filters.value,
+			onChange: (patch: Partial<AlertsFilters>) => changes.push(patch)
+		})
+
 	const wrapper = mount(
 		defineComponent({
-			setup: () => () =>
-				h(NMessageProvider, null, () =>
-					h(AlertsList, {
-						filters: filters.value,
-						onChange: (patch: Partial<AlertsFilters>) => changes.push(patch)
-					})
-				)
+			setup: () => () => h(NMessageProvider, null, content)
 		}),
 		// The detail and status components are not what this spec is about.
 		{ global: { stubs: { AlertDetailsButton: true, AlertStatusSelect: true } } }

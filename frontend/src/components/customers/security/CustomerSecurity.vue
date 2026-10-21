@@ -169,8 +169,8 @@
 				<n-alert type="warning" :bordered="false" class="text-sm">
 					This generates a new password for
 					<strong>{{ tempPasswordTarget?.username }}</strong>
-					, sets it, and emails it to {{ tempPasswordTarget?.email }}. Their current password will stop
-					working.
+					<span>,</span>
+					sets it, and emails it to {{ tempPasswordTarget?.email }}. Their current password will stop working.
 				</n-alert>
 
 				<div class="flex flex-col gap-1">
@@ -272,7 +272,8 @@
 				<p class="text-secondary mb-3 text-sm">
 					Overwrite the password for
 					<strong>{{ passwordTarget?.username }}</strong>
-					. The user will need to sign in with this new password.
+					<span>.</span>
+					The user will need to sign in with this new password.
 				</p>
 				<n-form-item label="New password" path="newPassword">
 					<n-input

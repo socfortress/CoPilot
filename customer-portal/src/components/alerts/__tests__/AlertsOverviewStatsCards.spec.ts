@@ -11,15 +11,16 @@ vi.mock("@/api", () => ({ default: { portal: { alertsStats } } }))
 
 function mountCards(status: AlertStatus | null) {
 	const updates: (AlertStatus | null)[] = []
+	// The component under test, inside the message provider it needs.
+	const content = () =>
+		h(AlertsOverviewStatsCards, {
+			status,
+			"onUpdate:status": (value: AlertStatus | null) => updates.push(value)
+		})
+
 	const wrapper = mount(
 		defineComponent({
-			setup: () => () =>
-				h(NMessageProvider, null, () =>
-					h(AlertsOverviewStatsCards, {
-						status,
-						"onUpdate:status": (value: AlertStatus | null) => updates.push(value)
-					})
-				)
+			setup: () => () => h(NMessageProvider, null, content)
 		})
 	)
 	return { wrapper, updates }

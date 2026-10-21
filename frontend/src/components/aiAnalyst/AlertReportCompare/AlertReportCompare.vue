@@ -12,8 +12,9 @@
 				<div class="text-secondary text-sm">
 					Side-by-side view of two investigations for alert
 					<code class="text-primary">#{{ alertId }}</code>
-					. Pick any two runs below — defaults to the current report on the left and the next-most-recent run
-					on the right.
+					<span>.</span>
+					Pick any two runs below — defaults to the current report on the left and the next-most-recent run on
+					the right.
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">

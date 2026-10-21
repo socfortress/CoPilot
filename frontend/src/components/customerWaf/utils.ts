@@ -92,8 +92,11 @@ export function useCustomerWafs(customerCode: string) {
 	return { instances }
 }
 
+/** U+1F1E6, the regional indicator for "A" (in decimal: the linter and the formatter disagree on hex case). */
+const REGIONAL_INDICATOR_A = 127462
+
 /** ISO 3166 alpha-2 → flag emoji (regional-indicator pair); a globe when unknown. */
 export function flag(code: string | null | undefined): string {
 	if (!code || !/^[A-Z]{2}$/i.test(code)) return "🌐"
-	return String.fromCodePoint(...[...code.toUpperCase()].map(ch => 0x1f1e6 + ch.charCodeAt(0) - 65))
+	return String.fromCodePoint(...[...code.toUpperCase()].map(ch => REGIONAL_INDICATOR_A + ch.charCodeAt(0) - 65))
 }

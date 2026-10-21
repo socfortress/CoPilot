@@ -19,7 +19,8 @@
 				<p class="text-default text-sm">
 					Point a customer at their own GitHub repo of Graylog-only detection rules (layout
 					<code>detections/&lt;folder&gt;/&lt;rule&gt;.yaml</code>
-					, same as the shared catalog). Their rules then appear as
+					<span>,</span>
+					same as the shared catalog). Their rules then appear as
 					<b>Custom</b>
 					cards alongside the catalog — searchable, provisionable, backtestable. Rules stay in the client's
 					repo; CoPilot only stores this pointer.

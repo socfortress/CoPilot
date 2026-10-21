@@ -38,6 +38,8 @@ _TABLE_NAMES = (
     "customers",
     "customer_portal_sla_settings",
     "customer_portal_activity_settings",
+    "customer_portal_exposure_settings",
+    "agents",
 )
 
 

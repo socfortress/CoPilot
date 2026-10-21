@@ -1,6 +1,8 @@
 """E2E for #1117 — several Microsoft 365 tenants under one customer.
 
-NOT collected by pytest: it needs a live MySQL with a provisioned customer. Run by hand.
+NOT collected by pytest: it needs a live MySQL. Run by hand. It borrows a customer that already
+has an unnamed Office365 integration; a database without one (the disposable 13306) gets a
+seeded customer, removed again at the end.
 
     cd backend && PYTHONPATH=$PWD <venv>/bin/python tests/e2e/office365_multi_tenant_e2e.py
 
@@ -42,6 +44,7 @@ from app.integrations.models.customer_integration_settings import (  # noqa: E40
     CustomerIntegrations,
 )
 from app.integrations.models.customer_integration_settings import IntegrationAuthKeys
+from app.integrations.models.customer_integration_settings import IntegrationConfig
 from app.integrations.models.customer_integration_settings import IntegrationService
 from app.integrations.models.customer_integration_settings import (
     IntegrationSubscription,
@@ -49,6 +52,10 @@ from app.integrations.models.customer_integration_settings import (
 
 INSTANCE = "e2e-tenant-b.onmicrosoft.com"
 TENANT_ID = f"e2e-{uuid.uuid4()}"
+# Used only when the database has no customer to borrow (a disposable one): created with an
+# unnamed Office365 integration first, and removed with everything it holds at the end.
+SEED_CUSTOMER = "E2E_O365"
+SEED_TENANT_ID = f"e2e-{uuid.uuid4()}"
 
 results = []
 
@@ -75,8 +82,11 @@ async def pick_customer(conn):
             text(
                 "SELECT ci.customer_code, ci.customer_name FROM customer_integrations ci "
                 "JOIN customersmeta cm ON cm.customer_code = ci.customer_code "
-                "WHERE ci.integration_service_name = 'Office365' AND ci.instance_name IS NULL LIMIT 1",
+                "WHERE ci.integration_service_name = 'Office365' AND ci.instance_name IS NULL "
+                # A seeded customer a crashed run left behind is seeded afresh, never borrowed.
+                "AND ci.customer_code <> :seed LIMIT 1",
             ),
+            {"seed": SEED_CUSTOMER},
         )
     ).first()
     return (row[0], row[1]) if row else (None, None)
@@ -101,18 +111,16 @@ async def instances_of(conn, customer_code):
     return [r[0] for r in rows]
 
 
-async def cleanup(customer_code):
+async def cleanup(customer_code, instance=INSTANCE):
     """Remove whatever this run created, whether or not the API delete got to run."""
     from sqlalchemy.ext.asyncio import AsyncSession
 
+    named = CustomerIntegrations.instance_name.is_(None) if instance is None else CustomerIntegrations.instance_name == instance
     async with AsyncSession(async_engine) as session:
         ci_ids = (
             (
                 await session.execute(
-                    select(CustomerIntegrations.id).where(
-                        CustomerIntegrations.customer_code == customer_code,
-                        CustomerIntegrations.instance_name == INSTANCE,
-                    ),
+                    select(CustomerIntegrations.id).where(CustomerIntegrations.customer_code == customer_code, named),
                 )
             )
             .scalars()
@@ -135,30 +143,78 @@ async def cleanup(customer_code):
             await session.execute(sa_delete(IntegrationAuthKeys).where(IntegrationAuthKeys.subscription_id.in_(sub_ids)))
             await session.execute(sa_delete(IntegrationSubscription).where(IntegrationSubscription.id.in_(sub_ids)))
         if svc_ids:
+            # Each creation makes its own service row; its config rows hold a key to it.
+            await session.execute(sa_delete(IntegrationConfig).where(IntegrationConfig.integration_service_id.in_(svc_ids)))
             await session.execute(sa_delete(IntegrationService).where(IntegrationService.id.in_(svc_ids)))
         await session.execute(sa_delete(CustomerIntegrations).where(CustomerIntegrations.id.in_(ci_ids)))
         await session.commit()
         return len(ci_ids)
 
 
+async def seed_customer():
+    """A disposable customer with the meta row that creating an integration needs."""
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.db.db_setup import create_available_integrations
+    from app.db.universal_models import Customers
+    from app.db.universal_models import CustomersMeta
+
+    await create_available_integrations(async_engine)
+    await remove_seed_customer()
+    async with AsyncSession(async_engine) as session:
+        session.add(Customers(customer_code=SEED_CUSTOMER, customer_name="E2E Office365", customer_type="MSSP", logo_file=""))
+        await session.commit()
+        session.add(
+            CustomersMeta(
+                customer_code=SEED_CUSTOMER,
+                customer_name="E2E Office365",
+                customer_meta_graylog_index="",
+                customer_meta_graylog_stream="",
+                customer_meta_grafana_org_id="",
+                customer_meta_wazuh_group="",
+            ),
+        )
+        await session.commit()
+    return SEED_CUSTOMER, "E2E Office365"
+
+
+async def remove_seed_customer():
+    """Everything the seeded customer holds, then the customer."""
+    for instance in (INSTANCE, None):
+        await cleanup(SEED_CUSTOMER, instance)
+    async with async_engine.begin() as conn:
+        for table in ("customer_integrations_meta", "custom_alert_creation_settings", "customersmeta"):
+            await conn.execute(text(f"DELETE FROM {table} WHERE customer_code = :c"), {"c": SEED_CUSTOMER})
+        await conn.execute(text("DELETE FROM customers WHERE customer_code = :c"), {"c": SEED_CUSTOMER})
+
+
 async def build_index_set_for(customer_code):
     """Build the index set config a deploy would send to Graylog, without sending it."""
     from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 
-    from app.integrations.office365.services.provision import build_index_set_config
+    from app.integrations.office365.services import provision
 
-    async with _AsyncSession(async_engine) as session:
-        return await build_index_set_config(customer_code, session)
+    async def one_shard():
+        # The shard count is read from the indexer's nodes; this check is about the prefix only,
+        # so it must not need a Wazuh indexer.
+        return 1
+
+    real, provision.output_shard_number_to_be_set_based_on_nodes = provision.output_shard_number_to_be_set_based_on_nodes, one_shard
+    try:
+        async with _AsyncSession(async_engine) as session:
+            return await provision.build_index_set_config(customer_code, session)
+    finally:
+        provision.output_shard_number_to_be_set_based_on_nodes = real
 
 
-def office365_payload(customer_code, customer_name, instance_name):
+def office365_payload(customer_code, customer_name, instance_name, tenant_id=None):
     payload = {
         "customer_code": customer_code,
         "customer_name": customer_name,
         "integration_name": "Office365",
         "integration_config": {"auth_type": "Wazuh", "config_key": "endpoint", "config_value": "not applicable"},
         "integration_auth_keys": [
-            {"auth_key_name": "TENANT_ID", "auth_value": TENANT_ID},
+            {"auth_key_name": "TENANT_ID", "auth_value": tenant_id or TENANT_ID},
             {"auth_key_name": "CLIENT_ID", "auth_value": "e2e-client"},
             {"auth_key_name": "CLIENT_SECRET", "auth_value": "e2e-secret"},
             {"auth_key_name": "API_TYPE", "auth_value": "commercial"},
@@ -174,14 +230,10 @@ async def main():
         customer_code, customer_name = await pick_customer(conn)
         username = await admin_username(conn)
 
-    if not customer_code:
-        print("No customer with an unnamed Office365 integration and a customersmeta row; nothing to test against.")
-        return 1
+    seeded = not customer_code
     if not username:
         print("No admin user (role_id=1) in this database.")
         return 1
-
-    print(f"Customer under test: {customer_code} ({customer_name}); tenant GUID: {TENANT_ID}")
 
     app = build_app()
     transport = httpx.ASGITransport(app=app)
@@ -189,6 +241,20 @@ async def main():
     try:
         async with httpx.AsyncClient(transport=transport, base_url="http://e2e", timeout=120) as client:
             H = {"Authorization": f"Bearer {await AuthHandler().encode_token(username)}"}
+
+            if seeded:
+                # No customer to borrow (a disposable database): make one, with its first tenant
+                # unnamed, exactly as every integration configured before #1117 was.
+                customer_code, customer_name = await seed_customer()
+                r = await client.post(
+                    "/integrations/create_integration",
+                    json=office365_payload(customer_code, customer_name, None, SEED_TENANT_ID),
+                    headers=H,
+                )
+                if r.status_code != 200:
+                    print(f"Could not seed {customer_code}'s first Office365 tenant: {r.status_code} {r.text[:200]}")
+                    return 1
+            print(f"Customer under test: {customer_code} ({customer_name}){' (seeded)' if seeded else ''}; tenant GUID: {TENANT_ID}")
 
             print("\n=== 0) the existing unnamed instance is visible and reads as NULL ===")
             r = await client.get(f"/integrations/customer_integrations/{customer_code}", headers=H)
@@ -338,9 +404,12 @@ async def main():
             check("only the unnamed instance remains", names == [None], str(names))
 
     finally:
-        removed = await cleanup(customer_code)
-        if removed:
-            print(f"\n(cleanup removed {removed} leftover instance row(s))")
+        if customer_code:
+            removed = await cleanup(customer_code)
+            if removed:
+                print(f"\n(cleanup removed {removed} leftover instance row(s))")
+        if seeded:
+            await remove_seed_customer()
         await async_engine.dispose()
 
     print("\n" + "=" * 60)

@@ -128,7 +128,8 @@
 				<code>Authorization: Bearer …</code>
 				or
 				<code>X-API-Key</code>
-				). Leave empty if the URL itself carries the secret (Discord / Slack).
+				<span>).</span>
+				Leave empty if the URL itself carries the secret (Discord / Slack).
 			</div>
 
 			<n-form-item :show-feedback="false">
@@ -254,25 +255,28 @@
 			<template v-else-if="isWebhook">
 				Leave empty to send a structured JSON payload (
 				<code>customer_code</code>
-				,
+				<span>,</span>
 				<code>alert_id</code>
-				,
+				<span>,</span>
 				<code>severity</code>
-				,
+				<span>,</span>
 				<code>summary</code>
-				,
+				<span>,</span>
 				<code>report_url</code>
-				,
+				<span>,</span>
 				<code>text</code>
-				). Set a template to send a custom body instead — if it's valid JSON it's sent as JSON (e.g.
+				<span>).</span>
+				Set a template to send a custom body instead — if it's valid JSON it's sent as JSON (e.g.
 				<code>{"content": "…"}</code>
-				), otherwise as plain text. Available tokens:
+				<span>),</span>
+				otherwise as plain text. Available tokens:
 				<code>{{ substitutionTokens }}</code>
-				. To include the full AI report, place
+				<span>.</span>
+				To include the full AI report, place
 				<code>{{ reportToken }}</code>
 				unquoted as a JSON value (e.g.
 				<code>"report": {{ reportToken }}</code>
-				).
+				<span>).</span>
 			</template>
 			<template v-else>
 				Leave empty to use the shared template above, or the channel default when there is none. Substitutions:

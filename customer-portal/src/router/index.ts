@@ -126,6 +126,12 @@ const router = createRouter({
 		},
 
 		{
+			path: "/exposure",
+			name: "Exposure",
+			component: () => import("@/views/Exposure.vue"),
+			meta: { title: "Exposure", auth: true, roles: RouteRole.All }
+		},
+		{
 			// A customer admin's own customers' portal users (#1296); anyone else is told it isn't theirs.
 			path: "/users",
 			name: "Users",

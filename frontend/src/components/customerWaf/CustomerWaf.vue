@@ -7,7 +7,7 @@
 					SOCFortress WAFs protecting this customer's applications. Set them up here; view their events,
 					threat intel and blocks under
 					<b>Investigate → WAF</b>
-					.
+					<span>.</span>
 				</p>
 			</div>
 			<n-button v-if="isAdmin" type="primary" :disabled="!keyConfigured" @click="openForm(null)">

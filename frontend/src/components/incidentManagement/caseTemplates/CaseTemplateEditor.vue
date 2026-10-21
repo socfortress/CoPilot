@@ -57,7 +57,8 @@
 				<code>{{ form.match_field || "[field]" }}</code>
 				equal to
 				<code>{{ form.match_value || "[value]" }}</code>
-				. Leave blank for an unconditional template.
+				<span>.</span>
+				Leave blank for an unconditional template.
 			</p>
 			<div class="grid grid-cols-1 gap-3 @md:grid-cols-2">
 				<n-form-item label="Match field" path="match_field" :show-feedback="false">

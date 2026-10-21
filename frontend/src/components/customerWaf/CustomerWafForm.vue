@@ -32,7 +32,8 @@
 			<p class="text-secondary -mt-3 text-xs">
 				Issue it in the WAF under
 				<b>Service Tokens</b>
-				, for a dedicated user. Its WAF role sets what CoPilot can do:
+				<span>,</span>
+				for a dedicated user. Its WAF role sets what CoPilot can do:
 				<b>viewer</b>
 				reads,
 				<b>admin</b>

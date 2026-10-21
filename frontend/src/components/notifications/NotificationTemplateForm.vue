@@ -76,7 +76,8 @@
 		<div v-else-if="isTempPassword" class="text-secondary mb-4 text-xs">
 			This is the email an admin sends from
 			<strong>Customers → Security → Email temp password</strong>
-			. It is not a notification route and fires only on that action. Set
+			<span>.</span>
+			It is not a notification route and fires only on that action. Set
 			<strong>Customer</strong>
 			to give one customer their own wording or language; leave it empty for the shared default. The most specific
 			one wins, and the admin can still override it for a single send.
@@ -130,7 +131,8 @@
 				<div class="text-secondary mb-2 text-xs">
 					For
 					<strong>{{ form.trigger ? triggerLabel(form.trigger) : "any trigger" }}</strong>
-					. Wrap in
+					<span>.</span>
+					Wrap in
 					<code>{{ mustache }}</code>
 					to output a value.
 				</div>

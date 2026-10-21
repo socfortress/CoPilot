@@ -1,7 +1,7 @@
 """add user_customer_access.is_customer_admin and user.disabled_at
 
 Revision ID: b1296a0c1d2e
-Revises: a7d2e9c4b5f1
+Revises: a1289e0b1c2d
 Create Date: 2026-10-22 09:00:00.000000
 
 Self-service management of a customer's portal users (#1296). ``is_customer_admin`` marks a
@@ -19,7 +19,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b1296a0c1d2e"
-down_revision: Union[str, None] = "a7d2e9c4b5f1"
+down_revision: Union[str, None] = "a1289e0b1c2d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -80,6 +80,14 @@ export interface CustomerPortalActivitySettings {
 	updated_by: number | null
 }
 
+/** Per-customer switch for the Customer Portal's Exposure page (#1289). Opt-in: a missing row reads as off. */
+export interface CustomerPortalExposureSettings {
+	customer_code: string
+	enabled: boolean
+	updated_at: string | null
+	updated_by: number | null
+}
+
 export interface CustomerPortalBrandingListItem {
 	customer_code: string
 	enabled: boolean

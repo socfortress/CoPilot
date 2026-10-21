@@ -24,7 +24,8 @@
 		<n-alert v-if="job && job.hardened === false" type="warning" :bordered="false" class="text-sm">
 			This result came from the dev-only in-process inspector —
 			<b>no container isolation</b>
-			. Not for production triage.
+			<span>.</span>
+			Not for production triage.
 		</n-alert>
 
 		<n-alert v-if="job?.status === 'failed'" type="error" :bordered="false" class="text-sm">

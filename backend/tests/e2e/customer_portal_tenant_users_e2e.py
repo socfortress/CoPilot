@@ -150,7 +150,7 @@ async def migration_round_trip():
             return bool(disabled), bool(admin)
 
     await async_engine.dispose()
-    await asyncio.to_thread(command.downgrade, config, "a7d2e9c4b5f1")
+    await asyncio.to_thread(command.downgrade, config, "a1289e0b1c2d")
     check("downgrade drops both columns", await columns() == (False, False))
     await asyncio.to_thread(command.upgrade, config, "head")
     check("upgrade brings them back", await columns() == (True, True))
