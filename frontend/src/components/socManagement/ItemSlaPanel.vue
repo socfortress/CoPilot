@@ -112,13 +112,18 @@ const emit = defineEmits<{ (e: "loaded", value: ItemSla | null): void }>()
 
 const sla = shallowRef<ItemSla | null>(null)
 
+/** An answer without an item's severity and both clocks is not SLA data: the panel stays hidden. */
+function readable(data: ItemSla | null | undefined): ItemSla | null {
+	return data && typeof data.severity === "string" && data.ack && data.resolve ? data : null
+}
+
 watch(
 	() => `${entity}:${itemId}:${refreshKey}`,
 	async (_key, _old, onCleanup) => {
 		const controller = new AbortController()
 		onCleanup(() => controller.abort())
 		try {
-			sla.value = (await Api.socManagement.getItemSla(entity, itemId, controller.signal)).data
+			sla.value = readable((await Api.socManagement.getItemSla(entity, itemId, controller.signal)).data)
 		} catch {
 			if (controller.signal.aborted) return
 			sla.value = null
