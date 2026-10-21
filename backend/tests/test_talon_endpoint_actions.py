@@ -771,11 +771,14 @@ def test_the_start_functions_signatures_are_pinned():
             "request",
             "session",
             "literal_values",
-        ] + (["require_built_in", "analyst_policy", "limits"] if function is velociraptor_routes.start_collection_as else [])
+        ] + (
+            ["require_built_in", "analyst_policy", "limits", "audit_values"] if function is velociraptor_routes.start_collection_as else []
+        )
         assert inspect.signature(function).parameters["literal_values"].default is False
     assert inspect.signature(velociraptor_routes.start_collection_as).parameters["require_built_in"].default is False
     assert inspect.signature(velociraptor_routes.start_collection_as).parameters["analyst_policy"].default is True
     assert inspect.signature(velociraptor_routes.start_collection_as).parameters["limits"].default is None
+    assert inspect.signature(velociraptor_routes.start_collection_as).parameters["audit_values"].default is None
 
 
 class _HostRows:

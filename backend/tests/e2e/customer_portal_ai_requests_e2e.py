@@ -71,7 +71,7 @@ def check(name, passed, detail=""):
     print(f"  {'PASS' if passed else 'FAIL'}  {name}" + (f"  [{detail}]" if detail else ""))
 
 
-async def fake_talon(request):
+async def fake_talon(request, **_):
     if talon_fails:
         raise HTTPException(status_code=500, detail="Talon stack trace: secret internals")
     sent_to_talon.append(request)

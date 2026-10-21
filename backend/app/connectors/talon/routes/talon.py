@@ -23,6 +23,9 @@ from app.connectors.talon.services.talon import investigate_alert_for_user
 from app.connectors.talon.services.talon import list_talon_templates
 from app.connectors.talon.services.talon import reset_talon_session
 from app.connectors.talon.services.talon import stream_talon_message
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.db.db_session import get_db
 
 talon_router = APIRouter()
@@ -61,7 +64,9 @@ async def send_message(
     "/investigate",
     response_model=TalonInvestigateResponse,
     description="Trigger a Talon investigation for a specific alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # Never the Talon service account: an investigation it sent would be a trigger record of its own
+    # making, which automated collections are bound to (talon-analyst plan AP-2a).
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def trigger_investigation(
     request: TalonInvestigateRequest,

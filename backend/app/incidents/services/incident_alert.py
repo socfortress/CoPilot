@@ -23,6 +23,7 @@ from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.services.talon import (
     investigate_alert as talon_investigate_alert,
 )
+from app.connectors.talon.services.talon_triggers import PIPELINE as PIPELINE_TRIGGER
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_indexer.utils.universal import (
     create_wazuh_indexer_client_async,
@@ -1141,7 +1142,7 @@ async def handle_talon_investigation(alert_id: int, customer_code: str, session:
 
 async def _investigate_in_background(alert_id: int, customer_code: str) -> None:
     try:
-        await talon_investigate_alert(TalonInvestigateRequest(alert_id=alert_id, customer_code=customer_code))
+        await talon_investigate_alert(TalonInvestigateRequest(alert_id=alert_id, customer_code=customer_code), source=PIPELINE_TRIGGER)
     except Exception as e:
         logger.error(f"Failed to trigger Talon investigation for alert {alert_id}: {e}")
 
