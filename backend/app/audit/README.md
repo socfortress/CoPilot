@@ -82,6 +82,10 @@ one instrumentation point.
 | `user.create` | `app/auth` user create | `user` / new id | new = {username, role_id} |
 | `user.delete` | `app/auth` user delete | `user` / id | old = {username, role_id} |
 | `user.role_change` | `app/auth` role update | `user` / id | old/new = {role_id} |
+| `user.disable` / `user.enable` | SOC Security tab or a customer admin in the portal (#1296) | `user` / username | details say who; + customer_code from the portal |
+| `customer_admin.update` | SOC Security tab (#1296) | `user` / username | old/new = {is_customer_admin}; + customer_code |
+| `customer_user.invite` | a customer admin in the portal (#1296) | `user` / username | new = {username, email, customer_codes}; + customer_code |
+| `customer_user.totp_reset` / `customer_user.password_reset` | a customer admin in the portal (#1296) | `user` / username | + customer_code; the password is never recorded |
 | `connector.create/update/delete` | `app/connectors` services | `connector` / name | new/old = sanitized config (no secrets) |
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |

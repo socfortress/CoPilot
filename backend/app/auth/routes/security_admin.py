@@ -43,12 +43,20 @@ class CustomerSecurityUser(BaseModel):
     totp_enabled: bool = False
     # Still on a password an admin chose (#1277): the portal holds them on the change.
     must_change_password: bool = False
+    # Administers this customer's portal users from the portal (#1296).
+    is_customer_admin: bool = False
+    # Set while the account is disabled (#1296): it cannot sign in.
+    disabled_at: Optional[datetime.datetime] = None
 
 
 class CustomerSecurityUsersResponse(BaseModel):
     users: List[CustomerSecurityUser]
     success: bool = True
     message: str = "Users retrieved successfully"
+
+
+class CustomerAdminRequest(BaseModel):
+    is_customer_admin: bool
 
 
 class SmtpStatusResponse(BaseModel):
@@ -144,6 +152,84 @@ async def list_customer_security_users(
 ) -> CustomerSecurityUsersResponse:
     users = await security_admin.list_customer_users(db, customer_code)
     return CustomerSecurityUsersResponse(users=[CustomerSecurityUser(**u) for u in users])
+
+
+@security_admin_router.put(
+    "/security/customers/{customer_code}/users/{user_id}/customer-admin",
+    response_model=ActionResponse,
+    description="Make a portal user an administrator of this customer's portal users, or not (#1296).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def set_customer_admin(
+    customer_code: str,
+    user_id: int,
+    payload: CustomerAdminRequest,
+    http_request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ActionResponse:
+    user = await _get_user_or_404(db, user_id)
+    changed = await security_admin.set_customer_admin(db, customer_code, user, payload.is_customer_admin)
+    if changed:
+        await record_audit_event(
+            action=AuditAction.CUSTOMER_ADMIN_UPDATE,
+            actor_user_id=current_user.id,
+            actor_username=current_user.username,
+            customer_code=customer_code,
+            entity_type="user",
+            entity_id=user.username,
+            old_value={"is_customer_admin": not payload.is_customer_admin},
+            new_value={"is_customer_admin": payload.is_customer_admin},
+            request=http_request,
+        )
+    verb = "now administers" if payload.is_customer_admin else "no longer administers"
+    return ActionResponse(success=True, message=f"{user.username} {verb} this customer's portal users.")
+
+
+async def _set_disabled(user_id: int, disabled: bool, http_request: Request, current_user: User, db: AsyncSession) -> ActionResponse:
+    user = await _get_user_or_404(db, user_id)
+    changed = await security_admin.set_disabled(db, user, disabled)
+    if changed:
+        await record_audit_event(
+            action=AuditAction.USER_DISABLE if disabled else AuditAction.USER_ENABLE,
+            actor_user_id=current_user.id,
+            actor_username=current_user.username,
+            entity_type="user",
+            entity_id=user.username,
+            details=f"Portal user {'disabled' if disabled else 'enabled'} by a SOC admin",
+            request=http_request,
+        )
+    return ActionResponse(success=True, message=f"{user.username} was {'disabled' if disabled else 'enabled'}.")
+
+
+@security_admin_router.post(
+    "/security/users/{user_id}/disable",
+    response_model=ActionResponse,
+    description="Disable a portal user: they can no longer sign in, and a session they hold ends (#1296).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def disable_user(
+    user_id: int,
+    http_request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ActionResponse:
+    return await _set_disabled(user_id, True, http_request, current_user, db)
+
+
+@security_admin_router.post(
+    "/security/users/{user_id}/enable",
+    response_model=ActionResponse,
+    description="Enable a disabled portal user again (#1296).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def enable_user(
+    user_id: int,
+    http_request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ActionResponse:
+    return await _set_disabled(user_id, False, http_request, current_user, db)
 
 
 @security_admin_router.get(

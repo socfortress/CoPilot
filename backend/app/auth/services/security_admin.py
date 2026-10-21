@@ -19,6 +19,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -28,6 +29,7 @@ from app.auth.models.users import Password
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
+from app.time_utils import now_utc
 
 TEMP_PASSWORD_LENGTH = 16
 
@@ -47,11 +49,16 @@ async def list_customer_users(session: AsyncSession, customer_code: str) -> List
     accounts actually bound to this customer (the "customers").
     """
     result = await session.execute(
-        select(User)
+        select(User, UserCustomerAccess.is_customer_admin)
         .join(UserCustomerAccess, UserCustomerAccess.user_id == User.id)
         .where(UserCustomerAccess.customer_code == customer_code),
     )
-    users = list(result.scalars().unique().all())
+    admin_of_this_customer: Dict[int, bool] = {}
+    users: List[User] = []
+    for user, is_admin in result.all():
+        if user.id not in admin_of_this_customer:
+            users.append(user)
+        admin_of_this_customer[user.id] = admin_of_this_customer.get(user.id, False) or bool(is_admin)
     if not users:
         return []
 
@@ -69,9 +76,51 @@ async def list_customer_users(session: AsyncSession, customer_code: str) -> List
             "last_login_at": u.last_login_at,
             "totp_enabled": totp_map.get(u.id, False),
             "must_change_password": bool(u.must_change_password),
+            # Administers this customer's portal users from the portal (#1296).
+            "is_customer_admin": admin_of_this_customer.get(u.id, False),
+            "disabled_at": u.disabled_at,
         }
         for u in users
     ]
+
+
+async def set_customer_admin(session: AsyncSession, customer_code: str, user: User, is_customer_admin: bool) -> bool:
+    """Make a portal user an administrator of ``customer_code``, or not. Returns whether it changed.
+
+    Only a ``customer_user`` with access to the customer can be one: a SOC user never administers
+    portal users, and the flag lives on the user's access row for that customer.
+    """
+    if user.role_id != RoleEnum.customer_user.value:
+        raise HTTPException(status_code=400, detail="Only a Customer Portal user can be a customer administrator.")
+    rows = (
+        (
+            await session.execute(
+                select(UserCustomerAccess).where(UserCustomerAccess.user_id == user.id, UserCustomerAccess.customer_code == customer_code),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not rows:
+        raise HTTPException(status_code=400, detail=f"User {user.username!r} does not have access to customer {customer_code!r}.")
+    changed = any(bool(row.is_customer_admin) != is_customer_admin for row in rows)
+    for row in rows:
+        row.is_customer_admin = is_customer_admin
+        session.add(row)
+    await session.commit()
+    return changed
+
+
+async def set_disabled(session: AsyncSession, user: User, disabled: bool) -> bool:
+    """Disable a portal user's account, or enable it again. Returns whether it changed (#1296)."""
+    if user.role_id != RoleEnum.customer_user.value:
+        raise HTTPException(status_code=400, detail="Only a Customer Portal user can be disabled here.")
+    if (user.disabled_at is not None) == disabled:
+        return False
+    user.disabled_at = now_utc() if disabled else None
+    session.add(user)
+    await session.commit()
+    return True
 
 
 async def force_reset_totp(session: AsyncSession, user_id: int) -> bool:
