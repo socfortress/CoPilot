@@ -38,16 +38,21 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 import pytest  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from loguru import logger  # noqa: E402
+from sqlalchemy import delete  # noqa: E402
 from sqlalchemy import update  # noqa: E402
 from sqlmodel import SQLModel  # noqa: E402
 
 import app.connectors.velociraptor.services.artifacts as artifacts_service  # noqa: E402
 import tests.test_talon_actions as harness  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
+from app.audit.models.audit import AuditLog  # noqa: E402
 from app.auth.models.users import User  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonAutomationPolicy  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonAutomationStart  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger  # noqa: E402
+from app.connectors.talon.services import talon_automation  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
 from app.connectors.talon.services import talon_service_account  # noqa: E402
 from app.connectors.talon.services import talon_triggers  # noqa: E402
@@ -132,10 +137,21 @@ def service_users():
             yield
 
 
+#: The tables AP-2a and AP-2 add (the trigger record, the per-alert cap, the automation policy and
+#: its start records, and the audit log the start's audit row is written to in its transaction).
+AUTOMATION_TABLES = [
+    TalonInvestigationTrigger.__table__,
+    TalonAutomationAlertCap.__table__,
+    TalonAutomationPolicy.__table__,
+    TalonAutomationStart.__table__,
+    AuditLog.__table__,
+]
+
+
 class _Db(harness._Db):
     async def create(self):
         await super().create()
-        tables = [TalonInvestigationTrigger.__table__, TalonAutomationAlertCap.__table__]
+        tables = AUTOMATION_TABLES
         async with self.engine.begin() as conn:
             await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
         return self
@@ -178,8 +194,10 @@ async def _seed(db, enabled):
     return ctx
 
 
-def call(scenario, **kwargs):
-    with service_users(), patch.object(harness, "_Db", _Db), patch.object(harness, "_seed", _seed):
+def call(scenario, users=True, **kwargs):
+    """``harness.call`` with this file's tables and seed; ``users=False`` leaves the harness's users
+    as the caller patched them (a service account with another role)."""
+    with service_users() if users else ExitStack(), patch.object(harness, "_Db", _Db), patch.object(harness, "_seed", _seed):
         with patch.object(talon_triggers, "new_session", lambda: _seeded["db"].session()):
             return harness.call(scenario, **kwargs)
 
@@ -192,7 +210,9 @@ async def pins_for(allowed):
     }
 
 
-async def configure(ctx, allowed=ALL_AUTO_RUN, username=None, hashes=None):
+async def configure(ctx, allowed=ALL_AUTO_RUN, username=None, hashes=None, level_1="auto", automation=True):
+    """EA-4b's allowlist and pins, and (AP-2) the global switch and ACME's automation policy: level 1
+    on ``level_1`` (None: no row), as a level-1 customer runs once AP-2 is deployed."""
     pins = hashes if hashes is not None else (await pins_for(allowed) if allowed is not None else None)
     async with ctx.db.session() as session:
         await session.execute(
@@ -200,6 +220,19 @@ async def configure(ctx, allowed=ALL_AUTO_RUN, username=None, hashes=None):
             .where(TalonConnectorSettings.connector_name == "Talon")
             .values(collect_allowed_artifacts=allowed, collect_service_username=username, collect_definition_hashes=pins),
         )
+        await session.commit()
+    await set_policy(ctx, level_1=level_1, automation=automation)
+
+
+async def set_policy(ctx, level_1="auto", automation=True, customer=ACME, **modes):
+    """The global switch and ``customer``'s automation policy (``level_1`` None: no row)."""
+    async with ctx.db.session() as session:
+        await session.execute(
+            update(TalonConnectorSettings).where(TalonConnectorSettings.connector_name == "Talon").values(automation_enabled=automation),
+        )
+        await session.execute(delete(TalonAutomationPolicy).where(TalonAutomationPolicy.customer_code == customer))
+        if level_1 is not None:
+            session.add(TalonAutomationPolicy(customer_code=customer, level_1_mode=level_1, **modes))
         await session.commit()
 
 
@@ -446,8 +479,8 @@ def test_a_custom_definition_is_refused_for_the_service_account():
 @pytest.mark.parametrize(
     "payload, allowed",
     [
-        (body("Windows.System.DNSCache"), ALL_AUTO_RUN),  # an analyst may; the service account may not
-        (body("Windows.Forensics.Prefetch"), ALL_AUTO_RUN),
+        # (A catalogue artifact outside the auto-run subset is level 2 since AP-2:
+        # test_talon_automation_policy's level tests.)
         (body("Windows.System.Pslist"), ["Windows.System.Services"]),  # auto-run, but not on the admin's list
         (body("Windows.System.Services", [{"key": "Calculate_hashes", "value": "Y"}, SERVICES_PINS[1]]), ALL_AUTO_RUN),
         (body("Windows.System.Services", [SERVICES_PINS[0]]), ALL_AUTO_RUN),  # a pin left out
@@ -468,8 +501,15 @@ def test_the_service_account_outside_its_allowlist_or_with_a_changed_pin_is_a_40
 def test_the_service_account_is_held_whatever_its_role():
     with patch.dict(harness.SCOPES, {SERVICE: ["admin"]}):
         with patch.dict(harness.USERS, {SERVICE: (20, 1, [])}):
-            response, vr, ctx = harness.call(start_scenario(SERVICE, body("Windows.System.DNSCache")))
+            response, vr, ctx = call(start_scenario(SERVICE, body("Windows.System.DNSCache")), users=False)
     assert response.status_code == 403 and vr.starts == []
+    with patch.dict(harness.SCOPES, {SERVICE: ["admin"]}):
+        with patch.dict(harness.USERS, {SERVICE: (20, 1, [])}):
+            response, vr, ctx = call(
+                start_scenario(SERVICE, body("Windows.System.Pslist"), allowed=["Windows.System.Services"]),
+                users=False,
+            )
+    assert response.status_code == 403 and response.json()["message"] == talon_collections.SERVICE_REFUSED and vr.starts == []
 
 
 @pytest.mark.parametrize("allowed", [None, []])
@@ -809,7 +849,7 @@ def test_the_service_account_is_refused_on_collect_and_file_collection(name):
 def test_the_service_account_is_refused_on_collect_whatever_its_role():
     with patch.dict(harness.SCOPES, {SERVICE: ["admin"]}), patch.dict(harness.USERS, {SERVICE: (20, 1, [])}):
         with patch.object(harness, "_app", _full_app):
-            response, vr, waited, ctx = harness.call(manual_scenario(SERVICE, "/artifacts/collect", COLLECT))
+            response, vr, waited, ctx = call(manual_scenario(SERVICE, "/artifacts/collect", COLLECT), users=False)
     assert response.status_code == 403 and vr.starts == []
 
 
@@ -1147,7 +1187,7 @@ def test_definition_reads_are_cached_between_starts():
             answers = [await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE)) for _ in range(3)]
         return answers, vr.definitions.lookups[before:]
 
-    with patch.object(talon_triggers, "PER_ALERT_CAP", 3):  # three starts on one alert
+    with patch.dict(talon_automation.CAP_DEFAULTS, {"per_alert": 3}):  # three starts on one alert
         answers, lookups = call(scenario)
     assert [a.status_code for a in answers] == [200, 200, 200]
     assert lookups == [("Windows.System.Services", "root")]  # one read for three starts
@@ -1249,6 +1289,7 @@ def test_a_renamed_service_account_is_still_gated_after_a_restart():
             vr = Velociraptor(stack, host_artifacts=HOST_ARTIFACTS)
             with patch.object(talon_collections, "record_audit_event", ctx.audit):
                 await client.put(SETTINGS, json={"service_username": "svc", "allowed_artifacts": ALL_AUTO_RUN}, headers=as_user("admin"))
+            await set_policy(ctx)
             async with ctx.db.session() as session:  # the account is renamed outside the setting
                 await session.execute(update(User).where(User.id == 21).values(username="renamed"))
                 await session.commit()
@@ -1266,7 +1307,7 @@ def test_a_renamed_service_account_is_still_gated_after_a_restart():
 
     row, outside, manual, vr = call(scenario)
     assert row.collect_service_user_id == 21  # kept
-    assert outside.status_code == 403 and outside.json()["message"] == talon_collections.SERVICE_REFUSED  # still held
+    assert outside.status_code == 403 and outside.json()["message"] == talon_automation.LEVEL_OFF  # still held (level 2 is off)
     assert manual.status_code == 200 and vr.starts[0][2]["literal_values"] is True  # its allowlist still works
     assert [line for line in lines if "stays held to the gate" in line]
 
