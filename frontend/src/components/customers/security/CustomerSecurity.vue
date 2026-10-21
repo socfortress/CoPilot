@@ -4,7 +4,8 @@
 			<div class="flex flex-col gap-1">
 				<h3 class="text-lg font-bold">Security</h3>
 				<p class="text-secondary text-sm">
-					Manage 2FA and passwords for the user accounts scoped to this customer
+					Manage 2FA and passwords for the user accounts scoped to this customer. A customer admin manages
+					this customer's other portal users from the Customer Portal.
 				</p>
 			</div>
 			<!-- The tab stays mounted: a user who changes their password or signs in meanwhile shows on a refresh (#1277). -->
@@ -47,6 +48,27 @@
 									data-testid="security-must-change-password"
 								>
 									Password change pending
+								</n-tag>
+								<!-- Manages this customer's other portal users from the portal (#1296). -->
+								<n-tag
+									v-if="user.is_customer_admin"
+									type="info"
+									size="tiny"
+									:bordered="false"
+									title="Manages this customer's portal users from the Customer Portal."
+									data-testid="security-customer-admin"
+								>
+									Customer admin
+								</n-tag>
+								<n-tag
+									v-if="user.disabled_at"
+									type="error"
+									size="tiny"
+									:bordered="false"
+									:title="`Disabled on ${formatDate(user.disabled_at, dFormats.datetime, { tz: true })}: the user cannot sign in.`"
+									data-testid="security-disabled"
+								>
+									Disabled
 								</n-tag>
 							</div>
 						</td>
@@ -95,6 +117,33 @@
 									<template #icon><Icon :name="KeyIcon" :size="13" /></template>
 									Set password
 								</n-button>
+
+								<!-- Portal accounts only (#1296): the SOC appoints customer admins and can disable an account. -->
+								<template v-if="isPortalUser(user)">
+									<n-button
+										size="tiny"
+										secondary
+										:disabled="busyUserId === user.id"
+										data-testid="security-toggle-customer-admin"
+										@click="confirmCustomerAdmin(user)"
+									>
+										<template #icon><Icon :name="AdminIcon" :size="13" /></template>
+										{{ user.is_customer_admin ? "Remove customer admin" : "Make customer admin" }}
+									</n-button>
+									<n-button
+										size="tiny"
+										:type="user.disabled_at ? 'success' : 'error'"
+										secondary
+										:disabled="busyUserId === user.id"
+										data-testid="security-toggle-disabled"
+										@click="confirmDisabled(user)"
+									>
+										<template #icon>
+											<Icon :name="user.disabled_at ? EnableIcon : DisableIcon" :size="13" />
+										</template>
+										{{ user.disabled_at ? "Enable" : "Disable" }}
+									</n-button>
+								</template>
 							</div>
 						</td>
 					</tr>
@@ -288,6 +337,9 @@ const ResetIcon = "carbon:reset"
 const MailIcon = "carbon:email"
 const RefreshIcon = "carbon:renew"
 const KeyIcon = "carbon:password"
+const AdminIcon = "carbon:user-admin"
+const DisableIcon = "carbon:user-follow"
+const EnableIcon = "carbon:checkmark-outline"
 
 const message = useMessage()
 const dialog = useDialog()
@@ -363,6 +415,7 @@ function roleLabel(role?: string | null) {
 	const labels: Record<string, string> = {
 		admin: "Admin",
 		analyst: "Analyst",
+		responder: "Responder",
 		scheduler: "Scheduler",
 		customer_user: "Customer"
 	}
@@ -392,6 +445,56 @@ async function loadSmtpStatus() {
 	} catch {
 		smtpConfigured.value = false
 	}
+}
+
+function isPortalUser(user: CustomerSecurityUser) {
+	return user.role_name === "customer_user"
+}
+
+/** Run one action on one user: busy while it runs, the list read again after. */
+async function act(user: CustomerSecurityUser, run: () => Promise<{ data: { success: boolean; message?: string } }>) {
+	busyUserId.value = user.id
+	try {
+		const response = await run()
+		if (response.data.success) message.success(response.data.message || "Done")
+		else message.error(response.data.message || "The action failed")
+	} catch (error) {
+		message.error(getApiErrorMessage(error as ApiError) || "The action failed")
+	} finally {
+		busyUserId.value = null
+		await loadUsers()
+	}
+}
+
+function confirmCustomerAdmin(user: CustomerSecurityUser) {
+	const appoint = !user.is_customer_admin
+	dialog.warning({
+		title: appoint ? "Make customer admin" : "Remove customer admin",
+		content: appoint
+			? `Let "${user.username}" manage this customer's portal users from the Customer Portal: invite colleagues, disable and enable them, reset their 2FA and issue temporary passwords?`
+			: `"${user.username}" will no longer manage this customer's portal users.`,
+		positiveText: appoint ? "Make customer admin" : "Remove",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			act(user, () => Api.security.setCustomerAdmin(customerCode, user.id, appoint))
+		}
+	})
+}
+
+function confirmDisabled(user: CustomerSecurityUser) {
+	if (user.disabled_at) {
+		act(user, () => Api.security.enableUser(user.id))
+		return
+	}
+	dialog.error({
+		title: "Disable account",
+		content: `Disable "${user.username}"? They will not be able to sign in, and a session they hold ends at its next request. You can enable the account again.`,
+		positiveText: "Disable",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			act(user, () => Api.security.disableUser(user.id))
+		}
+	})
 }
 
 function confirmResetTotp(user: CustomerSecurityUser) {
