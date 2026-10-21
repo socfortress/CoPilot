@@ -3,6 +3,7 @@ import type {
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
+	CustomerPortalExposureSettings,
 	CustomerPortalNotificationSettings,
 	CustomerPortalSettings,
 	CustomerPortalSlaSettings
@@ -57,6 +58,14 @@ export interface CustomerPortalSlaSettingsPayload {
 
 type SlaSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalSlaSettings
+}
+
+export interface CustomerPortalExposureSettingsPayload {
+	enabled: boolean
+}
+
+type ExposureSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalExposureSettings
 }
 
 export interface CustomerPortalNotificationSettingsPayload {
@@ -122,5 +131,12 @@ export default {
 	/** Admin-only: turns portal users' notifications on or off for this customer (#1282). */
 	setCustomerNotificationSettings(customerCode: string, payload: CustomerPortalNotificationSettingsPayload) {
 		return HttpClient.put<NotificationSettingsResponse>(`/customer_portal/notifications/settings/${customerCode}`, payload)
+	},
+	getCustomerExposureSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, { signal })
+	},
+	/** Admin-only: shows or hides the portal's Exposure page for this customer (#1289). */
+	setCustomerExposureSettings(customerCode: string, payload: CustomerPortalExposureSettingsPayload) {
+		return HttpClient.put<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, payload)
 	}
 }
