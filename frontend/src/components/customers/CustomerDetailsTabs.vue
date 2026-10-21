@@ -260,6 +260,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"AI Report",
 	"SLA",
 	"Activity",
+	"Portal Notifications",
 	"Exposure",
 	"Security"
 ])
