@@ -108,6 +108,9 @@
 				>
 					<CustomerPortalNotifications :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane name="Exposure" tab="Exposure" display-directive="show:lazy" class="p-4!">
+					<CustomerPortalExposure :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
 				</n-tab-pane>
@@ -236,6 +239,8 @@ const CustomerPortalActivity = defineAsyncComponent(() => import("@/components/c
 const CustomerPortalNotifications = defineAsyncComponent(
 	() => import("@/components/customerPortal/NotificationSettings.vue")
 )
+// Per-customer switch for the portal's read-only Exposure page: vulnerabilities and compliance (#1289).
+const CustomerPortalExposure = defineAsyncComponent(() => import("@/components/customerPortal/ExposureSettings.vue"))
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
 const CustomerWaf = defineAsyncComponent(() => import("@/components/customerWaf/CustomerWaf.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
@@ -271,6 +276,8 @@ const CUSTOMER_SUB_TABS = new Set([
 	"AI Report",
 	"SLA",
 	"Activity",
+	"Portal Notifications",
+	"Exposure",
 	"Security"
 ])
 

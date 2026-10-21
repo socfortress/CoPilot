@@ -51,11 +51,13 @@
 								<li>
 									Set a name (e.g.
 									<code>CoPilot SSO</code>
-									), choose
+									<span>),</span>
+									choose
 									<em>Accounts in this organizational directory only</em>
-									, then click
+									<span>,</span>
+									then click
 									<strong>Register</strong>
-									.
+									<span>.</span>
 								</li>
 								<li>
 									Copy the
@@ -174,7 +176,7 @@
 									</n-button>
 									and click
 									<strong>Create Credentials &rarr; OAuth client ID</strong>
-									.
+									<span>.</span>
 								</li>
 								<li>
 									Choose
@@ -184,7 +186,8 @@
 								<li>
 									Under
 									<strong>Authorized redirect URIs</strong>
-									, add:
+									<span>,</span>
+									add:
 									<code>https://&lt;your-domain&gt;/api/auth/sso/google/callback</code>
 								</li>
 								<li>
@@ -287,14 +290,15 @@
 									</n-button>
 									go to
 									<strong>Access → Applications → Add an application</strong>
-									.
+									<span>.</span>
 								</li>
 								<li>
 									Choose
 									<strong>Self-hosted</strong>
-									. Set the domain to your CoPilot URL (e.g.
+									<span>.</span>
+									Set the domain to your CoPilot URL (e.g.
 									<code>copilot.example.com</code>
-									).
+									<span>).</span>
 								</li>
 								<li>
 									Under
@@ -317,7 +321,8 @@
 									<strong>Settings → Custom Pages</strong>
 									(e.g.
 									<code>myteam.cloudflareaccess.com</code>
-									) → paste as
+									<span>)</span>
+									→ paste as
 									<em>Team Domain</em>
 									below.
 								</li>

@@ -24,7 +24,8 @@
 						<code>.yml</code>
 						file to
 						<code>/var/ossec/ruleset/sca/</code>
-						, setting the correct ownership, and restarting the agent:
+						<span>,</span>
+						setting the correct ownership, and restarting the agent:
 					</p>
 					<CodeSource :code="deploymentCommands" lang="bash" />
 				</div>

@@ -30,6 +30,7 @@ import { NMenu } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
+import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useThemeStore } from "@/stores/theme"
 import getItems from "./items"
@@ -47,11 +48,13 @@ const expandedKeys = ref<string[] | undefined>(undefined)
 
 const themeStore = useThemeStore()
 
-// The SLA (#1187) and Activity (#1284) pages are offered only to users whose customer has them on.
+// The SLA (#1187), Activity (#1284) and Exposure (#1289) pages are offered only to users whose
+// customer has them on.
 const { available: slaAvailable, isEnabledFor: isSlaEnabledFor } = useSlaAvailability()
 const { available: activityAvailable, isEnabledFor: isActivityEnabledFor } = useActivityAvailability()
+const { available: exposureAvailable, isEnabledFor: isExposureEnabledFor } = useExposureAvailability()
 const menuOptions = computed<MenuMixedOption[]>(() =>
-	getItems({ sla: slaAvailable.value, activity: activityAvailable.value })
+	getItems({ sla: slaAvailable.value, activity: activityAvailable.value, exposure: exposureAvailable.value })
 )
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
@@ -71,6 +74,7 @@ onBeforeMount(() => {
 	setMenuKey(route.matched)
 	isSlaEnabledFor()
 	isActivityEnabledFor()
+	isExposureEnabledFor()
 
 	router.afterEach(route => {
 		if (route?.matched?.length) {

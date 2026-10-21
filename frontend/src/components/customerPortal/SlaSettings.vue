@@ -55,7 +55,8 @@
 							<b>compliance</b>
 							— the share of acknowledge and resolve targets met — and the median
 							<b>response and resolution times</b>
-							, compared with the previous period;
+							<span>,</span>
+							compared with the previous period;
 						</li>
 						<li>
 							the
@@ -71,14 +72,16 @@
 					<p>
 						This only decides what the customer can
 						<b>see</b>
-						. SLA clocks run for every customer either way, and the targets themselves are set under
+						<span>.</span>
+						SLA clocks run for every customer either way, and the targets themselves are set under
 						<b>SOC Management → Policies</b>
-						.
+						<span>.</span>
 					</p>
 					<p>
 						New customers start with this
 						<b>off</b>
-						, so response-time figures are never published to a customer without an explicit decision.
+						<span>,</span>
+						so response-time figures are never published to a customer without an explicit decision.
 					</p>
 				</div>
 

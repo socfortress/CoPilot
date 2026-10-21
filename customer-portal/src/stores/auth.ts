@@ -10,6 +10,7 @@ import Api from "@/api"
 import { resetEventSearchMemory } from "@/components/eventSearch/useEventSearchMemory"
 import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
+import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
@@ -64,11 +65,12 @@ export const useAuthStore = defineStore("auth", {
 
 			useCustomerFilterStore().clear()
 			useReportGenerationStore().reset()
-			// The next user may see other customers, whose AI report, SLA and Activity switches
-			// may be off: no cached answer may outlive the session that asked.
+			// The next user may see other customers, whose AI report, SLA, Activity and Exposure
+			// switches may be off: no cached answer may outlive the session that asked.
 			useAiReportsAvailability().reset()
 			useSlaAvailability().reset()
 			useActivityAvailability().reset()
+			useExposureAvailability().reset()
 			// The bell's server notifications are the user's own (#1282).
 			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).

@@ -47,7 +47,7 @@
 		<div class="text-secondary text-xs">
 			Escape any of these to search them literally (with
 			<code>\</code>
-			):
+			<span>):</span>
 			<code class="break-all">&amp; | : \ / + - ! ( ) {{ '{ } [ ] ^ " ~ * ?' }}</code>
 		</div>
 	</div>

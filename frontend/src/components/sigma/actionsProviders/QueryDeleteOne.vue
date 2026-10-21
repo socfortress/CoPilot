@@ -8,7 +8,7 @@
 			<div>
 				Are you sure you want to delete the Query
 				<strong>#{{ query.id }}</strong>
-				?
+				<span>?</span>
 			</div>
 
 			<div class="flex justify-between gap-2">

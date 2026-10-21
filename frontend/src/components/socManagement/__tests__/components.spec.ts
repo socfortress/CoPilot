@@ -431,6 +431,14 @@ describe("itemSlaPanel", () => {
 		expect(wrapper.emitted("loaded")?.[0]).toEqual([null])
 	})
 
+	it("hides itself when the answer is not an item's SLA (a proxy page, an older backend)", async () => {
+		getItemSla.mockResolvedValue({ data: { success: true } })
+		const wrapper = mount(ItemSlaPanel, { props: { entity: "alert", itemId: 7 } })
+		await flushPromises()
+		expect(wrapper.html()).toBe("<!--v-if-->")
+		expect(wrapper.emitted("loaded")?.[0]).toEqual([null])
+	})
+
 	it("reloads when the item changes", async () => {
 		getItemSla.mockResolvedValue({ data: sla })
 		const wrapper = mount(ItemSlaPanel, { props: { entity: "alert", itemId: 7, refreshKey: "OPEN" } })

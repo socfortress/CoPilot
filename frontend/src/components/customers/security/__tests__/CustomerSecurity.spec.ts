@@ -21,12 +21,12 @@ function user(id: number, username: string, mustChange: boolean) {
 }
 
 function render() {
+	// The component under test, inside the message provider it needs.
+	const content = () => h(NDialogProvider, null, () => h(CustomerSecurity, { customerCode: "ACME" }))
+
 	return mount(
 		defineComponent({
-			setup: () => () =>
-				h(NMessageProvider, null, () =>
-					h(NDialogProvider, null, () => h(CustomerSecurity, { customerCode: "ACME" }))
-				)
+			setup: () => () => h(NMessageProvider, null, content)
 		})
 	)
 }

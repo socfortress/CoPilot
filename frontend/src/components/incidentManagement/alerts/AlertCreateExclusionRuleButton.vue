@@ -22,10 +22,11 @@
 					<template v-if="draft?.computer">
 						(host
 						<code>{{ draft.computer }}</code>
-						)
+						<span>)</span>
 					</template>
-					. Channel and title match exactly; tick the fields that identify the benign activity and complete
-					the justification. The rule is checked live against this alert as you edit it.
+					<span>.</span>
+					Channel and title match exactly; tick the fields that identify the benign activity and complete the
+					justification. The rule is checked live against this alert as you edit it.
 				</p>
 
 				<n-alert v-if="draft && !draft.payload_available" type="warning">

@@ -70,10 +70,8 @@ describe("route form", () => {
 		await flushPromises()
 		const trigger = selectOffering(wrapper, "alert_assigned")
 		expect(values(trigger)).toEqual(expect.arrayContaining(["sla_at_risk", "sla_breached"]))
-		expect(
-			(trigger.props("options") as { value: string; label: string }[]).find(o => o.value === "sla_breached")
-				?.label
-		).toBe("An alert or case SLA is breached")
+		const options = trigger.props("options") as { value: string; label: string }[]
+		expect(options.find(o => o.value === "sla_breached")?.label).toBe("An alert or case SLA is breached")
 	})
 
 	it("never offers them on a customer's route", async () => {

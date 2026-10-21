@@ -646,6 +646,34 @@ class CustomerPortalNotification(SQLModel, table=True):
     email_error: Optional[str] = Field(default=None, max_length=500, nullable=True)
 
 
+class CustomerPortalExposureSettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's Exposure page (#1289).
+
+    **Opt-in** like the SLA and AI report switches: a customer with no row here does not
+    see the page. Its figures are read live from Wazuh (the vulnerability states in the
+    indexer, SCA from the manager) through ``app/customer_portal/services/exposure*.py``,
+    for the agents of the customers whose switch is on; nothing should read this table
+    directly.
+    """
+
+    __tablename__ = "customer_portal_exposure_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 

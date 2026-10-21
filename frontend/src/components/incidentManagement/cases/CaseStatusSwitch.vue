@@ -26,7 +26,8 @@
 			This case has {{ pendingTasks.length }} mandatory task{{ pendingTasks.length === 1 ? "" : "s" }} that
 			{{ pendingTasks.length === 1 ? "is" : "are" }} not marked
 			<strong>Done</strong>
-			. Closing anyway will record the override in the case timeline.
+			<span>.</span>
+			Closing anyway will record the override in the case timeline.
 		</p>
 
 		<ul class="text-sm">

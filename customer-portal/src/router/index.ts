@@ -126,6 +126,12 @@ const router = createRouter({
 		},
 
 		{
+			path: "/exposure",
+			name: "Exposure",
+			component: () => import("@/views/Exposure.vue"),
+			meta: { title: "Exposure", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/activity",
 			name: "Activity",
 			component: () => import("@/views/Activity.vue"),

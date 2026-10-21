@@ -88,9 +88,10 @@
 							Wazuh saw the log but no analyst-facing rule fired. Try a different "Format" — most
 							agent-forwarded logs use
 							<code>syslog</code>
-							; pure JSON payloads use
+							<span>;</span>
+							pure JSON payloads use
 							<code>json</code>
-							.
+							<span>.</span>
 						</div>
 					</div>
 				</div>

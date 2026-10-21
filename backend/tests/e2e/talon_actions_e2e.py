@@ -60,6 +60,8 @@ from sqlalchemy import text  # noqa: E402
 from sqlalchemy import update  # noqa: E402
 from sqlalchemy.dialects import mysql as mysql_dialect  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
+from sqlalchemy.ext.asyncio import create_async_engine  # noqa: E402
+from sqlalchemy.pool import NullPool  # noqa: E402
 
 import app.connectors.velociraptor.routes.artifacts as artifact_routes  # noqa: E402
 from alembic import command  # noqa: E402
@@ -409,10 +411,10 @@ async def main():
                 await asyncio.sleep(0.05)
             await asyncio.sleep(0.5)  # inside the route's run, the host's rows locked
 
-            async def timed(work):
+            async def timed(work, engine=async_engine):
                 started = asyncio.get_running_loop().time()
                 try:
-                    async with AsyncSession(async_engine) as s:
+                    async with AsyncSession(engine) as s:
                         await work(s)
                         await s.commit()
                     return asyncio.get_running_loop().time() - started, None
@@ -433,7 +435,13 @@ async def main():
 
             updated, update_error = await timed(touch_other)
             inserted, insert_error = await timed(add_new)
-            neighboured, neighbour_error = await timed(add_neighbour)
+            # Its shortened lock wait stays on a connection of its own, closed after it, so no pooled
+            # connection carries it into G's check.
+            unpooled = create_async_engine(async_engine.url, poolclass=NullPool)
+            try:
+                neighboured, neighbour_error = await timed(add_neighbour, unpooled)
+            finally:
+                await unpooled.dispose()
             still_running = not running.done()
             response = await running
             velociraptor.side_effect = None

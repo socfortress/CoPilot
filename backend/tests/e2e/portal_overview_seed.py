@@ -41,6 +41,7 @@ from app.db.universal_models import CustomerPortalActivitySettings  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
+from app.db.universal_models import CustomerPortalExposureSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
 from app.db.universal_models import EventSources  # noqa: E402
@@ -192,6 +193,7 @@ async def cleanup(s):
     await s.execute(delete(CustomerPortalAiRequest).where(CustomerPortalAiRequest.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalActivitySettings).where(CustomerPortalActivitySettings.customer_code.in_(codes)))
+    await s.execute(delete(CustomerPortalExposureSettings).where(CustomerPortalExposureSettings.customer_code.in_(codes)))
     await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
     await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))
@@ -372,6 +374,8 @@ async def seed(quiet: bool = False) -> dict:
         s.add(CustomerPortalSlaSettings(customer_code=CUST_A, enabled=True))
         # Activity (#1284): the page is on for A only, counted from the same clocks.
         s.add(CustomerPortalActivitySettings(customer_code=CUST_A, enabled=True))
+        # Exposure (#1289): the page is on for A only; its data comes from Wazuh, which tests replace.
+        s.add(CustomerPortalExposureSettings(customer_code=CUST_A, enabled=True))
         today = datetime.datetime.utcnow().replace(microsecond=0)
         for i, (ack_after, resolved_after) in enumerate(SLA_ALERTS_A):
             opened = today - datetime.timedelta(days=len(SLA_ALERTS_A) - i)
@@ -436,7 +440,7 @@ async def seed(quiet: bool = False) -> dict:
         await s.commit()
         if not quiet:
             print(
-                f"seed: {CUST_A} and {CUST_B} with alerts, tags, assets, cases, agents, AI reports, SLA clocks, Activity; '{PORTAL_USER}' assigned to {CUST_A}",
+                f"seed: {CUST_A} and {CUST_B} with alerts, tags, assets, cases, agents, AI reports, SLA clocks, Activity, Exposure; '{PORTAL_USER}' assigned to {CUST_A}",
             )
         return {
             "portal_user_id": portal.id,

@@ -8,10 +8,10 @@
 					<AgentOverview :agent @critical-asset-updated="handleCriticalAssetUpdated" />
 				</n-tab-pane>
 				<n-tab-pane name="vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
-					<AgentVulnerabilities :agent-id="agent.agent_id" :agent-label="agent.hostname" />
+					<AgentVulnerabilities :agent-id="agent.agent_id" :agent-label="agent.hostname" :initial-search />
 				</n-tab-pane>
 				<n-tab-pane name="sca" tab="SCA" display-directive="show:lazy">
-					<AgentSca :agent-id="agent.agent_id" :agent-label="agent.hostname" />
+					<AgentSca :agent-id="agent.agent_id" :agent-label="agent.hostname" :initial-policy />
 				</n-tab-pane>
 				<n-tab-pane name="cases" tab="Cases" display-directive="show:lazy">
 					<AgentCases :hostname="agent.hostname" />
@@ -36,14 +36,22 @@ import AgentVulnerabilities from "./AgentVulnerabilities.vue"
 
 const props = defineProps<{
 	agentId: string | number | null
+	/** Opens this tab first: `vulnerabilities`, `sca` or `cases` (the Exposure page links them, #1289). */
+	initialTab?: string
+	/** The Vulnerabilities tab's search, prefilled. */
+	initialSearch?: string
+	/** The SCA policy to open. */
+	initialPolicy?: string
 }>()
 
 const emit = defineEmits<{
 	(e: "criticalAssetUpdated", value: AgentCriticalUpdateSuccessPayload): void
 }>()
+const TABS = ["overview", "vulnerabilities", "sca", "cases"]
+const firstTab = () => (props.initialTab && TABS.includes(props.initialTab) ? props.initialTab : "overview")
 
 const agent = ref<Agent | null>(null)
-const activeTab = ref("overview")
+const activeTab = ref(firstTab())
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 
@@ -76,7 +84,7 @@ watch(
 	() => props.agentId,
 	async newAgentId => {
 		agent.value = null
-		activeTab.value = "overview"
+		activeTab.value = firstTab()
 		detailsError.value = null
 
 		if (newAgentId !== null) {

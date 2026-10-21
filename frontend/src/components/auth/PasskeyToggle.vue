@@ -14,7 +14,8 @@
 			<n-alert v-else-if="!originSupported" type="warning" class="mb-4">
 				Passkeys do not work on
 				<code class="font-mono">127.0.0.1</code>
-				. Open
+				<span>.</span>
+				Open
 				<a :href="localhostUrl" class="text-primary underline">{{ localhostUrl }}</a>
 				instead.
 			</n-alert>

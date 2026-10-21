@@ -28,13 +28,14 @@ function stub(name: string) {
 		default: defineComponent({ name, setup: () => () => h("div", { "data-testid": `stub-${name}` }) })
 	}
 }
+function sourceDetailsStub() {
+	return stub("SourceConfigurationDetails")
+}
 vi.mock("@/components/incidentManagement/alerts/AlertDetails.vue", () => stub("AlertDetails"))
 vi.mock("@/components/incidentManagement/cases/CaseDetails.vue", () => stub("CaseDetails"))
 vi.mock("@/components/incidentManagement/alerts/AlertAssetOverview.vue", () => stub("AlertAssetOverview"))
 vi.mock("@/components/incidentManagement/exclusionRules/ExclusionRuleOverview.vue", () => stub("ExclusionRuleOverview"))
-vi.mock("@/components/incidentManagement/sources/SourceConfigurationDetails.vue", () =>
-	stub("SourceConfigurationDetails")
-)
+vi.mock("@/components/incidentManagement/sources/SourceConfigurationDetails.vue", sourceDetailsStub)
 vi.mock("@/components/customers/CustomerDetails.vue", () => stub("CustomerDetails"))
 vi.mock("@/components/customers/healthcheck/CustomerHealthcheckDetails.vue", () => stub("CustomerHealthcheckDetails"))
 vi.mock(

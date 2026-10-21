@@ -105,7 +105,8 @@
 						<Icon name="carbon:information" />
 						This audit is intentionally
 						<strong>read-only</strong>
-						. No write or admin scopes are required.
+						<span>.</span>
+						No write or admin scopes are required.
 					</p>
 
 					<n-tabs type="segment" animated>

@@ -12,7 +12,9 @@
 			<span class="text-default min-w-0 text-xs break-words">
 				Delete
 				<span class="font-medium">“{{ name }}”</span>
-				?
+				<!-- Its own element: a line break between two elements renders as nothing, so "?" stays
+				     beside the name however the formatter wraps this. -->
+				<span>?</span>
 			</span>
 		</span>
 		<span class="ml-auto flex shrink-0 gap-2">

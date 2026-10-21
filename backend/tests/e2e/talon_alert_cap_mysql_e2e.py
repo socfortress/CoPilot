@@ -10,8 +10,9 @@ on real MySQL or MariaDB. NOT collected by pytest: it needs a live, disposable d
         JWT_SECRET=e2e-test-secret-not-the-default PYTHONPATH=$PWD
     .venv/bin/python tests/e2e/talon_alert_cap_mysql_e2e.py
 
-Point it at a throwaway instance, never at the MySQL in .env: it creates and drops
-``talon_automation_alert_cap``.
+Point it at a throwaway instance, never at the MySQL in .env. It uses the migrated
+``talon_automation_alert_cap`` and removes only its own row; on an unmigrated database it
+creates the table and drops it again.
 
 What it proves:
 - many reservations at once, each on its own connection, take exactly ``PER_ALERT_CAP`` slots;
@@ -31,6 +32,8 @@ os.environ.setdefault("MYSQL_ROOT_PASSWORD", "e2eroot")
 os.environ.setdefault("JWT_SECRET", "e2e-test-secret-not-the-default")
 
 from fastapi import HTTPException  # noqa: E402
+from sqlalchemy import delete  # noqa: E402
+from sqlalchemy import inspect  # noqa: E402
 from sqlalchemy import update  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 from sqlalchemy.ext.asyncio import async_sessionmaker  # noqa: E402
@@ -67,10 +70,23 @@ async def main() -> int:
         async with factory() as session:
             return await session.get(TalonAutomationAlertCap, ALERT)
 
-    try:
+    # On a migrated database the table is the migration's (c2a2a0b1d3e4): use it and remove only
+    # this test's row, so alembic_version keeps matching the schema for the suites run after.
+    async with engine.begin() as conn:
+        existed = await conn.run_sync(lambda c: inspect(c).has_table(table.name))
+
+    async def clear():
         async with engine.begin() as conn:
-            await conn.run_sync(lambda c: table.drop(c, checkfirst=True))
-            await conn.run_sync(lambda c: table.create(c))
+            if existed:
+                await conn.execute(delete(table).where(table.c.alert_id == ALERT))
+            else:
+                await conn.run_sync(lambda c: table.drop(c, checkfirst=True))
+
+    try:
+        await clear()
+        if not existed:
+            async with engine.begin() as conn:
+                await conn.run_sync(lambda c: table.create(c))
         outcomes = sorted(await asyncio.gather(*(one() for _ in range(8))))
         cap = talon_triggers.PER_ALERT_CAP
         check("8 concurrent reservations take exactly the cap", outcomes == [200] * cap + [429] * (8 - cap), str(outcomes))
@@ -89,8 +105,7 @@ async def main() -> int:
         rest = [await one() for _ in range(cap)]
         check("the new window fills and refuses", rest == [200] * (cap - 1) + [429], str(rest))
     finally:
-        async with engine.begin() as conn:
-            await conn.run_sync(lambda c: table.drop(c, checkfirst=True))
+        await clear()
         await engine.dispose()
 
     failed = [name for name, passed in results if not passed]

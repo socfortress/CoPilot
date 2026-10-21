@@ -39,7 +39,7 @@
 					<strong>Customers → Notifications</strong>
 					or
 					<strong>Internal Notifications</strong>
-					.
+					<span>.</span>
 				</div>
 
 				<!--

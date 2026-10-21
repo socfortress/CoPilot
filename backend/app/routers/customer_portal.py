@@ -5,6 +5,7 @@ from app.customer_portal.routes.agents import customer_portal_agents_router
 from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
+from app.customer_portal.routes.exposure import customer_portal_exposure_router
 from app.customer_portal.routes.me import customer_portal_me_router
 from app.customer_portal.routes.notifications import (
     customer_portal_notifications_router,
@@ -55,6 +56,12 @@ router.include_router(
     customer_portal_activity_router,
     prefix="/customer_portal",
     tags=["Customer Portal Activity"],
+)
+# Vulnerabilities and compliance across the caller's agents, live from Wazuh (#1289) — opt-in per customer
+router.include_router(
+    customer_portal_exposure_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Exposure"],
 )
 # The portal user and their customers, with names (the token carries only codes)
 router.include_router(
