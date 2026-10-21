@@ -19,12 +19,12 @@
 						</div>
 						<div class="box">
 							<span class="text-success">Active</span>
-							:
+							<span>:</span>
 							<code>{{ activeTotal }}</code>
 						</div>
 						<div class="box">
 							<span class="text-secondary">Inactive</span>
-							:
+							<span>:</span>
 							<code>{{ inactiveTotal }}</code>
 						</div>
 					</div>

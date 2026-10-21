@@ -125,8 +125,9 @@
 			</template>
 			Force a re-fetch of the MITRE ATT&amp;CK STIX bundle from
 			<code>github.com/mitre/cti</code>
-			, bypassing the 24-hour cache. Use this if MITRE published a new release and you want the matrix to pick it
-			up immediately.
+			<span>,</span>
+			bypassing the 24-hour cache. Use this if MITRE published a new release and you want the matrix to pick it up
+			immediately.
 		</n-tooltip>
 	</div>
 </template>

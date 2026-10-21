@@ -66,7 +66,8 @@
 			<p class="text-sm">
 				Set the Talon budgets of
 				<b>{{ customerCode }}</b>
-				? This change is audited.
+				<span>?</span>
+				This change is audited.
 			</p>
 			<ul class="flex flex-col gap-1 text-sm">
 				<li>

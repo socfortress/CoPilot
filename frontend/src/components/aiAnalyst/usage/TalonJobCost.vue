@@ -73,9 +73,9 @@
 							<td>
 								<bdi class="break-all">{{ run.model ?? "—" }}</bdi>
 								<span v-if="run.provider" class="text-secondary ml-1 text-xs">
-									(
+									<span>(</span>
 									<bdi>{{ run.provider }}</bdi>
-									)
+									<span>)</span>
 								</span>
 							</td>
 							<td class="font-mono text-xs">

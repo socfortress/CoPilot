@@ -133,13 +133,15 @@
 					<p>
 						This is independent of
 						<b>AI Triggers</b>
-						: that decides whether investigations run for this customer, this decides whether the customer
+						<span>:</span>
+						that decides whether investigations run for this customer, this decides whether the customer
 						gets to read the result. Running investigations while keeping them internal is a valid setup.
 					</p>
 					<p>
 						New customers start with this
 						<b>off</b>
-						, so AI-written findings are never published to a customer without an explicit decision.
+						<span>,</span>
+						so AI-written findings are never published to a customer without an explicit decision.
 					</p>
 				</div>
 
