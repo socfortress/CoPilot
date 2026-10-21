@@ -172,7 +172,8 @@ const router = createRouter({
 		{
 			path: "/logout",
 			name: "Logout",
-			redirect: "/login"
+			// Only a known reason is carried to the sign-in page, which says it (#1296).
+			redirect: to => ({ path: "/login", query: to.query.reason === "disabled" ? { reason: "disabled" } : {} })
 		},
 		{
 			path: "/:pathMatch(.*)*",
