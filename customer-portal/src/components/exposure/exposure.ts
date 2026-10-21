@@ -70,12 +70,20 @@ export function withExposureQuery(
 }
 
 /** The severity strip: every level and "All", each a count of distinct CVEs, and the filter. */
-export function severityOptions(counts: SeverityCount[], loading = false): FilterStripOption<ExposureSeverity | "All">[] {
+export function severityOptions(
+	counts: SeverityCount[],
+	loading = false
+): FilterStripOption<ExposureSeverity | "All">[] {
 	const by = Object.fromEntries(counts.map(item => [item.severity, item.cves]))
 	const all = counts.reduce((sum, item) => sum + item.cves, 0)
 	return [
 		{ value: "All", label: "All", count: loading ? 0 : all, dot: "bg-muted" },
-		...SEVERITIES.map(level => ({ value: level, label: level, count: loading ? 0 : (by[level] ?? 0), dot: severityDot(level) }))
+		...SEVERITIES.map(level => ({
+			value: level,
+			label: level,
+			count: loading ? 0 : (by[level] ?? 0),
+			dot: severityDot(level)
+		}))
 	]
 }
 
@@ -113,7 +121,11 @@ export function isWebLink(reference: string): boolean {
 /** A file name for the CSV: what it is, the filter, and when. */
 export function exportFilename(state: { severity: ExposureSeverity | null; search: string }, now = new Date()): string {
 	const stamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-")
-	const parts = ["vulnerabilities", state.severity?.toLowerCase(), state.search.trim().replace(/[^\w.-]+/g, "_") || null]
+	const parts = [
+		"vulnerabilities",
+		state.severity?.toLowerCase(),
+		state.search.trim().replace(/[^\w.-]+/g, "_") || null
+	]
 	return `${parts.filter(Boolean).join("-")}-${stamp}.csv`
 }
 

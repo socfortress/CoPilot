@@ -8,11 +8,7 @@
 					<AgentOverview :agent @critical-asset-updated="handleCriticalAssetUpdated" />
 				</n-tab-pane>
 				<n-tab-pane name="vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
-					<AgentVulnerabilities
-						:agent-id="agent.agent_id"
-						:agent-label="agent.hostname"
-						:initial-search
-					/>
+					<AgentVulnerabilities :agent-id="agent.agent_id" :agent-label="agent.hostname" :initial-search />
 				</n-tab-pane>
 				<n-tab-pane name="sca" tab="SCA" display-directive="show:lazy">
 					<AgentSca :agent-id="agent.agent_id" :agent-label="agent.hostname" :initial-policy />

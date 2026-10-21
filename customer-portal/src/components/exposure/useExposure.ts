@@ -42,7 +42,12 @@ export function useExposureVulnerabilities(state: Ref<VulnerabilityState>) {
 
 	// The store replaces the selection array on every change: no deep watch needed.
 	watch(
-		[() => state.value.severity, () => state.value.search, () => state.value.page, () => customerFilterStore.queryCustomerCodes],
+		[
+			() => state.value.severity,
+			() => state.value.search,
+			() => state.value.page,
+			() => customerFilterStore.queryCustomerCodes
+		],
 		load,
 		{ immediate: true }
 	)

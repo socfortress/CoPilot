@@ -51,10 +51,17 @@ export default {
 	},
 
 	/** Every finding under the filter as CSV; `x-export-truncated` says when it was cut at its limit. */
-	exportVulnerabilities(query: { severity?: ExposureSeverity | null; search?: string | null }, customerCodes?: string[]) {
+	exportVulnerabilities(
+		query: { severity?: ExposureSeverity | null; search?: string | null },
+		customerCodes?: string[]
+	) {
 		return HttpClient.get<Blob>(
 			"/customer_portal/exposure/vulnerabilities/export",
-			withCustomerCodes(customerCodes, { params: vulnerabilityParams(query), responseType: "blob", keepOnNavigation: true })
+			withCustomerCodes(customerCodes, {
+				params: vulnerabilityParams(query),
+				responseType: "blob",
+				keepOnNavigation: true
+			})
 		)
 	},
 

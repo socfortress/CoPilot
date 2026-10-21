@@ -217,7 +217,11 @@ import FilterStrip from "./FilterStrip.vue"
  * then filtered, counted and paged here; the export asks for the severity on screen.
  */
 
-const { agentId, agentLabel, initialSearch = "" } = defineProps<{
+const {
+	agentId,
+	agentLabel,
+	initialSearch = ""
+} = defineProps<{
 	agentId: string
 	agentLabel: string
 	/** Prefilled by a link (a CVE from the Exposure page, #1289). */

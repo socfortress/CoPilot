@@ -26,7 +26,11 @@ describe("exposure URL state", () => {
 			search: "openssl",
 			page: 3
 		})
-		expect(vulnerabilityStateFromQuery({ severity: "high", page: "0" })).toEqual({ severity: null, search: "", page: 1 })
+		expect(vulnerabilityStateFromQuery({ severity: "high", page: "0" })).toEqual({
+			severity: null,
+			search: "",
+			page: 1
+		})
 		expect(vulnerabilityStateFromQuery({ page: "two" }).page).toBe(1)
 		expect(vulnerabilityStateFromQuery({ page: "-2" }).page).toBe(1)
 		expect(vulnerabilityStateFromQuery({ q: "x".repeat(150) }).search).toHaveLength(100)
@@ -34,7 +38,11 @@ describe("exposure URL state", () => {
 
 	it("writes defaults out of the URL and keeps every other key", () => {
 		expect(
-			withExposureQuery({ other: "1", tab: "compliance" }, "vulnerabilities", { severity: null, search: " ", page: 1 })
+			withExposureQuery({ other: "1", tab: "compliance" }, "vulnerabilities", {
+				severity: null,
+				search: " ",
+				page: 1
+			})
 		).toEqual({ other: "1" })
 		expect(withExposureQuery({}, "vulnerabilities", { severity: "Critical", search: "curl", page: 2 })).toEqual({
 			severity: "Critical",

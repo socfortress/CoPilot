@@ -312,8 +312,12 @@ describe("links into an agent's tabs", () => {
 		const wrapper = render(AgentVulnerabilities, { agentId: "001", agentLabel: "web-01", initialSearch: "CVE-H" })
 		await flushPromises()
 
-		expect((wrapper.get("[data-testid=vulnerabilities-search] input").element as HTMLInputElement).value).toBe("CVE-H")
-		expect(wrapper.findAll("[data-testid=vulnerability-row]").map(r => r.find(".font-mono").text())).toEqual(["CVE-H"])
+		expect((wrapper.get("[data-testid=vulnerabilities-search] input").element as HTMLInputElement).value).toBe(
+			"CVE-H"
+		)
+		expect(wrapper.findAll("[data-testid=vulnerability-row]").map(r => r.find(".font-mono").text())).toEqual([
+			"CVE-H"
+		])
 	})
 
 	it("sCA: opens the linked policy, and stays on the list when the agent has no such policy", async () => {

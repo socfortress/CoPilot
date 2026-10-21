@@ -4,7 +4,7 @@
 		data-testid="exposure-disabled"
 	>
 		<Icon name="carbon:security" :size="28" class="text-tertiary" />
-		<p class="font-semibold">Exposure is not available yet</p>
+		<p class="text-default font-semibold">Exposure is not available yet</p>
 		<p class="text-secondary max-w-md text-sm">
 			Your SOC has not published the vulnerabilities and compliance across your agents. Each agent's page still
 			shows its own. Ask your SOC contact if you would like to see them here.
