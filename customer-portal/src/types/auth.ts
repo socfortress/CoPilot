@@ -24,6 +24,8 @@ export type RouteMetaAuthRole = AuthUserRole | RouteRole | string
 export interface PortalCustomer {
 	customer_code: string
 	customer_name: string
+	/** The user administers this customer's portal users (#1296): set by the SOC only. */
+	is_customer_admin?: boolean
 }
 
 /** `GET /customer_portal/me`: read live, unlike the token's `customer_codes` claim. */
