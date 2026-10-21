@@ -68,6 +68,9 @@ from app.connectors.talon.services.talon import (
 from app.connectors.talon.services.talon import (
     search_palace_lessons as talon_search_palace_lessons,
 )
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.db.db_session import get_db
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystJob
@@ -525,6 +528,8 @@ async def get_my_review_route(
     dependencies=[
         Security(AuthHandler().require_any_scope("admin", "analyst")),
         Depends(verify_report_access),
+        # Never the Talon service account: it would send its own trigger records (talon-analyst AP-2a).
+        Depends(refuse_talon_service_account_dependency),
     ],
 )
 async def replay_report_route(

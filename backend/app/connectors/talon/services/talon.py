@@ -183,7 +183,7 @@ async def investigate_alert(request: TalonInvestigateRequest, *, source: str, us
         TalonInvestigateResponse with the investigation result.
     """
     logger.info(f"Triggering Talon investigation for alert ID: {request.alert_id}")
-    await talon_triggers.record_before_sending(request.alert_id, request.customer_code, source, user)
+    await talon_triggers.record_before_sending(request.alert_id, source, user)
     response = await send_post_request(
         endpoint="/investigate",
         data={"alert_id": request.alert_id, "customer_code": request.customer_code, "sender": request.sender},
@@ -352,7 +352,7 @@ async def replay_investigation(
     logger.info(
         f"Replaying Talon investigation for alert {alert_id} " f"with template_override={template_override}",
     )
-    await talon_triggers.record_before_sending(alert_id, customer_code, talon_triggers.REPLAY, user)
+    await talon_triggers.record_before_sending(alert_id, talon_triggers.REPLAY, user)
     response = await send_post_request(
         endpoint="/investigate",
         data={

@@ -27,7 +27,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 TABLE = "talon_investigation_trigger"
-INDEX = "ix_talon_investigation_trigger_alert_id_sent_at"
+INDEX = "ix_talon_investigation_trigger_alert_id"
 CAP_TABLE = "talon_automation_alert_cap"
 
 
@@ -44,7 +44,7 @@ def upgrade() -> None:
         sa.Column("sent_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(INDEX, TABLE, ["alert_id", "sent_at"], unique=False)
+    op.create_index(INDEX, TABLE, ["alert_id"], unique=False)
     op.create_table(
         CAP_TABLE,
         sa.Column("alert_id", sa.Integer(), autoincrement=False, nullable=False),

@@ -22,8 +22,10 @@ older pipeline or analyst row as the alert's newest, and with it an automation w
 service account once the host's ``agents`` row is locked; its start without ``alert_id`` is refused
 before anything else, ``ALERT_REQUIRED``, so leaving the field out never skips the binding):
 
-1. the alert exists, and its newest row for the alert's customer was sent within ``WINDOW``;
-2. that row's source is ``pipeline`` or ``analyst`` (a portal request or a replay is refused);
+1. the alert exists, and its newest row (by id) was sent within ``WINDOW``, for the alert's own
+   customer;
+2. that row's source is ``pipeline`` or ``analyst`` (a portal request or a replay is refused), and it
+   wasn't sent by the Talon service account (refused on every sending route; refused here too);
 3. the host is one of the alert's assets in that row (by name, as ``agents`` matches it, and with the
    asset's Velociraptor client, when it has one), and its locked ``agents`` row is the alert's
    customer's;
@@ -38,6 +40,7 @@ Every refusal is a fixed text with no part of the request.
 from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
+from types import SimpleNamespace
 from typing import Any
 from typing import Dict
 from typing import List
@@ -56,6 +59,8 @@ from app.connectors.talon.models.talon_v2 import AUTOMATION_SOURCES
 from app.connectors.talon.models.talon_v2 import TRIGGER_SOURCES
 from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger
+from app.connectors.talon.services.talon_service_account import is_service_account
+from app.connectors.talon.services.talon_service_account import settings_row
 from app.db.db_session import AsyncSessionLocal
 from app.incidents.models import Alert
 from app.incidents.models import Asset
@@ -73,6 +78,8 @@ ALERT_REQUIRED = "not started: the Talon service account must name the alert its
 NO_TRIGGER = "not started: CoPilot has not sent this alert to Talon in the last 2 hours"
 PORTAL_TRIGGER = "not started: this alert was last sent to Talon from the customer portal, which never leads to an automated action"
 REPLAY_TRIGGER = "not started: this alert was last sent to Talon as a replay, which never leads to an automated action"
+OTHER_CUSTOMER = "not started: the alert's newest record names another customer than the alert's"
+SERVICE_TRIGGER = "not started: this alert was last sent to Talon by the Talon service account, which never leads to an automated action"
 NOT_ALERT_HOST = "not started: the host is not one of the alert's assets"
 ALERT_CAP = "not started: this alert has reached its cap of automated collections"
 CAP_UNRECORDED = "not started: CoPilot could not record the start against this alert's cap"
@@ -105,12 +112,16 @@ async def _assets(session: AsyncSession, alert_id: int, customer_code: str) -> L
     return [{"asset_name": name, "velociraptor_id": vid} for name, vid in rows]
 
 
-async def record(alert_id: int, customer_code: str, source: str, user: Any = None) -> TalonInvestigationTrigger:
+async def record(alert_id: int, source: str, user: Any = None) -> TalonInvestigationTrigger:
     """Write the row for one ``/investigate`` CoPilot is about to send, in a session of its own,
-    committed before the call (talon-analyst may start a collection before the call returns)."""
+    committed before the call (talon-analyst may start a collection before the call returns). The
+    customer is the alert's own, read from CoPilot's row, never the caller's; no alert, no row."""
     if source not in TRIGGER_SOURCES:
         raise ValueError(f"unknown trigger source {source!r}")
     async with new_session() as session:
+        customer_code = (await session.execute(select(Alert.customer_code).where(Alert.id == alert_id))).scalars().first()
+        if customer_code is None:
+            raise LookupError("no such alert")
         row = TalonInvestigationTrigger(
             alert_id=alert_id,
             customer_code=customer_code,
@@ -125,12 +136,12 @@ async def record(alert_id: int, customer_code: str, source: str, user: Any = Non
         return row
 
 
-async def record_before_sending(alert_id: int, customer_code: str, source: str, user: Any = None) -> None:
+async def record_before_sending(alert_id: int, source: str, user: Any = None) -> None:
     """``record``, with the failure rule in the module docstring: a ``portal`` or ``replay`` send is
     refused (500, a fixed text) when its row can't be written; a ``pipeline`` or ``analyst`` one goes
     ahead, and nothing can be bound to it."""
     try:
-        await record(alert_id, customer_code, source, user)
+        await record(alert_id, source, user)
     except Exception as e:  # noqa: BLE001 - the rule below decides, whatever the database said
         logger.error(f"Could not record the Talon investigation trigger for alert {alert_id} ({source}): {type(e).__name__}")
         if source not in AUTOMATION_SOURCES:
@@ -187,12 +198,14 @@ async def check(session: AsyncSession, alert_id: int, hostname: str, client: str
     if customer_code is None:
         logger.warning(f"Refused a bound collection start for alert {alert_id}: no such alert")
         raise HTTPException(status_code=403, detail=NO_TRIGGER)
+    # The alert's newest record, whatever its customer (by id: rows are written in send order).
     newest = (
         (
             await session.execute(
                 select(TalonInvestigationTrigger)
-                .where(TalonInvestigationTrigger.alert_id == alert_id, TalonInvestigationTrigger.customer_code == customer_code)
-                .order_by(TalonInvestigationTrigger.sent_at.desc(), TalonInvestigationTrigger.id.desc()),
+                .where(TalonInvestigationTrigger.alert_id == alert_id)
+                .order_by(TalonInvestigationTrigger.id.desc())
+                .limit(1),
             )
         )
         .scalars()
@@ -201,9 +214,19 @@ async def check(session: AsyncSession, alert_id: int, hostname: str, client: str
     if newest is None or newest.sent_at < utcnow() - WINDOW:
         logger.warning(f"Refused a bound collection start for alert {alert_id}: CoPilot sent it no investigation in the window")
         raise HTTPException(status_code=403, detail=NO_TRIGGER)
+    if newest.customer_code != customer_code:
+        logger.warning(f"Refused a bound collection start for alert {alert_id}: its newest record names another customer")
+        raise HTTPException(status_code=403, detail=OTHER_CUSTOMER)
     if newest.source not in AUTOMATION_SOURCES:
         logger.warning(f"Refused a bound collection start for alert {alert_id}: its newest trigger is {newest.source}")
         raise HTTPException(status_code=403, detail=_REFUSED_SOURCE.get(newest.source, NO_TRIGGER))
+    if (newest.user_id is not None or newest.username is not None) and is_service_account(
+        SimpleNamespace(id=newest.user_id, username=newest.username),
+        await settings_row(session),
+    ):
+        # Belt and braces: the service account is refused on every route that sends an alert to Talon.
+        logger.warning(f"Refused a bound collection start for alert {alert_id}: its newest trigger was sent by the Talon service account")
+        raise HTTPException(status_code=403, detail=SERVICE_TRIGGER)
     if host_customer != customer_code or not _host_is_an_asset(newest.assets, hostname, client):
         logger.warning(f"Refused a bound collection start for alert {alert_id}: {hostname} ({client}) is not one of its assets")
         raise HTTPException(status_code=403, detail=NOT_ALERT_HOST)
@@ -226,7 +249,10 @@ async def _take_slot(session: AsyncSession, alert_id: int, customer_code: str, n
             TalonAutomationAlertCap.alert_id == alert_id,
             or_(expired, TalonAutomationAlertCap.starts < PER_ALERT_CAP),
         )
-        # ``starts`` first: MySQL assigns left to right, so it must read the old window.
+        # ``starts`` first. MySQL and MariaDB assign a single-table UPDATE's SET left to right, each
+        # later expression seeing the earlier columns' new values; SQLite and standard SQL use the
+        # old row throughout. With ``starts`` first, both read the old window. Reversed, MySQL
+        # would see the new window and count on from the old ``starts``.
         .ordered_values(
             (TalonAutomationAlertCap.starts, case((expired, 1), else_=TalonAutomationAlertCap.starts + 1)),
             (TalonAutomationAlertCap.window_started_at, case((expired, now), else_=TalonAutomationAlertCap.window_started_at)),
@@ -239,35 +265,35 @@ async def reserve(binding: Binding) -> None:
     """Check 4: take one of the alert's ``PER_ALERT_CAP`` slots for this ``WINDOW``, every job
     together (a new ``ai_analyst_job`` never resets it), in a session of its own, committed before
     the flow starts. Over the cap, a fixed 429; if the slot can't be recorded, a fixed 500 and no
-    start. A slot is spent once taken, whether the start then succeeds or not."""
+    start. A slot is spent once taken, whether the start then succeeds or not.
+
+    The alert's row is created first, empty, in a transaction of its own (a concurrent creator's
+    duplicate is ignored), and the slot is then taken from the existing row. On MySQL, a guarded
+    UPDATE of a missing row takes gap locks, and concurrent INSERTs after it deadlock; an UPDATE of
+    an existing row only waits for its row lock (``tests/e2e/talon_alert_cap_mysql_e2e.py``)."""
     try:
         async with new_session() as session:
-            for _ in range(2):
-                now = utcnow()
-                if await _take_slot(session, binding.alert_id, binding.customer_code, now):
-                    await session.commit()
-                    return
-                if await session.get(TalonAutomationAlertCap, binding.alert_id) is not None:
-                    await session.rollback()
-                    logger.warning(
-                        f"Refused a bound collection start for alert {binding.alert_id}: the per-alert cap ({PER_ALERT_CAP}) is reached",
-                    )
-                    raise HTTPException(status_code=429, detail=ALERT_CAP)
+            if await session.get(TalonAutomationAlertCap, binding.alert_id) is None:
                 session.add(
                     TalonAutomationAlertCap(
                         alert_id=binding.alert_id,
                         customer_code=binding.customer_code,
-                        starts=1,
-                        window_started_at=now,
+                        starts=0,
+                        window_started_at=utcnow(),
                     ),
                 )
                 try:
                     await session.commit()
-                    return
-                except IntegrityError:  # a concurrent start created the row: take a slot from it
+                except IntegrityError:  # a concurrent start created it
                     await session.rollback()
-    except HTTPException:
-        raise
+            else:
+                await session.rollback()  # ends the read's snapshot before the UPDATE
+            if await _take_slot(session, binding.alert_id, binding.customer_code, utcnow()):
+                await session.commit()
+                return
+            await session.rollback()
     except Exception as e:  # noqa: BLE001 - no slot recorded, no start
         logger.error(f"Could not record a bound collection start for alert {binding.alert_id}: {type(e).__name__}")
-    raise HTTPException(status_code=500, detail=CAP_UNRECORDED)
+        raise HTTPException(status_code=500, detail=CAP_UNRECORDED) from None
+    logger.warning(f"Refused a bound collection start for alert {binding.alert_id}: the per-alert cap ({PER_ALERT_CAP}) is reached")
+    raise HTTPException(status_code=429, detail=ALERT_CAP)

@@ -15,6 +15,9 @@ from app.active_response.routes.graylog import verify_graylog_header
 from app.active_response.schema.graylog import GraylogThresholdEventNotification
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.db.db_session import get_db
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AlertDetailsResponse
@@ -175,7 +178,8 @@ async def get_alert_timeline_route(
     "/create/manual",
     response_model=CreateAlertResponse,
     description="Manually create an incident alert in CoPilot",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # The Talon service account can't create alerts: each one is sent to Talon as the pipeline's.
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def create_alert_manual_route(
     create_alert_request: CreateAlertRequest,
@@ -243,7 +247,8 @@ async def create_alert_manual_route(
     "/create/auto",
     response_model=AutoCreateAlertResponse,
     description="Is invoked by the scheduler to create an incident alert in CoPilot",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # The Talon service account can't create alerts: each one is sent to Talon as the pipeline's.
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def create_alert_auto_route(
     session: AsyncSession = Depends(get_db),

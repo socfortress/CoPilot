@@ -161,7 +161,8 @@ class TalonInvestigationTrigger(SQLModel, table=True):
     (the record outlives the customer, like ``audit_log``)."""
 
     __tablename__ = "talon_investigation_trigger"
-    __table_args__ = (Index("ix_talon_investigation_trigger_alert_id_sent_at", "alert_id", "sent_at"),)
+    #: The newest row for an alert is ``ORDER BY id DESC`` on this index (InnoDB appends the key).
+    __table_args__ = (Index("ix_talon_investigation_trigger_alert_id", "alert_id"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)
     alert_id: int = Field(nullable=False)

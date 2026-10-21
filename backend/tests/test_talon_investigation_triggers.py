@@ -39,6 +39,7 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 import pytest  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from sqlalchemy import select  # noqa: E402
+from sqlalchemy import update  # noqa: E402
 from sqlmodel import SQLModel  # noqa: E402
 
 import app.connectors.talon.services.talon as talon_service  # noqa: E402
@@ -49,6 +50,7 @@ from app.ai_analyst.routes import ai_analyst as ai_analyst_routes  # noqa: E402
 from app.ai_analyst.schema.ai_analyst import ReplayRequest  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
 from app.connectors.talon.services import talon_triggers  # noqa: E402
@@ -120,10 +122,10 @@ async def add_asset(ctx, alert_id, name=HOST, vid=VID, customer=ACME):
         await session.commit()
 
 
-async def add_trigger(ctx, alert_id, source, *, ago=timedelta(minutes=5), user=None, customer=ACME):
+async def add_trigger(ctx, alert_id, source, *, ago=timedelta(minutes=5), user=None):
     """A record as a sender writes it (``talon_triggers.record``, its assets read now), sent ``ago``."""
     with patch.object(talon_triggers, "new_session", ctx.db.session):
-        row = await talon_triggers.record(alert_id, customer, source, user)
+        row = await talon_triggers.record(alert_id, source, user)
     async with ctx.db.session() as session:
         stored = await session.get(TalonInvestigationTrigger, row.id)
         stored.sent_at = talon_triggers.utcnow() - ago
@@ -324,7 +326,94 @@ def test_when_the_record_cant_be_written_only_an_allowing_sender_still_sends(sou
 
 def test_an_unknown_source_is_a_programming_error():
     with pytest.raises(ValueError):
-        asyncio.run(talon_triggers.record(5, ACME, "copilot-analyst"))
+        asyncio.run(talon_triggers.record(5, "copilot-analyst"))
+
+
+def test_the_record_takes_the_alerts_own_customer_never_the_callers():
+    async def scenario(client, ctx):
+        seen = []
+        with patch.object(talon_triggers, "new_session", ctx.db.session), patch.object(
+            talon_service,
+            "send_post_request",
+            _sending(ctx, seen),
+        ):
+            await talon_service.investigate_alert(
+                talon_service.TalonInvestigateRequest(alert_id=ctx.alert_id, customer_code=GLOBEX),
+                source=talon_triggers.PIPELINE,
+            )
+        return await triggers(ctx)
+
+    (row,) = call(scenario)
+    assert row.customer_code == ACME
+
+
+@pytest.mark.parametrize("source, sent", [("pipeline", True), ("portal", False)])
+def test_an_alert_copilot_doesnt_have_gets_no_record(source, sent):
+    async def scenario(client, ctx):
+        seen = []
+        with patch.object(talon_triggers, "new_session", ctx.db.session), patch.object(
+            talon_service,
+            "send_post_request",
+            _sending(ctx, seen),
+        ):
+            try:
+                await talon_service.investigate_alert(
+                    talon_service.TalonInvestigateRequest(alert_id=999999, customer_code=ACME),
+                    source=source,
+                )
+            except HTTPException as e:
+                assert e.detail == talon_triggers.NOT_RECORDED
+        return seen, await triggers(ctx)
+
+    seen, rows = call(scenario)
+    assert rows == [] and len(seen) == (1 if sent else 0)
+
+
+# ── the Talon service account can't send alerts to Talon, or create them ─────
+
+
+SENDING_ROUTES = [
+    ("app.connectors.talon.routes.talon", "talon_router", "/investigate", "POST"),
+    ("app.ai_analyst.routes.ai_analyst", "ai_analyst_router", "/reports/{report_id}/replay", "POST"),
+    ("app.incidents.routes.incident_alert", "incidents_alerts_router", "/create/manual", "POST"),
+    ("app.incidents.routes.incident_alert", "incidents_alerts_router", "/create/auto", "POST"),
+]
+
+
+@pytest.mark.parametrize("module, router, path, method", SENDING_ROUTES)
+def test_every_route_that_sends_an_alert_to_talon_refuses_the_service_account(module, router, path, method):
+    import importlib
+
+    from app.connectors.talon.services import talon_service_account
+
+    routes = [r for r in getattr(importlib.import_module(module), router).routes if r.path == path and method in r.methods]
+    assert len(routes) == 1
+    assert talon_service_account.refuse_talon_service_account_dependency in [d.dependency for d in routes[0].dependencies]
+
+
+def test_the_service_account_cant_investigate_and_writes_no_record():
+    async def scenario(client, ctx):
+        seen = []
+        with patch.object(talon_triggers, "new_session", ctx.db.session), patch.object(
+            talon_service,
+            "send_post_request",
+            _sending(ctx, seen),
+        ):
+            refused = await client.post(
+                "/talon/investigate",
+                json={"alert_id": ctx.alert_id, "customer_code": ACME},
+                headers=as_user(SERVICE),
+            )
+            allowed = await client.post(
+                "/talon/investigate",
+                json={"alert_id": ctx.alert_id, "customer_code": ACME},
+                headers=as_user("ana"),
+            )
+        return refused, allowed, seen, await triggers(ctx)
+
+    refused, allowed, seen, rows = call(scenario)
+    assert refused.status_code == 403 and allowed.status_code == 200
+    assert len(seen) == 1 and [(r.source, r.user_id) for r in rows] == [("analyst", 2)]
 
 
 # ── the binding: accepted ─────────────────────────────────────────────────────
@@ -413,6 +502,63 @@ def test_refused_with_a_replay_record():
     refused(response, vr, ctx, 403, talon_triggers.REPLAY_TRIGGER)
 
 
+def test_refused_when_the_newest_record_was_sent_by_the_service_account():
+    # However it came about: by its default name, or by the user id recorded with the setting.
+    async def by_name(ctx):
+        await add_trigger(ctx, ctx.alert_id, "pipeline", ago=timedelta(minutes=30))
+        await add_trigger(ctx, ctx.alert_id, "analyst", ago=timedelta(minutes=1), user=harness.user_ns(SERVICE))
+
+    async def by_recorded_id(ctx):
+        async with ctx.db.session() as session:
+            await session.execute(update(TalonConnectorSettings).values(collect_service_user_id=21))
+            await session.commit()
+        await add_trigger(ctx, ctx.alert_id, "analyst", user=SimpleNamespace(id=21, username="renamed"))
+
+    for setup in (by_name, by_recorded_id):
+        (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
+        refused(response, vr, ctx, 403, talon_triggers.SERVICE_TRIGGER)
+
+
+def test_an_analysts_record_still_binds():
+    async def setup(ctx):
+        await add_trigger(ctx, ctx.alert_id, "analyst", user=harness.user_ns("ana"))
+
+    (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
+    assert response.status_code == 200
+
+
+async def insert_trigger(ctx, alert_id, source, customer=ACME, ago=timedelta(minutes=5)):
+    async with ctx.db.session() as session:
+        session.add(
+            TalonInvestigationTrigger(
+                alert_id=alert_id,
+                customer_code=customer,
+                source=source,
+                assets=[{"asset_name": HOST, "velociraptor_id": VID}],
+                sent_at=talon_triggers.utcnow() - ago,
+            ),
+        )
+        await session.commit()
+
+
+def test_refused_when_the_newest_record_names_another_customer():
+    async def setup(ctx):
+        await insert_trigger(ctx, ctx.alert_id, "pipeline")
+        await insert_trigger(ctx, ctx.alert_id, "pipeline", customer=GLOBEX)
+
+    (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
+    refused(response, vr, ctx, 403, talon_triggers.OTHER_CUSTOMER)
+
+
+def test_the_newest_record_is_the_last_written_whatever_its_time():
+    async def setup(ctx):
+        await insert_trigger(ctx, ctx.alert_id, "pipeline", ago=timedelta(minutes=1))
+        await insert_trigger(ctx, ctx.alert_id, "portal", ago=timedelta(minutes=30))  # written last
+
+    (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
+    refused(response, vr, ctx, 403, talon_triggers.PORTAL_TRIGGER)
+
+
 def test_refused_with_an_expired_window():
     setup = with_triggers(("pipeline", talon_triggers.WINDOW + timedelta(minutes=1)))
     (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.alert_id)], setup)
@@ -455,7 +601,7 @@ def test_refused_for_a_host_of_another_customer_named_as_the_alerts_asset():
     # host, but not for GLOBEX's alert.
     async def setup(ctx):
         await add_asset(ctx, ctx.globex_alert_id, customer=GLOBEX)
-        await add_trigger(ctx, ctx.globex_alert_id, "pipeline", customer=GLOBEX)
+        await add_trigger(ctx, ctx.globex_alert_id, "pipeline")
 
     (response,), vr, ctx = start(SERVICE, lambda ctx: [bound(SERVICES, ctx.globex_alert_id)], setup)
     refused(response, vr, ctx, 403, talon_triggers.NOT_ALERT_HOST)
@@ -653,3 +799,32 @@ def test_the_migration_creates_the_models_table_on_the_single_head():
     assert {c.name for c in table.columns} == {"id", "alert_id", "customer_code", "source", "user_id", "username", "assets", "sent_at"}
     assert {i.name for i in table.indexes} == {migration.INDEX}
     assert talon_collections.talon_triggers is talon_triggers  # the start route uses this module
+
+
+def test_the_migration_upgrades_and_downgrades():
+    import sqlalchemy as sa
+
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+
+    path = next((Path(__file__).resolve().parents[1] / "alembic" / "versions").glob("c2a2a0b1d3e4_*.py"))
+    spec = importlib.util.spec_from_file_location("ap2a_migration_ops", path)
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    engine = sa.create_engine("sqlite://")
+    with engine.begin() as conn:
+        with patch.object(migration, "op", Operations(MigrationContext.configure(conn))):
+            migration.upgrade()
+            inspector = sa.inspect(conn)
+            assert {migration.TABLE, migration.CAP_TABLE} <= set(inspector.get_table_names())
+            assert [i["name"] for i in inspector.get_indexes(migration.TABLE)] == [migration.INDEX]
+            assert {c["name"] for c in inspector.get_columns(migration.CAP_TABLE)} == {
+                "alert_id",
+                "customer_code",
+                "starts",
+                "window_started_at",
+            }
+            migration.downgrade()
+            assert not {migration.TABLE, migration.CAP_TABLE} & set(sa.inspect(conn).get_table_names())
+            migration.upgrade()  # and up again
+            assert {migration.TABLE, migration.CAP_TABLE} <= set(sa.inspect(conn).get_table_names())
