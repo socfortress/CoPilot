@@ -29,6 +29,7 @@ from app.auth.schema.auth import UserResponse
 from app.auth.schema.user import UserBaseResponse
 from app.auth.schema.user import UserDetailResponse
 from app.auth.services import password_change
+from app.auth.services.account_status import refuse_disabled_login
 from app.auth.services.customer_assignment import NEEDS_A_CUSTOMER
 from app.auth.services.customer_assignment import assigned_codes
 from app.auth.services.customer_assignment import replace_assignment
@@ -89,6 +90,8 @@ async def login_for_access_token(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    await refuse_disabled_login(user, request, "main portal")
 
     # Check if user is customer_user role
     if user.role_id == RoleEnum.customer_user.value:
@@ -159,6 +162,8 @@ async def login_for_customer_portal(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    await refuse_disabled_login(user, request, "customer portal")
 
     if user.role_id != RoleEnum.customer_user.value:
         await record_audit_event(

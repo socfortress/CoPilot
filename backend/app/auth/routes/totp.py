@@ -22,6 +22,7 @@ from app.auth.models.totp import TOTPStatusResponse
 from app.auth.models.totp import TOTPValidateRequest
 from app.auth.models.totp import TOTPVerifyRequest
 from app.auth.models.users import RoleEnum
+from app.auth.services.account_status import refuse_disabled_login
 from app.auth.services.totp import disable_totp
 from app.auth.services.totp import is_2fa_enabled
 from app.auth.services.totp import regenerate_backup_codes
@@ -188,6 +189,8 @@ async def validate_2fa_login(body: TOTPValidateRequest, request: Request):
     user = await find_user(username)
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    # Disabled between the password and the second factor (#1296): refused before a code is spent.
+    await refuse_disabled_login(user, request, "two-factor sign-in")
 
     if not body.code and not body.backup_code:
         raise HTTPException(status_code=400, detail="Provide a TOTP code or backup code.")

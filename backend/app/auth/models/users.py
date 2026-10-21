@@ -33,6 +33,10 @@ class UserCustomerAccess(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id")
     customer_code: str = Field(foreign_key="customers.customer_code")
     created_at: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    # A customer_user who administers this customer's portal users from the Customer Portal
+    # (#1296). Set by the SOC only, per customer: a user may administer one of their customers
+    # and not another.
+    is_customer_admin: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": sa.false()})
 
     # Relationships
     user: "User" = Relationship(back_populates="customer_access")
@@ -79,6 +83,10 @@ class User(SQLModel, table=True):
     # account) and cleared when the user sets their own (#1277). While it is set, a
     # customer_user reaches only the password change (app/auth/services/password_change.py).
     must_change_password: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": sa.false()})
+    # Set when the account is disabled (by a SOC admin, or by a customer admin for a portal
+    # user, #1296): no token is issued to it and every request it makes is refused
+    # (app/auth/services/account_status.py). Naive UTC; NULL means active.
+    disabled_at: Optional[datetime.datetime] = Field(default=None, nullable=True)
 
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")
