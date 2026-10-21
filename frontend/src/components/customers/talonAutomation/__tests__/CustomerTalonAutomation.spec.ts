@@ -32,25 +32,38 @@ const ModalStub = defineComponent({
 			props.show ? h("div", { "data-testid": "modal-stub" }, slots.default?.()) : null
 })
 
+const RISK_TEXT =
+	"At levels 3 and 4 an automatic investigation runs commands on the alert's host without a person approving each one. Anyone who can write text into this customer's logs can try to steer such a command onto that host."
+
+/** `TalonAutomationPolicyResponse` as CoPilot's AP-2 answers it (cap names from its `CAP_DEFAULTS`). */
 function policy(over: Partial<TalonAutomationPolicy> = {}): TalonAutomationPolicy {
 	return {
+		success: true,
+		message: "Talon automation policy retrieved",
 		customer_code: "ACME",
 		exists: true,
+		automation_enabled: true,
 		level_1_mode: "auto",
 		level_2_mode: "off",
 		level_3_mode: "off",
 		level_4_mode: "off",
 		level_2_artifacts: ["Windows.System.Pslist"],
 		file_allow_globs: { windows: ["C:\\Users\\*\\Downloads\\*"] },
-		caps: {
-			per_alert_level_1: { default: 2, override: null, effective: 2 },
-			per_customer_commands_day: { default: 20, override: 10, effective: 10 }
-		},
-		risk_acknowledged_by: null,
+		caps: { commands_per_customer_day: 10 },
+		effective_caps: { per_alert: 2, per_host_hour: 6, commands_per_customer_day: 10 },
+		cap_defaults: { per_alert: 2, per_host_hour: 6, commands_per_customer_day: 20 },
+		enforced_caps: ["per_alert", "per_host_hour"],
+		startable_levels: [1],
+		service_user_assigned: true,
+		risk_acknowledgement_text: RISK_TEXT,
+		risk_acknowledged_by_user_id: null,
+		risk_acknowledged_by_username: null,
 		risk_acknowledged_at: null,
-		updated_by: "admin",
-		updated_at: "2026-10-20T10:00:00Z",
+		shadow_reviewed: null,
 		version: 3,
+		updated_by_user_id: 1,
+		updated_by_username: "admin",
+		updated_at: "2026-10-20T10:00:00Z",
 		...over
 	}
 }
@@ -87,11 +100,11 @@ enableAutoUnmount(afterEach)
 describe("customer AI Automation tab", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
-		getPolicy.mockReset().mockResolvedValue({ data: { success: true, message: "", policy: policy() } })
+		getPolicy.mockReset().mockResolvedValue({ data: policy() })
 		putPolicy
 			.mockReset()
 			.mockImplementation((_code: string, body: Record<string, unknown>) =>
-				Promise.resolve({ data: { success: true, message: "", policy: policy({ ...body, version: 4 }) } })
+				Promise.resolve({ data: policy({ ...(body as Partial<TalonAutomationPolicy>), version: 4 }) })
 			)
 	})
 
@@ -107,8 +120,26 @@ describe("customer AI Automation tab", () => {
 		expect(checked(wrapper, 1)).toEqual(["auto"])
 		expect(checked(wrapper, 3)).toEqual(["off"])
 		expect(wrapper.get('[data-testid="automation-help"]').text()).toMatch(/suggest\s+shadow\s+first/)
-		expect(wrapper.get('[data-testid="automation-caps"]').text()).toContain("Commands")
 		expect(wrapper.find('[data-testid="automation-would-have-run"]').exists()).toBe(true)
+		// Only level 1 is startable today; 2-4 are marked, and still settable.
+		expect(wrapper.find('[data-testid="automation-level-1-unavailable"]').exists()).toBe(false)
+		for (const level of [2, 3, 4]) {
+			expect(wrapper.find(`[data-testid="automation-level-${level}-unavailable"]`).text()).toBe(
+				"Not available yet"
+			)
+		}
+	})
+
+	it("lists the caps by CoPilot's names, with defaults, overrides and what is enforced", async () => {
+		const wrapper = render()
+		await flushPromises()
+		const rows = wrapper.findAll('[data-testid^="automation-cap-"][data-testid$="-override"]')
+		expect(rows).toHaveLength(3)
+		const commands = wrapper.get('[data-testid="automation-cap-commands_per_customer_day"]')
+		expect(commands.text()).toContain("20")
+		expect(commands.text()).toContain("10")
+		expect(commands.text()).not.toContain("Enforced")
+		expect(wrapper.get('[data-testid="automation-cap-per_alert"]').text()).toContain("Enforced")
 	})
 
 	it("saves any mode chosen directly at levels 1-2, without a risk confirm", async () => {
@@ -128,23 +159,36 @@ describe("customer AI Automation tab", () => {
 			level_4_mode: "off",
 			level_2_artifacts: ["Windows.System.Pslist"],
 			file_allow_globs: { windows: ["C:\\Users\\*\\Downloads\\*"] },
-			cap_overrides: { per_alert_level_1: null, per_customer_commands_day: 10 },
+			caps: { commands_per_customer_day: 10 },
 			acknowledge_risk: false,
-			version: 3
+			expected_version: 3
 		})
 		expect(checked(wrapper, 2)).toEqual(["auto"])
 	})
 
-	it("sends a lowered cap override", async () => {
+	it("sends a lowered cap override, and null caps for a customer with none", async () => {
+		getPolicy.mockResolvedValue({
+			data: policy({ exists: false, version: 0, caps: null, level_2_artifacts: null, file_allow_globs: null })
+		})
 		const wrapper = render()
 		await flushPromises()
-		const input = wrapper.get('[data-testid="automation-cap-per_alert_level_1-override"] input')
+		await choose(wrapper, 1, "shadow")
+		await wrapper.get('[data-testid="automation-save"]').trigger("click")
+		await flushPromises()
+		expect(lastBody()).toMatchObject({
+			caps: null,
+			level_2_artifacts: null,
+			file_allow_globs: null,
+			expected_version: 0
+		})
+
+		const input = wrapper.get('[data-testid="automation-cap-per_alert-override"] input')
 		await input.setValue("1")
 		await input.trigger("blur")
 		await nextTick()
 		await wrapper.get('[data-testid="automation-save"]').trigger("click")
 		await flushPromises()
-		expect(lastBody().cap_overrides).toEqual({ per_alert_level_1: 1, per_customer_commands_day: 10 })
+		expect(lastBody().caps).toEqual({ per_alert: 1 })
 	})
 
 	for (const level of [3, 4]) {
@@ -158,9 +202,7 @@ describe("customer AI Automation tab", () => {
 			// Nothing is sent before the box is ticked; the honest risk is shown.
 			expect(putPolicy).not.toHaveBeenCalled()
 			const dialog = wrapper.get('[data-testid="automation-risk-dialog"]')
-			expect(dialog.get('[data-testid="automation-risk-text"]').text()).toContain(
-				"anyone who can write text into this customer's logs can try to steer a command onto that host"
-			)
+			expect(dialog.get('[data-testid="automation-risk-text"]').text()).toBe(RISK_TEXT) // CoPilot's own text
 			const confirm = wrapper.get('[data-testid="automation-risk-confirm"]')
 			expect(confirm.attributes("disabled")).toBeDefined()
 			await confirm.trigger("click")
@@ -192,9 +234,7 @@ describe("customer AI Automation tab", () => {
 	})
 
 	it("raising level 3 again (shadow to auto) asks again; lowering it does not", async () => {
-		getPolicy.mockResolvedValue({
-			data: { success: true, message: "", policy: policy({ level_3_mode: "shadow" }) }
-		})
+		getPolicy.mockResolvedValue({ data: policy({ level_3_mode: "shadow" }) })
 		const wrapper = render()
 		await flushPromises()
 		await choose(wrapper, 3, "auto")
@@ -211,20 +251,33 @@ describe("customer AI Automation tab", () => {
 		expect(lastBody()).toMatchObject({ level_3_mode: "off", acknowledge_risk: false })
 	})
 
-	it("shows CoPilot's refusal text", async () => {
-		putPolicy.mockRejectedValue(
-			Object.assign(new Error("refused"), {
-				isAxiosError: true,
-				response: { status: 403, data: { detail: "Talon service user isn't assigned to this customer" } }
-			})
-		)
+	for (const [status, text] of [
+		[409, "The automation policy changed since it was read; read it again and review the change"],
+		[409, "No level can be raised: the Talon service user isn't assigned to this customer"],
+		[400, "Raising level 3 or 4 needs acknowledge_risk: true (the admin acknowledges the risk text)"]
+	] as const) {
+		it(`shows CoPilot's ${status} refusal and keeps the edit: ${text}`, async () => {
+			putPolicy.mockRejectedValue(
+				Object.assign(new Error("refused"), {
+					isAxiosError: true,
+					response: { status, data: { success: false, message: text } }
+				})
+			)
+			const wrapper = render()
+			await flushPromises()
+			await choose(wrapper, 2, "shadow")
+			await wrapper.get('[data-testid="automation-save"]').trigger("click")
+			await flushPromises()
+			expect(wrapper.get('[data-testid="automation-error"]').text()).toBe(text)
+			expect(checked(wrapper, 2)).toEqual(["shadow"])
+		})
+	}
+
+	it("warns when the switch is off or the service user isn't assigned", async () => {
+		getPolicy.mockResolvedValue({ data: policy({ automation_enabled: false, service_user_assigned: false }) })
 		const wrapper = render()
 		await flushPromises()
-		await choose(wrapper, 1, "off")
-		await wrapper.get('[data-testid="automation-save"]').trigger("click")
-		await flushPromises()
-		expect(wrapper.get('[data-testid="automation-error"]').text()).toBe(
-			"Talon service user isn't assigned to this customer"
-		)
+		expect(wrapper.find('[data-testid="automation-switch-off"]').exists()).toBe(true)
+		expect(wrapper.find('[data-testid="automation-unassigned"]').exists()).toBe(true)
 	})
 })

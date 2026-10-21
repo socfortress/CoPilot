@@ -1,6 +1,6 @@
 /**
- * The customer's AI Automation tab (talon-analyst D85, plan AP-2) is an admin's only, and only with
- * the "Talon v2" setting on. Anyone else neither sees it nor asks for Talon v2's availability.
+ * The customer's AI Automation tab (talon-analyst D85, plan AP-2) is an admin's only. CoPilot serves
+ * the policy whatever "Talon v2" says, so the tab doesn't wait on it and never asks for availability.
  */
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
@@ -61,19 +61,12 @@ describe("customer AI Automation tab visibility", () => {
 		getAvailability.mockReset().mockResolvedValue({ data: { success: true, enabled: true } })
 	})
 
-	it("an admin with Talon v2 on sees it", async () => {
+	it("an admin sees it, without asking for Talon v2's availability", async () => {
 		signInAs(AuthUserRole.Admin)
 		const wrapper = render()
 		await flushPromises()
 		expect(wrapper.find(pane).exists()).toBe(true)
-	})
-
-	it("an admin with Talon v2 off doesn't", async () => {
-		signInAs(AuthUserRole.Admin)
-		getAvailability.mockResolvedValue({ data: { success: true, enabled: false } })
-		const wrapper = render()
-		await flushPromises()
-		expect(wrapper.find(pane).exists()).toBe(false)
+		expect(getAvailability).not.toHaveBeenCalled()
 	})
 
 	for (const role of [
@@ -82,7 +75,7 @@ describe("customer AI Automation tab visibility", () => {
 		AuthUserRole.Scheduler,
 		AuthUserRole.CustomerUser
 	]) {
-		it(`a ${AuthUserRole[role] ?? role} never sees it, nor asks for availability`, async () => {
+		it(`a ${AuthUserRole[role] ?? role} never sees it`, async () => {
 			signInAs(role)
 			const wrapper = render()
 			await flushPromises()

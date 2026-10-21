@@ -11,8 +11,12 @@
 	>
 		<div class="flex flex-col gap-4">
 			<n-alert type="warning" :bordered="false" title="The honest risk">
-				<div class="flex flex-col gap-2 text-sm" data-testid="automation-risk-text">
-					<p v-for="paragraph of HONEST_RISK_TEXT" :key="paragraph">{{ paragraph }}</p>
+				<div class="flex flex-col gap-2 text-sm">
+					<p class="whitespace-pre-line" data-testid="automation-risk-text">{{ riskText }}</p>
+					<p class="text-xs">
+						Saving records your name, the time, the old and new values and this acknowledgement in CoPilot's
+						audit.
+					</p>
 				</div>
 			</n-alert>
 			<n-checkbox v-model:checked="acknowledged" :disabled="saving" data-testid="automation-risk-ack">
@@ -43,12 +47,13 @@
 import type { TalonAutomationLevel } from "@/api/endpoints/talonAutomation"
 import { NAlert, NButton, NCheckbox, NModal } from "naive-ui"
 import { computed, ref, watch } from "vue"
-import { HONEST_RISK_TEXT } from "./automation"
 
 const props = defineProps<{
 	show: boolean
 	customerCode: string
 	levels: TalonAutomationLevel[]
+	/** CoPilot's honest-risk text (`risk_acknowledgement_text`), shown as it sent it. */
+	riskText: string
 	saving?: boolean
 }>()
 

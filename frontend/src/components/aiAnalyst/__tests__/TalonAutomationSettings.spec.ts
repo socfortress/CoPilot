@@ -17,6 +17,18 @@ vi.mock("@/api", () => ({
 	}
 }))
 
+/** `TalonAutomationSwitchResponse` as CoPilot answers it. */
+function switchAnswer(on: boolean) {
+	return {
+		success: true,
+		message: "",
+		connector_name: "Talon",
+		automation_enabled: on,
+		updated_by_user_id: null,
+		updated_at: null
+	}
+}
+
 function render() {
 	return mount(defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(TalonAutomationSettings)) }))
 }
@@ -25,12 +37,8 @@ enableAutoUnmount(afterEach)
 
 describe("talon automation global switch", () => {
 	beforeEach(() => {
-		getSettings.mockReset().mockResolvedValue({ data: { success: true, message: "", automation_enabled: false } })
-		putSettings
-			.mockReset()
-			.mockImplementation((on: boolean) =>
-				Promise.resolve({ data: { success: true, message: "", automation_enabled: on } })
-			)
+		getSettings.mockReset().mockResolvedValue({ data: switchAnswer(false) })
+		putSettings.mockReset().mockImplementation((on: boolean) => Promise.resolve({ data: switchAnswer(on) }))
 	})
 
 	it("shows the stored state and saves the switch", async () => {
@@ -48,7 +56,7 @@ describe("talon automation global switch", () => {
 		getSettings.mockRejectedValue(
 			Object.assign(new Error("x"), {
 				isAxiosError: true,
-				response: { status: 403, data: { detail: "Admins only" } }
+				response: { status: 403, data: { success: false, message: "Admins only" } }
 			})
 		)
 		const wrapper = render()

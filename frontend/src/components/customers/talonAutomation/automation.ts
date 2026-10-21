@@ -37,29 +37,22 @@ export const MODE_TEXT: Record<TalonAutomationMode, { label: string; detail: str
 }
 
 /**
- * The honest risk of levels 3–4 (plan AUTOMATION-POLICY.md, "The honest risk"; D85's accepted
- * residual risks). Shown before a raise is saved; the admin's acknowledgement is recorded.
+ * Readable labels for the caps CoPilot reports. The names, defaults and values always come from the
+ * response (`cap_defaults`, `effective_caps`, `caps`); a name not listed here shows as itself.
  */
-export const HONEST_RISK_TEXT = [
-	"At levels 3 and 4 on auto, anyone who can write text into this customer's logs can try to steer a command onto that host.",
-	"Talon downgrades a command that repeats alert text, or that comes after data the prompt-injection defender flagged, and CoPilot never runs a risk-labelled command on auto. These checks are not a boundary: a paraphrased or self-composed command copies nothing, a command under 8 characters (such as whoami or netstat) never trips the copy check, and an instruction the defender doesn't flag leaves the run unflagged.",
-	"Levels 3 and 4 are off by default. Raising one records your name, the time, the old and new values and this acknowledgement in CoPilot's audit."
-] as const
-
-/** Labels for the caps CoPilot reports (Q9). An unknown key shows as itself. */
-export const CAP_LABELS: Record<string, { label: string; unit: string }> = {
-	per_alert_level_1: { label: "Level 1 collections per alert", unit: "per 2 hours" },
-	per_alert_level_2_artifacts: { label: "Level 2 artifacts per alert", unit: "per 2 hours" },
-	per_alert_level_2_files: { label: "Level 2 files per alert", unit: "per 2 hours" },
-	per_alert_commands: { label: "Commands per alert", unit: "per 2 hours" },
-	per_alert_free_form: { label: "Free-form commands per alert", unit: "per 2 hours" },
-	per_host_hour: { label: "Automated starts per host", unit: "per hour" },
-	per_customer_collections_hour: { label: "Collections (levels 1–2)", unit: "per hour" },
-	per_customer_files_day: { label: "Files", unit: "per day" },
-	per_customer_file_mb_day: { label: "File volume (MB)", unit: "per day" },
-	per_customer_commands_day: { label: "Commands", unit: "per day" }
+export const CAP_LABELS: Record<string, string> = {
+	per_alert: "Level 1 collections per alert (per 2 hours)",
+	per_host_hour: "Automated starts per host per hour",
+	per_customer_hour: "Collections per customer per hour (levels 1–2)",
+	level_2_artifacts_per_alert: "Level 2 artifacts per alert",
+	files_per_alert: "Files per alert",
+	files_per_customer_day: "Files per customer per day",
+	file_bytes_per_customer_day: "File bytes per customer per day",
+	commands_per_alert: "Commands per alert",
+	free_form_per_alert: "Free-form commands per alert",
+	commands_per_customer_day: "Commands per customer per day"
 }
 
-export function capLabel(key: string): { label: string; unit: string } {
-	return CAP_LABELS[key] ?? { label: key, unit: "" }
+export function capLabel(name: string): string {
+	return CAP_LABELS[name] ?? name
 }
