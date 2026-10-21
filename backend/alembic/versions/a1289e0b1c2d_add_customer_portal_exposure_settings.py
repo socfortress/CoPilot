@@ -1,7 +1,7 @@
 """add customer portal exposure settings
 
 Revision ID: a1289e0b1c2d
-Revises: c2a2a0b1d3e4
+Revises: a7d2e9c4b5f1
 Create Date: 2026-10-21 09:00:00.000000
 
 The per-customer switch for the Customer Portal's Exposure page (#1289): the tenant-wide
@@ -17,7 +17,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "a1289e0b1c2d"
-down_revision: Union[str, None] = "c2a2a0b1d3e4"
+down_revision: Union[str, None] = "a7d2e9c4b5f1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

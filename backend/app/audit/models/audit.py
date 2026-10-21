@@ -87,6 +87,12 @@ class AuditAction(str, Enum):
     # An admin's per-customer Talon budget override (talon-analyst M5-9a, FR-COST-4), with the old
     # and new ceilings; refused attempts are recorded as failures.
     TALON_BUDGET_UPDATE = "talon_budget.update"
+    # The per-customer automation policy and the global automation switch (talon-analyst AP-2,
+    # D85), with the old and new values (raising level 3 or 4: the admin's risk acknowledgement);
+    # and each automated start the Talon service account was given a slot for, recorded in the
+    # same transaction as its talon_automation_start row, before the flow starts.
+    TALON_AUTOMATION_POLICY_UPDATE = "talon_automation.policy_update"
+    TALON_AUTOMATION_START = "talon_automation.start"
 
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"

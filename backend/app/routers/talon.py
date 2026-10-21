@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.connectors.talon.routes.talon import talon_router
 from app.connectors.talon.routes.talon_actions import talon_actions_router
+from app.connectors.talon.routes.talon_automation import talon_automation_router
 from app.connectors.talon.routes.talon_collections import talon_collect_start_router
 from app.connectors.talon.routes.talon_collections import (
     talon_collection_settings_router,
@@ -23,3 +24,6 @@ router.include_router(talon_actions_router, prefix="/talon/actions", tags=["talo
 # beside /artifacts/collect; and the admin's setting for the Talon service account's allowlist.
 router.include_router(talon_collect_start_router, prefix="/artifacts", tags=["talon-v2"])
 router.include_router(talon_collection_settings_router, prefix="/talon/v2", tags=["talon-v2"])
+# The per-customer automation policy, the global automation switch and the dry-run route
+# (talon-analyst plan AP-2): the policy and switch whatever "Talon v2" says, the dry run behind it.
+router.include_router(talon_automation_router, prefix="/talon/v2", tags=["talon-v2"])

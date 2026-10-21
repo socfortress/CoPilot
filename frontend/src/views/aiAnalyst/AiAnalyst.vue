@@ -38,6 +38,10 @@
 			<n-tab-pane v-if="talonV2Available && isAdmin" name="budgets" tab="Budgets" display-directive="show:lazy">
 				<TalonBudgets v-if="visited.has('budgets')" class="pt-6" />
 			</n-tab-pane>
+			<!-- The global automation switch (talon-analyst D85, AP-2): an admin's only, behind "Talon v2" (D54). -->
+			<n-tab-pane v-if="talonV2Available && isAdmin" name="settings" tab="Settings" display-directive="show:lazy">
+				<TalonAutomationSettings v-if="visited.has('settings')" class="pt-6" />
+			</n-tab-pane>
 			<n-tab-pane name="reports" tab="Reports" display-directive="show:lazy">
 				<AlertsReportsList />
 			</n-tab-pane>
@@ -65,6 +69,7 @@ const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2
 const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
 const TalonUsagePanel = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonUsagePanel.vue"))
 const TalonBudgets = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonBudgets.vue"))
+const TalonAutomationSettings = defineAsyncComponent(() => import("@/components/aiAnalyst/TalonAutomationSettings.vue"))
 
 const activeTab = ref("overview")
 const { available: talonV2Available, settled: talonV2Settled } = useTalonV2Availability()
