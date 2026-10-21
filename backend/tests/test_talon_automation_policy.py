@@ -748,8 +748,8 @@ def test_the_switch_and_policy_routes_answer_whatever_talon_v2_says():
     assert [r.status_code for r in call(scenario, enabled=False)] == [200, 200, 200]
 
 
-def test_the_lab_row_call_is_idempotent():
-    """The deploy step (the PR body): the switch on and the customer's level 1 on ``auto``, the same
+def test_the_deploy_calls_are_idempotent():
+    """The deploy step: the switch on and the customer's level 1 on ``auto``, the same
     PUTs again changing only the version."""
     calls = [
         ("admin", "PUT", SWITCH, {"automation_enabled": True}),

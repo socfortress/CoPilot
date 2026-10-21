@@ -212,7 +212,7 @@ async def pins_for(allowed):
 
 async def configure(ctx, allowed=ALL_AUTO_RUN, username=None, hashes=None, level_1="auto", automation=True):
     """EA-4b's allowlist and pins, and (AP-2) the global switch and ACME's automation policy: level 1
-    on ``level_1`` (None: no row), as ``lab`` runs once AP-2 is deployed."""
+    on ``level_1`` (None: no row), as a level-1 customer runs once AP-2 is deployed."""
     pins = hashes if hashes is not None else (await pins_for(allowed) if allowed is not None else None)
     async with ctx.db.session() as session:
         await session.execute(
