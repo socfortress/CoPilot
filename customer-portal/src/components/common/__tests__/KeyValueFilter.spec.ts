@@ -14,18 +14,19 @@ interface FilterProps {
 function mountFilter(props: FilterProps) {
 	const model = ref<KeyValueFilterModel>({ key: null, value: null })
 	const loaded = vi.fn()
+	// The component under test, inside the message provider it needs.
+	const content = () =>
+		h(KeyValueFilter, {
+			value: model.value,
+			"onUpdate:value": (value: KeyValueFilterModel) => (model.value = value),
+			onLoaded: loaded,
+			testid: "things",
+			...props
+		})
+
 	const wrapper = mount(
 		defineComponent({
-			setup: () => () =>
-				h(NMessageProvider, null, () =>
-					h(KeyValueFilter, {
-						value: model.value,
-						"onUpdate:value": (value: KeyValueFilterModel) => (model.value = value),
-						onLoaded: loaded,
-						testid: "things",
-						...props
-					})
-				)
+			setup: () => () => h(NMessageProvider, null, content)
 		})
 	)
 	const selects = () => wrapper.findAllComponents(NSelect)

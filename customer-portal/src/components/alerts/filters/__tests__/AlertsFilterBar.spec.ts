@@ -15,18 +15,19 @@ vi.mock("@/api", () => ({ default: { alerts: { getAlertsFilters, searchAlertAsse
 function mountBar(initial: Partial<AlertsFilters> = {}) {
 	const filters = ref<AlertsFilters>({ ...EMPTY_ALERTS_FILTERS, ...initial })
 	const patches: Partial<AlertsFilters>[] = []
+	// The component under test, inside the message provider it needs.
+	const content = () =>
+		h(AlertsFilterBar, {
+			filters: filters.value,
+			onChange: (patch: Partial<AlertsFilters>) => {
+				patches.push(patch)
+				filters.value = { ...filters.value, ...patch }
+			}
+		})
+
 	const wrapper = mount(
 		defineComponent({
-			setup: () => () =>
-				h(NMessageProvider, null, () =>
-					h(AlertsFilterBar, {
-						filters: filters.value,
-						onChange: (patch: Partial<AlertsFilters>) => {
-							patches.push(patch)
-							filters.value = { ...filters.value, ...patch }
-						}
-					})
-				)
+			setup: () => () => h(NMessageProvider, null, content)
 		})
 	)
 	const group = (type: string) => wrapper.find(`[data-testid=alerts-filter-${type}]`)
