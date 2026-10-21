@@ -70,6 +70,13 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         # Their own notification choices and bell (#1282): every query is scoped to the caller.
         ("PUT", "/api/customer_portal/notifications/preferences"),
         ("POST", "/api/customer_portal/notifications/read"),
+        # A customer admin's own customers' portal users (#1296): admin by the database, not the
+        # token (services/tenant_users.py refuses everyone else), and never an admin or the caller.
+        ("POST", "/api/customer_portal/users"),
+        ("POST", "/api/customer_portal/users/{user_id}/disable"),
+        ("POST", "/api/customer_portal/users/{user_id}/enable"),
+        ("DELETE", "/api/customer_portal/users/{user_id}/totp"),
+        ("POST", "/api/customer_portal/users/{user_id}/temporary-password"),
         # Reads that take a body, so they are POSTs. They change nothing.
         ("POST", "/api/siem/dashboards/panel-data"),
         ("POST", "/api/copilot_searches/by-ids"),

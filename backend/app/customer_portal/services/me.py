@@ -7,6 +7,7 @@ from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.customer_portal.schema.me import PortalCustomer
 from app.customer_portal.schema.me import PortalMeResponse
+from app.customer_portal.services.tenant_users import administered_customer_codes
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
 
@@ -22,9 +23,17 @@ async def portal_customers(user: User, session: AsyncSession) -> List[PortalCust
     if not codes:
         return []
 
+    administered = set(await administered_customer_codes(user, session))
     result = await session.execute(select(Customers.customer_code, Customers.customer_name).where(Customers.customer_code.in_(codes)))
     names = {code: name for code, name in result.all()}
-    customers = [PortalCustomer(customer_code=code, customer_name=(names.get(code) or "").strip() or code) for code in codes]
+    customers = [
+        PortalCustomer(
+            customer_code=code,
+            customer_name=(names.get(code) or "").strip() or code,
+            is_customer_admin=code in administered,
+        )
+        for code in codes
+    ]
     return sorted(customers, key=lambda customer: (customer.customer_name.casefold(), customer.customer_code))
 
 
