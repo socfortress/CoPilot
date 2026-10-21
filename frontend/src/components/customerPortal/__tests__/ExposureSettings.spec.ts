@@ -84,7 +84,9 @@ describe("customer portal exposure settings", () => {
 		const wrapper = render()
 		await flushPromises()
 		expect(formatDate).toHaveBeenCalledWith("2026-10-21T08:00:00", "YYYY-MM-DD HH:mm", { tz: true })
-		expect(wrapper.get("[data-testid=exposure-settings-updated]").text()).toBe("Last changed 2026-10-21T08:00:00 local")
+		expect(wrapper.get("[data-testid=exposure-settings-updated]").text()).toBe(
+			"Last changed 2026-10-21T08:00:00 local"
+		)
 	})
 
 	it("reads its help without a space before any punctuation", async () => {

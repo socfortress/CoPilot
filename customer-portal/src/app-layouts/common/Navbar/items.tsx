@@ -13,7 +13,11 @@ export interface NavbarFeatures {
 	exposure?: boolean
 }
 
-export default function getItems({ sla = false, activity = false, exposure = false }: NavbarFeatures = {}): MenuMixedOption[] {
+export default function getItems({
+	sla = false,
+	activity = false,
+	exposure = false
+}: NavbarFeatures = {}): MenuMixedOption[] {
 	const items: MenuMixedOption[] = [
 		{
 			label: () =>
@@ -118,7 +122,11 @@ export default function getItems({ sla = false, activity = false, exposure = fal
 	if (exposure) {
 		items.push({
 			label: () =>
-				h(RouterLink, { to: { name: "Exposure" }, "data-testid": "nav-exposure" }, { default: () => "Exposure" }),
+				h(
+					RouterLink,
+					{ to: { name: "Exposure" }, "data-testid": "nav-exposure" },
+					{ default: () => "Exposure" }
+				),
 			key: "Exposure",
 			icon: renderIcon(ICONS.exposure)
 		})

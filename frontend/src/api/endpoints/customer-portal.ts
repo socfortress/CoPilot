@@ -154,7 +154,9 @@ export default {
 		)
 	},
 	getCustomerExposureSettings(customerCode: string, signal?: AbortSignal) {
-		return HttpClient.get<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, { signal })
+		return HttpClient.get<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, {
+			signal
+		})
 	},
 	/** Admin-only: shows or hides the portal's Exposure page for this customer (#1289). */
 	setCustomerExposureSettings(customerCode: string, payload: CustomerPortalExposureSettingsPayload) {
