@@ -14,7 +14,12 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
 3. the artifact. **The Talon service account** (``talon_service_account.is_service_account``: the
    user id recorded with the setting, the user named by ``collect_service_username``, and
    ``talon-analyst``, whatever its role; every other route that starts endpoint work refuses it)
-   must name an artifact on the admin's allowlist (``collect_allowed_artifacts``) with exactly its
+   must name its alert (403 ``ALERT_REQUIRED``, first), then pass the **automation policy**
+   (talon-analyst plan AP-2, ``talon_automation.check_policy``): the global switch
+   (``automation_enabled``), the host's customer's ``talon_automation_policy`` row (none: every level
+   off), and the level CoPilot classifies itself (an auto-run artifact is level 1, another catalogue
+   artifact level 2, anything else none) on ``auto`` (``off``, ``shadow`` and ``propose`` start
+   nothing) and startable here (level 1 only, for now), each a fixed 403; then it must name an artifact on the admin's allowlist (``collect_allowed_artifacts``) with exactly its
    pins and nothing else (``talon_catalogue.auto_run_violation``), else 403; **with the allowlist
    unset it starts nothing** (403); and the artifact's and its dependencies' definitions must have
    the SHA-256s saved with the allowlist (``collect_definition_hashes``), else 403 until an admin
@@ -27,9 +32,12 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
    to CoPilot's own record of what it sent Talon (``talon_triggers``): the alert's newest record
    sent within 2 hours, from the alert pipeline or an analyst (never the customer portal or a
    replay), the host one of the alert's assets as they were when it was sent and of the alert's
-   customer (403), then a slot under the per-alert cap, committed before the flow starts (429 over
-   it, 500 if it can't be recorded). The service account's start without ``alert_id`` is refused at
-   step 3, first (403 ``ALERT_REQUIRED``); everyone else's ``alert_id`` and ``job_id`` are ignored;
+   customer (403); then, in one transaction under the customer's policy row lock
+   (``talon_automation.reserve_start``, AP-2), the policy again (as it is now), the per-alert slot,
+   the per-host and per-customer hourly caps (429 over one), and the start's
+   ``talon_automation_start`` row with its ``talon_automation.start`` audit row, committed before
+   the flow starts (500 ``CAP_UNRECORDED`` if it can't be). Everyone else's ``alert_id`` and
+   ``job_id`` are ignored;
 6. ``/collect``'s shared start function (``routes.artifacts.start_collection_as``), under the locks:
    the caller's access to every row of the host, the host's artifact list (400), the analyst policy
    (for the service account: the auto-run allowlist instead, plus
@@ -38,6 +46,9 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
    with the caller as the actor (bound to an alert, its ``new_value`` also names the alert, the job id
    as sent, and the trigger: its id, source and user), and EA-1's parameterized start with the resource limits
    (``collect_start_limits``) as ``collect_client`` arguments. No wait, no MinIO upload, no rows.
+
+``POST /api/talon/v2/automation/dry-run`` (``dry_run``) runs the same checks for the service account
+on the same body, with the level on ``shadow`` or ``auto``, records the verdict and starts nothing.
 
 The answer is ``{success, message, flow_id, client_id, artifact}``; ``flow_id`` only in
 talon-analyst's ``F.[A-Za-z0-9]{1,64}`` form. Every refusal is a fixed text with its status (never
@@ -66,12 +77,14 @@ from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings
+from app.connectors.talon.schema.talon_automation import TalonAutomationDryRunResponse
 from app.connectors.talon.schema.talon_collections import CollectStartBody
 from app.connectors.talon.schema.talon_collections import CollectStartResponse
 from app.connectors.talon.schema.talon_collections import (
     TalonCollectionSettingsResponse,
 )
 from app.connectors.talon.services import talon_action_execution as execution
+from app.connectors.talon.services import talon_automation as automation
 from app.connectors.talon.services import talon_triggers
 from app.connectors.talon.services.talon_service_account import DEFAULT_SERVICE_USERNAME
 from app.connectors.talon.services.talon_service_account import effective_username
@@ -94,6 +107,7 @@ from app.connectors.velociraptor.services.talon_catalogue import is_response_art
 from app.connectors.velociraptor.utils.universal import _positive_int_from_env
 from app.connectors.velociraptor.utils.validation import validate_artifact_name
 from app.connectors.velociraptor.utils.validation import validate_hostname
+from app.middleware.customer_access import customer_code_for_hostname
 from app.middleware.customer_access import enforce_hostname_access
 from app.time_utils import now_utc
 
@@ -125,11 +139,26 @@ DEFINITION_CHANGED = (
     "The Talon service account may not start this collection: its Velociraptor definition changed since the setting was saved; "
     "an admin must review it and save the Talon collection setting again"
 )
+DRY_RUN_SERVICE_ONLY = "Only the Talon service account may ask CoPilot for a dry run"
+WOULD_START_TEXT = "would start: every check passed; nothing was started (dry run)"
 DEFINITIONS_UNREADABLE = "Velociraptor's artifact definitions could not be read, so the Talon collection setting was not saved"
 DEFINITION_REFUSED = "allowed_artifacts names an artifact whose definition in Velociraptor's root org can't be pinned (not found, not built in, or not read-only)"
 #: The org the service account collects in: ``lock_and_check_host`` refuses any other.
 ROOT_ORG = "root"
 FIXED_BY_STATUS = {400: NOT_APPLICABLE, 403: POLICY_REFUSED, 404: NOT_FOUND}
+# The dry run's codes for this route's own fixed texts.
+automation.register_codes(
+    [
+        ("UNSET", UNSET),
+        ("SERVICE_REFUSED", SERVICE_REFUSED),
+        ("DEFINITION_CHANGED", DEFINITION_CHANGED),
+        ("BAD_REQUEST", BAD_REQUEST),
+        ("NOT_APPLICABLE", NOT_APPLICABLE),
+        ("NOT_FOUND", NOT_FOUND),
+        ("POLICY_REFUSED", POLICY_REFUSED),
+        ("START_FAILED", START_FAILED),
+    ],
+)
 
 
 def collect_start_limits() -> FlowLimits:
@@ -216,8 +245,8 @@ async def pin_definitions(artifacts: Optional[List[str]]) -> Optional[Dict[str, 
     return pins
 
 
-async def start(user: User, body: CollectStartBody, request: Optional[Request], session: AsyncSession) -> CollectStartResponse:
-    """Start one collection and answer its flow id (module docstring)."""
+def _shape(body: CollectStartBody) -> Tuple[Tuple[Tuple[str, str], ...], str, str, str]:
+    """Step 1: the parameters, the client id, the host and the artifact, validated (fixed 400s)."""
     parameters = _parameters(body.parameters)
     client = execution.canonical_client_id(body.velociraptor_id)
     try:
@@ -226,50 +255,97 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
         raise HTTPException(status_code=400, detail=BAD_REQUEST) from None
     if client is None:
         raise HTTPException(status_code=400, detail=NOT_CLIENT)
+    return parameters, client, hostname, artifact
 
+
+async def _host_access(user: User, hostname: str, session: AsyncSession) -> None:
+    """Step 2: ``enforce_hostname_access``, with fixed texts."""
     try:
         await enforce_hostname_access(user, hostname, session)
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=NO_ACCESS if e.status_code == 403 else NOT_FOUND) from None
+
+
+async def _service_gate(
+    user: User,
+    row: Optional[TalonConnectorSettings],
+    session: AsyncSession,
+    hostname: str,
+    artifact: str,
+    parameters: Tuple[Tuple[str, str], ...],
+    *,
+    dry_run: bool,
+) -> Tuple[str, Optional[int]]:
+    """Step 3 for the Talon service account, after ``ALERT_REQUIRED``: the automation policy
+    (``talon_automation.check_policy``: the switch, the host's customer's row, the level CoPilot
+    classifies and its mode), then level 1's own checks (EA-4b's allowlist, the pins, the
+    definition pin). Returns the host's customer and the level; a fixed refusal otherwise."""
+    customer = await customer_code_for_hostname(session, hostname)
+    if customer is None:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    level = automation.classify(artifact)
+    automation.check_policy(row, await automation.policy_row(session, customer), level, dry_run=dry_run)
+    allowed = allowed_artifacts(row)
+    if allowed is None:
+        logger.warning(f"Refused a collection start by the Talon service account {user.username}: no allowlist is set")
+        raise HTTPException(status_code=403, detail=UNSET)
+    refused = auto_run_violation(artifact, parameters, allowed)
+    if refused is not None:
+        # The artifact name is validated (``validate_artifact_name``); a value never reaches here.
+        logger.warning(f"Refused a collection start of {artifact} by the Talon service account {user.username}: {refused}")
+        raise HTTPException(status_code=403, detail=SERVICE_REFUSED)
+    await check_definition_pin(row, artifact)
+    return customer, level
+
+
+async def start(user: User, body: CollectStartBody, request: Optional[Request], session: AsyncSession) -> CollectStartResponse:
+    """Start one collection and answer its flow id (module docstring)."""
+    parameters, client, hostname, artifact = _shape(body)
+    await _host_access(user, hostname, session)
     row = await settings_row(session)
     service = is_service_account(user, row)
+    level = None
     if service:
         # Every start by the service account is bound to an alert CoPilot sent (talon-analyst AP-2a):
         # without one, nothing to bind, so nothing starts.
         if body.alert_id is None:
             logger.warning(f"Refused a collection start by the Talon service account {user.username}: no alert_id")
             raise HTTPException(status_code=403, detail=talon_triggers.ALERT_REQUIRED)
-        allowed = allowed_artifacts(row)
-        if allowed is None:
-            logger.warning(f"Refused a collection start by the Talon service account {user.username}: no allowlist is set")
-            raise HTTPException(status_code=403, detail=UNSET)
-        refused = auto_run_violation(artifact, parameters, allowed)
-        if refused is not None:
-            # The artifact name is validated (``validate_artifact_name``); a value never reaches here.
-            logger.warning(f"Refused a collection start of {artifact} by the Talon service account {user.username}: {refused}")
-            raise HTTPException(status_code=403, detail=SERVICE_REFUSED)
-        await check_definition_pin(row, artifact)
+        _, level = await _service_gate(user, row, session, hostname, artifact, parameters, dry_run=False)
     elif is_response_artifact(artifact) or artifact in response_artifacts():
         raise HTTPException(status_code=403, detail=RESPONSE_ARTIFACT)
 
     # A fresh transaction, so the host's locks are taken before anything else is read in it (the
     # start function's own reads then see the rows as they were locked).
     await session.rollback()
+    record_id = None
     try:
         try:
             agent = await execution.lock_and_check_host(session, hostname, client)
         except execution.RecheckFailed as e:
             raise HTTPException(status_code=409, detail=f"not started: {e}") from None
         # The service account's start bound to an alert: CoPilot's own trigger record (plain reads,
-        # after the host's lock), then a slot under the per-alert cap, committed before the flow.
+        # after the host's lock), then the policy again and the caps, with the start's record and its
+        # audit row, all committed before the flow (talon-analyst AP-2, ``talon_automation``).
         binding = None
         if service:
             binding = await talon_triggers.check(session, body.alert_id, hostname, client, agent.customer_code)
-            await talon_triggers.reserve(binding)
+            record_id = await automation.reserve_start(
+                user=user,
+                binding=binding,
+                customer_code=agent.customer_code,
+                hostname=hostname,
+                client=client,
+                level=level,
+                artifact=artifact,
+                parameters=parameters,
+                job_id=body.job_id,
+                request=request,
+            )
         # Every value logged here is validated: the host is the agents row's, the client canonical,
         # the artifact a name, the alert an integer. Never the parameters: their names are logged by
         # the parameter check, their values nowhere.
-        bound = f", bound to alert {binding.alert_id} ({binding.source})" if binding else ""
+        bound = f", bound to alert {binding.alert_id} ({binding.source}), automated start {record_id}" if binding else ""
         logger.info(f"Collection start: {artifact} on {hostname} ({client}) for user {getattr(user, 'username', '?')}{bound}")
         collect_body = CollectArtifactBody(
             hostname=hostname,
@@ -288,15 +364,88 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
                 require_built_in=service,
                 analyst_policy=not service,
                 limits=collect_start_limits(),
-                audit_values=binding.audit_values(body.job_id) if binding else None,
+                audit_values={**binding.audit_values(body.job_id), "automation_start_id": record_id} if binding else None,
             )
         except HTTPException as e:
             if e.status_code >= 500:
                 logger.error(f"Collection start of {artifact} on {client} failed in CoPilot (HTTP {e.status_code})")
+            if record_id is not None:
+                # A 4xx started nothing; a 5xx may have (EA-4b: "could not start" names the request).
+                await automation.finish_start(record_id, "failed" if e.status_code < 500 else "unknown", code=f"HTTP_{e.status_code}")
             raise _fixed(e, POLICY_REFUSED) from None
     finally:
         await session.rollback()  # releases the host's locks
-    return started_response(started, client)
+    try:
+        response = started_response(started, client)
+    except HTTPException:
+        if record_id is not None:
+            await automation.finish_start(record_id, "unknown", code="NO_FLOW_ID")
+        raise
+    if record_id is not None:
+        await automation.finish_start(record_id, "started", flow_id=response.flow_id)
+    return response
+
+
+async def dry_run(user: User, body: CollectStartBody, request: Optional[Request], session: AsyncSession) -> TalonAutomationDryRunResponse:
+    """``POST /api/talon/v2/automation/dry-run`` (talon-analyst plan AP-2, "What CoPilot checks" 1-7):
+    the start route's checks for the Talon service account, on the same body, with the level's mode
+    ``shadow`` or ``auto``, and the caps counted from earlier dry runs; then the verdict recorded
+    (``talon_automation_start``, ``mode = shadow``) and answered. **Nothing starts**: no flow, no
+    slot, no ``ARTIFACT_COLLECT``. Before the verdict can be recorded (the shape, the host's access,
+    a caller who isn't the service account, no ``alert_id``, a host without a customer) it answers
+    the start route's refusal, unrecorded."""
+    parameters, client, hostname, artifact = _shape(body)
+    await _host_access(user, hostname, session)
+    row = await settings_row(session)
+    if not is_service_account(user, row):
+        raise HTTPException(status_code=403, detail=DRY_RUN_SERVICE_ONLY)
+    if body.alert_id is None:
+        raise HTTPException(status_code=403, detail=talon_triggers.ALERT_REQUIRED)
+    customer = await customer_code_for_hostname(session, hostname)
+    if customer is None:
+        raise HTTPException(status_code=404, detail=NOT_FOUND)
+    level, binding, refusal = automation.classify(artifact), None, None
+    try:
+        await _service_gate(user, row, session, hostname, artifact, parameters, dry_run=True)
+        await session.rollback()
+        try:
+            agent = await execution.lock_and_check_host(session, hostname, client)
+        except execution.RecheckFailed as e:
+            raise HTTPException(status_code=409, detail=f"not started: {e}") from None
+        customer = agent.customer_code
+        binding = await talon_triggers.check(session, body.alert_id, hostname, client, agent.customer_code)
+    except HTTPException as e:
+        if e.status_code >= 500:
+            logger.error(f"Dry run of {artifact} on {client}: CoPilot's checks failed (HTTP {e.status_code})")
+        refusal = (e.status_code, *automation.code_and_text(e))
+    finally:
+        await session.rollback()  # releases the host's locks; nothing more is read under them
+    record_id, refusal, policy = await automation.record_dry_run(
+        user=user,
+        binding=binding,
+        alert_id=body.alert_id,
+        customer_code=customer,
+        hostname=hostname,
+        client=client,
+        level=level,
+        artifact=artifact,
+        parameters=parameters,
+        job_id=body.job_id,
+        refusal=refusal,
+    )
+    verdict = "refused" if refusal else "would_start"
+    logger.info(f"Dry run: {artifact} on {hostname} ({client}) for alert {body.alert_id}: {verdict}{f' ({refusal[1]})' if refusal else ''}")
+    mode = policy.mode(level) if policy is not None and level is not None else None
+    return TalonAutomationDryRunResponse(
+        success=True,
+        message=refusal[2] if refusal else WOULD_START_TEXT,
+        verdict=verdict,
+        code=refusal[1] if refusal else None,
+        status_code=refusal[0] if refusal else None,
+        level=level,
+        mode=mode,
+        record_id=record_id,
+    )
 
 
 def started_response(started: Any, client: str) -> CollectStartResponse:

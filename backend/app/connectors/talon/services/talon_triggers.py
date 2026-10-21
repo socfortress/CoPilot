@@ -240,14 +240,17 @@ async def check(session: AsyncSession, alert_id: int, hostname: str, client: str
     )
 
 
-async def _take_slot(session: AsyncSession, alert_id: int, customer_code: str, now: datetime) -> bool:
-    """One guarded UPDATE: a slot while the window holds fewer than the cap, or a new window once it
-    has passed. Atomic on its own, so two starts at the cap minus one can't both take the last slot."""
+async def _take_slot(session: AsyncSession, alert_id: int, customer_code: str, now: datetime, cap: int = PER_ALERT_CAP) -> bool:
+    """One guarded UPDATE: a slot while the window holds fewer than ``cap``, or a new window once it
+    has passed (a cap of 0 gives none). Atomic on its own, so two starts at the cap minus one can't
+    both take the last slot."""
+    if cap < 1:
+        return False
     expired = TalonAutomationAlertCap.window_started_at < now - WINDOW
     result = await session.execute(
         update(TalonAutomationAlertCap).where(
             TalonAutomationAlertCap.alert_id == alert_id,
-            or_(expired, TalonAutomationAlertCap.starts < PER_ALERT_CAP),
+            or_(expired, TalonAutomationAlertCap.starts < cap),
         )
         # ``starts`` first. MySQL and MariaDB assign a single-table UPDATE's SET left to right, each
         # later expression seeing the earlier columns' new values; SQLite and standard SQL use the
@@ -259,6 +262,27 @@ async def _take_slot(session: AsyncSession, alert_id: int, customer_code: str, n
         ),
     )
     return result.rowcount == 1
+
+
+async def ensure_cap_row(session: AsyncSession, binding: Binding) -> None:
+    """The alert's cap row, created empty in a transaction of its own if it is missing (a concurrent
+    creator's duplicate is ignored), and the session's transaction ended, so a guarded UPDATE that
+    follows finds an existing row (``reserve``'s docstring: gap locks on MySQL otherwise)."""
+    if await session.get(TalonAutomationAlertCap, binding.alert_id) is None:
+        session.add(
+            TalonAutomationAlertCap(
+                alert_id=binding.alert_id,
+                customer_code=binding.customer_code,
+                starts=0,
+                window_started_at=utcnow(),
+            ),
+        )
+        try:
+            await session.commit()
+        except IntegrityError:  # a concurrent start created it
+            await session.rollback()
+    else:
+        await session.rollback()  # ends the read's snapshot before the UPDATE
 
 
 async def reserve(binding: Binding) -> None:
@@ -273,21 +297,7 @@ async def reserve(binding: Binding) -> None:
     an existing row only waits for its row lock (``tests/e2e/talon_alert_cap_mysql_e2e.py``)."""
     try:
         async with new_session() as session:
-            if await session.get(TalonAutomationAlertCap, binding.alert_id) is None:
-                session.add(
-                    TalonAutomationAlertCap(
-                        alert_id=binding.alert_id,
-                        customer_code=binding.customer_code,
-                        starts=0,
-                        window_started_at=utcnow(),
-                    ),
-                )
-                try:
-                    await session.commit()
-                except IntegrityError:  # a concurrent start created it
-                    await session.rollback()
-            else:
-                await session.rollback()  # ends the read's snapshot before the UPDATE
+            await ensure_cap_row(session, binding)
             if await _take_slot(session, binding.alert_id, binding.customer_code, utcnow()):
                 await session.commit()
                 return

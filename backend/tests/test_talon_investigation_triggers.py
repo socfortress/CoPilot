@@ -64,6 +64,7 @@ from tests.test_talon_actions import VID  # noqa: E402
 from tests.test_talon_actions import agent_row  # noqa: E402
 from tests.test_talon_actions import as_user  # noqa: E402
 from tests.test_talon_collect_start import ALL_AUTO_RUN  # noqa: E402
+from tests.test_talon_collect_start import AUTOMATION_TABLES  # noqa: E402
 from tests.test_talon_collect_start import HOST_ARTIFACTS  # noqa: E402
 from tests.test_talon_collect_start import ROUTE  # noqa: E402
 from tests.test_talon_collect_start import SERVICE  # noqa: E402
@@ -85,7 +86,7 @@ JOB = "copilot-inv-1-1761048000000"
 class _Db(harness._Db):
     async def create(self):
         await super().create()
-        tables = [TalonInvestigationTrigger.__table__, TalonAutomationAlertCap.__table__, CustomerPortalAiRequest.__table__]
+        tables = [*AUTOMATION_TABLES, CustomerPortalAiRequest.__table__]
         async with self.engine.begin() as conn:
             await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
         return self
@@ -437,6 +438,7 @@ def test_the_service_account_starts_on_the_alerts_host_with_a_pipeline_or_analys
         "trigger_source": source,
         "trigger_user_id": 2 if source == "analyst" else None,
         "trigger_username": "ana" if source == "analyst" else None,
+        "automation_start_id": 1,
     }
 
 
