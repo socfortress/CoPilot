@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h, nextTick } from "vue"
 import AgentCases from "../AgentCases.vue"
+import AgentDetails from "../AgentDetails.vue"
 import AgentSca from "../AgentSca.vue"
 import AgentVulnerabilities from "../AgentVulnerabilities.vue"
 
@@ -14,7 +15,8 @@ const api = vi.hoisted(() => ({
 	getScaPolicies: vi.fn(),
 	getScaChecks: vi.fn(),
 	exportScaChecks: vi.fn(),
-	getCases: vi.fn()
+	getCases: vi.fn(),
+	getAgentById: vi.fn()
 }))
 const saveAs = vi.hoisted(() => vi.fn())
 
@@ -262,5 +264,70 @@ describe("agent cases", () => {
 		const wrapper = render(AgentCases, { hostname: "web-01" })
 		await flushPromises()
 		expect(wrapper.get("[data-testid=agent-cases-empty]").text()).toContain("No case involves this host")
+	})
+})
+
+/** The Exposure page links an agent's tab filtered to what was clicked (#1289). */
+describe("links into an agent's tabs", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		for (const fn of Object.values(api)) fn.mockReset()
+	})
+
+	it("opens the tab the link names, the overview for anything else", async () => {
+		api.getAgentById.mockResolvedValue({ data: { agents: [{ agent_id: "001", hostname: "web-01" }] } })
+		const stubs = {
+			AgentOverview: { template: "<div data-testid='overview-stub' />" },
+			AgentVulnerabilities: {
+				props: ["initialSearch"],
+				template: "<div data-testid='vulnerabilities-stub'>{{ initialSearch }}</div>"
+			},
+			AgentSca: { props: ["initialPolicy"], template: "<div data-testid='sca-stub'>{{ initialPolicy }}</div>" },
+			AgentCases: { template: "<div />" }
+		}
+		const linked = mount(AgentDetails, {
+			props: { agentId: "001", initialTab: "sca", initialPolicy: "cis_win" },
+			global: { stubs }
+		})
+		await flushPromises()
+		expect(linked.get("[data-testid=sca-stub]").text()).toBe("cis_win")
+
+		const searched = mount(AgentDetails, {
+			props: { agentId: "001", initialTab: "vulnerabilities", initialSearch: "CVE-C" },
+			global: { stubs }
+		})
+		await flushPromises()
+		expect(searched.get("[data-testid=vulnerabilities-stub]").text()).toBe("CVE-C")
+
+		const unknown = mount(AgentDetails, { props: { agentId: "001", initialTab: "settings" }, global: { stubs } })
+		await flushPromises()
+		expect(unknown.find("[data-testid=overview-stub]").isVisible()).toBe(true)
+		expect(unknown.find("[data-testid=sca-stub]").exists()).toBe(false)
+	})
+
+	it("vulnerabilities: starts searched for the CVE", async () => {
+		api.getVulnerabilities.mockResolvedValue({
+			data: { vulnerabilities: [vuln("CVE-C", "Critical", 9.8), vuln("CVE-H", "High", 8)] }
+		})
+		const wrapper = render(AgentVulnerabilities, { agentId: "001", agentLabel: "web-01", initialSearch: "CVE-H" })
+		await flushPromises()
+
+		expect((wrapper.get("[data-testid=vulnerabilities-search] input").element as HTMLInputElement).value).toBe("CVE-H")
+		expect(wrapper.findAll("[data-testid=vulnerability-row]").map(r => r.find(".font-mono").text())).toEqual(["CVE-H"])
+	})
+
+	it("sCA: opens the linked policy, and stays on the list when the agent has no such policy", async () => {
+		api.getScaPolicies.mockResolvedValue({ data: { sca: [policy("good", 90), policy("bad", 30)] } })
+		api.getScaChecks.mockResolvedValue({ data: { sca_policy_results: [check(1, "failed")] } })
+		const linked = render(AgentSca, { agentId: "001", agentLabel: "web-01", initialPolicy: "good" })
+		await flushPromises()
+		expect(linked.get("[data-testid=sca-policy-name]").text()).toContain("good")
+		expect(api.getScaChecks).toHaveBeenCalledWith("001", "good", expect.any(AbortSignal))
+
+		api.getScaChecks.mockClear()
+		const missing = render(AgentSca, { agentId: "001", agentLabel: "web-01", initialPolicy: "gone" })
+		await flushPromises()
+		expect(missing.findAll("[data-testid=sca-policy-row]")).toHaveLength(2)
+		expect(api.getScaChecks).not.toHaveBeenCalled()
 	})
 })

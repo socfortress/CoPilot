@@ -288,7 +288,12 @@ import FilterStrip from "./FilterStrip.vue"
  * failing ones first, with what to do about them — plus that policy's CSV export.
  */
 
-const { agentId, agentLabel } = defineProps<{ agentId: string; agentLabel: string }>()
+const { agentId, agentLabel, initialPolicy } = defineProps<{
+	agentId: string
+	agentLabel: string
+	/** Opened once the policies load (a link from the Exposure page, #1289). */
+	initialPolicy?: string
+}>()
 
 const PAGE_SIZES = [25, 50, 100]
 const HEAD = "text-xxs font-medium tracking-[0.12em] uppercase"
@@ -364,6 +369,8 @@ function loadPolicies() {
 	return run(
 		async signal => {
 			policies.value = sortScaPolicies((await Api.agents.getScaPolicies(agentId, signal)).data.sca ?? [])
+			const linked = initialPolicy ? policies.value.find(p => p.policy_id === initialPolicy) : undefined
+			if (linked && !policy.value) openPolicy(linked)
 		},
 		err => {
 			error.value = getApiErrorMessage(err as ApiError) || "Could not load the SCA policies."

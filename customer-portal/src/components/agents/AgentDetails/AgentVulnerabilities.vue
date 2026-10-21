@@ -217,7 +217,12 @@ import FilterStrip from "./FilterStrip.vue"
  * then filtered, counted and paged here; the export asks for the severity on screen.
  */
 
-const { agentId, agentLabel } = defineProps<{ agentId: string; agentLabel: string }>()
+const { agentId, agentLabel, initialSearch = "" } = defineProps<{
+	agentId: string
+	agentLabel: string
+	/** Prefilled by a link (a CVE from the Exposure page, #1289). */
+	initialSearch?: string
+}>()
 
 const PAGE_SIZES = [25, 50, 100]
 const HEAD = "text-xxs font-medium tracking-[0.12em] uppercase"
@@ -238,7 +243,7 @@ const { loading, run } = useLatestRequest()
 const vulnerabilities = ref<AgentVulnerability[]>([])
 const error = ref<string | null>(null)
 const severity = ref<VulnerabilitySeverity | "All">("All")
-const search = ref("")
+const search = ref(initialSearch)
 const pageNumber = ref(1)
 const pageSize = ref(PAGE_SIZES[0])
 const expanded = ref(new Set<string>())
