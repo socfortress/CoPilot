@@ -19,5 +19,6 @@ export const ICONS = {
 	worker: "carbon:ibm-openshift-container-platform-on-vpc-for-regulated-industries",
 	eventSearch: "carbon:search-locate",
 	reports: "carbon:document-pdf",
-	sla: "carbon:meter"
+	sla: "carbon:meter",
+	exposure: "carbon:security"
 }

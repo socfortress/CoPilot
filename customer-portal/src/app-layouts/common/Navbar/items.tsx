@@ -7,9 +7,11 @@ import { renderIcon } from "@/utils"
 export interface NavbarFeatures {
 	/** The SLA page is on for one of the user's customers (#1187). */
 	sla?: boolean
+	/** The Exposure page is on for one of the user's customers (#1289). */
+	exposure?: boolean
 }
 
-export default function getItems({ sla = false }: NavbarFeatures = {}): MenuMixedOption[] {
+export default function getItems({ sla = false, exposure = false }: NavbarFeatures = {}): MenuMixedOption[] {
 	const items: MenuMixedOption[] = [
 		{
 			label: () =>
@@ -110,6 +112,15 @@ export default function getItems({ sla = false }: NavbarFeatures = {}): MenuMixe
 			icon: renderIcon(ICONS.processes)
 		}
 	]
+
+	if (exposure) {
+		items.push({
+			label: () =>
+				h(RouterLink, { to: { name: "Exposure" }, "data-testid": "nav-exposure" }, { default: () => "Exposure" }),
+			key: "Exposure",
+			icon: renderIcon(ICONS.exposure)
+		})
+	}
 
 	if (sla) {
 		items.push({

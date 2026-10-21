@@ -29,6 +29,7 @@ import _uniq from "lodash/uniq"
 import { NMenu } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useThemeStore } from "@/stores/theme"
 import getItems from "./items"
@@ -46,9 +47,12 @@ const expandedKeys = ref<string[] | undefined>(undefined)
 
 const themeStore = useThemeStore()
 
-// The SLA page is offered only to users whose customer has it on (#1187).
+// The SLA (#1187) and Exposure (#1289) pages are offered only to users whose customer has them on.
 const { available: slaAvailable, isEnabledFor: isSlaEnabledFor } = useSlaAvailability()
-const menuOptions = computed<MenuMixedOption[]>(() => getItems({ sla: slaAvailable.value }))
+const { available: exposureAvailable, isEnabledFor: isExposureEnabledFor } = useExposureAvailability()
+const menuOptions = computed<MenuMixedOption[]>(() =>
+	getItems({ sla: slaAvailable.value, exposure: exposureAvailable.value })
+)
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 
@@ -66,6 +70,7 @@ function setMenuKey(matched: RouteRecordNormalized[]) {
 onBeforeMount(() => {
 	setMenuKey(route.matched)
 	isSlaEnabledFor()
+	isExposureEnabledFor()
 
 	router.afterEach(route => {
 		if (route?.matched?.length) {
