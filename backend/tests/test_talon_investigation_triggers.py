@@ -17,8 +17,8 @@ Pinned here:
   start); each refusal a fixed text, starting nothing;
 - it is accepted with a pipeline or an analyst record (a re-trigger reopens the window), and its
   audit event names the alert, the job and the trigger;
-- ``alert_id`` and ``job_id`` are no longer a 422; other users, and the service account without
-  ``alert_id``, are unchanged;
+- ``alert_id`` and ``job_id`` are no longer a 422; the service account without ``alert_id`` is
+  refused first (``ALERT_REQUIRED``); other users are unchanged, with or without it;
 - the migration has a single head (``test_alembic_single_head``), its tables are the models'.
 
 Run with: cd backend && python -m pytest tests/test_talon_investigation_triggers.py
@@ -61,6 +61,7 @@ from tests.test_talon_actions import HOST  # noqa: E402
 from tests.test_talon_actions import VID  # noqa: E402
 from tests.test_talon_actions import agent_row  # noqa: E402
 from tests.test_talon_actions import as_user  # noqa: E402
+from tests.test_talon_collect_start import ALL_AUTO_RUN  # noqa: E402
 from tests.test_talon_collect_start import HOST_ARTIFACTS  # noqa: E402
 from tests.test_talon_collect_start import ROUTE  # noqa: E402
 from tests.test_talon_collect_start import SERVICE  # noqa: E402
@@ -602,10 +603,22 @@ def test_alert_id_and_job_id_are_no_longer_a_422_and_other_users_are_unchanged()
     assert event["new_value"] == {"artifact_name": "Windows.System.Pslist", "velociraptor_id": VID}
 
 
-def test_the_service_account_without_alert_id_starts_as_before():
-    (response,), vr, ctx = start(SERVICE, lambda ctx: [SERVICES])
+def without_alert_id(payload):
+    return {key: value for key, value in payload.items() if key not in ("alert_id", "job_id")}
+
+
+@pytest.mark.parametrize("job_id", [None, JOB])
+def test_the_service_account_without_alert_id_is_refused_before_anything_else(job_id):
+    # Even with a fresh pipeline trigger for the host's alert: leaving the field out never skips the binding.
+    payload = {**without_alert_id(SERVICES), **({"job_id": job_id} if job_id else {})}
+    (response,), vr, ctx = start(SERVICE, lambda ctx: [payload], with_triggers(("pipeline", timedelta(minutes=1))))
+    refused(response, vr, ctx, 403, talon_triggers.ALERT_REQUIRED)
+    assert vr.definitions.lookups[len(ALL_AUTO_RUN) :] == []  # refused before the pin check reads Velociraptor
+
+
+def test_other_users_without_alert_id_are_unchanged():
+    (response,), vr, ctx = start("ana", lambda ctx: [without_alert_id(body())])
     assert response.status_code == 200 and len(vr.starts) == 1
-    assert set(collect_audits(ctx)[0]["new_value"]) == {"artifact_name", "velociraptor_id"}
 
 
 @pytest.mark.parametrize(

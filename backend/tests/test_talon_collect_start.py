@@ -39,14 +39,18 @@ import pytest  # noqa: E402
 from fastapi import HTTPException  # noqa: E402
 from loguru import logger  # noqa: E402
 from sqlalchemy import update  # noqa: E402
+from sqlmodel import SQLModel  # noqa: E402
 
 import app.connectors.velociraptor.services.artifacts as artifacts_service  # noqa: E402
 import tests.test_talon_actions as harness  # noqa: E402
 from app.audit.models.audit import AuditAction  # noqa: E402
 from app.auth.models.users import User  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonAutomationAlertCap  # noqa: E402
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings  # noqa: E402
+from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger  # noqa: E402
 from app.connectors.talon.services import talon_collections  # noqa: E402
 from app.connectors.talon.services import talon_service_account  # noqa: E402
+from app.connectors.talon.services import talon_triggers  # noqa: E402
 from app.connectors.velociraptor.routes import artifacts as velociraptor_routes  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import ArtifactParameter  # noqa: E402
 from app.connectors.velociraptor.schema.artifacts import Artifacts  # noqa: E402
@@ -55,6 +59,8 @@ from app.connectors.velociraptor.services import collection_policy  # noqa: E402
 from app.connectors.velociraptor.services import talon_catalogue  # noqa: E402
 from app.connectors.velociraptor.services.artifacts import FlowLimits  # noqa: E402
 from app.connectors.velociraptor.utils import universal  # noqa: E402
+from app.incidents.models import AlertContext  # noqa: E402
+from app.incidents.models import Asset  # noqa: E402
 from tests.test_talon_actions import ACME  # noqa: E402
 from tests.test_talon_actions import GLOBEX  # noqa: E402
 from tests.test_talon_actions import HOST  # noqa: E402
@@ -101,8 +107,14 @@ TALON_ANALYST_AUTO_RUN = {
 }
 
 
-def body(artifact="Windows.System.Pslist", env=None, hostname=HOST, vid=VID):
-    out = {"hostname": hostname, "velociraptor_id": vid, "artifact_name": artifact}
+#: The ACME alert every scenario seeds (the first alert in a fresh database), with HOST as its asset
+#: and a pipeline trigger sent just now: the Talon service account's starts name it (AP-2a's binding;
+#: ``test_talon_investigation_triggers`` tests the binding itself).
+TRIGGERED_ALERT = 1
+
+
+def body(artifact="Windows.System.Pslist", env=None, hostname=HOST, vid=VID, alert_id=TRIGGERED_ALERT):
+    out = {"hostname": hostname, "velociraptor_id": vid, "artifact_name": artifact, "alert_id": alert_id}
     if env is not None:
         out["parameters"] = {"env": env}
     return out
@@ -120,9 +132,56 @@ def service_users():
             yield
 
 
+class _Db(harness._Db):
+    async def create(self):
+        await super().create()
+        tables = [TalonInvestigationTrigger.__table__, TalonAutomationAlertCap.__table__]
+        async with self.engine.begin() as conn:
+            await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
+        return self
+
+
+_seeded = {}
+_harness_seed = harness._seed
+
+
+async def _seed(db, enabled):
+    """The harness's seed, plus the ACME alert's asset and a pipeline trigger for it."""
+    ctx = await _harness_seed(db, enabled)
+    assert ctx.alert_id == TRIGGERED_ALERT
+    async with db.session() as session:
+        context = AlertContext(source="wazuh", context={})
+        session.add(context)
+        await session.commit()
+        session.add(
+            Asset(
+                alert_linked=ctx.alert_id,
+                asset_name=HOST,
+                alert_context_id=context.id,
+                velociraptor_id=VID,
+                customer_code=ACME,
+                index_name="wazuh-alerts",
+                index_id="1",
+            ),
+        )
+        session.add(
+            TalonInvestigationTrigger(
+                alert_id=ctx.alert_id,
+                customer_code=ACME,
+                source="pipeline",
+                assets=[{"asset_name": HOST, "velociraptor_id": VID}],
+                sent_at=talon_triggers.utcnow(),
+            ),
+        )
+        await session.commit()
+    _seeded["db"] = db
+    return ctx
+
+
 def call(scenario, **kwargs):
-    with service_users():
-        return harness.call(scenario, **kwargs)
+    with service_users(), patch.object(harness, "_Db", _Db), patch.object(harness, "_seed", _seed):
+        with patch.object(talon_triggers, "new_session", lambda: _seeded["db"].session()):
+            return harness.call(scenario, **kwargs)
 
 
 async def pins_for(allowed):
@@ -1088,7 +1147,8 @@ def test_definition_reads_are_cached_between_starts():
             answers = [await client.post(ROUTE, json=SERVICES, headers=as_user(SERVICE)) for _ in range(3)]
         return answers, vr.definitions.lookups[before:]
 
-    answers, lookups = call(scenario)
+    with patch.object(talon_triggers, "PER_ALERT_CAP", 3):  # three starts on one alert
+        answers, lookups = call(scenario)
     assert [a.status_code for a in answers] == [200, 200, 200]
     assert lookups == [("Windows.System.Services", "root")]  # one read for three starts
 

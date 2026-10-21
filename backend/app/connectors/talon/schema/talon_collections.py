@@ -3,10 +3,10 @@
 
 The start body is strict (``extra="forbid"``). Its ``parameters`` are checked by the service, with
 fixed texts, never echoing a value: a validation error's answer would carry the value back.
-``alert_id`` and ``job_id`` (talon-analyst plan AP-2a) are optional for now: with ``alert_id``, the
-Talon service account's start is bound to CoPilot's own record of that alert
-(``services/talon_triggers.py``); ``job_id`` is recorded in the audit event, never trusted. Other
-callers' starts ignore both.
+``alert_id`` and ``job_id`` (talon-analyst plan AP-2a): the Talon service account must send
+``alert_id`` (else a fixed 403), and its start is bound to CoPilot's own record of that alert
+(``services/talon_triggers.py``); ``job_id`` is recorded in the audit event, never trusted. Both are
+optional in the schema, and other callers' starts ignore them.
 """
 from datetime import datetime
 from typing import Any

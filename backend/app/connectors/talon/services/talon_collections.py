@@ -28,8 +28,8 @@ startup state) on the alert's own host without an approval, as talon-analyst's C
    sent within 2 hours, from the alert pipeline or an analyst (never the customer portal or a
    replay), the host one of the alert's assets as they were when it was sent and of the alert's
    customer (403), then a slot under the per-alert cap, committed before the flow starts (429 over
-   it, 500 if it can't be recorded). Without ``alert_id`` the start is as before, until
-   talon-analyst's AP-1 sends it everywhere; everyone else's ``alert_id`` and ``job_id`` are ignored;
+   it, 500 if it can't be recorded). The service account's start without ``alert_id`` is refused at
+   step 3, first (403 ``ALERT_REQUIRED``); everyone else's ``alert_id`` and ``job_id`` are ignored;
 6. ``/collect``'s shared start function (``routes.artifacts.start_collection_as``), under the locks:
    the caller's access to every row of the host, the host's artifact list (400), the analyst policy
    (for the service account: the auto-run allowlist instead, plus
@@ -234,6 +234,11 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
     row = await settings_row(session)
     service = is_service_account(user, row)
     if service:
+        # Every start by the service account is bound to an alert CoPilot sent (talon-analyst AP-2a):
+        # without one, nothing to bind, so nothing starts.
+        if body.alert_id is None:
+            logger.warning(f"Refused a collection start by the Talon service account {user.username}: no alert_id")
+            raise HTTPException(status_code=403, detail=talon_triggers.ALERT_REQUIRED)
         allowed = allowed_artifacts(row)
         if allowed is None:
             logger.warning(f"Refused a collection start by the Talon service account {user.username}: no allowlist is set")
@@ -258,7 +263,7 @@ async def start(user: User, body: CollectStartBody, request: Optional[Request], 
         # The service account's start bound to an alert: CoPilot's own trigger record (plain reads,
         # after the host's lock), then a slot under the per-alert cap, committed before the flow.
         binding = None
-        if service and body.alert_id is not None:
+        if service:
             binding = await talon_triggers.check(session, body.alert_id, hostname, client, agent.customer_code)
             await talon_triggers.reserve(binding)
         # Every value logged here is validated: the host is the agents row's, the client canonical,

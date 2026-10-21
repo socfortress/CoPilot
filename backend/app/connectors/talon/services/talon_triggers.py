@@ -19,7 +19,8 @@ older pipeline or analyst row as the alert's newest, and with it an automation w
 ``pipeline`` or ``analyst`` send goes ahead: without its row, nothing can be bound to it.
 
 **The binding** (``check``, then ``reserve``, called by ``/api/artifacts/collect/start`` for the Talon
-service account when the body names ``alert_id``, once the host's ``agents`` row is locked):
+service account once the host's ``agents`` row is locked; its start without ``alert_id`` is refused
+before anything else, ``ALERT_REQUIRED``, so leaving the field out never skips the binding):
 
 1. the alert exists, and its newest row for the alert's customer was sent within ``WINDOW``;
 2. that row's source is ``pipeline`` or ``analyst`` (a portal request or a replay is refused);
@@ -68,6 +69,7 @@ WINDOW = timedelta(hours=2)
 #: plan Q9), enforced per alert here since CoPilot can't trust a job boundary talon-analyst draws.
 PER_ALERT_CAP = 2
 
+ALERT_REQUIRED = "not started: the Talon service account must name the alert its collection is for (alert_id)"
 NO_TRIGGER = "not started: CoPilot has not sent this alert to Talon in the last 2 hours"
 PORTAL_TRIGGER = "not started: this alert was last sent to Talon from the customer portal, which never leads to an automated action"
 REPLAY_TRIGGER = "not started: this alert was last sent to Talon as a replay, which never leads to an automated action"
