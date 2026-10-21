@@ -37,6 +37,7 @@ from app.db.db_session import async_engine  # noqa: E402
 from app.db.universal_models import Agents  # noqa: E402
 from app.db.universal_models import AiAnalystJob  # noqa: E402
 from app.db.universal_models import AiAnalystReport  # noqa: E402
+from app.db.universal_models import CustomerPortalActivitySettings  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
@@ -191,6 +192,7 @@ async def cleanup(s):
     # Analyses the portal user asked for (#1215): they hold a foreign key to the customer.
     await s.execute(delete(CustomerPortalAiRequest).where(CustomerPortalAiRequest.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalSlaSettings).where(CustomerPortalSlaSettings.customer_code.in_(codes)))
+    await s.execute(delete(CustomerPortalActivitySettings).where(CustomerPortalActivitySettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalExposureSettings).where(CustomerPortalExposureSettings.customer_code.in_(codes)))
     await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
     await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
@@ -370,6 +372,8 @@ async def seed(quiet: bool = False) -> dict:
 
         # SLA (#1187): the page is on for A only, and A's items carry live clocks.
         s.add(CustomerPortalSlaSettings(customer_code=CUST_A, enabled=True))
+        # Activity (#1284): the page is on for A only, counted from the same clocks.
+        s.add(CustomerPortalActivitySettings(customer_code=CUST_A, enabled=True))
         # Exposure (#1289): the page is on for A only; its data comes from Wazuh, which tests replace.
         s.add(CustomerPortalExposureSettings(customer_code=CUST_A, enabled=True))
         today = datetime.datetime.utcnow().replace(microsecond=0)
@@ -436,7 +440,7 @@ async def seed(quiet: bool = False) -> dict:
         await s.commit()
         if not quiet:
             print(
-                f"seed: {CUST_A} and {CUST_B} with alerts, tags, assets, cases, agents, AI reports, SLA clocks, Exposure; '{PORTAL_USER}' assigned to {CUST_A}",
+                f"seed: {CUST_A} and {CUST_B} with alerts, tags, assets, cases, agents, AI reports, SLA clocks, Activity, Exposure; '{PORTAL_USER}' assigned to {CUST_A}",
             )
         return {
             "portal_user_id": portal.id,

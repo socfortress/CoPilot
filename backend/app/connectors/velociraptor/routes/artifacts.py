@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
@@ -15,6 +17,12 @@ from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account,
+)
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.connectors.velociraptor.schema.artifacts import ArtifactParametersResponse
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -27,6 +35,7 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.services.artifacts import FlowLimits
 from app.connectors.velociraptor.services.artifacts import finish_artifact_collection
 from app.connectors.velociraptor.services.artifacts import finish_remote_command
 from app.connectors.velociraptor.services.artifacts import get_artifact_by_name
@@ -40,6 +49,9 @@ from app.connectors.velociraptor.services.artifacts import run_file_collection
 from app.connectors.velociraptor.services.artifacts import start_artifact_collection
 from app.connectors.velociraptor.services.artifacts import start_remote_command
 from app.connectors.velociraptor.services.artifacts import validate_artifact_parameters
+from app.connectors.velociraptor.services.collection_policy import (
+    enforce_auto_run_definitions,
+)
 from app.connectors.velociraptor.services.collection_policy import (
     enforce_built_in_definitions,
 )
@@ -342,6 +354,9 @@ async def start_collection_as(
     session: AsyncSession,
     literal_values: bool = False,
     require_built_in: bool = False,
+    analyst_policy: bool = True,
+    limits: Optional[FlowLimits] = None,
+    audit_values: Optional[Dict[str, Any]] = None,
 ) -> StartedFlow:
     """``/collect``'s checks and its ``ARTIFACT_COLLECT`` audit event, once, then the collection
     started without waiting: the flow id back. The route waits for it and reads its results after
@@ -356,7 +371,21 @@ async def start_collection_as(
     ``/collect``'s clients expect, so what runs is what the approver read. `require_built_in`
     (Talon v2): the artifact and its dependencies must be Velociraptor's built-in definitions in the
     host's org, whatever the caller's role.
+
+    `analyst_policy=False` (only the Talon service account on ``/collect/start``, talon-analyst
+    EA-4b): the analyst allowlist is replaced by the stricter auto-run allowlist the caller has
+    already checked (``talon_catalogue.auto_run_violation``) and by
+    ``enforce_auto_run_definitions``; pass `require_built_in` with it. With the analyst policy (every
+    other caller: ``/collect``, an approved Talon collection) the Talon service account is refused,
+    whatever its role, so its allowlist can't be stepped around (``talon_service_account``).
+    `limits`: the flow's resource limits on the endpoint (``FlowLimits``). `audit_values`: more
+    validated values for the audit event's ``new_value`` (a bound Talon start's alert and trigger,
+    ``talon_triggers.Binding``).
     """
+    if not analyst_policy and not require_built_in:
+        raise ValueError("the analyst artifact policy is only replaced together with require_built_in")
+    if analyst_policy:
+        await refuse_talon_service_account(current_user, session)
     # The host is named in the body, so no path dependency can guard it: collecting an
     # artifact runs code on someone's endpoint, which a scoped analyst must not reach.
     await enforce_hostname_access(current_user, collect_artifact_body.hostname, session)
@@ -381,13 +410,16 @@ async def start_collection_as(
     # The host's artifact list includes the command and remediation artifacts, which /command
     # and /quarantine keep to admins and responders: an analyst may only collect what the
     # analyst allowlist admits, judged by the definition in the host's own org.
-    await enforce_collect_artifact_policy(
-        current_user,
-        collect_artifact_body.artifact_name,
-        collect_artifact_body.velociraptor_org,
-        collect_artifact_body.parameters,
-    )
-    if require_built_in:
+    if analyst_policy:
+        await enforce_collect_artifact_policy(
+            current_user,
+            collect_artifact_body.artifact_name,
+            collect_artifact_body.velociraptor_org,
+            collect_artifact_body.parameters,
+        )
+    if not analyst_policy:
+        await enforce_auto_run_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
+    elif require_built_in:
         await enforce_built_in_definitions(collect_artifact_body.artifact_name, collect_artifact_body.velociraptor_org)
 
     # Validate parameters if provided, against the definition in the host's org
@@ -403,10 +435,14 @@ async def start_collection_as(
         actor_username=current_user.username,
         entity_type="agent",
         entity_id=collect_artifact_body.hostname,
-        new_value={"artifact_name": collect_artifact_body.artifact_name, "velociraptor_id": collect_artifact_body.velociraptor_id},
+        new_value={
+            "artifact_name": collect_artifact_body.artifact_name,
+            "velociraptor_id": collect_artifact_body.velociraptor_id,
+            **(audit_values or {}),
+        },
         request=request,
     )
-    flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values)
+    flow_id = await start_artifact_collection(collect_artifact_body, literal_values=literal_values, limits=limits)
     return StartedFlow(
         flow_id=flow_id,
         client_id=collect_artifact_body.velociraptor_id,
@@ -642,7 +678,7 @@ async def collect_artifact(
     "/command",
     response_model=RunCommandResponse,
     description="Run a remote command",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder")), Depends(refuse_talon_service_account_dependency)],
 )
 async def run_command(
     run_command_body: RunCommandBody,
@@ -672,7 +708,7 @@ async def run_command(
     "/quarantine",
     response_model=QuarantineResponse,
     description="Quarantine a host, or release it (action=remove_quarantine)",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder")), Depends(refuse_talon_service_account_dependency)],
 )
 async def quarantine(
     quarantine_body: QuarantineBody,
@@ -743,6 +779,7 @@ async def quarantine(
     description="Collect a file from an agent using agent ID",
     dependencies=[
         Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(refuse_talon_service_account_dependency),
         Depends(verify_agent_id_access),
     ],
 )

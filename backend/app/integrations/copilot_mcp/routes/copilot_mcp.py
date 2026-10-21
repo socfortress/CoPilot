@@ -9,6 +9,9 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.routes.auth import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.db.db_session import get_db
 from app.integrations.copilot_mcp.schema.copilot_mcp import AvailableMCPServersResponse
 from app.integrations.copilot_mcp.schema.copilot_mcp import ExampleQuestionsResponse
@@ -199,7 +202,7 @@ async def get_question_categories(mcp_server: MCPServerType = Query(..., descrip
 @copilot_mcp_router.post(
     "/query",
     description="Process a query to the appropriate MCP server",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def query_mcp(request: MCPQueryRequest, session: AsyncSession = Depends(get_db)) -> MCPQueryResponse:
     """

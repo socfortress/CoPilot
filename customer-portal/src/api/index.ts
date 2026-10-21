@@ -1,3 +1,4 @@
+import activity from "./endpoints/activity"
 import agents from "./endpoints/agents"
 import aiReports from "./endpoints/aiReports"
 import alerts from "./endpoints/alerts"
@@ -13,6 +14,7 @@ import sla from "./endpoints/sla"
 import totp from "./endpoints/totp"
 
 export default {
+	activity,
 	auth,
 	agents,
 	aiReports,

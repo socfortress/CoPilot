@@ -34,9 +34,15 @@ function tone(item: PortalNotification): NotificationType {
 function target(item: PortalNotification): Pick<Notification, "actionRoute" | "actionTitle"> {
 	switch (item.entity_type) {
 		case "alert":
-			return { actionRoute: { name: "AlertDetails", params: { id: String(item.entity_id) } }, actionTitle: "Open alert" }
+			return {
+				actionRoute: { name: "AlertDetails", params: { id: String(item.entity_id) } },
+				actionTitle: "Open alert"
+			}
 		case "case":
-			return { actionRoute: { name: "CaseDetails", params: { id: String(item.entity_id) } }, actionTitle: "Open case" }
+			return {
+				actionRoute: { name: "CaseDetails", params: { id: String(item.entity_id) } },
+				actionTitle: "Open case"
+			}
 		default:
 			return { actionRoute: { name: "ReportsList" }, actionTitle: "View reports" }
 	}

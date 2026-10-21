@@ -74,6 +74,8 @@ class AuditAction(str, Enum):
     # AI Analyst from the Customer Portal (#1215)
     AI_ANALYSIS_REQUEST = "ai_analysis.request"
     AI_REPORT_SETTINGS_UPDATE = "ai_report.settings_update"
+    # The Customer Portal's Activity page switch, per customer (#1284).
+    ACTIVITY_SETTINGS_UPDATE = "activity.settings_update"
     # The Customer Portal's Exposure page switch, per customer (#1289).
     EXPOSURE_SETTINGS_UPDATE = "exposure.settings_update"
 

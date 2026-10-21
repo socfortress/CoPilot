@@ -544,6 +544,33 @@ class CustomerPortalSlaSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalActivitySettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's Activity page (#1284).
+
+    **Opt-in** like the SLA and AI report switches: a customer with no row here does not
+    see the page. The figures are computed by ``app/customer_portal/services/activity.py``
+    from the alert and case tables and the SLA clocks — nothing should read this table
+    directly.
+    """
+
+    __tablename__ = "customer_portal_activity_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class CustomerPortalNotificationSettings(SQLModel, table=True):
     """Per-customer switch for portal users' email and in-app notifications (#1282).
 

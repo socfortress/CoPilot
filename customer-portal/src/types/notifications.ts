@@ -5,7 +5,12 @@ export type NotificationEmailMode = "off" | "immediate" | "digest"
 export type NotificationSeverity = "Informational" | "Low" | "Medium" | "High" | "Critical"
 
 /** In the order the profile lists them. */
-export const NOTIFICATION_EVENTS: NotificationEventName[] = ["alert_created", "waiting_on_you", "case_closed", "report_ready"]
+export const NOTIFICATION_EVENTS: NotificationEventName[] = [
+	"alert_created",
+	"waiting_on_you",
+	"case_closed",
+	"report_ready"
+]
 
 export const SEVERITIES: NotificationSeverity[] = ["Critical", "High", "Medium", "Low", "Informational"]
 

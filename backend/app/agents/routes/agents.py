@@ -58,6 +58,9 @@ from app.auth.models.users import User
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.connectors.velociraptor.utils.validation import validate_client_id
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
@@ -371,7 +374,7 @@ async def get_customer_agents_for_dashboard(
     "/bulk/delete",
     response_model=BulkDeleteAgentsResponse,
     description="Delete multiple agents by their IDs",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def bulk_delete_agents(
     request: BulkDeleteAgentRequest,
@@ -444,7 +447,7 @@ async def bulk_delete_agents(
     "/bulk/delete/filter",
     response_model=BulkDeleteAgentsResponse,
     description="Delete multiple agents based on filter conditions",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def bulk_delete_agents_by_filter(
     request: BulkDeleteFilterRequest,
@@ -1401,7 +1404,7 @@ async def unpin_agent_velociraptor_id(
     "/{agent_id}/delete",
     response_model=AgentModifyResponse,
     description="Delete agent",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
 async def delete_agent(
     agent_id: str,

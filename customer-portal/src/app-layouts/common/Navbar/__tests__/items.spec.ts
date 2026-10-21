@@ -3,18 +3,30 @@ import getItems from "../items"
 
 const keys = (features?: Parameters<typeof getItems>[0]) => getItems(features).map(item => item.key)
 
-/** Pages a customer's SOC switches on appear in the menu only when on (#1187, #1289). */
+/** The menu offers the opt-in pages only to users whose customer has them on (#1187, #1284, #1289). */
 describe("navbar items", () => {
-	it("leaves out the pages that are off", () => {
+	it("leaves the opt-in pages out by default", () => {
+		expect(keys()).not.toContain("Activity")
 		expect(keys()).not.toContain("Exposure")
 		expect(keys()).not.toContain("Sla")
 	})
 
-	it("lists Exposure only when it is on, before Service Levels", () => {
+	it("offers Activity only when its switch is on, keyed by its route name", () => {
+		expect(keys({ activity: true })).toContain("Activity")
+		expect(keys({ activity: true })).not.toContain("Sla")
+		expect(keys({ sla: true })).not.toContain("Activity")
+	})
+
+	it("offers Exposure only when its switch is on, keyed by its route name", () => {
 		expect(keys({ exposure: true })).toContain("Exposure")
-		expect(keys({ sla: true })).not.toContain("Exposure")
-		const both = keys({ exposure: true, sla: true })
-		expect(both.indexOf("Exposure")).toBeGreaterThan(-1)
-		expect(both.indexOf("Exposure")).toBeLessThan(both.indexOf("Sla"))
+		expect(keys({ exposure: true })).not.toContain("Activity")
+		expect(keys({ sla: true, activity: true })).not.toContain("Exposure")
+	})
+
+	it("puts Exposure, Activity and Service Levels last, in that order", () => {
+		const all = keys({ exposure: true, activity: true, sla: true })
+		expect(all.slice(-3)).toEqual(["Exposure", "Activity", "Sla"])
+		expect(all[0]).toBe("Overview")
+		expect(keys({ activity: true, sla: true }).slice(-2)).toEqual(["Activity", "Sla"])
 	})
 })

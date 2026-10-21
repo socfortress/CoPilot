@@ -19,6 +19,7 @@ from app.connectors.talon.schema.talon import TalonSessionContextResponse
 from app.connectors.talon.schema.talon import TalonSessionResetResponse
 from app.connectors.talon.schema.talon import TalonStatusResponse
 from app.connectors.talon.schema.talon import TalonTemplatesResponse
+from app.connectors.talon.services import talon_triggers
 from app.connectors.talon.utils.universal import send_get_request
 from app.connectors.talon.utils.universal import send_post_request
 from app.connectors.talon.utils.universal import send_post_request_sse
@@ -169,17 +170,20 @@ async def get_talon_session_context(user_id: int) -> TalonSessionContextResponse
     )
 
 
-async def investigate_alert(request: TalonInvestigateRequest) -> TalonInvestigateResponse:
+async def investigate_alert(request: TalonInvestigateRequest, *, source: str, user: Optional[User] = None) -> TalonInvestigateResponse:
     """
     Trigger an investigation for a specific alert.
 
     Args:
         request: The investigation request containing the alert ID, customer code, and sender.
+        source: Who is sending it (``talon_triggers``: ``pipeline``, ``analyst`` or ``portal``), set
+            by the calling code path; recorded with ``user`` before the call.
 
     Returns:
         TalonInvestigateResponse with the investigation result.
     """
     logger.info(f"Triggering Talon investigation for alert ID: {request.alert_id}")
+    await talon_triggers.record_before_sending(request.alert_id, source, user)
     response = await send_post_request(
         endpoint="/investigate",
         data={"alert_id": request.alert_id, "customer_code": request.customer_code, "sender": request.sender},
@@ -212,7 +216,7 @@ async def investigate_alert_for_user(request: TalonInvestigateRequest, user: Use
             status_code=400,
             detail=f"customer_code mismatch: alert {alert.id} belongs to {alert.customer_code}, got {request.customer_code}",
         )
-    return await investigate_alert(request.model_copy(update={"sender": ANALYST_SENDER}))
+    return await investigate_alert(request.model_copy(update={"sender": ANALYST_SENDER}), source=talon_triggers.ANALYST, user=user)
 
 
 def _own_lane_only(data: Any, user_id: int) -> Optional[Dict[str, Any]]:
@@ -329,6 +333,7 @@ async def replay_investigation(
     customer_code: str,
     template_override: str,
     sender: str = "copilot-replay",
+    user: Optional[User] = None,
 ) -> Dict[str, Any]:
     """
     Trigger an investigation replay with a forced template via Talon's
@@ -339,6 +344,7 @@ async def replay_investigation(
         customer_code: Customer code for the alert.
         template_override: Template filename to force (validated upstream).
         sender: Audit identifier for the replay.
+        user: Who replayed it, recorded with the ``replay`` trigger before the call.
 
     Returns:
         Raw Talon response envelope (success, message, data).
@@ -346,6 +352,7 @@ async def replay_investigation(
     logger.info(
         f"Replaying Talon investigation for alert {alert_id} " f"with template_override={template_override}",
     )
+    await talon_triggers.record_before_sending(alert_id, talon_triggers.REPLAY, user)
     response = await send_post_request(
         endpoint="/investigate",
         data={

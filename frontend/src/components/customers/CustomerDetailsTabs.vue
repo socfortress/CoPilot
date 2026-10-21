@@ -6,7 +6,7 @@
 				type="line"
 				animated
 				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
 				placement="left"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
@@ -87,6 +87,9 @@
 				<n-tab-pane name="SLA" tab="SLA" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalSla :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane name="Activity" tab="Activity" display-directive="show:lazy" class="p-4!">
+					<CustomerPortalActivity :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane
 					name="Portal Notifications"
 					tab="Portal Notifications"
@@ -111,7 +114,7 @@
 				type="line"
 				animated
 				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-99"
+				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
 				placement="left"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
@@ -219,6 +222,8 @@ const CustomerPortalBranding = defineAsyncComponent(() => import("@/components/c
 const CustomerPortalAiReport = defineAsyncComponent(() => import("@/components/customerPortal/AiReportSettings.vue"))
 // Per-customer switch for the portal's read-only SLA page (#1187).
 const CustomerPortalSla = defineAsyncComponent(() => import("@/components/customerPortal/SlaSettings.vue"))
+// Per-customer switch for the portal's read-only Activity page (#1284).
+const CustomerPortalActivity = defineAsyncComponent(() => import("@/components/customerPortal/ActivitySettings.vue"))
 const CustomerPortalNotifications = defineAsyncComponent(
 	() => import("@/components/customerPortal/NotificationSettings.vue")
 )
@@ -254,6 +259,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"WAF",
 	"AI Report",
 	"SLA",
+	"Activity",
 	"Exposure",
 	"Security"
 ])

@@ -4,8 +4,8 @@
 			<div class="flex flex-col gap-1 pb-4">
 				<div class="font-display text-lg font-semibold">Notifications</div>
 				<p class="text-secondary max-w-prose text-sm">
-					Choose what reaches you in the portal's bell and by email. You are never told about something you did
-					yourself.
+					Choose what reaches you in the portal's bell and by email. You are never told about something you
+					did yourself.
 				</p>
 			</div>
 

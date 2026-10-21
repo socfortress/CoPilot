@@ -170,7 +170,7 @@ def collect(monkeypatch):
         return None
 
     # The routes start the flow (start_collection_as / start_command_as), then wait for it.
-    async def start_collection(body, literal_values=False):
+    async def start_collection(body, literal_values=False, limits=None):
         calls["collections"].append(body.artifact_name)
         calls["targets"].append((body.velociraptor_id, body.velociraptor_org))
         return "F.COLLECTED"

@@ -20,5 +20,6 @@ export const ICONS = {
 	eventSearch: "carbon:search-locate",
 	reports: "carbon:document-pdf",
 	sla: "carbon:meter",
+	activity: "carbon:activity",
 	exposure: "carbon:security"
 }

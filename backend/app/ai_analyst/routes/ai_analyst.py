@@ -68,6 +68,9 @@ from app.connectors.talon.services.talon import (
 from app.connectors.talon.services.talon import (
     search_palace_lessons as talon_search_palace_lessons,
 )
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.db.db_session import get_db
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystJob
@@ -525,12 +528,15 @@ async def get_my_review_route(
     dependencies=[
         Security(AuthHandler().require_any_scope("admin", "analyst")),
         Depends(verify_report_access),
+        # Never the Talon service account: it would send its own trigger records (talon-analyst AP-2a).
+        Depends(refuse_talon_service_account_dependency),
     ],
 )
 async def replay_report_route(
     report_id: int,
     request: ReplayRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> ReplayResponse:
     """
     Triggers Talon POST /investigate with template_override. The new run will
@@ -557,6 +563,7 @@ async def replay_report_route(
         customer_code=request.customer_code,
         template_override=request.template_override,
         sender=request.sender,
+        user=current_user,
     )
     return ReplayResponse(
         success=True,

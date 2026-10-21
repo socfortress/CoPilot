@@ -1,5 +1,6 @@
-"""The "Talon v2" setting (talon-analyst SPEC §5.3, D54; plan M5-5a, decision a), and the mirror of
-talon-analyst's action proposals (``talon_action_request``, plan M5-11a).
+"""The "Talon v2" setting (talon-analyst SPEC §5.3, D54; plan M5-5a, decision a), the mirror of
+talon-analyst's action proposals (``talon_action_request``, plan M5-11a), and CoPilot's own record of
+every alert it sends to Talon (``talon_investigation_trigger``, talon-analyst plan AP-2a).
 
 One row per Talon connector, keyed by the connector's name, so a second connector (the pilot's
 "Talon Next", D53) gets a row of its own. A missing row reads as off: every declared v2 proxy route answers 404
@@ -10,10 +11,13 @@ column (that table is cached in-process, ``app/connectors/cache.py``). Read and 
 through ``app/connectors/talon/services/talon_v2.py``.
 """
 from datetime import datetime
+from typing import Dict
+from typing import List
 from typing import Optional
 
 from sqlalchemy import JSON
 from sqlalchemy import Column
+from sqlalchemy import Index
 from sqlalchemy import Text
 from sqlmodel import Field
 from sqlmodel import SQLModel
@@ -29,6 +33,21 @@ class TalonConnectorSettings(SQLModel, table=True):
     connector_name: str = Field(max_length=256, unique=True, index=True, nullable=False)
     # Off by default: the v2 chat proxy exists only once an admin turns it on.
     v2_enabled: bool = Field(default=False, nullable=False)
+    # The collection start route's second gate for talon-analyst's service account (talon-analyst
+    # EA-4b, D77; ``services/talon_collections.py``). ``collect_service_username``: the CoPilot user
+    # talon-analyst logs in as (unset: ``talon-analyst``, the name CoPilot's docs give it; that name is
+    # held to the gate whatever this says; ``talon_service_account``). ``collect_allowed_artifacts``: the auto-run artifacts that
+    # user may start, a JSON list of names from ``talon_catalogue.TALON_AUTO_RUN``; unset (null) means
+    # none, so the service account starts nothing until an admin sets it.
+    collect_service_username: Optional[str] = Field(default=None, max_length=256, nullable=True)
+    # The id of the one user with that name (or ``talon-analyst``) when an admin last saved the
+    # setting: held to the gate too, so a rename doesn't take the account out of it.
+    collect_service_user_id: Optional[int] = Field(default=None, nullable=True)
+    collect_allowed_artifacts: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    # ``{artifact: {definition name: SHA-256}}`` for each allowed artifact and its dependencies, read
+    # from Velociraptor when an admin saved the allowlist: a start whose definitions differ is refused
+    # until an admin reviews them and saves again (``collection_policy.definition_hashes``).
+    collect_definition_hashes: Optional[Dict[str, Dict[str, str]]] = Field(default=None, sa_column=Column(JSON, nullable=True))
     updated_by_user_id: Optional[int] = Field(default=None, nullable=True)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)
 
@@ -122,3 +141,56 @@ class TalonActionRequest(SQLModel, table=True):
     synced_at: datetime = Field(default_factory=now_utc, nullable=False)
     created_at: datetime = Field(default_factory=now_utc, nullable=False)
     updated_at: datetime = Field(default_factory=now_utc, nullable=False)
+
+
+# ── what CoPilot sent to Talon (talon-analyst plan AP-2a; SPEC D85 (l), D86 (j)) ──────────────────
+
+#: Who sent an alert to Talon, set by the calling code path (never parsed from ``sender``):
+#: CoPilot's alert pipeline, an analyst's "Investigate with AI Analyst", the customer portal
+#: (#1215), or a report replay. Only the first two may lead to an automated endpoint action.
+TRIGGER_SOURCES = ("pipeline", "analyst", "portal", "replay")
+#: The sources an automated collection may be bound to; a portal request or a replay never is.
+AUTOMATION_SOURCES = frozenset({"pipeline", "analyst"})
+
+
+class TalonInvestigationTrigger(SQLModel, table=True):
+    """One row per ``POST /investigate`` CoPilot sends to Talon, written by CoPilot itself before the
+    call (``services/talon_triggers.py``). It is what binds the Talon service account's automated
+    collections to an alert (``/api/artifacts/collect/start``): never ``ai_analyst_job`` or its
+    ``triggered_by``, which talon-analyst writes. ``customer_code`` is the alert's, not a foreign key
+    (the record outlives the customer, like ``audit_log``)."""
+
+    __tablename__ = "talon_investigation_trigger"
+    #: The newest row for an alert is ``ORDER BY id DESC`` on this index (InnoDB appends the key).
+    __table_args__ = (Index("ix_talon_investigation_trigger_alert_id", "alert_id"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    alert_id: int = Field(nullable=False)
+    customer_code: str = Field(max_length=64, nullable=False)
+    #: One of ``TRIGGER_SOURCES``; ``replay`` marks a replay.
+    source: str = Field(max_length=16, nullable=False)
+    #: The CoPilot user who asked (an analyst, a portal user, whoever replayed); null for the pipeline.
+    user_id: Optional[int] = Field(default=None, nullable=True)
+    username: Optional[str] = Field(default=None, max_length=256, nullable=True)
+    #: The alert's assets when it was sent, ``[{"asset_name", "velociraptor_id"}]``: the only hosts an
+    #: automated collection bound to this record may target (an asset added later, by anyone, isn't).
+    assets: List[Dict[str, Optional[str]]] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    #: Naive UTC, as the ``DATETIME`` columns hold.
+    sent_at: datetime = Field(nullable=False)
+
+
+class TalonAutomationAlertCap(SQLModel, table=True):
+    """The per-alert cap on the Talon service account's bound collections (talon-analyst plan AP-2a;
+    ``services/talon_triggers.py:reserve``): one row per alert, its window and the starts in it.
+    A start takes a slot with one guarded ``UPDATE`` (only while ``starts`` is under the cap, or the
+    window has passed), committed before the flow starts; no slot, no start. Never the audit log,
+    whose writes are best-effort. AP-2's ``talon_automation_start`` keeps the per-start detail."""
+
+    __tablename__ = "talon_automation_alert_cap"
+
+    alert_id: int = Field(primary_key=True, sa_column_kwargs={"autoincrement": False})
+    customer_code: str = Field(max_length=64, nullable=False)
+    #: Before ``window_started_at`` in the table, so MySQL's left-to-right ``SET`` reads the old window.
+    starts: int = Field(default=0, nullable=False)
+    #: Naive UTC: the first start of the current window.
+    window_started_at: datetime = Field(nullable=False)

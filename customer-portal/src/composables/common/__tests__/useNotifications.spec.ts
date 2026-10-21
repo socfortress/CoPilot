@@ -66,7 +66,15 @@ describe("server notifications in the bell (#1282)", () => {
 		list.value = []
 		create.mockClear()
 		prepend(
-			{ id: "report-9", category: "report", type: "success", title: "Report ready", description: "", read: false, date: new Date() },
+			{
+				id: "report-9",
+				category: "report",
+				type: "success",
+				title: "Report ready",
+				description: "",
+				read: false,
+				date: new Date()
+			},
 			{ sendNotify: true, toastOnly: true }
 		)
 		expect(create).toHaveBeenCalledTimes(1)

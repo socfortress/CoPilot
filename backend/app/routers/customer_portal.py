@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.customer_portal.routes.activity import customer_portal_activity_router
 from app.customer_portal.routes.agents import customer_portal_agents_router
 from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
@@ -49,6 +50,12 @@ router.include_router(
     customer_portal_sla_router,
     prefix="/customer_portal",
     tags=["Customer Portal SLA"],
+)
+# What the SOC handled for the caller's customers, broken down (#1284) — opt-in per customer
+router.include_router(
+    customer_portal_activity_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Activity"],
 )
 # Vulnerabilities and compliance across the caller's agents, live from Wazuh (#1289) — opt-in per customer
 router.include_router(

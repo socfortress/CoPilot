@@ -16,6 +16,9 @@ from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import InvokeCopilotActionBody
@@ -424,7 +427,7 @@ async def invoke_action_on_agent(
     "/invoke",
     response_model=InvokeCopilotActionResponse,  # Updated to use structured response
     description="Invoke a Copilot Action on multiple target agents",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "responder")), Depends(refuse_talon_service_account_dependency)],
 )
 async def invoke_action(
     body: InvokeCopilotActionBody,

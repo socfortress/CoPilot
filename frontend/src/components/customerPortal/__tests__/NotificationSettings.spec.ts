@@ -17,7 +17,9 @@ vi.mock("@/api", () => ({
 	}
 }))
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => auth }))
-const formatDate = vi.hoisted(() => vi.fn((date: string, _format: string, opts?: { tz?: boolean }) => `${date}${opts?.tz ? " local" : ""}`))
+const formatDate = vi.hoisted(() =>
+	vi.fn((date: string, _format: string, opts?: { tz?: boolean }) => `${date}${opts?.tz ? " local" : ""}`)
+)
 vi.mock("@/utils/format", () => ({ formatDate }))
 vi.mock("@/stores/settings", () => ({ useSettingsStore: () => ({ dateFormat: { datetime: "YYYY-MM-DD HH:mm" } }) }))
 
@@ -102,7 +104,9 @@ describe("customer portal notification settings (#1282)", () => {
 	})
 
 	it("says when email cannot go out, and at which hour the summary does", async () => {
-		getCustomerNotificationSettings.mockResolvedValue(response(true, { email_configured: false, digest_hour_utc: 18 }))
+		getCustomerNotificationSettings.mockResolvedValue(
+			response(true, { email_configured: false, digest_hour_utc: 18 })
+		)
 		const wrapper = render()
 		await flushPromises()
 		expect(wrapper.get("[data-testid=notification-settings-no-smtp]").text()).toContain("bell only")

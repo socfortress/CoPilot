@@ -132,6 +132,12 @@ const router = createRouter({
 			meta: { title: "Exposure", auth: true, roles: RouteRole.All }
 		},
 		{
+			path: "/activity",
+			name: "Activity",
+			component: () => import("@/views/Activity.vue"),
+			meta: { title: "Activity", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/sla",
 			name: "Sla",
 			component: () => import("@/views/Sla.vue"),
