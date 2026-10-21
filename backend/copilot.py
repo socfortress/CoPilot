@@ -225,8 +225,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # Readable by a portal served from another origin: it holds a user on the password change (#1277).
-    expose_headers=["X-Password-Change-Required"],
+    # Readable by a portal served from another origin: it holds a user on the password change (#1277);
+    # an Exposure CSV cut at its row limit says so (#1289), and a download names its file.
+    expose_headers=["X-Password-Change-Required", "X-Export-Truncated", "Content-Disposition"],
 )
 
 ################## ! RESPONSE COMPRESSION (#1072, level 3) ! ##################
