@@ -12,7 +12,7 @@
 				/>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<div class="flex items-center justify-between gap-4">
+				<div v-if="list.length || loading" class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -35,7 +35,23 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty v-if="!loading" description="No integrations found" class="h-48 justify-center" />
+							<CustomerTabEmpty
+								v-if="!loading"
+								icon="carbon:plug"
+								title="No third-party integrations yet"
+								description="Integrations bring this customer's events in from the security products they already run, such as Microsoft 365, CrowdStrike or Mimecast. Once deployed, those events reach the customer's index and raise alerts like any other source."
+								:points="EMPTY_POINTS"
+								points-title="How it works"
+							>
+								<template #actions>
+									<n-button type="primary" data-testid="integrations-add" @click="openForm()">
+										<template #icon>
+											<Icon :name="AddIcon" :size="16" />
+										</template>
+										Add integration
+									</n-button>
+								</template>
+							</CustomerTabEmpty>
 						</template>
 					</div>
 				</n-spin>
@@ -47,11 +63,12 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CustomerIntegration } from "@/types/integrations"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerIntegrationForm from "./CustomerIntegrationForm.vue"
 import CustomerIntegrationItem from "./CustomerIntegrationItem.vue"
 import { isMultiInstanceIntegration } from "./utils"
@@ -62,6 +79,15 @@ const { customerCode, customerName } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
+
+const EMPTY_POINTS = [
+	{
+		title: "Choose the product",
+		description: "One of the integrations CoPilot supports. A Microsoft 365 customer can hold several tenants."
+	},
+	{ title: "Set its keys", description: "The API credentials the product issues, kept for this customer only." },
+	{ title: "Deploy it", description: "CoPilot starts collecting, and the events land in the customer's index." }
+]
 
 const message = useMessage()
 const showForm = ref(false)

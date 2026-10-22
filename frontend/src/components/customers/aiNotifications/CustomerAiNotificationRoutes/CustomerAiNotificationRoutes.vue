@@ -11,7 +11,7 @@
 				/>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<div class="flex items-center justify-between gap-4">
+				<div v-if="list.length || loading" class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -35,11 +35,23 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty
+							<CustomerTabEmpty
 								v-if="!loading"
-								description="No routes configured. Add one to send Talon's investigation summaries to Shuffle apps or a direct webhook (automation platforms, chat, custom endpoints)."
-								class="h-48 justify-center"
-							/>
+								icon="carbon:send-alt"
+								title="No notification routes yet"
+								description="A route sends this customer's events, such as the AI Analyst's investigation summaries, to a Shuffle app or straight to a webhook: an automation platform, a chat channel or an endpoint of your own."
+								:points="EMPTY_POINTS"
+								points-title="How it works"
+							>
+								<template #actions>
+									<n-button type="primary" data-testid="notification-routes-add" @click="openForm()">
+										<template #icon>
+											<Icon :name="AddIcon" :size="16" />
+										</template>
+										Add route
+									</n-button>
+								</template>
+							</CustomerTabEmpty>
 						</template>
 					</div>
 				</n-spin>
@@ -50,11 +62,12 @@
 
 <script setup lang="ts">
 import type { NotificationRoute } from "@/types/notifications"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../../CustomerTabEmpty.vue"
 import CustomerAiNotificationRouteForm from "./CustomerAiNotificationRouteForm.vue"
 import CustomerAiNotificationRouteItem from "./CustomerAiNotificationRouteItem.vue"
 
@@ -63,6 +76,13 @@ const { customerCode } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
+
+// What setting this up gives the customer, for the empty tab.
+const EMPTY_POINTS = [
+	{ title: "Pick the events", description: "Which triggers the route listens to, and from which severity up." },
+	{ title: "Pick the channel", description: "A Shuffle app of the customer's organization, or a direct webhook." },
+	{ title: "Shape the message", description: "A template decides what is sent; every dispatch is kept in the log." }
+]
 
 const message = useMessage()
 const showForm = ref(false)

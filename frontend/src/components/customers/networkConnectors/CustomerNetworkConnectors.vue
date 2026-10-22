@@ -11,7 +11,7 @@
 				/>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<div class="flex items-center justify-between gap-4">
+				<div v-if="list.length || loading" class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -35,11 +35,23 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty
+							<CustomerTabEmpty
 								v-if="!loading"
-								description="No network connectors found"
-								class="h-48 justify-center"
-							/>
+								icon="carbon:network-3"
+								title="No network connectors yet"
+								description="Network connectors link this customer's firewalls and network security tools, such as Fortinet, SonicWall or SentinelOne, so their logs reach CoPilot with the rest of the customer's events."
+								:points="EMPTY_POINTS"
+								points-title="How it works"
+							>
+								<template #actions>
+									<n-button type="primary" data-testid="network-connectors-add" @click="openForm()">
+										<template #icon>
+											<Icon :name="AddIcon" :size="16" />
+										</template>
+										Add network connector
+									</n-button>
+								</template>
+							</CustomerTabEmpty>
 						</template>
 					</div>
 				</n-spin>
@@ -51,11 +63,12 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CustomerNetworkConnector } from "@/types/network-connectors"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerNetworkConnectorForm from "./CustomerNetworkConnectorForm.vue"
 import CustomerNetworkConnectorItem from "./CustomerNetworkConnectorItem.vue"
 
@@ -65,6 +78,13 @@ const { customerCode, customerName } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
+
+// What setting this up gives the customer, for the empty tab.
+const EMPTY_POINTS = [
+	{ title: "Choose the vendor", description: "The device or service the customer runs." },
+	{ title: "Set its keys", description: "The credentials CoPilot uses to reach it, kept for this customer only." },
+	{ title: "Deploy it", description: "CoPilot provisions the collection; it can be decommissioned later." }
+]
 
 const message = useMessage()
 const showForm = ref(false)

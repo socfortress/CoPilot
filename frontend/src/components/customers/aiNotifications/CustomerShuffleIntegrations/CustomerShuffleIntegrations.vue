@@ -13,7 +13,7 @@
 				/>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<div class="flex items-center justify-between gap-4">
+				<div v-if="list.length || loading" class="flex items-center justify-between gap-4">
 					<n-button size="small" type="primary" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
@@ -22,7 +22,9 @@
 					</n-button>
 				</div>
 
+				<!-- With nothing listed, the empty panel explains the same thing. -->
 				<n-alert
+					v-if="list.length || loading"
 					title="Shuffle integrations"
 					type="info"
 					class="[&_.n-alert-body\_\_content]:text-sm! [&_.n-alert-body\_\_title]:text-sm!"
@@ -49,11 +51,23 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty
+							<CustomerTabEmpty
 								v-if="!loading"
-								description="No Shuffle integrations configured. Add one to enable Shuffle-channel notification routes for this customer."
-								class="h-48 justify-center"
-							/>
+								icon="carbon:data-share"
+								title="No Shuffle integration yet"
+								description="A Shuffle integration records which Shuffle organization belongs to this customer, so routes on the Shuffle channel deliver to the right one. The deployment-wide Shuffle API key stays in Connectors; here you only set the customer's Org-Id."
+								:points="EMPTY_POINTS"
+								points-title="How it works"
+							>
+								<template #actions>
+									<n-button type="primary" data-testid="shuffle-integrations-add" @click="openForm()">
+										<template #icon>
+											<Icon :name="AddIcon" :size="16" />
+										</template>
+										Add Shuffle integration
+									</n-button>
+								</template>
+							</CustomerTabEmpty>
 						</template>
 					</div>
 				</n-spin>
@@ -66,11 +80,12 @@
 
 <script setup lang="ts">
 import type { ShuffleIntegration } from "@/types/notifications"
-import { NAlert, NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NAlert, NButton, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../../CustomerTabEmpty.vue"
 import CustomerShuffleAppsDrawer from "./CustomerShuffleAppsDrawer.vue"
 import CustomerShuffleIntegrationForm from "./CustomerShuffleIntegrationForm.vue"
 import CustomerShuffleIntegrationItem from "./CustomerShuffleIntegrationItem.vue"
@@ -80,6 +95,13 @@ const { customerCode } = defineProps<{
 }>()
 
 const AddIcon = "carbon:add-alt"
+
+// What setting this up gives the customer, for the empty tab.
+const EMPTY_POINTS = [
+	{ title: "Add the organization", description: "The customer's Shuffle Org-Id." },
+	{ title: "Choose its apps", description: "The Shuffle apps routes may send to, managed from the row." },
+	{ title: "Route to it", description: "Notification routes on the Shuffle channel pick this organization." }
+]
 
 const message = useMessage()
 const showForm = ref(false)

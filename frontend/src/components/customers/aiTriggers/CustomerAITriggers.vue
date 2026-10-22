@@ -24,18 +24,23 @@
 						</div>
 					</template>
 					<template v-else>
-						<n-empty v-if="!loading" class="h-48 justify-center">
-							<div class="flex flex-col items-center gap-4">
-								<p>No AI Trigger found</p>
-
-								<n-button size="small" type="primary" @click="openForm()">
+						<CustomerTabEmpty
+							v-if="!loading"
+							icon="carbon:machine-learning-model"
+							title="No AI trigger yet"
+							description="An AI trigger has the AI Analyst investigate this customer's alerts on its own: each new alert is handed to it as it arrives, and its report appears on the alert, with no analyst pressing a button."
+							:points="EMPTY_POINTS"
+							points-title="How it works"
+						>
+							<template #actions>
+								<n-button type="primary" data-testid="ai-trigger-create" @click="openForm()">
 									<template #icon>
-										<Icon :name="AddIcon" :size="14" />
+										<Icon :name="AddIcon" :size="16" />
 									</template>
-									Create an AI Trigger
+									Create AI trigger
 								</n-button>
-							</div>
-						</n-empty>
+							</template>
+						</CustomerTabEmpty>
 					</template>
 				</n-spin>
 			</div>
@@ -46,11 +51,12 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { AITrigger } from "@/types/incidentManagement/ai-triggers"
-import { NButton, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 
 const { customerCode } = defineProps<{
 	customerCode: string
@@ -59,6 +65,13 @@ const CustomerAITriggersItem = defineAsyncComponent(() => import("./CustomerAITr
 const CustomerAITriggersForm = defineAsyncComponent(() => import("./CustomerAITriggersForm.vue"))
 
 const AddIcon = "carbon:add-alt"
+
+// What setting this up gives the customer, for the empty tab.
+const EMPTY_POINTS = [
+	{ title: "Switch it on", description: "One trigger per customer, off until someone turns it on." },
+	{ title: "Alerts arrive", description: "Each new alert of this customer is sent to the AI Analyst in the background." },
+	{ title: "Reports follow", description: "The findings and IoCs land on the alert for the analysts to review." }
+]
 
 const message = useMessage()
 const showForm = ref(false)
