@@ -6,8 +6,21 @@
 					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
 				</div>
 				<div class="info flex grow flex-col justify-center">
-					<div class="name">
+					<div class="name flex flex-wrap items-center gap-x-3 gap-y-1">
 						<h1>{{ userName }}</h1>
+						<!-- A customer admin (#1296): the SOC appointed them to manage these customers' portal users. -->
+						<n-tooltip v-if="administered.length" placement="top">
+							<template #trigger>
+								<n-tag type="info" size="small" :bordered="false" data-testid="profile-customer-admin">
+									<template #icon><Icon name="carbon:user-admin" :size="14" /></template>
+									Customer admin
+								</n-tag>
+							</template>
+							<span data-testid="profile-customer-admin-of">
+								Manages the portal users of
+								<bdi>{{ administered.map(customer => customer.customer_name).join(", ") }}</bdi>
+							</span>
+						</n-tooltip>
 					</div>
 					<div class="details flex flex-wrap">
 						<div class="item">
@@ -69,7 +82,7 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { NAvatar, NCard, NTab, NTabPane, NTabs, NTag, NTooltip } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
@@ -103,6 +116,7 @@ const authStore = useAuthStore()
 const userRole = authStore.userRoleName
 const userName = authStore.userName
 const customers = computed(() => authStore.accessibleCustomers)
+const administered = computed(() => customers.value.filter(customer => customer.is_customer_admin))
 const userPic = authStore.userPic
 </script>
 

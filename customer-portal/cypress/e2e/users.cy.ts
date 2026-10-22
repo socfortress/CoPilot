@@ -109,7 +109,9 @@ describe("users", () => {
 	it("a customer admin finds Users in the avatar menu, with the customer's portal users", () => {
 		cy.loginToPortal(seed)
 		cy.visit("/overview")
+		cy.get("[data-testid=toolbar-avatar-admin]").should("have.attr", "aria-label", "Customer admin")
 		cy.get(".n-avatar:visible").first().click()
+		cy.get("[data-testid=toolbar-role]").should("contain", "Customer admin")
 		cy.contains(".n-dropdown-option", "Users").click()
 		cy.location("pathname").should("eq", "/users")
 		row(seed.portal_user).within(() => {
@@ -187,6 +189,7 @@ describe("users", () => {
 		cy.get(".n-avatar:visible").first().click()
 		cy.contains(".n-dropdown-option", "Profile").should("be.visible")
 		cy.contains(".n-dropdown-option", "Users").should("not.exist")
+		cy.get("[data-testid=toolbar-avatar-admin]").should("not.exist")
 		cy.visit("/users")
 		cy.get("[data-testid=users-forbidden]").should("contain", "Only a customer administrator")
 	})

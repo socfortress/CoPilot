@@ -13,20 +13,30 @@ function keys() {
 	return options.map(option => option.key)
 }
 
-/** The avatar menu offers Users only to a customer admin (#1296). */
+/** The avatar marks a customer admin, whose menu says so and offers Users (#1296). */
 describe("avatar menu", () => {
 	beforeEach(() => {
 		push.mockReset()
 	})
 
-	it("has no Users for a portal user who administers nothing", () => {
+	it("has no Users, no role line and no mark for a portal user who administers nothing", () => {
 		store.isCustomerAdmin = false
 		expect(keys()).toEqual(["route-Profile", "route-Logout"])
+		const wrapper = mount(Avatar)
+		expect(wrapper.find("[data-testid=toolbar-avatar-admin]").exists()).toBe(false)
+		expect(wrapper.get("[data-testid=toolbar-avatar]").attributes("title")).toBeUndefined()
 	})
 
-	it("offers Users to a customer admin, between Profile and Logout", () => {
+	it("offers Users to a customer admin, between Profile and Logout, under a line naming the role", () => {
 		store.isCustomerAdmin = true
-		expect(keys()).toEqual(["route-Profile", "route-Users", "route-Logout"])
+		expect(keys()).toEqual(["role", "role-divider", "route-Profile", "route-Users", "route-Logout"])
+	})
+
+	it("marks a customer admin's avatar, for screen readers too", () => {
+		store.isCustomerAdmin = true
+		const wrapper = mount(Avatar)
+		expect(wrapper.get("[data-testid=toolbar-avatar-admin]").attributes("aria-label")).toBe("Customer admin")
+		expect(wrapper.get("[data-testid=toolbar-avatar]").attributes("title")).toBe("Customer admin")
 	})
 
 	it("opens the page a key names", () => {
