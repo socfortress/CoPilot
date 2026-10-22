@@ -1,23 +1,27 @@
 <template>
 	<n-dropdown :options placement="bottom-end" trigger="click" @select="handleSelect">
-		<span
-			class="relative inline-flex cursor-pointer"
-			:title="signedInRole ? roleLabel(signedInRole) : undefined"
+		<!-- Who is signed in and as what, without opening the menu: avatar, username, role. -->
+		<button
+			type="button"
+			class="border-default flex max-w-52 cursor-pointer items-center gap-2 rounded-full border bg-transparent p-0.5 sm:pr-3"
+			:title="signedInRole ? `${authStore.userName ?? ''} · ${roleLabel(signedInRole)}` : (authStore.userName ?? '')"
 			data-testid="toolbar-avatar"
 		>
-			<n-avatar round :size="32" :src="userPic" :img-props="{ alt: 'avatar' }" />
-			<!-- The role at a glance, in its tag colour; the menu names it in full. -->
-			<span
-				v-if="signedInRole"
-				class="bg-default absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-full border"
-				:class="ROLE_TONE[roleTagType(signedInRole) ?? 'default']"
-				role="img"
-				:aria-label="roleLabel(signedInRole)"
-				data-testid="toolbar-avatar-role"
-			>
-				<Icon :name="roleIcon(signedInRole)" :size="10" />
+			<n-avatar round :size="28" :src="userPic" :img-props="{ alt: '' }" class="shrink-0" />
+			<span class="hidden min-w-0 flex-col items-start gap-0.5 leading-tight sm:flex">
+				<span class="text-default max-w-full truncate text-xs font-semibold" data-testid="toolbar-avatar-name">
+					{{ authStore.userName }}
+				</span>
+				<span
+					v-if="signedInRole"
+					class="text-secondary flex items-center gap-1.5 text-2xs"
+					data-testid="toolbar-avatar-role"
+				>
+					<span class="size-1.5 shrink-0 rounded-full" :style="{ background: roleColor(signedInRole) }"></span>
+					{{ roleLabel(signedInRole) }}
+				</span>
 			</span>
-		</span>
+		</button>
 	</n-dropdown>
 </template>
 
@@ -25,8 +29,7 @@
 import { NAvatar, NDropdown, NTag } from "naive-ui"
 import { computed, h, ref } from "vue"
 import { useRouter } from "vue-router"
-import Icon from "@/components/common/Icon.vue"
-import { roleIcon, roleLabel, roleNameOf, roleTagType } from "@/components/users/roles"
+import { roleColor, roleLabel, roleNameOf, roleTagType } from "@/components/users/roles"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
@@ -40,16 +43,6 @@ const authStore = useAuthStore()
 
 const userPic = authStore.userPic
 const signedInRole = computed(() => roleNameOf(authStore.userRole))
-
-// Literal classes per tag type, so Tailwind sees them.
-const ROLE_TONE: Record<string, string> = {
-	error: "text-error border-error",
-	primary: "text-primary border-primary",
-	warning: "text-warning border-warning",
-	info: "text-info border-info",
-	success: "text-success border-success",
-	default: "text-secondary border-default"
-}
 
 // Who is signed in: avatar, the whole username (wrapped, never truncated) and the role.
 function renderSignedInUser() {

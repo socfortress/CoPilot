@@ -38,28 +38,31 @@ describe("avatar menu", () => {
 	})
 })
 
-/** The toolbar avatar itself carries the role, so it shows without opening the menu. */
-describe("avatar role badge", () => {
-	function badge(role: AuthUserRole) {
-		store.userName = "someone"
+/** The toolbar shows who is signed in and as what, without opening the menu. */
+describe("toolbar account block", () => {
+	function block(role: AuthUserRole, name = "someone") {
+		store.userName = name
 		store.userRole = role
 		return mount(Avatar)
 	}
 
-	it("names the role for screen readers and on hover, in the role's tag colour", () => {
-		const admin = badge(AuthUserRole.Admin)
-		expect(admin.get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Admin")
-		expect(admin.get("[data-testid=toolbar-avatar]").attributes("title")).toBe("Admin")
-		expect(admin.get("[data-testid=toolbar-avatar-role]").classes()).toContain("text-error")
-
-		const responder = badge(AuthUserRole.Responder)
-		expect(responder.get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Responder")
-		expect(responder.get("[data-testid=toolbar-avatar-role]").classes()).toContain("text-primary")
-
-		expect(badge(AuthUserRole.Analyst).get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Analyst")
+	it("shows the username and the role, with a dot in the role's colour", () => {
+		const responder = block(AuthUserRole.Responder, "g.conti")
+		expect(responder.get("[data-testid=toolbar-avatar-name]").text()).toBe("g.conti")
+		expect(responder.get("[data-testid=toolbar-avatar-role]").text()).toBe("Responder")
+		expect(responder.get("[data-testid=toolbar-avatar-role] span").attributes("style")).toContain("var(--primary-color)")
+		expect(block(AuthUserRole.Analyst).get("[data-testid=toolbar-avatar-role] span").attributes("style")).toContain(
+			"var(--info-color)"
+		)
 	})
 
-	it("shows no badge while the role is unknown", () => {
-		expect(badge(AuthUserRole.Unknown).find("[data-testid=toolbar-avatar-role]").exists()).toBe(false)
+	it("cuts a long username on screen but names it whole on hover", () => {
+		const wrapper = block(AuthUserRole.Admin, LONG_NAME)
+		expect(wrapper.get("[data-testid=toolbar-avatar-name]").classes()).toContain("truncate")
+		expect(wrapper.get("[data-testid=toolbar-avatar]").attributes("title")).toBe(`${LONG_NAME} · Admin`)
+	})
+
+	it("shows no role while it is unknown", () => {
+		expect(block(AuthUserRole.Unknown).find("[data-testid=toolbar-avatar-role]").exists()).toBe(false)
 	})
 })
