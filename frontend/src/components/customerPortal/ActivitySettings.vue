@@ -43,8 +43,8 @@
 					Only administrators can change this setting.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm" data-testid="activity-settings-help">
-					<p>
+				<div class="flex flex-col gap-3 text-sm" data-testid="activity-settings-help">
+					<p class="text-default">
 						Turning this on adds a read-only Activity page to the Customer Portal, for the last 7, 30 or 90
 						days beside the period before:
 					</p>
@@ -69,15 +69,15 @@
 							opened, by type and where they stand now
 						</li>
 					</ul>
-					<p>
+					<p class="text-default">
 						Every figure counts only alerts and cases the customer can already open in the portal, and a
 						click on a slice lists exactly those alerts. Items count from when they reached the SOC, so an
 						alert that keeps firing is not counted again as new.
 					</p>
-					<p>
+					<p class="text-default">
 						The figures are the ones the customer already receives in the PDF report, never a person's name.
 					</p>
-					<p>
+					<p class="text-default">
 						New customers start with this
 						<b>off</b>
 						until an administrator turns it on.

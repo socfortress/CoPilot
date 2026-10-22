@@ -67,17 +67,22 @@
 					:class="{ '@2xl:col-span-2': section.wide }"
 					:data-testid="`customer-info-${section.key}`"
 				>
-					<h3 class="text-tertiary m-0 flex items-center gap-2 font-mono text-[10px] font-normal tracking-[0.14em] uppercase">
+					<h3
+						class="text-tertiary m-0 flex items-center gap-2 font-mono text-[10px] font-normal tracking-[0.14em] uppercase"
+					>
 						<Icon :name="section.icon" :size="13" />
 						{{ section.title }}
 						<span class="border-default grow border-t"></span>
 					</h3>
 					<dl class="m-0 grid gap-x-6 gap-y-3" :class="{ '@2xl:grid-cols-2': section.wide }">
 						<div v-for="row of section.rows" :key="row.label" class="flex min-w-0 flex-col gap-0.5">
-							<dt class="text-tertiary text-xs">{{ row.label }}</dt>
+							<dt class="text-secondary text-xs">{{ row.label }}</dt>
 							<dd
 								class="m-0 text-sm break-words whitespace-pre-line"
-								:class="[row.value ? 'text-default' : 'text-tertiary', { 'font-mono': row.mono && row.value }]"
+								:class="[
+									row.value ? 'text-default' : 'text-tertiary',
+									{ 'font-mono': row.mono && row.value }
+								]"
 							>
 								<bdi>{{ row.value || "Not set" }}</bdi>
 							</dd>

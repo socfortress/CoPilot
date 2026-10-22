@@ -43,8 +43,8 @@
 					Only administrators can change this setting.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm">
-					<p>Turning this on adds a read-only SLA page to the Customer Portal, with:</p>
+				<div class="flex flex-col gap-3 text-sm">
+					<p class="text-default">Turning this on adds a read-only SLA page to the Customer Portal, with:</p>
 					<ul class="ml-4 flex list-disc flex-col gap-1">
 						<li>
 							the
@@ -64,12 +64,12 @@
 							over the period, and what is open now, including the items waiting on the customer.
 						</li>
 					</ul>
-					<p>
+					<p class="text-default">
 						The page is computed from the same figures as SOC Management, but never names a person: no
 						analyst, assignee or resolver reaches the customer, and nothing about other customers or the
 						SOC's internal workload.
 					</p>
-					<p>
+					<p class="text-default">
 						This only decides what the customer can
 						<b>see</b>
 						<span>.</span>
@@ -77,7 +77,7 @@
 						<b>SOC Management → Policies</b>
 						<span>.</span>
 					</p>
-					<p>
+					<p class="text-default">
 						New customers start with this
 						<b>off</b>
 						<span>,</span>
