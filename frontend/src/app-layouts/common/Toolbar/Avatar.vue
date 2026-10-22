@@ -3,21 +3,26 @@
 		<!-- Who is signed in and as what, without opening the menu: avatar, username, role. -->
 		<button
 			type="button"
-			class="border-default flex max-w-52 cursor-pointer items-center gap-2 rounded-full border bg-transparent p-0.5 sm:pr-3"
-			:title="signedInRole ? `${authStore.userName ?? ''} · ${roleLabel(signedInRole)}` : (authStore.userName ?? '')"
+			class="border-default flex h-8 max-w-52 cursor-pointer items-center gap-2 rounded-full border bg-transparent p-0.5 sm:pr-3"
+			:title="
+				signedInRole ? `${authStore.userName ?? ''} · ${roleLabel(signedInRole)}` : (authStore.userName ?? '')
+			"
 			data-testid="toolbar-avatar"
 		>
-			<n-avatar round :size="28" :src="userPic" :img-props="{ alt: '' }" class="shrink-0" />
-			<span class="hidden min-w-0 flex-col items-start gap-0.5 leading-tight sm:flex">
+			<n-avatar round :size="26" :src="userPic" :img-props="{ alt: '' }" class="shrink-0" />
+			<span class="hidden min-w-0 flex-col items-start gap-0 leading-none sm:flex">
 				<span class="text-default max-w-full truncate text-xs font-semibold" data-testid="toolbar-avatar-name">
 					{{ authStore.userName }}
 				</span>
 				<span
 					v-if="signedInRole"
-					class="text-secondary flex items-center gap-1.5 text-2xs"
+					class="text-secondary text-3xs flex items-center gap-1.5"
 					data-testid="toolbar-avatar-role"
 				>
-					<span class="size-1.5 shrink-0 rounded-full" :style="{ background: roleColor(signedInRole) }"></span>
+					<span
+						class="size-1.5 shrink-0 rounded-full"
+						:style="{ background: roleColor(signedInRole) }"
+					></span>
 					{{ roleLabel(signedInRole) }}
 				</span>
 			</span>

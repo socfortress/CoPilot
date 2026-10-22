@@ -3,19 +3,21 @@
 		<!-- Who is signed in and as what, without opening the menu (#1296): avatar, username, role. -->
 		<button
 			type="button"
-			class="border-default flex max-w-52 cursor-pointer items-center gap-2 rounded-full border bg-transparent p-0.5 sm:pr-3"
+			class="border-default flex h-8 max-w-52 cursor-pointer items-center gap-2 rounded-full border bg-transparent p-0.5 sm:pr-3"
 			:title="`${authStore.userName ?? ''} · ${roleText}`"
 			data-testid="toolbar-avatar"
 		>
-			<n-avatar round :size="28" :src="userPic" :img-props="{ alt: '' }" class="shrink-0" />
-			<span class="hidden min-w-0 flex-col items-start gap-0.5 leading-tight sm:flex">
+			<n-avatar round :size="26" :src="userPic" :img-props="{ alt: '' }" class="shrink-0" />
+			<span class="hidden min-w-0 flex-col items-start gap-0 leading-none sm:flex">
 				<span class="text-default max-w-full truncate text-xs font-semibold" data-testid="toolbar-avatar-name">
 					{{ authStore.userName }}
 				</span>
-				<span class="text-secondary flex items-center gap-1.5 text-[11px]" data-testid="toolbar-avatar-role">
+				<span class="text-secondary text-xxs flex items-center gap-1.5" data-testid="toolbar-avatar-role">
 					<span
 						class="size-1.5 shrink-0 rounded-full"
-						:style="{ background: authStore.isCustomerAdmin ? 'var(--info-color)' : 'var(--fg-tertiary-color)' }"
+						:style="{
+							background: authStore.isCustomerAdmin ? 'var(--info-color)' : 'var(--fg-tertiary-color)'
+						}"
 					></span>
 					{{ roleText }}
 				</span>
@@ -51,9 +53,15 @@ function renderSignedInUser() {
 			"data-testid": "toolbar-user"
 		},
 		[
-			h("span", { class: "flex shrink-0" }, [h(NAvatar, { round: true, size: 40, src: userPic, imgProps: { alt: "" } })]),
+			h("span", { class: "flex shrink-0" }, [
+				h(NAvatar, { round: true, size: 40, src: userPic, imgProps: { alt: "" } })
+			]),
 			h("div", { class: "flex min-w-0 flex-col gap-1" }, [
-				h("span", { class: "text-default text-sm leading-snug font-semibold break-all" }, authStore.userName ?? ""),
+				h(
+					"span",
+					{ class: "text-default text-sm leading-snug font-semibold break-all" },
+					authStore.userName ?? ""
+				),
 				authStore.isCustomerAdmin
 					? h(
 							NTag,
