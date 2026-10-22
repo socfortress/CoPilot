@@ -49,7 +49,7 @@
 							<CustomerName :code="customer.customer_code" />
 							<span
 								v-if="customer.is_customer_admin"
-								class="text-info font-mono text-[10px] font-semibold tracking-wider uppercase"
+								class="text-info mt-0.5 font-mono text-[10px] leading-none font-semibold tracking-wider uppercase"
 								data-testid="profile-customer-admin-of"
 							>
 								admin
