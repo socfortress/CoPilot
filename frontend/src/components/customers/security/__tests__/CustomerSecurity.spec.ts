@@ -3,6 +3,7 @@ import { NDialogProvider, NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
+import dayjs from "@/utils/dayjs"
 import CustomerSecurity from "../CustomerSecurity.vue"
 
 const security = vi.hoisted(() => ({
@@ -79,6 +80,28 @@ describe("customer security: password change pending", () => {
 		await flushPromises()
 		expect(security.listCustomerUsers).toHaveBeenCalledTimes(2)
 		expect(wrapper.find("[data-testid=security-must-change-password]").exists()).toBe(false)
+	})
+
+	it("reads the last sign-in as UTC, and says 2FA is On or Off (Disabled is the account's state)", async () => {
+		const guess = vi.spyOn(dayjs.tz, "guess").mockReturnValue("Europe/Rome")
+		security.listCustomerUsers.mockResolvedValue({
+			data: {
+				success: true,
+				users: [
+					user(1, "with.2fa", false, { totp_enabled: true, last_login_at: "2026-10-22T12:01:00" }),
+					user(2, "without.2fa", false)
+				]
+			}
+		})
+		const wrapper = render()
+		await flushPromises()
+		const [on, off] = wrapper.findAll("tbody tr")
+		// 12:01 UTC is 14:01 in Rome (CEST).
+		expect(on?.get("[data-testid=security-last-login]").text()).toBe("10/22/2026 14:01")
+		expect(on?.get("[data-testid=security-totp]").text()).toBe("On")
+		expect(off?.get("[data-testid=security-last-login]").text()).toBe("Never")
+		expect(off?.get("[data-testid=security-totp]").text()).toBe("Off")
+		guess.mockRestore()
 	})
 })
 

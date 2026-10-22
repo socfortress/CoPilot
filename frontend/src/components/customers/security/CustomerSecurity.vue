@@ -74,16 +74,27 @@
 						</td>
 						<td>{{ roleLabel(user.role_name) }}</td>
 						<td>
-							<n-tag :type="user.totp_enabled ? 'success' : 'default'" size="small" round>
+							<!-- "On"/"Off", never "Disabled": that word is the account's own state. -->
+							<n-tag
+								:type="user.totp_enabled ? 'success' : 'default'"
+								size="small"
+								round
+								data-testid="security-totp"
+							>
 								<template #icon>
 									<Icon :name="user.totp_enabled ? EnabledIcon : DisabledIcon" :size="13" />
 								</template>
-								{{ user.totp_enabled ? "Enabled" : "Disabled" }}
+								{{ user.totp_enabled ? "On" : "Off" }}
 							</n-tag>
 						</td>
 						<td>
-							<span class="font-mono text-xs">
-								{{ user.last_login_at ? formatDate(user.last_login_at, dFormats.datetime) : "Never" }}
+							<!-- Stored as naive UTC: shown in the viewer's time zone. -->
+							<span class="font-mono text-xs" data-testid="security-last-login">
+								{{
+									user.last_login_at
+										? formatDate(user.last_login_at, dFormats.datetime, { tz: true })
+										: "Never"
+								}}
 							</span>
 						</td>
 						<td>
