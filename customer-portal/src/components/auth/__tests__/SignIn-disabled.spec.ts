@@ -25,7 +25,7 @@ describe("sign-in after an account was disabled", () => {
 
 	it("says so when the sign-out carried that reason", () => {
 		query.value = { reason: "disabled" }
-		expect(render().get("[data-testid=login-account-disabled]").text()).toContain("Your account has been disabled")
+		expect(render().get("[data-testid=login-account-disabled]").text()).toBe("Your session ended because your account was disabled.")
 	})
 
 	it("says nothing otherwise", () => {

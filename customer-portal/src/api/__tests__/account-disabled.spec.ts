@@ -20,7 +20,7 @@ function refusing(headers: Record<string, string>): AxiosAdapter {
 				statusText: "",
 				headers: new AxiosHeaders(headers),
 				config,
-				data: { success: false, message: "This account has been disabled. Contact your administrator." }
+				data: { success: false, message: "This account is disabled. Ask your organization's administrator or your SOC to enable it again." }
 			})
 		)
 }

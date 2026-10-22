@@ -159,11 +159,11 @@ describe("users", () => {
 		signInAsColleague()
 		cy.visit("/overview")
 		cy.location("pathname").should("eq", "/login")
-		cy.get("[data-testid=login-account-disabled]").should("contain", "Your account has been disabled")
+		cy.get("[data-testid=login-account-disabled]").should("contain", "Your session ended because your account was disabled.")
 		cy.get("[data-testid=login-username] input").type(colleague.username)
 		cy.get("[data-testid=login-password] input").type(colleague.password, { log: false })
 		cy.get("[data-testid=login-submit]").click()
-		cy.contains("This account has been disabled").should("be.visible")
+		cy.contains("This account is disabled. Ask your organization's administrator").should("be.visible")
 		cy.location("pathname").should("eq", "/login")
 
 		cy.loginToPortal(seed)

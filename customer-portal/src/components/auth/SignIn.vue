@@ -8,7 +8,7 @@
 			class="mb-4"
 			data-testid="login-account-disabled"
 		>
-			Your account has been disabled. Contact your administrator.
+			Your session ended because your account was disabled.
 		</n-alert>
 		<n-form v-if="!show2faForm" ref="formRef" :model :rules :disabled="loading">
 			<n-form-item path="username" label="Username">

@@ -16,7 +16,7 @@ from fastapi import HTTPException
 
 from app.auth.models.users import User
 
-ACCOUNT_DISABLED = "This account has been disabled. Contact your administrator."
+ACCOUNT_DISABLED = "This account is disabled. Ask your organization's administrator or your SOC to enable it again."
 ACCOUNT_DISABLED_HEADER = "X-Account-Disabled"
 
 
