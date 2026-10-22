@@ -3,27 +3,31 @@
 		size="small"
 		embedded
 		hoverable
-		main-box-class="gap-3"
+		main-box-class="gap-4"
 		:status="reportCardStatus(report.status)"
 		:loading
 		loading-description="Deleting report…"
 	>
 		<!-- Header: icon + title + period, status pill on the right -->
 		<template #headerMain>
-			<div class="flex min-w-0 items-start gap-2.5">
-				<Icon :name="ReportIcon" :size="18" class="report-glyph mt-0.5 shrink-0" />
-				<div class="flex min-w-0 flex-col gap-0.5">
+			<!-- The icon spans both lines, so the title and the period start at the same edge. -->
+			<div class="flex min-w-0 items-center gap-3">
+				<span
+					class="border-default bg-secondary report-glyph flex size-9 shrink-0 items-center justify-center rounded-lg border"
+				>
+					<Icon :name="ReportIcon" :size="18" />
+				</span>
+				<div class="flex min-w-0 flex-col gap-1">
 					<span
-						class="text-default line-clamp-2 text-sm leading-snug font-semibold"
+						class="text-default line-clamp-2 font-sans text-sm leading-snug font-semibold"
 						:title="report.report_name"
 					>
 						{{ report.report_name }}
 					</span>
-					<span class="text-secondary inline-flex items-center gap-1.5 text-xs">
-						<Icon :name="PeriodIcon" :size="13" />
-						<span class="font-mono">
-							{{ formatDate(report.date_from, dFormats.date) }} –
-							{{ formatDate(report.date_to, dFormats.date) }}
+					<span class="flex items-baseline gap-2 text-xs" data-testid="report-period">
+						<span class="text-tertiary font-mono text-[10px] tracking-[0.12em] uppercase">Period</span>
+						<span class="text-secondary font-mono whitespace-nowrap">
+							{{ periodText }}
 						</span>
 					</span>
 				</div>
@@ -75,7 +79,7 @@
 
 		<!-- Body: flat stat strip + optional error -->
 		<template #default>
-			<div class="stat-strip flex">
+			<div class="stat-strip mt-2 flex">
 				<div v-for="tile in tiles" :key="tile.label" class="stat-col flex flex-1 flex-col px-3.5">
 					<span
 						class="font-mono text-xl leading-none font-bold"
@@ -166,7 +170,6 @@ const emit = defineEmits<{
 }>()
 
 const ReportIcon = "carbon:document"
-const PeriodIcon = "carbon:calendar"
 const DownloadIcon = "carbon:download"
 const DeleteIcon = "carbon:trash-can"
 const AuthorIcon = "carbon:user"
@@ -181,6 +184,10 @@ const ErrorIcon = "carbon:warning-filled"
 const LoadingIcon = "eos-icons:loading"
 
 const dFormats = useSettingsStore().dateFormat
+// One line, never split around the arrow.
+const periodText = computed(
+	() => `${formatDate(report.date_from, dFormats.date)} → ${formatDate(report.date_to, dFormats.date)}`
+)
 
 const isCustomerGenerated = computed(() => report.generated_by_role === "customer_user")
 
