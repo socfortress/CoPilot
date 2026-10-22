@@ -12,7 +12,16 @@ const LONG_NAME = "a.very.long.username.that.would.never.fit@corporate-directory
 const store = vi.hoisted(() => ({ userName: "", userRole: 0, userPic: "" }))
 
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => store }))
-vi.mock("vue-router", () => ({ useRouter: () => ({ push: vi.fn() }) }))
+vi.mock("vue-router", async () => {
+	const { defineComponent, h } = await import("vue")
+	// A link that names where it goes, as the real one does in its href.
+	const RouterLink = defineComponent({
+		props: { to: { type: Object, required: true } },
+		setup: (props, { slots, attrs }) => () =>
+			h("a", { ...attrs, "data-to": (props.to as { name: string }).name }, slots.default?.())
+	})
+	return { useRouter: () => ({ push: vi.fn() }), RouterLink }
+})
 
 function header(role: AuthUserRole) {
 	store.userName = LONG_NAME
@@ -30,6 +39,28 @@ describe("avatar menu", () => {
 		expect(name.text()).toBe(LONG_NAME)
 		expect(name.classes()).toContain("break-all")
 		expect(name.classes()).not.toContain("truncate")
+	})
+
+	it("is the way to the Profile, which the menu no longer lists", () => {
+		const card = header(AuthUserRole.Analyst).get("[data-testid=avatar-user]")
+		expect(card.element.tagName).toBe("A")
+		expect(card.attributes("data-to")).toBe("Profile")
+		const keys = (mount(Avatar).findComponent(NDropdown).props("options") as { key: string }[]).map(o => o.key)
+		expect(keys).not.toContain("route-Profile")
+		expect(keys).toContain("route-Logout")
+	})
+
+	it("closes the menu when the card is followed", async () => {
+		store.userRole = AuthUserRole.Admin
+		const wrapper = mount(Avatar)
+		const dropdown = wrapper.findComponent(NDropdown)
+		dropdown.vm.$emit("update:show", true)
+		await wrapper.vm.$nextTick()
+		expect(dropdown.props("show")).toBe(true)
+		const [first] = dropdown.props("options") as { render: () => VNode }[]
+		await mount(defineComponent({ render: () => first.render() })).get("[data-testid=avatar-user]").trigger("click")
+		await wrapper.vm.$nextTick()
+		expect(dropdown.props("show")).toBe(false)
 	})
 
 	it("shows the role by its label", () => {

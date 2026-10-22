@@ -1,5 +1,5 @@
 <template>
-	<n-dropdown :options placement="bottom-end" trigger="click" @select="handleSelect">
+	<n-dropdown v-model:show="open" :options placement="bottom-end" trigger="click" @select="handleSelect">
 		<!-- Who is signed in and as what, without opening the menu: avatar, username, role. -->
 		<button
 			type="button"
@@ -33,12 +33,11 @@
 <script lang="ts" setup>
 import { NAvatar, NDropdown, NTag } from "naive-ui"
 import { computed, h, ref } from "vue"
-import { useRouter } from "vue-router"
+import { RouterLink, useRouter } from "vue-router"
 import { roleColor, roleLabel, roleNameOf, roleTagType } from "@/components/users/roles"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
-const UserIcon = "ion:person-outline"
 const LogoutIcon = "ion:log-out-outline"
 const ContactIcon = "ic:outline-alternate-email"
 const DocsIcon = "carbon:document"
@@ -49,16 +48,24 @@ const authStore = useAuthStore()
 const userPic = authStore.userPic
 const signedInRole = computed(() => roleNameOf(authStore.userRole))
 
+const open = ref(false)
+
 // Who is signed in: avatar, the whole username (wrapped, never truncated) and the role.
+// The card is the way to the Profile, so the menu has no separate Profile item.
 function renderSignedInUser() {
 	const roleName = roleNameOf(authStore.userRole)
 	return h(
-		"div",
+		RouterLink,
 		{
-			class: "border-default bg-secondary mx-2 mt-2 mb-1 flex max-w-80 min-w-64 items-center gap-3 rounded-lg border px-3 py-2.5",
-			"data-testid": "avatar-user"
+			to: { name: "Profile" },
+			class: "border-default bg-secondary hover:border-primary focus-visible:border-primary mx-2 mt-2 mb-1 flex max-w-80 min-w-64 items-center gap-3 rounded-lg border px-3 py-2.5 no-underline transition-colors outline-none",
+			title: "Your profile",
+			"data-testid": "avatar-user",
+			onClick: () => {
+				open.value = false
+			}
 		},
-		[
+		() => [
 			h("div", { class: "relative shrink-0" }, [
 				h(NAvatar, {
 					round: true,
@@ -99,11 +106,6 @@ const options = ref([
 		type: "render",
 		key: "signed-in-user",
 		render: renderSignedInUser
-	},
-	{
-		label: "Profile",
-		key: "route-Profile",
-		icon: renderIcon(UserIcon)
 	},
 	// Settings pages (Users, SSO, Scheduler, Integrations, Audit, …) live in the
 	// sidebar's Platform section since #1152; this menu is about the signed-in user.
