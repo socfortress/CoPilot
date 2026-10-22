@@ -8,7 +8,16 @@ import Avatar from "../Avatar.vue"
 const store = vi.hoisted(() => ({ isCustomerAdmin: false, userPic: "", userName: "giulia.bianchi" }))
 const push = vi.hoisted(() => vi.fn())
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => store }))
-vi.mock("vue-router", () => ({ useRouter: () => ({ push }) }))
+vi.mock("vue-router", async () => {
+	const { defineComponent, h } = await import("vue")
+	// A link that names where it goes, as the real one does in its href.
+	const RouterLink = defineComponent({
+		props: { to: { type: Object, required: true } },
+		setup: (props, { slots, attrs }) => () =>
+			h("a", { ...attrs, "data-to": (props.to as { name: string }).name }, slots.default?.())
+	})
+	return { useRouter: () => ({ push }), RouterLink }
+})
 
 function options() {
 	return mount(Avatar).getComponent(NDropdown).props("options") as { key: string; render?: () => VNode }[]
@@ -30,14 +39,14 @@ describe("avatar", () => {
 		push.mockReset()
 	})
 
-	it("shows a portal user's name and role, with no Users and no admin tag", () => {
+	it("shows a portal user's name and role, tagged Portal user, with no Users", () => {
 		store.isCustomerAdmin = false
 		const wrapper = mount(Avatar)
 		expect(wrapper.get("[data-testid=toolbar-avatar-name]").text()).toBe("giulia.bianchi")
 		expect(wrapper.get("[data-testid=toolbar-avatar-role]").text()).toBe("Portal user")
 		expect(wrapper.get("[data-testid=toolbar-avatar]").attributes("title")).toBe("giulia.bianchi · Portal user")
-		expect(keys()).toEqual(["signed-in-user", "route-Profile", "route-Logout"])
-		expect(userCard().find("[data-testid=toolbar-role]").exists()).toBe(false)
+		expect(keys()).toEqual(["signed-in-user", "route-Logout"])
+		expect(userCard().get("[data-testid=toolbar-role]").text()).toBe("Portal user")
 	})
 
 	it("shows a customer admin as such, in the toolbar and on the menu's user card", () => {
@@ -48,9 +57,24 @@ describe("avatar", () => {
 		expect(userCard().get("[data-testid=toolbar-role]").text()).toBe("Customer admin")
 	})
 
-	it("offers Users to a customer admin, between Profile and Logout", () => {
+	it("offers Users to a customer admin, above Logout", () => {
 		store.isCustomerAdmin = true
-		expect(keys()).toEqual(["signed-in-user", "route-Profile", "route-Users", "route-Logout"])
+		expect(keys()).toEqual(["signed-in-user", "route-Users", "route-Logout"])
+	})
+
+	it("makes the user card the way to the Profile, closing the menu", async () => {
+		store.isCustomerAdmin = false
+		const wrapper = mount(Avatar)
+		const dropdown = wrapper.getComponent(NDropdown)
+		dropdown.vm.$emit("update:show", true)
+		await wrapper.vm.$nextTick()
+		const card = userCard().get("[data-testid=toolbar-user]")
+		expect(card.element.tagName).toBe("A")
+		expect(card.attributes("data-to")).toBe("Profile")
+		const [first] = dropdown.props("options") as { render: () => VNode }[]
+		await mount(defineComponent({ render: () => first?.render() })).get("[data-testid=toolbar-user]").trigger("click")
+		await wrapper.vm.$nextTick()
+		expect(dropdown.props("show")).toBe(false)
 	})
 
 	it("opens the page a key names", () => {

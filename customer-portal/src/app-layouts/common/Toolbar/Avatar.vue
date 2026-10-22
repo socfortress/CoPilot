@@ -1,5 +1,5 @@
 <template>
-	<n-dropdown :options placement="bottom-end" trigger="click" @select="handleSelect">
+	<n-dropdown v-model:show="open" :options placement="bottom-end" trigger="click" @select="handleSelect">
 		<!-- Who is signed in and as what, without opening the menu (#1296): avatar, username, role. -->
 		<button
 			type="button"
@@ -29,12 +29,11 @@
 <script lang="ts" setup>
 import type { DropdownOption } from "naive-ui"
 import { NAvatar, NDropdown, NTag } from "naive-ui"
-import { computed, h } from "vue"
-import { useRouter } from "vue-router"
+import { computed, h, ref } from "vue"
+import { RouterLink, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
-const UserIcon = "carbon:user"
 const LogoutIcon = "carbon:logout"
 const UsersIcon = "carbon:user-multiple"
 
@@ -44,15 +43,23 @@ const authStore = useAuthStore()
 const userPic = authStore.userPic
 const roleText = computed(() => (authStore.isCustomerAdmin ? "Customer admin" : "Portal user"))
 
-// Who is signed in: the whole username (wrapped, never truncated) and, for a customer admin, the role.
+const open = ref(false)
+
+// Who is signed in: the whole username (wrapped, never truncated) and the role. The card is
+// the way to the Profile, so the menu has no separate Profile item.
 function renderSignedInUser() {
 	return h(
-		"div",
+		RouterLink,
 		{
-			class: "border-default bg-secondary mx-2 mt-2 mb-1 flex max-w-80 min-w-56 items-center gap-3 rounded-lg border px-3 py-2.5",
-			"data-testid": "toolbar-user"
+			to: { name: "Profile" },
+			class: "border-default bg-secondary hover:border-primary focus-visible:border-primary mx-2 mt-2 mb-1 flex max-w-80 min-w-56 items-center gap-3 rounded-lg border px-3 py-2.5 no-underline transition-colors outline-none",
+			title: "Your profile",
+			"data-testid": "toolbar-user",
+			onClick: () => {
+				open.value = false
+			}
 		},
-		[
+		() => [
 			h("span", { class: "flex shrink-0" }, [
 				h(NAvatar, { round: true, size: 40, src: userPic, imgProps: { alt: "" } })
 			]),
@@ -62,19 +69,17 @@ function renderSignedInUser() {
 					{ class: "text-default text-sm leading-snug font-semibold break-all" },
 					authStore.userName ?? ""
 				),
-				authStore.isCustomerAdmin
-					? h(
-							NTag,
-							{
-								type: "info",
-								size: "tiny",
-								bordered: false,
-								class: "self-start font-mono text-[8px]! tracking-wider uppercase",
-								"data-testid": "toolbar-role"
-							},
-							() => "Customer admin"
-						)
-					: null
+				h(
+					NTag,
+					{
+						type: authStore.isCustomerAdmin ? "info" : "default",
+						size: "tiny",
+						bordered: false,
+						class: "self-start font-mono text-[8px]! tracking-wider uppercase",
+						"data-testid": "toolbar-role"
+					},
+					() => roleText.value
+				)
 			])
 		]
 	)
@@ -83,11 +88,6 @@ function renderSignedInUser() {
 // "Users" only for a customer admin (#1296): the profile says so, read live.
 const options = computed<DropdownOption[]>(() => [
 	{ key: "signed-in-user", type: "render", render: renderSignedInUser },
-	{
-		label: "Profile",
-		key: "route-Profile",
-		icon: renderIcon(UserIcon)
-	},
 	...(authStore.isCustomerAdmin ? [{ label: "Users", key: "route-Users", icon: renderIcon(UsersIcon) }] : []),
 	{
 		label: "Logout",
