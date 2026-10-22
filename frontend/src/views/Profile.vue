@@ -3,7 +3,14 @@
 		<n-card class="header flex flex-col" content-class="p-0!">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
-					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
+					<n-avatar
+						:size="100"
+						:src="userPic"
+						round
+						:img-props="{ alt: 'avatar' }"
+						:style="roleName ? { boxShadow: `0 0 0 3px var(--bg-default-color), 0 0 0 5px ${roleColor(roleName)}` } : undefined"
+						data-testid="profile-avatar"
+					/>
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
@@ -15,20 +22,35 @@
 					</ImageCropper>
 				</div>
 				<div class="info flex grow flex-col justify-center">
-					<div class="name">
+					<div class="name flex flex-wrap items-center gap-x-3 gap-y-1">
 						<h1>{{ userName }}</h1>
+						<n-tag v-if="roleName" :type="roleTagType(roleName)" :bordered="false" data-testid="profile-role">
+							<template #icon><Icon :name="roleIcon(roleName)" :size="14" /></template>
+							{{ roleLabel(roleName) }}
+						</n-tag>
 					</div>
+					<p
+						v-if="roleDescription(roleName)"
+						class="text-secondary m-0 mb-3 text-sm"
+						data-testid="profile-role-description"
+					>
+						{{ roleDescription(roleName) }}
+					</p>
 					<div class="details flex flex-wrap">
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap">
-										<Icon :name="RoleIcon" />
-										<span>{{ userRole }}</span>
-									</div>
-								</template>
-								<span>Role</span>
-							</n-tooltip>
+						<div v-if="scopeText" class="item" data-testid="profile-scope">
+							<div class="tooltip-wrap">
+								<Icon :name="CustomersIcon" />
+								<n-button
+									v-if="scope === 'assigned'"
+									text
+									class="text-secondary!"
+									data-testid="profile-scope-link"
+									@click="tabActive = 'customers'"
+								>
+									{{ scopeText }}
+								</n-button>
+								<span v-else>{{ scopeText }}</span>
+							</div>
 						</div>
 						<div v-if="userEmail" class="item">
 							<div class="tooltip-wrap">
@@ -81,8 +103,9 @@
 
 <script lang="ts" setup>
 import type { ImageCropperResult } from "@/components/common/ImageCropper.vue"
-import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
-import { ref } from "vue"
+import { NAvatar, NButton, NCard, NTab, NTabPane, NTabs, NTag } from "naive-ui"
+import { computed, onBeforeMount, ref } from "vue"
+import Api from "@/api"
 import ChangePasswordCard from "@/components/auth/ChangePassword.vue"
 import PasskeyToggle from "@/components/auth/PasskeyToggle.vue"
 import TotpToggle from "@/components/auth/TotpToggle.vue"
@@ -90,20 +113,54 @@ import Icon from "@/components/common/Icon.vue"
 import ImageCropper from "@/components/common/ImageCropper.vue"
 import ProfileCustomers from "@/components/profile/ProfileCustomers.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
+import {
+	needsCustomers,
+	roleColor,
+	roleDescription,
+	roleIcon,
+	roleLabel,
+	roleNameOf,
+	roleTagType,
+	seesEveryCustomer
+} from "@/components/users/roles"
 
 import { useAuthStore } from "@/stores/auth"
 
 const propicEnabled = false
 
-const RoleIcon = "tabler:user"
 const EditIcon = "uil:image-edit"
 const EmailIcon = "carbon:email"
+const CustomersIcon = "carbon:enterprise"
 
 const tabActive = ref("settings")
 const authStore = useAuthStore()
 
-const userRole = authStore.userRoleName
+const roleName = roleNameOf(authStore.userRole)
 const userName = authStore.userName
+
+// Which customers the role reaches, in one line; the Customers tab lists them.
+const scope = ref<"assigned" | "deployment" | "unassigned" | null>(null)
+const assignedCount = ref(0)
+const scopeText = computed(() => {
+	if (scope.value === "deployment") return "All customers"
+	if (scope.value === "unassigned") return "No customers assigned"
+	if (scope.value === "assigned") {
+		return `${assignedCount.value} ${assignedCount.value === 1 ? "customer" : "customers"} assigned`
+	}
+	return ""
+})
+
+onBeforeMount(async () => {
+	if (!needsCustomers(roleName) && !seesEveryCustomer(roleName)) return
+	try {
+		const res = await Api.auth.getMyCustomerAccess()
+		const codes = res.data.customer_codes ?? []
+		scope.value = res.data.scope ?? (codes.includes("*") ? "deployment" : codes.length ? "assigned" : "unassigned")
+		assignedCount.value = codes.filter(code => code !== "*").length
+	} catch {
+		// The line is a summary: without an answer it is simply left out.
+	}
+})
 const userEmail = authStore.userEmail
 const userPic = ref(authStore.userPic)
 
