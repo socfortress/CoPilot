@@ -17,14 +17,23 @@
 						Decommission
 					</n-button>
 				</div>
-				<div v-else class="flex items-center justify-between gap-4">
-					<n-button size="small" type="primary" @click="editing = true">
-						<template #icon>
-							<Icon :name="AddIcon" :size="14" />
-						</template>
-						Create Provision
-					</n-button>
-				</div>
+				<CustomerTabEmpty
+					v-else
+					:icon="ProvisionIcon"
+					title="This customer isn't provisioned yet"
+					description="Provisioning builds the pipeline this customer's events go through: where they are stored, where they are shown and how their agents connect. It is set up once, from a short wizard, and can be decommissioned later."
+					:points="PROVISION_POINTS"
+					note="Takes a few minutes. Decommissioning removes what it created."
+				>
+					<template #actions>
+						<n-button type="primary" data-testid="provision-create" @click="editing = true">
+							<template #icon>
+								<Icon :name="AddIcon" :size="16" />
+							</template>
+							Create provision
+						</n-button>
+					</template>
+				</CustomerTabEmpty>
 
 				<div class="grid-auto-fit-200 grid gap-2">
 					<CardKV v-for="(value, key) of customerMeta" :key>
@@ -50,6 +59,7 @@ import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerProvisionWizard from "./CustomerProvisionWizard.vue"
 
 const props = defineProps<{
@@ -67,6 +77,18 @@ const { customerMeta, customerCode, customerName } = toRefs(props)
 
 const DeleteIcon = "ph:trash"
 const AddIcon = "carbon:add-alt"
+const ProvisionIcon = "carbon:deploy"
+
+// The wizard's steps, as the customer will get them.
+const PROVISION_POINTS = [
+	{ title: "Graylog", description: "An index set and a stream for the customer's events, with its hot-data retention." },
+	{ title: "Grafana", description: "An organization holding the customer's dashboards." },
+	{ title: "Subscriptions", description: "The event sources the customer sends, and the dashboards that read them." },
+	{
+		title: "Wazuh",
+		description: "The customer's agent group, and optionally a dedicated worker behind an HA proxy."
+	}
+]
 
 const loadingDelete = ref(false)
 const editing = ref(false)
