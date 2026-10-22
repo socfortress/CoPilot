@@ -13,12 +13,16 @@
 				class="border-default flex flex-wrap items-center gap-x-5 gap-y-3 border-b pb-5"
 				data-testid="customer-info-header"
 			>
-				<span
-					class="border-default bg-secondary text-primary flex size-14 shrink-0 items-center justify-center rounded-xl border font-mono text-lg font-semibold tracking-wider"
-					aria-hidden="true"
-				>
-					{{ initials }}
-				</span>
+				<!-- The same avatar as the customers list: its logo, else one drawn from its initials. -->
+				<n-avatar
+					:src="customer.logo_file || fallbackAvatar"
+					:fallback-src="fallbackAvatar"
+					round
+					:size="56"
+					class="shrink-0"
+					:img-props="{ alt: '' }"
+					data-testid="customer-info-avatar"
+				/>
 				<div class="flex min-w-0 grow flex-col gap-2">
 					<h2 class="font-display text-default m-0 text-xl leading-tight font-semibold break-words">
 						<bdi>{{ customer.customer_name || customer.customer_code }}</bdi>
@@ -124,11 +128,11 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import { NButton, useDialog, useMessage } from "naive-ui"
+import { NAvatar, NButton, useDialog, useMessage } from "naive-ui"
 import { computed, h, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { getApiErrorMessage } from "@/utils"
+import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
 import CustomerForm from "./CustomerForm.vue"
 
 const props = defineProps<{
@@ -151,13 +155,9 @@ const editing = ref(false)
 const dialog = useDialog()
 const message = useMessage()
 
-const initials = computed(() => {
-	const words = (customer.value.customer_name || customer.value.customer_code || "?").trim().split(/\s+/)
-	return words
-		.slice(0, 2)
-		.map(word => word.charAt(0))
-		.join("")
-		.toUpperCase()
+const fallbackAvatar = computed(() => {
+	const initials = getNameInitials(customer.value.customer_name)
+	return getAvatar({ seed: initials, text: initials })
 })
 
 interface InfoRow {
