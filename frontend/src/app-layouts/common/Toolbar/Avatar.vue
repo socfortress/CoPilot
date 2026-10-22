@@ -1,14 +1,32 @@
 <template>
 	<n-dropdown :options placement="bottom-end" trigger="click" @select="handleSelect">
-		<n-avatar round :size="32" :src="userPic" :img-props="{ alt: 'avatar' }" />
+		<span
+			class="relative inline-flex cursor-pointer"
+			:title="signedInRole ? roleLabel(signedInRole) : undefined"
+			data-testid="toolbar-avatar"
+		>
+			<n-avatar round :size="32" :src="userPic" :img-props="{ alt: 'avatar' }" />
+			<!-- The role at a glance, in its tag colour; the menu names it in full. -->
+			<span
+				v-if="signedInRole"
+				class="bg-default absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-full border"
+				:class="ROLE_TONE[roleTagType(signedInRole) ?? 'default']"
+				role="img"
+				:aria-label="roleLabel(signedInRole)"
+				data-testid="toolbar-avatar-role"
+			>
+				<Icon :name="roleIcon(signedInRole)" :size="10" />
+			</span>
+		</span>
 	</n-dropdown>
 </template>
 
 <script lang="ts" setup>
 import { NAvatar, NDropdown, NTag } from "naive-ui"
-import { h, ref } from "vue"
+import { computed, h, ref } from "vue"
 import { useRouter } from "vue-router"
-import { roleLabel, roleNameOf, roleTagType } from "@/components/users/roles"
+import Icon from "@/components/common/Icon.vue"
+import { roleIcon, roleLabel, roleNameOf, roleTagType } from "@/components/users/roles"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
@@ -21,6 +39,17 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const userPic = authStore.userPic
+const signedInRole = computed(() => roleNameOf(authStore.userRole))
+
+// Literal classes per tag type, so Tailwind sees them.
+const ROLE_TONE: Record<string, string> = {
+	error: "text-error border-error",
+	primary: "text-primary border-primary",
+	warning: "text-warning border-warning",
+	info: "text-info border-info",
+	success: "text-success border-success",
+	default: "text-secondary border-default"
+}
 
 // Who is signed in: avatar, the whole username (wrapped, never truncated) and the role.
 function renderSignedInUser() {

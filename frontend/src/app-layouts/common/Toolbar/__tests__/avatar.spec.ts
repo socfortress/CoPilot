@@ -37,3 +37,29 @@ describe("avatar menu", () => {
 		expect(header(AuthUserRole.CustomerUser).get("[data-testid=avatar-role]").text()).toBe("Customer User")
 	})
 })
+
+/** The toolbar avatar itself carries the role, so it shows without opening the menu. */
+describe("avatar role badge", () => {
+	function badge(role: AuthUserRole) {
+		store.userName = "someone"
+		store.userRole = role
+		return mount(Avatar)
+	}
+
+	it("names the role for screen readers and on hover, in the role's tag colour", () => {
+		const admin = badge(AuthUserRole.Admin)
+		expect(admin.get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Admin")
+		expect(admin.get("[data-testid=toolbar-avatar]").attributes("title")).toBe("Admin")
+		expect(admin.get("[data-testid=toolbar-avatar-role]").classes()).toContain("text-error")
+
+		const responder = badge(AuthUserRole.Responder)
+		expect(responder.get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Responder")
+		expect(responder.get("[data-testid=toolbar-avatar-role]").classes()).toContain("text-primary")
+
+		expect(badge(AuthUserRole.Analyst).get("[data-testid=toolbar-avatar-role]").attributes("aria-label")).toBe("Analyst")
+	})
+
+	it("shows no badge while the role is unknown", () => {
+		expect(badge(AuthUserRole.Unknown).find("[data-testid=toolbar-avatar-role]").exists()).toBe(false)
+	})
+})

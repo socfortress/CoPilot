@@ -43,6 +43,22 @@ export function roleLabel(roleName: string | null | undefined): string {
 	return ROLE_NAME_OPTIONS.find(option => option.value === roleName?.toLowerCase())?.label ?? roleName ?? ""
 }
 
+/** The role's icon, written out in full so the icon scan finds it. */
+export function roleIcon(roleName: string | null | undefined): string {
+	switch (roleName?.toLowerCase()) {
+		case "admin":
+			return "carbon:user-admin"
+		case "responder":
+			return "carbon:flash"
+		case "analyst":
+			return "carbon:search"
+		case "scheduler":
+			return "carbon:time"
+		default:
+			return "carbon:user"
+	}
+}
+
 export function roleTagType(roleName: string | null | undefined): TagProps["type"] {
 	switch (roleName?.toLowerCase()) {
 		case "admin":
