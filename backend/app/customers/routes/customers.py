@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Request
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +11,9 @@ from sqlalchemy.future import select
 
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
+from app.connectors.talon.services.talon_service_account import (
+    refuse_talon_service_account_dependency,
+)
 
 # App specific imports
 from app.customers.schema.customers import AgentModel
@@ -29,8 +33,21 @@ from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
+from app.healthchecks.agents.schema.unhealthy_delete import HealthcheckSource
+from app.healthchecks.agents.schema.unhealthy_delete import UnhealthyAgentsDeleteRequest
+from app.healthchecks.agents.schema.unhealthy_delete import (
+    UnhealthyAgentsDeleteResponse,
+)
+from app.healthchecks.agents.schema.unhealthy_delete import (
+    UnhealthyAgentsPreviewRequest,
+)
+from app.healthchecks.agents.schema.unhealthy_delete import (
+    UnhealthyAgentsPreviewResponse,
+)
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
+from app.healthchecks.agents.services.unhealthy_delete import delete_unhealthy_agents
+from app.healthchecks.agents.services.unhealthy_delete import preview_unhealthy_agents
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.license import get_license_seat_allowance
@@ -906,3 +923,68 @@ async def get_velociraptor_agents_healthcheck(
     agents = [AgentModel.parse_obj(agent.__dict__) for agent in agents]
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
     return await velociraptor_agents_healthcheck(agents, time_criteria)
+
+
+@customers_router.post(
+    "/{customer_code}/agents/healthcheck/{source}/delete/preview",
+    response_model=UnhealthyAgentsPreviewResponse,
+    description="Judge which of the customer's unhealthy agents a deletion would remove; changes nothing",
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
+)
+async def preview_unhealthy_agents_deletion(
+    customer_code: str,
+    source: HealthcheckSource,
+    body: UnhealthyAgentsPreviewRequest,
+    session: AsyncSession = Depends(get_db),
+) -> UnhealthyAgentsPreviewResponse:
+    """
+    Judge each listed agent as the deletion would, at the threshold the user chose (#1291).
+
+    Args:
+        customer_code (str): The customer whose agents are listed.
+        source (str): The healthcheck list: ``wazuh`` or ``velociraptor``.
+        body (UnhealthyAgentsPreviewRequest): The agents and the threshold.
+
+    Returns:
+        UnhealthyAgentsPreviewResponse: Each agent's verdict and the counts.
+    """
+    return await preview_unhealthy_agents(session, customer_code, source, body)
+
+
+@customers_router.post(
+    "/{customer_code}/agents/healthcheck/{source}/delete",
+    response_model=UnhealthyAgentsDeleteResponse,
+    description="Delete the customer's agents unseen for longer than the chosen threshold, from Wazuh, Velociraptor and CoPilot",
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+        Depends(refuse_talon_service_account_dependency),
+    ],
+)
+async def delete_unhealthy_agents_route(
+    customer_code: str,
+    source: HealthcheckSource,
+    body: UnhealthyAgentsDeleteRequest,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> UnhealthyAgentsDeleteResponse:
+    """
+    Delete the listed agents that are still unhealthy at the threshold the user chose (#1291).
+
+    Each agent is judged again before it is deleted; one no longer stale, unknown or another
+    customer's is skipped, not an error. Every deletion is audited as ``agent.delete``.
+
+    Args:
+        customer_code (str): The customer whose agents are deleted.
+        source (str): The healthcheck list: ``wazuh`` or ``velociraptor``.
+        body (UnhealthyAgentsDeleteRequest): The agents (at most 50), the threshold and whether to
+            include agents the other tool still sees.
+
+    Returns:
+        UnhealthyAgentsDeleteResponse: What happened to each agent and the counts.
+    """
+    return await delete_unhealthy_agents(session, customer_code, source, body, actor=current_user, request=request)

@@ -915,6 +915,7 @@ REFUSING_ROUTES = [
     ("app.agents.routes.agents", "agents_router", "/{agent_id}/delete", "DELETE"),
     ("app.agents.routes.agents", "agents_router", "/bulk/delete", "POST"),
     ("app.agents.routes.agents", "agents_router", "/bulk/delete/filter", "POST"),
+    ("app.customers.routes.customers", "customers_router", "/{customer_code}/agents/healthcheck/{source}/delete", "POST"),
     ("app.integrations.copilot_mcp.routes.copilot_mcp", "copilot_mcp_router", "/query", "POST"),
     ("app.integrations.copilot_action.routes.copilot_action", "copilot_action_router", "/invoke", "POST"),
 ]
