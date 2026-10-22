@@ -158,6 +158,10 @@ export const useAuthStore = defineStore("auth", {
 			if (state.customers) return state.customers
 			return (state.user?.customer_codes ?? []).map(code => ({ customer_code: code, customer_name: code }))
 		},
+		/** The user administers some customer's portal users (#1296): the Users page is theirs. */
+		isCustomerAdmin(): boolean {
+			return this.accessibleCustomers.some(customer => customer.is_customer_admin)
+		},
 		accessibleCustomerCodes(): string[] {
 			return this.accessibleCustomers.map(customer => customer.customer_code)
 		},

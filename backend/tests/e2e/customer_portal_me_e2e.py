@@ -68,7 +68,8 @@ async def main():
         check("username and role", (body.get("username"), body.get("role")) == (PORTAL_USER, "customer_user"), str(body)[:200])
         check(
             "the assigned customer, named",
-            body.get("customers") == [{"customer_code": CUST_A, "customer_name": CUSTOMER_NAMES[CUST_A]}],
+            # Not an administrator of its users unless the SOC says so (#1296).
+            body.get("customers") == [{"customer_code": CUST_A, "customer_name": CUSTOMER_NAMES[CUST_A], "is_customer_admin": False}],
             str(body.get("customers")),
         )
 

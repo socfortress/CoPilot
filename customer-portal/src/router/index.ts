@@ -132,6 +132,13 @@ const router = createRouter({
 			meta: { title: "Exposure", auth: true, roles: RouteRole.All }
 		},
 		{
+			// A customer admin's own customers' portal users (#1296); anyone else is told it isn't theirs.
+			path: "/users",
+			name: "Users",
+			component: () => import("@/views/Users.vue"),
+			meta: { title: "Users", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/activity",
 			name: "Activity",
 			component: () => import("@/views/Activity.vue"),
@@ -178,7 +185,8 @@ const router = createRouter({
 		{
 			path: "/logout",
 			name: "Logout",
-			redirect: "/login"
+			// Only a known reason is carried to the sign-in page, which says it (#1296).
+			redirect: to => ({ path: "/login", query: to.query.reason === "disabled" ? { reason: "disabled" } : {} })
 		},
 		{
 			path: "/:pathMatch(.*)*",

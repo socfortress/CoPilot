@@ -12,6 +12,7 @@ import reports from "./endpoints/reports"
 import siem from "./endpoints/siem"
 import sla from "./endpoints/sla"
 import totp from "./endpoints/totp"
+import users from "./endpoints/users"
 
 export default {
 	activity,
@@ -27,5 +28,6 @@ export default {
 	notifications,
 	portal,
 	reports,
-	totp
+	totp,
+	users
 }

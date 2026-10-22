@@ -38,6 +38,17 @@ export function isPasswordChangeRequired(headers: unknown): boolean {
 	return String(value ?? "").toLowerCase() === "true"
 }
 
+/** The API's 401 for an account disabled while its session was open (#1296). */
+export const ACCOUNT_DISABLED_HEADER = "x-account-disabled"
+
+export function isAccountDisabled(headers: unknown): boolean {
+	const value =
+		headers && typeof (headers as { get?: unknown }).get === "function"
+			? (headers as { get: (name: string) => unknown }).get(ACCOUNT_DISABLED_HEADER)
+			: (headers as Record<string, unknown> | undefined)?.[ACCOUNT_DISABLED_HEADER]
+	return String(value ?? "").toLowerCase() === "true"
+}
+
 async function holdForPasswordChange() {
 	// Loaded on demand: the router imports the pages, which import this client.
 	const { default: router } = await import("@/router")
@@ -120,7 +131,10 @@ function applyInterceptors(client: AxiosInstance) {
 
 			if (error.response && error.response.status === 401) {
 				if (!window.location.pathname.includes("login")) {
-					window.location.href = "/logout"
+					// The sign-in page says why when the account was disabled (#1296).
+					window.location.href = isAccountDisabled(error.response.headers)
+						? "/logout?reason=disabled"
+						: "/logout"
 				}
 				/*
 				useGlobalActions().message("You are not authorized to access the resource", { type: "error" })

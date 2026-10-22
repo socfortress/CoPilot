@@ -47,6 +47,15 @@ class AuditAction(str, Enum):
     # change that replaces it (#1277)
     USER_PASSWORD_CHANGE_REQUIRED = "user.password_change_required"
     USER_PASSWORD_CHANGE = "user.password_change"
+    # An account disabled or enabled again, by a SOC admin or a customer admin (#1296)
+    USER_DISABLE = "user.disable"
+    USER_ENABLE = "user.enable"
+    # A SOC admin makes a portal user an administrator of one of their customers, or not (#1296)
+    CUSTOMER_ADMIN_UPDATE = "customer_admin.update"
+    # What a customer admin does to their customer's portal users from the portal (#1296)
+    CUSTOMER_USER_INVITE = "customer_user.invite"
+    CUSTOMER_USER_TOTP_RESET = "customer_user.totp_reset"
+    CUSTOMER_USER_PASSWORD_RESET = "customer_user.password_reset"
 
     # Connectors
     CONNECTOR_CREATE = "connector.create"

@@ -33,6 +33,7 @@ field of a real response to show a failed section.
 | `theme-switch.cy.ts` | #1192 — the toolbar theme switch flips between light and dark. |
 | `profile.cy.ts` | #1192 — the profile page shows the user and both tabs; the never-shown image editor is gone. |
 | `password-change.cy.ts` | #1277 — an account the SOC creates signs in to the password change and nothing else (any page leads there, keeping where it was going; the API answers 403 with `X-Password-Change-Required`), refusals keep the user there, the change continues to the destination for good, signing out is the only other way, and an admin reset holds a signed-in user again at their next request. |
+| `users.cy.ts` | #1296 — a portal user the SOC made a customer admin finds Users in the avatar menu, sees their customer's portal users (their own account and other admins not theirs to manage, and says why), invites a colleague whose temporary password is emailed (to the SMTP sink), and disables a colleague: the colleague's open session ends on a sign-in page that says the account was disabled, their sign-in is refused, and enabling them restores it; a plain portal user has no Users and the page says it isn't theirs; no horizontal scroll on a phone. |
 
 The same seed drives the API-level test `backend/tests/e2e/customer_portal_overview_e2e.py`,
 which additionally checks field-by-field parity and the SQL statement budget.

@@ -10,7 +10,12 @@
 					<span>.</span>
 				</p>
 			</div>
-			<n-button v-if="isAdmin" type="primary" :disabled="!keyConfigured" @click="openForm(null)">
+			<n-button
+				v-if="isAdmin && (instances.length || loading)"
+				type="primary"
+				:disabled="!keyConfigured"
+				@click="openForm(null)"
+			>
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
@@ -33,11 +38,24 @@
 		<CustomerWafError v-if="error" :error />
 
 		<n-spin :show="loading">
-			<n-empty
-				v-if="!instances.length && !loading"
-				description="No WAF configured for this customer"
-				class="h-32 justify-center"
-			/>
+			<CustomerTabEmpty
+				v-if="!instances.length && !loading && !error"
+				icon="carbon:security"
+				title="No WAF for this customer yet"
+				description="Connect the customer's SOCFortress WAFs with a service token: CoPilot reads their events, statistics and threat intel, can forward their events into the SIEM and can block an address straight from an alert."
+				:points="EMPTY_POINTS"
+				points-title="How it works"
+				:note="isAdmin ? undefined : 'Only administrators can add WAFs.'"
+			>
+				<template v-if="isAdmin" #actions>
+					<n-button type="primary" :disabled="!keyConfigured" data-testid="waf-add" @click="openForm(null)">
+						<template #icon>
+							<Icon :name="AddIcon" :size="16" />
+						</template>
+						Add WAF
+					</n-button>
+				</template>
+			</CustomerTabEmpty>
 			<div class="flex flex-col gap-3">
 				<n-card v-for="waf of instances" :key="waf.id" size="small">
 					<div class="flex flex-wrap items-center justify-between gap-3">
@@ -130,7 +148,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CustomerWafInstance, CustomerWafVerification } from "@/types/customer-waf"
-import { NAlert, NButton, NCard, NEmpty, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
+import { NAlert, NButton, NCard, NPopconfirm, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
 import { useRouter } from "vue-router"
 import Api from "@/api"
@@ -139,6 +157,7 @@ import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import CustomerTabEmpty from "../customers/CustomerTabEmpty.vue"
 import CustomerWafError from "./CustomerWafError.vue"
 import CustomerWafForm from "./CustomerWafForm.vue"
 import CustomerWafForwarding from "./CustomerWafForwarding.vue"
@@ -147,6 +166,16 @@ import { invalidateCustomerWafs, reasonHint, wafCapabilityLabel } from "./utils"
 const { customerCode } = defineProps<{ customerCode: string }>()
 
 const AddIcon = "carbon:add"
+
+// What adding a WAF gives the customer, for the empty tab.
+const EMPTY_POINTS = [
+	{ title: "Add the WAF", description: "Its URL and a service token created in the WAF, stored encrypted." },
+	{ title: "Watch its traffic", description: "Events, statistics and threat intel under Investigate → WAF." },
+	{
+		title: "Act from CoPilot",
+		description: "Forward its events to the SIEM and block an address from an alert, as the token's role allows."
+	}
+]
 const OpenIcon = "carbon:launch"
 const router = useRouter()
 const message = useMessage()

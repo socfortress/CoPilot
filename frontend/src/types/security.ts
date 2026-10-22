@@ -8,6 +8,10 @@ export interface CustomerSecurityUser {
 	totp_enabled: boolean
 	/** Still on a password an admin chose: the Customer Portal holds them on the change (#1277). */
 	must_change_password?: boolean
+	/** Administers this customer's portal users from the Customer Portal; set here only (#1296). */
+	is_customer_admin?: boolean
+	/** Set while the account is disabled: it cannot sign in (#1296). Naive UTC. */
+	disabled_at?: string | null
 }
 
 /**

@@ -12,7 +12,7 @@ function token(customerCodes: string[]) {
 		.encode()
 }
 
-function profile(customers: { customer_code: string; customer_name: string }[]) {
+function profile(customers: { customer_code: string; customer_name: string; is_customer_admin?: boolean }[]) {
 	return Promise.resolve({ data: { success: true, username: "acme.viewer", role: "customer_user", customers } })
 }
 
@@ -96,5 +96,30 @@ describe("auth store: the user's customers", () => {
 		store.setLogout()
 		expect(store.customers).toBeNull()
 		expect(store.accessibleCustomerCodes).toEqual([])
+	})
+})
+
+/** A customer admin manages their customers' portal users (#1296): the profile says so, live. */
+describe("auth store: customer admins", () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		me.mockReset()
+	})
+
+	it("is one only when the profile says so for some customer", async () => {
+		const store = signIn()
+		expect(store.isCustomerAdmin).toBe(false)
+		me.mockImplementation(() =>
+			profile([
+				{ customer_code: "ACME", customer_name: "Acme", is_customer_admin: false },
+				{ customer_code: "BETA", customer_name: "Beta", is_customer_admin: true }
+			])
+		)
+		await store.loadProfile()
+		expect(store.isCustomerAdmin).toBe(true)
+
+		me.mockImplementation(() => profile([{ customer_code: "ACME", customer_name: "Acme" }]))
+		await store.loadProfile()
+		expect(store.isCustomerAdmin).toBe(false)
 	})
 })

@@ -54,5 +54,25 @@ export default {
 	 */
 	sendTempPassword(userId: number, payload?: { template_id?: number | null; customer_code?: string | null }) {
 		return HttpClient.post<FlaskBaseResponse>(`/auth/security/users/${userId}/send-temp-password`, payload ?? {})
+	},
+
+	/** Make a portal user an administrator of this customer's portal users, or not (admin, #1296) */
+	setCustomerAdmin(customerCode: string, userId: number, isCustomerAdmin: boolean) {
+		return HttpClient.put<FlaskBaseResponse>(
+			`/auth/security/customers/${customerCode}/users/${userId}/customer-admin`,
+			{
+				is_customer_admin: isCustomerAdmin
+			}
+		)
+	},
+
+	/** Disable a portal user: no sign-in, and a session they hold ends (admin, #1296) */
+	disableUser(userId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/auth/security/users/${userId}/disable`)
+	},
+
+	/** Enable a disabled portal user again (admin, #1296) */
+	enableUser(userId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/auth/security/users/${userId}/enable`)
 	}
 }

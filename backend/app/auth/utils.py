@@ -13,6 +13,7 @@ from loguru import logger
 
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import effective_roles
+from app.auth.services.account_status import ensure_active
 from app.auth.services.password_change import enforce_password_change
 from app.auth.services.universal import find_user
 from app.auth.services.universal import get_role
@@ -171,6 +172,10 @@ class AuthHandler:
         access_token_expires: timedelta = timedelta(hours=24),
         extra_claims: dict = None,
     ):
+        # No token for a disabled account, whichever way it signs in (#1296).
+        user = await find_user(username)
+        if user is not None:
+            ensure_active(user)
         role = await get_role(username)
         payload = {
             "exp": datetime.utcnow() + access_token_expires,
@@ -303,6 +308,8 @@ class AuthHandler:
                 headers={"WWW-Authenticate": authenticate_value},
             )
 
+        # A disabled account's session ends at its next request (#1296).
+        ensure_active(user)
         # A customer whose password an admin chose reaches only the change (#1277).
         enforce_password_change(request, user)
 
@@ -382,6 +389,8 @@ class AuthHandler:
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
+            # A disabled account's session ends at its next request (#1296).
+            ensure_active(user)
             # A customer whose password an admin chose reaches only the change (#1277).
             enforce_password_change(request, user)
 

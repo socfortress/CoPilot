@@ -57,8 +57,10 @@
 					variables to let users receive them by email.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm" data-testid="notification-settings-help">
-					<p>Turning this on lets each portal user of this customer choose to be told when:</p>
+				<div class="flex flex-col gap-3 text-sm" data-testid="notification-settings-help">
+					<p class="text-default">
+						Turning this on lets each portal user of this customer choose to be told when:
+					</p>
 					<ul class="ml-4 flex list-disc flex-col gap-1">
 						<li>
 							a
@@ -80,14 +82,14 @@
 							that they generated, or that the SOC shared with them
 						</li>
 					</ul>
-					<p>
+					<p class="text-default">
 						Each event can reach their bell, their inbox at once, or a
 						<b>daily summary</b>
 						sent at
 						<b data-testid="notification-settings-digest-hour">{{ digestHourLabel }}</b>
 						every day. Until they choose, they get the bell only: email is theirs to turn on.
 					</p>
-					<p>
+					<p class="text-default">
 						A user is never told about something they caused, and never about an alert or a case the portal
 						would not show them. The emails use the
 						<b>Portal —</b>
@@ -95,7 +97,7 @@
 						<b>Notifications → Message Templates</b>
 						in the menu.
 					</p>
-					<p>
+					<p class="text-default">
 						New customers start with this
 						<b>off</b>
 						until an administrator turns it on.

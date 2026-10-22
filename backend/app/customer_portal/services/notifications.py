@@ -224,6 +224,8 @@ def wants(user_id: int, event: PortalEvent) -> bool:
 
 def email_problem(user: User) -> Optional[str]:
     """Why an email for this user cannot be sent, or None."""
+    if getattr(user, "disabled_at", None) is not None:
+        return "The account is disabled"
     if not email_configured():
         return "SMTP is not configured"
     if not getattr(user, "email", None):
@@ -309,11 +311,16 @@ async def save_preferences(user_id: int, prefs: Sequence[Preference], session: A
 
 
 async def portal_users_of(customer_code: str, session: AsyncSession) -> List[User]:
-    """The customer's portal users: ``customer_user`` accounts assigned to it."""
+    """The customer's portal users: active ``customer_user`` accounts assigned to it (a disabled
+    account is told nothing, #1296)."""
     result = await session.execute(
         select(User)
         .join(UserCustomerAccess, UserCustomerAccess.user_id == User.id)
-        .where(UserCustomerAccess.customer_code == customer_code, User.role_id == RoleEnum.customer_user.value)
+        .where(
+            UserCustomerAccess.customer_code == customer_code,
+            User.role_id == RoleEnum.customer_user.value,
+            User.disabled_at.is_(None),
+        )
         .order_by(User.id),
     )
     return list(result.scalars().unique().all())

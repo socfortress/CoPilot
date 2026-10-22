@@ -43,8 +43,10 @@
 					Only administrators can change this setting.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm" data-testid="exposure-settings-help">
-					<p>Turning this on adds a read-only Exposure page to the Customer Portal, with two tabs:</p>
+				<div class="flex flex-col gap-3 text-sm" data-testid="exposure-settings-help">
+					<p class="text-default">
+						Turning this on adds a read-only Exposure page to the Customer Portal, with two tabs:
+					</p>
 					<ul class="ml-4 flex list-disc flex-col gap-1">
 						<li>
 							<b>Vulnerabilities</b>
@@ -55,12 +57,12 @@
 							by SCA policy, with the agents that score lowest on each
 						</li>
 					</ul>
-					<p>
+					<p class="text-default">
 						Both are read live from Wazuh for this customer's agents only, the same data each agent's page
 						already shows the customer. Compliance is kept a few minutes, since Wazuh is asked agent by
 						agent.
 					</p>
-					<p>
+					<p class="text-default">
 						New customers start with this
 						<b>off</b>
 						until an administrator turns it on.

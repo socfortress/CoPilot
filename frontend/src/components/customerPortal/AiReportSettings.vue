@@ -100,8 +100,8 @@
 					Only administrators can change this setting.
 				</n-alert>
 
-				<div class="text-secondary flex flex-col gap-3 text-sm">
-					<p>Turning this on adds two read-only surfaces to the Customer Portal:</p>
+				<div class="flex flex-col gap-3 text-sm">
+					<p class="text-default">Turning this on adds two read-only surfaces to the Customer Portal:</p>
 					<ul class="ml-4 flex list-disc flex-col gap-1">
 						<li>
 							an
@@ -116,13 +116,13 @@
 							the indicators the AI extracted.
 						</li>
 					</ul>
-					<p>
+					<p class="text-default">
 						Both surfaces are read-only. Analyst tooling — the Talon chat, report reviews, memory palace
 						lessons and investigation replay — is never exposed to the customer, and internal details such
 						as job identifiers, investigation templates and agent error messages are stripped from the
 						payload.
 					</p>
-					<p>
+					<p class="text-default">
 						Letting portal users
 						<b>request an analysis</b>
 						adds a Run AI analysis button to the AI Report tab, also to re-run a finished one. An alert is
@@ -130,14 +130,14 @@
 						request is noted on the alert's timeline and in the audit log. The daily limit is never shown to
 						the customer: a request over it is refused with a message.
 					</p>
-					<p>
+					<p class="text-default">
 						This is independent of
 						<b>AI Triggers</b>
 						<span>:</span>
 						that decides whether investigations run for this customer, this decides whether the customer
 						gets to read the result. Running investigations while keeping them internal is a valid setup.
 					</p>
-					<p>
+					<p class="text-default">
 						New customers start with this
 						<b>off</b>
 						<span>,</span>

@@ -1,5 +1,15 @@
 <template>
 	<div>
+		<!-- Signed out because the account was disabled while the session was open (#1296). -->
+		<n-alert
+			v-if="route.query.reason === 'disabled' && !show2faForm"
+			type="error"
+			:bordered="false"
+			class="mb-4"
+			data-testid="login-account-disabled"
+		>
+			Your session ended because your account was disabled.
+		</n-alert>
 		<n-form v-if="!show2faForm" ref="formRef" :model :rules :disabled="loading">
 			<n-form-item path="username" label="Username">
 				<n-input
@@ -47,7 +57,7 @@
 <script lang="ts" setup>
 import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/api/endpoints/auth"
-import { NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
+import { NAlert, NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import TotpForm from "@/components/auth/TotpForm.vue"

@@ -31,11 +31,21 @@ def _session(rows):
     return AsyncMock(execute=AsyncMock(return_value=result))
 
 
-def _customers(accessible, rows):
+def _customers(accessible, rows, administered=()):
     session = _session(rows)
-    with patch.object(customer_access_handler, "get_user_accessible_customers", AsyncMock(return_value=accessible)):
+    with (
+        patch.object(customer_access_handler, "get_user_accessible_customers", AsyncMock(return_value=accessible)),
+        patch.object(me_service, "administered_customer_codes", AsyncMock(return_value=list(administered))),
+    ):
         customers = asyncio.run(me_service.portal_customers(PORTAL_USER, session))
+    _customers.last = customers
     return [(c.customer_code, c.customer_name) for c in customers], session
+
+
+def test_each_customer_says_whether_the_user_administers_it():
+    # A customer admin manages that customer's portal users (#1296); the flag is per customer.
+    _customers(["ACME", "BETA"], [("ACME", "Acme"), ("BETA", "Beta")], administered=["BETA"])
+    assert {c.customer_code: c.is_customer_admin for c in _customers.last} == {"ACME": False, "BETA": True}
 
 
 def test_customers_carry_their_names_sorted_by_name():

@@ -12,6 +12,7 @@ from app.customer_portal.routes.notifications import (
 )
 from app.customer_portal.routes.settings import customer_portal_settings_router
 from app.customer_portal.routes.sla import customer_portal_sla_router
+from app.customer_portal.routes.tenant_users import customer_portal_tenant_users_router
 
 # Instantiate the APIRouter
 router = APIRouter()
@@ -74,4 +75,10 @@ router.include_router(
     customer_portal_notifications_router,
     prefix="/customer_portal",
     tags=["Customer Portal Notifications"],
+)
+# A customer admin manages their customers' portal users (#1296)
+router.include_router(
+    customer_portal_tenant_users_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Users"],
 )

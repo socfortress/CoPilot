@@ -14,10 +14,12 @@
 
 		<n-spin :show="loading">
 			<div class="min-h-52">
-				<n-empty
+				<CustomerTabEmpty
 					v-if="!loading && !entries.length"
-					description="No dispatches yet"
-					class="h-48 justify-center"
+					icon="carbon:catalog"
+					eyebrow="Nothing sent yet"
+					title="No dispatches yet"
+					description="Every notification a route sends for this customer is logged here, delivered or not, with its status, latency and the error when it failed. It fills up as soon as a route fires."
 				/>
 
 				<n-data-table
@@ -36,7 +38,7 @@
 <script setup lang="ts">
 import type { DataTableColumns } from "naive-ui"
 import type { NotificationDispatchLogEntry as DispatchLogEntry } from "@/types/notifications"
-import { NButton, NDataTable, NEmpty, NSpin, useMessage } from "naive-ui"
+import { NButton, NDataTable, NSpin, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
@@ -44,6 +46,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 
 const { customerCode } = defineProps<{
 	customerCode: string

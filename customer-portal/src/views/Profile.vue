@@ -3,39 +3,59 @@
 		<n-card class="header flex flex-col" content-class="p-0!">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
-					<n-avatar :size="100" :src="userPic" round :img-props="{ alt: 'avatar' }" />
+					<!-- A customer admin's avatar is ringed in the role's colour (#1296). -->
+					<n-avatar
+						:size="100"
+						:src="userPic"
+						round
+						:img-props="{ alt: 'avatar' }"
+						:style="
+							administered.length
+								? { boxShadow: '0 0 0 3px var(--bg-default-color), 0 0 0 5px var(--info-color)' }
+								: undefined
+						"
+						data-testid="profile-avatar"
+					/>
 				</div>
-				<div class="info flex grow flex-col justify-center">
-					<div class="name">
+				<div class="info flex grow flex-col justify-center gap-3">
+					<div class="name flex flex-wrap items-center gap-x-3 gap-y-1">
 						<h1>{{ userName }}</h1>
+						<n-tag
+							v-if="administered.length"
+							type="info"
+							:bordered="false"
+							data-testid="profile-customer-admin"
+						>
+							<template #icon><Icon name="carbon:user-multiple" :size="14" /></template>
+							Customer admin
+						</n-tag>
 					</div>
-					<div class="details flex flex-wrap">
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap">
-										<Icon :name="RoleIcon" />
-										<span>{{ userRole }}</span>
-									</div>
-								</template>
-								<span>Role</span>
-							</n-tooltip>
-						</div>
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap" data-testid="profile-customers">
-										<Icon :name="CustomersIcon" />
-										<span v-for="(customer, index) in customers" :key="customer.customer_code">
-											<CustomerName :code="customer.customer_code" />
-											{{ index < customers.length - 1 ? "," : "" }}
-										</span>
-										<span v-if="!customers.length">No customer</span>
-									</div>
-								</template>
-								<span>{{ customers.length === 1 ? "Customer" : "Customers" }}</span>
-							</n-tooltip>
-						</div>
+					<!-- What the account is for, in one line: the SOC appointed a customer admin (#1296). -->
+					<p class="text-secondary m-0 text-sm" data-testid="profile-role-description">
+						<template v-if="administered.length">
+							Invites and manages the portal users of
+							<bdi>{{ administered.map(customer => customer.customer_name).join(", ") }}</bdi>
+							<span>. Appointed by your SOC.</span>
+						</template>
+						<template v-else>Portal user</template>
+					</p>
+					<div class="flex flex-wrap items-center gap-2" data-testid="profile-customers">
+						<span
+							v-for="customer in customers"
+							:key="customer.customer_code"
+							class="border-default flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm"
+							data-testid="profile-customer"
+						>
+							<CustomerName :code="customer.customer_code" />
+							<span
+								v-if="customer.is_customer_admin"
+								class="text-info mt-0.5 font-mono text-[10px] leading-none font-semibold tracking-wider uppercase"
+								data-testid="profile-customer-admin-of"
+							>
+								admin
+							</span>
+						</span>
+						<span v-if="!customers.length" class="text-secondary text-sm">No customer</span>
 					</div>
 				</div>
 			</div>
@@ -69,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NCard, NTab, NTabPane, NTabs, NTooltip } from "naive-ui"
+import { NAvatar, NCard, NTab, NTabPane, NTabs, NTag } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import ChangePasswordCard from "@/components/auth/ChangePasswordCard.vue"
@@ -80,9 +100,6 @@ import NotificationPreferences from "@/components/profile/NotificationPreference
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useAuthStore } from "@/stores/auth"
-
-const RoleIcon = "carbon:user"
-const CustomersIcon = "carbon:enterprise"
 
 // `?tab=notifications` opens it directly: the link in every notification email points here.
 const tabActive = ref(useRoute().query.tab === "notifications" ? "notifications" : "settings")
@@ -100,9 +117,9 @@ onBeforeMount(async () => {
 })
 const authStore = useAuthStore()
 
-const userRole = authStore.userRoleName
 const userName = authStore.userName
 const customers = computed(() => authStore.accessibleCustomers)
+const administered = computed(() => customers.value.filter(customer => customer.is_customer_admin))
 const userPic = authStore.userPic
 </script>
 
@@ -120,24 +137,9 @@ const userPic = authStore.userPic
 			}
 			.info {
 				.name {
-					margin-bottom: 12px;
-
 					@media (max-width: 450px) {
 						h1 {
 							font-size: 28px;
-						}
-					}
-				}
-
-				.details {
-					gap: 24px;
-
-					.item {
-						.tooltip-wrap {
-							display: flex;
-							align-items: center;
-							gap: 8px;
-							line-height: 1;
 						}
 					}
 				}

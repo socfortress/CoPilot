@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
 import { AuthUserRole } from "@/types/auth"
-import { needsCustomers, ROLE_NAME_OPTIONS, roleLabel, roleNameOf, roleTagType, seesEveryCustomer } from "../roles"
+import {
+	needsCustomers,
+	ROLE_NAME_OPTIONS,
+	roleColor,
+	roleDescription,
+	roleLabel,
+	roleNameOf,
+	roleTagType,
+	seesEveryCustomer
+} from "../roles"
 
 describe("user roles and customers (#1219)", () => {
 	it("offers the responder role", () => {
@@ -22,9 +31,18 @@ describe("user roles and customers (#1219)", () => {
 		expect(seesEveryCustomer("responder")).toBe(false)
 	})
 
-	it("gives the responder its own tag colour", () => {
+	it("gives the three SOC roles three colours, no two of them yellow", () => {
+		expect(roleTagType("admin")).toBe("error")
+		expect(roleTagType("analyst")).toBe("info")
 		expect(roleTagType("responder")).toBe("primary")
 		expect(new Set(["admin", "analyst", "responder"].map(roleTagType)).size).toBe(3)
+		expect(roleColor("analyst")).toBe("var(--info-color)")
+		expect(roleColor("scheduler")).toBe("var(--fg-tertiary-color)")
+	})
+
+	it("says in one line what each role may do", () => {
+		for (const { value } of ROLE_NAME_OPTIONS) expect(roleDescription(value), value).not.toBe("")
+		expect(roleDescription("responder")).toMatch(/act on the endpoints/)
 	})
 
 	it("names a role from its id, as the API spells it", () => {
