@@ -59,6 +59,10 @@ export function roleIcon(roleName: string | null | undefined): string {
 	}
 }
 
+/**
+ * The role's colour: three SOC roles told apart at a glance (Analyst and Responder used to
+ * be warning and primary, two yellows).
+ */
 export function roleTagType(roleName: string | null | undefined): TagProps["type"] {
 	switch (roleName?.toLowerCase()) {
 		case "admin":
@@ -66,12 +70,41 @@ export function roleTagType(roleName: string | null | undefined): TagProps["type
 		case "responder":
 			return "primary"
 		case "analyst":
-			return "warning"
-		case "scheduler":
 			return "info"
 		case "customer_user":
 			return "success"
 		default:
 			return "default"
+	}
+}
+
+const TAG_TYPE_COLOR: Record<string, string> = {
+	error: "var(--error-color)",
+	primary: "var(--primary-color)",
+	info: "var(--info-color)",
+	success: "var(--success-color)",
+	warning: "var(--warning-color)"
+}
+
+/** The role's colour as a CSS value, for a dot or a ring beside its name. */
+export function roleColor(roleName: string | null | undefined): string {
+	return TAG_TYPE_COLOR[roleTagType(roleName) ?? "default"] ?? "var(--fg-tertiary-color)"
+}
+
+/** What the role may do, in one line, for the profile. */
+export function roleDescription(roleName: string | null | undefined): string {
+	switch (roleName?.toLowerCase()) {
+		case "admin":
+			return "Sees every customer and administers users, connectors and settings."
+		case "responder":
+			return "An analyst who can also act on the endpoints of the customers assigned to them."
+		case "analyst":
+			return "Investigates the alerts and cases of the customers assigned to them."
+		case "scheduler":
+			return "Runs CoPilot's scheduled jobs."
+		case "customer_user":
+			return "Uses the Customer Portal."
+		default:
+			return ""
 	}
 }
