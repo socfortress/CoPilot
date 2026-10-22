@@ -57,6 +57,59 @@ export interface CustomerAgentHealth {
 	unhealthy_recent_logs_collected: null
 }
 
+/** How long an agent must have gone unseen to be deleted (#1291): at least 24 hours. */
+export interface UnhealthyDeleteThreshold {
+	value: number
+	unit: "hours" | "days"
+}
+
+/** What deleting a requested agent would do, judged by the backend at the time of the request. */
+export type UnhealthyAgentVerdict = "deletable" | "active_elsewhere" | "seen_recently" | "wazuh_manager" | "not_found"
+
+export interface UnhealthyAgentPreview {
+	agent_id: string
+	verdict: UnhealthyAgentVerdict
+	hostname: string | null
+	label: string | null
+	os: string | null
+	/** When the list's tool last saw it (naive UTC). */
+	last_seen: string | null
+	/** When the other tool last saw it (naive UTC). */
+	other_last_seen: string | null
+}
+
+export type UnhealthyVerdictCounts = Record<UnhealthyAgentVerdict, number>
+
+export interface UnhealthyAgentsPreview {
+	source: CustomerHealthcheckSource
+	not_seen_for: UnhealthyDeleteThreshold
+	/** Agents last seen before this moment (naive UTC) are stale. */
+	cutoff: string
+	counts: UnhealthyVerdictCounts
+	agents: UnhealthyAgentPreview[]
+}
+
+export interface UnhealthyAgentDeleteResult {
+	agent_id: string
+	hostname: string | null
+	outcome: "deleted" | "skipped" | "failed"
+	/** Why a skipped agent was skipped. */
+	reason: UnhealthyAgentVerdict | null
+	/** Upstreams that did not confirm: the agent left CoPilot but may still be enrolled there. */
+	unconfirmed: CustomerHealthcheckSource[]
+}
+
+export interface UnhealthyAgentsDeletion {
+	source: CustomerHealthcheckSource
+	not_seen_for: UnhealthyDeleteThreshold
+	requested: number
+	deleted: number
+	skipped: number
+	failed: number
+	unconfirmed: number
+	results: UnhealthyAgentDeleteResult[]
+}
+
 export interface CustomerProvision {
 	customer_name: string
 	customer_code: string
