@@ -1,5 +1,6 @@
+import type { VueWrapper } from "@vue/test-utils"
 import { flushPromises, mount } from "@vue/test-utils"
-import { NDialogProvider, NMessageProvider } from "naive-ui"
+import { NDialogProvider, NDropdown, NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
@@ -40,6 +41,30 @@ async function confirm(label: string) {
 	await flushPromises()
 }
 
+interface ActionOption {
+	key: string
+	label?: unknown
+	disabled?: boolean
+	type?: string
+	children?: ActionOption[]
+}
+
+/** A row's Actions menu, its groups flattened. */
+function actions(wrapper: VueWrapper, row: number): ActionOption[] {
+	const options = wrapper.findAllComponents(NDropdown)[row]?.props("options") as ActionOption[]
+	return options.flatMap(option => option.children ?? []).filter(option => option.type !== "divider")
+}
+
+function actionKeys(wrapper: VueWrapper, row: number) {
+	return actions(wrapper, row).map(option => option.key)
+}
+
+/** Pick an action from a row's menu, as a click on it does. */
+async function select(wrapper: VueWrapper, row: number, key: string) {
+	wrapper.findAllComponents(NDropdown)[row]?.vm.$emit("select", key)
+	await flushPromises()
+}
+
 function render() {
 	// The component under test, inside the providers it needs.
 	const content = () => h(NDialogProvider, null, () => h(CustomerSecurity, { customerCode: "ACME" }))
@@ -65,7 +90,7 @@ describe("customer security: password change pending", () => {
 	it("marks only the users still on a password an admin chose", async () => {
 		const wrapper = render()
 		await flushPromises()
-		const [held, free] = wrapper.findAll("tbody tr")
+		const [held, free] = wrapper.findAll("[data-testid=security-row]")
 		expect(held?.find("[data-testid=security-must-change-password]").text()).toBe("Password change pending")
 		expect(free?.find("[data-testid=security-must-change-password]").exists()).toBe(false)
 	})
@@ -95,7 +120,7 @@ describe("customer security: password change pending", () => {
 		})
 		const wrapper = render()
 		await flushPromises()
-		const [on, off] = wrapper.findAll("tbody tr")
+		const [on, off] = wrapper.findAll("[data-testid=security-row]")
 		// 12:01 UTC is 14:01 in Rome (CEST).
 		expect(on?.get("[data-testid=security-last-login]").text()).toBe("10/22/2026 14:01")
 		expect(on?.get("[data-testid=security-totp]").text()).toBe("On")
@@ -130,28 +155,47 @@ describe("customer security: customer admins and disabled accounts", () => {
 	it("tags who administers the customer's portal users and who is disabled", async () => {
 		const wrapper = render()
 		await flushPromises()
-		const [boss, gone, ana] = wrapper.findAll("tbody tr")
+		const [boss, gone] = wrapper.findAll("[data-testid=security-row]")
 		expect(boss?.find("[data-testid=security-customer-admin]").text()).toBe("Customer admin")
 		expect(boss?.find("[data-testid=security-disabled]").exists()).toBe(false)
 		expect(gone?.find("[data-testid=security-disabled]").text()).toBe("Disabled")
-		// A SOC user is neither appointed nor disabled here.
-		expect(ana?.find("[data-testid=security-toggle-customer-admin]").exists()).toBe(false)
-		expect(ana?.find("[data-testid=security-toggle-disabled]").exists()).toBe(false)
+		// A SOC user is neither appointed nor disabled here: their menu has sign-in help only.
+		expect(actionKeys(wrapper, 2)).toEqual(["reset-totp", "email-temp-password", "set-password"])
+		expect(actionKeys(wrapper, 0)).toEqual([
+			"reset-totp",
+			"email-temp-password",
+			"set-password",
+			"customer-admin",
+			"toggle-disabled"
+		])
+		wrapper.unmount()
+	})
+
+	it("offers every action from one menu, saying why one can't run", async () => {
+		security.getSmtpStatus.mockResolvedValue({ data: { success: true, configured: false } })
+		const wrapper = render()
+		await flushPromises()
+		const options = actions(wrapper, 0)
+		expect(options.find(o => o.key === "reset-totp")).toMatchObject({ disabled: true, label: "Reset 2FA (2FA is off)" })
+		expect(options.find(o => o.key === "email-temp-password")).toMatchObject({
+			disabled: true,
+			label: "Email a temporary password (no SMTP)"
+		})
+		expect(options.find(o => o.key === "set-password")?.disabled).toBeFalsy()
 		wrapper.unmount()
 	})
 
 	it("appoints and removes a customer admin once confirmed, then reads the list again", async () => {
 		const wrapper = render()
 		await flushPromises()
-		const [boss, gone] = wrapper.findAll("tbody tr")
-		expect(boss?.get("[data-testid=security-toggle-customer-admin]").text()).toBe("Remove customer admin")
-		await gone?.get("[data-testid=security-toggle-customer-admin]").trigger("click")
+		expect(actions(wrapper, 0).find(o => o.key === "customer-admin")?.label).toBe("Remove customer admin")
+		await select(wrapper, 1, "customer-admin")
 		expect(security.setCustomerAdmin).not.toHaveBeenCalled()
 		await confirm("Make customer admin")
 		expect(security.setCustomerAdmin).toHaveBeenCalledWith("ACME", 2, true)
 		expect(security.listCustomerUsers).toHaveBeenCalledTimes(2)
 
-		await boss?.get("[data-testid=security-toggle-customer-admin]").trigger("click")
+		await select(wrapper, 0, "customer-admin")
 		await confirm("Remove")
 		expect(security.setCustomerAdmin).toHaveBeenLastCalledWith("ACME", 1, false)
 		wrapper.unmount()
@@ -160,13 +204,12 @@ describe("customer security: customer admins and disabled accounts", () => {
 	it("disables only once confirmed, and enables straight away", async () => {
 		const wrapper = render()
 		await flushPromises()
-		const [boss, gone] = wrapper.findAll("tbody tr")
-		expect(gone?.get("[data-testid=security-toggle-disabled]").text()).toBe("Enable")
-		await gone?.get("[data-testid=security-toggle-disabled]").trigger("click")
+		expect(actions(wrapper, 1).find(o => o.key === "toggle-disabled")?.label).toBe("Enable account")
+		await select(wrapper, 1, "toggle-disabled")
 		await flushPromises()
 		expect(security.enableUser).toHaveBeenCalledWith(2)
 
-		await boss?.get("[data-testid=security-toggle-disabled]").trigger("click")
+		await select(wrapper, 0, "toggle-disabled")
 		expect(security.disableUser).not.toHaveBeenCalled()
 		await confirm("Disable")
 		expect(security.disableUser).toHaveBeenCalledWith(1)

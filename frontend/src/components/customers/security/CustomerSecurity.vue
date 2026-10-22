@@ -22,33 +22,39 @@
 		</n-alert>
 
 		<n-spin :show="loading">
-			<n-table v-if="users.length" bordered :single-line="false" size="small">
-				<thead>
-					<tr>
-						<th>User</th>
-						<th>Role</th>
-						<th>2FA (TOTP)</th>
-						<th>Last login</th>
-						<th class="text-right!">Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="user in users" :key="user.id">
-						<td>
-							<div class="flex flex-col items-start gap-0.5">
-								<span class="font-semibold">{{ user.username }}</span>
-								<span class="text-secondary text-xs">{{ user.email }}</span>
-								<!-- An admin chose the password; the portal holds the user on the change (#1277). -->
-								<n-tag
-									v-if="user.must_change_password"
-									type="warning"
-									size="tiny"
-									:bordered="false"
-									title="The password was set by an admin. The user must choose a new one at their next sign-in."
-									data-testid="security-must-change-password"
-								>
-									Password change pending
-								</n-tag>
+			<!-- One row per account: who, three facts, and one Actions menu instead of a wall of buttons. -->
+			<div v-if="users.length" class="border-default @container overflow-hidden rounded-lg border">
+				<div
+					class="text-tertiary border-default bg-secondary hidden gap-4 border-b px-4 py-2 font-mono text-[10px] tracking-[0.12em] uppercase @3xl:grid @3xl:grid-cols-[minmax(0,1.8fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,1fr)_auto]"
+				>
+					<span>User</span>
+					<span>Role</span>
+					<span>2FA</span>
+					<span>Last sign-in</span>
+					<span class="w-24"></span>
+				</div>
+				<ul class="divide-border m-0 list-none divide-y p-0">
+					<li
+						v-for="user in users"
+						:key="user.id"
+						class="grid items-center gap-x-4 gap-y-2 px-4 py-3 @3xl:grid-cols-[minmax(0,1.8fr)_minmax(0,0.8fr)_minmax(0,0.6fr)_minmax(0,1fr)_auto]"
+						:class="{ 'bg-secondary/40': user.disabled_at }"
+						:data-user="user.username"
+						data-testid="security-row"
+					>
+						<div class="flex min-w-0 flex-col gap-1">
+							<span
+								class="truncate text-sm font-semibold"
+								:class="user.disabled_at ? 'text-tertiary' : 'text-default'"
+								:title="user.username"
+							>
+								{{ user.username }}
+							</span>
+							<span class="text-secondary truncate text-xs" :title="user.email">{{ user.email }}</span>
+							<div
+								v-if="user.must_change_password || user.is_customer_admin || user.disabled_at"
+								class="flex flex-wrap gap-1"
+							>
 								<!-- Manages this customer's other portal users from the portal (#1296). -->
 								<n-tag
 									v-if="user.is_customer_admin"
@@ -70,96 +76,77 @@
 								>
 									Disabled
 								</n-tag>
-							</div>
-						</td>
-						<td>{{ roleLabel(user.role_name) }}</td>
-						<td>
-							<!-- "On"/"Off", never "Disabled": that word is the account's own state. -->
-							<n-tag
-								:type="user.totp_enabled ? 'success' : 'default'"
-								size="small"
-								round
-								data-testid="security-totp"
-							>
-								<template #icon>
-									<Icon :name="user.totp_enabled ? EnabledIcon : DisabledIcon" :size="13" />
-								</template>
-								{{ user.totp_enabled ? "On" : "Off" }}
-							</n-tag>
-						</td>
-						<td>
-							<!-- Stored as naive UTC: shown in the viewer's time zone. -->
-							<span class="font-mono text-xs" data-testid="security-last-login">
-								{{
-									user.last_login_at
-										? formatDate(user.last_login_at, dFormats.datetime, { tz: true })
-										: "Never"
-								}}
-							</span>
-						</td>
-						<td>
-							<div class="flex flex-wrap items-center justify-end gap-2">
-								<n-button
+								<!-- An admin chose the password; the portal holds the user on the change (#1277). -->
+								<n-tag
+									v-if="user.must_change_password"
+									type="warning"
 									size="tiny"
-									secondary
-									:disabled="!user.totp_enabled || busyUserId === user.id"
-									@click="confirmResetTotp(user)"
+									:bordered="false"
+									title="The password was set by an admin. The user must choose a new one at their next sign-in."
+									data-testid="security-must-change-password"
 								>
-									<template #icon><Icon :name="ResetIcon" :size="13" /></template>
-									Reset 2FA
-								</n-button>
-
-								<n-tooltip :disabled="smtpConfigured" trigger="hover">
-									<template #trigger>
-										<n-button
-											size="tiny"
-											secondary
-											:disabled="!smtpConfigured || busyUserId === user.id"
-											@click="openTempPasswordModal(user)"
-										>
-											<template #icon><Icon :name="MailIcon" :size="13" /></template>
-											Email temp password
-										</n-button>
-									</template>
-									SMTP is not configured
-								</n-tooltip>
-
-								<n-button size="tiny" type="warning" secondary @click="openPasswordModal(user)">
-									<template #icon><Icon :name="KeyIcon" :size="13" /></template>
-									Set password
-								</n-button>
-
-								<!-- Portal accounts only (#1296): the SOC appoints customer admins and can disable an account. -->
-								<template v-if="isPortalUser(user)">
-									<n-button
-										size="tiny"
-										secondary
-										:disabled="busyUserId === user.id"
-										data-testid="security-toggle-customer-admin"
-										@click="confirmCustomerAdmin(user)"
-									>
-										<template #icon><Icon :name="AdminIcon" :size="13" /></template>
-										{{ user.is_customer_admin ? "Remove customer admin" : "Make customer admin" }}
-									</n-button>
-									<n-button
-										size="tiny"
-										:type="user.disabled_at ? 'success' : 'error'"
-										secondary
-										:disabled="busyUserId === user.id"
-										data-testid="security-toggle-disabled"
-										@click="confirmDisabled(user)"
-									>
-										<template #icon>
-											<Icon :name="user.disabled_at ? EnableIcon : DisableIcon" :size="13" />
-										</template>
-										{{ user.disabled_at ? "Enable" : "Disable" }}
-									</n-button>
-								</template>
+									Password change pending
+								</n-tag>
 							</div>
-						</td>
-					</tr>
-				</tbody>
-			</n-table>
+						</div>
+
+						<div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs @3xl:contents">
+							<span class="flex items-baseline gap-2">
+								<span class="text-tertiary font-mono text-[10px] tracking-[0.12em] uppercase @3xl:hidden">
+									Role
+								</span>
+								<span class="text-default">{{ roleLabel(user.role_name) }}</span>
+							</span>
+							<!-- "On"/"Off", never "Disabled": that word is the account's own state. -->
+							<span class="flex items-center gap-2">
+								<span class="text-tertiary font-mono text-[10px] tracking-[0.12em] uppercase @3xl:hidden">
+									2FA
+								</span>
+								<span
+									class="flex items-center gap-1.5"
+									:class="user.totp_enabled ? 'text-success' : 'text-secondary'"
+									data-testid="security-totp"
+								>
+									<Icon :name="user.totp_enabled ? EnabledIcon : DisabledIcon" :size="13" />
+									{{ user.totp_enabled ? "On" : "Off" }}
+								</span>
+							</span>
+							<span class="flex items-baseline gap-2">
+								<span class="text-tertiary font-mono text-[10px] tracking-[0.12em] uppercase @3xl:hidden">
+									Last sign-in
+								</span>
+								<!-- Stored as naive UTC: shown in the viewer's time zone. -->
+								<span class="text-secondary font-mono" data-testid="security-last-login">
+									{{
+										user.last_login_at
+											? formatDate(user.last_login_at, dFormats.datetime, { tz: true })
+											: "Never"
+									}}
+								</span>
+							</span>
+						</div>
+
+						<div class="flex justify-start @3xl:w-24 @3xl:justify-end">
+							<n-dropdown
+								trigger="click"
+								placement="bottom-end"
+								:options="actionOptions(user)"
+								@select="(key: string) => runAction(key, user)"
+							>
+								<n-button
+									size="small"
+									secondary
+									:loading="busyUserId === user.id"
+									data-testid="security-actions"
+								>
+									Actions
+									<template #icon><Icon :name="MoreIcon" :size="14" /></template>
+								</n-button>
+							</n-dropdown>
+						</div>
+					</li>
+				</ul>
+			</div>
 
 			<n-empty
 				v-else
@@ -312,12 +299,13 @@
 </template>
 
 <script setup lang="ts">
-import type { FormInst, FormRules } from "naive-ui"
+import type { DropdownOption, FormInst, FormRules } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { CustomerSecurityUser, TempPasswordEmailPreview, TempPasswordTemplateOption } from "@/types/security"
 import {
 	NAlert,
 	NButton,
+	NDropdown,
 	NEmpty,
 	NForm,
 	NFormItem,
@@ -325,13 +313,11 @@ import {
 	NModal,
 	NSelect,
 	NSpin,
-	NTable,
 	NTag,
-	NTooltip,
 	useDialog,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, h, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -350,8 +336,9 @@ const MailIcon = "carbon:email"
 const RefreshIcon = "carbon:renew"
 const KeyIcon = "carbon:password"
 const AdminIcon = "carbon:user-admin"
-const DisableIcon = "carbon:user-follow"
+const DisableIcon = "carbon:locked"
 const EnableIcon = "carbon:checkmark-outline"
+const MoreIcon = "carbon:overflow-menu-vertical"
 
 const message = useMessage()
 const dialog = useDialog()
@@ -429,7 +416,7 @@ function roleLabel(role?: string | null) {
 		analyst: "Analyst",
 		responder: "Responder",
 		scheduler: "Scheduler",
-		customer_user: "Customer"
+		customer_user: "Portal user"
 	}
 	return role ? (labels[role] ?? role) : "—"
 }
@@ -461,6 +448,67 @@ async function loadSmtpStatus() {
 
 function isPortalUser(user: CustomerSecurityUser) {
 	return user.role_name === "customer_user"
+}
+
+function renderOptionIcon(name: string) {
+	return () => h(Icon, { name, size: 15 })
+}
+
+/**
+ * Every action on an account, in one menu: sign-in help first, then the account itself
+ * (portal accounts only). An action that can't run says why instead of disappearing.
+ */
+function actionOptions(user: CustomerSecurityUser): DropdownOption[] {
+	const signIn: DropdownOption[] = [
+		{
+			key: "reset-totp",
+			label: user.totp_enabled ? "Reset 2FA" : "Reset 2FA (2FA is off)",
+			icon: renderOptionIcon(ResetIcon),
+			disabled: !user.totp_enabled
+		},
+		{
+			key: "email-temp-password",
+			label: smtpConfigured.value ? "Email a temporary password" : "Email a temporary password (no SMTP)",
+			icon: renderOptionIcon(MailIcon),
+			disabled: !smtpConfigured.value
+		},
+		{ key: "set-password", label: "Set password", icon: renderOptionIcon(KeyIcon) }
+	]
+	const options: DropdownOption[] = [{ type: "group", label: "Sign-in", key: "sign-in", children: signIn }]
+	if (isPortalUser(user)) {
+		options.push({ type: "divider", key: "divider" })
+		options.push({
+			type: "group",
+			label: "Account",
+			key: "account",
+			children: [
+				{
+					key: "customer-admin",
+					label: user.is_customer_admin ? "Remove customer admin" : "Make customer admin",
+					icon: renderOptionIcon(AdminIcon)
+				},
+				{
+					key: "toggle-disabled",
+					// Disabling locks the user out: it reads as the dangerous one.
+					label: user.disabled_at
+						? "Enable account"
+						: () => h("span", { class: "text-error" }, "Disable account"),
+					icon: user.disabled_at
+						? renderOptionIcon(EnableIcon)
+						: () => h(Icon, { name: DisableIcon, size: 15, class: "text-error" })
+				}
+			]
+		})
+	}
+	return options
+}
+
+function runAction(key: string, user: CustomerSecurityUser) {
+	if (key === "reset-totp") confirmResetTotp(user)
+	else if (key === "email-temp-password") openTempPasswordModal(user)
+	else if (key === "set-password") openPasswordModal(user)
+	else if (key === "customer-admin") confirmCustomerAdmin(user)
+	else if (key === "toggle-disabled") confirmDisabled(user)
 }
 
 /** Run one action on one user: busy while it runs, the list read again after. */

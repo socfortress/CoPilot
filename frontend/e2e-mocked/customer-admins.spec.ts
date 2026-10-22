@@ -1,4 +1,4 @@
-import type { BrowserContext, Route } from "@playwright/test"
+import type { BrowserContext, Page, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
 import { installMockBackend, signIn } from "./mock-backend"
 
@@ -85,6 +85,12 @@ async function installSecurityMock(context: BrowserContext) {
 	return writes
 }
 
+/** Pick an action from the Actions menu of the account's row. */
+async function act(page: Page, username: string, action: string | RegExp) {
+	await page.locator(`[data-testid=security-row][data-user="${username}"]`).getByTestId("security-actions").click()
+	await page.locator(".n-dropdown-option", { hasText: action }).click()
+}
+
 test.describe("customer admins and disabled accounts", () => {
 	let writes: string[]
 
@@ -94,31 +100,33 @@ test.describe("customer admins and disabled accounts", () => {
 		await signIn(page)
 		await page.goto("/customers/ACME")
 		await page.locator(".n-tabs-tab", { hasText: /^\s*Security\s*$/ }).click()
-		await expect(page.getByTestId("security-toggle-customer-admin")).toBeVisible({ timeout: 60_000 })
+		await expect(page.getByTestId("security-actions").first()).toBeVisible({ timeout: 60_000 })
 	})
 
 	test("an admin appoints a customer admin once confirmed, and sees it", async ({ page }) => {
-		// Only the portal user gets the action: a SOC user is never one.
-		await expect(page.getByTestId("security-toggle-customer-admin")).toHaveCount(1)
-		await page.getByTestId("security-toggle-customer-admin").click()
+		// Only the portal user's menu has the account actions: a SOC user is never one.
+		const portalUser = (await page.getByTestId("security-row").first().getAttribute("data-user")) ?? ""
+		await act(page, portalUser, "Make customer admin")
 		expect(writes).toEqual([])
 		await page.locator(".n-dialog").getByRole("button", { name: "Make customer admin" }).click()
 		await expect.poll(() => writes).toEqual(["admin 1 true"])
 		await expect(page.getByTestId("security-customer-admin")).toHaveText("Customer admin")
-		await expect(page.getByTestId("security-toggle-customer-admin")).toHaveText(/Remove customer admin/)
+		await page.locator(`[data-testid=security-row][data-user="${portalUser}"]`).getByTestId("security-actions").click()
+		await expect(page.locator(".n-dropdown-option", { hasText: "Remove customer admin" })).toBeVisible()
 	})
 
 	test("an admin disables an account once confirmed, and enables it again", async ({ page }) => {
-		await page.getByTestId("security-toggle-disabled").click()
+		const portalUser = (await page.getByTestId("security-row").first().getAttribute("data-user")) ?? ""
+		await act(page, portalUser, "Disable account")
 		await page.locator(".n-dialog").getByRole("button", { name: "Cancel" }).click()
 		expect(writes).toEqual([])
 
-		await page.getByTestId("security-toggle-disabled").click()
+		await act(page, portalUser, "Disable account")
 		await page.locator(".n-dialog").getByRole("button", { name: "Disable" }).click()
 		await expect.poll(() => writes).toEqual(["disable 1"])
 		await expect(page.getByTestId("security-disabled")).toHaveText("Disabled")
 
-		await page.getByTestId("security-toggle-disabled").click()
+		await act(page, portalUser, "Enable account")
 		await expect.poll(() => writes).toEqual(["disable 1", "enable 1"])
 		await expect(page.getByTestId("security-disabled")).toHaveCount(0)
 	})
