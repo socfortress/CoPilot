@@ -20,7 +20,6 @@ from fastapi import Security
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from packaging import version
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -34,6 +33,9 @@ from app.agents.schema.agents import BulkDeleteFilterRequest
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
+from app.agents.services.deletion import AgentRef
+from app.agents.services.deletion import delete_agent_from_database
+from app.agents.services.deletion import delete_single_agent
 from app.agents.services.status import get_agents_by_customer_code
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
@@ -67,9 +69,7 @@ from app.db.db_session import get_db
 
 # App specific imports
 # from app.db.db_session import session
-from app.db.universal_models import AgentDataStore
 from app.db.universal_models import Agents
-from app.db.universal_models import AgentVulnerabilities
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.services.db_operations import list_cases_by_asset_name
 from app.middleware.customer_access import customer_access_handler
@@ -118,69 +118,6 @@ async def check_wazuh_manager_version() -> bool:
         return False
 
 
-async def delete_single_agent(
-    db: AsyncSession,
-    agent_id: str,
-    agent: Agents,
-) -> BulkDeleteAgentResult:
-    """
-    Delete a single agent and return the result.
-    This function handles errors gracefully and returns a result object.
-
-    Args:
-        db (AsyncSession): The database session.
-        agent_id (str): The ID of the agent to delete.
-        agent (Agents): The agent object from the database.
-
-    Returns:
-        BulkDeleteAgentResult: The result of the deletion attempt.
-    """
-    errors = []
-
-    # Try to delete from Wazuh
-    try:
-        await delete_agent_wazuh(agent_id)
-    except Exception as e:
-        error_msg = f"Failed to delete from Wazuh: {str(e)}"
-        logger.warning(f"Agent {agent_id}: {error_msg}")
-        errors.append(error_msg)
-
-    # Try to delete from Velociraptor if applicable
-    if agent.velociraptor_id and agent.velociraptor_id != "Unknown":
-        try:
-            await delete_agent_velociraptor(agent.velociraptor_id)
-        except Exception as e:
-            error_msg = f"Failed to delete from Velociraptor: {str(e)}"
-            logger.warning(f"Agent {agent_id}: {error_msg}")
-            errors.append(error_msg)
-
-    # Delete from database
-    try:
-        await delete_agent_from_database(db=db, agent_id=agent_id)
-    except Exception as e:
-        error_msg = f"Failed to delete from database: {str(e)}"
-        logger.error(f"Agent {agent_id}: {error_msg}")
-        errors.append(error_msg)
-        return BulkDeleteAgentResult(
-            agent_id=agent_id,
-            success=False,
-            message=f"Failed to delete agent: {'; '.join(errors)}",
-        )
-
-    if errors:
-        return BulkDeleteAgentResult(
-            agent_id=agent_id,
-            success=True,
-            message=f"Agent deleted from database but with warnings: {'; '.join(errors)}",
-        )
-
-    return BulkDeleteAgentResult(
-        agent_id=agent_id,
-        success=True,
-        message="Agent deleted successfully",
-    )
-
-
 agents_router = APIRouter()
 
 
@@ -211,36 +148,6 @@ async def fetch_velociraptor_id(db: AsyncSession, agent_id: str) -> str:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to fetch agent {agent_id} from database: {e}",
-        )
-
-
-async def delete_agent_from_database(db: AsyncSession, agent_id: str):
-    """
-    Delete an agent from the database.
-
-    Args:
-        db (AsyncSession): The async database session.
-        agent_id (str): The ID of the agent to be deleted.
-
-    Raises:
-        HTTPException: If there is an error deleting the agent from the database.
-
-    """
-    try:
-        # First delete related records from agent_datastore
-        await db.execute(delete(AgentDataStore).filter(AgentDataStore.agent_id == agent_id))
-        # ...and the agent's vulnerabilities. The FK cascades on delete, but doing it
-        # explicitly keeps the delete working on databases that predate that migration.
-        await db.execute(delete(AgentVulnerabilities).filter(AgentVulnerabilities.agent_id == agent_id))
-        # Then delete the agent
-        await db.execute(delete(Agents).filter(Agents.agent_id == agent_id))
-        await db.commit()
-    except Exception as e:
-        logger.error(f"Failed to delete agent {agent_id} from database: {e}")
-        await db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete agent {agent_id} from database: {e}",
         )
 
 
@@ -378,6 +285,7 @@ async def get_customer_agents_for_dashboard(
 )
 async def bulk_delete_agents(
     request: BulkDeleteAgentRequest,
+    http_request: Request,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> BulkDeleteAgentsResponse:
@@ -425,7 +333,14 @@ async def bulk_delete_agents(
             continue
 
         # Delete the agent
-        delete_result = await delete_single_agent(db=session, agent_id=agent_id, agent=agent)
+        delete_result = await delete_single_agent(
+            db=session,
+            agent_id=agent_id,
+            agent=agent,
+            actor=current_user,
+            via="bulk_delete",
+            request=http_request,
+        )
         results.append(delete_result)
 
         if delete_result.success:
@@ -451,6 +366,7 @@ async def bulk_delete_agents(
 )
 async def bulk_delete_agents_by_filter(
     request: BulkDeleteFilterRequest,
+    http_request: Request,
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> BulkDeleteAgentsResponse:
@@ -527,8 +443,16 @@ async def bulk_delete_agents_by_filter(
     successful_count = 0
     failed_count = 0
 
-    for agent in agents_to_delete:
-        delete_result = await delete_single_agent(db=session, agent_id=agent.agent_id, agent=agent)
+    # Copied first: a failed deletion rolls the session back, which expires every row still to come.
+    for agent in [AgentRef.of(row) for row in agents_to_delete]:
+        delete_result = await delete_single_agent(
+            db=session,
+            agent_id=agent.agent_id,
+            agent=agent,
+            actor=current_user,
+            via="bulk_delete_filter",
+            request=http_request,
+        )
         results.append(delete_result)
 
         if delete_result.success:
