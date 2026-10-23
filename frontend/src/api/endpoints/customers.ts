@@ -3,10 +3,14 @@ import type {
 	Customer,
 	CustomerAgentHealth,
 	CustomerDecommissionedData,
+	CustomerHealthcheckSource,
 	CustomerMeta,
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings,
-	EDRInstallCommands
+	EDRInstallCommands,
+	UnhealthyAgentsDeletion,
+	UnhealthyAgentsPreview,
+	UnhealthyDeleteThreshold
 } from "@/types/customers"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
@@ -116,6 +120,33 @@ export default {
 			},
 			signal
 		})
+	},
+	/** Judge which of the listed agents a deletion would remove; changes nothing (#1291). */
+	previewUnhealthyAgentsDeletion(
+		code: string,
+		source: CustomerHealthcheckSource,
+		body: { agent_ids: string[]; not_seen_for: UnhealthyDeleteThreshold },
+		signal?: AbortSignal
+	) {
+		return HttpClient.post<FlaskBaseResponse & UnhealthyAgentsPreview>(
+			`/customers/${code}/agents/healthcheck/${source}/delete/preview`,
+			body,
+			{ signal }
+		)
+	},
+	/**
+	 * Delete the listed agents still unseen for longer than the threshold, from Wazuh, Velociraptor
+	 * and CoPilot (#1291). At most 50 agents a request: the caller sends them in chunks.
+	 */
+	deleteUnhealthyAgents(
+		code: string,
+		source: CustomerHealthcheckSource,
+		body: { agent_ids: string[]; not_seen_for: UnhealthyDeleteThreshold; include_active_elsewhere: boolean }
+	) {
+		return HttpClient.post<FlaskBaseResponse & UnhealthyAgentsDeletion>(
+			`/customers/${code}/agents/healthcheck/${source}/delete`,
+			body
+		)
 	},
 	// #endregion
 

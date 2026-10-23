@@ -18,11 +18,14 @@ from app.healthchecks.agents.schema.agents import HostLogsSearchBody
 from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
 from app.healthchecks.agents.schema.agents import LogsSearchBody
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
+from app.time_utils import now_utc
+from app.time_utils import to_naive_utc
 
 
 def is_wazuh_agent_unhealthy(
     agent: AgentModel,
     time_criteria: TimeCriteriaModel,
+    now: Optional[datetime] = None,
 ) -> ExtendedAgentModel:
     """
     Checks if a Wazuh agent is unhealthy based on the last seen time and time criteria.
@@ -30,6 +33,7 @@ def is_wazuh_agent_unhealthy(
     Args:
         agent (AgentModel): The agent to check.
         time_criteria (TimeCriteriaModel): The time criteria for determining agent health.
+        now (datetime): The moment to judge at, naive UTC like the column; the current time by default.
 
     Returns:
         ExtendedAgentModel: An extended agent model with the unhealthy status updated.
@@ -39,7 +43,9 @@ def is_wazuh_agent_unhealthy(
         logger.info(f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Wazuh last seen time - marking as unhealthy")
         return ExtendedAgentModel(**agent.model_dump(), unhealthy_wazuh_agent=True)
 
-    current_time = datetime.now()
+    # The columns hold naive UTC, so the clock must be too: a local datetime.now() shifted every
+    # agent by the host's UTC offset.
+    current_time = now or to_naive_utc(now_utc())
     wazuh_last_seen = agent.wazuh_last_seen
 
     if wazuh_last_seen > current_time:
@@ -59,6 +65,7 @@ def is_wazuh_agent_unhealthy(
 def is_velociraptor_agent_unhealthy(
     agent: AgentModel,
     time_criteria: TimeCriteriaModel,
+    now: Optional[datetime] = None,
 ) -> ExtendedAgentModel:
     """
     Checks if a velociraptor agent is unhealthy based on the last seen time and time criteria.
@@ -66,6 +73,7 @@ def is_velociraptor_agent_unhealthy(
     Args:
         agent (AgentModel): The agent to check.
         time_criteria (TimeCriteriaModel): The time criteria for determining agent health.
+        now (datetime): The moment to judge at, naive UTC like the column; the current time by default.
 
     Returns:
         ExtendedAgentModel: An extended agent model with the unhealthy_velociraptor_agent flag set.
@@ -75,7 +83,9 @@ def is_velociraptor_agent_unhealthy(
         logger.info(f"Agent {agent.hostname} (ID: {agent.agent_id}) has no Velociraptor ID or last seen time - marking as unhealthy")
         return ExtendedAgentModel(**agent.model_dump(), unhealthy_velociraptor_agent=True)
 
-    current_time = datetime.now()
+    # The columns hold naive UTC, so the clock must be too: a local datetime.now() shifted every
+    # agent by the host's UTC offset.
+    current_time = now or to_naive_utc(now_utc())
     velociraptor_last_seen = agent.velociraptor_last_seen
 
     if velociraptor_last_seen > current_time:

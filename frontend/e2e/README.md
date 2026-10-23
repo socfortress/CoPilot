@@ -20,6 +20,7 @@ customer information"):
 | `global-filter-disclaimer.spec.ts` | The Customers page tells you the sidebar filter does not apply to it — but only while a customer is selected — and the list really is unchanged by it. |
 | `portal-settings-patch.spec.ts` | #1188 — the Customer Portal settings editor saves with `PATCH`: renaming sends only the title (never the logo), clearing a field sends a `reset`, and saving without changes sends nothing. |
 | `soc-management.spec.ts` | #1187 — SOC Management & SLA: an assigned analyst sees one customer's figures and only their own analyst row (on screen and at the API), SLA overrides are an admin's to change and persist, an action through the incidents API stops an alert's clock on its page, a case's severity is set from its page, and the PDF report downloads. Seeds a month of history with `backend/tests/e2e/soc_management_seed.py` (needs the backend venv and DB env); its admin is `e2e_sla_admin` / `E2ePlaywr1ght!`. |
+| `healthcheck-delete.spec.ts` | #1291 — an admin deletes a customer's agents unseen for 30 days from the Healthcheck Wazuh list; the rows left in MySQL, one `agent.delete` audit row each with the threshold, and what Wazuh and Velociraptor were asked all match what the dialog showed; the API refuses a threshold under 24 hours and keeps a fresh agent named directly. Needs its own backend, below. |
 
 ## Running them
 
@@ -51,6 +52,24 @@ pnpm test:e2e:ui       # no arguments needed from here on
 
 Anything set on the command line still wins over the file, so a one-off
 `E2E_API_URL=… pnpm test:e2e` keeps working.
+
+### The healthcheck deletion spec (#1291)
+
+Deleting agents calls Wazuh and Velociraptor, so `healthcheck-delete.spec.ts` runs against
+`backend/tests/e2e/healthcheck_delete_server.py` instead of a plain uvicorn: the real app with those
+two deletions recorded (read back at `/e2e/upstream-calls`) and every connection beyond 127.0.0.1
+refused, on the disposable MySQL on 13306. The spec seeds it through `POST /e2e/reset` before it
+starts, so it can run again and again. The other specs run against it too.
+
+```bash
+cd backend
+PYTHONPATH=$PWD .venv/bin/python tests/e2e/healthcheck_delete_seed.py   # first time only: creates the admin
+PYTHONPATH=$PWD .venv/bin/uvicorn tests.e2e.healthcheck_delete_server:app --lifespan off --port 5102
+
+cd ../frontend
+E2E_API_URL=http://127.0.0.1:5102 VITE_API_URL=http://127.0.0.1:5102 E2E_PORT=5199 \
+E2E_ADMIN_USER=e2e_hd_admin E2E_ADMIN_PASSWORD='E2ePlaywr1ght!hd' pnpm test:e2e healthcheck-delete
+```
 
 ### Two things that will waste your afternoon
 

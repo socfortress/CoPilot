@@ -3,9 +3,21 @@
 		<CardEntity
 			:embedded
 			hoverable
+			:highlighted="selectable && selected"
 			:status="type === 'healthy' ? 'success' : type === 'unhealthy' ? 'warning' : undefined"
 		>
-			<template #headerMain>#{{ healthData.id }} - {{ healthData.label }}</template>
+			<template #headerMain>
+				<div class="flex items-center gap-2.5">
+					<!-- Picks the agent for a bulk deletion from the list (#1291). -->
+					<n-checkbox
+						v-if="selectable"
+						v-model:checked="selected"
+						:aria-label="`Select ${healthData.hostname}`"
+						data-testid="healthcheck-select"
+					/>
+					<span>#{{ healthData.id }} - {{ healthData.label }}</span>
+				</div>
+			</template>
 			<template v-if="cardDate" #headerExtra>{{ cardDate }}</template>
 			<template #default>
 				<div class="flex grow flex-col gap-1">
@@ -97,7 +109,7 @@
 
 <script setup lang="ts">
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers"
-import { NModal, NPopover } from "naive-ui"
+import { NCheckbox, NModal, NPopover } from "naive-ui"
 import { computed, ref } from "vue"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
@@ -110,13 +122,17 @@ import { iconFromOs } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import CustomerHealthcheckDetails from "./CustomerHealthcheckDetails.vue"
 
-const { healthData, source, embedded, type, customerCode } = defineProps<{
+const { healthData, source, embedded, type, customerCode, selectable } = defineProps<{
 	healthData: CustomerAgentHealth
 	source: CustomerHealthcheckSource
 	customerCode: string
 	type?: "healthy" | "unhealthy"
 	embedded?: boolean
+	/** Shows a checkbox that picks the agent for a bulk action. */
+	selectable?: boolean
 }>()
+
+const selected = defineModel<boolean>("selected", { default: false })
 
 const InfoIcon = "carbon:information"
 const AgentIcon = "carbon:police"

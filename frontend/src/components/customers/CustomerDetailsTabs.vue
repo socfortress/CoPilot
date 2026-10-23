@@ -7,7 +7,7 @@
 				animated
 				:tabs-padding="24"
 				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
-				placement="left"
+				:placement="subTabsPlacement"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
 				<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
@@ -125,7 +125,7 @@
 				animated
 				:tabs-padding="24"
 				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
-				placement="left"
+				:placement="subTabsPlacement"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
 				<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
@@ -188,6 +188,7 @@
 
 <script setup lang="ts">
 import type { Customer, CustomerMeta } from "@/types/customers"
+import { useMediaQuery } from "@vueuse/core"
 import { NScrollbar, NTabPane, NTabs } from "naive-ui"
 import { computed, defineAsyncComponent, ref, watch } from "vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
@@ -259,6 +260,11 @@ const loadingDeleteModel = computed({
 })
 
 const scrollbarClass = computed(() => (props.useMaxHeight ? "max-h-117.5 pr-4" : undefined))
+
+// Below the theme's mobile breakpoint a side rail of sub-tabs takes half the screen and clips the
+// pane: the sub-tabs move on top, where they scroll sideways.
+const narrow = useMediaQuery("(max-width: 700px)")
+const subTabsPlacement = computed(() => (narrow.value ? "top" : "left"))
 
 const CUSTOMER_SUB_TABS = new Set([
 	"Info",
