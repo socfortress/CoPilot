@@ -15,7 +15,11 @@
 					label="Memories"
 					:value="formatCount(stats.total)"
 					help="Every drawer Talon keeps for this customer, from investigations, reviews and chat."
-					:hint="checked"
+					:hint="
+						stats.complete === false
+							? `approximate: Talon stopped counting at a cap · ${checked ?? ''}`
+							: checked
+					"
 					test-id="talon-memory-total"
 				/>
 				<KpiTile
@@ -83,7 +87,11 @@
 						<tbody>
 							<tr v-for="row of panel.rows" :key="row.key" :data-key="row.key">
 								<th scope="row" class="w-40 py-1 pr-3 text-left font-normal">
+									<span v-if="panel.id === 'rooms' && row.key === 'other'" :title="row.hint">
+										{{ row.label }}
+									</span>
 									<button
+										v-else
 										type="button"
 										class="text-default hover:text-primary focus-visible:text-primary cursor-pointer text-left underline-offset-2 hover:underline"
 										:title="row.hint"

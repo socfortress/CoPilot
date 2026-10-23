@@ -31,12 +31,14 @@ const STATS = {
 	rooms: { alerts: 10, false_positives: 12, threat_intel: 5, assets: 8, environment: 6, other: 1 },
 	sources: { investigation: 20, review_durable: 6, review_one_off: 10, chat_remember: 5, other: 1 },
 	testing_hidden: 3,
+	complete: true,
 	growth: Array.from({ length: 30 }, (_, i) => ({ date: day(29 - i), filed: i === 12 ? null : (i * 7) % 5 }))
 }
 
 function item(id: string, extra: Record<string, unknown> = {}) {
 	return {
 		drawer_id: id,
+		customer_code: "ACME",
 		openable: true,
 		room: "false_positives",
 		source: "review_one_off",
@@ -93,7 +95,8 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 	let items = [...ITEMS]
 	let chat = [
 		{
-			drawer_id: "drawer_talon chat memory_environment_b",
+			drawer_id: `drawer_talon chat memory_user ${"a".repeat(64)}_${"b".repeat(24)}`,
+			user_id: "1",
 			openable: true,
 			filed_at: "2026-10-20T09:00:00Z",
 			preview: "Prefers times in UTC",
@@ -142,7 +145,7 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 				const id = decodeURIComponent(drawerMatch[1])
 				if (request.method() === "DELETE") {
 					items = items.filter(i => i.drawer_id !== id)
-					return json(route, { success: true, drawer_id: id })
+					return json(route, { success: true, drawer_id: id, customer_code: "ACME" })
 				}
 				return DRAWERS[id]
 					? json(route, DRAWERS[id])
@@ -152,8 +155,8 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 				return json(route, {
 					success: true,
 					items: [
-						{ asset: "SRV-01", openable: true, alerts: 4, iocs: 2, last_seen: "2026-10-21T10:00:00Z" },
-						{ asset: "WKS-07", openable: true, alerts: 9, iocs: 5, last_seen: "2026-10-20T10:00:00Z" }
+						{ asset: "SRV-01", openable: true, alerts: 4, iocs: 0, last_seen: "2026-10-21T10:00:00Z" },
+						{ asset: "WKS-07", openable: true, alerts: 9, iocs: 0, last_seen: "2026-10-20T10:00:00Z" }
 					]
 				})
 			}
@@ -184,7 +187,7 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 			if (chatMatch && request.method() === "DELETE") {
 				const id = decodeURIComponent(chatMatch[1])
 				chat = chat.filter(i => i.drawer_id !== id)
-				return json(route, { success: true, drawer_id: id })
+				return json(route, { success: true, drawer_id: id, user_id: "1" })
 			}
 			return route.fallback()
 		}
@@ -278,7 +281,9 @@ test.describe("talon memory tab", () => {
 
 		// Assets and a timeline.
 		await page.getByTestId("talon-memory-view-assets").click()
-		await page.locator('[data-testid="talon-memory-asset"][data-asset="SRV-01"]').click()
+		const srv = page.locator('[data-testid="talon-memory-asset"][data-asset="SRV-01"]')
+		await expect(srv).toContainText("IOCs: no data yet")
+		await srv.click()
 		await expect(page.getByTestId("talon-memory-fact")).toHaveCount(2)
 		await expect(page.getByTestId("talon-memory-fact").first()).toContainText("is owned by")
 		await expect(page.getByTestId("talon-memory-fact").first()).toContainText("no longer true")
@@ -296,7 +301,7 @@ test.describe("talon memory tab", () => {
 			.map(r => `${r.method} ${r.path}`)
 		expect(chatPaths).toEqual([
 			"GET /talon/memory/chat/mine",
-			"DELETE /talon/memory/chat/mine/drawer_talon chat memory_environment_b"
+			`DELETE /talon/memory/chat/mine/drawer_talon chat memory_user ${"a".repeat(64)}_${"b".repeat(24)}`
 		])
 	})
 

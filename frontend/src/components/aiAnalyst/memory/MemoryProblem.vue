@@ -1,6 +1,6 @@
 <template>
 	<n-alert
-		:type="state.kind === 'error' ? 'error' : 'info'"
+		:type="state.kind === 'error' ? 'error' : state.kind === 'no_memory' ? 'default' : 'info'"
 		:bordered="false"
 		:title="state.title"
 		data-testid="talon-memory-problem"

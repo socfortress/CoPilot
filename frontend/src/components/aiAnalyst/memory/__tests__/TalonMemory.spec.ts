@@ -71,13 +71,15 @@ function stats() {
 			{ date: "2026-10-20", filed: 2 },
 			{ date: "2026-10-21", filed: null },
 			{ date: "2026-10-22", filed: 4 }
-		]
+		],
+		complete: true
 	}
 }
 
 function item(id = ONE_OFF, overrides = {}) {
 	return {
 		drawer_id: id,
+		customer_code: "ACME",
 		openable: true,
 		room: "false_positives",
 		source: "review_one_off",
@@ -210,7 +212,7 @@ beforeEach(() => {
 	)
 	api.getDrawer.mockImplementation(() => ok(drawer()))
 	api.listAssets.mockImplementation(() =>
-		ok({ success: true, items: [{ asset: "SRV-01", openable: true, alerts: 4, iocs: 2, last_seen: null }] })
+		ok({ success: true, items: [{ asset: "SRV-01", openable: true, alerts: 4, iocs: 0, last_seen: null }] })
 	)
 	api.getAssetTimeline.mockImplementation(() =>
 		ok({
@@ -314,6 +316,36 @@ describe("the Memory tab", () => {
 		await settle()
 		expect(api.getStats).toHaveBeenCalledTimes(2)
 		expect(byId(wrapper, "talon-memory-total")[0].text()).toContain("42")
+	})
+
+	it("approximate figures say so", async () => {
+		api.getStats.mockImplementation(() => ok({ ...stats(), complete: false }))
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-memory-total")[0].text()).toContain("approximate")
+	})
+
+	it("a customer Talon has no memory for says so, not an error", async () => {
+		api.getStats.mockImplementation(() =>
+			refusal(404, { detail: "Talon has no memory for this customer yet", code: "unknown_customer" })
+		)
+		const wrapper = render()
+		await settle()
+		const problem = byId(wrapper, "talon-memory-problem")[0]
+		expect(problem.attributes("data-kind")).toBe("no_memory")
+		expect(problem.text()).toContain("Talon has no memory for this customer yet")
+		expect(byId(wrapper, "talon-memory-retry")).toHaveLength(0)
+	})
+
+	it("the other rooms can't be a filter, and a room outside the five shows its own name", async () => {
+		api.listDrawers.mockImplementation(() =>
+			ok({ success: true, items: [item(ONE_OFF, { room: "other", room_name: "notes" })], next_cursor: null })
+		)
+		const wrapper = render()
+		await settle()
+		expect(wrapper.find('[data-testid="talon-memory-rooms"] [data-key="other"] button').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="talon-memory-rooms"] [data-key="alerts"] button').exists()).toBe(true)
+		expect(byId(wrapper, "talon-memory-row")[0].text()).toContain("notes")
 	})
 
 	it("an empty memory says so", async () => {
@@ -472,6 +504,8 @@ describe("assets", () => {
 		await wrapper.get('[data-testid="talon-memory-view-assets"] input').setValue(true)
 		await settle()
 		expect(api.listAssets).toHaveBeenCalledWith("ACME", { q: null, limit: 100 }, expect.anything())
+		// talon-analyst doesn't record IOC sightings on assets yet: its 0 is "no data yet".
+		expect(byId(wrapper, "talon-memory-asset")[0].text()).toContain("4 alerts · IOCs: no data yet")
 		await byId(wrapper, "talon-memory-asset")[0].trigger("click")
 		await settle()
 		expect(api.getAssetTimeline).toHaveBeenCalledWith("ACME", "SRV-01", expect.anything())
@@ -488,7 +522,7 @@ describe("my chat memory", () => {
 		await settle()
 		await wrapper.find('[data-open="chat"]').trigger("click")
 		await settle()
-		expect(api.listMyChatMemory).toHaveBeenCalledWith(expect.anything())
+		expect(api.listMyChatMemory).toHaveBeenCalledWith(50, expect.anything())
 		expect(byId(wrapper, "talon-memory-chat-item")[0].text()).toContain("Prefers UTC")
 		await byId(wrapper, "talon-memory-chat-forget")[0].trigger("click")
 		expect(api.forgetMyChatMemory).not.toHaveBeenCalled()

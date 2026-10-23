@@ -53,6 +53,7 @@ class TalonMemoryStats(BaseModel):
     sources: TalonMemorySources = Field(default_factory=TalonMemorySources)
     testing_hidden: Optional[int] = Field(None, description="Drawers kept from investigations because they came from testing")
     growth: List[TalonMemoryGrowth] = Field(default_factory=list, description="Drawers filed per day, the last 30 days")
+    complete: Optional[bool] = Field(None, description="False: Talon hit a cap while counting, so the figures are approximate")
 
 
 class TalonMemorySourceRef(BaseModel):
@@ -69,6 +70,7 @@ class TalonMemoryItem(BaseModel):
         description="The id fits CoPilot's safe pattern, so the drawer can be opened and forgotten through CoPilot",
     )
     room: Room = "other"
+    room_name: Optional[str] = Field(None, description="The room as Talon wrote it (a wing may hold rooms outside the five)")
     source: Source = "other"
     source_ref: Optional[TalonMemorySourceRef] = None
     filed_at: Optional[str] = None

@@ -55,10 +55,10 @@ Each memory is filed in a **room**, by what it is about:
 
 Choose a customer (the picker starts from the global customers filter, and from your one customer when you have only one). You see:
 
-- **Tiles:** how many memories Talon holds for the customer, how many it filed in the last 30 days, and how many are hidden from investigations.
+- **Tiles:** how many memories Talon holds for the customer, how many it filed in the last 30 days, and how many are hidden from investigations. On a very large memory Talon stops counting at a limit, and the tiles say **approximate**.
 - **Filed per day:** memories filed per UTC day over the last 30 days. **Show the numbers** gives the same figures as a table; a day Talon didn't report shows "no data", not 0.
 - **By room** and **By source:** how the memories split. Select a row to filter the list below to it.
-- **Memories:** the list, newest first, with filters for room, source and the days it was filed, and a **search by meaning**: it finds memories about what you describe, not only ones containing your words, so its results are the closest matches first. **Load more** fetches the next page.
+- **Memories:** the list, newest first, with filters for room, source and the days it was filed, and a **search by meaning**: it finds memories about what you describe, not only ones containing your words, so its results are the closest matches first, on one page. **Load more** fetches the next page of the list; with a source filter a page can be shorter than usual while there is still more.
 
 Open a memory to see:
 
@@ -70,7 +70,7 @@ Open a memory to see:
 
 ### Assets
 
-The assets Talon remembers for the customer, with how many alerts and IOCs it has linked to each. Choose one to see its **timeline**: each fact Talon learnt about it ("runs the nightly backup", "is owned by IT operations"), from when it became true and, once something replaced it, until when.
+The hosts Talon has recorded in the customer's memory, with how many alerts it has linked to each. (IOCs per asset show **no data yet**: Talon doesn't record them yet.) Choose one to see its **timeline**: each fact Talon learnt about it ("runs the nightly backup", "is owned by IT operations"), from when it became true and, once something replaced it, until when.
 
 ### My chat memory
 

@@ -50,11 +50,15 @@ def _no_store(response: Response) -> None:
 @talon_memory_router.get("/chat/mine", response_model=TalonChatMemory, description="The caller's own Talon chat memory")
 async def get_my_chat_memory(
     response: Response,
+    limit: Optional[int] = Query(
+        None,
+        description=f"At most {service.CHAT_MAX_LIMIT} (more is capped); default {service.CHAT_DEFAULT_LIMIT}",
+    ),
     current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
     _no_store(response)
-    return await service.list_chat_memory(current_user, session)
+    return await service.list_chat_memory(current_user, session, limit)
 
 
 @talon_memory_router.delete(

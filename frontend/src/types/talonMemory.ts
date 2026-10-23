@@ -13,6 +13,8 @@ export interface TalonMemoryStats {
 	sources: Record<TalonMemorySource, number | null>
 	testing_hidden: number | null
 	growth: { date: string; filed: number | null }[]
+	/** False: Talon hit a cap while counting, so the figures are approximate. */
+	complete?: boolean | null
 }
 
 export interface TalonMemorySourceRef {
@@ -25,6 +27,8 @@ export interface TalonMemoryItem {
 	/** The id fits CoPilot's safe pattern: it can be opened and forgotten. */
 	openable: boolean
 	room: TalonMemoryRoom
+	/** The room as Talon wrote it: a wing may hold rooms outside the five (`room` is then "other"). */
+	room_name?: string | null
 	source: TalonMemorySource
 	source_ref: TalonMemorySourceRef | null
 	filed_at: string | null

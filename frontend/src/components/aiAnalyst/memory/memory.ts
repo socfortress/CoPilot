@@ -44,6 +44,19 @@ export const SOURCES: { value: TalonMemorySource; label: string; hint: string }[
 	{ value: "other", label: "Other", hint: "Any other origin" }
 ]
 
+/** The rooms the list can be filtered by (talon-analyst refuses "other": it isn't one room). */
+export const ROOM_FILTERS = ROOMS.filter(r => r.value !== "other")
+
+/** IOCs per asset: talon-analyst doesn't record IOC sightings on assets yet, so its 0 means "no data yet". */
+export function formatIocs(value: number | null | undefined): string {
+	return typeof value === "number" && value > 0 ? value.toLocaleString() : "no data yet"
+}
+
+/** A row's room: the label, or for a room outside the five, its own name. */
+export function roomText(room: string | null | undefined, roomName?: string | null): string {
+	return room === "other" && roomName ? roomName : roomLabel(room)
+}
+
 /** What a user may forget (decision 1; the backend and talon-analyst refuse anything else). */
 export const FORGETTABLE_SOURCES: TalonMemorySource[] = ["review_one_off", "chat_remember"]
 
@@ -188,7 +201,7 @@ export function buildGrowthOption(
 }
 
 export interface ProblemState {
-	kind: "v2_off" | "unsupported" | "error"
+	kind: "v2_off" | "unsupported" | "no_memory" | "error"
 	title: string
 	text: string
 }
@@ -197,6 +210,9 @@ export interface ProblemState {
 export function problemState(failure: TalonMemoryFailure | null | undefined): ProblemState | null {
 	if (!failure) return null
 	if (failure.code === "v2_off") return { kind: "v2_off", title: "Talon v2 is off", text: V2_OFF_TEXT }
+	if (failure.code === "unknown_customer") {
+		return { kind: "no_memory", title: "No memory yet", text: failure.detail }
+	}
 	if (failure.code === "unsupported") {
 		return { kind: "unsupported", title: "Upgrade Talon for the Memory tab", text: OLD_TALON_MEMORY_TEXT }
 	}

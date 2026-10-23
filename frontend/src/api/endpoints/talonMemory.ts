@@ -104,8 +104,12 @@ export default {
 		})
 	},
 	/** The caller's own chat memory: CoPilot uses the signed-in user's id, never one from here. */
-	listMyChatMemory(signal?: AbortSignal) {
-		return HttpClient.get<{ success: boolean; items: TalonChatMemoryItem[] }>(`/talon/memory/chat/mine`, { signal })
+	/** At most 50 (the backend caps it); default 20. */
+	listMyChatMemory(limit?: number, signal?: AbortSignal) {
+		return HttpClient.get<{ success: boolean; items: TalonChatMemoryItem[] }>(`/talon/memory/chat/mine`, {
+			params: limit ? { limit } : undefined,
+			signal
+		})
 	},
 	forgetMyChatMemory(drawerId: string) {
 		return HttpClient.delete<{ success: boolean; drawer_id: string }>(`/talon/memory/chat/mine/${seg(drawerId)}`)

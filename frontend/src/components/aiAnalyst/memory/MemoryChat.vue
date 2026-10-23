@@ -97,6 +97,9 @@ import { formatTime } from "../health/health"
 import { problemState } from "./memory"
 import MemoryProblem from "./MemoryProblem.vue"
 
+/** The most talon-analyst lists (its `CHAT_MAX_LIMIT`), newest first. */
+const CHAT_LIMIT = 50
+
 const items = ref<TalonChatMemoryItem[]>([])
 const failure = ref<TalonMemoryFailure | null>(null)
 const loading = ref(false)
@@ -114,7 +117,7 @@ async function load() {
 	loading.value = true
 	failure.value = null
 	try {
-		const { data } = await Api.talonMemory.listMyChatMemory(own.signal)
+		const { data } = await Api.talonMemory.listMyChatMemory(CHAT_LIMIT, own.signal)
 		if (controller !== own) return
 		items.value = data.items ?? []
 	} catch (err) {

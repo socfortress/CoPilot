@@ -8,6 +8,7 @@ import asyncio
 import gzip
 import hashlib
 import json
+import re
 import ssl
 from contextlib import ExitStack
 from types import SimpleNamespace
@@ -79,14 +80,20 @@ def stats_payload(code=ACME, **overrides):
         "sources": {"investigation": 20, "review_durable": 6, "review_one_off": 10, "chat_remember": 5, "other": 1},
         "testing_hidden": 3,
         "growth": [{"date": f"2026-10-{d:02d}", "filed": d % 4} for d in range(1, 23)],
+        "complete": True,
     }
     payload.update(overrides)
     return payload
 
 
 def item(drawer_id=ONE_OFF, **overrides):
+    """A drawer list item as talon-analyst answers it (``browse._item``): the wing it was read from as
+    ``customer_code``, read off the id unless given."""
+    found = re.fullmatch(r"drawer_(.+?)_(?:alerts|false_positives|threat_intel|assets|environment|notes)_.+", drawer_id)
+    owner = found.group(1) if found else ACME
     entry = {
         "drawer_id": drawer_id,
+        "customer_code": owner,
         "room": "false_positives",
         "source": "review_one_off",
         "source_ref": {"job_id": "copilot-inv-1-1760601600000", "alert_id": 1},
@@ -152,25 +159,29 @@ def talon(overrides=None, drawers=None):
                             "filed_at": "2026-10-20T09:00:00Z",
                             "preview": "Prefers UTC",
                             "thread_id": THREAD,
+                            "user_id": parts[1],
                         },
                     ],
                 },
             )
         if request.method == "DELETE" and len(parts) == 3 and parts[0] == "chat":
-            return httpx.Response(200, json={"success": True, "drawer_id": parts[2]})
+            return httpx.Response(200, json={"success": True, "drawer_id": parts[2], "user_id": parts[1]})
         code = parts[0] if parts else ""
+        if code == "chat":  # talon-analyst's reserved name (never reached: chat routes come first)
+            return httpx.Response(404, json={"detail": "unknown customer"})
         if request.method == "GET" and parts[1:] == ["stats"]:
             return httpx.Response(200, json=stats_payload(code))
         if request.method == "GET" and parts[1:] == ["drawers"]:
-            return httpx.Response(200, json={"items": [item(), item(DURABLE, source="investigation", durable=True)], "next_cursor": "c1"})
+            items = [item(), item(DURABLE, source="investigation", durable=True)] if code == ACME else [item(customer_drawer(code))]
+            return httpx.Response(200, json={"items": items, "next_cursor": "c1"})
         if len(parts) == 3 and parts[1] == "drawers":
             found = drawers.get(parts[2])
             if found is None:
-                return httpx.Response(404, json={"detail": "Not Found"})
+                return httpx.Response(404, json={"detail": "drawer not found"})
             if request.method == "GET":
                 return httpx.Response(200, json=found)
             if request.method == "DELETE":
-                return httpx.Response(200, json={"success": True, "drawer_id": parts[2]})
+                return httpx.Response(200, json={"success": True, "drawer_id": parts[2], "customer_code": code})
         if request.method == "GET" and parts[1:] == ["assets"]:
             return httpx.Response(200, json={"items": [{"asset": "SRV-01", "alerts": 4, "iocs": 2, "last_seen": "2026-10-21T10:00:00Z"}]})
         if request.method == "GET" and len(parts) == 4 and parts[1] == "assets" and parts[3] == "timeline":
@@ -305,7 +316,6 @@ def test_drawers_page_and_filters_are_forwarded_checked():
     query = {
         "room": "false_positives",
         "source": "review_one_off",
-        "q": "  vssadmin backups  ",
         "since": "2026-10-01",
         "before": "2026-10-21T00:00:00Z",
         "limit": "500",
@@ -327,7 +337,6 @@ def test_drawers_page_and_filters_are_forwarded_checked():
     assert dict(request.url.params) == {
         "room": "false_positives",
         "source": "review_one_off",
-        "q": "vssadmin backups",
         "since": "2026-10-01",
         "before": "2026-10-21T00:00:00+00:00",
         "limit": "100",  # capped
@@ -347,12 +356,14 @@ def test_default_limit_and_no_empty_filters():
         ({"q": "x" * 201}, "q is too long (at most 200 characters)"),
         ({"q": "a\x00b"}, "q holds a control character"),
         ({"q": "a‮b"}, "q holds a control character"),
-        ({"room": "secrets"}, "room must be one of: alerts, false_positives, threat_intel, assets, environment, other"),
+        ({"room": "secrets"}, "room must be one of: alerts, false_positives, threat_intel, assets, environment"),
+        ({"room": "other"}, "room must be one of: alerts, false_positives, threat_intel, assets, environment"),
+        ({"q": "backups", "cursor": "c1"}, "a search has no cursor: it shows its best matches only"),
         ({"source": "model"}, "source must be one of: investigation, review_durable, review_one_off, chat_remember, other"),
         ({"since": "yesterday"}, "since must be a date (YYYY-MM-DD) or an ISO 8601 date-time"),
         ({"before": "2026-13-01"}, "before must be a date (YYYY-MM-DD) or an ISO 8601 date-time"),
         ({"cursor": "a b"}, "cursor is not a page cursor"),
-        ({"cursor": "c" * 513}, "cursor is not a page cursor"),
+        ({"cursor": "c" * 8001}, "cursor is not a page cursor"),
     ],
 )
 def test_bad_filters_are_refused_before_talon_is_asked(query, detail):
@@ -418,7 +429,7 @@ def test_the_customer_must_be_one_the_caller_may_see(method, template, user, cod
 
 
 @pytest.mark.parametrize("method, template", CUSTOMER_ROUTES)
-@pytest.mark.parametrize("user, code", [("admin", GLOBEX), ("ana", ACME), ("ana", DOTTED), ("ana", CHAT), ("gus", GLOBEX), ("resp", ACME)])
+@pytest.mark.parametrize("user, code", [("admin", GLOBEX), ("ana", ACME), ("ana", DOTTED), ("gus", GLOBEX), ("resp", ACME)])
 def test_a_callers_own_customers_are_answered(method, template, user, code):
     own = customer_drawer(code)
     drawers = {own: drawer(own)}
@@ -427,9 +438,14 @@ def test_a_callers_own_customers_are_answered(method, template, user, code):
     assert all(path.startswith(f"/v2/memory/{code}/") for path in fake.paths())
 
 
-def test_a_customer_named_chat_is_a_customer():
-    response, fake, _ = run(get(f"/{CHAT}/stats", "ana"))
-    assert response.status_code == 200 and fake.paths() == [f"/v2/memory/{CHAT}/stats"]
+@pytest.mark.parametrize("method, template", CUSTOMER_ROUTES)
+def test_a_customer_named_chat_is_never_asked_for(method, template):
+    """talon-analyst reserves ``chat`` (its chat-memory routes are matched first): CoPilot never asks,
+    or ``/v2/memory/chat/stats`` would be user ``stats``'s chat memory."""
+    response, fake, _ = run(call(method, f"/talon/memory{template.format(code=CHAT)}", "ana"))
+    assert response.status_code == 404
+    assert body_of(response) == {"detail": talon_memory.RESERVED, "code": "unknown_customer"}
+    assert fake.requests == []
 
 
 @pytest.mark.parametrize("method, template", ALL_ROUTES)
@@ -456,7 +472,7 @@ def test_chat_memory_is_always_the_callers_own(user, uid):
     response, fake, _ = run(get("/chat/mine", user, params={"user_id": "99", "user": "99"}))
     assert response.status_code == 200
     assert fake.paths() == [f"/v2/memory/chat/{uid}"]
-    assert dict(fake.requests[0].url.params) == {}
+    assert dict(fake.requests[0].url.params) == {"limit": "20"}
     assert body_of(response)["items"] == [
         {
             "drawer_id": chat_drawer(uid),
@@ -497,8 +513,9 @@ def test_forgetting_a_chat_memory_is_the_callers_own_and_audited():
 @pytest.mark.parametrize(
     "answer, status, detail",
     [
-        (httpx.Response(409, json={"detail": "Not a chat memory of this user"}), 409, "Not a chat memory of this user"),
-        (httpx.Response(404, json={"detail": "Not Found"}), 404, "Talon has no such memory"),
+        (httpx.Response(409, json={"success": False, "drawer_id": CHAT_DRAWER, "user_id": "2", "error": "not yours"}), 409, "not yours"),
+        (httpx.Response(409, json={"success": False, "drawer_id": CHAT_DRAWER, "error": "not yours"}), 409, talon_memory.FORGET_REFUSED),
+        (httpx.Response(404, json={"detail": "drawer not found"}), 404, "Talon has no such memory"),
     ],
 )
 def test_a_refused_chat_forget_keeps_its_status_and_is_audited(answer, status, detail):
@@ -558,10 +575,25 @@ def test_copilot_refuses_what_may_not_be_forgotten_without_asking_talon_to(overr
 @pytest.mark.parametrize(
     "answer, detail",
     [
-        (httpx.Response(409, json={"detail": "A durable lesson can't be forgotten"}), "A durable lesson can't be forgotten"),
-        (httpx.Response(409, json={"detail": "x" * 600}), talon_memory.FORGET_REFUSED),  # not one short line
+        (
+            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": "a durable lesson"}),
+            "a durable lesson",
+        ),
+        (
+            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": "x" * 600}),
+            talon_memory.FORGET_REFUSED,
+        ),  # not one short line
         (httpx.Response(409, content=b"<html>no</html>"), talon_memory.FORGET_REFUSED),
-        (httpx.Response(409, json={"detail": f"key {TALON_KEY} refused"}), "key [redacted] refused"),
+        (
+            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": f"key {TALON_KEY} refused"}),
+            "key [redacted] refused",
+        ),
+        # A refusal that doesn't name this customer: its text isn't shown.
+        (
+            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": GLOBEX, "error": "a durable lesson"}),
+            talon_memory.FORGET_REFUSED,
+        ),
+        (httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "error": "a durable lesson"}), talon_memory.FORGET_REFUSED),
     ],
 )
 def test_talons_refusal_to_forget_is_a_409_with_its_reason(answer, detail):
@@ -629,11 +661,8 @@ UNSAFE = [
     "drawer\n",
     " drawer",
     "drawer ",
-    "-drawer",
-    "_drawer",
-    "drawer‮",
-    "drawer​",
-    "drawér",
+    "drawer\u202e",
+    "drawer\u200b",
     "x" * 256,
     "a..b",
 ]
@@ -708,12 +737,19 @@ def test_an_old_talon_or_its_v2_api_off_is_unsupported(path):
     assert body_of(response) == {"detail": talon_memory.OLD_TALON, "code": "unsupported"}
 
 
-def test_unknown_drawers_and_assets_are_not_found():
-    respond = lambda request: httpx.Response(404, json={"detail": "Not Found"})  # noqa: E731
-    response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=respond)
-    assert body_of(response) == {"detail": talon_memory.UNKNOWN_DRAWER, "code": "not_found"}
-    response, _, _ = run(get(f"/{ACME}/assets/SRV-01/timeline"), respond=respond)
-    assert body_of(response) == {"detail": talon_memory.UNKNOWN_ASSET, "code": "not_found"}
+@pytest.mark.parametrize(
+    "detail, expected",
+    [
+        ("drawer not found", {"detail": talon_memory.UNKNOWN_DRAWER, "code": "not_found"}),
+        ("unknown customer", {"detail": talon_memory.NO_MEMORY, "code": "unknown_customer"}),
+        ("Not Found", {"detail": talon_memory.OLD_TALON, "code": "unsupported"}),
+    ],
+)
+def test_talons_404s_are_told_apart(detail, expected):
+    respond = lambda request: httpx.Response(404, json={"detail": detail})  # noqa: E731
+    for path in (f"/{ACME}/drawers/{ONE_OFF}", f"/{ACME}/stats", f"/{ACME}/assets/SRV-01/timeline"):
+        response, _, _ = run(get(path), respond=respond)
+        assert response.status_code == 404 and body_of(response) == expected
 
 
 @pytest.mark.parametrize(
@@ -721,12 +757,19 @@ def test_unknown_drawers_and_assets_are_not_found():
     [
         (httpx.Response(401, json={"error": "Unauthorized"}), 502, talon_memory.KEY_REFUSED),
         (httpx.Response(503, json={"detail": "palace down at 10.0.0.5"}), 503, talon_memory.UNAVAILABLE),
+        (httpx.Response(503, json={"detail": "MemPalace is not configured"}), 503, talon_memory.NO_PALACE),
+        (httpx.Response(502, json={"detail": "MemPalace request failed"}), 502, talon_memory.PALACE_FAILED),
+        (httpx.Response(502, json={"detail": "something at 10.0.0.5"}), 502, talon_memory.FAILED),
         (httpx.Response(500, text=f"Traceback ... {TALON_KEY}"), 502, talon_memory.FAILED),
-        (httpx.Response(400, json={"detail": "bad"}), 502, talon_memory.FAILED),
+        (httpx.Response(400, json={"detail": "invalid customer_code"}), 400, "Talon refused the request: invalid customer_code"),
+        (httpx.Response(400, json={"detail": f"bad {TALON_KEY}"}), 400, "Talon refused the request: bad [redacted]"),
+        (httpx.Response(400, text="<html>"), 400, talon_memory.INVALID_REQUEST),
+        (httpx.Response(422, json={"detail": "invalid request"}), 400, talon_memory.INVALID_REQUEST),
         (httpx.Response(403, json={"detail": "no"}), 502, talon_memory.FAILED),
         (httpx.Response(200, content=b"not json"), 502, talon_memory.NOT_JSON),
         (httpx.Response(200, json=[1, 2]), 502, talon_memory.WRONG_SHAPE),
         (httpx.Response(200, json=stats_payload(GLOBEX)), 502, talon_memory.WRONG_SHAPE),  # another customer's
+        (httpx.Response(200, json={k: v for k, v in stats_payload().items() if k != "customer_code"}), 502, talon_memory.WRONG_SHAPE),
         (
             httpx.Response(200, content=gzip.compress(json.dumps(stats_payload()).encode()), headers={"content-encoding": "gzip"}),
             502,
@@ -794,7 +837,8 @@ def test_malformed_fields_are_dropped_not_fatal():
     response, _, _ = run(get(f"/{ACME}/drawers"), respond=talon({f"/v2/memory/{ACME}/drawers": httpx.Response(200, json=page)}))
     assert response.status_code == 200
     body = body_of(response)
-    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, customer_drawer(ACME, "alerts", "c" * 24)]
+    # "drawer_ACME_x_1" is in ACME's wing and names ACME: a room outside the five is listed ("other").
+    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, customer_drawer(ACME, "alerts", "c" * 24), "drawer_ACME_x_1"]
     assert all(i["openable"] for i in body["items"])
     odd = body["items"][1]
     assert odd["room"] == "other" and odd["source"] == "other" and odd["source_ref"] is None and odd["durable"] is None
@@ -867,9 +911,9 @@ def test_assets_counts_lists_and_odd_names():
 
 def test_chat_memory_odd_items():
     items = [
-        {"drawer_id": ADMIN_CHAT, "thread_id": "not-a-uuid"},
-        {"drawer_id": ADMIN_CHAT},
-        {"drawer_id": chat_drawer(1, "c" * 24), "thread_id": THREAD.upper(), "preview": 5},
+        {"drawer_id": ADMIN_CHAT, "user_id": "1", "thread_id": "not-a-uuid"},
+        {"drawer_id": ADMIN_CHAT, "user_id": "1"},
+        {"drawer_id": chat_drawer(1, "c" * 24), "user_id": "1", "thread_id": THREAD.upper(), "preview": 5},
     ]
     respond = talon({"/v2/memory/chat/1": httpx.Response(200, json={"items": items})})
     body = body_of(run(get("/chat/mine"), respond=respond)[0])
@@ -889,7 +933,7 @@ def test_no_key_password_or_user_info_reaches_the_browser():
     one = drawer(content=leak + "\n" + leak, why_hidden=leak, why_not_forgettable=leak, preview=leak)
     assets = {"items": [{"asset": "SRV-01", "last_seen": leak}]}
     timeline = {"asset": "SRV-01", "facts": [{"subject": leak, "predicate": leak, "object": leak, "valid_from": leak}]}
-    chat = {"items": [{"drawer_id": ADMIN_CHAT, "preview": leak, "filed_at": leak}]}
+    chat = {"items": [{"drawer_id": ADMIN_CHAT, "user_id": "1", "preview": leak, "filed_at": leak}]}
     respond = talon(
         {
             f"/v2/memory/{ACME}/stats": httpx.Response(200, json=stats),
@@ -964,11 +1008,10 @@ def test_the_database_session_is_closed_before_talon_is_asked():
 GLOBEX_DRAWER = customer_drawer(GLOBEX)
 NOT_ACMES = [
     GLOBEX_DRAWER,  # another customer's
-    customer_drawer("ACME_X"),  # a longer code starting the same: "X_false_positives" is no room
     customer_drawer("acme"),  # case-sensitive
-    customer_drawer(ACME, "secrets"),  # not one of talon-analyst's rooms
-    customer_drawer(ACME, digest="0123"),  # not a MemPalace hash
-    customer_drawer(ACME, digest=HASH.upper()),
+    customer_drawer("ACMEX"),  # not ACME's prefix ("drawer_ACME_")
+    "drawer_ACME_",  # nothing after the wing
+    "ACME_alerts_" + HASH,
     CHAT_DRAWER,  # the chat-memory wing
     ADMIN_CHAT,
     "drawer_Talon Chat Memory_user x_" + HASH,
@@ -990,7 +1033,9 @@ def test_a_customer_route_takes_only_that_customers_drawer_ids(method, drawer_id
 def test_the_customer_binding_helpers():
     assert talon_memory.is_customer_drawer(customer_drawer(ACME), ACME)
     assert talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), "ACME_X")
-    assert not talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), ACME)
+    # The prefix alone can't tell ACME from ACME_X: the answer's required customer_code does.
+    assert talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), ACME)
+    assert talon_memory.is_customer_drawer(customer_drawer(ACME, "notes", "x"), ACME)  # any room, as written
     assert talon_memory.is_customer_drawer(customer_drawer(DOTTED, "environment"), DOTTED)
     assert not talon_memory.is_customer_drawer(customer_drawer("acmexio"), DOTTED)  # "." is literal
     assert talon_memory.is_chat_drawer(CHAT_DRAWER) and not talon_memory.is_chat_drawer(ONE_OFF)
@@ -1004,7 +1049,7 @@ def test_the_customer_binding_helpers():
     [
         (ADMIN_CHAT, talon_memory.NOT_YOUR_CHAT),  # the admin's chat memory, asked for by ana
         (ONE_OFF, talon_memory.NOT_YOUR_CHAT),  # a customer's drawer
-        (chat_drawer(2, "0123"), talon_memory.NOT_YOUR_CHAT),
+        ("drawer_talon chat memory_user " + "0" * 64 + "_" + HASH, talon_memory.NOT_YOUR_CHAT),
         ("drawer?x", talon_memory.INVALID_DRAWER),
     ],
 )
@@ -1054,16 +1099,79 @@ def test_a_list_never_shows_another_customers_or_chat_drawers():
 
 def test_chat_memory_never_shows_another_users_or_a_customers_drawers():
     items = [
-        {"drawer_id": CHAT_DRAWER},
-        {"drawer_id": ADMIN_CHAT},
-        {"drawer_id": ONE_OFF},
-        {"drawer_id": chat_drawer(2, "c" * 24), "wing": ACME},
+        {"drawer_id": CHAT_DRAWER, "user_id": "2"},
+        {"drawer_id": ADMIN_CHAT, "user_id": "2"},  # in the admin's room
+        {"drawer_id": ONE_OFF, "user_id": "2"},  # a customer's drawer
+        {"drawer_id": chat_drawer(2, "c" * 24), "user_id": "1"},  # names another user
+        {"drawer_id": chat_drawer(2, "d" * 24)},  # names nobody
+        {"drawer_id": chat_drawer(2, "e" * 24), "user_id": 2},  # not the id as CoPilot sends it
+        {"drawer_id": chat_drawer(2, "f" * 24), "user_id": "2", "wing": ACME},
     ]
     respond = talon({"/v2/memory/chat/2": httpx.Response(200, json={"items": items})})
     body = body_of(run(get("/chat/mine", "ana"), respond=respond)[0])
     assert [i["drawer_id"] for i in body["items"]] == [CHAT_DRAWER]
-    respond = talon({"/v2/memory/chat/2": httpx.Response(200, json={"items": items, "wing": ACME})})
-    assert run(get("/chat/mine", "ana"), respond=respond)[0].status_code == 502
+
+
+def test_the_chat_list_limit_is_capped():
+    _, fake, _ = run(get("/chat/mine", "ana", params={"limit": "500"}))
+    assert fake.requests[0].url.params["limit"] == "50"
+    response, fake, _ = run(get("/chat/mine", "ana", params={"limit": "0"}))
+    assert response.status_code == 400 and fake.requests == []
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        {"success": True, "drawer_id": CHAT_DRAWER, "user_id": "1"},
+        {"success": True, "drawer_id": CHAT_DRAWER},
+        {"success": True, "drawer_id": "drawer_other", "user_id": "2"},
+    ],
+)
+def test_a_chat_forget_answer_must_name_the_caller(answer):
+    respond = talon({("DELETE", f"/v2/memory/chat/2/{CHAT_DRAWER}"): httpx.Response(200, json=answer)})
+    response, _, audit = run(delete(f"/chat/mine/{quote(CHAT_DRAWER, safe='')}", "ana"), respond=respond)
+    assert response.status_code == 502 and body_of(response)["detail"] == talon_memory.FORGET_UNCONFIRMED
+    assert "unconfirmed" in audits(audit)[0]["details"]
+
+
+def test_a_longer_customer_code_is_caught_by_the_answers_owner():
+    """``drawer_ACME_X_…`` starts ``drawer_ACME_``: the prefix lets it through to Talon, and the answer,
+    which names ACME_X (talon-analyst reads it from ACME_X's wing), is refused."""
+    other = customer_drawer("ACME_X")
+    drawers = {other: drawer(other, customer_code="ACME_X")}
+    response, _, _ = run(get(f"/{ACME}/drawers/{quote(other, safe='')}"), respond=talon(drawers=drawers))
+    assert response.status_code == 502
+    response, fake, _ = run(delete(f"/{ACME}/drawers/{quote(other, safe='')}"), respond=talon(drawers=drawers))
+    assert response.status_code == 502 and [r.method for r in fake.requests] == ["GET"]
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [{"success": True, "drawer_id": ONE_OFF}, {"success": True, "drawer_id": ONE_OFF, "customer_code": GLOBEX}],
+)
+def test_a_forget_answer_must_name_the_customer(answer):
+    respond = talon({("DELETE", f"/v2/memory/{ACME}/drawers/{ONE_OFF}"): httpx.Response(200, json=answer)})
+    response, _, audit = run(delete(f"/{ACME}/drawers/{ONE_OFF}"), respond=respond)
+    assert response.status_code == 502 and "unconfirmed" in audits(audit)[0]["details"]
+
+
+@pytest.mark.parametrize("missing", ["customer_code"])
+def test_drawers_without_an_owner_are_never_shown(missing):
+    page = {"items": [{k: v for k, v in item().items() if k != missing}, item(customer_drawer(ACME, "alerts"))]}
+    respond = talon({("GET", f"/v2/memory/{ACME}/drawers"): httpx.Response(200, json=page)})
+    assert [i["drawer_id"] for i in body_of(run(get(f"/{ACME}/drawers"), respond=respond)[0])["items"]] == [customer_drawer(ACME, "alerts")]
+    one = {k: v for k, v in drawer().items() if k != missing}
+    response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers={ONE_OFF: one}))
+    assert response.status_code == 502
+
+
+def test_stats_complete_and_room_names():
+    respond = talon({f"/v2/memory/{ACME}/stats": httpx.Response(200, json=stats_payload(complete=False))})
+    assert body_of(run(get(f"/{ACME}/stats"), respond=respond)[0])["complete"] is False
+    page = {"items": [item(customer_drawer(ACME, "notes"), room="notes")]}
+    respond = talon({("GET", f"/v2/memory/{ACME}/drawers"): httpx.Response(200, json=page)})
+    (row,) = body_of(run(get(f"/{ACME}/drawers"), respond=respond)[0])["items"]
+    assert (row["room"], row["room_name"]) == ("other", "notes")
 
 
 def test_assets_and_timelines_naming_another_customer_are_not_shown():

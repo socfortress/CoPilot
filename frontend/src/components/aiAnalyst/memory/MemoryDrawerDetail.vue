@@ -15,7 +15,9 @@
 			<div v-else-if="drawer" class="flex flex-col gap-4" data-testid="talon-memory-detail-body">
 				<dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
 					<dt class="text-secondary">Room</dt>
-					<dd data-testid="talon-memory-detail-room">{{ roomLabel(drawer.room) }}</dd>
+					<dd data-testid="talon-memory-detail-room">
+						<bdi>{{ roomText(drawer.room, drawer.room_name) }}</bdi>
+					</dd>
 					<dt class="text-secondary">Source</dt>
 					<dd data-testid="talon-memory-detail-source">
 						{{ sourceLabel(drawer.source) }}
@@ -170,7 +172,7 @@ import { memoryFailure } from "@/api/endpoints/talonMemory"
 import Icon from "@/components/common/Icon.vue"
 import Markdown from "@/components/common/Markdown.vue"
 import { formatTime } from "../health/health"
-import { canForget, problemState, roomLabel, sourceLabel } from "./memory"
+import { canForget, problemState, roomText, sourceLabel } from "./memory"
 import MemoryProblem from "./MemoryProblem.vue"
 
 const { customerCode, drawerId } = defineProps<{ customerCode: string; drawerId: string | null }>()

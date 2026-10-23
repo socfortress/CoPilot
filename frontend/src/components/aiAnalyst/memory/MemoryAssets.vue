@@ -40,7 +40,7 @@
 								<bdi>{{ asset.asset }}</bdi>
 							</span>
 							<span class="text-tertiary shrink-0 text-xs tabular-nums">
-								{{ formatCount(asset.alerts) }} alerts · {{ formatCount(asset.iocs) }} IOCs
+								{{ formatCount(asset.alerts) }} alerts · IOCs: {{ formatIocs(asset.iocs) }}
 							</span>
 						</button>
 					</li>
@@ -93,7 +93,7 @@ import { memoryFailure } from "@/api/endpoints/talonMemory"
 import Icon from "@/components/common/Icon.vue"
 import SocPanel from "@/components/socManagement/ui/SocPanel.vue"
 import { formatTime } from "../health/health"
-import { formatCount, problemState, SEARCH_DEBOUNCE_MS } from "./memory"
+import { formatCount, formatIocs, problemState, SEARCH_DEBOUNCE_MS } from "./memory"
 import MemoryProblem from "./MemoryProblem.vue"
 
 const { customerCode } = defineProps<{ customerCode: string }>()

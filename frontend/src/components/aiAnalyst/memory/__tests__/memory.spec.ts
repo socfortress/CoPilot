@@ -15,11 +15,14 @@ import {
 	canForget,
 	dateParams,
 	formatCount,
+	formatIocs,
 	growthSummary,
 	growthTotal,
 	OLD_TALON_MEMORY_TEXT,
 	problemState,
+	ROOM_FILTERS,
 	ROOMS,
+	roomText,
 	SOURCES
 } from "../memory"
 
@@ -93,6 +96,27 @@ describe("the forget rule", () => {
 
 	it("refuses nothing loaded", () => {
 		expect(canForget(null)).toBe(false)
+	})
+})
+
+describe("rooms and assets", () => {
+	it("filters by the five rooms only, and names a room outside them as written", () => {
+		expect(ROOM_FILTERS.map(r => r.value)).toEqual([
+			"alerts",
+			"false_positives",
+			"threat_intel",
+			"assets",
+			"environment"
+		])
+		expect(roomText("other", "notes")).toBe("notes")
+		expect(roomText("other", null)).toBe("Other")
+		expect(roomText("alerts", "alerts")).toBe("Alerts")
+	})
+
+	it("shows IOCs per asset as no data yet until Talon records any", () => {
+		expect(formatIocs(0)).toBe("no data yet")
+		expect(formatIocs(null)).toBe("no data yet")
+		expect(formatIocs(3)).toBe("3")
 	})
 })
 
@@ -179,6 +203,16 @@ describe("telling failures apart", () => {
 		const failure = memoryFailure(axiosError(404, { detail: OLD_TALON_MEMORY_TEXT, code: "unsupported" }))
 		expect(failure).toEqual({ status: 404, code: "unsupported", detail: OLD_TALON_MEMORY_TEXT })
 		expect(problemState(failure)).toMatchObject({ kind: "unsupported", text: OLD_TALON_MEMORY_TEXT })
+	})
+
+	it("a customer Talon has no memory for is no memory yet, not an error", () => {
+		const failure = memoryFailure(
+			axiosError(404, { detail: "Talon has no memory for this customer yet", code: "unknown_customer" })
+		)
+		expect(problemState(failure)).toMatchObject({
+			kind: "no_memory",
+			text: "Talon has no memory for this customer yet"
+		})
 	})
 
 	it("anything else is an error with CoPilot's text and status", () => {

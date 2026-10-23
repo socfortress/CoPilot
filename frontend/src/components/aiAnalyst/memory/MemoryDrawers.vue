@@ -94,7 +94,9 @@
 							:data-drawer="row.drawer_id"
 						>
 							<td class="whitespace-nowrap">{{ formatTime(row.filed_at) }}</td>
-							<td class="whitespace-nowrap">{{ roomLabel(row.room) }}</td>
+							<td class="whitespace-nowrap">
+								<bdi>{{ roomText(row.room, row.room_name) }}</bdi>
+							</td>
 							<td class="whitespace-nowrap">{{ sourceLabel(row.source) }}</td>
 							<td>
 								<div class="flex flex-col gap-1">
@@ -180,8 +182,8 @@ import {
 	dateParams,
 	PAGE_SIZE,
 	problemState,
-	roomLabel,
-	ROOMS,
+	ROOM_FILTERS,
+	roomText,
 	SEARCH_DEBOUNCE_MS,
 	sourceLabel,
 	SOURCES
@@ -206,7 +208,7 @@ const emit = defineEmits<{
 /** The backend's cap on a search (`services/talon_memory.py:MAX_QUERY`). */
 const MAX_QUERY = 200
 
-const roomOptions = ROOMS.map(r => ({ label: r.label, value: r.value }))
+const roomOptions = ROOM_FILTERS.map(r => ({ label: r.label, value: r.value }))
 const sourceOptions = SOURCES.map(s => ({ label: s.label, value: s.value }))
 
 const search = ref<string | null>(null)
