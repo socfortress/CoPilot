@@ -57,19 +57,32 @@
 				</dl>
 
 				<n-alert
-					v-if="hidden"
+					v-if="drawer.testing_hidden === true"
 					type="warning"
 					:bordered="false"
-					title="Not used by new investigations"
+					title="Hidden: put down to testing"
 					data-testid="talon-memory-detail-hidden"
+					data-reason="testing"
 				>
 					<p v-if="drawer.why_hidden">
 						<bdi>{{ drawer.why_hidden }}</bdi>
 					</p>
 					<p class="text-secondary mt-1 text-xs">
-						A lesson learnt while testing is kept out of investigations. Testing is never a reason to lower
-						an alert's severity: simulated attacks are investigated as real ones.
+						A lesson that puts activity down to testing is kept out of investigations and recall. Testing is
+						never a reason to lower an alert's severity: simulated attacks are investigated as real ones.
 					</p>
+				</n-alert>
+				<n-alert
+					v-else-if="hidden"
+					type="default"
+					:bordered="false"
+					title="Not in an investigation's context"
+					data-testid="talon-memory-detail-hidden"
+					data-reason="other"
+				>
+					<bdi>
+						{{ drawer.why_hidden ?? "Talon keeps this memory out of what investigations are shown." }}
+					</bdi>
 				</n-alert>
 
 				<section aria-label="What Talon remembers" class="border-default rounded-lg border p-3">

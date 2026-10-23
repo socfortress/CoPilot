@@ -39,6 +39,7 @@ function item(id: string, extra: Record<string, unknown> = {}) {
 	return {
 		drawer_id: id,
 		customer_code: "ACME",
+		wing: "ACME",
 		openable: true,
 		room: "false_positives",
 		source: "review_one_off",
@@ -97,6 +98,7 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 		{
 			drawer_id: `drawer_talon chat memory_user ${"a".repeat(64)}_${"b".repeat(24)}`,
 			user_id: "1",
+			wing: "talon chat memory",
 			openable: true,
 			filed_at: "2026-10-20T09:00:00Z",
 			preview: "Prefers times in UTC",
@@ -145,7 +147,7 @@ async function installMemoryMock(context: BrowserContext, mode: Mode): Promise<S
 				const id = decodeURIComponent(drawerMatch[1])
 				if (request.method() === "DELETE") {
 					items = items.filter(i => i.drawer_id !== id)
-					return json(route, { success: true, drawer_id: id, customer_code: "ACME" })
+					return json(route, { success: true, drawer_id: id, customer_code: "ACME", wing: "ACME" })
 				}
 				return DRAWERS[id]
 					? json(route, DRAWERS[id])
@@ -224,6 +226,7 @@ test.describe("talon memory tab", () => {
 		await tab(page, "Memory").click()
 
 		await expect(page.getByTestId("talon-memory-total")).toContainText("42")
+		await expect(page.getByTestId("talon-memory-hidden")).toContainText("Hidden as testing")
 		await expect(page.getByTestId("talon-memory-hidden")).toContainText("3")
 		await expect(page.getByTestId("talon-memory-growth")).toBeVisible()
 		await expect(page.locator('[data-testid="talon-memory-rooms"] [data-key="false_positives"]')).toContainText(

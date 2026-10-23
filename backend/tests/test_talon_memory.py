@@ -11,6 +11,8 @@ import json
 import re
 import ssl
 from contextlib import ExitStack
+from contextlib import asynccontextmanager
+from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from unittest.mock import patch
@@ -18,13 +20,16 @@ from urllib.parse import quote
 
 import httpx
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import SQLModel
 
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.auth.utils import AuthHandler
 from app.connectors.talon.services import talon_memory
 from app.connectors.talon.utils import memory_client
+from app.db.universal_models import AiAnalystPalaceLesson
 from tests.talon_v2_support import ACME
 from tests.talon_v2_support import CHAT
 from tests.talon_v2_support import DOTTED
@@ -94,6 +99,7 @@ def item(drawer_id=ONE_OFF, **overrides):
     entry = {
         "drawer_id": drawer_id,
         "customer_code": owner,
+        "wing": owner,  # the stored MemPalace wing
         "room": "false_positives",
         "source": "review_one_off",
         "source_ref": {"job_id": "copilot-inv-1-1760601600000", "alert_id": 1},
@@ -160,6 +166,7 @@ def talon(overrides=None, drawers=None):
                             "preview": "Prefers UTC",
                             "thread_id": THREAD,
                             "user_id": parts[1],
+                            "wing": "talon chat memory",
                         },
                     ],
                 },
@@ -173,15 +180,16 @@ def talon(overrides=None, drawers=None):
             return httpx.Response(200, json=stats_payload(code))
         if request.method == "GET" and parts[1:] == ["drawers"]:
             items = [item(), item(DURABLE, source="investigation", durable=True)] if code == ACME else [item(customer_drawer(code))]
-            return httpx.Response(200, json={"items": items, "next_cursor": "c1"})
+            # talon-analyst echoes the path's customer_code; the wing is the drawer's own.
+            return httpx.Response(200, json={"items": [{**i, "customer_code": code} for i in items], "next_cursor": "c1"})
         if len(parts) == 3 and parts[1] == "drawers":
             found = drawers.get(parts[2])
             if found is None:
                 return httpx.Response(404, json={"detail": "drawer not found"})
             if request.method == "GET":
-                return httpx.Response(200, json=found)
+                return httpx.Response(200, json={**found, "customer_code": code})
             if request.method == "DELETE":
-                return httpx.Response(200, json={"success": True, "drawer_id": parts[2], "customer_code": code})
+                return httpx.Response(200, json={"success": True, "drawer_id": parts[2], "customer_code": code, "wing": found.get("wing")})
         if request.method == "GET" and parts[1:] == ["assets"]:
             return httpx.Response(200, json={"items": [{"asset": "SRV-01", "alerts": 4, "iocs": 2, "last_seen": "2026-10-21T10:00:00Z"}]})
         if request.method == "GET" and len(parts) == 4 and parts[1] == "assets" and parts[3] == "timeline":
@@ -228,7 +236,15 @@ def run(scenario, *, respond=None, attributes="default", enabled=True):
         db = await _Db().create()
         try:
             await _seed(db, enabled)
+            async with db.engine.begin() as conn:
+                await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=[AiAnalystPalaceLesson.__table__]))
+            fake.db = db
             app = _app(db)
+
+            @asynccontextmanager
+            async def own_session():
+                async with db.session() as session:
+                    yield session
 
             async def resolve_user(self, request, username):
                 if username not in USERS:
@@ -244,6 +260,7 @@ def run(scenario, *, respond=None, attributes="default", enabled=True):
                 stack.enter_context(patch.object(memory_client, "_new_client", fake.new_client))
                 stack.enter_context(patch.object(talon_memory, "get_connector_info_from_db", AsyncMock(return_value=attrs)))
                 stack.enter_context(patch.object(talon_memory, "record_audit_event", audit))
+                stack.enter_context(patch.object(talon_memory, "get_db_session", own_session))
                 transport = httpx.ASGITransport(app=app)
                 async with httpx.AsyncClient(transport=transport, base_url="http://copilot") as client:
                     return await scenario(client, fake, audit)
@@ -576,16 +593,22 @@ def test_copilot_refuses_what_may_not_be_forgotten_without_asking_talon_to(overr
     "answer, detail",
     [
         (
-            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": "a durable lesson"}),
+            httpx.Response(
+                409,
+                json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "wing": ACME, "error": "a durable lesson"},
+            ),
             "a durable lesson",
         ),
         (
-            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": "x" * 600}),
+            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "wing": ACME, "error": "x" * 600}),
             talon_memory.FORGET_REFUSED,
         ),  # not one short line
         (httpx.Response(409, content=b"<html>no</html>"), talon_memory.FORGET_REFUSED),
         (
-            httpx.Response(409, json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "error": f"key {TALON_KEY} refused"}),
+            httpx.Response(
+                409,
+                json={"success": False, "drawer_id": ONE_OFF, "customer_code": ACME, "wing": ACME, "error": f"key {TALON_KEY} refused"},
+            ),
             "key [redacted] refused",
         ),
         # A refusal that doesn't name this customer: its text isn't shown.
@@ -776,7 +799,7 @@ def test_talons_404s_are_told_apart(detail, expected):
             "Talon's answer was compressed; not read",
         ),
         (httpx.ConnectError("connection refused to talon.invalid:3100"), 502, "Talon could not be reached (ConnectError)"),
-        (httpx.ReadTimeout("read timed out"), 504, "Talon did not answer within 8 s"),
+        (httpx.ReadTimeout("read timed out"), 504, "Talon did not answer within 50 s"),
     ],
 )
 def test_unusable_answers_are_fixed_texts(answer, status, detail):
@@ -795,7 +818,7 @@ def test_a_huge_answer_is_not_read(monkeypatch):
 
 
 def test_a_talon_that_never_answers_times_out(monkeypatch):
-    monkeypatch.setattr(memory_client, "TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(memory_client, "STATS_SECONDS", 0.05)
 
     async def slow(request):
         await asyncio.sleep(1)
@@ -837,8 +860,8 @@ def test_malformed_fields_are_dropped_not_fatal():
     response, _, _ = run(get(f"/{ACME}/drawers"), respond=talon({f"/v2/memory/{ACME}/drawers": httpx.Response(200, json=page)}))
     assert response.status_code == 200
     body = body_of(response)
-    # "drawer_ACME_x_1" is in ACME's wing and names ACME: a room outside the five is listed ("other").
-    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, customer_drawer(ACME, "alerts", "c" * 24), "drawer_ACME_x_1"]
+    # "drawer_ACME_x_1" isn't a MemPalace id (no 24-hex hash): dropped.
+    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, customer_drawer(ACME, "alerts", "c" * 24)]
     assert all(i["openable"] for i in body["items"])
     odd = body["items"][1]
     assert odd["room"] == "other" and odd["source"] == "other" and odd["source_ref"] is None and odd["durable"] is None
@@ -911,9 +934,9 @@ def test_assets_counts_lists_and_odd_names():
 
 def test_chat_memory_odd_items():
     items = [
-        {"drawer_id": ADMIN_CHAT, "user_id": "1", "thread_id": "not-a-uuid"},
-        {"drawer_id": ADMIN_CHAT, "user_id": "1"},
-        {"drawer_id": chat_drawer(1, "c" * 24), "user_id": "1", "thread_id": THREAD.upper(), "preview": 5},
+        {"drawer_id": ADMIN_CHAT, "user_id": "1", "wing": "talon chat memory", "thread_id": "not-a-uuid"},
+        {"drawer_id": ADMIN_CHAT, "user_id": "1", "wing": "talon chat memory"},
+        {"drawer_id": chat_drawer(1, "c" * 24), "user_id": "1", "wing": "talon chat memory", "thread_id": THREAD.upper(), "preview": 5},
     ]
     respond = talon({"/v2/memory/chat/1": httpx.Response(200, json={"items": items})})
     body = body_of(run(get("/chat/mine"), respond=respond)[0])
@@ -933,7 +956,7 @@ def test_no_key_password_or_user_info_reaches_the_browser():
     one = drawer(content=leak + "\n" + leak, why_hidden=leak, why_not_forgettable=leak, preview=leak)
     assets = {"items": [{"asset": "SRV-01", "last_seen": leak}]}
     timeline = {"asset": "SRV-01", "facts": [{"subject": leak, "predicate": leak, "object": leak, "valid_from": leak}]}
-    chat = {"items": [{"drawer_id": ADMIN_CHAT, "user_id": "1", "preview": leak, "filed_at": leak}]}
+    chat = {"items": [{"drawer_id": ADMIN_CHAT, "user_id": "1", "wing": "talon chat memory", "preview": leak, "filed_at": leak}]}
     respond = talon(
         {
             f"/v2/memory/{ACME}/stats": httpx.Response(200, json=stats),
@@ -1033,14 +1056,20 @@ def test_a_customer_route_takes_only_that_customers_drawer_ids(method, drawer_id
 def test_the_customer_binding_helpers():
     assert talon_memory.is_customer_drawer(customer_drawer(ACME), ACME)
     assert talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), "ACME_X")
-    # The prefix alone can't tell ACME from ACME_X: the answer's required customer_code does.
-    assert talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), ACME)
-    assert talon_memory.is_customer_drawer(customer_drawer(ACME, "notes", "x"), ACME)  # any room, as written
+    # acme_x's drawer asked as acme: the room would be "X_threat_intel", which has an underscore.
+    assert not talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), ACME)
+    assert not talon_memory.is_customer_drawer(customer_drawer("ACME_X", "notes"), ACME)
+    assert talon_memory.is_customer_drawer(customer_drawer(ACME, "notes"), ACME)  # any room without "_"
+    assert talon_memory.is_customer_drawer(customer_drawer(ACME, "old-notes"), ACME)
+    assert not talon_memory.is_customer_drawer(customer_drawer(ACME, "my notes"), ACME)
+    assert not talon_memory.is_customer_drawer(customer_drawer(ACME, digest="0123"), ACME)
+    assert not talon_memory.is_customer_drawer(customer_drawer(ACME, digest=HASH.upper()), ACME)
     assert talon_memory.is_customer_drawer(customer_drawer(DOTTED, "environment"), DOTTED)
     assert not talon_memory.is_customer_drawer(customer_drawer("acmexio"), DOTTED)  # "." is literal
     assert talon_memory.is_chat_drawer(CHAT_DRAWER) and not talon_memory.is_chat_drawer(ONE_OFF)
     assert talon_memory.is_own_chat_drawer(CHAT_DRAWER, "2")
     assert not talon_memory.is_own_chat_drawer(CHAT_DRAWER, "1")
+    assert not talon_memory.is_own_chat_drawer(chat_drawer(2, "0123"), "2")
     assert not talon_memory.is_own_chat_drawer(ONE_OFF, "2")
 
 
@@ -1064,15 +1093,29 @@ def test_a_chat_route_takes_only_the_callers_own_chat_ids(drawer_id, detail):
 
 @pytest.mark.parametrize(
     "named",
-    [{"customer_code": GLOBEX}, {"wing": GLOBEX}, {"customer_code": None}, {"wing": "talon chat memory"}, {"customer_code": "acme"}],
+    [{"wing": GLOBEX}, {"wing": None}, {"wing": "talon chat memory"}, {"wing": "acme"}, {"wing": "ACME_false"}],
 )
-def test_a_drawer_answer_naming_another_customer_is_refused(named):
+def test_a_drawer_whose_wing_is_another_customers_is_refused(named):
+    """talon-analyst echoes the path's customer_code: the stored wing is what tells whose it is."""
     drawers = {ONE_OFF: drawer(**named)}
     response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers=drawers))
     assert response.status_code == 502 and body_of(response)["detail"] == talon_memory.WRONG_SHAPE
     response, fake, audit = run(delete(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers=drawers))
     assert response.status_code == 502 and [r.method for r in fake.requests] == ["GET"]  # nothing deleted
     assert audits(audit)[0]["result"] == AuditResult.FAILURE
+
+
+@pytest.mark.parametrize("missing", ["wing", "customer_code"])
+def test_a_drawer_answer_without_its_owner_fields_is_refused(missing):
+    one = {k: v for k, v in drawer().items() if k != missing}
+    respond = talon({("GET", f"/v2/memory/{ACME}/drawers/{ONE_OFF}"): httpx.Response(200, json=one)})
+    assert run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=respond)[0].status_code == 502
+
+
+def test_an_answer_naming_another_customer_code_is_refused():
+    one = {**drawer(), "customer_code": GLOBEX}
+    respond = talon({("GET", f"/v2/memory/{ACME}/drawers/{ONE_OFF}"): httpx.Response(200, json=one)})
+    assert run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=respond)[0].status_code == 502
 
 
 def test_a_drawer_answer_naming_its_own_customer_is_shown():
@@ -1099,13 +1142,14 @@ def test_a_list_never_shows_another_customers_or_chat_drawers():
 
 def test_chat_memory_never_shows_another_users_or_a_customers_drawers():
     items = [
-        {"drawer_id": CHAT_DRAWER, "user_id": "2"},
-        {"drawer_id": ADMIN_CHAT, "user_id": "2"},  # in the admin's room
-        {"drawer_id": ONE_OFF, "user_id": "2"},  # a customer's drawer
-        {"drawer_id": chat_drawer(2, "c" * 24), "user_id": "1"},  # names another user
-        {"drawer_id": chat_drawer(2, "d" * 24)},  # names nobody
-        {"drawer_id": chat_drawer(2, "e" * 24), "user_id": 2},  # not the id as CoPilot sends it
+        {"drawer_id": CHAT_DRAWER, "user_id": "2", "wing": "talon chat memory"},
+        {"drawer_id": ADMIN_CHAT, "user_id": "2", "wing": "talon chat memory"},  # in the admin's room
+        {"drawer_id": ONE_OFF, "user_id": "2", "wing": "talon chat memory"},  # a customer's drawer
+        {"drawer_id": chat_drawer(2, "c" * 24), "user_id": "1", "wing": "talon chat memory"},  # another user
+        {"drawer_id": chat_drawer(2, "d" * 24), "wing": "talon chat memory"},  # names nobody
+        {"drawer_id": chat_drawer(2, "e" * 24), "user_id": 2, "wing": "talon chat memory"},  # not the id sent
         {"drawer_id": chat_drawer(2, "f" * 24), "user_id": "2", "wing": ACME},
+        {"drawer_id": chat_drawer(2, "a" * 24), "user_id": "2"},  # no wing
     ]
     respond = talon({"/v2/memory/chat/2": httpx.Response(200, json={"items": items})})
     body = body_of(run(get("/chat/mine", "ana"), respond=respond)[0])
@@ -1134,20 +1178,48 @@ def test_a_chat_forget_answer_must_name_the_caller(answer):
     assert "unconfirmed" in audits(audit)[0]["details"]
 
 
-def test_a_longer_customer_code_is_caught_by_the_answers_owner():
-    """``drawer_ACME_X_…`` starts ``drawer_ACME_``: the prefix lets it through to Talon, and the answer,
-    which names ACME_X (talon-analyst reads it from ACME_X's wing), is refused."""
-    other = customer_drawer("ACME_X")
-    drawers = {other: drawer(other, customer_code="ACME_X")}
-    response, _, _ = run(get(f"/{ACME}/drawers/{quote(other, safe='')}"), respond=talon(drawers=drawers))
+ACME_X_DRAWERS = [customer_drawer("ACME_X"), customer_drawer("ACME_X", "alerts"), customer_drawer("ACME_X", "notes")]
+
+
+@pytest.mark.parametrize("other", ACME_X_DRAWERS)
+@pytest.mark.parametrize("method", ["GET", "DELETE"])
+def test_acme_x_drawers_are_refused_on_acme_routes_before_talon_is_asked(method, other):
+    response, fake, _ = run(call(method, f"/talon/memory/{ACME}/drawers/{quote(other, safe='')}"))
+    assert response.status_code == 400 and body_of(response)["detail"] == talon_memory.NOT_THIS_CUSTOMERS
+    assert fake.requests == []
+
+
+def test_acme_x_drawers_are_never_listed_or_searched_for_acme():
+    """talon-analyst lists only the wing asked for; if one came back anyway, echoing ACME, it is
+    dropped by its id and by its wing."""
+    leak = [{**item(d), "customer_code": ACME} for d in ACME_X_DRAWERS]
+    ambiguous = {**item(customer_drawer(ACME, "false_positives", "e" * 24)), "wing": "ACME_false"}
+    page = {"items": [item(), *leak, ambiguous], "next_cursor": None}
+    for query in ({}, {"q": "backups"}):
+        respond = talon({("GET", f"/v2/memory/{ACME}/drawers"): httpx.Response(200, json=page)})
+        body = body_of(run(get(f"/{ACME}/drawers", params=query), respond=respond)[0])
+        assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF]
+
+
+def test_an_id_two_customers_could_own_is_settled_by_the_wing():
+    """``drawer_ACME_false_positives_<hex>`` reads as ACME's (room false_positives) and ACME_false's
+    (room positives): the id check can't tell, the stored wing does."""
+    theirs = customer_drawer(ACME, "false_positives", "e" * 24)
+    drawers = {theirs: drawer(theirs, wing="ACME_false")}
+    response, _, _ = run(get(f"/{ACME}/drawers/{theirs}"), respond=talon(drawers=drawers))
     assert response.status_code == 502
-    response, fake, _ = run(delete(f"/{ACME}/drawers/{quote(other, safe='')}"), respond=talon(drawers=drawers))
+    response, fake, _ = run(delete(f"/{ACME}/drawers/{theirs}"), respond=talon(drawers=drawers))
     assert response.status_code == 502 and [r.method for r in fake.requests] == ["GET"]
 
 
 @pytest.mark.parametrize(
     "answer",
-    [{"success": True, "drawer_id": ONE_OFF}, {"success": True, "drawer_id": ONE_OFF, "customer_code": GLOBEX}],
+    [
+        {"success": True, "drawer_id": ONE_OFF},
+        {"success": True, "drawer_id": ONE_OFF, "customer_code": GLOBEX, "wing": ACME},
+        {"success": True, "drawer_id": ONE_OFF, "customer_code": ACME},  # no wing
+        {"success": True, "drawer_id": ONE_OFF, "customer_code": ACME, "wing": GLOBEX},
+    ],
 )
 def test_a_forget_answer_must_name_the_customer(answer):
     respond = talon({("DELETE", f"/v2/memory/{ACME}/drawers/{ONE_OFF}"): httpx.Response(200, json=answer)})
@@ -1155,14 +1227,12 @@ def test_a_forget_answer_must_name_the_customer(answer):
     assert response.status_code == 502 and "unconfirmed" in audits(audit)[0]["details"]
 
 
-@pytest.mark.parametrize("missing", ["customer_code"])
-def test_drawers_without_an_owner_are_never_shown(missing):
+@pytest.mark.parametrize("missing", ["customer_code", "wing"])
+def test_list_items_without_an_owner_field_are_never_shown(missing):
     page = {"items": [{k: v for k, v in item().items() if k != missing}, item(customer_drawer(ACME, "alerts"))]}
     respond = talon({("GET", f"/v2/memory/{ACME}/drawers"): httpx.Response(200, json=page)})
-    assert [i["drawer_id"] for i in body_of(run(get(f"/{ACME}/drawers"), respond=respond)[0])["items"]] == [customer_drawer(ACME, "alerts")]
-    one = {k: v for k, v in drawer().items() if k != missing}
-    response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers={ONE_OFF: one}))
-    assert response.status_code == 502
+    shown = body_of(run(get(f"/{ACME}/drawers"), respond=respond)[0])["items"]
+    assert [i["drawer_id"] for i in shown] == [customer_drawer(ACME, "alerts")]
 
 
 def test_stats_complete_and_room_names():
@@ -1181,3 +1251,118 @@ def test_assets_and_timelines_naming_another_customer_are_not_shown():
     timeline = {"asset": "SRV-01", "customer_code": GLOBEX, "facts": []}
     respond = talon({f"/v2/memory/{ACME}/assets/SRV-01/timeline": httpx.Response(200, json=timeline)})
     assert run(get(f"/{ACME}/assets/SRV-01/timeline"), respond=respond)[0].status_code == 502
+
+
+# ── timeouts, the audit row, CoPilot's lesson rows ─────────────────────────────
+
+
+def test_each_call_has_its_own_deadline(monkeypatch):
+    seen = []
+    original = memory_client.request
+
+    async def spy(*args, **kwargs):
+        seen.append((args[0], args[2][-1], kwargs.get("timeout")))
+        return await original(*args, **kwargs)
+
+    monkeypatch.setattr(memory_client, "request", spy)
+
+    async def scenario(client, fake, audit):
+        for method, path in [
+            ("GET", f"/{ACME}/stats"),
+            ("GET", f"/{ACME}/drawers"),
+            ("GET", f"/{ACME}/drawers/{ONE_OFF}"),
+            ("DELETE", f"/{ACME}/drawers/{ONE_OFF}"),
+            ("GET", f"/{ACME}/assets"),
+            ("GET", f"/{ACME}/assets/SRV-01/timeline"),
+            ("GET", "/chat/mine"),
+            ("DELETE", f"/chat/mine/{quote(ADMIN_CHAT, safe='')}"),
+        ]:
+            assert (await client.request(method, f"/talon/memory{path}", headers=as_user("admin"))).status_code == 200
+
+    run(scenario)
+    assert memory_client.STATS_SECONDS == 50.0 and memory_client.SLOW_SECONDS == 30.0
+    assert seen == [
+        ("GET", "stats", 50.0),
+        ("GET", "drawers", 30.0),
+        ("GET", ONE_OFF, 30.0),
+        ("GET", ONE_OFF, 30.0),  # the forget's read
+        ("DELETE", ONE_OFF, 30.0),
+        ("GET", "assets", None),  # the short default
+        ("GET", "timeline", 30.0),
+        ("GET", "1", None),
+        ("DELETE", ADMIN_CHAT, 30.0),
+    ]
+
+
+@pytest.mark.parametrize("path", [f"/{ACME}/drawers/{ONE_OFF}", f"/chat/mine/{quote(CHAT_DRAWER, safe='')}"])
+def test_a_forget_that_times_out_is_audited_as_outcome_unknown(path):
+    respond = talon(
+        {
+            ("DELETE", f"/v2/memory/chat/2/{CHAT_DRAWER}"): httpx.ReadTimeout("slow"),
+            ("DELETE", f"/v2/memory/{ACME}/drawers/{ONE_OFF}"): httpx.ReadTimeout("slow"),
+        },
+    )
+    response, _, audit = run(delete(path, "ana"), respond=respond)
+    assert response.status_code == 504
+    assert body_of(response) == {"detail": talon_memory.FORGET_UNKNOWN, "code": "unavailable"}
+    (row,) = audits(audit)
+    assert row["result"] == AuditResult.UNKNOWN and "outcome unknown" in row["details"]
+    assert "not forgotten" not in row["details"]
+
+
+def test_a_customer_code_too_long_for_the_audit_column_goes_in_the_details():
+    code = "a" * 60
+    response, fake, audit = run(delete(f"/{code}/drawers/{customer_drawer(code)}"))
+    assert response.status_code == 404 and fake.requests == []  # no such customer row
+    (row,) = audits(audit)
+    assert row["customer_code"] is None and row["details"].startswith(f"customer {code}: ")
+    response, _, audit = run(delete(f"/{ACME}/drawers/{ONE_OFF}"))
+    (row,) = audits(audit)
+    assert row["customer_code"] == ACME and not row["details"].startswith("customer ")
+
+
+def _lesson(drawer_id, **extra):
+    fields = {
+        "customer_code": ACME,
+        "lesson_type": "false_positives",
+        "lesson_text": "x",
+        "durability": "one_off",
+        "status": "ingested",
+        "drawer_id": drawer_id,
+        "ingested_at": datetime(2026, 10, 20),
+    }
+    fields.update(extra)
+    return AiAnalystPalaceLesson(**fields)
+
+
+@pytest.mark.parametrize("source, expired", [("review_one_off", True), ("chat_remember", False)])
+def test_a_forgotten_one_off_lesson_expires_copilots_lesson_row(source, expired):
+    drawers = {ONE_OFF: drawer(source=source)}
+
+    async def scenario(client, fake, audit):
+        async with fake.db.session() as session:
+            session.add_all([_lesson(ONE_OFF), _lesson(ONE_OFF, customer_code=GLOBEX), _lesson(DURABLE)])
+            await session.commit()
+        response = await client.delete(f"/talon/memory/{ACME}/drawers/{ONE_OFF}", headers=as_user("admin"))
+        assert response.status_code == 200
+        async with fake.db.session() as session:
+            rows = (await session.execute(select(AiAnalystPalaceLesson).order_by(AiAnalystPalaceLesson.id))).scalars().all()
+            return [(r.customer_code, r.drawer_id, r.status, r.expired_at is not None) for r in rows]
+
+    rows = run(scenario, respond=talon(drawers=drawers))
+    assert rows == [
+        (ACME, ONE_OFF, "expired" if expired else "ingested", expired),
+        (GLOBEX, ONE_OFF, "ingested", False),  # another customer's row with the same id
+        (ACME, DURABLE, "ingested", False),
+    ]
+
+
+@pytest.mark.parametrize("value", ["drawer∕..∕threads", "drawer／..／threads", "a∕b", "a／b"])
+def test_unicode_slashes_never_reach_talon(value):
+    """U+2215 (division slash) and U+FF0F (fullwidth solidus) look like "/": refused by the id rules,
+    and percent-encoded as UTF-8 if one were ever sent."""
+    assert not talon_memory.is_customer_drawer(value, ACME) and not talon_memory.is_own_chat_drawer(value, "2")
+    for method, path in [("GET", f"/{ACME}/drawers/{_encoded(value)}"), ("DELETE", f"/chat/mine/{_encoded(value)}")]:
+        response, fake, _ = run(call(method, f"/talon/memory{path}", "ana"))
+        assert response.status_code == 400 and fake.requests == []
+    assert memory_client.memory_path([ACME, "drawers", "a∕b／c"]) == f"/v2/memory/{ACME}/drawers/a%E2%88%95b%EF%BC%8Fc"

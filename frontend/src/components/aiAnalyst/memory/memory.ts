@@ -13,7 +13,13 @@ import type { BarSeriesOption } from "echarts/charts"
 import type { GridComponentOption, TooltipComponentOption } from "echarts/components"
 import type { ComposeOption } from "echarts/core"
 import type { TalonMemoryFailure } from "@/api/endpoints/talonMemory"
-import type { TalonMemoryDrawer, TalonMemoryRoom, TalonMemorySource, TalonMemoryStats } from "@/types/talonMemory"
+import type {
+	TalonMemoryDrawer,
+	TalonMemoryItem,
+	TalonMemoryRoom,
+	TalonMemorySource,
+	TalonMemoryStats
+} from "@/types/talonMemory"
 import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle } from "@/components/common/charts"
 import { escapeHtml } from "../usage/usage-chart"
 
@@ -55,6 +61,39 @@ export function formatIocs(value: number | null | undefined): string {
 /** A row's room: the label, or for a room outside the five, its own name. */
 export function roomText(room: string | null | undefined, roomName?: string | null): string {
 	return room === "other" && roomName ? roomName : roomLabel(room)
+}
+
+export interface HiddenTag {
+	text: string
+	title: string
+	/** Testing (D28) is a warning; the other reasons are how the memory works. */
+	type: "warning" | "default"
+}
+
+/**
+ * Why a drawer is out of what investigations are shown, in a tag (talon-analyst's `why_hidden`
+ * reasons): testing (D28: never recalled), not written by talon-analyst (left out of an
+ * investigation's context, though the recall tool can still find it), or per-user chat memory.
+ */
+export function hiddenTag(
+	row: Pick<TalonMemoryItem, "testing_hidden" | "visible_to_investigations" | "source">
+): HiddenTag | null {
+	if (row.testing_hidden) {
+		return {
+			text: "Hidden: testing",
+			title: "Put down to testing, so investigations and recall leave it out",
+			type: "warning"
+		}
+	}
+	if (row.visible_to_investigations !== false) return null
+	if (row.source === "investigation") {
+		return { text: "Not used by investigations", title: "Talon keeps it out of investigations", type: "default" }
+	}
+	return {
+		text: "Recall only",
+		title: "Not written by Talon: left out of an investigation's context, but the recall tool can still find it",
+		type: "default"
+	}
 }
 
 /** What a user may forget (decision 1; the backend and talon-analyst refuse anything else). */

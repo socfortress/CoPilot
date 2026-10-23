@@ -29,9 +29,9 @@
 					test-id="talon-memory-filed"
 				/>
 				<KpiTile
-					label="Hidden from investigations"
+					label="Hidden as testing"
 					:value="formatCount(stats.testing_hidden)"
-					help="Lessons kept but not used by new investigations because they came from testing. Testing is never a reason to lower an alert's severity."
+					help="False-positive lessons that put the activity down to testing: kept, but investigations and recall leave them out. Testing is never a reason to lower an alert's severity."
 					hint="kept, not used"
 					test-id="talon-memory-hidden"
 				/>

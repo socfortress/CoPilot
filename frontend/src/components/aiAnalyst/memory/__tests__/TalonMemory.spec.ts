@@ -475,6 +475,58 @@ describe("a memory's detail", () => {
 		expect(byId(wrapper, "drawer-stub")).toHaveLength(0)
 	})
 
+	it("a double click on Forget sends one request", async () => {
+		let finish: (value: unknown) => void = () => {}
+		api.forgetDrawer.mockImplementation(() => new Promise(resolve => (finish = resolve)))
+		const wrapper = await opened()
+		await byId(wrapper, "talon-memory-forget")[0].trigger("click")
+		await byId(wrapper, "talon-memory-forget")[0].trigger("click")
+		const confirm = byId(wrapper, "talon-memory-forget-confirm-button")[0]
+		await confirm.trigger("click")
+		await confirm.trigger("click")
+		await confirm.trigger("dblclick")
+		expect(api.forgetDrawer).toHaveBeenCalledTimes(1)
+		finish({ data: { success: true, drawer_id: ONE_OFF } })
+		await settle()
+		expect(api.forgetDrawer).toHaveBeenCalledTimes(1)
+	})
+
+	it("the hidden tag and note follow Talon's reason", async () => {
+		api.listDrawers.mockImplementation(() =>
+			ok({
+				success: true,
+				items: [
+					item(ONE_OFF, { testing_hidden: true, visible_to_investigations: false }),
+					item(DURABLE, { source: "review_durable", visible_to_investigations: false })
+				],
+				next_cursor: null
+			})
+		)
+		const NOT_TRUSTED =
+			"not written by talon-analyst: S3 counts it but doesn't show it to investigations (chat's recall still finds it)"
+		api.getDrawer.mockImplementation((_code: string, id: string) =>
+			ok(
+				id === ONE_OFF
+					? drawer({ testing_hidden: true, visible_to_investigations: false, why_hidden: "D28: testing" })
+					: drawer({
+							drawer_id: DURABLE,
+							source: "review_durable",
+							visible_to_investigations: false,
+							why_hidden: NOT_TRUSTED
+						})
+			)
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-memory-hidden-tag").map(t => t.text())).toEqual(["Hidden: testing", "Recall only"])
+		await byId(wrapper, "talon-memory-open")[1].trigger("click")
+		await settle()
+		const note = byId(wrapper, "talon-memory-detail-hidden")[0]
+		expect(note.attributes("data-reason")).toBe("other")
+		expect(note.text()).toContain(NOT_TRUSTED)
+		expect(note.text()).not.toContain("never a reason to lower")
+	})
+
 	it("a refused forget shows Talon's reason and keeps the memory", async () => {
 		api.forgetDrawer.mockImplementation(() =>
 			refusal(409, { detail: "A durable lesson can't be forgotten", code: "refused" })

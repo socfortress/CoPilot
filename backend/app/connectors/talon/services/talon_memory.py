@@ -19,13 +19,17 @@ about who may see what is applied in this module, before Talon is asked:
   again. The actor sent is the CoPilot username. Every attempt, refused or not, is audited
   (``talon_memory.forget``).
 - **Owners are checked here too** (defence in depth; talon-analyst checks them as well). A MemPalace
-  id is ``drawer_<wing>_<room>_<24 hex>``: on a customer route it must start ``drawer_<customer_code>_``
-  exactly (``is_customer_drawer``), so a chat-memory id or another customer's is refused before Talon
-  is asked; on the chat routes it must be in the chat-memory wing and the caller's own room
-  (``is_own_chat_drawer``: ``user `` and the SHA-256 of their id). Every answer must name its owner
-  (``owned_by``): ``customer_code`` on a drawer, a list item and a forget, ``user_id`` on a chat item
-  and a chat forget; missing or different, it is never shown (a list item is dropped, anything else
-  is a 502) and a forget that names another owner is unconfirmed.
+  id is ``drawer_<wing>_<room>_<24 hex>``. On a customer route it must fullmatch
+  ``drawer_<customer_code>_<room>_<24 hex>``, the room one of the five lesson rooms or a name without
+  ``_`` (``is_customer_drawer``), so ``drawer_acme_x_alerts_…`` asked as ``acme`` is refused ("x_alerts"
+  is no room); on the chat routes it must be the chat-memory wing and the caller's own room
+  (``is_own_chat_drawer``: ``user `` and the SHA-256 of their id). Refused before Talon is asked.
+  Every answer must name its owner (``Owner``): a drawer, a list item and a forget (200 and 409) carry
+  ``customer_code`` *and* the stored MemPalace ``wing``, both equal to the customer; a chat item
+  ``user_id`` and the chat-memory ``wing``; a chat forget ``user_id``; stats ``customer_code``. talon-analyst
+  echoes ``customer_code`` from the path, so the ``wing`` it read is what proves the drawer is this
+  customer's. Missing or different: never shown (a list item is dropped, anything else is a 502) and
+  a forget is unconfirmed.
 - **Paths.** A drawer id or an asset name goes into talon-analyst's path, so it must be safe
   (``is_safe_drawer_id``: at most 255 characters, nothing unseen, no ``/``, ``\\``, ``%``, ``?``, ``#``
   or ``..``; ``ASSET``) and is percent-encoded by ``utils/memory_client``; a search goes in the
@@ -49,18 +53,19 @@ from dataclasses import dataclass
 from datetime import date
 from datetime import datetime
 from typing import Any
+from typing import Awaitable
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Mapping
 from typing import Optional
-from typing import Tuple
 from typing import Union
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
@@ -94,6 +99,8 @@ from app.connectors.talon.utils.memory_client import MemoryAnswer
 from app.connectors.talon.utils.universal import refusal_reason
 from app.connectors.talon.utils.v2_client import TALON_CONNECTOR
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
+from app.db.universal_models import AiAnalystPalaceLesson
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
 
@@ -162,6 +169,7 @@ FAILED = "Talon request failed"
 NOT_FORGETTABLE = "This memory can't be forgotten: only one-off review lessons and chat remember lessons can"
 FORGET_REFUSED = "Talon refused to forget this memory"
 FORGET_UNCONFIRMED = "Talon did not confirm that the memory was forgotten"
+FORGET_UNKNOWN = "Talon didn't answer in time, so the memory may or may not have been forgotten; refresh to check"
 
 NO_STORE = {"Cache-Control": "no-store"}
 
@@ -203,13 +211,21 @@ def is_safe_drawer_id(value: Any) -> bool:
 CHAT_ROOM_PREFIX = "user "
 
 
+#: The five lesson rooms (talon-analyst ``browse.ROOMS``); any other room in an id must have no ``_``.
+_LESSON_ROOMS = "|".join(ROOM_FILTERS)
+_OTHER_ROOM = "[A-Za-z0-9-]+"
+_DRAWER_HASH = "[0-9a-f]{24}"
+
+
 def is_customer_drawer(drawer_id: Any, customer_code: str) -> bool:
-    """Whether ``drawer_id`` starts with ``customer_code``'s wing, exactly and case-sensitively
-    (``drawer_<customer_code>_``). Defence in depth, before Talon is asked: talon-analyst checks the
-    wing too, and every answer must name ``customer_code`` (``owned_by``), which is what settles a
-    longer code that starts the same (``acme`` and ``acme_x``)."""
-    prefix = f"drawer_{customer_code}_"
-    return is_safe_drawer_id(drawer_id) and drawer_id.startswith(prefix) and len(drawer_id) > len(prefix)
+    """Whether ``drawer_id`` is ``drawer_<customer_code>_<room>_<24 hex>`` exactly (case-sensitive),
+    the room one of the five lesson rooms or a name without ``_``. Defence in depth, before Talon is
+    asked: ``drawer_acme_x_alerts_<hex>`` asked as ``acme`` would need the room ``x_alerts``, so it is
+    refused. (A code that ends like a lesson room's start, ``acme_false`` vs ``acme`` +
+    ``false_positives``, still reads both ways: the answer's ``wing`` settles it.)"""
+    return is_safe_drawer_id(drawer_id) and bool(
+        re.fullmatch(f"drawer_{re.escape(customer_code)}_(?:{_LESSON_ROOMS}|{_OTHER_ROOM})_{_DRAWER_HASH}", drawer_id),
+    )
 
 
 def is_chat_drawer(drawer_id: Any) -> bool:
@@ -222,18 +238,39 @@ def chat_room(user_id: str) -> str:
 
 
 def is_own_chat_drawer(drawer_id: Any, user_id: str) -> bool:
-    """Whether ``drawer_id`` is in the chat-memory wing *and* in ``user_id``'s own room."""
-    prefix = f"drawer_{CHAT_MEMORY_WING}_{chat_room(user_id)}_"
-    return is_safe_drawer_id(drawer_id) and drawer_id.startswith(prefix) and len(drawer_id) > len(prefix)
+    """Whether ``drawer_id`` is ``drawer_<chat wing>_<user_id's own room>_<24 hex>`` exactly."""
+    return is_safe_drawer_id(drawer_id) and bool(
+        re.fullmatch(f"drawer_{re.escape(CHAT_MEMORY_WING)}_{re.escape(chat_room(user_id))}_{_DRAWER_HASH}", drawer_id),
+    )
 
 
-def owned_by(raw: Mapping[str, Any], field: str, owner: str, *, wing: Optional[str] = None) -> bool:
-    """Whether an answer names its owner: ``field`` (``customer_code`` or ``user_id``) present and
-    equal to ``owner``, and a ``wing``, if there is one, equal to ``wing``. Missing or different
-    fails closed: never shown, never acted on."""
-    if raw.get(field) != owner:
-        return False
-    return "wing" not in raw or raw["wing"] == (wing if wing is not None else owner)
+@dataclass(frozen=True)
+class Owner:
+    """Whose an answer must say it is: ``field`` (``customer_code`` or ``user_id``) equal to ``value``,
+    and the stored MemPalace ``wing`` equal to ``wing`` (required unless ``wing_required`` is off, then
+    checked only when present). Missing or different fails closed: never shown, never acted on."""
+
+    field: str
+    value: str
+    wing: str
+    wing_required: bool = True
+
+    def owns(self, raw: Any) -> bool:
+        if not isinstance(raw, Mapping) or raw.get(self.field) != self.value:
+            return False
+        if "wing" in raw:
+            return raw["wing"] == self.wing
+        return not self.wing_required
+
+
+def customer_owner(customer_code: str) -> Owner:
+    """A drawer, a list item, a forget's answer: ``customer_code`` and the wing it was read from."""
+    return Owner("customer_code", customer_code, customer_code)
+
+
+def chat_owner(user_id: str, *, wing_required: bool = True) -> Owner:
+    """A chat item (``user_id`` and the chat-memory wing); a chat forget's answer carries no wing."""
+    return Owner("user_id", user_id, CHAT_MEMORY_WING, wing_required)
 
 
 def names_another(raw: Mapping[str, Any], owner: str) -> bool:
@@ -497,7 +534,7 @@ def _source_ref(raw: Any) -> Optional[TalonMemorySourceRef]:
 def _item_fields(raw: Any, talon: Talon, customer_code: str) -> Optional[Dict[str, Any]]:
     """A drawer's fields, or None: not a dict, no usable id, an id outside ``customer_code``'s wing,
     or an answer naming another customer or wing (fail closed)."""
-    if not isinstance(raw, dict) or not owned_by(raw, "customer_code", customer_code):
+    if not isinstance(raw, dict) or not customer_owner(customer_code).owns(raw):
         return None
     drawer_id = _id(raw.get("drawer_id"), talon.scrub)
     if drawer_id is None or not is_customer_drawer(drawer_id, customer_code):
@@ -520,7 +557,7 @@ def _item_fields(raw: Any, talon: Talon, customer_code: str) -> Optional[Dict[st
 def parse_stats(raw: Any, talon: Talon, customer_code: str) -> Optional[TalonMemoryStats]:
     if not isinstance(raw, dict):
         return None
-    if not owned_by(raw, "customer_code", customer_code):
+    if not Owner("customer_code", customer_code, customer_code, wing_required=False).owns(raw):
         return None  # another customer's answer, or one that doesn't say whose, is never shown
     rooms = _dict(raw.get("rooms"))
     sources = _dict(raw.get("sources"))
@@ -643,7 +680,7 @@ def parse_chat(raw: Any, talon: Talon, user_id: str) -> Optional[TalonChatMemory
     for entry in raw["items"]:
         if len(items) >= MAX_CHAT_ITEMS:
             break
-        if not isinstance(entry, dict) or not owned_by(entry, "user_id", user_id, wing=CHAT_MEMORY_WING):
+        if not isinstance(entry, dict) or not chat_owner(user_id).owns(entry):
             dropped += 1
             continue
         drawer_id = _id(entry.get("drawer_id"), talon.scrub)
@@ -667,9 +704,9 @@ def parse_chat(raw: Any, talon: Talon, user_id: str) -> Optional[TalonChatMemory
     return TalonChatMemory(items=items)
 
 
-def _forgotten(raw: Any, drawer_id: str, owner: Tuple[str, str]) -> Optional[TalonMemoryForgotten]:
-    """A 2xx forget that says so, for this drawer and naming its owner (``(field, value)``)."""
-    if not isinstance(raw, dict) or raw.get("success") is not True or not owned_by(raw, *owner):
+def _forgotten(raw: Any, drawer_id: str, owner: Owner) -> Optional[TalonMemoryForgotten]:
+    """A 2xx forget that says so, for this drawer and naming its owner."""
+    if not isinstance(raw, dict) or raw.get("success") is not True or not owner.owns(raw):
         return None
     if raw.get("drawer_id") != drawer_id:
         return None
@@ -698,7 +735,7 @@ async def get_stats(user: User, session: AsyncSession, customer_code: str):
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         return talon
-    answer = await _ask(talon, "GET", [customer_code, "stats"])
+    answer = await _ask(talon, "GET", [customer_code, "stats"], timeout=memory_client.STATS_SECONDS)
     return _parsed(answer, lambda raw: parse_stats(raw, talon, customer_code), talon)
 
 
@@ -733,7 +770,7 @@ async def list_drawers(
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         return talon
-    answer = await _ask(talon, "GET", [customer_code, "drawers"], params=params)
+    answer = await _ask(talon, "GET", [customer_code, "drawers"], params=params, timeout=memory_client.SLOW_SECONDS)
     return _parsed(answer, lambda raw: parse_page(raw, talon, customer_code), talon)
 
 
@@ -745,7 +782,7 @@ async def get_drawer(user: User, session: AsyncSession, customer_code: str, draw
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         return talon
-    answer = await _ask(talon, "GET", [customer_code, "drawers", drawer_id])
+    answer = await _ask(talon, "GET", [customer_code, "drawers", drawer_id], timeout=memory_client.SLOW_SECONDS)
     return _parsed(
         answer,
         lambda raw: parse_drawer(raw, talon, customer_code, drawer_id),
@@ -773,7 +810,7 @@ async def asset_timeline(user: User, session: AsyncSession, customer_code: str, 
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         return talon
-    answer = await _ask(talon, "GET", [customer_code, "assets", asset, "timeline"])
+    answer = await _ask(talon, "GET", [customer_code, "assets", asset, "timeline"], timeout=memory_client.SLOW_SECONDS)
     return _parsed(answer, lambda raw: parse_timeline(raw, talon, customer_code, asset), talon)
 
 
@@ -793,20 +830,55 @@ async def list_chat_memory(user: User, session: AsyncSession, limit: Optional[in
 # ── forgetting ────────────────────────────────────────────────────────────────
 
 
+#: ``audit_log.customer_code``'s length.
+AUDIT_CUSTOMER_MAX = 50
+
+
+async def _record(audit: Mapping[str, Any], *, result, details: str, old_value: Optional[dict] = None) -> None:
+    """One ``talon_memory.forget`` row. A customer code too long for the column is named in the
+    details instead (``long_customer_code``)."""
+    fields = dict(audit)
+    long_code = fields.pop("long_customer_code", None)
+    if long_code:
+        details = f"customer {long_code}: {details}"
+    await record_audit_event(**fields, result=result, old_value=old_value, details=details)
+
+
+async def expire_lesson_rows(customer_code: str, drawer_id: str) -> None:
+    """After a confirmed forget of a one-off review lesson: CoPilot's ``ai_analyst_palace_lesson`` rows
+    for it go ``expired`` with ``expired_at``, as the sweeper leaves the ones it forgets, so the palace
+    digest no longer counts it live. Best effort, in a session of its own."""
+    try:
+        async with get_db_session() as session:
+            await session.execute(
+                update(AiAnalystPalaceLesson)
+                .where(
+                    AiAnalystPalaceLesson.drawer_id == drawer_id,
+                    AiAnalystPalaceLesson.customer_code == customer_code,
+                    AiAnalystPalaceLesson.durability == "one_off",
+                    AiAnalystPalaceLesson.status == "ingested",
+                )
+                .values(status="expired", expired_at=datetime.utcnow()),
+            )
+            await session.commit()
+    except Exception as e:  # noqa: BLE001 - the forget happened; the row is a mirror
+        logger.error(f"Talon memory: could not mark the lesson rows of a forgotten drawer expired ({type(e).__name__})")
+
+
 def _audit_id(drawer_id: Any) -> str:
     """The drawer id for the audit row: as sent when it is one CoPilot could use, else a marker
     (a refused id is never written as the caller typed it)."""
     return drawer_id if is_safe_drawer_id(drawer_id) else "<invalid drawer id>"
 
 
-def _refusal_text(answer: MemoryAnswer, talon: Talon, owner: Tuple[str, str]) -> str:
+def _refusal_text(answer: MemoryAnswer, talon: Talon, owner: Owner) -> str:
     """A forget refusal's own short line from talon-analyst (its ``error``), cleaned, when the 409
     names the owner asked about; else ours."""
     try:
         body = json.loads(answer.body)
     except (ValueError, RecursionError):
         body = None
-    if not isinstance(body, dict) or not owned_by(body, *owner):
+    if not owner.owns(body):
         return FORGET_REFUSED
     reason = refusal_reason(answer.status or 0, answer.body)
     return talon.scrub(reason, MAX_REASON) or FORGET_REFUSED
@@ -818,29 +890,41 @@ async def _delete(
     drawer_id: str,
     user: User,
     audit: Dict[str, Any],
-    owner: Tuple[str, str],
+    owner: Owner,
     old_value: Optional[dict] = None,
+    on_forgotten: Optional[Callable[[], Awaitable[None]]] = None,
 ):
-    """The DELETE itself, audited whatever happens."""
+    """The DELETE itself, audited whatever happens. A DELETE Talon didn't answer in time may have
+    happened: audited as ``unknown``, never as not forgotten."""
 
     async def failed(response: JSONResponse, details: str) -> JSONResponse:
-        await record_audit_event(**audit, result=AuditResult.FAILURE, old_value=old_value, details=details)
+        await _record(audit, result=AuditResult.FAILURE, old_value=old_value, details=details)
         return response
 
-    answer = await _ask(talon, "DELETE", segments, json_body={"actor": user.username})
+    answer = await _ask(talon, "DELETE", segments, json_body={"actor": user.username}, timeout=memory_client.SLOW_SECONDS)
     status = answer.status
+    if answer.timed_out:
+        await _record(
+            audit,
+            result=AuditResult.UNKNOWN,
+            old_value=old_value,
+            details=f"Talon memory forget: outcome unknown ({answer.error}); it may have been forgotten",
+        )
+        return problem(504, FORGET_UNKNOWN, "unavailable")
     if status is not None and 200 <= status < 300:
         raw = _json(answer) if not answer.error else None
         done = None if isinstance(raw, JSONResponse) else _forgotten(raw, drawer_id, owner)
         if done is None and isinstance(raw, dict) and raw.get("success") is False:
             return await failed(problem(502, FORGET_UNCONFIRMED, "bad_answer"), "Talon answered 2xx with success false")
         # talon-analyst's 2xx means it was forgotten, whatever its body: audited as done.
-        await record_audit_event(
-            **audit,
+        await _record(
+            audit,
             result=AuditResult.SUCCESS,
             old_value=old_value,
             details="Talon memory forgotten" + ("" if done else "; talon-analyst's answer was unreadable, so it is unconfirmed"),
         )
+        if done is not None and on_forgotten is not None:
+            await on_forgotten()
         return done if done is not None else problem(502, FORGET_UNCONFIRMED, "bad_answer")
     if status == 409:
         reason = _refusal_text(answer, talon, owner)
@@ -855,14 +939,18 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
         "action": AuditAction.TALON_MEMORY_FORGET,
         "actor_user_id": user.id,
         "actor_username": user.username,
-        "customer_code": customer_code if is_talon_customer_code(customer_code) else None,
+        # audit_log.customer_code holds 50 characters: a longer code goes in the details instead.
+        "customer_code": customer_code if is_talon_customer_code(customer_code) and len(customer_code) <= AUDIT_CUSTOMER_MAX else None,
         "entity_type": "talon_memory",
         "entity_id": _audit_id(drawer_id),
         "request": request,
     }
 
+    if audit["customer_code"] is None and is_talon_customer_code(customer_code):
+        audit["long_customer_code"] = customer_code
+
     async def failed(response: JSONResponse, details: str, old_value: Optional[dict] = None) -> JSONResponse:
-        await record_audit_event(**audit, result=AuditResult.FAILURE, old_value=old_value, details=details)
+        await _record(audit, result=AuditResult.FAILURE, old_value=old_value, details=details)
         return response
 
     refused = _customer_drawer_problem(customer_code, drawer_id)
@@ -877,7 +965,7 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
 
     # Read it first: CoPilot applies decision 1 itself, and the audit row says what was forgotten.
     drawer = _parsed(
-        await _ask(talon, "GET", [customer_code, "drawers", drawer_id]),
+        await _ask(talon, "GET", [customer_code, "drawers", drawer_id], timeout=memory_client.SLOW_SECONDS),
         lambda raw: parse_drawer(raw, talon, customer_code, drawer_id),
         talon,
     )
@@ -899,8 +987,9 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
         drawer_id,
         user,
         audit,
-        ("customer_code", customer_code),
+        customer_owner(customer_code),
         old_value,
+        on_forgotten=(lambda: expire_lesson_rows(customer_code, drawer_id)) if drawer.source == "review_one_off" else None,
     )
 
 
@@ -918,12 +1007,12 @@ async def forget_chat_memory(user: User, session: AsyncSession, drawer_id: str, 
         # A customer's drawer, another user's chat memory, or an unsafe id: never sent to Talon.
         await session.close()
         detail = NOT_YOUR_CHAT if is_safe_drawer_id(drawer_id) else INVALID_DRAWER
-        await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {detail}")
+        await _record(audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {detail}")
         return problem(400, detail, "invalid")
     talon = await _connector_then_release(session)
     if isinstance(talon, JSONResponse):
         reason = json.loads(talon.body)["detail"]
-        await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {reason}")
+        await _record(audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {reason}")
         return talon
     return await _delete(
         talon,
@@ -931,5 +1020,5 @@ async def forget_chat_memory(user: User, session: AsyncSession, drawer_id: str, 
         drawer_id,
         user,
         audit,
-        ("user_id", str(user.id)),
+        chat_owner(str(user.id), wing_required=False),
     )

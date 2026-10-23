@@ -15,7 +15,11 @@ description: The AI Analyst page's Memory tab shows what Talon remembers about e
 
 Talon's memory is a set of short notes, called **memories** (a MemPalace "drawer" each), kept in one area per customer. A memory is text: a summary, a lesson, a fact about an asset. It is never a copy of raw logs.
 
-Memories are stored with the customer's anonymized tokens in place of usernames, hostnames, email addresses and internal IP addresses, as everything Talon keeps is. When you read one on the Memory tab, Talon restores the real values for that customer before CoPilot shows it to you.
+Memories Talon writes itself (from investigations and chat) are stored with the customer's anonymized tokens in place of usernames, hostnames, email addresses and internal IP addresses. When you read one on the Memory tab, Talon restores the real values for that customer before CoPilot shows it to you.
+
+<Note>
+  Review lessons are the exception: a lesson an analyst teaches from the [review workflow](/power-features/ai-analyst-review) is stored as the analyst wrote it, not tokenized. Write lessons with that in mind.
+</Note>
 
 ### Rooms
 
@@ -55,7 +59,7 @@ Each memory is filed in a **room**, by what it is about:
 
 Choose a customer (the picker starts from the global customers filter, and from your one customer when you have only one). You see:
 
-- **Tiles:** how many memories Talon holds for the customer, how many it filed in the last 30 days, and how many are hidden from investigations. On a very large memory Talon stops counting at a limit, and the tiles say **approximate**.
+- **Tiles:** how many memories Talon holds for the customer, how many it filed in the last 30 days, and how many are hidden as testing. On a very large memory Talon stops counting at a limit, and the tiles say **approximate**.
 - **Filed per day:** memories filed per UTC day over the last 30 days. **Show the numbers** gives the same figures as a table; a day Talon didn't report shows "no data", not 0.
 - **By room** and **By source:** how the memories split. Select a row to filter the list below to it.
 - **Memories:** the list, newest first, with filters for room, source and the days it was filed, and a **search by meaning**: it finds memories about what you describe, not only ones containing your words, so its results are the closest matches first, on one page. **Load more** fetches the next page of the list; with a source filter a page can be shorter than usual while there is still more.
@@ -87,21 +91,23 @@ What Talon remembers from your own chats: your preferences and the notes it keep
 
 You can't forget an investigation's own record or a durable lesson: the Forget button doesn't appear for them, and CoPilot and Talon both refuse it. A durable lesson that is wrong is corrected by reviewing again and teaching a better one.
 
-Forget always asks you to confirm. Every forget, including one CoPilot or Talon refuses, is recorded in CoPilot's audit log as `talon_memory.forget`, with who, which customer and which memory.
+Forget always asks you to confirm. Every forget that passes CoPilot's access checks is recorded in CoPilot's audit log as `talon_memory.forget`, with who, which customer and which memory, and its result: forgotten, refused (by CoPilot or Talon), or **unknown** when Talon didn't answer in time (the memory may or may not be gone; refresh to check). A forget refused because you can't see the customer, or with the Talon v2 setting off, isn't.
 
 What forgetting **does not** do:
 
 - It can't be undone. An analyst can teach Talon the lesson again.
-- It doesn't change reports, reviews or IOC verdicts already written, or the lesson's entry in the review history.
+- It doesn't change reports, reviews or IOC verdicts already written. A forgotten one-off review lesson stays in the review history, marked **expired**, as one past its time is.
 - It doesn't remove what an earlier investigation already concluded from that investigation's own report.
 
 ---
 
-## Why some lessons are hidden
+## Why some memories are hidden
 
-A memory marked **Hidden: testing** (or **Not used by investigations**) is kept, but new investigations don't recall it. Talon does this to lessons it learnt from activity that was put down to testing: a red-team exercise, a breach-and-attack simulation, a penetration test.
+Some memories are kept but not shown to investigations. The memory's detail says why; in the list, a tag does. There are three reasons:
 
-That is not because testing is harmless. **Testing is never a reason to lower an alert's severity**: simulated attacks use real techniques, and an attacker can look exactly like a test. Talon investigates them as real threats. A lesson that says "this was only a test" must not teach later investigations to wave similar activity through, so it is kept out of them. The memory's detail says why it is hidden.
+- **Hidden: testing.** A false-positive lesson that puts the activity down to testing (a red-team exercise, a breach-and-attack simulation, a penetration test). Investigations don't see it, and neither does Talon's recall tool. That is not because testing is harmless. **Testing is never a reason to lower an alert's severity**: simulated attacks use real techniques, and an attacker can look exactly like a test. Talon investigates them as real threats. A lesson that says "this was only a test" must not teach later investigations to wave similar activity through, so it is kept out of them.
+- **Recall only: not written by Talon.** Review lessons and other memories Talon didn't write itself are left out of the context an investigation starts with (it counts them, but doesn't show them), though Talon's recall tool can still find them when it searches.
+- **Chat memory.** A user's own chat memory is per user: investigations never read it.
 
 ---
 

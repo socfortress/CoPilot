@@ -127,14 +127,15 @@
 											Durable
 										</n-tag>
 										<n-tag
-											v-if="row.testing_hidden || row.visible_to_investigations === false"
+											v-if="hiddenTag(row)"
 											size="tiny"
-											type="warning"
+											:type="hiddenTag(row)?.type"
 											:bordered="false"
+											:title="hiddenTag(row)?.title"
 											data-testid="talon-memory-hidden-tag"
 										>
 											<template #icon><Icon name="carbon:view-off" :size="12" /></template>
-											{{ row.testing_hidden ? "Hidden: testing" : "Not used by investigations" }}
+											{{ hiddenTag(row)?.text }}
 										</n-tag>
 									</span>
 								</div>
@@ -180,6 +181,7 @@ import Icon from "@/components/common/Icon.vue"
 import { formatTime } from "../health/health"
 import {
 	dateParams,
+	hiddenTag,
 	PAGE_SIZE,
 	problemState,
 	ROOM_FILTERS,

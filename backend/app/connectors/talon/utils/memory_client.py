@@ -1,7 +1,9 @@
 """The HTTP client behind the Talon Memory tab (``services/talon_memory.py``): talon-analyst's
 ``/v2/memory/...`` routes.
 
-Shaped like ``health_client``: one 8 s deadline per request (connect, headers and body together), at
+Shaped like ``health_client``: one deadline per request (connect, headers and body together; the
+caller picks it, ``TIMEOUT_SECONDS`` by default, ``STATS_SECONDS``/``SLOW_SECONDS`` for the calls
+talon-analyst itself gives 45 s and 25 s), at
 most a capped number of raw bytes read (``capped_body``: an encoded answer is refused, never
 inflated), no redirect followed and the host's proxy settings ignored (``trust_env=False``: no proxy
 nobody chose for Talon carries the API key). Only the connector's API key is sent: the memory API
@@ -35,9 +37,14 @@ from loguru import logger
 
 from app.connectors.talon.utils import capped_body
 
-#: Seconds for a whole request, connect to last byte. A semantic search is the slowest call.
+#: Seconds for a whole request, connect to last byte, by default (the assets list and chat memory).
 TIMEOUT_SECONDS = 8.0
 TIMEOUT = httpx.Timeout(TIMEOUT_SECONDS)
+#: The stats: talon-analyst builds them within 45 s (``browse.STATS_DEADLINE``).
+STATS_SECONDS = 50.0
+#: The list, a search, a drawer, a forget, a timeline: talon-analyst answers within 25 s
+#: (``browse.DEADLINE``; a forget's lock wait included).
+SLOW_SECONDS = 30.0
 PREFIX = "/v2/memory"
 #: The largest answer read: a page of 100 drawers with their previews, or one drawer's content.
 MAX_BODY_BYTES = 2 * 1024 * 1024
@@ -91,10 +98,12 @@ async def request(
     params: Optional[Mapping[str, Any]] = None,
     json_body: Optional[Dict[str, Any]] = None,
     max_body_bytes: Optional[int] = None,
+    timeout: Optional[float] = None,
 ) -> MemoryAnswer:
     """One request to talon-analyst's memory API. ``UnsafePath`` is raised before anything is sent."""
     path = memory_path(segments)
     max_body_bytes = MAX_BODY_BYTES if max_body_bytes is None else max_body_bytes
+    seconds = TIMEOUT_SECONDS if timeout is None else timeout
     headers = {"Accept": "application/json", "Accept-Encoding": "identity", "x-api-key": api_key}
     if json_body is not None:
         headers["Content-Type"] = "application/json"
@@ -102,8 +111,8 @@ async def request(
     # The log line names the route's shape, never a drawer, an asset or a search.
     shape = f"{method} {PREFIX}/{segments[0] if segments[0] == 'chat' else '<customer>'}/…"
     try:
-        with anyio.fail_after(TIMEOUT_SECONDS):
-            async with _new_client(TIMEOUT) as client:
+        with anyio.fail_after(seconds):
+            async with _new_client(httpx.Timeout(seconds)) as client:
                 async with client.stream(method, _url(base_url, path), headers=headers, params=query, json=json_body) as response:
                     if not capped_body.is_identity(response):
                         logger.warning(f"Talon memory {shape}: the answer came with a Content-Encoding; not read")
@@ -114,11 +123,11 @@ async def request(
                         return MemoryAnswer(response.status_code, b"", "Talon's answer was too large")
                     return MemoryAnswer(response.status_code, body)
     except TimeoutError:
-        logger.warning(f"Talon memory {shape}: no answer within {TIMEOUT_SECONDS:g} s")
-        return MemoryAnswer(None, error=f"Talon did not answer within {TIMEOUT_SECONDS:g} s", timed_out=True)
+        logger.warning(f"Talon memory {shape}: no answer within {seconds:g} s")
+        return MemoryAnswer(None, error=f"Talon did not answer within {seconds:g} s", timed_out=True)
     except Exception as e:  # noqa: BLE001 - a transport error or a malformed connector URL
         name = type(e).__name__
         logger.warning(f"Talon memory {shape} failed: {name}")
         if isinstance(e, httpx.TimeoutException):
-            return MemoryAnswer(None, error=f"Talon did not answer within {TIMEOUT_SECONDS:g} s", timed_out=True)
+            return MemoryAnswer(None, error=f"Talon did not answer within {seconds:g} s", timed_out=True)
         return MemoryAnswer(None, error=f"Talon could not be reached ({name})")

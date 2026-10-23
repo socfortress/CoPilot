@@ -119,6 +119,9 @@ class AuditAction(str, Enum):
 class AuditResult(str, Enum):
     SUCCESS = "success"
     FAILURE = "failure"
+    # The action was asked for and no answer came back: it may or may not have happened (a Talon
+    # memory forget that timed out).
+    UNKNOWN = "unknown"
 
 
 class AuditLog(SQLModel, table=True):
