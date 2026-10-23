@@ -72,7 +72,9 @@ from app.time_utils import to_naive_utc  # noqa: E402
 
 CUST_A, CUST_B = "E2E_HDA", "E2E_HDB"
 PREFIX = "e2ehd-"
-ADMIN, ANALYST, PORTAL = "e2e_hd_admin", "e2e_hd_analyst", "e2e_hd_portal"
+# Not healthcheck_delete_seed.py's admin: the cleanup below deletes these, and the browser spec
+# signs in as that one.
+ADMIN, ANALYST, PORTAL = "e2e_hdx_admin", "e2e_hdx_analyst", "e2e_hdx_portal"
 TALON = "talon-analyst"
 PASSWORD = "E2ePassw0rd!hd"
 NOW = to_naive_utc(now_utc())
