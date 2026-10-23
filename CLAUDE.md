@@ -757,6 +757,17 @@ Tests: `tests/test_responder_role.py`; frontend `stores/__tests__/auth-roles.spe
 `components/users/__tests__/`, `Navbar/__tests__/items.spec.ts`,
 `e2e-mocked/responder-role.spec.ts`, and `e2e/unassigned-analyst.spec.ts` (real backend).
 
+### SOCFortress announcements ("What's new", analyst console)
+
+SOCFortress tells CoPilot users about new products, releases, advisories and events through a JSON feed in the public `socfortress/copilot-announcements` repository (`feed.json` on `main`; its README is the publishing guide). `app/announcements/` (`GET /api/announcements`, admin/analyst, so responders too) and `components/announcements/WhatsNew.vue` in the toolbar. Separate from the version banner (`app/version/`, `VersionUpdateBanner.vue`), on purpose.
+
+- **The backend fetches the feed, never the browser** (`services/announcements.py`): `ANNOUNCEMENTS_FEED_URL` (default the raw GitHub URL), 5 s, at most 512 KB of raw bytes with `Accept-Encoding: identity` (an encoded answer is refused), cached an hour (`ANNOUNCEMENTS_CACHE_TTL_SECONDS`), a failure cached five minutes. Any failure is an empty list, logged: never an error to the console. `ANNOUNCEMENTS_ENABLED=false` makes no request at all (air-gapped); `ANNOUNCEMENTS_HIDE_PROMOTIONS=true` drops the `promotion` category.
+- **Each item is validated alone** (`schema/announcements.py:FeedAnnouncement`; unknown fields ignored, a bad item dropped, never the feed): `https` only for `cta.url` and `image_url` (no credentials, whitespace or backslashes), bounded strings, a known category, `expires_at` after `published_at`. The server filters by publish/expiry time, audience (`admin`/`analyst`/`responder`; a responder also gets `analyst` items) and `min_version`/`max_version` against `CURRENT_VERSION`; `AnnouncementOut` carries none of the targeting fields.
+- **No table, no migration: read state is the browser's** (`composables/useAnnouncements.ts`): seen ids in localStorage per username (`copilot.announcements.seen.<username>`), pruned to the ids the feed still carries. The sign-in modal shows unseen `popup` items once per browser session (`sessionStorage`) and marks them seen as it opens; opening the drawer marks everything seen. Reset at logout (`stores/auth.ts:setLogout`). Only SOC roles ask.
+- **Rendering**: the body through `Markdown` with `no-images` (no raw HTML); the CTA a `target="_blank" rel="noopener noreferrer"` link; the image `referrerpolicy="no-referrer"`, hidden if it fails. Never the Customer Portal.
+
+Tests: `tests/test_announcements.py` (no network: `httpx.MockTransport`). Frontend: `composables/__tests__/useAnnouncements.spec.ts`, `components/announcements/__tests__/WhatsNew.spec.ts`.
+
 ### Global customers filter (analyst frontend)
 
 The sidebar multi-select (`app-layouts/VerticalNav/GlobalCustomerFilter.vue`) writes `stores/customer-filter.ts`; **every consumer goes through `composables/useGlobalCustomerFilter.ts`, never the store directly.** Empty selection means "all accessible customers" — the backend intersects requested codes with `user_customer_access`, so a stale code can never widen access. Four entry points, and picking the wrong one is the usual mistake:

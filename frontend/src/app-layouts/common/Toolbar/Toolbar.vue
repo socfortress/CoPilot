@@ -13,6 +13,7 @@
 				<Search />
 				<FullscreenSwitch />
 				<ThemeSwitch />
+				<WhatsNew />
 				<Notifications />
 				<Avatar />
 			</PillWrapper>
@@ -24,6 +25,7 @@
 </template>
 
 <script lang="ts" setup>
+import WhatsNew from "@/components/announcements/WhatsNew.vue"
 import BlurEffect from "@/components/common/BlurEffect.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useThemeStore } from "@/stores/theme"
