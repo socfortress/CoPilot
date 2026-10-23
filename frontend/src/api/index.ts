@@ -2,6 +2,7 @@ import activeResponse from "./endpoints/active-response"
 import agents from "./endpoints/agents"
 import aiAnalyst from "./endpoints/ai-analyst"
 import alerts from "./endpoints/alerts"
+import announcements from "./endpoints/announcements"
 import artifacts from "./endpoints/artifacts"
 import askSocfortress from "./endpoints/ask-socfortress"
 import audit from "./endpoints/audit"
@@ -117,6 +118,7 @@ export default {
 	customerPortal,
 	customerWaf,
 	version,
+	announcements,
 	sidebarContext,
 	snapshots,
 	tagRbac,

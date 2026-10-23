@@ -64,6 +64,7 @@ from app.routers import active_response
 from app.routers import agents
 from app.routers import ai_analyst
 from app.routers import alert_creation_settings
+from app.routers import announcements
 from app.routers import audit
 from app.routers import auth
 from app.routers import aws
@@ -294,6 +295,7 @@ api_router.include_router(logs.router)
 api_router.include_router(audit.router)
 api_router.include_router(influxdb.router)
 api_router.include_router(version.router)
+api_router.include_router(announcements.router)
 api_router.include_router(status.router)
 api_router.include_router(grafana.router)
 api_router.include_router(customer_provisioning.router)

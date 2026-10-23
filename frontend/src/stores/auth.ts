@@ -8,6 +8,7 @@ import _toNumber from "lodash/toNumber"
 import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { resetTalonActions } from "@/components/talonChat/v2/actionCards"
+import { resetAnnouncements } from "@/composables/useAnnouncements"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
 import { resetTalonApprovals } from "@/composables/useTalonApprovals"
@@ -61,6 +62,7 @@ export const useAuthStore = defineStore("auth", {
 			resetTalonApprovals()
 			resetTalonActions()
 			resetCustomerOptions()
+			resetAnnouncements()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {
