@@ -6,12 +6,14 @@ no redirects, no proxy). No network.
 """
 import asyncio
 import gzip
+import hashlib
 import json
 import ssl
 from contextlib import ExitStack
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from unittest.mock import patch
+from urllib.parse import quote
 
 import httpx
 import pytest
@@ -38,7 +40,22 @@ PASSWORD = "talon-connector-password"
 URL = "http://talon-user:talon-pass@talon.invalid:3100/?token=abc#frag"
 ONE_OFF = "drawer_ACME_false_positives_0123456789abcdef01234567"
 DURABLE = "drawer_ACME_alerts_aaaaaaaaaaaaaaaaaaaaaaaa"
-CHAT_DRAWER = "drawer_talon chat memory_environment_bbbbbbbbbbbbbbbbbbbbbbbb"
+HASH = "0123456789abcdef01234567"
+
+
+def customer_drawer(code, room="false_positives", digest=HASH):
+    """A MemPalace drawer id in ``code``'s wing (talon-analyst ``mempalace.drawer_id_for``)."""
+    return f"drawer_{code}_{room}_{digest}"
+
+
+def chat_drawer(uid, digest="b" * 24):
+    """A drawer id in user ``uid``'s chat-memory room (talon-analyst ``chat_memory.room_for``)."""
+    return f"drawer_talon chat memory_user {hashlib.sha256(str(uid).encode()).hexdigest()}_{digest}"
+
+
+#: Ana's (user 2) and the admin's (user 1) chat memories.
+CHAT_DRAWER = chat_drawer(2)
+ADMIN_CHAT = chat_drawer(1)
 THREAD = "0b6f0c55-7a39-4e57-9d6e-3f1a2b3c4d5e"
 
 
@@ -130,7 +147,12 @@ def talon(overrides=None, drawers=None):
                 200,
                 json={
                     "items": [
-                        {"drawer_id": CHAT_DRAWER, "filed_at": "2026-10-20T09:00:00Z", "preview": "Prefers UTC", "thread_id": THREAD},
+                        {
+                            "drawer_id": chat_drawer(parts[1]),
+                            "filed_at": "2026-10-20T09:00:00Z",
+                            "preview": "Prefers UTC",
+                            "thread_id": THREAD,
+                        },
                     ],
                 },
             )
@@ -245,12 +267,12 @@ def audits(audit):
 CUSTOMER_ROUTES = [
     ("GET", "/{code}/stats"),
     ("GET", "/{code}/drawers"),
-    ("GET", f"/{{code}}/drawers/{ONE_OFF}"),
-    ("DELETE", f"/{{code}}/drawers/{ONE_OFF}"),
+    ("GET", "/{code}/drawers/drawer_{code}_false_positives_" + HASH),
+    ("DELETE", "/{code}/drawers/drawer_{code}_false_positives_" + HASH),
     ("GET", "/{code}/assets"),
     ("GET", "/{code}/assets/SRV-01/timeline"),
 ]
-ALL_ROUTES = CUSTOMER_ROUTES + [("GET", "/chat/mine"), ("DELETE", f"/chat/mine/{ONE_OFF}")]
+ALL_ROUTES = CUSTOMER_ROUTES + [("GET", "/chat/mine"), ("DELETE", f"/chat/mine/{CHAT_DRAWER}")]
 
 
 # ── a customer's memory ───────────────────────────────────────────────────────
@@ -398,7 +420,8 @@ def test_the_customer_must_be_one_the_caller_may_see(method, template, user, cod
 @pytest.mark.parametrize("method, template", CUSTOMER_ROUTES)
 @pytest.mark.parametrize("user, code", [("admin", GLOBEX), ("ana", ACME), ("ana", DOTTED), ("ana", CHAT), ("gus", GLOBEX), ("resp", ACME)])
 def test_a_callers_own_customers_are_answered(method, template, user, code):
-    drawers = {ONE_OFF: drawer()}
+    own = customer_drawer(code)
+    drawers = {own: drawer(own)}
     response, fake, _ = run(call(method, f"/talon/memory{template.format(code=code)}", user), respond=talon(drawers=drawers))
     assert response.status_code == 200, response.content
     assert all(path.startswith(f"/v2/memory/{code}/") for path in fake.paths())
@@ -435,7 +458,13 @@ def test_chat_memory_is_always_the_callers_own(user, uid):
     assert fake.paths() == [f"/v2/memory/chat/{uid}"]
     assert dict(fake.requests[0].url.params) == {}
     assert body_of(response)["items"] == [
-        {"drawer_id": CHAT_DRAWER, "openable": True, "filed_at": "2026-10-20T09:00:00Z", "preview": "Prefers UTC", "thread_id": THREAD},
+        {
+            "drawer_id": chat_drawer(uid),
+            "openable": True,
+            "filed_at": "2026-10-20T09:00:00Z",
+            "preview": "Prefers UTC",
+            "thread_id": THREAD,
+        },
     ]
 
 
@@ -456,7 +485,8 @@ def test_forgetting_a_chat_memory_is_the_callers_own_and_audited():
     (request,) = fake.requests
     assert request.method == "DELETE"
     # The space in the chat wing's id is encoded, never a raw path character.
-    assert request.url.raw_path == b"/v2/memory/chat/2/drawer_talon%20chat%20memory_environment_bbbbbbbbbbbbbbbbbbbbbbbb"
+    assert request.url.raw_path == f"/v2/memory/chat/2/{quote(CHAT_DRAWER, safe='')}".encode()
+    assert b"%20chat%20memory_user%20" in request.url.raw_path
     assert json.loads(request.content) == {"actor": "ana"}
     (row,) = audits(audit)
     assert row["action"] == AuditAction.TALON_MEMORY_FORGET and row["result"] == AuditResult.SUCCESS
@@ -574,7 +604,7 @@ def test_a_2xx_forget_with_an_unreadable_answer_is_audited_as_done_but_unconfirm
 
 
 def test_a_forget_refused_for_tenancy_is_audited_and_never_asks_talon():
-    response, fake, audit = run(delete(f"/{GLOBEX}/drawers/{ONE_OFF}", "ana"))
+    response, fake, audit = run(delete(f"/{GLOBEX}/drawers/{customer_drawer(GLOBEX)}", "ana"))
     assert response.status_code == 403 and fake.requests == []
     (row,) = audits(audit)
     assert row["result"] == AuditResult.FAILURE and row["customer_code"] == GLOBEX and row["actor_username"] == "ana"
@@ -649,11 +679,11 @@ def test_the_client_encodes_every_segment():
 
 
 def test_a_safe_but_unusual_id_is_encoded_on_the_wire():
-    odd = "drawer_acme.io_assets_0123:4567"
+    odd = customer_drawer(DOTTED, "assets")
     drawers = {odd: drawer(odd)}
     response, fake, _ = run(get(f"/{DOTTED}/drawers/{odd}", "ana"), respond=talon(drawers=drawers))
     assert response.status_code == 200
-    assert fake.requests[0].url.raw_path == b"/v2/memory/acme.io/drawers/drawer_acme.io_assets_0123%3A4567"
+    assert fake.requests[0].url.raw_path == f"/v2/memory/acme.io/drawers/drawer_acme.io_assets_{HASH}".encode()
 
 
 def test_an_asset_with_a_machine_account_name_is_allowed():
@@ -744,8 +774,16 @@ def test_malformed_fields_are_dropped_not_fatal():
     items = [
         item(),
         item(),  # a duplicate
-        item("drawer_ACME_x_1", room="secrets", source=7, source_ref={"job_id": "../x", "alert_id": -1}, durable="yes", preview=["a"]),
-        item("drawer..odd", preview="listed, but can't be opened"),
+        item(
+            customer_drawer(ACME, "alerts", "c" * 24),
+            room="secrets",
+            source=7,
+            source_ref={"job_id": "../x", "alert_id": -1},
+            durable="yes",
+            preview=["a"],
+        ),
+        item("drawer..odd", preview="an id CoPilot can't use"),
+        item("drawer_ACME_x_1", preview="not a MemPalace id of this wing"),
         {"drawer_id": 12},
         {"drawer_id": "drawer‮evil"},
         {"drawer_id": f"drawer_{TALON_KEY}"},  # an id holding the key is dropped, not shown redacted
@@ -756,11 +794,11 @@ def test_malformed_fields_are_dropped_not_fatal():
     response, _, _ = run(get(f"/{ACME}/drawers"), respond=talon({f"/v2/memory/{ACME}/drawers": httpx.Response(200, json=page)}))
     assert response.status_code == 200
     body = body_of(response)
-    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, "drawer_ACME_x_1", "drawer..odd"]
+    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF, customer_drawer(ACME, "alerts", "c" * 24)]
+    assert all(i["openable"] for i in body["items"])
     odd = body["items"][1]
     assert odd["room"] == "other" and odd["source"] == "other" and odd["source_ref"] is None and odd["durable"] is None
     assert odd["preview"] is None
-    assert body["items"][2]["openable"] is False
     assert body["next_cursor"] is None and "extra" not in body
 
 
@@ -829,15 +867,15 @@ def test_assets_counts_lists_and_odd_names():
 
 def test_chat_memory_odd_items():
     items = [
-        {"drawer_id": CHAT_DRAWER, "thread_id": "not-a-uuid"},
-        {"drawer_id": CHAT_DRAWER},
-        {"drawer_id": "drawer_x", "thread_id": THREAD.upper(), "preview": 5},
+        {"drawer_id": ADMIN_CHAT, "thread_id": "not-a-uuid"},
+        {"drawer_id": ADMIN_CHAT},
+        {"drawer_id": chat_drawer(1, "c" * 24), "thread_id": THREAD.upper(), "preview": 5},
     ]
     respond = talon({"/v2/memory/chat/1": httpx.Response(200, json={"items": items})})
     body = body_of(run(get("/chat/mine"), respond=respond)[0])
     assert body["items"] == [
-        {"drawer_id": CHAT_DRAWER, "openable": True, "filed_at": None, "preview": None, "thread_id": None},
-        {"drawer_id": "drawer_x", "openable": True, "filed_at": None, "preview": None, "thread_id": THREAD},
+        {"drawer_id": ADMIN_CHAT, "openable": True, "filed_at": None, "preview": None, "thread_id": None},
+        {"drawer_id": chat_drawer(1, "c" * 24), "openable": True, "filed_at": None, "preview": None, "thread_id": THREAD},
     ]
 
 
@@ -851,7 +889,7 @@ def test_no_key_password_or_user_info_reaches_the_browser():
     one = drawer(content=leak + "\n" + leak, why_hidden=leak, why_not_forgettable=leak, preview=leak)
     assets = {"items": [{"asset": "SRV-01", "last_seen": leak}]}
     timeline = {"asset": "SRV-01", "facts": [{"subject": leak, "predicate": leak, "object": leak, "valid_from": leak}]}
-    chat = {"items": [{"drawer_id": CHAT_DRAWER, "preview": leak, "filed_at": leak}]}
+    chat = {"items": [{"drawer_id": ADMIN_CHAT, "preview": leak, "filed_at": leak}]}
     respond = talon(
         {
             f"/v2/memory/{ACME}/stats": httpx.Response(200, json=stats),
@@ -918,3 +956,120 @@ def test_the_database_session_is_closed_before_talon_is_asked():
         response, _, _ = run(get(f"/{ACME}/stats"), respond=respond)
     assert response.status_code == 200
     assert "talon" in events and "close" in events[: events.index("talon")]
+
+
+# ── drawer ids bound to the customer and the caller (defence in depth) ────────
+
+
+GLOBEX_DRAWER = customer_drawer(GLOBEX)
+NOT_ACMES = [
+    GLOBEX_DRAWER,  # another customer's
+    customer_drawer("ACME_X"),  # a longer code starting the same: "X_false_positives" is no room
+    customer_drawer("acme"),  # case-sensitive
+    customer_drawer(ACME, "secrets"),  # not one of talon-analyst's rooms
+    customer_drawer(ACME, digest="0123"),  # not a MemPalace hash
+    customer_drawer(ACME, digest=HASH.upper()),
+    CHAT_DRAWER,  # the chat-memory wing
+    ADMIN_CHAT,
+    "drawer_Talon Chat Memory_user x_" + HASH,
+]
+
+
+@pytest.mark.parametrize("drawer_id", NOT_ACMES)
+@pytest.mark.parametrize("method", ["GET", "DELETE"])
+def test_a_customer_route_takes_only_that_customers_drawer_ids(method, drawer_id):
+    response, fake, audit = run(call(method, f"/talon/memory/{ACME}/drawers/{quote(drawer_id, safe='')}", "ana"))
+    assert response.status_code == 400
+    assert body_of(response) == {"detail": talon_memory.NOT_THIS_CUSTOMERS, "code": "invalid"}
+    assert fake.requests == []
+    if method == "DELETE":
+        (row,) = audits(audit)
+        assert row["result"] == AuditResult.FAILURE and talon_memory.NOT_THIS_CUSTOMERS in row["details"]
+
+
+def test_the_customer_binding_helpers():
+    assert talon_memory.is_customer_drawer(customer_drawer(ACME), ACME)
+    assert talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), "ACME_X")
+    assert not talon_memory.is_customer_drawer(customer_drawer("ACME_X", "threat_intel"), ACME)
+    assert talon_memory.is_customer_drawer(customer_drawer(DOTTED, "environment"), DOTTED)
+    assert not talon_memory.is_customer_drawer(customer_drawer("acmexio"), DOTTED)  # "." is literal
+    assert talon_memory.is_chat_drawer(CHAT_DRAWER) and not talon_memory.is_chat_drawer(ONE_OFF)
+    assert talon_memory.is_own_chat_drawer(CHAT_DRAWER, "2")
+    assert not talon_memory.is_own_chat_drawer(CHAT_DRAWER, "1")
+    assert not talon_memory.is_own_chat_drawer(ONE_OFF, "2")
+
+
+@pytest.mark.parametrize(
+    "drawer_id, detail",
+    [
+        (ADMIN_CHAT, talon_memory.NOT_YOUR_CHAT),  # the admin's chat memory, asked for by ana
+        (ONE_OFF, talon_memory.NOT_YOUR_CHAT),  # a customer's drawer
+        (chat_drawer(2, "0123"), talon_memory.NOT_YOUR_CHAT),
+        ("drawer?x", talon_memory.INVALID_DRAWER),
+    ],
+)
+def test_a_chat_route_takes_only_the_callers_own_chat_ids(drawer_id, detail):
+    response, fake, audit = run(delete(f"/chat/mine/{quote(drawer_id, safe='')}", "ana"))
+    assert response.status_code == 400
+    assert body_of(response) == {"detail": detail, "code": "invalid"}
+    assert fake.requests == []
+    (row,) = audits(audit)
+    assert row["result"] == AuditResult.FAILURE and row["entity_type"] == "talon_chat_memory"
+
+
+@pytest.mark.parametrize(
+    "named",
+    [{"customer_code": GLOBEX}, {"wing": GLOBEX}, {"customer_code": None}, {"wing": "talon chat memory"}, {"customer_code": "acme"}],
+)
+def test_a_drawer_answer_naming_another_customer_is_refused(named):
+    drawers = {ONE_OFF: drawer(**named)}
+    response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers=drawers))
+    assert response.status_code == 502 and body_of(response)["detail"] == talon_memory.WRONG_SHAPE
+    response, fake, audit = run(delete(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers=drawers))
+    assert response.status_code == 502 and [r.method for r in fake.requests] == ["GET"]  # nothing deleted
+    assert audits(audit)[0]["result"] == AuditResult.FAILURE
+
+
+def test_a_drawer_answer_naming_its_own_customer_is_shown():
+    drawers = {ONE_OFF: drawer(customer_code=ACME, wing=ACME)}
+    response, _, _ = run(get(f"/{ACME}/drawers/{ONE_OFF}"), respond=talon(drawers=drawers))
+    assert response.status_code == 200
+
+
+def test_a_list_never_shows_another_customers_or_chat_drawers():
+    page = {
+        "items": [
+            item(),
+            item(GLOBEX_DRAWER),
+            item(customer_drawer("ACME_X")),
+            item(CHAT_DRAWER),
+            item(customer_drawer(ACME, "alerts"), customer_code=GLOBEX),
+            item(customer_drawer(ACME, "assets"), wing="GLOBEX"),
+        ],
+    }
+    respond = talon({("GET", f"/v2/memory/{ACME}/drawers"): httpx.Response(200, json=page)})
+    body = body_of(run(get(f"/{ACME}/drawers"), respond=respond)[0])
+    assert [i["drawer_id"] for i in body["items"]] == [ONE_OFF]
+
+
+def test_chat_memory_never_shows_another_users_or_a_customers_drawers():
+    items = [
+        {"drawer_id": CHAT_DRAWER},
+        {"drawer_id": ADMIN_CHAT},
+        {"drawer_id": ONE_OFF},
+        {"drawer_id": chat_drawer(2, "c" * 24), "wing": ACME},
+    ]
+    respond = talon({"/v2/memory/chat/2": httpx.Response(200, json={"items": items})})
+    body = body_of(run(get("/chat/mine", "ana"), respond=respond)[0])
+    assert [i["drawer_id"] for i in body["items"]] == [CHAT_DRAWER]
+    respond = talon({"/v2/memory/chat/2": httpx.Response(200, json={"items": items, "wing": ACME})})
+    assert run(get("/chat/mine", "ana"), respond=respond)[0].status_code == 502
+
+
+def test_assets_and_timelines_naming_another_customer_are_not_shown():
+    assets = {"items": [{"asset": "SRV-01"}, {"asset": "GLOBEX-DC", "customer_code": GLOBEX}]}
+    respond = talon({f"/v2/memory/{ACME}/assets": httpx.Response(200, json=assets)})
+    assert [a["asset"] for a in body_of(run(get(f"/{ACME}/assets"), respond=respond)[0])["items"]] == ["SRV-01"]
+    timeline = {"asset": "SRV-01", "customer_code": GLOBEX, "facts": []}
+    respond = talon({f"/v2/memory/{ACME}/assets/SRV-01/timeline": httpx.Response(200, json=timeline)})
+    assert run(get(f"/{ACME}/assets/SRV-01/timeline"), respond=respond)[0].status_code == 502

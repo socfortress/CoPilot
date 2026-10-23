@@ -18,6 +18,13 @@ about who may see what is applied in this module, before Talon is asked:
   ``forgettable`` *and* its source is one of those two *and* it isn't durable; talon-analyst checks
   again. The actor sent is the CoPilot username. Every attempt, refused or not, is audited
   (``talon_memory.forget``).
+- **Drawer ids are bound here too** (defence in depth; talon-analyst refuses another customer's
+  drawer as well). A MemPalace id is ``drawer_<wing>_<room>_<24 hex>``: on a customer route it must be
+  exactly that customer's wing (case-sensitive) and one of talon-analyst's rooms (``is_customer_drawer``),
+  so a chat-memory id or another customer's is refused before Talon is asked; on the chat routes it
+  must be the chat-memory wing and the caller's own room (``is_own_chat_drawer``: ``user `` and the
+  SHA-256 of their id). An answer naming another ``customer_code`` or ``wing`` (present and different)
+  is never shown; a list item outside the wing or room is dropped.
 - **Paths.** A drawer id or an asset name goes into talon-analyst's path, so it must fit a safe
   pattern (``DRAWER_ID``, ``ASSET``; never ``..``, a separator or an escape) and is percent-encoded
   by ``utils/memory_client``; a search goes in the query string only. A list item whose id doesn't
@@ -30,6 +37,7 @@ about who may see what is applied in this module, before Talon is asked:
 
 The request's database session is closed before Talon is asked.
 """
+import hashlib
 import json
 import re
 import unicodedata
@@ -70,6 +78,7 @@ from app.connectors.talon.schema.talon_memory import TalonMemorySourceRef
 from app.connectors.talon.schema.talon_memory import TalonMemorySources
 from app.connectors.talon.schema.talon_memory import TalonMemoryStats
 from app.connectors.talon.schema.talon_memory import TalonMemoryTimeline
+from app.connectors.talon.services.identity import CHAT_MEMORY_WING
 from app.connectors.talon.services.identity import is_talon_customer_code
 from app.connectors.talon.services.talon_health import _SECRET_PARAM
 from app.connectors.talon.services.talon_health import _URL_USERINFO
@@ -120,6 +129,8 @@ INVALID_CUSTOMER = "customer_code is not a valid customer code"
 NOT_ACCESSIBLE = "You don't have access to this customer"
 UNKNOWN_CUSTOMER = "There is no such customer"
 INVALID_DRAWER = "drawer_id is not a drawer id CoPilot can open"
+NOT_THIS_CUSTOMERS = "drawer_id is not one of this customer's memories"
+NOT_YOUR_CHAT = "drawer_id is not one of your chat memories"
 INVALID_ASSET = "asset is not an asset name CoPilot can open"
 UNKNOWN_DRAWER = "Talon has no such memory"
 UNKNOWN_ASSET = "Talon has no timeline for this asset"
@@ -158,6 +169,52 @@ def is_safe_drawer_id(value: Any) -> bool:
     return (
         isinstance(value, str) and bool(DRAWER_ID.fullmatch(value)) and ".." not in value and not value.endswith(" ") and "  " not in value
     )
+
+
+#: The rooms talon-analyst files a customer's drawers in (its ``mempalace.LESSON_ROOMS``: investigations,
+#: review lessons and chat ``remember`` all write one of these).
+WING_ROOMS = ("alerts", "environment", "false_positives", "assets", "threat_intel")
+#: A MemPalace drawer id is ``drawer_<wing>_<room>_<24 hex>`` (talon-analyst ``mempalace.drawer_id_for``:
+#: the first 24 hex characters of a SHA-256 of wing, room and content).
+_DRAWER_HASH = "[0-9a-f]{24}"
+_CUSTOMER_ROOM = "(?:" + "|".join(WING_ROOMS) + ")"
+#: A user's chat-memory room: ``user `` and the SHA-256 hex of their user id (talon-analyst
+#: ``chat_memory.room_for``), in the chat-memory wing.
+CHAT_ROOM_PREFIX = "user "
+
+
+def is_customer_drawer(drawer_id: Any, customer_code: str) -> bool:
+    """Whether ``drawer_id`` is a drawer of ``customer_code``'s wing, exactly and case-sensitively.
+
+    Defence in depth (talon-analyst refuses another customer's drawer too): the wing is the id's
+    prefix. The room must be one of ``WING_ROOMS`` and the id end in the 24-hex hash, so a longer
+    customer code that starts the same (``ACME`` and ``ACME_X``) can never match: after
+    ``drawer_ACME_`` comes ``X_alerts_…``, and ``X_alerts`` isn't a room."""
+    return is_safe_drawer_id(drawer_id) and bool(
+        re.fullmatch(f"drawer_{re.escape(customer_code)}_{_CUSTOMER_ROOM}_{_DRAWER_HASH}", drawer_id),
+    )
+
+
+def is_chat_drawer(drawer_id: Any) -> bool:
+    """Whether ``drawer_id`` is in the chat-memory wing (anyone's)."""
+    return isinstance(drawer_id, str) and drawer_id.casefold().startswith(f"drawer_{CHAT_MEMORY_WING}_")
+
+
+def chat_room(user_id: str) -> str:
+    return CHAT_ROOM_PREFIX + hashlib.sha256(user_id.encode()).hexdigest()
+
+
+def is_own_chat_drawer(drawer_id: Any, user_id: str) -> bool:
+    """Whether ``drawer_id`` is in the chat-memory wing *and* in ``user_id``'s own room."""
+    return is_safe_drawer_id(drawer_id) and bool(
+        re.fullmatch(f"drawer_{re.escape(CHAT_MEMORY_WING)}_{re.escape(chat_room(user_id))}_{_DRAWER_HASH}", drawer_id),
+    )
+
+
+def names_another(raw: Mapping[str, Any], wing: str, *, keys=("customer_code", "wing")) -> bool:
+    """An answer that names a customer or wing other than ``wing`` (present and different, a
+    null included): never shown, never acted on."""
+    return any(key in raw and raw[key] != wing for key in keys)
 
 
 def is_safe_asset(value: Any) -> bool:
@@ -386,15 +443,17 @@ def _source_ref(raw: Any) -> Optional[TalonMemorySourceRef]:
     return TalonMemorySourceRef(job_id=job_id, alert_id=alert_id)
 
 
-def _item_fields(raw: Any, talon: Talon) -> Optional[Dict[str, Any]]:
-    if not isinstance(raw, dict):
+def _item_fields(raw: Any, talon: Talon, customer_code: str) -> Optional[Dict[str, Any]]:
+    """A drawer's fields, or None: not a dict, no usable id, an id outside ``customer_code``'s wing,
+    or an answer naming another customer or wing (fail closed)."""
+    if not isinstance(raw, dict) or names_another(raw, customer_code):
         return None
     drawer_id = _id(raw.get("drawer_id"), talon.scrub)
-    if drawer_id is None:
+    if drawer_id is None or not is_customer_drawer(drawer_id, customer_code):
         return None
     return {
         "drawer_id": drawer_id,
-        "openable": is_safe_drawer_id(drawer_id),
+        "openable": True,
         "room": _enum(raw.get("room"), ROOMS),
         "source": _enum(raw.get("source"), SOURCES),
         "source_ref": _source_ref(raw.get("source_ref")),
@@ -432,24 +491,29 @@ def parse_stats(raw: Any, talon: Talon, customer_code: str) -> Optional[TalonMem
     )
 
 
-def parse_page(raw: Any, talon: Talon) -> Optional[TalonMemoryPage]:
+def parse_page(raw: Any, talon: Talon, customer_code: str) -> Optional[TalonMemoryPage]:
     if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
         return None
     items: List[TalonMemoryItem] = []
     seen = set()
+    dropped = 0
     for entry in raw["items"]:
         if len(items) >= MAX_LIMIT:
             break
-        fields = _item_fields(entry, talon)
-        if fields is not None and fields["drawer_id"] not in seen:
+        fields = _item_fields(entry, talon, customer_code)
+        if fields is None:
+            dropped += 1
+        elif fields["drawer_id"] not in seen:
             seen.add(fields["drawer_id"])
             items.append(TalonMemoryItem(**fields))
+    if dropped:
+        logger.warning(f"Talon memory: {dropped} drawer(s) not shown (unusable, or not this customer's)")
     cursor = raw.get("next_cursor")
     return TalonMemoryPage(items=items, next_cursor=cursor if isinstance(cursor, str) and CURSOR.fullmatch(cursor) else None)
 
 
-def parse_drawer(raw: Any, talon: Talon, drawer_id: str) -> Optional[TalonMemoryDrawer]:
-    fields = _item_fields(raw, talon)
+def parse_drawer(raw: Any, talon: Talon, customer_code: str, drawer_id: str) -> Optional[TalonMemoryDrawer]:
+    fields = _item_fields(raw, talon, customer_code)
     if fields is None or fields["drawer_id"] != drawer_id:
         return None
     return TalonMemoryDrawer(
@@ -461,15 +525,15 @@ def parse_drawer(raw: Any, talon: Talon, drawer_id: str) -> Optional[TalonMemory
     )
 
 
-def parse_assets(raw: Any, talon: Talon) -> Optional[TalonMemoryAssets]:
-    if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
+def parse_assets(raw: Any, talon: Talon, customer_code: str) -> Optional[TalonMemoryAssets]:
+    if not isinstance(raw, dict) or not isinstance(raw.get("items"), list) or names_another(raw, customer_code):
         return None
     items: List[TalonMemoryAsset] = []
     seen = set()
     for entry in raw["items"]:
         if len(items) >= MAX_ASSETS:
             break
-        if not isinstance(entry, dict):
+        if not isinstance(entry, dict) or names_another(entry, customer_code):
             continue
         name = _id(entry.get("asset"), talon.scrub)
         if name is None or name in seen:
@@ -487,8 +551,8 @@ def parse_assets(raw: Any, talon: Talon) -> Optional[TalonMemoryAssets]:
     return TalonMemoryAssets(items=items)
 
 
-def parse_timeline(raw: Any, talon: Talon, asset: str) -> Optional[TalonMemoryTimeline]:
-    if not isinstance(raw, dict) or not isinstance(raw.get("facts"), list):
+def parse_timeline(raw: Any, talon: Talon, customer_code: str, asset: str) -> Optional[TalonMemoryTimeline]:
+    if not isinstance(raw, dict) or not isinstance(raw.get("facts"), list) or names_another(raw, customer_code):
         return None
     said = raw.get("asset")
     if said is not None and said != asset:
@@ -518,34 +582,43 @@ def _thread_id(value: Any) -> Optional[str]:
         return None
 
 
-def parse_chat(raw: Any, talon: Talon) -> Optional[TalonChatMemory]:
-    if not isinstance(raw, dict) or not isinstance(raw.get("items"), list):
+def parse_chat(raw: Any, talon: Talon, user_id: str) -> Optional[TalonChatMemory]:
+    """The caller's chat memory. An item outside the caller's own room of the chat-memory wing, or
+    naming another wing, is never shown (fail closed: another user's memory must not reach them)."""
+    if not isinstance(raw, dict) or not isinstance(raw.get("items"), list) or names_another(raw, CHAT_MEMORY_WING, keys=("wing",)):
         return None
     items: List[TalonChatMemoryItem] = []
     seen = set()
+    dropped = 0
     for entry in raw["items"]:
         if len(items) >= MAX_CHAT_ITEMS:
             break
-        if not isinstance(entry, dict):
+        if not isinstance(entry, dict) or names_another(entry, CHAT_MEMORY_WING, keys=("wing",)):
+            dropped += 1
             continue
         drawer_id = _id(entry.get("drawer_id"), talon.scrub)
-        if drawer_id is None or drawer_id in seen:
+        if drawer_id is None or not is_own_chat_drawer(drawer_id, user_id):
+            dropped += 1
+            continue
+        if drawer_id in seen:
             continue
         seen.add(drawer_id)
         items.append(
             TalonChatMemoryItem(
                 drawer_id=drawer_id,
-                openable=is_safe_drawer_id(drawer_id),
+                openable=True,
                 filed_at=talon.scrub(entry.get("filed_at"), 64),
                 preview=talon.scrub(entry.get("preview"), MAX_PREVIEW),
                 thread_id=_thread_id(entry.get("thread_id")),
             ),
         )
+    if dropped:
+        logger.warning(f"Talon memory: {dropped} chat memory item(s) not shown to user {user_id} (unusable, or not theirs)")
     return TalonChatMemory(items=items)
 
 
-def _forgotten(raw: Any, drawer_id: str) -> Optional[TalonMemoryForgotten]:
-    if not isinstance(raw, dict) or raw.get("success") is not True:
+def _forgotten(raw: Any, drawer_id: str, wing: str) -> Optional[TalonMemoryForgotten]:
+    if not isinstance(raw, dict) or raw.get("success") is not True or names_another(raw, wing, keys=("wing",)):
         return None
     if raw.get("drawer_id") not in (None, drawer_id):
         return None
@@ -557,6 +630,17 @@ async def _ask(talon: Talon, method: str, segments: List[str], **kwargs) -> Memo
 
 
 # ── the routes' work ──────────────────────────────────────────────────────────
+
+
+def _customer_drawer_problem(customer_code: str, drawer_id: str) -> Optional[JSONResponse]:
+    """A drawer id CoPilot won't send for ``customer_code``: unsafe for a path (400), or not in the
+    customer's wing (a chat-memory id, another customer's, an unknown room; 400). Checked before
+    Talon is asked, so talon-analyst isn't the only thing binding the id to the customer."""
+    if not is_safe_drawer_id(drawer_id):
+        return problem(400, INVALID_DRAWER, "invalid")
+    if is_chat_drawer(drawer_id) or not is_customer_drawer(drawer_id, customer_code):
+        return problem(400, NOT_THIS_CUSTOMERS, "invalid")
+    return None
 
 
 def _not_supported() -> JSONResponse:
@@ -601,18 +685,23 @@ async def list_drawers(
     if isinstance(talon, JSONResponse):
         return talon
     answer = await _ask(talon, "GET", [customer_code, "drawers"], params=params)
-    return _parsed(answer, lambda raw: parse_page(raw, talon), _not_supported())
+    return _parsed(answer, lambda raw: parse_page(raw, talon, customer_code), _not_supported())
 
 
 async def get_drawer(user: User, session: AsyncSession, customer_code: str, drawer_id: str):
-    if not is_safe_drawer_id(drawer_id):
+    refused = _customer_drawer_problem(customer_code, drawer_id)
+    if refused is not None:
         await session.close()
-        return problem(400, INVALID_DRAWER, "invalid")
+        return refused
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         return talon
     answer = await _ask(talon, "GET", [customer_code, "drawers", drawer_id])
-    return _parsed(answer, lambda raw: parse_drawer(raw, talon, drawer_id), problem(404, UNKNOWN_DRAWER, "not_found"))
+    return _parsed(
+        answer,
+        lambda raw: parse_drawer(raw, talon, customer_code, drawer_id),
+        problem(404, UNKNOWN_DRAWER, "not_found"),
+    )
 
 
 async def list_assets(user: User, session: AsyncSession, customer_code: str, *, q: Optional[str] = None, limit: Optional[int] = None):
@@ -625,7 +714,7 @@ async def list_assets(user: User, session: AsyncSession, customer_code: str, *, 
     if isinstance(talon, JSONResponse):
         return talon
     answer = await _ask(talon, "GET", [customer_code, "assets"], params=params)
-    return _parsed(answer, lambda raw: parse_assets(raw, talon), _not_supported())
+    return _parsed(answer, lambda raw: parse_assets(raw, talon, customer_code), _not_supported())
 
 
 async def asset_timeline(user: User, session: AsyncSession, customer_code: str, asset: str):
@@ -636,7 +725,7 @@ async def asset_timeline(user: User, session: AsyncSession, customer_code: str, 
     if isinstance(talon, JSONResponse):
         return talon
     answer = await _ask(talon, "GET", [customer_code, "assets", asset, "timeline"])
-    return _parsed(answer, lambda raw: parse_timeline(raw, talon, asset), problem(404, UNKNOWN_ASSET, "not_found"))
+    return _parsed(answer, lambda raw: parse_timeline(raw, talon, customer_code, asset), problem(404, UNKNOWN_ASSET, "not_found"))
 
 
 async def list_chat_memory(user: User, session: AsyncSession):
@@ -645,7 +734,7 @@ async def list_chat_memory(user: User, session: AsyncSession):
         return talon
     # Always the caller's own id (decision 2): the route takes none from the request.
     answer = await _ask(talon, "GET", ["chat", str(user.id)])
-    return _parsed(answer, lambda raw: parse_chat(raw, talon), _not_supported())
+    return _parsed(answer, lambda raw: parse_chat(raw, talon, str(user.id)), _not_supported())
 
 
 # ── forgetting ────────────────────────────────────────────────────────────────
@@ -670,6 +759,7 @@ async def _delete(
     user: User,
     audit: Dict[str, Any],
     not_found: JSONResponse,
+    wing: str,
     old_value: Optional[dict] = None,
 ):
     """The DELETE itself, audited whatever happens."""
@@ -682,7 +772,7 @@ async def _delete(
     status = answer.status
     if status is not None and 200 <= status < 300:
         raw = _json(answer) if not answer.error else None
-        done = None if isinstance(raw, JSONResponse) else _forgotten(raw, drawer_id)
+        done = None if isinstance(raw, JSONResponse) else _forgotten(raw, drawer_id, wing)
         if done is None and isinstance(raw, dict) and raw.get("success") is False:
             return await failed(problem(502, FORGET_UNCONFIRMED, "bad_answer"), "Talon answered 2xx with success false")
         # talon-analyst's 2xx means it was forgotten, whatever its body: audited as done.
@@ -716,12 +806,11 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
         await record_audit_event(**audit, result=AuditResult.FAILURE, old_value=old_value, details=details)
         return response
 
-    if not is_safe_drawer_id(drawer_id):
+    refused = _customer_drawer_problem(customer_code, drawer_id)
+    if refused is not None:
         await session.close()
-        return await failed(
-            problem(400, INVALID_DRAWER, "invalid"),
-            "Talon memory not forgotten: the drawer id is not one CoPilot can open",
-        )
+        reason = json.loads(refused.body)["detail"]
+        return await failed(refused, f"Talon memory not forgotten: {reason}")
     talon = await _for_customer(user, session, customer_code)
     if isinstance(talon, JSONResponse):
         reason = json.loads(talon.body)["detail"]
@@ -731,7 +820,7 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
     not_found = problem(404, UNKNOWN_DRAWER, "not_found")
     drawer = _parsed(
         await _ask(talon, "GET", [customer_code, "drawers", drawer_id]),
-        lambda raw: parse_drawer(raw, talon, drawer_id),
+        lambda raw: parse_drawer(raw, talon, customer_code, drawer_id),
         not_found,
     )
     if isinstance(drawer, JSONResponse):
@@ -746,7 +835,7 @@ async def forget_drawer(user: User, session: AsyncSession, customer_code: str, d
             + ("" if drawer.forgettable else " that Talon says isn't forgettable"),
             old_value,
         )
-    return await _delete(talon, [customer_code, "drawers", drawer_id], drawer_id, user, audit, not_found, old_value)
+    return await _delete(talon, [customer_code, "drawers", drawer_id], drawer_id, user, audit, not_found, customer_code, old_value)
 
 
 async def forget_chat_memory(user: User, session: AsyncSession, drawer_id: str, request: Optional[Request] = None):
@@ -759,17 +848,23 @@ async def forget_chat_memory(user: User, session: AsyncSession, drawer_id: str, 
         "entity_id": _audit_id(drawer_id),
         "request": request,
     }
-    if not is_safe_drawer_id(drawer_id):
+    if not is_safe_drawer_id(drawer_id) or not is_own_chat_drawer(drawer_id, str(user.id)):
+        # A customer's drawer, another user's chat memory, or an unsafe id: never sent to Talon.
         await session.close()
-        await record_audit_event(
-            **audit,
-            result=AuditResult.FAILURE,
-            details="Chat memory not forgotten: the drawer id is not one CoPilot can open",
-        )
-        return problem(400, INVALID_DRAWER, "invalid")
+        detail = NOT_YOUR_CHAT if is_safe_drawer_id(drawer_id) else INVALID_DRAWER
+        await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {detail}")
+        return problem(400, detail, "invalid")
     talon = await _connector_then_release(session)
     if isinstance(talon, JSONResponse):
         reason = json.loads(talon.body)["detail"]
         await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Chat memory not forgotten: {reason}")
         return talon
-    return await _delete(talon, ["chat", str(user.id), drawer_id], drawer_id, user, audit, problem(404, UNKNOWN_DRAWER, "not_found"))
+    return await _delete(
+        talon,
+        ["chat", str(user.id), drawer_id],
+        drawer_id,
+        user,
+        audit,
+        problem(404, UNKNOWN_DRAWER, "not_found"),
+        CHAT_MEMORY_WING,
+    )
