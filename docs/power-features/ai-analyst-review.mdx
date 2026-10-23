@@ -75,7 +75,7 @@ Click **Submit review** (or **Update review** if you're editing). The review per
 
 ## Teach the palace
 
-The **Teach the palace** section under the rubric lets you add a lesson to the agent's persistent memory. Lessons get retrieved automatically at the start of every investigation for that customer, so the next time the agent sees a similar pattern it already has your context.
+The **Teach the palace** section under the rubric lets you add a lesson to the agent's persistent memory. **Durable** lessons are retrieved automatically at the start of every investigation for that customer when they match its asset, rule or indicators (up to three, anonymized first), so the next time the agent sees a similar pattern it already has your context. **One-off** lessons are found only when the agent searches its memory during a run. A lesson that puts activity down to testing is never shown: testing is no reason to lower severity. Durable lessons at the start of a run need talon-analyst 0.1.4 or later.
 
 ### When to add a lesson
 
