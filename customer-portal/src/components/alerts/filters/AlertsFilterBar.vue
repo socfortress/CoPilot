@@ -150,7 +150,7 @@
 			v-if="addableTypes.length"
 			trigger="click"
 			placement="bottom-start"
-			:options="addableTypes.map(type => ({ key: type, label: ALERTS_FILTER_LABELS[type] }))"
+			:options="addOptions"
 			@select="(type: AlertsFilterType) => openFilter(type)"
 		>
 			<n-button size="small" dashed data-testid="alerts-filter-add">
@@ -257,6 +257,9 @@ const shownTypes = computed(() => {
 	return ALERTS_FILTER_TYPES.filter(type => active.includes(type) || opened.value.includes(type))
 })
 const addableTypes = computed(() => ALERTS_FILTER_TYPES.filter(type => !shownTypes.value.includes(type)))
+// Built here rather than in the template: vue-tsc ≥ 3.3.12 reads an imported constant inside
+// a template arrow function as a ref (vuejs/language-tools#6237).
+const addOptions = computed(() => addableTypes.value.map(type => ({ key: type, label: ALERTS_FILTER_LABELS[type] })))
 const linkTypes = computed(() => activeFilterTypes(filters).filter(isLinkFilter))
 
 function linkText(type: AlertsLinkFilterType): string {

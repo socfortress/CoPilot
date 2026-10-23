@@ -17,6 +17,8 @@ export default antfu(
 		rules: {
 			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"antfu/if-newline": "off",
+			// New in @antfu/eslint-config 10: Prettier (`pnpm format`) joins back the lines it splits.
+			"antfu/reasonable-newline": "off",
 			// The online build fetches icons from api.iconify.design; icons are bundled instead.
 			"no-restricted-imports": [
 				"error",
