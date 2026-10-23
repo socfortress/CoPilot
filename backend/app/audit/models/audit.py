@@ -102,6 +102,10 @@ class AuditAction(str, Enum):
     # same transaction as its talon_automation_start row, before the flow starts.
     TALON_AUTOMATION_POLICY_UPDATE = "talon_automation.policy_update"
     TALON_AUTOMATION_START = "talon_automation.start"
+    # A Talon memory forgotten from the AI Analyst page's Memory tab: a customer's one-off review
+    # lesson or chat `remember` lesson, or one of the caller's own chat memories. Refusals (by
+    # CoPilot or by talon-analyst) are recorded as failures.
+    TALON_MEMORY_FORGET = "talon_memory.forget"
 
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"
