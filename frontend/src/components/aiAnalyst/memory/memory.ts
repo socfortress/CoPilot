@@ -72,8 +72,10 @@ export interface HiddenTag {
 
 /**
  * Why a drawer is out of what investigations are shown, in a tag (talon-analyst's `why_hidden`
- * reasons): testing (D28: never recalled), not written by talon-analyst (left out of an
- * investigation's context, though the recall tool can still find it), or per-user chat memory.
+ * reasons): testing (D28: kept out of investigations; a false-positive lesson is also never
+ * recalled), recall only (a one-off review lesson or another memory talon-analyst didn't write:
+ * left out of an investigation's context, though the recall tool can still find it; durable review
+ * lessons are shown, talon-analyst D94), or per-user chat memory.
  */
 export function hiddenTag(
 	row: Pick<TalonMemoryItem, "testing_hidden" | "visible_to_investigations" | "source">
@@ -81,7 +83,7 @@ export function hiddenTag(
 	if (row.testing_hidden) {
 		return {
 			text: "Hidden: testing",
-			title: "Put down to testing, so investigations and recall leave it out",
+			title: "Put down to testing, so investigations leave it out (and recall too, for a false-positive lesson)",
 			type: "warning"
 		}
 	}
@@ -91,7 +93,7 @@ export function hiddenTag(
 	}
 	return {
 		text: "Recall only",
-		title: "Not written by Talon: left out of an investigation's context, but the recall tool can still find it",
+		title: "Left out of an investigation's context (one-off review lessons expire; durable ones are shown), but the recall tool can still find it",
 		type: "default"
 	}
 }
