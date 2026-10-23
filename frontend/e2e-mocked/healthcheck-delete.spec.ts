@@ -58,7 +58,7 @@ test.describe("delete unhealthy agents from the healthcheck", () => {
 		// build-agent-02 is still seen by Velociraptor: kept, and said so.
 		await expect(dialog.locator("[data-agent='005']")).toHaveAttribute("data-verdict", "active_elsewhere")
 
-		// 12 agents: the count must be typed.
+		// The count is typed before every deletion.
 		const confirm = dialog.getByTestId("unhealthy-delete-confirm")
 		await expect(confirm).toBeDisabled()
 		await dialog.getByTestId("unhealthy-delete-typed").locator("input").fill("12")
@@ -160,7 +160,7 @@ test.describe("delete unhealthy agents from the healthcheck", () => {
 	test("on a 360 px phone the whole flow fits the screen", async ({ context, page }) => {
 		await page.setViewportSize({ width: 360, height: 780 })
 		await installMockBackend(context)
-		const backend = await installHealthcheckMock(context)
+		const backend = await installHealthcheckMock(context, { deleteDelayMs: 800 })
 		await signIn(page)
 		await openHealthcheck(page, "Healthcheck Velociraptor")
 
@@ -186,6 +186,11 @@ test.describe("delete unhealthy agents from the healthcheck", () => {
 		const count = await deletableCount(dialog)
 		await dialog.getByTestId("unhealthy-delete-typed").locator("input").fill(count)
 		await dialog.getByTestId("unhealthy-delete-confirm").click()
+		// While it runs, the count stays on one line: "0 / 12", never "0 /" above "12".
+		const progress = dialog.getByTestId("unhealthy-delete-progress")
+		await expect(progress).toBeVisible()
+		const progressBox = await progress.boundingBox()
+		expect(progressBox?.height ?? 0).toBeLessThan(36)
 		await expect(dialog.getByTestId("unhealthy-delete-outcome")).toHaveText(`${count} agents deleted`)
 		expect(backend.recorded.deletes.every(body => body.agent_ids.length <= 10)).toBe(true)
 	})

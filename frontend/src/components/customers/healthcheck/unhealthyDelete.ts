@@ -19,8 +19,6 @@ export const MIN_THRESHOLD_HOURS = 24
 export const MAX_THRESHOLD_DAYS = 3650
 /** Under a week, machines merely switched off (a weekend, a holiday) may be included. */
 export const CAUTION_BELOW_DAYS = 7
-/** From this many agents, the count must be typed to confirm. */
-export const TYPED_CONFIRMATION_FROM = 10
 /**
  * Each agent costs a call to Wazuh and to Velociraptor: small chunks keep each request short and
  * the progress honest. The backend refuses more than 50.
@@ -92,11 +90,10 @@ export function needsCaution(threshold: UnhealthyDeleteThreshold): boolean {
 	return thresholdHours(threshold) < CAUTION_BELOW_DAYS * 24
 }
 
-export function needsTypedConfirmation(threshold: UnhealthyDeleteThreshold, count: number): boolean {
-	return count > 0 && (needsCaution(threshold) || count >= TYPED_CONFIRMATION_FROM)
-}
-
-/** Whether what was typed confirms deleting ``count`` agents. */
+/**
+ * Whether what was typed confirms deleting ``count`` agents. Every deletion asks for it, however few
+ * the agents and however long the threshold: it cannot be undone.
+ */
 export function confirmationMatches(typed: string, count: number): boolean {
 	return typed.trim() === String(count)
 }
@@ -239,7 +236,7 @@ export function resultsToReview(results: UnhealthyAgentDeleteResult[]): Unhealth
 		.sort((a, b) => rank(a) - rank(b))
 }
 
-/** How long ago, compact and monospaced: "<1 h", "5 h", "41 d", "3 y". */
+/** How long ago, compact and plain: "<1h ago", "5h ago", "41d ago", "3y ago", "never". */
 export function compactAge(lastSeen: string | null, now: number): string {
 	if (!lastSeen) return "never"
 	// Naive UTC from the API.
@@ -248,10 +245,10 @@ export function compactAge(lastSeen: string | null, now: number): string {
 	// The sync stores Wazuh's "Unknown" as the epoch.
 	if (seen <= 0) return "never"
 	const hours = (now - seen) / 3_600_000
-	if (hours < 0) return "ahead"
-	if (hours < 1) return "<1 h"
-	if (hours < 48) return `${Math.floor(hours)} h`
+	if (hours < 0) return "in the future"
+	if (hours < 1) return "<1h ago"
+	if (hours < 48) return `${Math.floor(hours)}h ago`
 	const days = hours / 24
-	if (days < 730) return `${Math.floor(days)} d`
-	return `${Math.floor(days / 365)} y`
+	if (days < 730) return `${Math.floor(days)}d ago`
+	return `${Math.floor(days / 365)}y ago`
 }

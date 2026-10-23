@@ -15,273 +15,326 @@
 		data-testid="unhealthy-delete-dialog"
 	>
 		<template #header>
-			<div class="flex min-w-0 items-center gap-3">
-				<span class="danger-tile flex size-9 shrink-0 items-center justify-center rounded-lg">
-					<Icon :name="TrashIcon" :size="17" />
+			<div class="flex min-w-0 flex-col gap-0.5">
+				<span class="truncate text-base leading-tight font-semibold">Delete unhealthy agents</span>
+				<span class="text-secondary truncate text-xs" data-testid="unhealthy-delete-scope">
+					{{ toolName(source) }} healthcheck · {{ customerCode }}
 				</span>
-				<div class="flex min-w-0 flex-col">
-					<span class="truncate text-base leading-tight font-semibold">Delete unhealthy agents</span>
-					<span class="eyebrow truncate" data-testid="unhealthy-delete-scope">
-						{{ toolName(source) }} healthcheck · {{ customerCode }}
-					</span>
-				</div>
 			</div>
 		</template>
 
 		<div class="@container">
-			<!-- ── configure ─────────────────────────────────────────────────────── -->
-			<div v-if="phase === 'configure'" class="flex flex-col">
-				<section class="section" aria-labelledby="uhd-threshold">
-					<h4 id="uhd-threshold" class="eyebrow">
-						<span class="step">01</span>
-						Not seen for more than
-					</h4>
-					<div class="flex flex-wrap items-center gap-2">
-						<n-radio-group
-							:value="activePreset"
-							size="small"
-							name="unhealthy-delete-preset"
-							class="presets"
-							data-testid="unhealthy-delete-presets"
-							@update:value="applyPreset"
-						>
-							<n-radio-button
-								v-for="preset of THRESHOLD_PRESETS"
-								:key="preset.key"
-								:value="preset.key"
-								:label="preset.label"
-								class="font-mono"
-							/>
-						</n-radio-group>
-						<div class="flex items-center gap-2">
-							<span class="eyebrow px-1">or</span>
-							<n-input-group class="w-auto!">
-								<n-input-number
-									v-model:value="thresholdValue"
-									size="small"
-									:min="1"
-									:precision="0"
-									:show-button="false"
-									placeholder="—"
-									class="w-20! font-mono"
-									:input-props="{ 'aria-label': 'Not seen for', inputmode: 'numeric' }"
-									data-testid="unhealthy-delete-value"
-								/>
-								<n-select
-									v-model:value="thresholdUnit"
-									size="small"
-									:options="UNIT_OPTIONS"
-									class="w-24!"
-									:consistent-menu-width="false"
-									aria-label="Unit"
-									data-testid="unhealthy-delete-unit"
-								/>
-							</n-input-group>
-						</div>
-					</div>
-					<p
-						v-if="problem"
-						class="text-error m-0 text-xs"
-						role="alert"
-						data-testid="unhealthy-delete-problem"
-					>
-						{{ problem }}
-					</p>
-					<p v-else class="text-secondary m-0 font-mono text-xs" data-testid="unhealthy-delete-cutoff">
-						<template v-if="preview && previewCurrent">
-							Last seen before
-							<time :datetime="preview.cutoff" class="text-default">
-								{{ formatDate(preview.cutoff, dFormats.datetime, { tz: true }) }}
-							</time>
-						</template>
-						<template v-else>&nbsp;</template>
-					</p>
-					<div
-						v-if="validThreshold && caution"
-						class="callout callout-warning"
-						role="note"
-						data-testid="unhealthy-delete-caution"
-					>
-						<Icon :name="WarningIcon" :size="15" class="mt-px shrink-0" />
-						<span>
-							Under 7 days, this can include endpoints that are only switched off — over a weekend or a
-							holiday. You will be asked to type the count to confirm.
+			<!-- ── configure: three steps, each on a numbered rail (#1291) ──────────── -->
+			<ol v-if="phase === 'configure'" class="steps m-0 list-none p-0" data-testid="unhealthy-delete-steps">
+				<li class="step" :class="`is-${stepStates[0]}`" data-step="1">
+					<div class="step-rail" aria-hidden="true">
+						<span class="step-marker">
+							<Icon v-if="stepStates[0] === 'done'" :name="CheckIcon" :size="13" />
+							<template v-else>1</template>
 						</span>
 					</div>
-				</section>
-
-				<section class="section" aria-labelledby="uhd-impact">
-					<h4 id="uhd-impact" class="eyebrow">
-						<span class="step">02</span>
-						Impact
-					</h4>
-
-					<div v-if="previewError" class="callout callout-error" role="alert">
-						<Icon :name="ErrorIcon" :size="15" class="mt-px shrink-0" />
-						<span class="grow">{{ previewError }}</span>
-						<n-button size="tiny" secondary @click="loadPreview()">Retry</n-button>
-					</div>
-
-					<div class="stats grid grid-cols-3" :class="{ 'is-stale': !previewCurrent }" aria-live="polite">
-						<div class="stat stat-danger" data-testid="unhealthy-delete-count">
-							<span class="eyebrow">Delete</span>
-							<span class="stat-value">{{ previewCurrent ? groups.toDelete.length : "—" }}</span>
-						</div>
-						<!-- The three cells split the selection: an included agent moves from here to Delete. -->
-						<div class="stat" :class="{ 'stat-warning': groups.activeElsewhere.length }">
-							<!-- The full name does not fit a third of a phone: the list's own abbreviation there. -->
-							<span class="eyebrow" :title="`Seen by ${toolName(otherTool(source))}`">
-								Seen by
-								<span class="hidden @lg:inline">{{ toolName(otherTool(source)) }}</span>
-								<span class="@lg:hidden">{{ shortTool(otherTool(source)) }}</span>
-							</span>
-							<span class="stat-value" data-testid="unhealthy-delete-active-elsewhere">
-								{{ previewCurrent ? groups.activeElsewhere.length : "—" }}
-							</span>
-						</div>
-						<div class="stat">
-							<span class="eyebrow">Kept</span>
-							<span class="stat-value" data-testid="unhealthy-delete-kept">
-								{{ previewCurrent ? groups.kept.length : "—" }}
-							</span>
-						</div>
-					</div>
-
-					<!-- The whole row toggles: a label cannot target the switch, which is no native control. -->
-					<div
-						v-if="previewCurrent && activeElsewhereCount"
-						class="include-row flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5"
-						data-testid="unhealthy-delete-include"
-						@click="includeActiveElsewhere = !includeActiveElsewhere"
-					>
-						<span class="mt-0.5 flex" @click.stop>
-							<n-switch
-								v-model:value="includeActiveElsewhere"
+					<section class="step-body" aria-labelledby="uhd-threshold">
+						<header class="step-head">
+							<span class="step-count">Step 1 of 3</span>
+							<h4 id="uhd-threshold" class="step-title">Choose the threshold</h4>
+							<p class="step-desc">Agents not seen for longer than this can be deleted.</p>
+						</header>
+						<div class="threshold-row flex flex-wrap items-center gap-2">
+							<n-radio-group
+								:value="activePreset"
 								size="small"
-								aria-labelledby="uhd-include-label"
-								data-testid="unhealthy-delete-include-switch"
-							/>
-						</span>
-						<span class="flex min-w-0 flex-col gap-0.5">
-							<span id="uhd-include-label" class="text-default text-sm">
-								Also delete the {{ activeElsewhereCount }}
-								{{ activeElsewhereCount === 1 ? "agent" : "agents" }}
-								{{ toolName(otherTool(source)) }} still sees
-							</span>
-							<span class="text-secondary text-xs">
-								{{ toolName(otherTool(source)) }} saw them within the threshold, so the endpoints are
-								likely running. Deleting removes them from {{ toolName(otherTool(source)) }} too.
-							</span>
-						</span>
-					</div>
-
-					<div
-						v-if="preview && previewCurrent"
-						class="agent-list max-h-72 overflow-y-auto rounded-lg"
-						data-testid="unhealthy-delete-agents"
-					>
-						<template v-for="section of sections" :key="section.key">
-							<div v-if="section.agents.length" class="agent-group">
-								<div
-									class="agent-group-header eyebrow flex items-center justify-between gap-3 px-3 py-1.5"
-								>
-									<span class="truncate">
-										{{ section.title }}
-										<span class="text-secondary tabular-nums">· {{ section.agents.length }}</span>
-									</span>
-									<span class="shrink-0">{{ section.key === "kept" ? "Reason" : "Last seen" }}</span>
-								</div>
-								<ul class="m-0 list-none p-0">
-									<li
-										v-for="agent of section.agents"
-										:key="agent.agent_id"
-										class="agent-row grid items-center gap-x-3 px-3 py-2"
-										:data-agent="agent.agent_id"
-										:data-verdict="agent.verdict"
-									>
-										<Dot :variant="section.dot" />
-										<div class="flex min-w-0 flex-col">
-											<span
-												class="text-default truncate text-sm"
-												:title="agent.hostname ?? agent.agent_id"
-											>
-												<bdi>{{ agent.hostname ?? agent.agent_id }}</bdi>
-											</span>
-											<span class="text-tertiary truncate font-mono text-[11px]">
-												#{{ agent.agent_id }}
-												<template v-if="agent.os">· {{ agent.os }}</template>
-											</span>
-										</div>
-										<div
-											class="flex flex-col items-end font-mono text-[11px] leading-snug tabular-nums"
-										>
-											<span
-												v-if="section.key === 'kept'"
-												class="text-secondary"
-												:title="verdictText(agent.verdict, source).hint"
-											>
-												{{ verdictText(agent.verdict, source).label }}
-											</span>
-											<template v-else>
-												<span
-													class="text-default"
-													:title="lastSeenTitle(source, agent.last_seen)"
-												>
-													{{ shortTool(source) }} {{ compactAge(agent.last_seen, now) }}
-												</span>
-												<span
-													:class="
-														section.key === 'elsewhere' ? 'text-warning' : 'text-tertiary'
-													"
-													:title="lastSeenTitle(otherTool(source), agent.other_last_seen)"
-												>
-													{{ shortTool(otherTool(source)) }}
-													{{ compactAge(agent.other_last_seen, now) }}
-												</span>
-											</template>
-										</div>
-									</li>
-								</ul>
+								name="unhealthy-delete-preset"
+								class="presets"
+								data-testid="unhealthy-delete-presets"
+								@update:value="applyPreset"
+							>
+								<n-radio-button
+									v-for="preset of THRESHOLD_PRESETS"
+									:key="preset.key"
+									:value="preset.key"
+									:label="preset.label"
+								/>
+							</n-radio-group>
+							<div class="flex items-center gap-2">
+								<span class="text-tertiary px-1 text-xs">or</span>
+								<n-input-group class="w-auto!">
+									<n-input-number
+										v-model:value="thresholdValue"
+										size="small"
+										:min="1"
+										:precision="0"
+										:show-button="false"
+										placeholder="—"
+										class="w-20! font-mono"
+										:input-props="{ 'aria-label': 'Not seen for', inputmode: 'numeric' }"
+										data-testid="unhealthy-delete-value"
+									/>
+									<n-select
+										v-model:value="thresholdUnit"
+										size="small"
+										:options="UNIT_OPTIONS"
+										class="w-24!"
+										:consistent-menu-width="false"
+										aria-label="Unit"
+										data-testid="unhealthy-delete-unit"
+									/>
+								</n-input-group>
 							</div>
-						</template>
-					</div>
-					<div v-else-if="previewLoading" class="agent-list flex h-24 items-center justify-center rounded-lg">
-						<n-spin size="small" />
-					</div>
-				</section>
+						</div>
+						<p
+							v-if="problem"
+							class="text-error m-0 text-xs"
+							role="alert"
+							data-testid="unhealthy-delete-problem"
+						>
+							{{ problem }}
+						</p>
+						<p v-else class="text-secondary m-0 text-xs" data-testid="unhealthy-delete-cutoff">
+							<template v-if="preview && previewCurrent">
+								Last seen before
+								<time :datetime="preview.cutoff" class="text-default font-mono">
+									{{ formatDate(preview.cutoff, dFormats.datetime, { tz: true }) }}
+								</time>
+							</template>
+							<template v-else>&nbsp;</template>
+						</p>
+						<div
+							v-if="validThreshold && caution"
+							class="callout callout-warning"
+							role="note"
+							data-testid="unhealthy-delete-caution"
+						>
+							<Icon :name="WarningIcon" :size="15" class="mt-px shrink-0" />
+							<span>
+								Under 7 days, this can include endpoints that are only switched off — over a weekend or
+								a holiday. Check the list before you confirm.
+							</span>
+						</div>
+					</section>
+				</li>
 
-				<section class="section" aria-labelledby="uhd-confirm">
-					<h4 id="uhd-confirm" class="eyebrow">
-						<span class="step">03</span>
-						Confirm
-					</h4>
-					<div class="text-secondary flex gap-2 text-xs leading-relaxed">
-						<Icon :name="InfoIcon" :size="15" class="text-tertiary mt-px shrink-0" />
-						<span>
-							Each agent is removed from
-							<strong class="text-default font-medium">Wazuh, Velociraptor and CoPilot</strong>
-							with its collected artifacts and vulnerabilities. It stops reporting and has to be enrolled
-							again. This cannot be undone.
+				<li class="step" :class="`is-${stepStates[1]}`" data-step="2">
+					<div class="step-rail" aria-hidden="true">
+						<span class="step-marker">
+							<Icon v-if="stepStates[1] === 'done'" :name="CheckIcon" :size="13" />
+							<template v-else>2</template>
 						</span>
 					</div>
-					<div v-if="typedNeeded" class="flex flex-col gap-1.5">
-						<label for="uhd-typed" class="text-secondary text-xs">
-							Type
-							<code class="text-default">{{ groups.toDelete.length }}</code>
-							to confirm
-						</label>
-						<n-input
-							v-model:value="typed"
-							size="small"
-							class="w-40! font-mono"
-							:placeholder="String(groups.toDelete.length)"
-							:input-props="{ id: 'uhd-typed', inputmode: 'numeric', autocomplete: 'off' }"
-							data-testid="unhealthy-delete-typed"
-							@keyup.enter="startDeletion()"
-						/>
+					<section class="step-body" aria-labelledby="uhd-impact">
+						<header class="step-head">
+							<span class="step-count">Step 2 of 3</span>
+							<h4 id="uhd-impact" class="step-title">Review the impact</h4>
+							<p class="step-desc">
+								What the server will do with each of the {{ props.agents.length }} selected
+								{{ props.agents.length === 1 ? "agent" : "agents" }}, judged now.
+							</p>
+						</header>
+
+						<div v-if="previewError" class="callout callout-error" role="alert">
+							<Icon :name="ErrorIcon" :size="15" class="mt-px shrink-0" />
+							<span class="grow">{{ previewError }}</span>
+							<n-button size="tiny" secondary @click="loadPreview()">Retry</n-button>
+						</div>
+
+						<!-- The three cells split the selection: an included agent moves to Delete. -->
+						<div class="stats stats-split" :class="{ 'is-stale': !previewCurrent }" aria-live="polite">
+							<div class="stat stat-danger" data-testid="unhealthy-delete-count">
+								<span class="stat-label">Delete</span>
+								<span class="stat-value">{{ previewCurrent ? groups.toDelete.length : "—" }}</span>
+							</div>
+							<div class="stat" :class="{ 'stat-warning': groups.activeElsewhere.length }">
+								<span class="stat-label">Seen by {{ toolName(otherTool(source)) }}</span>
+								<span class="stat-value" data-testid="unhealthy-delete-active-elsewhere">
+									{{ previewCurrent ? groups.activeElsewhere.length : "—" }}
+								</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Kept</span>
+								<span class="stat-value" data-testid="unhealthy-delete-kept">
+									{{ previewCurrent ? groups.kept.length : "—" }}
+								</span>
+							</div>
+						</div>
+
+						<!-- The whole row toggles: a label cannot target the switch, which is no native control. -->
+						<div
+							v-if="previewCurrent && activeElsewhereCount"
+							class="include-row flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5"
+							data-testid="unhealthy-delete-include"
+							@click="includeActiveElsewhere = !includeActiveElsewhere"
+						>
+							<span class="mt-0.5 flex" @click.stop>
+								<n-switch
+									v-model:value="includeActiveElsewhere"
+									size="small"
+									aria-labelledby="uhd-include-label"
+									data-testid="unhealthy-delete-include-switch"
+								/>
+							</span>
+							<span class="flex min-w-0 flex-col gap-0.5">
+								<span id="uhd-include-label" class="text-default text-sm">
+									Also delete the {{ activeElsewhereCount }}
+									{{ activeElsewhereCount === 1 ? "agent" : "agents" }}
+									{{ toolName(otherTool(source)) }} still sees
+								</span>
+								<span class="text-secondary text-xs">
+									{{ toolName(otherTool(source)) }} saw them within the threshold, so the endpoints
+									are likely running. Deleting removes them from
+									{{ toolName(otherTool(source)) }} too.
+								</span>
+							</span>
+						</div>
+
+						<div
+							v-if="preview && previewCurrent"
+							class="agent-list rounded-lg"
+							data-testid="unhealthy-delete-agents"
+						>
+							<n-scrollbar class="max-h-72" trigger="none">
+								<template v-for="section of sections" :key="section.key">
+									<div v-if="section.agents.length" class="agent-group">
+										<div
+											class="agent-group-header eyebrow flex items-center justify-between gap-3 px-3 py-1.5"
+										>
+											<span class="truncate">
+												{{ section.title }}
+												<span class="text-secondary tabular-nums">
+													· {{ section.agents.length }}
+												</span>
+											</span>
+											<span class="shrink-0">
+												{{ section.key === "kept" ? "Reason" : "Last seen" }}
+											</span>
+										</div>
+										<ul class="m-0 list-none p-0">
+											<li
+												v-for="agent of section.agents"
+												:key="agent.agent_id"
+												class="agent-row grid items-center gap-x-3 px-3 py-2"
+												:data-agent="agent.agent_id"
+												:data-verdict="agent.verdict"
+											>
+												<Dot :variant="section.dot" />
+												<div class="flex min-w-0 flex-col">
+													<span
+														class="text-default truncate text-sm"
+														:title="agent.hostname ?? agent.agent_id"
+													>
+														<bdi>{{ agent.hostname ?? agent.agent_id }}</bdi>
+													</span>
+													<span class="text-tertiary truncate font-mono text-[11px]">
+														#{{ agent.agent_id }}
+														<template v-if="agent.os">· {{ agent.os }}</template>
+													</span>
+												</div>
+												<span
+													v-if="section.key === 'kept'"
+													class="text-secondary text-right text-xs"
+													:title="verdictText(agent.verdict, source).hint"
+												>
+													{{ verdictText(agent.verdict, source).label }}
+												</span>
+												<!-- Each tool by name, then how long ago it last saw the agent. -->
+												<dl v-else class="seen m-0" data-testid="unhealthy-delete-seen">
+													<div
+														class="seen-line"
+														:title="lastSeenTitle(source, agent.last_seen)"
+													>
+														<dt>{{ toolName(source) }}</dt>
+														<dd class="text-default">
+															{{ compactAge(agent.last_seen, now) }}
+														</dd>
+													</div>
+													<div
+														class="seen-line"
+														:title="lastSeenTitle(otherTool(source), agent.other_last_seen)"
+													>
+														<dt>{{ toolName(otherTool(source)) }}</dt>
+														<dd
+															:class="
+																section.key === 'elsewhere'
+																	? 'text-warning'
+																	: 'text-secondary'
+															"
+														>
+															{{ compactAge(agent.other_last_seen, now) }}
+														</dd>
+													</div>
+												</dl>
+											</li>
+										</ul>
+									</div>
+								</template>
+							</n-scrollbar>
+						</div>
+						<div
+							v-else-if="previewLoading"
+							class="agent-list flex h-24 items-center justify-center rounded-lg"
+						>
+							<n-spin size="small" />
+						</div>
+					</section>
+				</li>
+
+				<li class="step" :class="`is-${stepStates[2]}`" data-step="3">
+					<div class="step-rail" aria-hidden="true">
+						<span class="step-marker">
+							<Icon v-if="stepStates[2] === 'done'" :name="CheckIcon" :size="13" />
+							<span v-else class="mt-0.5">3</span>
+						</span>
 					</div>
-				</section>
-			</div>
+					<section class="step-body" aria-labelledby="uhd-confirm">
+						<header class="step-head">
+							<span class="step-count">Step 3 of 3</span>
+							<h4 id="uhd-confirm" class="step-title">Confirm the deletion</h4>
+							<p class="step-desc">Read what happens to each agent, then confirm.</p>
+						</header>
+
+						<div class="consequences" data-testid="unhealthy-delete-consequences">
+							<ul class="m-0 flex list-none flex-col gap-2 p-0">
+								<li v-for="item of CONSEQUENCES" :key="item.text" class="flex items-start gap-2.5">
+									<Icon :name="item.icon" :size="15" class="text-secondary mt-px shrink-0" />
+									<span>{{ item.text }}</span>
+								</li>
+							</ul>
+						</div>
+
+						<div v-if="typedNeeded" class="typed-confirm" data-testid="unhealthy-delete-typed-box">
+							<label for="uhd-typed" class="text-default text-sm">
+								To confirm, type the number of agents to delete:
+								<strong class="count-chip">{{ groups.toDelete.length }}</strong>
+							</label>
+							<div class="flex items-center gap-3">
+								<n-input
+									v-model:value="typed"
+									size="small"
+									class="w-32! font-mono"
+									:status="typed && !typedMatches ? 'error' : undefined"
+									:placeholder="String(groups.toDelete.length)"
+									:input-props="{ id: 'uhd-typed', inputmode: 'numeric', autocomplete: 'off' }"
+									data-testid="unhealthy-delete-typed"
+									@keyup.enter="startDeletion()"
+								/>
+								<span
+									v-if="typedMatches"
+									class="text-success flex items-center gap-1.5 text-xs"
+									data-testid="unhealthy-delete-typed-ok"
+								>
+									<Icon :name="CheckIcon" :size="14" />
+									Matches
+								</span>
+							</div>
+						</div>
+						<p
+							v-else-if="previewCurrent && !groups.toDelete.length"
+							class="text-secondary m-0 text-xs"
+							data-testid="unhealthy-delete-nothing"
+						>
+							Nothing to delete at this threshold.
+						</p>
+					</section>
+				</li>
+			</ol>
 
 			<!-- ── running ───────────────────────────────────────────────────────── -->
 			<div
@@ -354,39 +407,40 @@
 					</span>
 				</div>
 
-				<div
-					v-if="review.length"
-					class="agent-list max-h-60 overflow-y-auto rounded-lg"
-					data-testid="unhealthy-delete-review"
-				>
-					<div class="agent-group-header eyebrow flex items-center justify-between gap-3 px-3 py-1.5">
-						<span>
-							To review
-							<span class="text-secondary tabular-nums">· {{ review.length }}</span>
-						</span>
-						<span>Outcome</span>
-					</div>
-					<ul class="m-0 list-none p-0">
-						<li
-							v-for="result of review"
-							:key="result.agent_id"
-							class="agent-row grid items-center gap-x-3 px-3 py-2"
-							:data-agent="result.agent_id"
-						>
-							<Dot :variant="resultDot(result)" />
-							<div class="flex min-w-0 flex-col">
-								<span class="text-default truncate text-sm" :title="result.hostname ?? result.agent_id">
-									<bdi>{{ result.hostname ?? result.agent_id }}</bdi>
-								</span>
-								<span class="text-tertiary font-mono text-[11px]" :title="resultText(result).hint">
-									#{{ result.agent_id }} · {{ resultText(result).detail }}
-								</span>
-							</div>
-							<span class="outcome-tag" :class="`is-${resultDot(result)}`">
-								{{ resultText(result).label }}
+				<div v-if="review.length" class="agent-list rounded-lg" data-testid="unhealthy-delete-review">
+					<n-scrollbar class="max-h-60" trigger="none">
+						<div class="agent-group-header eyebrow flex items-center justify-between gap-3 px-3 py-1.5">
+							<span>
+								To review
+								<span class="text-secondary tabular-nums">· {{ review.length }}</span>
 							</span>
-						</li>
-					</ul>
+							<span>Outcome</span>
+						</div>
+						<ul class="m-0 list-none p-0">
+							<li
+								v-for="result of review"
+								:key="result.agent_id"
+								class="agent-row grid items-center gap-x-3 px-3 py-2"
+								:data-agent="result.agent_id"
+							>
+								<Dot :variant="resultDot(result)" />
+								<div class="flex min-w-0 flex-col">
+									<span
+										class="text-default truncate text-sm"
+										:title="result.hostname ?? result.agent_id"
+									>
+										<bdi>{{ result.hostname ?? result.agent_id }}</bdi>
+									</span>
+									<span class="text-tertiary font-mono text-[11px]" :title="resultText(result).hint">
+										#{{ result.agent_id }} · {{ resultText(result).detail }}
+									</span>
+								</div>
+								<span class="outcome-tag" :class="`is-${resultDot(result)}`">
+									{{ resultText(result).label }}
+								</span>
+							</li>
+						</ul>
+					</n-scrollbar>
 				</div>
 			</div>
 		</div>
@@ -454,6 +508,7 @@ import {
 	NProgress,
 	NRadioButton,
 	NRadioGroup,
+	NScrollbar,
 	NSelect,
 	NSpin,
 	NSwitch
@@ -473,7 +528,6 @@ import {
 	groupPreview,
 	mergePreviews,
 	needsCaution,
-	needsTypedConfirmation,
 	otherTool,
 	presetKey,
 	PREVIEW_CHUNK_SIZE,
@@ -507,9 +561,17 @@ const show = defineModel<boolean>("show", { required: true })
 const TrashIcon = "carbon:trash-can"
 const WarningIcon = "carbon:warning-alt"
 const ErrorIcon = "carbon:error"
-const InfoIcon = "carbon:information"
 const StopIcon = "carbon:stop-outline"
 const DoneIcon = "carbon:checkmark-outline"
+const CheckIcon = "carbon:checkmark"
+
+/** What deleting does to each agent, one fact a line (step 3). */
+const CONSEQUENCES = [
+	{ icon: "carbon:close-outline", text: "It is removed from Wazuh, Velociraptor and CoPilot." },
+	{ icon: "carbon:data-base", text: "Its collected artifacts and vulnerabilities are deleted." },
+	{ icon: "carbon:plug", text: "It stops reporting: the endpoint has to be enrolled again to come back." },
+	{ icon: "carbon:undo", text: "It is permanent: a deleted agent cannot be restored." }
+]
 
 const UNIT_OPTIONS = [
 	{ label: "hours", value: "hours" },
@@ -630,15 +692,23 @@ const sections = computed<
 	{ key: "kept", title: "Kept", dot: "muted", agents: groups.value.kept }
 ])
 
-const typedNeeded = computed(
-	() => !!validThreshold.value && needsTypedConfirmation(validThreshold.value, groups.value.toDelete.length)
-)
+// Every deletion asks for the count, two agents at 90 days as much as fifty at one: it cannot be undone.
+const typedNeeded = computed(() => previewCurrent.value && groups.value.toDelete.length > 0)
+const typedMatches = computed(() => confirmationMatches(typed.value, groups.value.toDelete.length))
 const canDelete = computed(
-	() =>
-		previewCurrent.value &&
-		groups.value.toDelete.length > 0 &&
-		(!typedNeeded.value || confirmationMatches(typed.value, groups.value.toDelete.length))
+	() => previewCurrent.value && groups.value.toDelete.length > 0 && (!typedNeeded.value || typedMatches.value)
 )
+
+type StepState = "todo" | "current" | "done"
+
+/** Where the user is in the three steps: each is done only once the one before it is. */
+const stepStates = computed<StepState[]>(() => {
+	const threshold: StepState = validThreshold.value ? "done" : "current"
+	const reviewed = previewCurrent.value && groups.value.toDelete.length > 0
+	const review: StepState = threshold !== "done" ? "todo" : reviewed ? "done" : "current"
+	const confirm: StepState = review !== "done" ? "todo" : canDelete.value ? "done" : "current"
+	return [threshold, review, confirm]
+})
 const deleteLabel = computed(() => {
 	const count = previewCurrent.value ? groups.value.toDelete.length : 0
 	return count ? `Delete ${count} ${count === 1 ? "agent" : "agents"}` : "Delete"
@@ -651,10 +721,6 @@ watch(
 		typed.value = ""
 	}
 )
-
-function shortTool(source: CustomerHealthcheckSource) {
-	return source === "wazuh" ? "WZ" : "VR"
-}
 
 function lastSeenTitle(source: CustomerHealthcheckSource, lastSeen: string | null) {
 	const when = lastSeen ? formatDate(lastSeen, dFormats.datetime, { tz: true }) : "never"
@@ -833,11 +899,6 @@ onBeforeUnmount(() => previewController?.abort())
 	color: var(--fg-tertiary-color);
 }
 
-.step {
-	color: var(--fg-secondary-color);
-	margin-right: 0.6em;
-}
-
 .section {
 	display: flex;
 	flex-direction: column;
@@ -855,15 +916,212 @@ onBeforeUnmount(() => previewController?.abort())
 	}
 }
 
-h4.eyebrow {
-	margin: 0;
-	font-weight: 500;
+/* ── the three steps: a numbered rail, a line joining each marker to the next ── */
+.steps {
+	display: flex;
+	flex-direction: column;
+	padding: calc(var(--spacing) * 4) calc(var(--spacing) * 4) 0;
 }
 
-.danger-tile {
+@container (min-width: 32rem) {
+	.steps {
+		padding: calc(var(--spacing) * 5) calc(var(--spacing) * 6) 0;
+	}
+}
+
+.step {
+	display: grid;
+	grid-template-columns: 26px minmax(0, 1fr);
+	column-gap: calc(var(--spacing) * 3.5);
+}
+
+.step-rail {
+	position: relative;
+	display: flex;
+	justify-content: center;
+}
+
+.step-rail::after {
+	content: "";
+	position: absolute;
+	top: 32px;
+	bottom: 6px;
+	left: 50%;
+	width: 1px;
+	transform: translateX(-50%);
+	background-color: var(--border-color);
+	transition: background-color 0.2s;
+}
+
+.step:last-child .step-rail::after {
+	display: none;
+}
+
+.step.is-done .step-rail::after {
+	background-color: rgb(var(--primary-color-rgb) / 0.55);
+}
+
+.step-marker {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	width: 26px;
+	height: 26px;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--border-color);
+	border-radius: 999px;
+	background-color: var(--bg-default-color);
+	color: var(--fg-tertiary-color);
+	font-family: var(--font-family-mono), monospace;
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	transition:
+		background-color 0.2s,
+		border-color 0.2s,
+		color 0.2s,
+		box-shadow 0.2s;
+}
+
+.step.is-current .step-marker {
+	border-color: var(--primary-color);
+	color: var(--primary-color);
+	box-shadow: 0 0 0 3px rgb(var(--primary-color-rgb) / 0.15);
+}
+
+.step.is-done .step-marker {
+	border-color: var(--primary-color);
+	background-color: var(--primary-color);
+	/* Dark on the primary in both themes: the check must read on amber. */
+	color: rgb(0 0 0 / 0.85);
+}
+
+.step-body {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: calc(var(--spacing) * 3);
+	padding-bottom: calc(var(--spacing) * 6);
+}
+
+.step-head {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding-top: 1px;
+}
+
+.step-count {
+	font-size: 11px;
+	line-height: 1.3;
+	color: var(--fg-tertiary-color);
+}
+
+.step-title {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--fg-default-color);
+}
+
+.step-desc {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--fg-secondary-color);
+}
+
+.step.is-todo .step-head {
+	opacity: 0.75;
+}
+
+/* A phone cannot spare a column for it: the last-seen lines go under the name, which keeps the
+   row's whole width. */
+@container (max-width: 31.99rem) {
+	.agent-row:has(.seen) {
+		grid-template-columns: auto minmax(0, 1fr);
+		row-gap: 3px;
+	}
+
+	.agent-row .seen {
+		grid-column: 2;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: baseline;
+		column-gap: calc(var(--spacing) * 3);
+	}
+
+	.agent-row .seen-line dd {
+		min-width: 0;
+		text-align: left;
+	}
+}
+
+/* ── step 3: what deleting does, then the typed count ── */
+.consequences {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--spacing) * 2.5);
+	padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3.5);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--bg-secondary-color);
+	font-size: 12.5px;
+	line-height: 1.45;
+	color: var(--fg-default-color);
+}
+
+.typed-confirm {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--spacing) * 2);
+	padding: calc(var(--spacing) * 3) calc(var(--spacing) * 3.5);
+	border: 1px solid rgb(var(--error-color-rgb) / 0.35);
+	border-radius: var(--border-radius);
+	background-color: rgb(var(--error-color-rgb) / 0.05);
+}
+
+.count-chip {
+	margin-left: 4px;
+	padding: 1px 7px;
+	border-radius: var(--border-radius-small);
+	background-color: rgb(var(--error-color-rgb) / 0.14);
 	color: var(--error-color);
-	background-color: rgb(var(--error-color-rgb) / 0.1);
-	box-shadow: inset 0 0 0 1px rgb(var(--error-color-rgb) / 0.25);
+	font-family: var(--font-family-mono), monospace;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ── the last-seen column: each tool by name, then how long ago ── */
+.seen {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 1px;
+	font-size: 11px;
+	line-height: 1.35;
+}
+
+.seen-line {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	white-space: nowrap;
+
+	/* The theme bolds every dl dt and spaces it: here it is a quiet label beside its value. */
+	dt {
+		margin: 0;
+		font-weight: 400;
+		color: var(--fg-tertiary-color);
+	}
+
+	dd {
+		min-width: 4.6em;
+		margin: 0;
+		font-family: var(--font-family-mono), monospace;
+		font-variant-numeric: tabular-nums;
+		text-align: right;
+	}
 }
 
 .outcome-tile {
@@ -909,6 +1167,37 @@ h4.eyebrow {
 	box-shadow:
 		1px 0 0 0 var(--border-color),
 		0 1px 0 0 var(--border-color);
+}
+
+.stat-label {
+	font-family: var(--font-family-mono), monospace;
+	font-size: 10px;
+	line-height: 1.4;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--fg-tertiary-color);
+}
+
+.stats-split {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* A third of a phone is too narrow for "Seen by Velociraptor": the figures become rows. */
+@container (max-width: 31.99rem) {
+	.stats-split {
+		grid-template-columns: minmax(0, 1fr);
+
+		.stat {
+			flex-direction: row;
+			align-items: center;
+			padding-block: calc(var(--spacing) * 2);
+		}
+
+		.stat-value {
+			font-size: 1.125rem;
+		}
+	}
 }
 
 .stat-value {
@@ -977,7 +1266,12 @@ h4.eyebrow {
 .agent-list {
 	border: 1px solid var(--border-color);
 	background-color: var(--bg-default-color);
-	overscroll-behavior: contain;
+	/* The box draws the frame; NScrollbar inside it scrolls. */
+	overflow: hidden;
+
+	:deep(.n-scrollbar-container) {
+		overscroll-behavior: contain;
+	}
 }
 
 .agent-group + .agent-group {
@@ -1003,6 +1297,9 @@ h4.eyebrow {
 .progress-count {
 	font-size: 1.5rem;
 	line-height: 1;
+	/* "0 / 14" is one reading: on a phone it must not break after the slash. */
+	flex-shrink: 0;
+	white-space: nowrap;
 }
 
 .presets :deep(.n-radio-button) {

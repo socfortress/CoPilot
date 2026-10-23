@@ -165,8 +165,11 @@ describe("unhealthy agents delete dialog: the preview", () => {
 		])
 		// Kept agents say why.
 		expect(rows[3].textContent).toContain("Wazuh manager")
-		expect(confirmButton().disabled).toBe(false)
 		expect(confirmButton().textContent).toContain("Delete 1 agent")
+		// Even one agent at 30 days: the count is typed first.
+		expect(confirmButton().disabled).toBe(true)
+		await type("1")
+		expect(confirmButton().disabled).toBe(false)
 	})
 
 	it("starts at 30 days when the list's filter could not delete, and reads again on a change", async () => {
@@ -203,7 +206,7 @@ describe("unhealthy agents delete dialog: the preview", () => {
 		expect(text("unhealthy-delete-problem")).toMatch(/choose/i)
 		await setThreshold(60)
 		expect(customers.previewUnhealthyAgentsDeletion).toHaveBeenCalledTimes(3)
-		expect(confirmButton().disabled).toBe(false)
+		expect(text("unhealthy-delete-count")).toContain("1")
 	})
 
 	it("refuses a threshold under 24 hours before asking anything", async () => {
@@ -218,6 +221,7 @@ describe("unhealthy agents delete dialog: the preview", () => {
 
 	it("never acts on a preview read at another threshold", async () => {
 		await render(["001"])
+		await type("1")
 		let release: (value: unknown) => void = () => {}
 		customers.previewUnhealthyAgentsDeletion.mockImplementationOnce(
 			(_code, _source, body) =>
@@ -248,7 +252,74 @@ describe("unhealthy agents delete dialog: the preview", () => {
 		retry.click()
 		await settle()
 		expect(customers.previewUnhealthyAgentsDeletion).toHaveBeenCalledTimes(2)
+		await type("1")
 		expect(confirmButton().disabled).toBe(false)
+	})
+})
+
+/** The layout the review asked for: a plain header, three numbered steps, plain words. */
+describe("unhealthy agents delete dialog: steps and wording", () => {
+	const states = () =>
+		[...document.querySelectorAll<HTMLElement>("[data-testid=unhealthy-delete-steps] > li")].map(
+			step => [...step.classList].find(name => name.startsWith("is-")) ?? ""
+		)
+
+	it("has a plain header: no icon, the scope in ordinary text", async () => {
+		await render(["001"])
+		const header = must(document.querySelector(".n-card-header__main"), "the header")
+		expect(header.querySelector("svg")).toBeNull()
+		expect($("unhealthy-delete-scope")?.className).not.toMatch(/eyebrow|font-mono/)
+	})
+
+	it("numbers its three steps and says which are done", async () => {
+		await render(["001"], { time: 1, unit: "days" })
+		const steps = [...document.querySelectorAll<HTMLElement>("[data-testid=unhealthy-delete-steps] > li")]
+		expect(steps.map(step => step.querySelector(".step-count")?.textContent?.trim())).toEqual([
+			"Step 1 of 3",
+			"Step 2 of 3",
+			"Step 3 of 3"
+		])
+		// A threshold and a preview: only the confirmation is left.
+		expect(states()).toEqual(["is-done", "is-done", "is-current"])
+		await type("1")
+		expect(states()).toEqual(["is-done", "is-done", "is-done"])
+		expect($("unhealthy-delete-typed-ok")?.textContent).toContain("Matches")
+
+		// No valid threshold: the first step is where the user is, the others wait.
+		await setThreshold(23, "hours")
+		expect(states()).toEqual(["is-current", "is-todo", "is-todo"])
+	})
+
+	it("names each tool and how long ago it saw the agent", async () => {
+		await render(["001"])
+		const lines = [...document.querySelectorAll<HTMLElement>("[data-testid=unhealthy-delete-seen] .seen-line")]
+		// The label and the value are a dt and a dd: read them as the pair they are.
+		const pairs = lines.map(line => [
+			line.querySelector("dt")?.textContent?.trim(),
+			line.querySelector("dd")?.textContent?.trim()
+		])
+		expect(pairs).toEqual([
+			["Wazuh", expect.stringMatching(/^\d+d ago$/)],
+			["Velociraptor", expect.stringMatching(/^\d+d ago$/)]
+		])
+	})
+
+	it("lists what deleting does, its permanence as one of the facts rather than an alarm", async () => {
+		await render(["001"])
+		const box = must($("unhealthy-delete-consequences"), "the consequences")
+		const facts = [...box.querySelectorAll("li")].map(item => item.textContent?.trim())
+		expect(facts).toHaveLength(4)
+		expect(facts[0]).toContain("removed from Wazuh, Velociraptor and CoPilot")
+		expect(facts[3]).toBe("It is permanent: a deleted agent cannot be restored.")
+		// Said once, in the list: no red line of its own that reads like a refusal.
+		expect(document.body.textContent).not.toContain("This cannot be undone.")
+	})
+
+	it("says when there is nothing to delete", async () => {
+		verdicts = { "001": "seen_recently" }
+		await render(["001"])
+		expect(text("unhealthy-delete-nothing")).toBe("Nothing to delete at this threshold.")
+		expect(confirmButton().disabled).toBe(true)
 	})
 })
 
@@ -264,12 +335,13 @@ describe("unhealthy agents delete dialog: confirming", () => {
 		expect(confirmButton().disabled).toBe(false)
 	})
 
-	it("asks for the typed count from ten agents, whatever the threshold", async () => {
-		const ids = Array.from({ length: 10 }, (_, index) => String(index + 1).padStart(3, "0"))
-		await render(ids)
+	it("asks for the typed count however few the agents and however long the threshold", async () => {
+		// Two agents at 90 days: no caution, and still the count to type.
+		await render(["001", "002"], { time: 90, unit: "days" })
 		expect($("unhealthy-delete-caution")).toBeNull()
+		expect($("unhealthy-delete-typed-box")).not.toBeNull()
 		expect(confirmButton().disabled).toBe(true)
-		await type("10")
+		await type("2")
 		expect(confirmButton().disabled).toBe(false)
 	})
 
@@ -296,6 +368,7 @@ describe("unhealthy agents delete dialog: deleting", () => {
 		await render(["001", "002", "003"])
 		current().findComponent(NSwitch).vm.$emit("update:value", true)
 		await flushPromises()
+		await type("2")
 
 		confirmButton().click()
 		await settle()
@@ -371,6 +444,7 @@ describe("unhealthy agents delete dialog: deleting", () => {
 
 	it("lists what needs a look: failures, then agents an upstream did not confirm, then the skipped", async () => {
 		await render(["001", "002", "003", "004"])
+		await type("4")
 		customers.deleteUnhealthyAgents.mockResolvedValueOnce({
 			data: {
 				success: false,

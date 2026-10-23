@@ -64,9 +64,11 @@ test.describe("#1291 delete unhealthy agents (real backend)", () => {
 		)
 		await expect(dialog.locator(`[data-agent='${id("novelo")}']`)).toHaveAttribute("data-verdict", "deletable")
 
-		// Four agents at 30 days: no typed count needed.
-		await expect(dialog.getByTestId("unhealthy-delete-typed")).toHaveCount(0)
-		await dialog.getByTestId("unhealthy-delete-confirm").click()
+		// Four agents at 30 days, and still the count to type: every deletion asks for it.
+		const confirm = dialog.getByTestId("unhealthy-delete-confirm")
+		await expect(confirm).toBeDisabled()
+		await dialog.getByTestId("unhealthy-delete-typed").locator("input").fill("4")
+		await confirm.click()
 		await expect(dialog.getByTestId("unhealthy-delete-outcome")).toHaveText("4 agents deleted")
 
 		// MySQL: only the agent Velociraptor still sees and the fresh one are left.

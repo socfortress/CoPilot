@@ -8,7 +8,6 @@ import {
 	groupPreview,
 	mergePreviews,
 	needsCaution,
-	needsTypedConfirmation,
 	presetKey,
 	resultsToReview,
 	runChunkedDeletion,
@@ -90,15 +89,10 @@ describe("the threshold", () => {
 })
 
 describe("confirming", () => {
-	it("is cautious under a week, and asks for the count to be typed then or from ten agents", () => {
+	it("is cautious under a week", () => {
 		expect(needsCaution({ value: 6, unit: "days" })).toBe(true)
 		expect(needsCaution({ value: 167, unit: "hours" })).toBe(true)
 		expect(needsCaution({ value: 7, unit: "days" })).toBe(false)
-
-		expect(needsTypedConfirmation({ value: 30, unit: "days" }, 9)).toBe(false)
-		expect(needsTypedConfirmation({ value: 30, unit: "days" }, 10)).toBe(true)
-		expect(needsTypedConfirmation({ value: 1, unit: "days" }, 1)).toBe(true)
-		expect(needsTypedConfirmation({ value: 1, unit: "days" }, 0)).toBe(false)
 	})
 
 	it("matches only the exact count", () => {
@@ -246,17 +240,17 @@ describe("ages", () => {
 	const now = Date.parse("2026-10-22T12:00:00Z")
 
 	it("are compact, read from naive UTC", () => {
-		expect(compactAge("2026-10-22T11:30:00", now)).toBe("<1 h")
-		expect(compactAge("2026-10-22T07:00:00", now)).toBe("5 h")
-		expect(compactAge("2026-10-20T12:00:00", now)).toBe("2 d")
-		expect(compactAge("2026-09-12T12:00:00", now)).toBe("40 d")
-		expect(compactAge("2023-10-22T12:00:00", now)).toBe("3 y")
-		expect(compactAge("2026-10-22T11:30:00+00:00", now)).toBe("<1 h")
+		expect(compactAge("2026-10-22T11:30:00", now)).toBe("<1h ago")
+		expect(compactAge("2026-10-22T07:00:00", now)).toBe("5h ago")
+		expect(compactAge("2026-10-20T12:00:00", now)).toBe("2d ago")
+		expect(compactAge("2026-09-12T12:00:00", now)).toBe("40d ago")
+		expect(compactAge("2023-10-22T12:00:00", now)).toBe("3y ago")
+		expect(compactAge("2026-10-22T11:30:00+00:00", now)).toBe("<1h ago")
 	})
 
 	it("say never for no time and for the epoch the sync stores for Wazuh's Unknown", () => {
 		expect(compactAge(null, now)).toBe("never")
 		expect(compactAge("1970-01-01T00:00:00", now)).toBe("never")
-		expect(compactAge("2026-10-23T12:00:00", now)).toBe("ahead")
+		expect(compactAge("2026-10-23T12:00:00", now)).toBe("in the future")
 	})
 })
