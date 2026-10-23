@@ -9,7 +9,10 @@
 				:data-tone="check.tone"
 			>
 				<span :class="SECTION_LABEL">{{ check.label }}</span>
-				<span class="inline-flex items-center gap-1.5 text-sm font-semibold" :style="{ color: TONE_COLOR[check.tone] }">
+				<span
+					class="inline-flex items-center gap-1.5 text-sm font-semibold"
+					:style="{ color: TONE_COLOR[check.tone] }"
+				>
 					<Icon :name="check.icon" :size="15" />
 					<span>{{ check.value }}</span>
 				</span>
@@ -26,7 +29,9 @@
 		<dl class="text-secondary flex flex-wrap gap-x-6 gap-y-1 text-xs" data-testid="talon-copilot-facts">
 			<div v-for="fact of facts" :key="fact.label" class="flex gap-1.5">
 				<dt>{{ fact.label }}</dt>
-				<dd class="text-default font-medium"><bdi>{{ fact.value }}</bdi></dd>
+				<dd class="text-default font-medium">
+					<bdi>{{ fact.value }}</bdi>
+				</dd>
 			</div>
 		</dl>
 		<p v-if="copilot.scope === 'assigned'" class="text-tertiary text-xs">
@@ -67,28 +72,91 @@ const checks = computed((): Check[] => {
 	const connectorCheck: Check = !connector?.exists
 		? { id: "connector", label: "Connector", value: "Missing", detail: null, tone: "bad", icon: BAD }
 		: !connector.configured
-			? { id: "connector", label: "Connector", value: "Not configured", detail: "Set the Talon connector's URL and API key", tone: "bad", icon: BAD }
+			? {
+					id: "connector",
+					label: "Connector",
+					value: "Not configured",
+					detail: "Set the Talon connector's URL and API key",
+					tone: "bad",
+					icon: BAD
+				}
 			: connector.verified
-				? { id: "connector", label: "Connector", value: "Configured and verified", detail: connector.url, tone: "good", icon: GOOD }
-				: { id: "connector", label: "Connector", value: "Configured, not verified", detail: connector.url, tone: "warn", icon: WARN }
+				? {
+						id: "connector",
+						label: "Connector",
+						value: "Configured and verified",
+						detail: connector.url,
+						tone: "good",
+						icon: GOOD
+					}
+				: {
+						id: "connector",
+						label: "Connector",
+						value: "Configured, not verified",
+						detail: connector.url,
+						tone: "warn",
+						icon: WARN
+					}
 
 	const reachableCheck: Check =
 		reachable?.ok === true
-			? { id: "reachable", label: "Talon reachable", value: `Yes, ${formatLatency(reachable.latency_ms)}`, detail: null, tone: "good", icon: GOOD }
+			? {
+					id: "reachable",
+					label: "Talon reachable",
+					value: `Yes, ${formatLatency(reachable.latency_ms)}`,
+					detail: null,
+					tone: "good",
+					icon: GOOD
+				}
 			: reachable?.ok === false
-				? { id: "reachable", label: "Talon reachable", value: "No", detail: reachable.error, tone: "bad", icon: BAD }
-				: { id: "reachable", label: "Talon reachable", value: "Not checked", detail: reachable?.error ?? null, tone: "neutral", icon: UNKNOWN }
+				? {
+						id: "reachable",
+						label: "Talon reachable",
+						value: "No",
+						detail: reachable.error,
+						tone: "bad",
+						icon: BAD
+					}
+				: {
+						id: "reachable",
+						label: "Talon reachable",
+						value: "Not checked",
+						detail: reachable?.error ?? null,
+						tone: "neutral",
+						icon: UNKNOWN
+					}
 
 	const authCheck: Check =
 		auth?.ok === true
 			? { id: "auth", label: "API key", value: "Accepted", detail: null, tone: "good", icon: GOOD }
 			: auth?.ok === false
 				? { id: "auth", label: "API key", value: "Refused", detail: auth.error, tone: "bad", icon: BAD }
-				: { id: "auth", label: "API key", value: "Not checked", detail: auth?.error ?? null, tone: "neutral", icon: UNKNOWN }
+				: {
+						id: "auth",
+						label: "API key",
+						value: "Not checked",
+						detail: auth?.error ?? null,
+						tone: "neutral",
+						icon: UNKNOWN
+					}
 
 	const v2Check: Check = copilot.v2_enabled
-		? { id: "v2", label: "Talon v2 setting", value: "On", detail: "Threaded chat, approvals and usage", tone: "good", icon: GOOD }
-		: { id: "v2", label: "Talon v2 setting", value: "Off", detail: "v1 chat; the dashboard works either way", tone: "neutral", icon: "carbon:subtract-alt" }
+		? {
+				id: "v2",
+				label: "Talon v2 setting",
+				value: "On",
+				detail: "Threaded chat, approvals and usage",
+				tone: "good",
+				icon: GOOD
+			}
+		: {
+				id: "v2",
+				label: "Talon v2 setting",
+				value: "Off",
+				detail: "v1 chat; the dashboard works either way",
+				tone: "neutral",
+				icon: "carbon:subtract-alt"
+			}
 
 	return [connectorCheck, reachableCheck, authCheck, v2Check]
 })

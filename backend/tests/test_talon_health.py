@@ -91,6 +91,7 @@ def health_payload(**overrides):
             component("database"),
             component("wazuh_mcp", group="mcp", status="warn", fix="Check the Wazuh API account"),
             component("model_provider", group="model", status="fail", detail="429 from the provider"),
+            component("web_search", group="tools", status="off", detail="No Tavily API key"),
         ],
         "config": {
             "writeback_mode": "live",
@@ -285,7 +286,8 @@ def test_reachable_talon_fills_every_section():
     assert health["error"] is None and health["unsupported"] is False
     data = health["data"]
     assert data["status"] == "degraded" and data["version"] == "0.1.3" and data["uptime_seconds"] == 3600
-    assert [c["id"] for c in data["components"]] == ["api", "database", "wazuh_mcp", "model_provider"]
+    assert [c["id"] for c in data["components"]] == ["api", "database", "wazuh_mcp", "model_provider", "web_search"]
+    assert (data["components"][4]["group"], data["components"][4]["status"]) == ("tools", "off")
     assert data["components"][2]["fix"] == "Check the Wazuh API account"
     assert data["config"]["budgets"] == {
         "daily_usd": "25.00",

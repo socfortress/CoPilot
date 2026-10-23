@@ -83,7 +83,12 @@
 								<th class="text-right">Queued (max)</th>
 								<th class="text-right">Tool calls (investigations)</th>
 								<th class="text-right">Tool errors</th>
-								<th class="text-right" title="Failed model calls Talon recorded; there may have been more">Model errors (at least)</th>
+								<th
+									class="text-right"
+									title="Failed model calls Talon recorded; there may have been more"
+								>
+									Model errors (at least)
+								</th>
 								<th class="text-right">Cost (USD)</th>
 							</tr>
 						</thead>
@@ -126,7 +131,11 @@ import { useThemeStore } from "@/stores/theme"
 import { formatCount, formatSeconds, formatTime, NO_DATA } from "./health"
 import { buildHealthCharts } from "./health-charts"
 
-const { series, hours, usageAvailable = false } = defineProps<{
+const {
+	series,
+	hours,
+	usageAvailable = false
+} = defineProps<{
 	series: TalonMetricsBucket[]
 	hours: number
 	usageAvailable?: boolean

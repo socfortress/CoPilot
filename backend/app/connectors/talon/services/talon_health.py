@@ -130,7 +130,7 @@ _CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f  ]")
 
 OVERALL = ("ok", "degraded", "down")
 COMPONENT_STATUSES = ("ok", "warn", "fail", "off")
-GROUPS = ("core", "mcp", "model")
+GROUPS = ("core", "mcp", "model", "tools")
 SWITCHES = ("v2_api", "action_tools", "endpoint_actions", "intel", "workspace_tools", "chat_browser")
 METRIC_FIELDS = (
     "investigations_completed",

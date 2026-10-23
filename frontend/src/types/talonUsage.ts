@@ -142,6 +142,8 @@ export interface TalonTimelineSpan {
 	role: string | null
 	model: string | null
 	tool: string | null
+	/** A reader's label for the tool (`Web search (Tavily)`), when CoPilot has one. */
+	tool_label?: string | null
 	prompt_tokens: number | null
 	completion_tokens: number | null
 	total_tokens: number | null

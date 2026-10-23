@@ -19,7 +19,7 @@ from pydantic import Field
 
 ComponentStatus = Literal["ok", "warn", "fail", "off", "unknown"]
 OverallStatus = Literal["ok", "degraded", "down", "unknown"]
-ComponentGroup = Literal["core", "mcp", "model", "other"]
+ComponentGroup = Literal["core", "mcp", "model", "tools", "other"]
 #: A feature switch as talon-analyst reports it: on/off, or a short word ("shadow", "level 1").
 Switch = Union[bool, str, None]
 

@@ -13,7 +13,7 @@ import {
 	warnAtPercent,
 	windowFormFromEntry
 } from "../budgets"
-import { layoutTimeline, spanTokens, TIMELINE_MIN_WIDTH_PCT, timeMs } from "../run-timeline"
+import { layoutTimeline, spanSubject, spanTokens, TIMELINE_MIN_WIDTH_PCT, timeMs } from "../run-timeline"
 import { compareStages, defaultUsageRange, formatDurationMs, usageGroupLabel, usageRangeProblem } from "../usage"
 import {
 	buildUsageChartOption,
@@ -296,6 +296,17 @@ describe("the run timeline's edges", () => {
 		expect(layout.unreadable).toBe(2)
 		expect(layout.lanes[0].rows.map(r => r.span.span_id)).toEqual(["r"])
 		expect(layoutTimeline([span("bad", { start_time: "x" })])).toMatchObject({ lanes: [], unreadable: 1 })
+	})
+})
+
+describe("what a span ran", () => {
+	it("names a tool by CoPilot's label when it has one, else by name, else the model", () => {
+		expect(spanSubject({ tool: "tavily_search", tool_label: "Web search (Tavily)", model: null })).toBe(
+			"Web search (Tavily)"
+		)
+		expect(spanSubject({ tool: "siem_search", tool_label: null, model: null })).toBe("siem_search")
+		expect(spanSubject({ tool: "siem_search", model: null })).toBe("siem_search")
+		expect(spanSubject({ tool: null, model: "claude-sonnet-5-5" })).toBe("claude-sonnet-5-5")
 	})
 })
 

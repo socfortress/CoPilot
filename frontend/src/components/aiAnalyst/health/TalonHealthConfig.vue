@@ -4,7 +4,9 @@
 			<span :class="SECTION_LABEL">Write-back</span>
 			<div class="flex items-center justify-between gap-2 text-sm">
 				<span class="text-secondary">Mode</span>
-				<b data-testid="talon-config-writeback"><bdi>{{ formatWriteback(config.writeback_mode) }}</bdi></b>
+				<b data-testid="talon-config-writeback">
+					<bdi>{{ formatWriteback(config.writeback_mode) }}</bdi>
+				</b>
 			</div>
 			<div class="flex flex-col gap-1 text-sm">
 				<span class="text-secondary">
@@ -30,7 +32,9 @@
 			</div>
 			<div class="flex items-center justify-between gap-2 text-sm">
 				<span class="text-secondary">Policy source</span>
-				<span><bdi>{{ config.automation_policy_source ?? "Not reported" }}</bdi></span>
+				<span>
+					<bdi>{{ config.automation_policy_source ?? "Not reported" }}</bdi>
+				</span>
 			</div>
 			<span :class="SECTION_LABEL" class="mt-2">Models</span>
 			<div class="flex items-center justify-between gap-2 text-sm">
@@ -117,7 +121,12 @@ const switches = computed(() =>
 		return {
 			...item,
 			text: formatSwitch(value),
-			icon: value === true ? "carbon:checkmark-outline" : value === false ? "carbon:close-outline" : "carbon:information"
+			icon:
+				value === true
+					? "carbon:checkmark-outline"
+					: value === false
+						? "carbon:close-outline"
+						: "carbon:information"
 		}
 	})
 )

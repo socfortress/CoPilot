@@ -30,6 +30,8 @@ class TimelineSpan(BaseModel):
     role: Optional[str] = None
     model: Optional[str] = None
     tool: Optional[str] = None
+    #: A reader's label for ``tool`` (``TOOL_LABELS``), when it has one.
+    tool_label: Optional[str] = None
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     total_tokens: Optional[int] = None

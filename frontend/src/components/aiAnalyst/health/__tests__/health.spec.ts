@@ -42,7 +42,12 @@ describe("talon health helpers", () => {
 		})
 		expect(banner(oldTalonReport())).toMatchObject({ title: "Status unknown", reason: OLD_TALON_TEXT })
 		const refused = oldTalonReport()
-		refused.copilot.auth = { ok: false, latency_ms: null, status_code: 401, error: "Talon refused CoPilot's API key (401)" }
+		refused.copilot.auth = {
+			ok: false,
+			latency_ms: null,
+			status_code: 401,
+			error: "Talon refused CoPilot's API key (401)"
+		}
 		expect(banner(refused)).toMatchObject({ title: "Down", reason: "Talon refused CoPilot's API key (401)" })
 		const none = unreachableReport()
 		none.copilot.connector = { exists: true, configured: false, verified: false, url: null }
@@ -50,15 +55,17 @@ describe("talon health helpers", () => {
 		expect(banner(null).title).toBe("Checking Talon…")
 	})
 
-	it("groups components Core, MCP servers, Model, and anything else last", () => {
+	it("groups components Core, MCP servers, Model, Tools, and anything else last", () => {
 		const groups = groupComponents([
 			component("intel_mcp", { group: "mcp" }),
+			component("web_search", { group: "tools" }),
 			component("api"),
 			component("model_provider", { group: "model" }),
 			component("future", { group: "weird" as never })
 		])
-		expect(groups.map(g => g.title)).toEqual(["Core", "MCP servers", "Model", "Other"])
-		expect(groups[3].components.map(c => c.id)).toEqual(["future"])
+		expect(groups.map(g => g.title)).toEqual(["Core", "MCP servers", "Model", "Tools", "Other"])
+		expect(groups[3].components.map(c => c.id)).toEqual(["web_search"])
+		expect(groups[4].components.map(c => c.id)).toEqual(["future"])
 		expect(groupComponents(null)).toEqual([])
 	})
 
