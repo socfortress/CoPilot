@@ -2,7 +2,12 @@
 	<div class="page flex flex-col pb-0!">
 		<n-tabs v-model:value="activeTab" type="segment" animated tab-class="px-5!" class="[&_.n-tabs-nav]:mx-auto">
 			<n-tab-pane name="overview" tab="Overview" display-directive="show:lazy">
-				<TalonOverview />
+				<!-- The Talon health dashboard, whatever the "Talon v2" setting says. -->
+				<TalonOverview
+					:active="activeTab === 'overview'"
+					:usage-available="talonV2Available"
+					@open-tab="activeTab = $event"
+				/>
 			</n-tab-pane>
 			<n-tab-pane name="talon" tab="Talon Chat" display-directive="show:lazy">
 				<!-- The v2 chat (threads, a customer per thread) only with the "Talon v2" setting on; else v1, unchanged. -->
@@ -29,6 +34,10 @@
 					</span>
 				</template>
 				<TalonApprovalsList class="pt-6" />
+			</n-tab-pane>
+			<!-- What Talon remembers (the memory API): only with the "Talon v2" setting on. -->
+			<n-tab-pane v-if="talonV2Available" name="memory" tab="Memory" display-directive="show:lazy">
+				<TalonMemory v-if="visited.has('memory')" class="pt-6" />
 			</n-tab-pane>
 			<!-- Talon's cost (talon-analyst FR-COST-5): only with the "Talon v2" setting on. -->
 			<n-tab-pane v-if="talonV2Available" name="usage" tab="Usage" display-directive="show:lazy">
@@ -67,6 +76,7 @@ import { useAuthStore } from "@/stores/auth"
 // Loaded only when the setting is on: with it off, the page is the v1 chat as before.
 const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonV2Chat.vue"))
 const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
+const TalonMemory = defineAsyncComponent(() => import("@/components/aiAnalyst/memory/TalonMemory.vue"))
 const TalonUsagePanel = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonUsagePanel.vue"))
 const TalonBudgets = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonBudgets.vue"))
 const TalonAutomationSettings = defineAsyncComponent(() => import("@/components/aiAnalyst/TalonAutomationSettings.vue"))

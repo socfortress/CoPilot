@@ -113,9 +113,9 @@ export function layoutTimeline(spans: TalonTimelineSpan[]): TimelineLayout {
 	return { lanes, unreadable, startMs, endMs }
 }
 
-/** What a span ran: its model or its tool, when the DTO names one. */
-export function spanSubject(span: Pick<TalonTimelineSpan, "model" | "tool">): string | null {
-	return span.tool ?? span.model ?? null
+/** What a span ran: its tool (by its label when it has one) or its model, when the DTO names one. */
+export function spanSubject(span: Pick<TalonTimelineSpan, "model" | "tool" | "tool_label">): string | null {
+	return span.tool_label ?? span.tool ?? span.model ?? null
 }
 
 /** Its token counts for reading (`1,200 in · 300 out`), or null when it has none. */

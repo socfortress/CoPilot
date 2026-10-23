@@ -417,6 +417,7 @@ def test_a_planted_marker_never_reaches_the_response_and_its_keys_are_the_allowl
     llm, model_tool, known_tool, agent, odd, other_agent = body["spans"]
     assert (model_tool["name"], model_tool["tool"], model_tool["status_code"]) == ("TOOL span", None, "ERROR")
     assert (known_tool["name"], known_tool["tool"]) == ("execute_tool siem_search", "siem_search")
+    assert known_tool["tool_label"] is None and model_tool["tool_label"] is None
     assert agent["name"] == "invoke_agent analyst-investigation" and agent["kind"] == "AGENT"
     assert (odd["name"], odd["kind"], odd["status_code"]) == ("UNKNOWN span", "UNKNOWN", "UNSET")
     assert (odd["stage"], odd["role"], odd["model"], odd["prompt_tokens"]) == (None, None, None, None)
@@ -443,6 +444,8 @@ def test_a_planted_marker_never_reaches_the_response_and_its_keys_are_the_allowl
         ("execute_tool final_result", "TOOL", "execute_tool final_result"),
         ("execute_tool final_result_evil", "TOOL", "TOOL span"),
         ("execute_tool wazuh_agent_processes", "TOOL", "execute_tool wazuh_agent_processes"),
+        ("execute_tool tavily_search", "TOOL", "execute_tool tavily_search"),
+        ("execute_tool duckduckgo_search", "TOOL", "execute_tool duckduckgo_search"),  # older runs
         ("execute_tool ", "TOOL", "TOOL span"),
         ("anything else", "CHAIN", "CHAIN span"),
         (None, "UNKNOWN", "UNKNOWN span"),
@@ -451,6 +454,19 @@ def test_a_planted_marker_never_reaches_the_response_and_its_keys_are_the_allowl
 )
 def test_only_known_span_names_are_shown(name, kind, shown):
     assert talon_runs.known_name(name, kind) == shown
+
+
+@pytest.mark.parametrize(
+    "tool, label",
+    [("tavily_search", "Web search (Tavily)"), ("duckduckgo_search", "Web search (DuckDuckGo)"), ("siem_search", None)],
+)
+def test_web_search_tools_are_known_and_labelled(tool, label):
+    item = talon_runs.to_dto(span(name=f"execute_tool {tool}", span_kind="TOOL", attributes={"tool.name": tool}))
+    assert (item.name, item.tool, item.tool_label) == (f"execute_tool {tool}", tool, label)
+
+
+def test_every_tool_label_is_a_known_tool():
+    assert set(talon_runs.TOOL_LABELS) <= talon_runs.TOOL_NAMES
 
 
 def test_token_counts_are_integers_only():

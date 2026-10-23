@@ -214,7 +214,8 @@ AGENT_NAMES = frozenset(
     {"analyst-investigation", "analyst-template-chooser", "reviewer", "analyst-chat", "analyst-chat-memory"},
 )
 #: talon-analyst's tools (``talon/tools/*.py`` ``@bound_tool`` functions, the capability tools
-#: ``read_tool_result``, ``duckduckgo_search``, ``web_fetch`` and ``run_command``) and Pydantic AI's
+#: ``read_tool_result``, ``tavily_search``, ``web_fetch`` and ``run_command``; ``duckduckgo_search``, its
+#: web search before the Tavily one, is kept for older runs) and Pydantic AI's
 #: output tool. A tool name is shown only when it is one of these: Pydantic AI also names a span
 #: after a tool the model *asked for* that doesn't exist (``execute_tool <name>``, "invalid tool
 #: call"), and that name is model-written. A tool talon-analyst adds later shows as "TOOL span"
@@ -246,12 +247,19 @@ TOOL_NAMES = frozenset(
         "wazuh_agent_ports",
         "wazuh_agent_processes",
         "read_tool_result",
-        "duckduckgo_search",
+        "tavily_search",
+        "duckduckgo_search",  # web search before Tavily: still named in older runs
         "web_fetch",
         "run_command",
         "final_result",
     },
 )
+#: A reader's label for a tool whose name says little on its own (``tool_label``); every key is in
+#: ``TOOL_NAMES``. Other tools show by name.
+TOOL_LABELS = {
+    "tavily_search": "Web search (Tavily)",
+    "duckduckgo_search": "Web search (DuckDuckGo)",
+}
 #: A model name as an operator configures it (``anthropic:claude-…``, ``claude-sonnet-5-5``,
 #: ``qwen3:32b``): never model-written, and still held to these characters and this length.
 MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}")
@@ -364,6 +372,7 @@ def to_dto(span: Mapping[str, Any]) -> Optional[TimelineSpan]:
         role=_member(attributes.get("role"), ROLES),
         model=_matching(model, MODEL_NAME),
         tool=_member(tool, TOOL_NAMES),
+        tool_label=TOOL_LABELS.get(_member(tool, TOOL_NAMES) or ""),
         prompt_tokens=_tokens(attributes, "llm.token_count.prompt", "gen_ai.usage.input_tokens"),
         completion_tokens=_tokens(attributes, "llm.token_count.completion", "gen_ai.usage.output_tokens"),
         total_tokens=_tokens(attributes, "llm.token_count.total"),

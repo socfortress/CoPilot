@@ -87,7 +87,7 @@ From a lab environment, to help you recognise where you are:
 ### AI Analyst
 
 - **AI Analyst** → `/ai-analyst`
-  - AI-powered investigation hub: Talon chat, alert reports and architecture overview.
+  - AI-powered investigation hub: the Talon health dashboard (Overview), Talon chat and alert reports; with Talon v2 also approvals, usage, budgets and automation settings.
 
 ### Incidents
 

@@ -1,0 +1,220 @@
+---
+title: Talon health dashboard
+description: The AI Analyst page's Overview tab shows whether Talon is up, which of its components are degraded, what CoPilot itself measures, and how to fix each problem.
+---
+
+The **Overview** tab of the **AI Analyst** page is a health dashboard for [Talon](/power-features/ai-analyst). It answers three questions: is Talon up, is CoPilot talking to it, and if something is wrong, what to do about it.
+
+It combines two sources:
+
+- **Talon's own health report**, from talon-analyst's health endpoint: each component, its status and latency, uptime history, metrics and configuration.
+- **Checks CoPilot's backend makes itself**: the connector, reachability, the API key, the Talon v2 setting and the last jobs.
+
+It works whether or not [Talon v2](/power-features/ai-analyst#the-talon-v2-setting) is on.
+
+<Note>
+  The health endpoint arrived in talon-analyst 0.1.3. With an older Talon the page says **"This Talon version has no health endpoint; upgrade to talon-analyst 0.1.3 or later"** and still shows CoPilot's own checks.
+</Note>
+
+---
+
+## Who sees what
+
+Everyone who can open the AI Analyst page sees the same health detail. It never includes secrets (keys, passwords, tokens).
+
+Per-customer items, such as which customers are in live write-back, show only the customers you are assigned to. Admins see all of them.
+
+---
+
+## The banner
+
+At the top:
+
+- **The overall state:** **All systems operational**, **Degraded** or **Down**. This is Talon's own verdict: **Down** when its database fails, its migrations aren't at the running version, or the investigation model provider refuses its key; **Degraded** when any other component warns or fails. When Talon can't answer at all, CoPilot shows **Down** with the reason (for example "Talon could not be reached"); with a Talon too old for the health endpoint it shows **Status unknown**.
+- **Talon's version and uptime.**
+- **When it was checked** ("checked 12s ago"), and a **Refresh** button.
+
+The page refreshes itself every 60 seconds while the Overview tab is shown and the browser tab is visible. CoPilot asks Talon at most once every 30 seconds, so a refresh within that time shows the same check.
+
+## From CoPilot
+
+A row that CoPilot's backend measures itself, so it works even when Talon can't answer:
+
+| Item | What it tells you |
+|---|---|
+| **Connector** | Whether CoPilot's Talon connector is configured and verified, and its URL (never its key) |
+| **Talon reachable** | Whether Talon answers, and how fast (latency) |
+| **API key** | Whether Talon accepts the connector's API key |
+| **Talon v2 setting** | Whether the Talon v2 setting is on |
+| **Last alert sent** | When CoPilot last sent Talon an alert, and for which customer |
+| **Last job** | The newest investigation job Talon created, and its state |
+| **Last report** | When a report last came back |
+| **Jobs failed in 24 h** | Investigation jobs that failed in the last 24 hours |
+| **Customers with the AI trigger on** | How many customers have their AI trigger on |
+
+For anyone but an admin, the last five cover only the customers assigned to you.
+
+---
+
+## Components
+
+The component grid is grouped into **Core**, **MCP servers**, **Model** and **Tools**. Each card has a status pill, the check's latency, a short detail line, and a **How to fix** expander.
+
+| Status | Meaning |
+|---|---|
+| **ok** | Working |
+| **warn** | Working, but degraded or needing attention |
+| **fail** | Not working |
+| **off** | Not configured or turned off on purpose. Not an error in itself |
+
+The fixes below are for whoever runs the Talon install (SOCFortress, for a supported install). Commands run in the install directory on the VM.
+
+### Core
+
+<AccordionGroup>
+  <Accordion title="api: the Talon service">
+    The talon-analyst API that CoPilot calls. If it is down, CoPilot's **Reachable** check fails too, and nothing else can be reported.
+
+    - Check `docker compose ps` and `docker compose logs api`.
+    - **The api won't start, with `SidecarUnavailableError`:** the sandbox's SSH keys are missing or unreadable. Re-run `scripts/sandbox_keys.sh`, and check that `COMPOSE_FILE` in `.env` is exactly `docker-compose.yml:docker-compose.client.yml`.
+    - **CoPilot can't reach it but it is running:** check that the connector's URL is `http://talon-analyst-api:3100` and that Talon is on CoPilot's Docker network.
+  </Accordion>
+  <Accordion title="database: Postgres">
+    Talon's Postgres: jobs, chat threads, the queue's state, memory vectors and traces.
+
+    - Check `docker compose logs postgres` and free disk space.
+  </Accordion>
+  <Accordion title="queue: the investigation queue">
+    The durable queue investigations wait in. A deep or long-waiting queue means alerts are arriving faster than they are investigated, or runs are stuck.
+
+    - A burst of alerts drains on its own; three investigations run at once by default.
+    - **Jobs fail with `DBOSUnexpectedStepError` after an upgrade:** the upgrade ran with the queue not empty. Re-investigate those alerts. Always empty the queue before an upgrade.
+    - A stuck job is failed automatically after its time limit, with the reason on the job.
+  </Accordion>
+  <Accordion title="migrations: the database schema">
+    Whether Talon's database schema matches the running version. The api runs its migrations when it starts.
+
+    - Read `docker compose logs api` for the migration error.
+    - Migrations only move forward: to go back to an older version after a migration ran, restore the backup taken before the upgrade.
+  </Accordion>
+  <Accordion title="mempalace: memory">
+    MemPalace, Talon's per-customer memory. Investigations and chat still run without it, but without memory.
+
+    - **On a fresh install,** "no palace yet" is expected: the palace is created on the first write (a lesson or a chat memory).
+    - **The service or its database is down,** or not on the pgvector backend: check `docker compose logs mempalace`.
+    - **"MemPalace has no palace, but this install has written to one before":** the `mempalace-data` volume was detached or replaced. Don't let it run like this, or its next write starts a new, empty palace. Restore the volume and the knowledge graph from the latest backup.
+  </Accordion>
+  <Accordion title="phoenix: traces">
+    Arize Phoenix, which stores the traces behind CoPilot's run timelines.
+
+    - Check `docker compose logs phoenix`.
+    - **After a restore onto a fresh Phoenix,** its keys no longer work: mint them again with the bootstrap's `phoenix-keys` step, then set CoPilot's Talon Phoenix connector again (`connector --phoenix`).
+  </Accordion>
+  <Accordion title="sandbox: the shell sidecar">
+    The isolated container that runs Talon's sandboxed shell. It has no network route except to Talon's api.
+
+    - **The host has unprivileged user namespaces off:** on Debian, `kernel.unprivileged_userns_clone` must be `1` and `user.max_user_namespaces` above `0`.
+    - **Its keys are missing:** re-run `scripts/sandbox_keys.sh` as root. If an earlier `docker compose` command made directories where the key files belong, run `docker compose down`, remove them, and run the script again.
+  </Accordion>
+</AccordionGroup>
+
+### MCP servers
+
+The MCP servers are Talon's read-only access to your stack. The three SOC tool servers are **off** until their read-only accounts exist and the `soc-tools` profile is on; threat intel is **off** unless it was set up.
+
+<AccordionGroup>
+  <Accordion title="indexer_mcp: Wazuh indexer">
+    Reads alerts' raw events and runs SIEM searches, always bound to the customer's verified indices.
+
+    - Check `INDEXER_URL`, `INDEXER_USERNAME` and `INDEXER_PASSWORD` in `.env`, and `docker compose logs indexer-mcp`.
+    - **Index rows stored unverified** (onboarded before the SOC tools were on): run the bootstrap's `index-map` step for the customers.
+  </Accordion>
+  <Accordion title="wazuh_mcp: Wazuh manager API">
+    Reads agent, inventory, SCA and rule data.
+
+    - **It restarts in a loop:** `WAZUH_USERNAME` or `WAZUH_PASSWORD` is empty. Re-run `sh install.sh` to create the read-only account, or set them in `.env`.
+  </Accordion>
+  <Accordion title="velociraptor_mcp: Velociraptor">
+    Reads endpoint state and collection results. It is read-only: approved actions are run by CoPilot, not through this server.
+
+    - **It won't start, with `bind source path does not exist`:** the Velociraptor API config isn't at `VELOCIRAPTOR_API_CONFIG` (default `./velociraptor-api.config.yaml`, owned by uid 10005, mode 600).
+    - **Queries are refused (`PERMISSION_DENIED`) just after setup:** a new API client can be refused for a few minutes on a running server. Wait 5 minutes and check again before suspecting its roles (`reader` and `api`).
+    - **It can't connect:** the config's `api_connection_string` must be the Velociraptor server's reachable host and port, not `0.0.0.0` or loopback. After changing it, re-run `sh install.sh`.
+  </Accordion>
+  <Accordion title="intel_mcp: threat intel">
+    Looks up public indicators and vulnerabilities. Optional.
+
+    - **Off:** threat intel wasn't set up. `TALON_SETUP_INTEL=yes sh install.sh` sets it up later.
+    - **Failing lookups:** check the source keys in `.env.intel`, and that the VM can reach the sources over HTTPS.
+  </Accordion>
+</AccordionGroup>
+
+### Model
+
+<AccordionGroup>
+  <Accordion title="model_provider: the model provider">
+    Whether Talon can reach its model provider and the key works.
+
+    - **No connection:** the VM needs outbound HTTPS to `api.anthropic.com` (and `api.openai.com` if an OpenAI model is configured).
+    - **Anthropic answers 400:** a key not scoped to one workspace (`sk-ant-usr-…`) needs `ANTHROPIC_WORKSPACE_ID` set to the workspace to bill.
+    - **The key is refused:** put a working key in `.env` (or re-run `sh install.sh`, which tests it), then `docker compose up -d api`.
+  </Accordion>
+</AccordionGroup>
+
+### Tools
+
+<AccordionGroup>
+  <Accordion title="web_search: Web search (Tavily)">
+    Talon's web search, through Tavily. It is **off** until a Tavily API key is set ([Installing Talon](/power-features/talon-install#the-guided-install)); off, the model isn't offered web search, and web fetch still works.
+
+    - **To turn it on:** create a key at [app.tavily.com](https://app.tavily.com), set `TAVILY_API_KEY` in `.env` (or re-run `sh install.sh`), then `docker compose up -d api` with the investigation queue empty.
+    - **"Tavily refused the key (401)" or "that isn't a Tavily API key":** the key was revoked, mistyped or pasted with an extra character. Put the right key in `.env` and `docker compose up -d api` (replacing a key needs no empty queue).
+    - **"credits are used up":** the plan's monthly credits are spent; raise the plan or turn on pay-as-you-go in Tavily's dashboard.
+    - **"Tavily unreachable":** the VM can't reach `api.tavily.com` on 443 (a proxy or firewall). **"rate-limited (429)":** wait a few minutes.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Uptime
+
+Under the grid, one row per component shows its status history, one bar per time slot, coloured by the worst status in it. A bar's height also says it, so it reads without colour: failing is full height, warning three quarters, ok half, and no data a quarter. Each row ends with a summary in words ("2 failing of 96"), and each bar's tooltip gives its time and counts.
+
+A **24 h / 7 d** toggle above the uptime rows and the charts switches the window for both. Talon checks each component every minute: over 24 hours the bars are 15 minutes each, over 7 days one hour each. A slot with no checks (Talon wasn't running, or the component was off) is **no data**.
+
+## Charts
+
+| Chart | Shows |
+|---|---|
+| **Investigations** | Investigations completed and failed per time slot |
+| **Investigation duration** | p50 and p95 duration of the investigations that ended in the slot |
+| **Queued jobs (max)** | The most investigations waiting in the queue at once |
+| **Tool errors against calls** | Tool calls made by investigations (not chat). Tool errors aren't recorded yet, so that series shows **no data** |
+| **Cost (USD)** | Talon's model cost per slot. With Talon v2 on, a link opens the **Usage** tab for the detail |
+
+A metric with no data source shows **no data**, never 0. **Show the numbers** under the charts opens a table with every value, including **model errors**: failed model calls Talon recorded, a lower bound.
+
+## Configuration
+
+A read-only panel of how the install is set up. It shows no secrets.
+
+- **Write-back:** the mode (**Off**, **Shadow** or **Live**), and which customers are live. For anyone but an admin, only the live customers assigned to you are listed.
+- **Automation:** the maximum level and where the policy comes from (Talon's own settings or CoPilot).
+- **Feature switches:** v2, action tools, endpoint actions and the others.
+- **Models** in use.
+- **Spend and budgets:** what Talon spent today and this month (UTC) across all customers, and the default daily and monthly ceilings that apply to each customer without a budget of its own (**Unlimited** when none is set). Per-customer budgets are on the **Budgets** tab (admins, Talon v2 on).
+
+---
+
+## Common problems
+
+| Symptom | Cause and fix |
+|---|---|
+| **Talon reachable** fails | Talon is down, or the connector URL is wrong. Check the **api** card's fixes, and that the URL is `http://talon-analyst-api:3100` |
+| **API key** fails | The connector's key isn't the install's `TALON_API_KEY`. Set it again with the bootstrap's `connector` step, or on the Connectors page, and verify |
+| **Last alert sent** is old, or none | No customer's AI trigger is on, or no alerts are arriving. Check **Customers → *customer* → AI Triggers** |
+| Jobs are sent, but no reports come back | The customers are in shadow (expected during rollout), or write-back is off. See the **Write-back** line in the configuration panel |
+| **Jobs failed in 24 h** climbs, with `403 Access denied to customer` in Talon's log | A live customer isn't assigned to the `talon-analyst` service user in CoPilot. Assign it with the bootstrap's `customer` step (`--assign`) |
+| `SELECT command denied` in Talon's log | A CoPilot upgrade added a table. Refresh the read-only MySQL user's grants (`mysql-ro --grants-only`) |
+| Automation always at level 0, "CoPilot's automation policy couldn't be read" | The read-only MySQL user lacks the automation policy grants, or CoPilot is too old for the automation policy |
+| The page shows only CoPilot's checks | Talon is older than 0.1.3. Upgrade it ([Installing Talon](/power-features/talon-install#upgrades)) |

@@ -1,0 +1,211 @@
+---
+title: Installing Talon
+description: Prerequisites, the two-command guided install of talon-analyst next to CoPilot, connecting CoPilot's Talon connector, the shadow-first rollout per customer, and moving from the earlier Talon.
+---
+
+talon-analyst, the current [AI Analyst (Talon)](/power-features/ai-analyst), runs on the same VM as CoPilot as a separate Docker Compose project. It joins CoPilot's Docker network, so CoPilot reaches it as `http://talon-analyst-api:3100`. The images are published as `ghcr.io/socfortress/talon-analyst-*`; each release has a version (for example `0.1.2`), and an install pins one.
+
+<Note>
+  talon-analyst is proprietary SOCFortress software under the SOCFortress EULA, which ships with every release. SOCFortress installs it on request for support clients, and this page describes what that install does. [Contact SOCFortress](https://www.socfortress.co/) to arrange one.
+</Note>
+
+Every setup step is safe to re-run, is a dry run until applied, and never prints a secret. Real values (hosts, passwords, keys) go only into the install's `.env` and `secrets/` on the VM.
+
+---
+
+## Prerequisites
+
+### CoPilot
+
+- **A running CoPilot, v0.1.99 or later**, installed from its own Compose project. On v0.1.99, investigations, write-back and chat work; endpoint actions and automation need the release after it.
+- **A CoPilot admin account without 2FA**, used only while the install runs. Its username and password are asked at a hidden prompt and never stored.
+- **CoPilot's MySQL `root` password** (from CoPilot's `.env`), used once to create a read-only MySQL user for Talon, and again after each CoPilot upgrade to refresh its grants.
+
+### The VM
+
+- **linux/amd64 (x86-64) only.** An arm64 host can't run an install, including an Apple Silicon Mac, even under emulation: CoPilot's images and the Wazuh and Velociraptor MCP server images are amd64 only.
+- **Docker Engine 24 or newer, and Docker Compose v2.24.4 or newer** (`docker version`, `docker compose version`).
+- **Unprivileged user namespaces**, for the sandbox that runs Talon's shell. On Debian, `sysctl kernel.unprivileged_userns_clone` must be `1` (the default) and `sysctl user.max_user_namespaces` above `0`. On an AppArmor host, only the `sandbox` service runs unconfined.
+- **Ubuntu 23.10 and later** restrict user namespaces through AppArmor; this hasn't been checked with the sandbox. Test the shell before going live, or use a Debian host.
+
+**Sizing**, on top of CoPilot's own use (measured at about 1.2 GB of RAM at rest; not load-tested):
+
+| Resource | Plan for | Why |
+|---|---|---|
+| RAM | 8 GB free | The api (4 GB limit), the sandbox (2 GB, no swap), Postgres, Phoenix, MemPalace and the MCP servers (about 1.5 GB) |
+| CPU | 4 vCPU | Three investigations at once, plus chat |
+| Disk | 30 GB free | The api image (about 1 GB), Postgres (transcripts, traces, memory), backups |
+
+**Outbound access** from the VM (HTTPS, 443, unless noted):
+
+| From | To | When |
+|---|---|---|
+| Docker | `ghcr.io` | Pulling the images. They are public: no login needed |
+| Talon | The model provider (`api.anthropic.com`; `api.openai.com` only if an OpenAI model is configured) | Always |
+| Talon | `api.tavily.com` | Web search, once a Tavily API key is set (below); also the health dashboard's key check |
+| Talon | Any host, ports 80 and 443 | Only if the web fetch tool is on and the customer's policy allows web access |
+| Threat intel | VirusTotal, abuse.ch, AbuseIPDB, GreyNoise, urlscan.io, NVD, FIRST (EPSS), CISA, GitHub, GitLab, VulnCheck, Microsoft, Red Hat, Ubuntu | Only with threat intel on |
+
+The public VirusTotal API is for non-commercial use, so a client install needs a commercial key or none. Check each other source's terms before setting its key.
+
+### Read-only accounts
+
+Talon's MCP servers read your stack through read-only accounts:
+
+- **Wazuh indexer:** a user (`talon_reader` by default) with a read-only role over the indices, plus read-only monitoring.
+- **Wazuh manager API:** a read-only RBAC user with the agent, syscollector, SCA and rules read permissions.
+- **Velociraptor:** an API client config with the `reader` and `api` roles.
+
+The guided install creates the indexer and Wazuh accounts for you, given each one's admin credentials (asked once, hidden, never stored). It never widens an existing account: one that differs from what Talon needs stops the run and is named. For Velociraptor it prints the `config api_client` command to run on the Velociraptor server, then waits for the file.
+
+---
+
+## The guided install
+
+Work as root in a new install directory on the CoPilot VM. Replace `<version>` with the release to install, without the `v` (for example `0.1.2`).
+
+<Steps>
+  <Step title="Create a Tavily API key (for web search)">
+    Talon's web search uses [Tavily](https://www.tavily.com). Sign up at [app.tavily.com](https://app.tavily.com) and create an API key (the free plan has 1,000 credits a month; each search costs one). The installer asks for it and checks it with Tavily before writing it.
+
+    It is optional: **without a key, web search stays off.** The model isn't offered it, and everything else (including web fetch) works as before.
+  </Step>
+  <Step title="Copy the install files out of the image">
+    ```bash
+    mkdir -p /opt/talon-analyst && cd /opt/talon-analyst
+    docker run --rm --user 0 -v "$PWD:/install" ghcr.io/socfortress/talon-analyst-api:<version> \
+      python -m talon.bootstrap install-files --apply
+    ```
+
+    This writes the release's Compose files, environment templates, scripts, `install.sh` and the `LICENSE`. It never overwrites a file you changed: it writes the release's copy beside it as `<file>.new`.
+  </Step>
+  <Step title="Run the installer">
+    ```bash
+    sh install.sh
+    ```
+
+    It runs, in order:
+
+    - **A preflight:** root, linux/amd64, Docker and Compose versions, user namespaces, CoPilot's Docker network, free host ports (it says what holds `3100` or `6006`, for example the earlier Talon, and offers the next free port), and the release.
+    - **The sandbox's SSH keys.**
+    - **The configuration:** `.env`, with every secret no human needs generated; then the model provider key, the budgets, CoPilot, the read-only MySQL user, the indexer, Wazuh and Velociraptor accounts, threat intel, and the Tavily API key for web search (optional). Each answer that can be tested (the model key, CoPilot, MySQL, the backends) is tested before it is written.
+    - **`docker compose pull` and `up -d`.**
+    - **Customers:** you pick CoPilot customers to onboard. Each is onboarded in **shadow**, and CoPilot's AI trigger is offered per customer. Then the Talon Phoenix connector in CoPilot is set (for run timelines).
+    - **A report:** one PASS, WARN or FAIL line per connection, the stack checks, and the next steps.
+  </Step>
+</Steps>
+
+- **Air-gapped VM:** load the images with `docker load` first, then run `sh install.sh --no-pull`.
+- **Re-running** `sh install.sh` keeps what is set, says `kept`, and asks only for what is missing. It is also the repair tool, and the way to onboard more customers later.
+- **Adding or removing the Tavily key later** (in `.env`, or by re-running `sh install.sh`) is done with the investigation queue empty, as for an upgrade: it changes the investigation workflow's version, and a run in the queue across it can't be recovered. Replacing a key with another one doesn't. Then `docker compose up -d api`.
+- **URLs are prefilled** from CoPilot's own connectors (only the URL, never their credentials).
+- **TLS verification of the indexer and the Wazuh API is off by default**, because their certificates are usually self-signed. The connections are still encrypted; turn verification on in `.env` once the MCP servers trust your CA.
+- **The indexer reader may read every index** (`INDEXER_ALLOWED_INDICES=*`). Per-customer scoping is enforced by Talon itself: every query is bound to the customer's verified indices.
+
+<Warning>
+  The installer never puts a customer live, never switches CoPilot's Talon connector, and never raises an automation level. Those are deliberate steps, below.
+</Warning>
+
+Take the first backup once the install is up. The install ships `scripts/backup.sh`, which backs up Talon's databases, memory and configuration (every secret included, so keep the copies encrypted and root-only).
+
+---
+
+## Connect CoPilot
+
+CoPilot finds Talon through its **Talon** connector (**Connectors**): a URL and an API key, sent as `x-api-key`.
+
+| Field | Value |
+|---|---|
+| URL | `http://talon-analyst-api:3100` (the container port on CoPilot's network, whatever host port the install uses) |
+| API key | The install's `TALON_API_KEY`, from its `.env` |
+
+The bootstrap's `connector` step sets both and runs CoPilot's **Verify**. It first saves the connector's previous URL and key in the install's `secrets/`, so they can be put back. While another Talon serves the connector, it refuses unless every customer with its AI trigger on is live on talon-analyst, and names any customer that would otherwise get no AI report.
+
+When to switch it:
+
+- **A CoPilot that no Talon serves yet** (the connector isn't verified): switch it right after the install, so the shadow phase can begin.
+- **A CoPilot served by the earlier Talon:** switch it last, after every customer's shadow comparison ([below](#moving-from-the-earlier-talon)).
+
+Then, per customer, turn on the **AI trigger** (**Customers → *customer* → AI Triggers**) so new alerts are sent to Talon. For threaded chat, approvals and the cost views, turn on [Talon v2](/power-features/ai-analyst#the-talon-v2-setting). Check the result on the AI Analyst page's [health dashboard](/power-features/talon-health-dashboard).
+
+---
+
+## Roll out per customer: shadow first
+
+Every customer goes through the same loop, one at a time: **shadow**, a comparison, then **live**.
+
+<Steps>
+  <Step title="Onboard in shadow">
+    The bootstrap's `customer` step (the installer runs it for the customers you pick):
+
+    - writes the customer's policy in Talon: anonymization on, the allowed model providers, automation level 0;
+    - keeps the customer out of the live list;
+    - adds the customer's internal domains to the threat intel deny list;
+    - syncs and verifies the customer's indices;
+    - reports (and can set) CoPilot's AI trigger for the customer, and checks that CoPilot's automation policy for it has every level off.
+
+    The customer's durable review lessons from the earlier Talon can be re-seeded into the new memory once.
+  </Step>
+  <Step title="Let shadow reports build up">
+    While a customer is in shadow, its reports stay in Talon and CoPilot gets nothing.
+
+    - On a CoPilot no Talon served before, the connector is switched and the AI trigger turned on, so every alert is investigated in shadow.
+    - On a CoPilot the earlier Talon still serves, SOCFortress sends tagged investigations by hand, which write nothing to CoPilot.
+  </Step>
+  <Step title="Compare">
+    At least 7 days in shadow, and until 50 paired alerts or 14 days. Then SOCFortress spot-checks report pairs blind, and reviews the cost per alert and any failed jobs.
+  </Step>
+  <Step title="Go live">
+    1. The `customer` step with `--live` assigns the customer to Talon's `talon-analyst` service user in CoPilot first, and only then adds it to the live list. If CoPilot refuses the assignment, the list is unchanged.
+    2. For the first live customer, write-back is set to `live` in `.env`.
+    3. With the investigation queue empty, the api is restarted.
+    4. The startup log must show write-back live for the listed customers, all of them assigned to the service user.
+  </Step>
+</Steps>
+
+**Feature switches** come after, each a `.env` change and an api restart with the queue empty, plus its CoPilot side:
+
+| Feature | Talon | CoPilot |
+|---|---|---|
+| Threaded chat, approvals, cost views | `TALON_V2_API=true` | The **Talon v2** setting (admin) |
+| Chat action proposals | `TALON_ACTION_TOOLS=true` | Approvers: users with the right role who are assigned the customer ([who can approve](/power-features/ai-analyst#actions-with-human-approval)) |
+| Endpoint collections and commands | `TALON_ENDPOINT_ACTIONS=true` (needs v2) | A CoPilot release newer than v0.1.99; the artifacts Talon's service account may start |
+| Budgets | Deployment-wide limits in `.env`; per customer on the **Budgets** tab | — |
+| Automation level 1 | `TALON_AUTOMATION_MAX_LEVEL=1`, and the customer's ceiling in Talon | The customer's **AI Automation** tab and the global switch (**AI Analyst → Settings**) |
+
+The stricter setting always wins. Automation stays at level 0 unless SOCFortress and you agree on a level for a customer.
+
+**Rolling one customer back** to shadow stops its write-back from the next job. Write-back **off** for the whole install is the kill switch: no write reaches CoPilot for any customer.
+
+---
+
+## Moving from the earlier Talon
+
+An existing Talon v1 install is replaced behind the same connector, so CoPilot needs no code change: only the connector's URL and key change.
+
+<Steps>
+  <Step title="Install side by side">
+    Install talon-analyst in shadow on the same VM, as above. CoPilot's connector keeps pointing at the earlier Talon throughout. If it holds host port 3100, the installer offers another (for example `3110`); CoPilot still reaches talon-analyst as `talon-analyst-api:3100` on its own network.
+  </Step>
+  <Step title="Compare each customer">
+    Onboard each customer in shadow, re-seed its review lessons, send tagged investigations by hand, and compare the reports with the earlier Talon's for the same alerts.
+  </Step>
+  <Step title="Switch, for everyone at once">
+    The connector is all or nothing: every customer with its AI trigger on moves at the switch, and a customer still in shadow would get no AI report at all. So, with the queue empty: put each of them live, set write-back to `live`, restart the api, run the `connector` step as a dry run (it must name no customer), then apply it. Watch the first investigations complete in CoPilot.
+  </Step>
+  <Step title="Keep the earlier Talon as the rollback">
+    Leave it running, untouched, for 30 days. Rolling back puts the saved connector URL and key back and sets write-back to shadow. After 30 days with no rollback, stop it and archive its data.
+  </Step>
+</Steps>
+
+What doesn't carry over:
+
+- **Memory.** The earlier Talon's memory stays where it is; talon-analyst starts empty, apart from the re-seeded review lessons.
+- **Chat sessions.** Users start new conversations.
+- **The 15-minute sweep.** The earlier Talon also investigated open alerts on a schedule. talon-analyst investigates only what CoPilot sends, so every customer that relied on the sweep needs its **AI trigger** on.
+
+---
+
+## Upgrades
+
+Upgrades follow the same pattern: empty the investigation queue (a run recovered by new code can fail), back up, refresh the install files from the new version's image (the same `install-files` command), set the new `TALON_VERSION` in `.env`, then `docker compose pull` and `docker compose up -d`. The api runs its database migrations on start. After a CoPilot upgrade, refresh the read-only MySQL user's grants.
