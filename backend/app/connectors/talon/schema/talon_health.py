@@ -87,7 +87,8 @@ class TalonHealthModels(BaseModel):
 
 
 class TalonHealthBudgets(BaseModel):
-    """Decimal strings as talon-analyst sends them (or ``"unlimited"``), never re-computed here."""
+    """Decimal strings as talon-analyst sends them, never re-computed here. A ceiling is
+    ``"unlimited"`` when talon-analyst reported none (its null), and None when it wasn't reported."""
 
     daily_usd: Optional[str] = None
     monthly_usd: Optional[str] = None
@@ -107,7 +108,7 @@ class TalonHealthConfig(BaseModel):
     workspace_tools: Switch = None
     chat_browser: Switch = None
     models: TalonHealthModels = Field(default_factory=TalonHealthModels)
-    budgets: TalonHealthBudgets = Field(default_factory=TalonHealthBudgets)
+    budgets: Optional[TalonHealthBudgets] = Field(None, description="None when talon-analyst reported no budgets")
 
 
 class TalonHealthData(BaseModel):

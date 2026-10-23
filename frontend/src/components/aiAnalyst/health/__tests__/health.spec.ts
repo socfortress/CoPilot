@@ -112,7 +112,8 @@ describe("talon health helpers", () => {
 	})
 
 	it("budgets: a null ceiling is unlimited; write-back modes as words", () => {
-		expect(formatCeiling(null)).toBe("Unlimited")
+		expect(formatCeiling("unlimited")).toBe("Unlimited")
+		expect(formatCeiling(null)).toBe("Not reported")
 		expect(formatCeiling("25.00")).toBe("$25.00")
 		expect(formatWriteback("off")).toBe("Off")
 		expect(formatWriteback("shadow")).toBe("Shadow")

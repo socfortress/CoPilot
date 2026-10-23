@@ -62,13 +62,16 @@ export interface TalonHealthConfig {
 	workspace_tools: TalonSwitch
 	chat_browser: TalonSwitch
 	models: { chat: string | null; investigation: string | null }
-	/** Decimal strings, or "unlimited". */
+	/**
+	 * Decimal strings. A ceiling is "unlimited" when talon-analyst reported none, null when it wasn't
+	 * reported; `budgets` itself is null when talon-analyst sent none.
+	 */
 	budgets: {
 		daily_usd: string | null
 		monthly_usd: string | null
 		spent_today_usd: string | null
 		spent_month_usd: string | null
-	}
+	} | null
 }
 
 export interface TalonHealthData {

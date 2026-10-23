@@ -11,6 +11,8 @@ import { AxiosError, AxiosHeaders } from "axios"
 import { createPinia, setActivePinia } from "pinia"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth"
 import TalonOverview from "../../TalonOverview.vue"
 import { OLD_TALON_TEXT, REFRESH_MS, TALON_DOCS } from "../health"
 import { bucket, healthReport, must, oldTalonReport, unreachableReport } from "./fixtures"
@@ -42,11 +44,16 @@ function texts(wrapper: ReturnType<typeof render>, testId: string) {
 
 let visibility: DocumentVisibilityState = "visible"
 
+function signInAs(role: AuthUserRole) {
+	useAuthStore().user = { access_token: "t", username: "u", email: "", role }
+}
+
 enableAutoUnmount(afterEach)
 
 describe("talon health dashboard", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
+		signInAs(AuthUserRole.Admin)
 		getHealth.mockReset()
 		visibility = "visible"
 		vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility)
@@ -244,5 +251,80 @@ describe("talon health dashboard", () => {
 		await flushPromises()
 		expect(wrapper.get('[data-testid="talon-config-live-none"]').text()).toBe("None of your customers")
 		expect(wrapper.text()).toContain("cover only the customers assigned to you")
+	})
+
+	it("roles the API refuses get a plain sentence and no request", async () => {
+		for (const role of [AuthUserRole.CustomerUser, AuthUserRole.Scheduler]) {
+			signInAs(role)
+			const wrapper = render()
+			await flushPromises()
+			expect(wrapper.get('[data-testid="talon-health-not-for-role"]').text()).toContain(
+				"isn't available for your role"
+			)
+			expect(wrapper.find('[data-testid="talon-health-banner"]').exists()).toBe(false)
+			wrapper.unmount()
+		}
+		expect(getHealth).not.toHaveBeenCalled()
+		signInAs(AuthUserRole.Responder)
+		getHealth.mockReturnValue(answer(healthReport()))
+		render()
+		await flushPromises()
+		expect(getHealth).toHaveBeenCalledTimes(1)
+	})
+
+	it("a 403 is a plain sentence, not an HTTP error", async () => {
+		getHealth.mockRejectedValue(
+			new AxiosError("x", "ERR", undefined, undefined, {
+				status: 403,
+				statusText: "",
+				headers: {},
+				config: { headers: new AxiosHeaders() },
+				data: {}
+			})
+		)
+		const wrapper = render()
+		await flushPromises()
+		const text = wrapper.get('[data-testid="talon-health-error"]').text()
+		expect(text).toBe("The Talon health dashboard isn't available for your role.")
+		expect(text).not.toContain("HTTP")
+	})
+
+	it("only the verdict is a live region; the seconds counter is not announced and stops while hidden", async () => {
+		vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] })
+		getHealth.mockImplementation(() => answer(healthReport()))
+		const wrapper = render()
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-banner"]').attributes("role")).toBeUndefined()
+		expect(wrapper.get('[data-testid="talon-health-verdict"]').attributes("role")).toBe("status")
+		expect(wrapper.get('[data-testid="talon-health-checked"]').attributes("aria-live")).toBe("off")
+		expect(wrapper.find('[data-testid="talon-health-verdict"] [data-testid="talon-health-checked"]').exists()).toBe(false)
+
+		visibility = "hidden"
+		document.dispatchEvent(new Event("visibilitychange"))
+		const frozen = wrapper.get('[data-testid="talon-health-checked"]').text()
+		vi.advanceTimersByTime(5000)
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-checked"]').text()).toBe(frozen)
+		visibility = "visible"
+		document.dispatchEvent(new Event("visibilitychange"))
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-checked"]').text()).not.toBe(frozen)
+	})
+
+	it("a missing configuration says so; missing budgets are not reported, never unlimited", async () => {
+		const report = healthReport()
+		must(report.health.data).config = null
+		getHealth.mockReturnValue(answer(report))
+		const wrapper = render()
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-config-unavailable"]').text()).toContain("Configuration unavailable")
+
+		const partial = healthReport()
+		must(must(partial.health.data).config).budgets = null
+		getHealth.mockReturnValue(answer(partial))
+		const other = render()
+		await flushPromises()
+		expect(other.get('[data-testid="talon-config-budget-none"]').text()).toContain("Not reported")
+		expect(other.get('[data-testid="talon-health-config"]').text()).not.toContain("Unlimited")
 	})
 })

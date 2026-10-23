@@ -1,10 +1,16 @@
 <template>
-	<div class="flex flex-col gap-4 pt-4" data-testid="talon-health">
-		<!-- The banner: the verdict, version, uptime, how fresh, and a refresh. -->
+	<div v-if="!allowed" class="text-secondary flex flex-col gap-2 py-10 text-center text-sm" data-testid="talon-health-not-for-role">
+		<span>The Talon health dashboard isn't available for your role.</span>
+		<a :href="TALON_DOCS.overview" target="_blank" rel="noopener noreferrer" class="text-primary">
+			What Talon does
+		</a>
+	</div>
+	<div v-else class="flex flex-col gap-4 pt-4" data-testid="talon-health">
+		<!-- The banner: the verdict, version, uptime, how fresh, and a refresh. Only the verdict is a
+		live region: "checked Ns ago" changes every second and must not be announced. -->
 		<div
 			class="border-default flex flex-wrap items-center justify-between gap-3 rounded-lg border border-l-4 px-4 py-3"
 			:style="{ borderLeftColor: TONE_COLOR[bannerState.tone] }"
-			role="status"
 			data-testid="talon-health-banner"
 			:data-tone="bannerState.tone"
 		>
@@ -12,7 +18,7 @@
 				<span class="flex shrink-0" :style="{ color: TONE_COLOR[bannerState.tone] }">
 					<Icon :name="bannerState.icon" :size="24" />
 				</span>
-				<div class="flex min-w-0 flex-col">
+				<div class="flex min-w-0 flex-col" role="status" aria-live="polite" data-testid="talon-health-verdict">
 					<span class="text-default text-lg font-semibold" data-testid="talon-health-banner-title">
 						{{ bannerState.title }}
 					</span>
@@ -33,7 +39,7 @@
 				<span v-if="uptime" data-testid="talon-health-uptime">
 					up <b class="text-default">{{ uptime }}</b>
 				</span>
-				<span data-testid="talon-health-checked">{{ checkedAgo }}</span>
+				<span aria-live="off" data-testid="talon-health-checked">{{ checkedAgo }}</span>
 				<n-button
 					size="small"
 					secondary
@@ -162,7 +168,14 @@
 
 			<SocPanel title="Configuration" caption="as Talon reports it">
 				<TalonHealthConfig v-if="health?.config" :config="health.config" :scope="report.copilot.scope" />
-				<HealthUnavailable v-else :text="sectionProblem(report.health, 'Talon reported no configuration')" />
+				<p
+					v-else-if="health"
+					class="text-tertiary py-4 text-sm"
+					data-testid="talon-health-config-unavailable"
+				>
+					Configuration unavailable: this Talon didn't report it.
+				</p>
+				<HealthUnavailable v-else :text="sectionProblem(report.health)" />
 			</SocPanel>
 		</div>
 
@@ -206,6 +219,7 @@
 import type { TalonHealthReport, TalonSection } from "@/types/talonHealth"
 import axios from "axios"
 import { NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NSpin } from "naive-ui"
+import { getActivePinia } from "pinia"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -213,6 +227,8 @@ import { SECTION_LABEL } from "@/components/common/section-label"
 import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import SocPanel from "@/components/socManagement/ui/SocPanel.vue"
 import { TONE_COLOR } from "@/components/socManagement/utils"
+import { useAuthStore } from "@/stores/auth"
+import { AuthUserRole } from "@/types/auth"
 import {
 	banner,
 	formatAgo,
@@ -239,6 +255,13 @@ const { active = true, usageAvailable = false } = defineProps<{
 	usageAvailable?: boolean
 }>()
 const emit = defineEmits<{ (e: "open-tab", tab: string): void }>()
+
+// The API answers admins and analysts (a responder is one too); the page itself is open to every
+// role, so anyone else gets a plain sentence instead of a request and an "HTTP 403".
+const allowed = computed(() =>
+	getActivePinia() ? useAuthStore().isRoleGranted([AuthUserRole.Admin, AuthUserRole.Analyst]) : false
+)
+const notForRole = ref(false)
 
 const windowOptions = WINDOWS.map(w => ({ value: w.value as number, label: w.label }))
 
@@ -276,6 +299,11 @@ async function load() {
 	} catch (err) {
 		if (controller !== own || axios.isCancel(err)) return
 		const status = axios.isAxiosError(err) ? err.response?.status : undefined
+		if (status === 403) {
+			notForRole.value = true
+			failure.value = "The Talon health dashboard isn't available for your role."
+			return
+		}
 		failure.value = status
 			? `CoPilot could not load Talon's health (HTTP ${status})`
 			: "CoPilot could not load Talon's health (no answer)"
@@ -291,16 +319,29 @@ function visible() {
 let timer: ReturnType<typeof setInterval> | null = null
 let ticker: ReturnType<typeof setInterval> | null = null
 
+/** The "checked Ns ago" clock runs only while it can be seen. */
+function syncTicker() {
+	if (visible() && !ticker) {
+		now.value = Date.now()
+		ticker = setInterval(() => (now.value = Date.now()), 1000)
+	} else if (!visible() && ticker) {
+		clearInterval(ticker)
+		ticker = null
+	}
+}
+
 function onVisibility() {
-	if (visible() && Date.now() - lastLoad >= REFRESH_MS) load()
+	syncTicker()
+	if (visible() && !notForRole.value && Date.now() - lastLoad >= REFRESH_MS) load()
 }
 
 onMounted(() => {
+	if (!allowed.value) return
 	load()
 	timer = setInterval(() => {
-		if (visible()) load()
+		if (visible() && !notForRole.value) load()
 	}, REFRESH_MS)
-	ticker = setInterval(() => (now.value = Date.now()), 1000)
+	syncTicker()
 	document.addEventListener("visibilitychange", onVisibility)
 })
 

@@ -129,7 +129,7 @@ With the optional threat intel service turned on, Talon can look up public indic
 The AI Analyst page's **Talon Chat** tab talks to Talon.
 
 - **Without Talon v2:** one conversation per user, with no customer data. It answers general security questions and explains what you paste into it.
-- **With Talon v2:** a list of threads. When you start one you pick a customer, or **General (no customer data)**. A customer thread is bound to that one customer for good: it can query that customer's SIEM, Wazuh, Velociraptor and memory (anonymized, as in investigations), and shows each tool it calls. Its history is kept, and old threads are archived after a period of inactivity.
+- **With Talon v2:** a list of threads. When you start one you pick a customer, or **General (no customer data)**. A customer thread is bound to that one customer for good: it can query that customer's SIEM, Wazuh, Velociraptor and memory (anonymized, as in investigations), and shows each tool it calls. Its history is kept. A thread is archived after 30 days without activity, or once it is 90 days old however active, and an archived thread is deleted 90 days later; SOCFortress can change all three periods for an install, and you can archive a thread yourself.
 
 ### The Talon v2 setting
 

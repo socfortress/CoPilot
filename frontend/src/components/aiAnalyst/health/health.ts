@@ -160,9 +160,11 @@ export function formatUsdText(value: string | null | undefined): string {
 	return `$${value}`
 }
 
-/** A default ceiling: talon-analyst sends null for unlimited. */
+/** A default ceiling: CoPilot sends "unlimited" for talon-analyst's reported null, and null when it wasn't reported. */
 export function formatCeiling(value: string | null | undefined): string {
-	return value === null || value === undefined || value === "unlimited" ? "Unlimited" : formatUsdText(value)
+	if (value === "unlimited") return "Unlimited"
+	if (typeof value !== "string" || !value) return "Not reported"
+	return formatUsdText(value)
 }
 
 const WRITEBACK: Record<string, string> = { shadow: "Shadow", live: "Live", off: "Off" }

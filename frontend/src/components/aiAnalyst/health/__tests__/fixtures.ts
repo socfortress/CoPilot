@@ -34,7 +34,7 @@ export function config(extra: Partial<TalonHealthConfig> = {}): TalonHealthConfi
 		workspace_tools: false,
 		chat_browser: null,
 		models: { chat: "claude-sonnet-5-5", investigation: "claude-opus-5-5" },
-		budgets: { daily_usd: "25.00", monthly_usd: null, spent_today_usd: "20.00", spent_month_usd: "41.20" },
+		budgets: { daily_usd: "25.00", monthly_usd: "unlimited", spent_today_usd: "20.00", spent_month_usd: "41.20" },
 		...extra
 	}
 }

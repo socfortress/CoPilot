@@ -6,6 +6,7 @@ redirects, no proxy). No network.
 """
 import asyncio
 import json
+import ssl
 from contextlib import ExitStack
 from datetime import timedelta
 from types import SimpleNamespace
@@ -15,6 +16,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.compiler import compiles
 from sqlmodel import SQLModel
 
@@ -316,7 +318,7 @@ def test_hours_is_forwarded_and_bounded():
     response, fake = run(get(query="?hours=168"))
     assert response.status_code == 200 and body_of(response)["hours"] == 168
     assert {r.url.params.get("hours") for r in fake.requests if "history" in r.url.path or "metrics" in r.url.path} == {"168"}
-    for bad in ("0", "169", "abc"):
+    for bad in ("0", "1", "48", "169", "abc"):
         response, fake = run(get(query=f"?hours={bad}"))
         assert response.status_code == 422
         assert fake.requests == []
@@ -630,3 +632,150 @@ def test_a_changed_connector_is_not_served_from_the_cache():
     c = talon_health._cache_key(connector(), 168)
     assert len({a, b, c}) == 3
     assert TALON_KEY not in repr(a)
+
+
+# ── review fixes: overflow, scrubbing, missing config, client settings, session order ──
+
+
+def test_huge_numbers_never_fail_the_route_or_reach_the_browser():
+    huge = 10**400
+    payload = health_payload(uptime_seconds=huge, components=[component("api", latency_ms=huge)])
+    payload["config"]["automation_max_level"] = huge
+    payload["config"]["budgets"] = {"daily_usd": 10**4000, "monthly_usd": 10**20, "spent_today_usd": huge, "spent_month_usd": "1" * 400}
+    metrics = {"bucket_minutes": huge, "series": [{"t": "x", "tool_calls": huge, "cost_usd": huge}]}
+    history = {"bucket_minutes": 5, "components": {"api": [{"t": "x", "ok": huge, "warn": 1, "fail": 0}]}}
+    respond = talon(
+        {
+            "/v2/health": lambda r: httpx.Response(200, content=json.dumps(payload).encode()),
+            "/v2/health/history": lambda r: httpx.Response(200, content=json.dumps(history).encode()),
+            "/v2/health/metrics": lambda r: httpx.Response(200, content=json.dumps(metrics).encode()),
+        },
+    )
+    response, _ = run(get(), respond=respond)
+    assert response.status_code == 200
+    body = body_of(response)
+    data = body["health"]["data"]
+    assert data["uptime_seconds"] is None and data["components"][0]["latency_ms"] is None
+    assert data["config"]["automation_max_level"] is None
+    assert data["config"]["budgets"] == {"daily_usd": None, "monthly_usd": None, "spent_today_usd": None, "spent_month_usd": None}
+    assert body["history"]["data"]["components"]["api"][0]["ok"] is None
+    assert body["metrics"]["data"]["bucket_minutes"] is None
+    assert body["metrics"]["data"]["series"][0]["tool_calls"] is None and body["metrics"]["data"]["series"][0]["cost_usd"] is None
+    assert len(response.text) < 20_000
+
+
+def test_an_integer_past_pythons_digit_limit_is_not_json():
+    content = b'{"status": "ok", "uptime_seconds": 1' + b"0" * 5000 + b"}"
+    body = body_of(run(get(), respond=talon({"/v2/health": lambda r: httpx.Response(200, content=content)}))[0])
+    assert body["health"]["error"] == talon_health.NOT_JSON
+
+
+def test_amount_and_number_helpers():
+    assert talon_health._number(10**400) is None
+    assert talon_health._count(10**400) is None
+    assert talon_health._amount(10**4000) is None
+    assert talon_health._amount(10**20) is None
+    assert talon_health._amount(1e300) is None
+    assert talon_health._amount("1" * 400) is None
+    assert talon_health._amount(123456789012345) == "123456789012345"
+
+
+def test_an_unforeseen_parse_failure_is_the_wrong_shape_error(monkeypatch):
+    def broken(raw, scrub):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(talon_health, "parse_health", broken)
+    response, _ = run(get())
+    assert response.status_code == 200
+    body = body_of(response)
+    assert body["health"] == {"data": None, "error": talon_health.WRONG_SHAPE, "status_code": 200, "unsupported": False}
+    assert body["metrics"]["data"] is not None
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("https://u:p@ss/w@rd@indexer:9200/x down", "https://indexer:9200/x down"),
+        ("https://reader:pa@ss@indexer:9200", "https://indexer:9200"),
+        ("http://user@host/path", "http://host/path"),
+        ("http://host:9200/path fine", "http://host:9200/path fine"),
+        (
+            "GET /x?token=abc&b=1 key=zzz api_key=q Password=hunter2 sig=s1",
+            "GET /x?token=[redacted]&b=1 key=[redacted] api_key=[redacted] Password=[redacted] sig=[redacted]",
+        ),
+        ("the connector password is s3cret-pass-1", "the connector password is [redacted]"),
+    ],
+)
+def test_scrub(text, expected):
+    scrub = talon_health.make_scrub([TALON_KEY, "s3cret-pass-1"])
+    assert scrub(text, 500) == expected
+
+
+def test_the_connector_password_never_reaches_the_browser():
+    leaky = health_payload(components=[component("api", detail="logged in with s3cret-pass-1 as talon")])
+    response, _ = run(
+        get(),
+        respond=talon({"/v2/health": lambda r: httpx.Response(200, json=leaky)}),
+        attributes=connector(connector_password="s3cret-pass-1"),
+    )
+    assert "s3cret-pass-1" not in response.text
+    assert body_of(response)["health"]["data"]["components"][0]["detail"] == "logged in with [redacted] as talon"
+
+
+def test_a_missing_configuration_is_none_and_budgets_tell_absent_from_unlimited():
+    for config in ({}, {"unexpected": 1}, None, "text"):
+        body = body_of(run(get(), respond=talon({"/v2/health": lambda r, c=config: httpx.Response(200, json=health_payload(config=c))}))[0])
+        assert body["health"]["data"]["config"] is None
+    no_budgets = health_payload(config={"writeback_mode": "off"})
+    config = body_of(run(get(), respond=talon({"/v2/health": lambda r: httpx.Response(200, json=no_budgets)}))[0])["health"]["data"][
+        "config"
+    ]
+    assert config["writeback_mode"] == "off" and config["budgets"] is None
+    partial = health_payload(config={"budgets": {"daily_usd": None, "spent_today_usd": None}})
+    config = body_of(run(get(), respond=talon({"/v2/health": lambda r: httpx.Response(200, json=partial)}))[0])["health"]["data"]["config"]
+    # A reported null ceiling is unlimited; a missing one is not reported; a null spend is no data.
+    assert config["budgets"] == {"daily_usd": "unlimited", "monthly_usd": None, "spent_today_usd": None, "spent_month_usd": None}
+
+
+def test_the_health_client_settings():
+    async def scenario():
+        async with health_client._new_client(health_client.TIMEOUT) as client:
+            context = client._transport._pool._ssl_context
+            return client.follow_redirects, client.trust_env, context.verify_mode, context.check_hostname, client.timeout
+
+    follow, trust_env, verify_mode, check_hostname, timeout = asyncio.run(scenario())
+    assert follow is False and trust_env is False
+    # TLS isn't verified, as for the rest of the Talon connector: talon-analyst is on a private network.
+    assert verify_mode == ssl.CERT_NONE and check_hostname is False
+    assert timeout.read == health_client.TIMEOUT_SECONDS
+
+
+def test_the_database_session_is_closed_before_talon_is_asked():
+    events = []
+    original_close = AsyncSession.close
+
+    async def close(self):
+        events.append("close")
+        return await original_close(self)
+
+    def respond(request):
+        events.append("talon")
+        return talon()(request)
+
+    with patch.object(AsyncSession, "close", close):
+        response, _ = run(get(), respond=respond)
+    assert response.status_code == 200
+    assert "talon" in events and "close" in events[: events.index("talon")]
+
+
+def test_the_cache_drops_expired_entries_and_their_idle_locks():
+    async def scenario(client, fake):
+        await client.get("/talon/health", headers=as_user("admin"))
+        await client.get("/talon/health?hours=168", headers=as_user("admin"))
+        assert len(talon_health._CACHE) == 2 and len(talon_health._LOCKS) == 2
+        for key, (_, value) in list(talon_health._CACHE.items()):
+            talon_health._CACHE[key] = (0.0, value)
+        await client.get("/talon/health", headers=as_user("admin"))
+        return len(talon_health._CACHE), len(talon_health._LOCKS)
+
+    assert run(scenario) == (1, 1)

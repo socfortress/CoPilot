@@ -112,7 +112,7 @@ function healthy() {
 					workspace_tools: false,
 					chat_browser: false,
 					models: { chat: "claude-sonnet-5-5", investigation: "claude-opus-5-5" },
-					budgets: { daily_usd: "25.00", monthly_usd: null, spent_today_usd: "12.4402", spent_month_usd: "311.20" }
+					budgets: { daily_usd: "25.00", monthly_usd: "unlimited", spent_today_usd: "12.4402", spent_month_usd: "311.20" }
 				}
 			},
 			error: null,

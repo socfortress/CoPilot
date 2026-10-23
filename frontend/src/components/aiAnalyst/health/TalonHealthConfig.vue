@@ -123,7 +123,8 @@ const switches = computed(() =>
 )
 
 const budgets = computed(() => {
-	const b = config.budgets ?? { daily_usd: null, monthly_usd: null, spent_today_usd: null, spent_month_usd: null }
+	const b = config.budgets
+	if (!b) return [{ key: "none", label: "Budgets", value: "Not reported" }]
 	// Spend is the deployment's, by UTC day and month; the ceilings are the default per customer, so
 	// the two aren't set against each other.
 	return [

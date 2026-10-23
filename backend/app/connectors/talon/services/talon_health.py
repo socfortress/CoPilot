@@ -90,8 +90,9 @@ from app.middleware.customer_access import customer_access_handler
 from app.time_utils import now_utc
 
 DEFAULT_HOURS = 24
-MIN_HOURS = 1
-MAX_HOURS = 168
+#: The windows the dashboard offers (24 h, 7 d); any other is refused, so the cache holds two entries
+#: per connector state at most.
+ALLOWED_HOURS = (24, 168)
 CACHE_SECONDS = 30.0
 
 #: Shown when talon-analyst answers 404 for its health routes (a release before the health API, or
@@ -114,8 +115,14 @@ MAX_BUCKETS = 2100  # 168 h of 5-minute buckets is 2016
 MAX_LIVE_CUSTOMERS = 1000
 COMPONENT_ID = re.compile(r"[A-Za-z0-9_.-]{1,64}")
 AMOUNT = re.compile(r"-?\d{1,15}(\.\d{1,12})?")
-#: ``scheme://user:password@`` inside any text: the user-info is dropped, the rest kept.
-_URL_USERINFO = re.compile(r"(?i)\b([a-z][a-z0-9+.-]{0,31}://)[^/\s@]{1,512}@")
+#: ``scheme://user:password@`` inside any text: the user-info is dropped, the rest kept. Two passes:
+#: a ``user:`` authority loses everything up to the token's last ``@``, so a password holding ``@``
+#: or ``/`` leaves no tail (a ``host:port`` path holding ``@`` is cut too, which only hides more);
+#: then any other authority up to its last ``@``.
+_URL_USERPASS = re.compile(r"(?i)\b([a-z][a-z0-9+.-]{0,31}://)[^\s:/?#@]*:\S*@")
+_URL_USERINFO = re.compile(r"(?i)\b([a-z][a-z0-9+.-]{0,31}://)[^\s/?#]*@")
+#: A credential in a query string or ``key=value`` text: the value is masked.
+_SECRET_PARAM = re.compile(r"(?i)\b(token|key|secret|password|passwd|sig|auth|api_key)=[^&\s]+")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f  ]")
 
 OVERALL = ("ok", "degraded", "down")
@@ -157,15 +164,18 @@ def strip_url(url: Any) -> Optional[str]:
 
 
 def make_scrub(secrets: Sequence[str]) -> Callable[[Any, int], Optional[str]]:
-    """A text cleaner for talon-analyst's strings: one line, user-info dropped from URLs, any of
-    ``secrets`` (the API key) replaced, at most ``cap`` characters. Not a string: None."""
+    """A text cleaner for talon-analyst's strings: one line, user-info dropped from URLs, credential
+    parameters masked, any of ``secrets`` (the connector's key and password) replaced, at most ``cap``
+    characters. Not a string: None."""
     hidden = [s for s in secrets if isinstance(s, str) and len(s) >= 6]
 
     def scrub(value: Any, cap: int) -> Optional[str]:
         if not isinstance(value, str):
             return None
         text = _CONTROL.sub(" ", value)
+        text = _URL_USERPASS.sub(r"\1", text)
         text = _URL_USERINFO.sub(r"\1", text)
+        text = _SECRET_PARAM.sub(r"\1=[redacted]", text)
         for secret in hidden:
             text = text.replace(secret, "[redacted]")
         text = text.strip()
@@ -179,7 +189,10 @@ def make_scrub(secrets: Sequence[str]) -> Callable[[Any, int], Optional[str]]:
 def _number(value: Any, *, minimum: float = 0.0) -> Optional[float]:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    number = float(value)
+    try:
+        number = float(value)  # a JSON integer of a few hundred digits overflows
+    except (OverflowError, ValueError):
+        return None
     if not math.isfinite(number) or number < minimum:
         return None
     return number
@@ -193,21 +206,34 @@ def _count(value: Any) -> Optional[int]:
 
 
 def _amount(value: Any) -> Optional[str]:
-    """A decimal string as talon-analyst sends amounts (a number is written out), or ``unlimited``."""
+    """A decimal string as talon-analyst sends amounts (a number is written out), or ``unlimited``.
+    Whatever its type, the result must match ``AMOUNT`` (at most 15 integer digits), so a huge
+    number never reaches the browser."""
     if isinstance(value, bool):
         return None
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, float):
-        # Written out in full (talon-analyst rounds amounts to 6 places): 1e-06 is "0.000001".
-        return format(Decimal(repr(value)), "f") if math.isfinite(value) else None
-    if isinstance(value, str):
-        text = value.strip()
-        if text.lower() == "unlimited":
-            return "unlimited"
-        if AMOUNT.fullmatch(text):
-            return text
-    return None
+    text: Optional[str] = None
+    try:
+        if isinstance(value, int):
+            text = str(value)  # past Python's digit limit this raises ValueError
+        elif isinstance(value, float) and math.isfinite(value):
+            # Written out in full (talon-analyst rounds amounts to 6 places): 1e-06 is "0.000001".
+            text = format(Decimal(repr(value)), "f")
+        elif isinstance(value, str):
+            text = value.strip()
+            if text.lower() == "unlimited":
+                return "unlimited"
+    except (ValueError, ArithmeticError):
+        return None
+    return text if text is not None and AMOUNT.fullmatch(text) else None
+
+
+def _ceiling(budgets: Mapping[str, Any], name: str) -> Optional[str]:
+    """A budget ceiling: talon-analyst reports unlimited as null, so a null that is there is
+    ``unlimited``; a missing key is None (not reported)."""
+    if name not in budgets:
+        return None
+    value = budgets[name]
+    return "unlimited" if value is None else _amount(value)
 
 
 def _enum(value: Any, allowed: Sequence[str], default: str) -> str:
@@ -242,8 +268,23 @@ def _switch(value: Any, scrub):
     return scrub(value, 32)
 
 
-def _config(raw: Any, scrub) -> Optional[TalonHealthConfig]:
+#: The configuration's keys; a ``config`` holding none of them is no configuration.
+CONFIG_KEYS = ("writeback_mode", "live_customers", "automation_max_level", "automation_policy_source", "models", "budgets", *SWITCHES)
+
+
+def _budgets(raw: Any) -> Optional[TalonHealthBudgets]:
     if not isinstance(raw, dict):
+        return None
+    return TalonHealthBudgets(
+        daily_usd=_ceiling(raw, "daily_usd"),
+        monthly_usd=_ceiling(raw, "monthly_usd"),
+        spent_today_usd=_amount(raw.get("spent_today_usd")),
+        spent_month_usd=_amount(raw.get("spent_month_usd")),
+    )
+
+
+def _config(raw: Any, scrub) -> Optional[TalonHealthConfig]:
+    if not isinstance(raw, dict) or not any(key in raw for key in CONFIG_KEYS):
         return None
     live = raw.get("live_customers")
     customers: List[str] = []
@@ -253,14 +294,14 @@ def _config(raw: Any, scrub) -> Optional[TalonHealthConfig]:
             if text and text not in customers:
                 customers.append(text)
     level = _count(raw.get("automation_max_level"))
-    models, budgets = _dict(raw.get("models")), _dict(raw.get("budgets"))
+    models = _dict(raw.get("models"))
     return TalonHealthConfig(
         writeback_mode=scrub(raw.get("writeback_mode"), 32),
         live_customers=customers,
         automation_max_level=level if level is not None and level <= 10 else None,
         automation_policy_source=scrub(raw.get("automation_policy_source"), 64),
         models=TalonHealthModels(chat=scrub(models.get("chat"), 128), investigation=scrub(models.get("investigation"), 128)),
-        budgets=TalonHealthBudgets(**{name: _amount(budgets.get(name)) for name in TalonHealthBudgets.model_fields}),
+        budgets=_budgets(raw.get("budgets")),
         **{name: _switch(raw.get(name), scrub) for name in SWITCHES},
     )
 
@@ -360,7 +401,11 @@ def _section(probe: Probe, parse, section_cls, scrub):
     raw, problem = _json(probe)
     if problem:
         return section_cls(error=problem, status_code=status)
-    data = parse(raw, scrub)
+    try:
+        data = parse(raw, scrub)
+    except Exception as e:  # noqa: BLE001 - a value no check foresaw: that section fails, not the route
+        logger.warning(f"Talon health: an answer could not be read ({type(e).__name__})")
+        data = None
     if data is None:
         return section_cls(error=WRONG_SHAPE, status_code=status)
     return section_cls(data=data, status_code=status)
@@ -460,11 +505,21 @@ async def _upstream(attributes: Optional[Mapping[str, Any]], hours: int) -> Upst
         api_key = str(attributes.get("connector_api_key") or "")
         # Asked at the stripped URL: Talon authenticates by the API key alone, and a stored query
         # or fragment would swallow the path.
-        upstream = await _ask_talon(url, api_key, hours, make_scrub([api_key]))
-        for stale in [k for k, (expires, _) in _CACHE.items() if expires <= time.monotonic()]:
-            _CACHE.pop(stale, None)
+        password = str(attributes.get("connector_password") or "")
+        upstream = await _ask_talon(url, api_key, hours, make_scrub([api_key, password]))
+        _prune()
         _CACHE[key] = (time.monotonic() + CACHE_SECONDS, upstream)
         return upstream
+
+
+def _prune() -> None:
+    """Drop expired entries, and the locks of keys no one holds or waits on: a changed connector
+    leaves its old keys behind, which would otherwise stay for the life of the process."""
+    now = time.monotonic()
+    for stale in [k for k, (expires, _) in _CACHE.items() if expires <= now]:
+        _CACHE.pop(stale, None)
+    for key in [k for k, lock in _LOCKS.items() if k not in _CACHE and not lock.locked()]:
+        _LOCKS.pop(key, None)
 
 
 # ── CoPilot's own tables, scoped to the caller ────────────────────────────────
