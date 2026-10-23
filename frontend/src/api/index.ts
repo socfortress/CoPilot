@@ -51,6 +51,7 @@ import tagRbac from "./endpoints/tag-rbac"
 import talon from "./endpoints/talon"
 import talonActions from "./endpoints/talonActions"
 import talonAutomation from "./endpoints/talonAutomation"
+import talonHealth from "./endpoints/talonHealth"
 import talonUsage from "./endpoints/talonUsage"
 import talonV2 from "./endpoints/talonV2"
 import threatIntel from "./endpoints/threat-intel"
@@ -121,6 +122,7 @@ export default {
 	talon,
 	talonActions,
 	talonAutomation,
+	talonHealth,
 	talonUsage,
 	talonV2,
 	opencti,

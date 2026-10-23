@@ -5,7 +5,7 @@ description: Review and grade every AI investigation, correct IOC verdicts, teac
 
 Every report Talon produces is a **draft**. The review workflow lets a SOC analyst grade it, correct what's wrong, teach the agent with a lesson, and — if needed — replay the investigation with a different template. Feedback is aggregated per customer so you can see which templates are reliable and which need tuning.
 
-This page is for **operators** (analysts reviewing reports). For the architecture and deployment guide, see [AI Analyst (Talon)](/power-features/ai-analyst).
+This page is for **operators** (analysts reviewing reports). For what Talon is and how it works, see [AI Analyst (Talon)](/power-features/ai-analyst); to install it, [Installing Talon](/power-features/talon-install).
 
 ---
 
@@ -124,7 +124,7 @@ Click **Queue lesson**. The lesson is persisted to CoPilot's database with `stat
 
 If the agent picked the wrong template — or you want to try a different one — click **Replay** on the Review tab.
 
-1. The modal lists all templates currently deployed in Talon's `groups/copilot/prompts/` directory
+1. The modal lists the investigation templates Talon ships with
 2. Pick a template (e.g. `sysmon_event_1.txt`, `windows_defender.txt`)
 3. Click **Replay**
 
@@ -226,7 +226,7 @@ Last 10 reviews with drill-in. Click any one to open a drawer with the full rubr
 - **One-off lessons auto-expire** — use them for temporary context so the palace stays clean.
 - **Replays don't mutate the original** — every replay is a new job/report; the original stays for comparison.
 - **Palace consolidation is read-only** — you can't accidentally delete the palace from the UI.
-- **Don't put secrets in lessons** — lesson text is sent to Talon and embedded by MemPalace / ChromaDB. Treat it as you would a SIEM comment.
+- **Don't put secrets in lessons** — lesson text is sent to Talon and stored in its MemPalace memory. Treat it as you would a SIEM comment.
 
 ---
 
@@ -237,7 +237,7 @@ Last 10 reviews with drill-in. Click any one to open a drawer with the full rubr
 | "Review" tab missing | Report doesn't exist yet | Click **Investigate with AI Analyst** on the alert Overview tab first |
 | Lesson stays `pending` forever | Drainer job not running | Check CoPilot scheduler logs for `invoke_palace_lesson_drainer` |
 | Lesson ingested but not retrieved on next investigation | Customer code mismatch, or wrong room | Verify lesson's `customer_code` matches the alert's; check palace search with the expected query |
-| Replay modal shows no templates | Talon unreachable | Check `GET /api/talon/templates` — should list `.txt` files from `groups/copilot/prompts/` |
+| Replay modal shows no templates | Talon unreachable | Check `GET /api/talon/templates` — should list Talon's `.txt` templates. Check the AI Analyst [health dashboard](/power-features/talon-health-dashboard) |
 | Feedback dashboard shows zero reviews | No reviews submitted yet, or wrong customer picked | Submit at least one review, confirm the customer dropdown matches the alert's code |
 | IOC accuracy shows `0/0` | No IOC corrections submitted | Review individual IOCs on the Review tab, not just the overall rubric |
 

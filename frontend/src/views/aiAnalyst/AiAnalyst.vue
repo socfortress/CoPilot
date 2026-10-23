@@ -2,7 +2,12 @@
 	<div class="page flex flex-col pb-0!">
 		<n-tabs v-model:value="activeTab" type="segment" animated tab-class="px-5!" class="[&_.n-tabs-nav]:mx-auto">
 			<n-tab-pane name="overview" tab="Overview" display-directive="show:lazy">
-				<TalonOverview />
+				<!-- The Talon health dashboard, whatever the "Talon v2" setting says. -->
+				<TalonOverview
+					:active="activeTab === 'overview'"
+					:usage-available="talonV2Available"
+					@open-tab="activeTab = $event"
+				/>
 			</n-tab-pane>
 			<n-tab-pane name="talon" tab="Talon Chat" display-directive="show:lazy">
 				<!-- The v2 chat (threads, a customer per thread) only with the "Talon v2" setting on; else v1, unchanged. -->

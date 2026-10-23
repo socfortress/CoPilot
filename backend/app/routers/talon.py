@@ -7,6 +7,7 @@ from app.connectors.talon.routes.talon_collections import talon_collect_start_ro
 from app.connectors.talon.routes.talon_collections import (
     talon_collection_settings_router,
 )
+from app.connectors.talon.routes.talon_health import talon_health_router
 from app.connectors.talon.routes.talon_v2 import talon_v2_proxy_router
 from app.connectors.talon.routes.talon_v2 import talon_v2_router
 
@@ -15,6 +16,8 @@ router = APIRouter()
 
 # Include the Talon related routes
 router.include_router(talon_router, prefix="/talon", tags=["talon"])
+# The Talon health dashboard (the AI Analyst page's Overview tab), whatever "Talon v2" says.
+router.include_router(talon_health_router, prefix="/talon", tags=["talon"])
 # Talon v2 (talon-analyst M5): the setting, then the thread and chat proxy behind it.
 router.include_router(talon_v2_router, prefix="/talon/v2", tags=["talon-v2"])
 router.include_router(talon_v2_proxy_router, prefix="/talon/v2", tags=["talon-v2"])
