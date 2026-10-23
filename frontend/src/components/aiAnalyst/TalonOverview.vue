@@ -1,287 +1,319 @@
 <template>
-	<div class="flex flex-col gap-8">
-		<!-- Hero -->
-		<div class="flex flex-col items-center gap-3 py-6 text-center">
-			<div class="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
-				<Icon name="carbon:machine-learning-model" :size="32" class="text-primary" />
+	<div class="flex flex-col gap-4 pt-4" data-testid="talon-health">
+		<!-- The banner: the verdict, version, uptime, how fresh, and a refresh. -->
+		<div
+			class="border-default flex flex-wrap items-center justify-between gap-3 rounded-lg border border-l-4 px-4 py-3"
+			:style="{ borderLeftColor: TONE_COLOR[bannerState.tone] }"
+			role="status"
+			data-testid="talon-health-banner"
+			:data-tone="bannerState.tone"
+		>
+			<div class="flex min-w-0 items-center gap-3">
+				<span class="flex shrink-0" :style="{ color: TONE_COLOR[bannerState.tone] }">
+					<Icon :name="bannerState.icon" :size="24" />
+				</span>
+				<div class="flex min-w-0 flex-col">
+					<span class="text-default text-lg font-semibold" data-testid="talon-health-banner-title">
+						{{ bannerState.title }}
+					</span>
+					<span
+						v-if="bannerState.reason"
+						class="text-secondary text-sm break-words"
+						data-testid="talon-health-banner-reason"
+					>
+						<bdi>{{ bannerState.reason }}</bdi>
+					</span>
+				</div>
 			</div>
-			<h1 class="text-default text-2xl font-bold">Talon AI Analyst</h1>
-			<p class="text-secondary max-w-xl text-sm leading-relaxed">
-				Automated Tier 1 SOC analyst that investigates every alert end-to-end &mdash; from raw SIEM events to
-				structured investigation reports with severity assessments and recommended actions.
-			</p>
-			<div class="mt-1 flex items-center gap-2">
-				<n-tag size="small" round type="success">
-					<template #icon>
-						<Icon name="carbon:checkmark-filled" />
-					</template>
-					Integrated
-				</n-tag>
-				<n-tag
-					v-if="status"
+			<div class="text-secondary flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+				<span v-if="health?.version" data-testid="talon-health-version">
+					talon-analyst
+					<b class="text-default font-mono"><bdi>{{ health.version }}</bdi></b>
+				</span>
+				<span v-if="uptime" data-testid="talon-health-uptime">
+					up <b class="text-default">{{ uptime }}</b>
+				</span>
+				<span data-testid="talon-health-checked">{{ checkedAgo }}</span>
+				<n-button
 					size="small"
-					round
-					:type="status === 'healthy' ? 'success' : 'warning'"
-					class="animate-fade"
+					secondary
+					:loading
+					:disabled="loading"
+					data-testid="talon-health-refresh"
+					@click="load()"
 				>
-					{{ status === "healthy" ? "Online" : status }}
-				</n-tag>
-				<n-tag v-else-if="statusChecked" size="small" round type="error" class="animate-fade">
-					Unreachable
-				</n-tag>
+					<template #icon><Icon name="carbon:renew" :size="14" /></template>
+					Refresh
+				</n-button>
 			</div>
-			<a
-				href="https://github.com/taylorwalton/talon"
-				target="_blank"
-				rel="noopener noreferrer"
-				class="text-primary mt-1 inline-flex items-center gap-1.5 text-xs no-underline hover:underline"
-			>
-				<Icon name="carbon:logo-github" :size="14" />
-				<span>github.com/taylorwalton/talon</span>
-				<Icon name="carbon:launch" :size="11" />
-			</a>
 		</div>
 
-		<n-tabs type="card" placement="left" animated>
-			<n-tab-pane name="How It Works" tab="How It Works">
-				<div class="grid grid-cols-1 gap-3">
-					<StepCard
-						v-for="item in investigationSteps"
-						:key="item.step"
-						:step="item.step"
-						:title="item.title"
-						:description="item.description"
-						:icon="item.icon"
-					/>
+		<n-alert v-if="failure" type="error" :bordered="false" size="small" data-testid="talon-health-error">
+			{{ failure }}
+		</n-alert>
+
+		<div v-if="!report && loading" class="flex justify-center py-16" data-testid="talon-health-loading">
+			<n-spin size="medium" />
+		</div>
+
+		<div
+			v-if="report"
+			class="flex flex-col gap-4 transition-opacity"
+			:class="{ 'opacity-60': loading }"
+			data-testid="talon-health-body"
+		>
+			<SocPanel title="From CoPilot" caption="measured by CoPilot's backend">
+				<TalonCopilotChecks :copilot="report.copilot" />
+			</SocPanel>
+
+			<n-alert
+				v-if="report.health.unsupported"
+				type="info"
+				:bordered="false"
+				title="Upgrade Talon for the health dashboard"
+				data-testid="talon-health-old"
+			>
+				{{ OLD_TALON_TEXT }}.
+				<a :href="`${TALON_DOCS.install}#upgrades`" target="_blank" rel="noopener noreferrer" class="text-primary">
+					How to upgrade
+				</a>
+			</n-alert>
+
+			<SocPanel title="Components">
+				<div v-if="groups.length" class="flex flex-col gap-4" data-testid="talon-health-components">
+					<div v-for="group of groups" :key="group.id" class="flex flex-col gap-2" :data-group="group.id">
+						<span :class="SECTION_LABEL">{{ group.title }}</span>
+						<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+							<div
+								v-for="component of group.components"
+								:key="component.id"
+								class="border-default flex flex-col gap-1.5 rounded-lg border p-3"
+								data-testid="talon-health-component"
+								:data-component="component.id"
+							>
+								<div class="flex items-center justify-between gap-2">
+									<span class="truncate font-medium" :title="component.name">
+										<bdi>{{ component.name }}</bdi>
+									</span>
+									<TalonHealthStatus :status="component.status" />
+								</div>
+								<div class="text-tertiary flex gap-3 text-xs">
+									<span class="font-mono">{{ component.id }}</span>
+									<span v-if="component.latency_ms !== null">
+										{{ formatLatency(component.latency_ms) }}
+									</span>
+								</div>
+								<p v-if="component.detail" class="text-secondary text-sm break-words">
+									<bdi>{{ component.detail }}</bdi>
+								</p>
+								<n-collapse v-if="component.fix" class="mt-1">
+									<n-collapse-item title="How to fix" :name="component.id">
+										<p class="text-sm break-words whitespace-pre-line" data-testid="talon-health-fix">
+											<bdi>{{ component.fix }}</bdi>
+										</p>
+									</n-collapse-item>
+								</n-collapse>
+							</div>
+						</div>
+					</div>
 				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Capabilities" tab="Capabilities">
-				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-					<FeatureCard
-						v-for="feature in capabilities"
-						:key="feature.title"
-						:title="feature.title"
-						:description="feature.description"
-						:icon="feature.icon"
+				<HealthUnavailable v-else :text="sectionProblem(report.health, 'Talon reported no components')" />
+			</SocPanel>
+
+			<!-- One window for everything below it: the uptime bars and the charts. -->
+			<div class="flex flex-wrap items-center gap-3">
+				<span class="text-secondary text-xs">History</span>
+				<SegmentedToggle
+					v-model="hours"
+					:options="windowOptions"
+					label="History window"
+					test-id="talon-health-window"
+				/>
+			</div>
+
+			<SocPanel title="Uptime" :caption="windowLabel">
+				<TalonUptimeBars
+					v-if="report.history.data"
+					:components="health?.components ?? []"
+					:history="report.history.data"
+					:hours="report.hours"
+				/>
+				<HealthUnavailable v-else :text="sectionProblem(report.history)" />
+			</SocPanel>
+
+			<SocPanel title="Activity" :caption="windowLabel">
+				<template v-if="report.metrics.data">
+					<TalonHealthCharts
+						v-if="report.metrics.data.series.length"
+						:series="report.metrics.data.series"
+						:hours="report.hours"
+						:usage-available="usageAvailable && report.copilot.v2_enabled"
+						@open-usage="emit('open-tab', 'usage')"
 					/>
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Architecture" tab="Architecture">
-				<pre class="text-default text-xs leading-relaxed"><code>{{ architectureDiagram }}</code></pre>
-			</n-tab-pane>
-			<n-tab-pane name="CoPilot Integration" tab="CoPilot Integration">
-				<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-					<FeatureCard
-						v-for="point in integrationPoints"
-						:key="point.title"
-						:title="point.title"
-						:description="point.description"
-						:icon="point.icon"
+					<n-empty
+						v-else
+						description="No activity in this window"
+						class="py-8"
+						data-testid="talon-health-metrics-empty"
 					/>
-				</div>
-			</n-tab-pane>
-		</n-tabs>
+				</template>
+				<HealthUnavailable v-else :text="sectionProblem(report.metrics)" />
+			</SocPanel>
+
+			<SocPanel title="Configuration" caption="as Talon reports it">
+				<TalonHealthConfig v-if="health?.config" :config="health.config" :scope="report.copilot.scope" />
+				<HealthUnavailable v-else :text="sectionProblem(report.health, 'Talon reported no configuration')" />
+			</SocPanel>
+		</div>
+
+		<footer
+			class="text-secondary flex flex-wrap items-center gap-x-4 gap-y-1 pb-4 text-xs"
+			data-testid="talon-health-footer"
+		>
+			<a
+				:href="TALON_DOCS.overview"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-primary inline-flex items-center gap-1 no-underline hover:underline"
+				data-testid="talon-health-docs"
+			>
+				What Talon does and how to set it up
+				<Icon name="carbon:launch" :size="11" />
+			</a>
+			<a
+				:href="TALON_DOCS.health"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-primary inline-flex items-center gap-1 no-underline hover:underline"
+			>
+				About this dashboard
+				<Icon name="carbon:launch" :size="11" />
+			</a>
+		</footer>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NTabPane, NTabs, NTag } from "naive-ui"
-import { defineComponent, h, onMounted, ref } from "vue"
+// The AI Analyst page's Overview tab: the Talon health dashboard (`GET /api/talon/health`), whatever
+// the "Talon v2" setting says. Everyone who can open the page sees the same detail (failure reasons,
+// URLs, configuration; never a secret); per-customer items come already scoped by the backend.
+//
+// States: loading (first load), an error from CoPilot itself (kept beside the last good render),
+// Talon unreachable (the "From CoPilot" row says why, the other sections say "unavailable"), an
+// older Talon without the health API (404: an upgrade notice, CoPilot's checks still shown), and
+// empty sections. Refreshes every 60 s while this tab is shown and the browser tab is visible; a
+// reload keeps the previous render, dimmed.
+import type { TalonHealthReport, TalonSection } from "@/types/talonHealth"
+import axios from "axios"
+import { NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NSpin } from "naive-ui"
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { SECTION_LABEL } from "@/components/common/section-label"
+import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
+import SocPanel from "@/components/socManagement/ui/SocPanel.vue"
+import { TONE_COLOR } from "@/components/socManagement/utils"
+import {
+	banner,
+	formatAgo,
+	formatDuration,
+	formatLatency,
+	groupComponents,
+	OLD_TALON_TEXT,
+	REFRESH_MS,
+	secondsSince,
+	TALON_DOCS,
+	WINDOWS
+} from "./health/health"
+import HealthUnavailable from "./health/HealthUnavailable.vue"
+import TalonCopilotChecks from "./health/TalonCopilotChecks.vue"
+import TalonHealthCharts from "./health/TalonHealthCharts.vue"
+import TalonHealthConfig from "./health/TalonHealthConfig.vue"
+import TalonHealthStatus from "./health/TalonHealthStatus.vue"
+import TalonUptimeBars from "./health/TalonUptimeBars.vue"
 
-const StepCard = defineComponent({
-	props: { step: Number, title: String, description: String, icon: String },
-	setup(props) {
-		return () =>
-			h("div", { class: "bg-secondary flex gap-3 rounded-lg p-4" }, [
-				h(
-					"div",
-					{ class: "bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" },
-					h("span", { class: "text-primary text-sm font-bold" }, props.step)
-				),
-				h("div", { class: "flex flex-col gap-1" }, [
-					h("div", { class: "text-default text-sm font-semibold" }, props.title),
-					h("div", { class: "text-secondary text-xs leading-relaxed" }, props.description)
-				])
-			])
+const { active = true, usageAvailable = false } = defineProps<{
+	/** Whether the Overview tab is the one shown (the page keeps hidden tabs mounted). */
+	active?: boolean
+	/** Whether the page has a Usage tab (the "Talon v2" setting is on). */
+	usageAvailable?: boolean
+}>()
+const emit = defineEmits<{ (e: "open-tab", tab: string): void }>()
+
+const windowOptions = WINDOWS.map(w => ({ value: w.value as number, label: w.label }))
+
+const report = ref<TalonHealthReport | null>(null)
+const failure = ref<string | null>(null)
+const loading = ref(false)
+const hours = ref<number>(24)
+const now = ref(Date.now())
+let controller: AbortController | null = null
+let lastLoad = 0
+
+const health = computed(() => report.value?.health?.data ?? null)
+const bannerState = computed(() => banner(report.value))
+const groups = computed(() => groupComponents(health.value?.components))
+const uptime = computed(() => formatDuration(health.value?.uptime_seconds))
+const checkedAgo = computed(() => formatAgo(secondsSince(report.value?.checked_at, now.value)))
+const windowLabel = computed(() => (hours.value > 24 ? "last 7 days" : "last 24 hours"))
+
+function sectionProblem(section: TalonSection<unknown> | undefined, empty = "Talon sent nothing") {
+	if (section?.unsupported) return OLD_TALON_TEXT
+	return section?.error ?? empty
+}
+
+async function load() {
+	controller?.abort()
+	const own = new AbortController()
+	controller = own
+	loading.value = true
+	lastLoad = Date.now()
+	try {
+		const { data } = await Api.talonHealth.getHealth(hours.value, own.signal)
+		if (controller !== own) return
+		report.value = data
+		failure.value = null
+	} catch (err) {
+		if (controller !== own || axios.isCancel(err)) return
+		const status = axios.isAxiosError(err) ? err.response?.status : undefined
+		failure.value = status
+			? `CoPilot could not load Talon's health (HTTP ${status})`
+			: "CoPilot could not load Talon's health (no answer)"
+	} finally {
+		if (controller === own) loading.value = false
 	}
-})
+}
 
-const FeatureCard = defineComponent({
-	props: { title: String, description: String, icon: String },
-	setup(props) {
-		return () =>
-			h("div", { class: "bg-secondary flex gap-3 rounded-lg p-4" }, [
-				h(
-					"div",
-					{ class: "bg-primary/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" },
-					h(Icon, { name: props.icon, size: 16, class: "text-primary" })
-				),
-				h("div", { class: "flex flex-col gap-1" }, [
-					h("div", { class: "text-default text-sm font-semibold" }, props.title),
-					h("div", { class: "text-secondary text-xs leading-relaxed" }, props.description)
-				])
-			])
-	}
-})
+function visible() {
+	return active && document.visibilityState === "visible"
+}
 
-// --- Status check ---
+let timer: ReturnType<typeof setInterval> | null = null
+let ticker: ReturnType<typeof setInterval> | null = null
 
-const status = ref<string | null>(null)
-const statusChecked = ref(false)
+function onVisibility() {
+	if (visible() && Date.now() - lastLoad >= REFRESH_MS) load()
+}
 
 onMounted(() => {
-	Api.talon
-		.getStatus()
-		.then(res => {
-			status.value = res.data.success ? "healthy" : "degraded"
-		})
-		.catch(() => {
-			status.value = null
-		})
-		.finally(() => {
-			statusChecked.value = true
-		})
+	load()
+	timer = setInterval(() => {
+		if (visible()) load()
+	}, REFRESH_MS)
+	ticker = setInterval(() => (now.value = Date.now()), 1000)
+	document.addEventListener("visibilitychange", onVisibility)
 })
 
-// --- Static content ---
+onBeforeUnmount(() => {
+	controller?.abort()
+	if (timer) clearInterval(timer)
+	if (ticker) clearInterval(ticker)
+	document.removeEventListener("visibilitychange", onVisibility)
+})
 
-const investigationSteps = [
-	{
-		step: 1,
-		title: "Alert Ingestion",
-		description:
-			"Talon picks up OPEN alerts via real-time webhook (POST /investigate) or a 15-minute scheduled sweep as a safety net.",
-		icon: "carbon:notification"
-	},
-	{
-		step: 2,
-		title: "SIEM Correlation",
-		description:
-			"Queries OpenSearch/Wazuh for the raw event and correlated events across the same asset, time window, and rule groups.",
-		icon: "carbon:search"
-	},
-	{
-		step: 3,
-		title: "IOC Enrichment",
-		description:
-			"Extracts IOCs (IPs, hashes, domains, user accounts) and enriches them via VirusTotal, Shodan, and AbuseIPDB.",
-		icon: "carbon:security"
-	},
-	{
-		step: 4,
-		title: "Report & Write-back",
-		description:
-			"Generates a structured investigation report with MITRE ATT&CK mapping, severity assessment, and recommended actions — written back to CoPilot.",
-		icon: "carbon:document"
-	}
-]
-
-const capabilities = [
-	{
-		title: "Privacy-Aware Anonymization",
-		description:
-			"An anonymizing MCP proxy replaces PII (usernames, hostnames, internal IPs) with session tokens before they reach the cloud model. A deanonymize tool restores real values in the final report.",
-		icon: "carbon:locked"
-	},
-	{
-		title: "Local LLM Support",
-		description:
-			"If Ollama is running, raw event interpretation routes through a local model — keeping the most sensitive analysis step entirely on-premises. No config needed if on the same host.",
-		icon: "carbon:model-alt"
-	},
-	{
-		title: "MemPalace Persistent Memory",
-		description:
-			"Long-term memory via ChromaDB + SQLite — past investigation outcomes, asset metadata, confirmed false positives, and IOC history are retrieved automatically at the start of each investigation.",
-		icon: "carbon:data-base"
-	},
-	{
-		title: "Alert-Type Templates",
-		description:
-			"Per-alert-type investigation guides (Sysmon Event 1, 3, 7, 11, 22, etc.) load automatically based on the alert's rule.groups field. Add new templates without touching code.",
-		icon: "carbon:template"
-	},
-	{
-		title: "MITRE ATT&CK Mapping",
-		description:
-			"Every investigation maps findings to MITRE ATT&CK tactics and techniques, providing standardized classification for SOC analysts and compliance reporting.",
-		icon: "carbon:chart-relationship"
-	},
-	{
-		title: "Containerized Isolation",
-		description:
-			"Each investigation runs in an isolated Linux container with a mount allowlist controlling file system access. Agents cannot modify their own configuration or escape the sandbox.",
-		icon: "carbon:container-software"
-	}
-]
-
-const integrationPoints = [
-	{
-		title: "Real-Time Investigation Trigger",
-		description:
-			"When an alert is created in CoPilot's Incident Management, Talon can be triggered immediately via POST /investigate. The \"Investigate with AI Analyst\" button on any alert's Overview tab does exactly this.",
-		icon: "carbon:flash"
-	},
-	{
-		title: "Scheduled Alert Sweep",
-		description:
-			"Every 15 minutes, Talon queries the CoPilot database for OPEN alerts with no existing job and automatically investigates them — a safety net ensuring nothing is missed.",
-		icon: "carbon:time"
-	},
-	{
-		title: "Report Write-back via MCP",
-		description:
-			"Job status, full investigation reports, and enriched IOCs are persisted back into CoPilot's database via the CoPilot MCP server — no direct database writes from Talon.",
-		icon: "carbon:document-add"
-	},
-	{
-		title: "In-Alert Report Viewing",
-		description:
-			"When you open any alert in Incident Management, the AI Analyst tab automatically loads if an investigation report exists — showing severity, summary, full report, and recommended actions.",
-		icon: "carbon:view"
-	}
-]
-
-const architectureDiagram = `┌───────────────────────────────────────────────────────┐
-│                  CoPilot (FastAPI)                    │
-│                                                       │
-│  Alert created → POST /investigate ───────────────┐   │
-│  GET /status, GET /jobs/:alertId ← Talon HTTP API │   │
-│                                                   │   │
-│  Write-back API (MCP tools):                      │   │
-│    POST /api/ai_analyst/jobs         ←────────────┘   │
-│    POST /api/ai_analyst/reports                       │
-│    POST /api/ai_analyst/iocs                          │
-│  MySQL: ai_analyst_job / report / ioc                 │
-└───────────┬───────────────────────────────────────────┘
-            │                    ▲ REST write-back
-            ▼ read-only MCP      │
-┌────────────────────────────────┴──────────────────────┐
-│                    Talon (Node.js)                    │
-│                                                       │
-│  HTTP channel (port 3100)                             │
-│    POST /investigate  ← CoPilot triggers this         │
-│    POST /message      ← ad-hoc analyst prompts        │
-│    GET  /status       ← queue + job overview          │
-│                                                       │
-│  Scheduled task (every 15 min)                        │
-│    Queries MySQL for OPEN alerts with no job row      │
-│    Runs full investigation per alert                  │
-│                                                       │
-│  SOC agent (containerized)                            │
-│    groups/copilot/CLAUDE.md  ← investigation flow     │
-│    groups/copilot/prompts/   ← per-alert templates    │
-└───────────────┬───────────────────────────────────────┘
-                │
-                ▼ MCP tools (read-only)
-┌───────────────────────────────────────────────────────┐
-│  opensearch-mcp    — raw SIEM queries                 │
-│  opensearch_anon   — anonymizing proxy (PII→tokens)   │
-│  mysql-mcp         — CoPilot DB (alerts, assets)      │
-│  copilot-mcp       — CoPilot REST API write-back      │
-│  ollama (optional) — local LLM for sensitive data     │
-│  mempalace         — persistent investigation memory  │
-└───────────────────────────────────────────────────────┘`
+watch(hours, () => load())
+watch(
+	() => active,
+	() => onVisibility()
+)
 </script>
