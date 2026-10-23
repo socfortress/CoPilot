@@ -14,7 +14,7 @@ import { defineComponent, h } from "vue"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
 import TalonOverview from "../../TalonOverview.vue"
-import { OLD_TALON_TEXT, REFRESH_MS, TALON_DOCS } from "../health"
+import { OLD_TALON_TEXT, REFRESH_MS, TALON_DOCS, WRONG_SHAPE_TEXT } from "../health"
 import { bucket, healthReport, must, oldTalonReport, unreachableReport } from "./fixtures"
 
 const getHealth = vi.fn()
@@ -97,19 +97,32 @@ describe("talon health dashboard", () => {
 		expect(texts(wrapper, "talon-uptime-summary")).toEqual(["all 1 OK", "1 warning of 1"])
 
 		// Configuration.
-		expect(wrapper.get('[data-testid="talon-config-live"]').findAll(".n-tag").map(t => t.text())).toEqual(["ACME", "GLOBEX"])
+		expect(
+			wrapper
+				.get('[data-testid="talon-config-live"]')
+				.findAll(".n-tag")
+				.map(t => t.text())
+		).toEqual(["ACME", "GLOBEX"])
 		expect(wrapper.get('[data-testid="talon-config-automation"]').text()).toBe("Level 1")
 		expect(wrapper.get('[data-testid="talon-config-switch-chat_browser"]').text()).toContain("Not reported")
 		expect(wrapper.get('[data-testid="talon-config-writeback"]').text()).toBe("Live")
-		expect(wrapper.get('[data-testid="talon-config-budget-spent-today"]').text()).toBe("Spent today (UTC, all customers)$20.00")
-		expect(wrapper.get('[data-testid="talon-config-budget-daily"]').text()).toBe("Default daily ceiling per customer$25.00")
-		expect(wrapper.get('[data-testid="talon-config-budget-monthly"]').text()).toBe("Default monthly ceiling per customerUnlimited")
+		expect(wrapper.get('[data-testid="talon-config-budget-spent-today"]').text()).toBe(
+			"Spent today (UTC, all customers)$20.00"
+		)
+		expect(wrapper.get('[data-testid="talon-config-budget-daily"]').text()).toBe(
+			"Default daily ceiling per customer$25.00"
+		)
+		expect(wrapper.get('[data-testid="talon-config-budget-monthly"]').text()).toBe(
+			"Default monthly ceiling per customerUnlimited"
+		)
 		// Tool errors aren't recorded: the chart says so rather than drawing zeros.
 		expect(wrapper.get('[data-testid="talon-health-chart-tools"]').text()).toContain("Tool errors: no data")
 
 		// The docs.
 		expect(wrapper.get('[data-testid="talon-health-docs"]').attributes("href")).toBe(TALON_DOCS.overview)
-		expect(wrapper.get('[data-testid="talon-health-docs"]').text()).toContain("What Talon does and how to set it up")
+		expect(wrapper.get('[data-testid="talon-health-docs"]').text()).toContain(
+			"What Talon does and how to set it up"
+		)
 	})
 
 	it("a null metric is no data, never 0", async () => {
@@ -125,7 +138,10 @@ describe("talon health dashboard", () => {
 		// The table view opens from "Show the numbers".
 		await wrapper.get('[data-testid="talon-health-charts"] .n-collapse-item__header-main').trigger("click")
 		await flushPromises()
-		const first = wrapper.findAll('[data-testid="talon-health-metrics-row"]')[0].findAll("td").map(c => c.text())
+		const first = wrapper
+			.findAll('[data-testid="talon-health-metrics-row"]')[0]
+			.findAll("td")
+			.map(c => c.text())
 		expect(first[5]).toBe("no data") // queue max
 		expect(first[7]).toBe("no data") // tool errors
 		expect(first[9]).toBe("no data") // cost
@@ -137,7 +153,9 @@ describe("talon health dashboard", () => {
 		const wrapper = render()
 		await flushPromises()
 		expect(wrapper.get('[data-testid="talon-health-banner-title"]').text()).toBe("Down")
-		expect(wrapper.get('[data-testid="talon-health-banner-reason"]').text()).toBe("Talon could not be reached (ConnectError)")
+		expect(wrapper.get('[data-testid="talon-health-banner-reason"]').text()).toBe(
+			"Talon could not be reached (ConnectError)"
+		)
 		expect(wrapper.get('[data-testid="talon-check-reachable"]').text()).toContain("No")
 		expect(wrapper.get('[data-testid="talon-check-reachable-detail"]').text()).toBe(
 			"Talon could not be reached (ConnectError)"
@@ -184,7 +202,28 @@ describe("talon health dashboard", () => {
 		)
 		await wrapper.get('[data-testid="talon-health-refresh"]').trigger("click")
 		await flushPromises()
-		expect(wrapper.get('[data-testid="talon-health-error"]').text()).toBe("CoPilot could not load Talon's health (HTTP 500)")
+		expect(wrapper.get('[data-testid="talon-health-error"]').text()).toBe(
+			"CoPilot could not load Talon's health (HTTP 500)"
+		)
+		expect(wrapper.find('[data-testid="talon-health-body"]').exists()).toBe(true)
+	})
+
+	it("an answer missing a section is an error, never a crash, and the last good render is kept", async () => {
+		getHealth.mockResolvedValueOnce({ data: { success: true, message: "mocked" } })
+		const wrapper = render()
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-error"]').text()).toBe(WRONG_SHAPE_TEXT)
+		expect(wrapper.find('[data-testid="talon-health-body"]').exists()).toBe(false)
+		expect(wrapper.get('[data-testid="talon-health-banner-title"]').text()).toBe("Checking Talon…")
+
+		getHealth.mockImplementationOnce(() => answer(healthReport()))
+		await wrapper.get('[data-testid="talon-health-refresh"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.find('[data-testid="talon-health-error"]').exists()).toBe(false)
+		getHealth.mockResolvedValueOnce({ data: { ...healthReport(), health: undefined } })
+		await wrapper.get('[data-testid="talon-health-refresh"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-error"]').text()).toBe(WRONG_SHAPE_TEXT)
 		expect(wrapper.find('[data-testid="talon-health-body"]').exists()).toBe(true)
 	})
 
@@ -297,7 +336,9 @@ describe("talon health dashboard", () => {
 		expect(wrapper.get('[data-testid="talon-health-banner"]').attributes("role")).toBeUndefined()
 		expect(wrapper.get('[data-testid="talon-health-verdict"]').attributes("role")).toBe("status")
 		expect(wrapper.get('[data-testid="talon-health-checked"]').attributes("aria-live")).toBe("off")
-		expect(wrapper.find('[data-testid="talon-health-verdict"] [data-testid="talon-health-checked"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="talon-health-verdict"] [data-testid="talon-health-checked"]').exists()).toBe(
+			false
+		)
 
 		visibility = "hidden"
 		document.dispatchEvent(new Event("visibilitychange"))
@@ -317,7 +358,9 @@ describe("talon health dashboard", () => {
 		getHealth.mockReturnValue(answer(report))
 		const wrapper = render()
 		await flushPromises()
-		expect(wrapper.get('[data-testid="talon-health-config-unavailable"]').text()).toContain("Configuration unavailable")
+		expect(wrapper.get('[data-testid="talon-health-config-unavailable"]').text()).toContain(
+			"Configuration unavailable"
+		)
 
 		const partial = healthReport()
 		must(must(partial.health.data).config).budgets = null

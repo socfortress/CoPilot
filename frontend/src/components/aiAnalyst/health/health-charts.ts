@@ -20,11 +20,22 @@ import type { ComposeOption } from "echarts/core"
 import type { TalonMetricsBucket } from "@/types/talonHealth"
 import { buildChartTooltipGlassBase, chartTooltipThemeFromStyle } from "@/components/common/charts"
 import { escapeHtml } from "../usage/usage-chart"
-import { costValue, formatCount, formatSeconds, formatTime, formatUsdText, hasAny, metricValues, NO_DATA } from "./health"
+import {
+	costValue,
+	formatCount,
+	formatSeconds,
+	formatTime,
+	formatUsdText,
+	hasAny,
+	metricValues,
+	NO_DATA
+} from "./health"
 
 export const NEUTRAL = "#8A8F98"
 
-export type HealthChartOption = ComposeOption<BarSeriesOption | LineSeriesOption | GridComponentOption | TooltipComponentOption>
+export type HealthChartOption = ComposeOption<
+	BarSeriesOption | LineSeriesOption | GridComponentOption | TooltipComponentOption
+>
 
 export interface ChartColors {
 	primary: string
@@ -61,7 +72,12 @@ function bucketLabels(series: TalonMetricsBucket[], hours: number) {
 	return series.map(b => formatTime(b.t, hours > 24))
 }
 
-function buildOption(labels: string[], list: Series[], style: Record<string, string>, valueLabels = true): HealthChartOption {
+function buildOption(
+	labels: string[],
+	list: Series[],
+	style: Record<string, string>,
+	valueLabels = true
+): HealthChartOption {
 	const muted = style["fg-secondary-color"]
 	const hairline = style["border-color"]
 	const surface = style["bg-default-color"]
@@ -122,7 +138,11 @@ function buildOption(labels: string[], list: Series[], style: Record<string, str
 							<span style="display:inline-block;width:12px;height:2px;border-radius:1px;background:${s.color}"></span>
 							<span style="opacity:.8">${escapeHtml(s.name)}</span>
 							<b style="margin-left:auto;padding-left:12px;font-variant-numeric:tabular-nums">${escapeHtml(
-								s.values[index] === null ? NO_DATA : s.text ? s.text(index) : formatCount(s.values[index])
+								s.values[index] === null
+									? NO_DATA
+									: s.text
+										? s.text(index)
+										: formatCount(s.values[index])
 							)}</b>
 						</div>`
 					)
@@ -151,7 +171,15 @@ function buildOption(labels: string[], list: Series[], style: Record<string, str
 	}
 }
 
-function chart(id: string, title: string, summary: string, list: Series[], labels: string[], style: Record<string, string>, valueLabels = true): HealthChart {
+function chart(
+	id: string,
+	title: string,
+	summary: string,
+	list: Series[],
+	labels: string[],
+	style: Record<string, string>,
+	valueLabels = true
+): HealthChart {
 	const drawable = list.some(s => hasAny(s.values))
 	return {
 		id,
@@ -242,7 +270,15 @@ export function buildHealthCharts(
 			"cost",
 			"Cost (USD)",
 			`Talon's cost per bucket over ${window}; the exact amounts are in the table`,
-			[{ name: "Cost", kind: "bar", color: colors.primary, values: cost, text: i => formatUsdText(series[i]?.cost_usd) }],
+			[
+				{
+					name: "Cost",
+					kind: "bar",
+					color: colors.primary,
+					values: cost,
+					text: i => formatUsdText(series[i]?.cost_usd)
+				}
+			],
 			labels,
 			style,
 			false

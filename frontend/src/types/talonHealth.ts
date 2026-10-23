@@ -9,7 +9,7 @@
 
 export type TalonComponentStatus = "ok" | "warn" | "fail" | "off" | "unknown"
 export type TalonOverallStatus = "ok" | "degraded" | "down" | "unknown"
-export type TalonComponentGroup = "core" | "mcp" | "model" | "other"
+export type TalonComponentGroup = "core" | "mcp" | "model" | "tools" | "other"
 export type TalonSwitch = boolean | string | null
 
 export interface TalonProbe {

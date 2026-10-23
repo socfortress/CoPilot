@@ -42,7 +42,8 @@ Every setup step is safe to re-run, is a dry run until applied, and never prints
 |---|---|---|
 | Docker | `ghcr.io` | Pulling the images. They are public: no login needed |
 | Talon | The model provider (`api.anthropic.com`; `api.openai.com` only if an OpenAI model is configured) | Always |
-| Talon | Any host, ports 80 and 443 | Only if the web search and fetch tools are on and the customer's policy allows web access |
+| Talon | `api.tavily.com` | Web search, once a Tavily API key is set (below); also the health dashboard's key check |
+| Talon | Any host, ports 80 and 443 | Only if the web fetch tool is on and the customer's policy allows web access |
 | Threat intel | VirusTotal, abuse.ch, AbuseIPDB, GreyNoise, urlscan.io, NVD, FIRST (EPSS), CISA, GitHub, GitLab, VulnCheck, Microsoft, Red Hat, Ubuntu | Only with threat intel on |
 
 The public VirusTotal API is for non-commercial use, so a client install needs a commercial key or none. Check each other source's terms before setting its key.
@@ -64,6 +65,11 @@ The guided install creates the indexer and Wazuh accounts for you, given each on
 Work as root in a new install directory on the CoPilot VM. Replace `<version>` with the release to install, without the `v` (for example `0.1.2`).
 
 <Steps>
+  <Step title="Create a Tavily API key (for web search)">
+    Talon's web search uses [Tavily](https://www.tavily.com). Sign up at [app.tavily.com](https://app.tavily.com) and create an API key (the free plan has 1,000 credits a month; each search costs one). The installer asks for it and checks it with Tavily before writing it.
+
+    It is optional: **without a key, web search stays off.** The model isn't offered it, and everything else (including web fetch) works as before.
+  </Step>
   <Step title="Copy the install files out of the image">
     ```bash
     mkdir -p /opt/talon-analyst && cd /opt/talon-analyst
@@ -82,7 +88,7 @@ Work as root in a new install directory on the CoPilot VM. Replace `<version>` w
 
     - **A preflight:** root, linux/amd64, Docker and Compose versions, user namespaces, CoPilot's Docker network, free host ports (it says what holds `3100` or `6006`, for example the earlier Talon, and offers the next free port), and the release.
     - **The sandbox's SSH keys.**
-    - **The configuration:** `.env`, with every secret no human needs generated; then the model provider key, the budgets, CoPilot, the read-only MySQL user, the indexer, Wazuh and Velociraptor accounts, and threat intel. Each answer that can be tested (the model key, CoPilot, MySQL, the backends) is tested before it is written.
+    - **The configuration:** `.env`, with every secret no human needs generated; then the model provider key, the budgets, CoPilot, the read-only MySQL user, the indexer, Wazuh and Velociraptor accounts, threat intel, and the Tavily API key for web search (optional). Each answer that can be tested (the model key, CoPilot, MySQL, the backends) is tested before it is written.
     - **`docker compose pull` and `up -d`.**
     - **Customers:** you pick CoPilot customers to onboard. Each is onboarded in **shadow**, and CoPilot's AI trigger is offered per customer. Then the Talon Phoenix connector in CoPilot is set (for run timelines).
     - **A report:** one PASS, WARN or FAIL line per connection, the stack checks, and the next steps.
@@ -91,6 +97,7 @@ Work as root in a new install directory on the CoPilot VM. Replace `<version>` w
 
 - **Air-gapped VM:** load the images with `docker load` first, then run `sh install.sh --no-pull`.
 - **Re-running** `sh install.sh` keeps what is set, says `kept`, and asks only for what is missing. It is also the repair tool, and the way to onboard more customers later.
+- **Adding or removing the Tavily key later** (in `.env`, or by re-running `sh install.sh`) is done with the investigation queue empty, as for an upgrade: it changes the investigation workflow's version, and a run in the queue across it can't be recovered. Replacing a key with another one doesn't. Then `docker compose up -d api`.
 - **URLs are prefilled** from CoPilot's own connectors (only the URL, never their credentials).
 - **TLS verification of the indexer and the Wazuh API is off by default**, because their certificates are usually self-signed. The connections are still encrypted; turn verification on in `.env` once the MCP servers trust your CA.
 - **The indexer reader may read every index** (`INDEXER_ALLOWED_INDICES=*`). Per-customer scoping is enforced by Talon itself: every query is bound to the customer's verified indices.

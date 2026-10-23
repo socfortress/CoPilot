@@ -60,8 +60,10 @@ export interface Banner {
 /** The banner: talon-analyst's own verdict when it gave one, else what CoPilot could tell. */
 export function banner(report: TalonHealthReport | null): Banner {
 	const status = report?.health?.data?.status
-	if (status === "ok") return { tone: "good", icon: "carbon:checkmark-filled", title: "All systems operational", reason: null }
-	if (status === "degraded") return { tone: "warn", icon: "carbon:warning-alt-filled", title: "Degraded", reason: null }
+	if (status === "ok")
+		return { tone: "good", icon: "carbon:checkmark-filled", title: "All systems operational", reason: null }
+	if (status === "degraded")
+		return { tone: "warn", icon: "carbon:warning-alt-filled", title: "Degraded", reason: null }
 	if (status === "down") return { tone: "bad", icon: "carbon:error-filled", title: "Down", reason: null }
 	if (!report) return { tone: "neutral", icon: "carbon:help", title: "Checking Talon…", reason: null }
 	const { copilot, health } = report
@@ -69,19 +71,43 @@ export function banner(report: TalonHealthReport | null): Banner {
 		return { tone: "neutral", icon: "carbon:plug", title: "Talon is not connected", reason: health?.error ?? null }
 	}
 	if (copilot.reachable?.ok === false) {
-		return { tone: "bad", icon: "carbon:error-filled", title: "Down", reason: copilot.reachable.error ?? "Talon could not be reached" }
+		return {
+			tone: "bad",
+			icon: "carbon:error-filled",
+			title: "Down",
+			reason: copilot.reachable.error ?? "Talon could not be reached"
+		}
 	}
 	if (copilot.auth?.ok === false) {
-		return { tone: "bad", icon: "carbon:error-filled", title: "Down", reason: copilot.auth.error ?? "Talon refused CoPilot's API key" }
+		return {
+			tone: "bad",
+			icon: "carbon:error-filled",
+			title: "Down",
+			reason: copilot.auth.error ?? "Talon refused CoPilot's API key"
+		}
 	}
-	if (health?.unsupported) return { tone: "neutral", icon: "carbon:help", title: "Status unknown", reason: OLD_TALON_TEXT }
+	if (health?.unsupported)
+		return { tone: "neutral", icon: "carbon:help", title: "Status unknown", reason: OLD_TALON_TEXT }
 	return { tone: "neutral", icon: "carbon:help", title: "Status unknown", reason: health?.error ?? null }
+}
+
+/** Shown when CoPilot's answer lacks a section the page reads (an older or a misbehaving backend). */
+export const WRONG_SHAPE_TEXT = "CoPilot's answer about Talon's health was not in the expected shape"
+
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+/** Whether an answer has every section the page reads (`copilot`, `health`, `history`, `metrics`). */
+export function isHealthReport(value: unknown): value is TalonHealthReport {
+	return isObject(value) && ["copilot", "health", "history", "metrics"].every(key => isObject(value[key]))
 }
 
 export const GROUPS: { id: TalonComponentGroup; title: string }[] = [
 	{ id: "core", title: "Core" },
 	{ id: "mcp", title: "MCP servers" },
 	{ id: "model", title: "Model" },
+	{ id: "tools", title: "Tools" },
 	{ id: "other", title: "Other" }
 ]
 

@@ -1,0 +1,123 @@
+---
+title: Talon memory
+description: The AI Analyst page's Memory tab shows what Talon remembers about each of your customers and from your own chats, where each memory came from, why some are kept out of investigations, and lets you forget the lessons that may be forgotten.
+---
+
+[Talon](/power-features/ai-analyst) keeps a long-term memory per customer, and uses it at the start of every investigation and in chat. The **Memory** tab of the **AI Analyst** page shows that memory: how much there is, where it came from, what it says, and what Talon has learnt about each asset over time. It also shows **your own chat memory**.
+
+<Note>
+  The Memory tab appears only with the [Talon v2 setting](/power-features/ai-analyst#the-talon-v2-setting) on, and needs a talon-analyst release with the memory API. With an older Talon, or with Talon's own v2 API turned off, the tab says **"This Talon has no memory API: upgrade talon-analyst, and check that its v2 API (TALON_V2_API) is on"**.
+</Note>
+
+---
+
+## What Talon stores
+
+Talon's memory is a set of short notes, called **memories** (a MemPalace "drawer" each), kept in one area per customer. A memory is text: a summary, a lesson, a fact about an asset. It is never a copy of raw logs.
+
+Memories Talon writes itself (from investigations and chat) are stored with the customer's anonymized tokens in place of usernames, hostnames, email addresses and internal IP addresses. When you read one on the Memory tab, Talon restores the real values for that customer before CoPilot shows it to you.
+
+<Note>
+  Review lessons are the exception: a lesson an analyst teaches from the [review workflow](/power-features/ai-analyst-review) is stored as the analyst wrote it, not tokenized. Write lessons with that in mind.
+</Note>
+
+### Rooms
+
+Each memory is filed in a **room**, by what it is about:
+
+| Room | What it holds |
+|---|---|
+| **Alerts** | What past investigations of this customer's alerts concluded |
+| **False positives** | Activity confirmed as benign, so the next similar alert is recognised |
+| **Threat intel** | Indicators and campaigns seen at this customer |
+| **Assets** | Hosts and accounts, and what is normal for them |
+| **Environment** | How the customer's estate is set up: domains, tools, naming |
+| **Other** | Anything filed outside the rooms above |
+
+### Where memories come from
+
+| Source | How it is made | Can it be forgotten? |
+|---|---|---|
+| **Investigations** | Talon files a summary at the end of every investigation, and a likely false positive only from a confident, benign report | No |
+| **Reviews (durable)** | An analyst's lesson from the [review workflow](/power-features/ai-analyst-review#durable-vs-one-off), marked to keep | No |
+| **Reviews (one-off)** | An analyst's lesson for one case, which expires on its own | Yes |
+| **Chat "remember"** | Something an analyst asked Talon to remember in a customer chat thread | Yes |
+
+---
+
+## Who sees what
+
+- **Customer memory:** you see only the customers you are assigned to; admins see every customer. CoPilot checks the customer on every request, before Talon is asked.
+- **Your chat memory:** only your own. Nobody else sees it, admins included.
+- The Memory tab is for admins, analysts and responders, like the rest of the AI Analyst page's Talon tabs.
+
+---
+
+## The Memory tab
+
+### Customer memory
+
+Choose a customer (the picker starts from the global customers filter, and from your one customer when you have only one). You see:
+
+- **Tiles:** how many memories Talon holds for the customer, how many it filed in the last 30 days, and how many are hidden as testing. On a very large memory Talon stops counting at a limit, and the tiles say **approximate**.
+- **Filed per day:** memories filed per UTC day over the last 30 days. **Show the numbers** gives the same figures as a table; a day Talon didn't report shows "no data", not 0.
+- **By room** and **By source:** how the memories split. Select a row to filter the list below to it.
+- **Memories:** the list, newest first, with filters for room, source and the days it was filed, and a **search by meaning**: it finds memories about what you describe, not only ones containing your words, so its results are the closest matches first, on one page. **Load more** fetches the next page of the list; with a source filter a page can be shorter than usual while there is still more.
+
+Open a memory to see:
+
+- its room, source and when it was filed;
+- **where it came from:** links to the investigation's job page and to the alert, when it came from one;
+- **why it is hidden**, if it is (see below);
+- its text, rendered as Markdown. Raw HTML in a memory is shown as text, and images are shown as links, never loaded;
+- **Forget**, only when the memory may be forgotten.
+
+### Assets
+
+The hosts Talon has recorded in the customer's memory, with how many alerts it has linked to each. (IOCs per asset show **no data yet**: Talon doesn't record them yet.) Choose one to see its **timeline**: each fact Talon learnt about it ("runs the nightly backup", "is owned by IT operations"), from when it became true and, once something replaced it, until when.
+
+### My chat memory
+
+What Talon remembers from your own chats: your preferences and the notes it keeps to answer you better. Each one can be forgotten.
+
+---
+
+## Forgetting a memory
+
+**Forget** removes a memory from Talon, so it is no longer recalled in investigations or chat. You can forget:
+
+- a customer's **one-off review lessons** and **chat "remember" lessons**;
+- any item in **your own chat memory**.
+
+You can't forget an investigation's own record or a durable lesson: the Forget button doesn't appear for them, and CoPilot and Talon both refuse it. A durable lesson that is wrong is corrected by reviewing again and teaching a better one.
+
+Forget always asks you to confirm. Every forget that passes CoPilot's access checks is recorded in CoPilot's audit log as `talon_memory.forget`, with who, which customer and which memory, and its result: forgotten, refused (by CoPilot or Talon), or **unknown** when Talon didn't answer in time (the memory may or may not be gone; refresh to check). A forget refused because you can't see the customer, or with the Talon v2 setting off, isn't.
+
+What forgetting **does not** do:
+
+- It can't be undone. An analyst can teach Talon the lesson again.
+- It doesn't change reports, reviews or IOC verdicts already written. A forgotten one-off review lesson stays in the review history, marked **expired**, as one past its time is.
+- It doesn't remove what an earlier investigation already concluded from that investigation's own report.
+
+---
+
+## Why some memories are hidden
+
+Some memories are kept but not shown to investigations. The memory's detail says why; in the list, a tag does. There are three reasons:
+
+- **Hidden: testing.** A false-positive lesson that puts the activity down to testing (a red-team exercise, a breach-and-attack simulation, a penetration test). Investigations don't see it, and neither does Talon's recall tool. That is not because testing is harmless. **Testing is never a reason to lower an alert's severity**: simulated attacks use real techniques, and an attacker can look exactly like a test. Talon investigates them as real threats. A lesson that says "this was only a test" must not teach later investigations to wave similar activity through, so it is kept out of them.
+- **Recall only: not written by Talon.** Review lessons and other memories Talon didn't write itself are left out of the context an investigation starts with (it counts them, but doesn't show them), though Talon's recall tool can still find them when it searches.
+- **Chat memory.** A user's own chat memory is per user: investigations never read it.
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Analyst (Talon)" icon="robot" href="/power-features/ai-analyst">
+    What Talon does, how an investigation runs, privacy and tenancy.
+  </Card>
+  <Card title="Analyst review workflow" icon="clipboard-check" href="/power-features/ai-analyst-review">
+    Grade reports and teach Talon durable or one-off lessons.
+  </Card>
+</CardGroup>

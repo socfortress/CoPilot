@@ -2,7 +2,11 @@
 	<div class="flex flex-col gap-3" data-testid="talon-uptime">
 		<div class="text-secondary flex flex-wrap items-center gap-4 text-xs" role="list" aria-label="Legend">
 			<span v-for="item of legend" :key="item.status" class="inline-flex items-center gap-1.5" role="listitem">
-				<span class="uptime-key" :class="`cell-${item.status}`" :style="{ backgroundColor: cellColor(item.status) }" />
+				<span
+					class="uptime-key"
+					:class="`cell-${item.status}`"
+					:style="{ backgroundColor: cellColor(item.status) }"
+				/>
 				{{ item.label }}
 			</span>
 			<span v-if="barText" class="text-tertiary" data-testid="talon-uptime-bar-size">{{ barText }}</span>
@@ -15,7 +19,9 @@
 				data-testid="talon-uptime-row"
 				:data-component="row.id"
 			>
-				<span class="truncate text-sm" :title="row.name"><bdi>{{ row.name }}</bdi></span>
+				<span class="truncate text-sm" :title="row.name">
+					<bdi>{{ row.name }}</bdi>
+				</span>
 				<div
 					v-if="row.cells.length"
 					class="flex h-6 items-end gap-px"
@@ -77,7 +83,8 @@ function cellColor(status: CellStatus) {
 }
 
 function cellTitle(cell: UptimeCell) {
-	const when = cell.start === cell.end ? formatTime(cell.start) : `${formatTime(cell.start)} – ${formatTime(cell.end)}`
+	const when =
+		cell.start === cell.end ? formatTime(cell.start) : `${formatTime(cell.start)} – ${formatTime(cell.end)}`
 	const word = legend.find(l => l.status === cell.status)?.label ?? ""
 	return `${when}: ${word} (ok ${cell.ok}, warning ${cell.warn}, failing ${cell.fail})`
 }

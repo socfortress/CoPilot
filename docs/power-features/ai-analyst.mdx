@@ -22,6 +22,9 @@ CoPilot stays the database of record and the only UI. Talon reads your SIEM and 
   <Card title="Talon health dashboard" icon="heart-pulse" href="/power-features/talon-health-dashboard">
     What each component on the AI Analyst Overview tab means, and how to fix it.
   </Card>
+  <Card title="Talon memory" icon="brain" href="/power-features/talon-memory">
+    What Talon remembers per customer and from your chats, why some lessons are hidden, and forgetting.
+  </Card>
   <Card title="Analyst review workflow" icon="clipboard-check" href="/power-features/ai-analyst-review">
     Grade reports, correct IOCs, teach the agent, replay with another template.
   </Card>
@@ -118,6 +121,8 @@ Talon keeps long-term memory in MemPalace, an open-source memory service that ru
 
 Memory holds the anonymized tokens, not the raw values. Earlier memories are recalled at the start of each investigation for the same customer. CoPilot never talks to MemPalace directly: lessons go through Talon.
 
+With Talon v2 on, the AI Analyst page's **Memory** tab shows this memory per customer, the asset timelines and each user's own chat memory, and lets you forget one-off review lessons and chat "remember" lessons: see [Talon memory](/power-features/talon-memory).
+
 ## Threat intel
 
 With the optional threat intel service turned on, Talon can look up public indicators: hashes, external IPs, domains and URLs (VirusTotal, abuse.ch, AbuseIPDB, GreyNoise, urlscan.io), and vulnerabilities (NVD, EPSS, CISA KEV, vendor advisories). Each customer's internal domains are on a deny list, so they are never sent out. Each source needs its own API key; the public VirusTotal API is for non-commercial use, so a commercial key is needed (or leave it empty).
@@ -195,6 +200,7 @@ With Talon v2 on, the **Usage** tab shows model cost by day, customer or user (a
 | **Overview** | The [health dashboard](/power-features/talon-health-dashboard): is Talon up, what's degraded, how to fix it | Always |
 | **Talon Chat** | Chat with Talon (v1, or threads with v2) | Always |
 | **Approvals** | Action proposals waiting for a decision, with a count | Talon v2 on |
+| **Memory** | [What Talon remembers](/power-features/talon-memory) per customer, asset timelines, your own chat memory; forget one-off and chat lessons | Talon v2 on |
 | **Usage** | Model cost by day, customer or user | Talon v2 on |
 | **Budgets** | Daily and monthly limits per customer | Talon v2 on, admins |
 | **Settings** | The global automation switch | Talon v2 on, admins |

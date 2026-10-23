@@ -58,7 +58,7 @@ For anyone but an admin, the last five cover only the customers assigned to you.
 
 ## Components
 
-The component grid is grouped into **Core**, **MCP servers** and **Model**. Each card has a status pill, the check's latency, a short detail line, and a **How to fix** expander.
+The component grid is grouped into **Core**, **MCP servers**, **Model** and **Tools**. Each card has a status pill, the check's latency, a short detail line, and a **How to fix** expander.
 
 | Status | Meaning |
 |---|---|
@@ -158,6 +158,19 @@ The MCP servers are Talon's read-only access to your stack. The three SOC tool s
     - **No connection:** the VM needs outbound HTTPS to `api.anthropic.com` (and `api.openai.com` if an OpenAI model is configured).
     - **Anthropic answers 400:** a key not scoped to one workspace (`sk-ant-usr-…`) needs `ANTHROPIC_WORKSPACE_ID` set to the workspace to bill.
     - **The key is refused:** put a working key in `.env` (or re-run `sh install.sh`, which tests it), then `docker compose up -d api`.
+  </Accordion>
+</AccordionGroup>
+
+### Tools
+
+<AccordionGroup>
+  <Accordion title="web_search: Web search (Tavily)">
+    Talon's web search, through Tavily. It is **off** until a Tavily API key is set ([Installing Talon](/power-features/talon-install#the-guided-install)); off, the model isn't offered web search, and web fetch still works.
+
+    - **To turn it on:** create a key at [app.tavily.com](https://app.tavily.com), set `TAVILY_API_KEY` in `.env` (or re-run `sh install.sh`), then `docker compose up -d api` with the investigation queue empty.
+    - **"Tavily refused the key (401)" or "that isn't a Tavily API key":** the key was revoked, mistyped or pasted with an extra character. Put the right key in `.env` and `docker compose up -d api` (replacing a key needs no empty queue).
+    - **"credits are used up":** the plan's monthly credits are spent; raise the plan or turn on pay-as-you-go in Tavily's dashboard.
+    - **"Tavily unreachable":** the VM can't reach `api.tavily.com` on 443 (a proxy or firewall). **"rate-limited (429)":** wait a few minutes.
   </Accordion>
 </AccordionGroup>
 

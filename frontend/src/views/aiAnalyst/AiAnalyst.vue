@@ -35,6 +35,10 @@
 				</template>
 				<TalonApprovalsList class="pt-6" />
 			</n-tab-pane>
+			<!-- What Talon remembers (the memory API): only with the "Talon v2" setting on. -->
+			<n-tab-pane v-if="talonV2Available" name="memory" tab="Memory" display-directive="show:lazy">
+				<TalonMemory v-if="visited.has('memory')" class="pt-6" />
+			</n-tab-pane>
 			<!-- Talon's cost (talon-analyst FR-COST-5): only with the "Talon v2" setting on. -->
 			<n-tab-pane v-if="talonV2Available" name="usage" tab="Usage" display-directive="show:lazy">
 				<TalonUsagePanel v-if="visited.has('usage')" class="pt-6" />
@@ -72,6 +76,7 @@ import { useAuthStore } from "@/stores/auth"
 // Loaded only when the setting is on: with it off, the page is the v1 chat as before.
 const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonV2Chat.vue"))
 const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
+const TalonMemory = defineAsyncComponent(() => import("@/components/aiAnalyst/memory/TalonMemory.vue"))
 const TalonUsagePanel = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonUsagePanel.vue"))
 const TalonBudgets = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonBudgets.vue"))
 const TalonAutomationSettings = defineAsyncComponent(() => import("@/components/aiAnalyst/TalonAutomationSettings.vue"))

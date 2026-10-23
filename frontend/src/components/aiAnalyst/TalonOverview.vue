@@ -1,5 +1,9 @@
 <template>
-	<div v-if="!allowed" class="text-secondary flex flex-col gap-2 py-10 text-center text-sm" data-testid="talon-health-not-for-role">
+	<div
+		v-if="!allowed"
+		class="text-secondary flex flex-col gap-2 py-10 text-center text-sm"
+		data-testid="talon-health-not-for-role"
+	>
 		<span>The Talon health dashboard isn't available for your role.</span>
 		<a :href="TALON_DOCS.overview" target="_blank" rel="noopener noreferrer" class="text-primary">
 			What Talon does
@@ -34,10 +38,13 @@
 			<div class="text-secondary flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
 				<span v-if="health?.version" data-testid="talon-health-version">
 					talon-analyst
-					<b class="text-default font-mono"><bdi>{{ health.version }}</bdi></b>
+					<b class="text-default font-mono">
+						<bdi>{{ health.version }}</bdi>
+					</b>
 				</span>
 				<span v-if="uptime" data-testid="talon-health-uptime">
-					up <b class="text-default">{{ uptime }}</b>
+					up
+					<b class="text-default">{{ uptime }}</b>
 				</span>
 				<span aria-live="off" data-testid="talon-health-checked">{{ checkedAgo }}</span>
 				<n-button
@@ -80,7 +87,12 @@
 				data-testid="talon-health-old"
 			>
 				{{ OLD_TALON_TEXT }}.
-				<a :href="`${TALON_DOCS.install}#upgrades`" target="_blank" rel="noopener noreferrer" class="text-primary">
+				<a
+					:href="`${TALON_DOCS.install}#upgrades`"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="text-primary"
+				>
 					How to upgrade
 				</a>
 			</n-alert>
@@ -114,7 +126,10 @@
 								</p>
 								<n-collapse v-if="component.fix" class="mt-1">
 									<n-collapse-item title="How to fix" :name="component.id">
-										<p class="text-sm break-words whitespace-pre-line" data-testid="talon-health-fix">
+										<p
+											class="text-sm break-words whitespace-pre-line"
+											data-testid="talon-health-fix"
+										>
 											<bdi>{{ component.fix }}</bdi>
 										</p>
 									</n-collapse-item>
@@ -168,11 +183,7 @@
 
 			<SocPanel title="Configuration" caption="as Talon reports it">
 				<TalonHealthConfig v-if="health?.config" :config="health.config" :scope="report.copilot.scope" />
-				<p
-					v-else-if="health"
-					class="text-tertiary py-4 text-sm"
-					data-testid="talon-health-config-unavailable"
-				>
+				<p v-else-if="health" class="text-tertiary py-4 text-sm" data-testid="talon-health-config-unavailable">
 					Configuration unavailable: this Talon didn't report it.
 				</p>
 				<HealthUnavailable v-else :text="sectionProblem(report.health)" />
@@ -235,11 +246,13 @@ import {
 	formatDuration,
 	formatLatency,
 	groupComponents,
+	isHealthReport,
 	OLD_TALON_TEXT,
 	REFRESH_MS,
 	secondsSince,
 	TALON_DOCS,
-	WINDOWS
+	WINDOWS,
+	WRONG_SHAPE_TEXT
 } from "./health/health"
 import HealthUnavailable from "./health/HealthUnavailable.vue"
 import TalonCopilotChecks from "./health/TalonCopilotChecks.vue"
@@ -294,6 +307,11 @@ async function load() {
 	try {
 		const { data } = await Api.talonHealth.getHealth(hours.value, own.signal)
 		if (controller !== own) return
+		if (!isHealthReport(data)) {
+			// A section missing would break the page: keep the last good render and say why.
+			failure.value = WRONG_SHAPE_TEXT
+			return
+		}
 		report.value = data
 		failure.value = null
 	} catch (err) {

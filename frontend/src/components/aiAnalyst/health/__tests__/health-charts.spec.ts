@@ -17,12 +17,23 @@ const STYLE = {
 const COLORS = { primary: "#A87400", secondary: "#2A78D6", error: "#FF0156" }
 
 interface Option {
-	series: { name: string; data: (number | string)[]; itemStyle?: { color: string }; stack?: string; barGap?: string }[]
+	series: {
+		name: string
+		data: (number | string)[]
+		itemStyle?: { color: string }
+		stack?: string
+		barGap?: string
+	}[]
 	yAxis: { axisLabel: { show?: boolean } }
 	tooltip: { formatter: (p: unknown) => string }
 }
 
-function charts(series = [bucket("2026-10-22T07:00:00Z"), bucket("2026-10-22T08:00:00Z", { investigations_failed: null, cost_usd: null })]) {
+function charts(
+	series = [
+		bucket("2026-10-22T07:00:00Z"),
+		bucket("2026-10-22T08:00:00Z", { investigations_failed: null, cost_usd: null })
+	]
+) {
 	return buildHealthCharts(series, 24, COLORS, STYLE)
 }
 
