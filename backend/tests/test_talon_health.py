@@ -378,6 +378,16 @@ def test_a_wrong_key_is_401_and_says_so():
     assert "/templates" not in fake.paths()  # /v2/health already said
 
 
+def test_a_talon_still_running_its_first_check_says_so():
+    starting = lambda r: httpx.Response(503, json={"detail": "the first health check is still running"})  # noqa: E731
+    respond = talon({"/v2/health": starting})
+    response, fake = run(get(), respond=respond)
+    body = body_of(response)
+    assert response.status_code == 200
+    assert body["health"]["error"] == talon_health.STARTING and body["health"]["status_code"] == 503
+    assert body["health"]["data"] is None and not body["health"].get("unsupported")
+
+
 def test_an_old_talon_without_the_health_api_is_unsupported():
     gone = lambda r: httpx.Response(404, json={"detail": "Not Found"})  # noqa: E731
     respond = talon({"/v2/health": gone, "/v2/health/history": gone, "/v2/health/metrics": gone})

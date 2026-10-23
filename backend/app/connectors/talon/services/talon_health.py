@@ -103,6 +103,9 @@ NO_CONNECTOR = "There is no Talon connector in CoPilot"
 KEY_REFUSED = "Talon refused CoPilot's API key (401)"
 NOT_JSON = "Talon's answer was not valid JSON"
 WRONG_SHAPE = "Talon's answer was not in the expected shape"
+#: talon-analyst answers 503 to /v2/health while a process's very first health check is still
+#: running (it waits at most 15 s, then 503; talon-analyst SPEC FR-API-11).
+STARTING = "Talon is still running its first health check; refresh in a few seconds"
 
 #: Body caps per route: the health snapshot is a few KB; a week of 5-minute buckets for 12
 #: components is a few hundred KB.
@@ -396,6 +399,8 @@ def _section(probe: Probe, parse, section_cls, scrub):
         return section_cls(error=OLD_TALON, status_code=404, unsupported=True)
     if status == 401:
         return section_cls(error=KEY_REFUSED, status_code=401)
+    if status == 503:
+        return section_cls(error=STARTING, status_code=503)
     if not 200 <= status < 300:
         return section_cls(error=f"Talon answered {status}", status_code=status)
     raw, problem = _json(probe)
