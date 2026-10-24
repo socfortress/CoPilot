@@ -45,6 +45,7 @@ import sigma from "./endpoints/sigma"
 import snapshots from "./endpoints/snapshots"
 import soc from "./endpoints/soc"
 import socManagement from "./endpoints/soc-management"
+import socRequests from "./endpoints/soc-requests"
 import sso from "./endpoints/sso"
 import stackProvisioning from "./endpoints/stack-provisioning"
 import sysmonConfig from "./endpoints/sysmon-config"
@@ -133,5 +134,6 @@ export default {
 	uba,
 	sso,
 	totp,
-	passkey
+	passkey,
+	socRequests
 }

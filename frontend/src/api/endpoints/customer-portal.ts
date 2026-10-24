@@ -10,6 +10,7 @@ import type {
 	CustomerPortalSlaSettings
 } from "@/types/customer-portal"
 import type { FlaskBaseResponse } from "@/types/flask"
+import type { CustomerPortalSocRequestSettings } from "@/types/soc-requests"
 import { HttpClient } from "../http-client"
 
 export interface CustomerPortalSettingsPayload {
@@ -75,6 +76,16 @@ export interface CustomerPortalExposureSettingsPayload {
 
 type ExposureSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalExposureSettings
+}
+
+export interface CustomerPortalSocRequestSettingsPayload {
+	enabled: boolean
+	/** Questions per customer over any 24 hours; null = unlimited. */
+	daily_request_limit: number | null
+}
+
+type SocRequestSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalSocRequestSettings
 }
 
 export interface CustomerPortalNotificationSettingsPayload {
@@ -161,5 +172,14 @@ export default {
 	/** Admin-only: shows or hides the portal's Exposure page for this customer (#1289). */
 	setCustomerExposureSettings(customerCode: string, payload: CustomerPortalExposureSettingsPayload) {
 		return HttpClient.put<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, payload)
+	},
+	getCustomerSocRequestSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<SocRequestSettingsResponse>(`/customer_portal/soc_requests/settings/${customerCode}`, {
+			signal
+		})
+	},
+	/** Admin-only: lets this customer's portal users ask the SOC, with a daily limit (#1305). */
+	setCustomerSocRequestSettings(customerCode: string, payload: CustomerPortalSocRequestSettingsPayload) {
+		return HttpClient.put<SocRequestSettingsResponse>(`/customer_portal/soc_requests/settings/${customerCode}`, payload)
 	}
 }

@@ -622,6 +622,9 @@ const INTERNAL_TRIGGER_OPTIONS = [
 	// enters its last quarter, or runs out. Minimum severity applies to the item's own.
 	{ label: "An alert or case SLA is at risk", value: "sla_at_risk" },
 	{ label: "An alert or case SLA is breached", value: "sla_breached" },
+	// Ask the SOC (#1305): a portal user's question about an alert or a case. Minimum
+	// severity compares the urgency they picked (low, normal = Medium, high).
+	{ label: "A customer asks the SOC a question", value: "customer_question" },
 	REVIEW_TRIGGER_OPTION
 ]
 
