@@ -67,21 +67,69 @@ async def record_audit_event(
 ) -> None:
     """Persist a single audit-log row. Never raises — failures are logged and swallowed."""
     try:
-        entry = AuditLog(
-            action=action.value if isinstance(action, AuditAction) else str(action),
+        entry = _entry(
+            action=action,
             actor_user_id=actor_user_id,
             actor_username=actor_username,
             customer_code=customer_code,
             entity_type=entity_type,
-            entity_id=str(entity_id) if entity_id is not None else None,
-            result=result.value if isinstance(result, AuditResult) else str(result),
+            entity_id=entity_id,
+            result=result,
             old_value=old_value,
             new_value=new_value,
             source_ip=source_ip if source_ip is not None else _client_ip(request),
             details=details,
         )
-        async with AsyncSession(async_engine) as session:
-            session.add(entry)
-            await session.commit()
+        await _persist([entry])
     except Exception as e:  # noqa: BLE001 - auditing must never break the caller's action
         logger.error(f"Failed to record audit event '{action}': {e}")
+
+
+async def record_audit_events(events: list[dict]) -> None:
+    """Persist several audit-log rows in one session (a bulk action, one row per object).
+
+    Each item takes `record_audit_event`'s keywords but `request` (pass `source_ip`). Best-effort
+    like the single write: a failure is logged and swallowed, and then none of the rows is kept.
+    """
+    if not events:
+        return
+    try:
+        await _persist([_entry(**event) for event in events])
+    except Exception as e:  # noqa: BLE001 - auditing must never break the caller's action
+        logger.error(f"Failed to record {len(events)} audit events: {e}")
+
+
+async def _persist(entries: list[AuditLog]) -> None:
+    """The one database write, in a session of its own (the unit tests replace it: tests/conftest.py)."""
+    async with AsyncSession(async_engine) as session:
+        session.add_all(entries)
+        await session.commit()
+
+
+def _entry(
+    *,
+    action: Union[AuditAction, str],
+    actor_user_id: Optional[int] = None,
+    actor_username: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    entity_type: Optional[str] = None,
+    entity_id: Optional[Union[str, int]] = None,
+    result: Union[AuditResult, str] = AuditResult.SUCCESS,
+    old_value: Optional[dict] = None,
+    new_value: Optional[dict] = None,
+    source_ip: Optional[str] = None,
+    details: Optional[str] = None,
+) -> AuditLog:
+    return AuditLog(
+        action=action.value if isinstance(action, AuditAction) else str(action),
+        actor_user_id=actor_user_id,
+        actor_username=actor_username,
+        customer_code=customer_code,
+        entity_type=entity_type,
+        entity_id=str(entity_id) if entity_id is not None else None,
+        result=result.value if isinstance(result, AuditResult) else str(result),
+        old_value=old_value,
+        new_value=new_value,
+        source_ip=source_ip,
+        details=details,
+    )

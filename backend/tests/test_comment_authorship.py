@@ -65,7 +65,7 @@ def _case_edit(**overrides):
 
 
 def test_alert_comment_create_ignores_the_body_author():
-    create = AsyncMock(side_effect=lambda comment, db: comment)
+    create = AsyncMock(side_effect=lambda comment, db: SimpleNamespace(id=1, **comment.model_dump()))
     body = CommentCreate(alert_id=1, comment="hi", user_name="analyst1")
     with patch.object(dbo, "get_alert_by_id", AsyncMock(return_value=SimpleNamespace(customer_code="A"))), _access(), patch.object(
         dbo,

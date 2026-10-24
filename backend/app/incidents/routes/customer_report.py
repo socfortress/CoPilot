@@ -15,6 +15,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.audit.models.audit import AuditAction
+from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
@@ -56,6 +58,30 @@ async def _require_report(session: AsyncSession, report_id: int) -> IncidentMana
     if report is None:
         raise HTTPException(status_code=404, detail=f"Report with ID {report_id} not found")
     return report
+
+
+def _report_snapshot(report: IncidentManagementCustomerReport) -> dict:
+    """What the audit row says of a report, read while the row still exists (a deletion expires it)."""
+    return {
+        "customer_code": report.customer_code,
+        "entity_id": report.id,
+        "new_value": {
+            "report_name": report.report_name,
+            "date_from": report.date_from.isoformat() if report.date_from else None,
+            "date_to": report.date_to.isoformat() if report.date_to else None,
+        },
+    }
+
+
+async def _audit_report(action: AuditAction, user: User, snapshot: dict) -> None:
+    """Who generated, downloaded or deleted which report, in the customer's audit log (#1298)."""
+    await record_audit_event(
+        action=action,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="report",
+        **snapshot,
+    )
 
 
 async def _ensure_customer_access(user: User, session: AsyncSession, customer_code: str) -> None:
@@ -139,6 +165,7 @@ async def generate_report_background(
             logger.error(f"Background incident report generation failed (ID: {report_id}): {e}")
 
     background_tasks.add_task(generate_task)
+    await _audit_report(AuditAction.REPORT_GENERATE, current_user, _report_snapshot(report_record))
 
     return CustomerReportGenerateBackgroundResponse(
         success=True,
@@ -223,6 +250,7 @@ async def download_report(
         raise HTTPException(status_code=409, detail=f"Report is not ready to download (status: {report.status})")
 
     data = await get_customer_report_download(db, report)
+    await _audit_report(AuditAction.REPORT_DOWNLOAD, current_user, _report_snapshot(report))
     return StreamingResponse(
         io.BytesIO(data["file_content"]),
         media_type=data["content_type"],
@@ -251,7 +279,9 @@ async def delete_report(
 
     report_name = report.report_name
     customer_code = report.customer_code
+    snapshot = _report_snapshot(report)
     await delete_customer_report(db, report)
+    await _audit_report(AuditAction.REPORT_DELETE, current_user, snapshot)
     logger.info(f"Deleted incident report {report_id} ({report_name}) for customer {customer_code}")
     return {
         "success": True,

@@ -46,6 +46,7 @@ def _alert(alert_id, assigned_to=None, severity="High"):
         id=alert_id,
         alert_name=f"Alert {alert_id}",
         customer_code="TENANT_A",
+        status="OPEN",
         assigned_to=assigned_to,
         severity=severity,
     )
