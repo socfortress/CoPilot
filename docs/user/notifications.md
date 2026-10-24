@@ -161,7 +161,7 @@ The setup most people are actually after when they ask "why isn't the report bei
 | To | The customer's security contact |
 | Message template | **AI investigation — full report (HTML email)** |
 
-**Also required:** *Customers → (customer) → AI Report* must be **enabled**. It's opt-in, and while it's off every AI notification to that customer is suppressed and logged as `skipped`.
+**Also required:** *Customers → (customer) → AI Report* must be **enabled**. It's opt-in, and while it's off every AI notification to that customer is suppressed and logged as `skipped`. It also governs the report itself on every other customer route (see [The AI Report setting and report content](#the-ai-report-setting-and-report-content)).
 
 The customer receives the complete write-up — timeline, IOC verdicts, recommended actions — with its tables rendered, in their brand colours.
 
@@ -367,7 +367,7 @@ By default CoPilot sends a structured JSON object:
 }
 ```
 
-**Include full AI report** is a checkbox on the route, not something you reference in a template. When it's on, the payload gains the `ai_report` object described in [Payload v1](#payload-v1). For receivers written before v1, the report's older fields are still merged flat into the same object, unchanged: `report_id`, `recommended_actions`, `report_markdown`, `report_created_at` and `iocs` (each IOC as `ioc_value`, `ioc_type`, `vt_verdict`, `vt_score`, `details`). New receivers should read `ai_report`.
+**Include full AI report** is a checkbox on the route, not something you reference in a template. When it's on, the payload gains the `ai_report` object described in [Payload v1](#payload-v1). For receivers written before v1, the report's older fields are still merged flat into the same object, unchanged: `report_id`, `recommended_actions`, `report_markdown`, `report_created_at` and `iocs` (each IOC as `ioc_value`, `ioc_type`, `vt_verdict`, `vt_score`, `details`). New receivers should read `ai_report`. On a customer route, all of these follow the customer's *AI Report* setting ([below](#the-ai-report-setting-and-report-content)).
 
 If you set a **message template**, its rendered output is sent as the raw body *instead* of the structured object — which is how you match a provider-specific shape like Discord's `{"content": …}` or Slack's `{"text": …}`. If you're parsing the payload programmatically, leave the template empty, or build your JSON from `{{ context.ai_report_v1 | tojson }}`.
 
@@ -397,7 +397,7 @@ A webhook template that sends its own JSON, with the block inside it:
 
 The block is customer data, so it follows the same rules as the report itself:
 
-- A **customer** route gets it only while AI reports are enabled for that customer (*Customers → (customer) → AI Report*), whatever the trigger. While they're off the value is `null`, and the AI triggers don't reach the customer at all, as before.
+- A **customer** route gets it only while AI reports are enabled for that customer (*Customers → (customer) → AI Report*), whatever the trigger, manual and test sends included. While they're off the value is `null`, and the AI triggers don't reach the customer at all, as before. The same rule covers every other report field: see [The AI Report setting and report content](#the-ai-report-setting-and-report-content).
 - An **internal** route is the SOC's own and always gets it.
 - `job_id` is filled in on internal routes only; a customer route gets `null`.
 - The report must belong to the alert and the customer of the notification, or the block is `null`.
@@ -409,7 +409,7 @@ When **Include full AI report** is on, `ai_report` is always present: an object,
 The block is read from the database when the notification is delivered, not when it was raised. A notification retried later (see [Delivery survives a restart](#delivery-survives-a-restart-and-transient-failures-are-retried)) carries the report as it is at that moment, as the older flat fields always have. Which report:
 
 - *An AI report is reviewed*: the report that was reviewed.
-- Any other trigger: the alert's newest report.
+- Any other trigger: the alert's newest report (the latest `created_at`, then the highest id). The older flat fields pick the same one, so the two never name different reports.
 
 ### Size limits
 
@@ -632,6 +632,17 @@ Always guard it — most alerts have no investigation:
 
 The report is only fetched when a template mentions `ai_report`, so templates that don't reference it cost nothing.
 
+### The AI Report setting and report content
+
+*Customers → (customer) → AI Report* decides whether AI-written findings may reach a customer. Besides suppressing the AI triggers' notifications to that customer, the AI-report setting now also governs the report fields on every trigger and on manual sends. While it is off, a **customer** route carries none of the report, whatever the trigger (an alert being created, an assignment, a manual send, a test send):
+
+- a webhook with **Include full AI report** sends no flat report fields and `"ai_report": null`: the same payload as an alert with no investigation yet;
+- the `{{report}}` token becomes `null`;
+- `context.ai_report` and `context.ai_report_v1` are empty in templates, so `{% if context.ai_report %}` takes its `else` branch, and the default message has no report section;
+- a Shuffle route's JSON line has `"ai_report": null`.
+
+**Internal routes** are the SOC's own and are not affected: they get the report whatever the setting. With the setting on, nothing changes.
+
 ### Built-in templates
 
 Eight ship with every deployment, as working starting points and as worked examples of the syntax:
@@ -666,7 +677,7 @@ Open an alert or case and choose **Send to channel…**.
 
 This sends a **real** notification: it consumes provider quota and is recorded in the dispatch log with `trigger_source = manual`. Sending twice sends twice — deliberately, since clicking send twice on purpose should work.
 
-The customer AI opt-out still applies. If *Customers → (customer) → AI Report* is off, including the report is refused rather than quietly dropped.
+The customer AI opt-out still applies. If *Customers → (customer) → AI Report* is off, including the report is refused rather than quietly dropped. Sent without it, a customer route carries no report content even if the route's own settings include the full report: see [The AI Report setting and report content](#the-ai-report-setting-and-report-content).
 
 ---
 
@@ -715,7 +726,7 @@ Work down this list:
 
 ### AI report notifications aren't arriving for one customer
 
-There's a separate switch: *Customers → (customer) → AI Report*. It controls whether AI-written findings may reach that customer at all, and it's **opt-in** — a customer who has never been enabled is disabled.
+There's a separate switch: *Customers → (customer) → AI Report*. It controls whether AI-written findings may reach that customer at all, and it's **opt-in** — a customer who has never been enabled is disabled. The same setting decides whether the report's content appears in that customer's other notifications ([The AI Report setting and report content](#the-ai-report-setting-and-report-content)).
 
 When it's off, AI notifications to that customer's routes are suppressed and logged as `skipped`. Internal routes are unaffected, so you can keep running investigations while keeping results in-house.
 

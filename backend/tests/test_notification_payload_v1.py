@@ -512,6 +512,235 @@ def test_a_route_without_a_scope_is_treated_as_a_customer_route():
     assert loads == 1
 
 
+# ── the AI report setting governs every report field ───────────────────────────
+
+
+def _alert_created():
+    return NotificationEvent(
+        customer_code=CC,
+        trigger=NotificationTrigger.ALERT_CREATED,
+        severity=NotificationSeverity.HIGH,
+        subject="Administrators Group Changed",
+        summary="A new alert was created.",
+        entity_type=EntityType.ALERT,
+        entity_id=ALERT,
+        dedupe_key=f"alert:{ALERT}:alert_created",
+        context={"alert_name": "Administrators Group Changed"},
+    )
+
+
+#: Reaches every report surface a template has: `context.ai_report` and the v1 block.
+REPORT_TEMPLATE = (
+    "{% if context.ai_report %}SUMMARY={{ context.ai_report.summary }} MD={{ context.ai_report.markdown }}"
+    "{% else %}NO-REPORT{% endif %} V1={{ context.ai_report_v1 | tojson }}"
+)
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_the_setting_governs_the_flat_fields_on_a_non_ai_trigger(tmp_path, monkeypatch, enabled):
+    """Off: exactly the "no report yet" payload, a shape receivers already handle. On: unchanged."""
+
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.ai_switch(enabled=enabled)
+        await h.route(trigger="alert_created")
+        await h.dispatch(_alert_created())
+        return report_id, h.webhooks
+
+    report_id, (sent,) = run(tmp_path, monkeypatch, scenario)
+    payload = sent["structured_payload"]
+    if enabled:
+        assert list(payload) == OLD_BASE_KEYS + ["schema"] + OLD_FLAT_KEYS + ["ai_report"]
+        assert payload["report_id"] == report_id
+        assert payload["ai_report"]["report_id"] == report_id
+    else:
+        assert list(payload) == OLD_BASE_KEYS + ["schema", "ai_report"]
+        assert payload["ai_report"] is None
+
+
+#: The `{{report}}` token is substituted by the webhook after rendering, so a Jinja template has
+#: to emit it literally (`{% raw %}`); a bare `{{report}}` is an undefined variable.
+@pytest.mark.parametrize("enabled", [False, True])
+def test_the_setting_governs_the_report_token(tmp_path, monkeypatch, enabled):
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.ai_switch(enabled=enabled)
+        await h.route(
+            trigger="alert_created",
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template='{"r": {% raw %}{{report}}{% endraw %}}',
+        )
+        await h.dispatch(_alert_created())
+        return report_id, h.webhooks
+
+    report_id, (sent,) = run(tmp_path, monkeypatch, scenario)
+    body = json.loads(sent["rendered_template"])
+    if enabled:
+        assert body["r"]["report_id"] == report_id
+        assert body["r"]["recommended_actions"] == "Isolate the host."
+    else:
+        # The token's "no report yet" value.
+        assert body == {"r": None}
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_the_setting_governs_template_access_on_a_webhook(tmp_path, monkeypatch, enabled):
+    async def scenario(h):
+        await h.seed()
+        await h.ai_switch(enabled=enabled)
+        await h.route(trigger="alert_created", config={"url": HOOK, "method": "POST", "headers": None}, format_template=REPORT_TEMPLATE)
+        await h.dispatch(_alert_created())
+        return h.webhooks
+
+    (sent,) = run(tmp_path, monkeypatch, scenario)
+    body = sent["rendered_template"]
+    if enabled:
+        assert "SUMMARY=Credential dumping observed." in body and "MD=# Report" in body
+        assert "V1=null" not in body
+    else:
+        assert body == "NO-REPORT V1=null"
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_the_setting_governs_a_shuffle_route(tmp_path, monkeypatch, enabled):
+    async def scenario(h):
+        await h.seed()
+        await h.ai_switch(enabled=enabled)
+        (integration_id,) = await h.add(CustomerShuffleIntegration(customer_code=CC, display_name="Acme", shuffle_org_id="org-1"))
+        await h.route(
+            "Shuffle Slack",
+            channel="shuffle",
+            trigger="alert_created",
+            destination="#soc",
+            shuffle_integration_id=integration_id,
+            format_template=REPORT_TEMPLATE,
+            config={"app_id": "app-1", "app_name": "Slack", "include_full_report": True},
+        )
+        await h.dispatch(_alert_created())
+        return h.shuffles
+
+    (sent,) = run(tmp_path, monkeypatch, scenario)
+    head, payload = _shuffle_input(sent["input_text"])
+    text = "\n".join(head)
+    if enabled:
+        assert "SUMMARY=Credential dumping observed." in text
+        assert payload["ai_report"] is not None
+    else:
+        assert "Credential dumping" not in sent["input_text"]
+        assert text.startswith("Send to #soc: NO-REPORT V1=null")
+        assert payload["ai_report"] is None
+
+
+def test_an_internal_route_gets_every_report_field_with_the_setting_off(tmp_path, monkeypatch):
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.ai_switch(enabled=False)
+        await h.route("SOC full", scope="internal", trigger="alert_assigned")
+        await h.route(
+            "SOC template",
+            scope="internal",
+            trigger="alert_assigned",
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template="{% if context.ai_report %}{{ context.ai_report.summary }}{% endif %} {% raw %}{{report}}{% endraw %}",
+        )
+        await h.dispatch(
+            alert_assigned_event(alert_id=ALERT, title="Administrators Group Changed", assignee="jdoe", actor="asmith", customer_code=CC),
+        )
+        return report_id, h.webhooks
+
+    report_id, sent = run(tmp_path, monkeypatch, scenario)
+    full, templated = sorted(sent, key=lambda kw: kw["rendered_template"] is not None)
+    assert list(full["structured_payload"]) == OLD_BASE_KEYS + ["schema"] + OLD_FLAT_KEYS + ["ai_report"]
+    assert full["structured_payload"]["report_id"] == report_id
+    assert templated["rendered_template"].startswith("Credential dumping observed. {")
+    assert json.loads(templated["rendered_template"][len("Credential dumping observed. ") :])["report_id"] == report_id
+
+
+def _admin():
+    from app.auth.models.users import RoleEnum
+
+    return SimpleNamespace(id=1, username="admin", role_id=RoleEnum.admin.value)
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_a_manual_send_without_the_report_follows_the_setting(tmp_path, monkeypatch, enabled):
+    """`include_ai_report=False` to a customer route whose config has `include_full_report`:
+    off, no report fields (and no report in the template); on, the route's config as before."""
+    import app.notifications.services.manual_send as ms
+
+    monkeypatch.setattr(ms, "_require_object_access", AsyncMock(return_value=None))
+
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.ai_switch(enabled=enabled)
+        full = await h.route("Full", trigger="alert_created")
+        templated = await h.route(
+            "Templated",
+            trigger="alert_created",
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template=REPORT_TEMPLATE + " T={% raw %}{{report}}{% endraw %}",
+        )
+        for route_id in (full, templated):
+            async with h.sessions() as session:
+                outcome = await ms.send_manual(entity_type="alert", entity_id=ALERT, route_id=route_id, user=_admin(), session=session)
+                assert outcome.status.value == "sent"
+        return report_id, h.webhooks
+
+    report_id, (full, templated) = run(tmp_path, monkeypatch, scenario)
+    if enabled:
+        assert full["structured_payload"]["report_id"] == report_id
+        assert full["structured_payload"]["ai_report"]["report_id"] == report_id
+        assert "SUMMARY=Credential dumping observed." in templated["rendered_template"]
+    else:
+        assert list(full["structured_payload"]) == OLD_BASE_KEYS + ["schema", "ai_report"]
+        assert full["structured_payload"]["ai_report"] is None
+        assert templated["rendered_template"] == "NO-REPORT V1=null T=null"
+
+
+def test_a_manual_send_asking_for_the_report_is_still_refused_with_the_setting_off(tmp_path, monkeypatch):
+    from fastapi import HTTPException
+
+    import app.notifications.services.manual_send as ms
+
+    monkeypatch.setattr(ms, "_require_object_access", AsyncMock(return_value=None))
+
+    async def scenario(h):
+        await h.seed()
+        await h.ai_switch(enabled=False)
+        route_id = await h.route("Full", trigger="alert_created")
+        async with h.sessions() as session:
+            with pytest.raises(HTTPException) as refused:
+                await ms.send_manual(
+                    entity_type="alert",
+                    entity_id=ALERT,
+                    route_id=route_id,
+                    user=_admin(),
+                    session=session,
+                    include_ai_report=True,
+                )
+        return refused.value.status_code, h.webhooks
+
+    assert run(tmp_path, monkeypatch, scenario) == (400, [])
+
+
+def test_the_flat_fields_and_the_block_name_the_same_report_on_a_timestamp_tie(tmp_path, monkeypatch):
+    async def scenario(h):
+        first = await h.seed()
+        await h.add(AiAnalystJob(id="copilot-inv-14-2", alert_id=ALERT, customer_code=CC, triggered_by="manual", created_at=T0))
+        (second,) = await h.add(
+            AiAnalystReport(job_id="copilot-inv-14-2", alert_id=ALERT, customer_code=CC, summary="Same second.", created_at=T0),
+        )
+        await h.ai_switch()
+        await h.route()
+        await h.dispatch(_investigation())
+        return first, second, h.webhooks
+
+    first, second, (sent,) = run(tmp_path, monkeypatch, scenario)
+    assert second > first
+    payload = sent["structured_payload"]
+    assert payload["report_id"] == payload["ai_report"]["report_id"] == second
+
+
 # ── caps, truncation and the size bound ────────────────────────────────────────
 
 

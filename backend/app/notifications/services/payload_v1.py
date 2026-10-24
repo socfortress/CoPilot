@@ -17,11 +17,12 @@ or else the alert's newest report, the same choice ``context.ai_report`` makes. 
 therefore carries the report as it is at delivery, the way the flat fields always have.
 
 **Authorization.** A report is customer data. ``ai_report_v1_for_route`` is the only entry point
-a channel or the renderer should use: on a customer-scope route it requires the customer's AI
-report switch (``is_ai_reports_enabled``, the predicate the portal and ``dispatch_event`` use),
-whatever the trigger, so the block never reaches a customer the switch keeps it from. Internal
-routes are the SOC's own and are not gated, as everywhere else. The report must belong to the
-event's customer and to the alert the event is about, or there is no block.
+a channel or the renderer should use. ``report_permitted_for_route`` is the rule it applies, and
+the one the flat fields, the ``{{report}}`` token and ``context.ai_report`` follow too: on a
+customer-scope route the customer's AI report setting (``is_ai_reports_enabled``, the predicate
+the portal and ``dispatch_event`` use) must be on, whatever the trigger, manual and test sends
+included. Internal routes are the SOC's own and are not gated, as everywhere else. The report
+must belong to the event's customer and to the alert the event is about, or there is no block.
 
 **Never stored, never raises from the safe wrapper**: a failure costs the route its block, not
 the notification.
@@ -319,6 +320,26 @@ async def _customer_permitted(event: NotificationEvent, session: AsyncSession, c
     return await ctx.memoize(f"ai_reports_enabled:{code}", check)
 
 
+async def report_permitted_for_route(
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    ctx: Any = None,
+) -> bool:
+    """Whether a route may receive any of the alert's AI report: the v1 block, the flat fields
+    `include_full_report` merges, the `{{report}}` token and `context.ai_report`.
+
+    The customer's AI report setting governs every customer route, on every trigger and on manual
+    and test sends; `dispatch_event`'s own gate covers only the AI triggers. Internal routes are
+    the SOC's own and always may. `route_scope` missing reads as customer: fail closed. Memoized
+    per customer on the dispatch context.
+    """
+    scope = route_scope or NotificationScope.CUSTOMER.value
+    if scope == NotificationScope.INTERNAL.value:
+        return True
+    return await _customer_permitted(event, session, ctx)
+
+
 async def ai_report_v1_for_route(
     route_scope: Optional[str],
     event: NotificationEvent,
@@ -331,7 +352,7 @@ async def ai_report_v1_for_route(
     context, so several routes on one event share it; the projection is per route.
     """
     scope = route_scope or NotificationScope.CUSTOMER.value
-    if scope != NotificationScope.INTERNAL.value and not await _customer_permitted(event, session, ctx):
+    if not await report_permitted_for_route(scope, event, session, ctx):
         return None
 
     async def load() -> Optional[Dict[str, Any]]:

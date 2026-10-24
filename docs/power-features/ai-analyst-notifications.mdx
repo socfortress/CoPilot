@@ -319,8 +319,13 @@ type, verdict, score and details. Templates reach the same object as
 `{{ context.ai_report_v1 }}`.
 
 Customer routes get it only while AI reports are enabled for the
-customer; the block is read when the notification is delivered, so a
-retried notification carries the current report. v1 fields are only
+customer. The AI-report setting now also governs the report fields on
+every trigger and on manual sends: while it is off, a customer route
+carries no report content at all (no flat report fields, a `null`
+`{{report}}` token and `ai_report`, empty `context.ai_report`), as if
+the alert had no investigation yet. Internal routes are not affected.
+The block is read when the notification is delivered, so a retried
+notification carries the current report. v1 fields are only
 ever added to; a breaking change would be `copilot.notification.v2`.
 The full field reference, an example and how a Shuffle workflow reads
 the JSON are in

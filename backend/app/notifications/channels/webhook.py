@@ -15,8 +15,11 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+from loguru import logger
 from pydantic import field_validator
+from sqlalchemy import select
 
+from app.db.universal_models import AiAnalystReport
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
@@ -26,27 +29,42 @@ from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_webhook
 from app.notifications.services.payload_v1 import SCHEMA_V1
 from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import report_permitted_for_route
 
 
-async def build_full_report(alert_id: int, session) -> Optional[Dict[str, Any]]:
+async def build_full_report(alert_id: int, session, customer_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Fetch the alert's latest AI report's *extra* fields as a flat dict.
 
     Returns only the fields NOT already present at the top level of the webhook
     payload — it deliberately omits ``summary`` and the severity to avoid
     duplicating them. Returns None when no report exists yet, so a webhook never
-    fails just because the report write-back hasn't landed.
+    fails just because the report write-back hasn't landed — and when
+    ``customer_code`` is given and the report is another customer's.
 
-    Reuses the ai_analyst service layer (the canonical read path) so the shape
-    stays in sync with the AI Analyst API. ``list_reports_by_alert`` returns
-    newest-first, so element 0 is the report this dispatch is about.
+    The shape (names, values, nulls, order) is the pre-v1 external contract and is
+    pinned by ``tests/test_notification_payload_v1.py``. The report is chosen the way
+    the v1 block and ``context.ai_report`` choose it, newest by ``created_at`` and
+    then ``id``, so the flat fields and the nested block never name different
+    reports. IOCs stay the alert's, newest first, read through the ai_analyst
+    service layer as before.
+
+    Callers check the route may receive the report first
+    (``payload_v1.report_permitted_for_route``).
     """
     from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
-    from app.ai_analyst.services.ai_analyst import list_reports_by_alert
 
-    reports = await list_reports_by_alert(alert_id, session)
-    if not reports:
+    result = await session.execute(
+        select(AiAnalystReport)
+        .where(AiAnalystReport.alert_id == alert_id)
+        .order_by(AiAnalystReport.created_at.desc(), AiAnalystReport.id.desc())
+        .limit(1),
+    )
+    report = result.scalars().first()
+    if report is None:
         return None
-    report = reports[0]
+    if customer_code and report.customer_code != customer_code:
+        logger.warning(f"AI report {report.id} is not customer {customer_code}'s; no report fields for its webhook.")
+        return None
     iocs = await list_iocs_by_alert(alert_id, session)
     return {
         "report_id": report.id,
@@ -151,14 +169,14 @@ class WebhookChannel(ChannelProvider):
         #      a JSON object at that spot.
         rendered_template: Optional[str] = None
         if include_full_report:
-            report_fields = await self._report(event, ctx)
+            report_fields = await self._report(route_scope, event, ctx)
             if report_fields is not None:
                 structured_payload.update(report_fields)
             structured_payload["ai_report"] = await ai_report_v1_for_route(route_scope, event, ctx.session, ctx)
         elif has_template:
             rendered_template = message.body
             if "{{report}}" in rendered_template:
-                report_fields = await self._report(event, ctx)
+                report_fields = await self._report(route_scope, event, ctx)
                 rendered_template = rendered_template.replace(
                     "{{report}}",
                     json.dumps(report_fields) if report_fields is not None else "null",
@@ -173,10 +191,18 @@ class WebhookChannel(ChannelProvider):
         )
         return SendResult(status=status, error_message=error_message, latency_ms=latency_ms)
 
-    async def _report(self, event: NotificationEvent, ctx: DispatchContext) -> Optional[Dict[str, Any]]:
-        """Memoized per dispatch call — several webhook routes on one alert
+    async def _report(self, route_scope: Optional[str], event: NotificationEvent, ctx: DispatchContext) -> Optional[Dict[str, Any]]:
+        """The flat report fields this route may receive, or None.
+
+        None on a customer route while the customer's AI report setting is off,
+        on any trigger: the payload is then exactly the "no report yet" one, a
+        shape receivers already handle. Internal routes are not gated.
+
+        Memoized per dispatch call — several webhook routes on one alert
         share a single report read."""
+        if not await report_permitted_for_route(route_scope, event, ctx.session, ctx):
+            return None
         return await ctx.memoize(
             f"full_report:{event.entity_id}",
-            lambda: build_full_report(event.entity_id, ctx.session),
+            lambda: build_full_report(event.entity_id, ctx.session, event.customer_code),
         )

@@ -169,13 +169,20 @@ def _session(template=None):
     return session
 
 
-def _render(route, event, session, ctx=None, loader=None):
+def _render(route, event, session, ctx=None, loader=None, ai_reports_enabled=True):
     """Render, with the report loader stubbed so no DB is involved.
+
+    The customer's AI report setting is stubbed too, on by default: these tests are
+    about what a route that may receive the report renders. The setting itself is
+    covered by `test_notification_payload_v1.py`.
 
     Returns (message, template_error, loader_mock).
     """
     loader = loader or AsyncMock(return_value=_report())
-    with patch.object(svc, "safe_load_ai_report_context", loader):
+    with (
+        patch.object(svc, "safe_load_ai_report_context", loader),
+        patch.object(svc, "report_permitted_for_route", AsyncMock(return_value=ai_reports_enabled)),
+    ):
         message, err = asyncio.run(svc._render_body(route, event, session, ctx=ctx))
     return message, err, loader
 

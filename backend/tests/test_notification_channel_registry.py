@@ -138,6 +138,9 @@ def _run_webhook(route, req=None, report=None, is_custom=False):
     with (
         patch.object(webhook_mod, "dispatch_webhook", sent),
         patch.object(webhook_mod, "build_full_report", AsyncMock(return_value=report)),
+        # The customer's AI report setting, on: these pin the payload a route that may
+        # receive the report gets. The setting is covered in test_notification_payload_v1.py.
+        patch.object(webhook_mod, "report_permitted_for_route", AsyncMock(return_value=True)),
     ):
         result = asyncio.run(
             CHANNEL_REGISTRY["webhook"].send(
@@ -239,6 +242,7 @@ def test_webhook_template_report_token_substitutes_when_present_in_body():
     with (
         patch.object(webhook_mod, "dispatch_webhook", sent),
         patch.object(webhook_mod, "build_full_report", AsyncMock(return_value=report)),
+        patch.object(webhook_mod, "report_permitted_for_route", AsyncMock(return_value=True)),
     ):
         asyncio.run(
             CHANNEL_REGISTRY["webhook"].send(
@@ -428,6 +432,7 @@ def test_report_is_read_once_across_routes_in_one_dispatch():
     with (
         patch.object(webhook_mod, "dispatch_webhook", AsyncMock(return_value=("sent", None, 12, None))),
         patch.object(webhook_mod, "build_full_report", build),
+        patch.object(webhook_mod, "report_permitted_for_route", AsyncMock(return_value=True)),
     ):
         for _ in range(3):
             asyncio.run(

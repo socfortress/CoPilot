@@ -18,9 +18,10 @@ on a report this size, so there is nothing to save.
 **Loading is authorization-sensitive.** A report is customer data. The loader
 takes an alert id and reads unconditionally, so every caller must run its own
 access checks *first* — `manual_send` does, after `_require_object_access` and
-`_require_ai_report_permitted`. On the automatic path `dispatch_event` has
-already applied the #1014 opt-out before any rendering happens. Calling this
-earlier than either would turn it into a read primitive.
+`_require_ai_report_permitted`. Rendering checks the customer's AI report
+setting per route (`payload_v1.report_permitted_for_route`) before it loads, on
+every trigger and on manual and test sends. Calling this earlier than either
+would turn it into a read primitive.
 
 **Absence is normal, not an error.** Most alerts have no investigation, cases
 never do, and a route can be configured for a customer whose AI trigger is off.
@@ -60,11 +61,17 @@ def _ioc_to_dict(ioc: AiAnalystIoc) -> Dict[str, Any]:
     }
 
 
-async def load_ai_report_context(alert_id: int, session: AsyncSession) -> Optional[Dict[str, Any]]:
+async def load_ai_report_context(
+    alert_id: int,
+    session: AsyncSession,
+    customer_code: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
     """The newest AI report for `alert_id`, shaped for template rendering.
 
     Returns `None` when the alert has no report — which the callers treat as
-    "nothing to include" rather than a failure.
+    "nothing to include" rather than a failure — and when `customer_code` is
+    given and the report is another customer's: a notification only ever
+    carries its own customer's report.
 
     **Newest wins.** An alert can accumulate several reports: the 15-minute
     scheduled sweep and the real-time trigger both run the same workflow, and a
@@ -80,6 +87,9 @@ async def load_ai_report_context(alert_id: int, session: AsyncSession) -> Option
     )
     report = result.scalars().first()
     if report is None:
+        return None
+    if customer_code and report.customer_code != customer_code:
+        logger.warning(f"AI report {report.id} is not customer {customer_code}'s; not loaded for its notification.")
         return None
 
     ioc_result = await session.execute(
@@ -110,7 +120,11 @@ async def load_ai_report_context(alert_id: int, session: AsyncSession) -> Option
     }
 
 
-async def safe_load_ai_report_context(alert_id: int, session: AsyncSession) -> Optional[Dict[str, Any]]:
+async def safe_load_ai_report_context(
+    alert_id: int,
+    session: AsyncSession,
+    customer_code: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
     """`load_ai_report_context`, but a failure degrades instead of propagating.
 
     Rendering sits between an event and a delivery. A malformed report or a
@@ -119,7 +133,7 @@ async def safe_load_ai_report_context(alert_id: int, session: AsyncSession) -> O
     than raise.
     """
     try:
-        return await load_ai_report_context(alert_id, session)
+        return await load_ai_report_context(alert_id, session, customer_code)
     except Exception as e:  # noqa: BLE001 — a report must never break a dispatch
         logger.warning(f"Could not load AI report for alert {alert_id}: {type(e).__name__}: {e}")
         return None

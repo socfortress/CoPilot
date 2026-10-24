@@ -82,6 +82,7 @@ from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
 from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import report_permitted_for_route
 from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
@@ -938,7 +939,7 @@ async def _render_body(
     inline = route.format_template
     route_scope = getattr(route, "scope", None)
     if inline:
-        await _ensure_ai_report_context(inline, event, session, ctx=ctx)
+        event = await _report_event_for_route(inline, route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
         body, error = render_body(inline, render_event, fallback)
@@ -946,6 +947,9 @@ async def _render_body(
 
     template = await resolve_template_for_route(route, session)
     if template is None:
+        # No template, but a manual send (or another route's template) may have put the
+        # report on the event for the default body's report section.
+        event = await _report_event_for_route("", route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         # A default body that carries a report is markdown, not plain text: the
         # report is markdown by nature, and flagging it lets the email channel
@@ -956,7 +960,7 @@ async def _render_body(
         return (RenderedMessage(body=fallback, format=fmt), None)
 
     source = f"{template.body_template}{template.subject_template or ''}"
-    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    event = await _report_event_for_route(source, route_scope, event, session, ctx=ctx)
     fallback = _format_default_body(event)
 
     autoescape = template.format == "html"
@@ -1059,10 +1063,39 @@ async def _ensure_ai_report_context(
         return
 
     async def _load():
-        return await safe_load_ai_report_context(event.entity_id, session)
+        return await safe_load_ai_report_context(event.entity_id, session, event.customer_code)
 
     report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
     event.context["ai_report"] = report
+
+
+async def _report_event_for_route(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event this route renders with, as far as `context.ai_report` goes.
+
+    The customer's AI report setting governs the report on every customer route, on
+    every trigger and on manual and test sends (`payload_v1.report_permitted_for_route`;
+    `dispatch_event`'s own gate covers only the AI triggers). A route that may not have
+    it renders a **copy** of the event with `context.ai_report` set to None, so neither a
+    template nor the default body's report section can show it, while routes that may
+    keep sharing the one loaded report. Internal routes are not gated.
+
+    Lazy like the loader: a template that never names `ai_report`, on an event that
+    doesn't already carry one, costs no query at all.
+    """
+    wants = bool(_MENTIONS_AI_REPORT.search(source))
+    if not wants and "ai_report" not in (event.context or {}):
+        return event
+    if not await report_permitted_for_route(route_scope, event, session, ctx):
+        return event.model_copy(update={"context": {**(event.context or {}), "ai_report": None}})
+    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    return event
 
 
 async def _with_ai_report_v1(
