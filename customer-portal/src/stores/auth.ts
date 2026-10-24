@@ -10,6 +10,7 @@ import Api from "@/api"
 import { resetEventSearchMemory } from "@/components/eventSearch/useEventSearchMemory"
 import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
+import { useAuditAvailability } from "@/composables/common/useAuditAvailability"
 import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
@@ -72,6 +73,7 @@ export const useAuthStore = defineStore("auth", {
 			useSlaAvailability().reset()
 			useActivityAvailability().reset()
 			useExposureAvailability().reset()
+			useAuditAvailability().reset()
 			// Whether the user may ask the SOC is the customer's choice too (#1305).
 			useSocRequestsAvailability().reset()
 			// The bell's server notifications are the user's own (#1282).

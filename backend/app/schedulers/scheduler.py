@@ -13,6 +13,7 @@ from sqlalchemy.future import select
 from app.audit.services.retention import prune_audit_log
 from app.db.db_session import async_engine
 from app.db.db_session import sync_engine
+from app.notifications.services.outbox import drain_notification_outbox
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
@@ -288,6 +289,18 @@ async def initialize_job_metadata():
                 "description": "Notifies internal routes when an alert's or case's SLA turns at risk or breaches, once per clock.",
             },
             {
+                "job_id": "drain_notification_outbox",
+                # The notification outbox's sweep. Every notification is delivered the moment it
+                # is queued; this picks up what that missed (a restart, a crash mid-dispatch, a
+                # retry whose backoff has passed) and recovers claims left by a dead worker. It
+                # also prunes (delivered rows after NOTIFICATION_OUTBOX_DONE_RETENTION_DAYS, 7,
+                # dead ones after NOTIFICATION_OUTBOX_DEAD_RETENTION_DAYS, 30) on each process's
+                # first sweep and daily after, so frequent restarts never postpone it.
+                "time_interval": 1,
+                "function": drain_notification_outbox,
+                "description": "Delivers queued notifications the immediate attempt missed, retries transient failures with backoff, prunes old rows.",
+            },
+            {
                 "job_id": "invoke_portal_notification_digest",
                 # The portal users' daily email digest (#1282). Every 15 minutes, but it sends
                 # only from PORTAL_NOTIFICATION_DIGEST_HOUR (UTC) on, once per user per day.
@@ -440,6 +453,7 @@ def get_function_by_name(function_name: str):
         "refresh_sidebar_health": refresh_sidebar_health,
         "refresh_sidebar_indicators": refresh_sidebar_indicators,
         "notify_sla_transitions": notify_sla_transitions,
+        "drain_notification_outbox": drain_notification_outbox,
         "invoke_portal_notification_digest": invoke_portal_notification_digest,
         # Add other function mappings here
     }

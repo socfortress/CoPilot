@@ -17,6 +17,8 @@ export default antfu(
 		rules: {
 			"@typescript-eslint/no-non-null-assertion": "error",
 			"antfu/if-newline": "off",
+			// New in @antfu/eslint-config 10: Prettier (`pnpm format`) joins back the lines it splits.
+			"antfu/reasonable-newline": "off",
 			"e18e/ban-dependencies": ["error", { allowed: ["axios", "lodash", "depcheck", "fs-extra"] }],
 			"pnpm/yaml-enforce-settings": isProduction ? "error" : "off",
 			"style/operator-linebreak": "off",

@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.customer_portal.routes.activity import customer_portal_activity_router
 from app.customer_portal.routes.agents import customer_portal_agents_router
 from app.customer_portal.routes.ai_reports import customer_portal_ai_reports_router
+from app.customer_portal.routes.audit import customer_portal_audit_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.exposure import customer_portal_exposure_router
@@ -82,6 +83,12 @@ router.include_router(
     customer_portal_tenant_users_router,
     prefix="/customer_portal",
     tags=["Customer Portal Users"],
+)
+# Who did what in the caller's customers, for customer admins (#1298) — opt-in per customer
+router.include_router(
+    customer_portal_audit_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Audit Log"],
 )
 # "Ask the SOC" about an alert or a case (#1305) — opt-in per customer; the SOC's list and its switch
 router.include_router(

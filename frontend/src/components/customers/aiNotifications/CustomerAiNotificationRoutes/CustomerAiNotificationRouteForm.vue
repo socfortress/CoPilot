@@ -99,6 +99,16 @@
 					Gmail, handle for chat apps, etc.
 				</template>
 			</n-form-item>
+
+			<n-form-item :show-feedback="false">
+				<n-checkbox v-model:checked="cfg.include_full_report">Include full AI report as JSON</n-checkbox>
+			</n-form-item>
+			<div class="text-secondary mb-2 text-xs">
+				For workflows that read the findings: the AI report (payload v1, with the summary, recommended actions
+				and IOCs) is appended to the message as its last line, one line of JSON after
+				<code>COPILOT_NOTIFICATION_V1_JSON:</code>
+				<span>. Leave off for apps that post the message as-is.</span>
+			</div>
 		</template>
 
 		<!-- ===== Webhook channel fields ===== -->
@@ -138,9 +148,11 @@
 				</n-checkbox>
 			</n-form-item>
 			<div class="text-secondary mb-2 text-xs">
-				Adds the full AI report to the payload — the recommended actions, the full markdown write-up, and the
-				IOC list — for automation agents that need more than the summary. Leave off for chat targets to keep the
-				payload small.
+				Adds the AI report to the payload as a structured
+				<code>ai_report</code>
+				object (payload v1: summary, recommended actions, IOCs), with the older flat fields beside it for
+				existing receivers. Sent only while the customer's AI Report setting is on. Leave off for chat targets
+				to keep the payload small.
 				<template v-if="fullReportDisabled">
 					<br />
 					<em>
@@ -265,6 +277,8 @@
 				<code>report_url</code>
 				<span>,</span>
 				<code>text</code>
+				<span>,</span>
+				<code>schema</code>
 				<span>).</span>
 				Set a template to send a custom body instead — if it's valid JSON it's sent as JSON (e.g.
 				<code>{"content": "…"}</code>
@@ -276,7 +290,11 @@
 				<code>{{ reportToken }}</code>
 				unquoted as a JSON value (e.g.
 				<code>"report": {{ reportToken }}</code>
-				<span>).</span>
+				<span>), or</span>
+				<code>{{ v1Token }}</code>
+				for the structured v1 block. Both are
+				<code>null</code>
+				when the customer's AI Report setting is off.
 			</template>
 			<template v-else>
 				Leave empty to use the shared template above, or the channel default when there is none. Substitutions:
@@ -583,6 +601,7 @@ const fullReportDisabled = computed(() => isWebhook.value && Boolean(form.format
 // Shown literally in the help text. Kept as a constant so the template
 // doesn't nest {{ }} inside an interpolation (Vue can't parse that).
 const reportToken = "{{report}}"
+const v1Token = "{{ context.ai_report_v1_json }}"
 
 // Custom headers are edited as an ordered key/value list and converted to
 // a Record on submit. Seed from the editing route's stored headers.
@@ -928,7 +947,11 @@ async function submit() {
 						shuffle_integration_id: form.shuffle_integration_id,
 						config: {
 							app_id: cfg.app_id ?? null,
-							app_name: cfg.app_name ?? null
+							app_name: cfg.app_name ?? null,
+							// Only when ticked: a backend from before this option rejects the key
+							// (extra="forbid"), so leaving it out keeps a rollback from breaking
+							// every Shuffle route saved since.
+							...(cfg.include_full_report ? { include_full_report: true } : {})
 						}
 					}
 

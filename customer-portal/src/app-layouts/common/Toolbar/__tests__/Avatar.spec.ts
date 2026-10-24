@@ -8,6 +8,13 @@ import Avatar from "../Avatar.vue"
 const store = vi.hoisted(() => ({ isCustomerAdmin: false, userPic: "", userName: "giulia.bianchi" }))
 const push = vi.hoisted(() => vi.fn())
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => store }))
+const audit = vi.hoisted(() => ({ available: { value: false }, check: vi.fn() }))
+vi.mock("@/composables/common/useAuditAvailability", async () => {
+	const { ref } = await import("vue")
+	const available = ref(false)
+	Object.defineProperty(audit, "available", { value: available })
+	return { useAuditAvailability: () => ({ available, check: audit.check }) }
+})
 vi.mock("vue-router", async () => {
 	const { defineComponent, h } = await import("vue")
 	// A link that names where it goes, as the real one does in its href.
@@ -37,6 +44,8 @@ function userCard() {
 describe("avatar", () => {
 	beforeEach(() => {
 		push.mockReset()
+		audit.check.mockReset()
+		audit.available.value = false
 	})
 
 	it("shows a portal user's name and role, tagged Portal user, with no Users", () => {
@@ -81,5 +90,22 @@ describe("avatar", () => {
 		store.isCustomerAdmin = true
 		mount(Avatar).getComponent(NDropdown).vm.$emit("select", "route-Users")
 		expect(push).toHaveBeenCalledWith({ name: "Users" })
+	})
+
+	it("offers the Audit log to a customer admin once their SOC turned it on (#1298)", () => {
+		store.isCustomerAdmin = true
+		expect(keys()).toEqual(["signed-in-user", "route-Users", "route-Logout"])
+		expect(audit.check).toHaveBeenCalled()
+		audit.available.value = true
+		expect(keys()).toEqual(["signed-in-user", "route-Users", "route-AuditLog", "route-Logout"])
+		mount(Avatar).getComponent(NDropdown).vm.$emit("select", "route-AuditLog")
+		expect(push).toHaveBeenCalledWith({ name: "AuditLog" })
+	})
+
+	it("never asks, nor offers it, for a plain portal user", () => {
+		store.isCustomerAdmin = false
+		audit.available.value = true
+		expect(keys()).toEqual(["signed-in-user", "route-Logout"])
+		expect(audit.check).not.toHaveBeenCalled()
 	})
 })

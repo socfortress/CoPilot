@@ -14,9 +14,14 @@ each trigger decides its own dedupe semantics.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import re
 from datetime import datetime
 from typing import Any
+from typing import Awaitable
+from typing import Callable
+from typing import Collection
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -44,6 +49,7 @@ from app.notifications.channels import SendResult
 from app.notifications.channels import get_channel
 from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.channels.webhook import full_report_for_route
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
@@ -66,6 +72,7 @@ from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
+from app.notifications.services.ai_report_context import named_report_id
 from app.notifications.services.ai_report_context import safe_load_ai_report_context
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
@@ -76,6 +83,10 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
+from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import ai_report_v1_json
+from app.notifications.services.payload_v1 import report_permitted_for_route
+from app.notifications.services.rendering import MENTIONS_REPORT_VAR
 from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
@@ -721,6 +732,10 @@ def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
     return route_trigger == report_trigger
 
 
+#: `ai_report` as a name of its own, not the start of `ai_report_v1`.
+_MENTIONS_AI_REPORT = re.compile(r"ai_report(?!_v1)")
+
+
 async def _ai_reports_permitted(trigger: str, customer_code: str, session: AsyncSession) -> bool:
     """Whether AI-written findings may be delivered to this customer.
 
@@ -943,14 +958,20 @@ async def _render_body(
     already broken, just silently.
     """
     inline = route.format_template
+    route_scope = getattr(route, "scope", None)
     if inline:
-        await _ensure_ai_report_context(inline, event, session, ctx=ctx)
+        event = await _report_event_for_route(inline, route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
-        body, error = render_body(inline, event, fallback)
+        render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
+        extra = await _report_variable(inline, route_scope, event, session, ctx=ctx)
+        body, error = render_body(inline, render_event, fallback, extra_context=extra)
         return (RenderedMessage(body=body, is_custom=error is None), error)
 
     template = await resolve_template_for_route(route, session)
     if template is None:
+        # No template, but a manual send (or another route's template) may have put the
+        # report on the event for the default body's report section.
+        event = await _report_event_for_route("", route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         # A default body that carries a report is markdown, not plain text: the
         # report is markdown by nature, and flagging it lets the email channel
@@ -961,13 +982,15 @@ async def _render_body(
         return (RenderedMessage(body=fallback, format=fmt), None)
 
     source = f"{template.body_template}{template.subject_template or ''}"
-    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    event = await _report_event_for_route(source, route_scope, event, session, ctx=ctx)
     fallback = _format_default_body(event)
 
     autoescape = template.format == "html"
     extra = await _branding_context(template, event, session, ctx=ctx)
+    extra.update(await _report_variable(source, route_scope, event, session, ctx=ctx))
+    render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
 
-    body, error = render_body(template.body_template, event, fallback, autoescape=autoescape, extra_context=extra)
+    body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
     if error:
         # The named template failed, so the channel default went out instead —
         # which is plain text with no subject, whatever the template declared.
@@ -975,7 +998,7 @@ async def _render_body(
 
     subject, subject_error = render_body(
         template.subject_template,
-        event,
+        render_event,
         # A failed subject falls back to the provider composing its own, which
         # is what a route with no named template already does.
         "",
@@ -1052,7 +1075,9 @@ async def _ensure_ai_report_context(
     same batch does not re-query. Templates guard with `{% if context.ai_report %}`
     and both a `None` and an absent key read as falsy.
     """
-    if "ai_report" not in source:
+    # `ai_report_v1` is a different block with its own loader and gate (`_with_ai_report_v1`);
+    # a template naming only that must not load this one too.
+    if not _MENTIONS_AI_REPORT.search(source):
         return
     if "ai_report" in (event.context or {}):
         return
@@ -1060,11 +1085,98 @@ async def _ensure_ai_report_context(
     if event.entity_type != EntityType.ALERT:
         return
 
-    async def _load():
-        return await safe_load_ai_report_context(event.entity_id, session)
+    report_id = named_report_id(event.context)
 
-    report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
+    async def _load():
+        return await safe_load_ai_report_context(
+            event.entity_id,
+            session,
+            event.customer_code,
+            report_id=report_id,
+            entity_type=event.entity_type,
+        )
+
+    key = f"ai_report:{event.entity_type}:{event.entity_id}:{report_id}"
+    report = await ctx.memoize(key, _load) if ctx is not None else await _load()
     event.context["ai_report"] = report
+
+
+async def _report_event_for_route(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event this route renders with, as far as `context.ai_report` goes.
+
+    The customer's AI report setting governs the report on every customer route, on
+    every trigger and on manual and test sends (`payload_v1.report_permitted_for_route`;
+    `dispatch_event`'s own gate covers only the AI triggers). A route that may not have
+    it renders a **copy** of the event with `context.ai_report` set to None, so neither a
+    template nor the default body's report section can show it, while routes that may
+    keep sharing the one loaded report. Internal routes are not gated.
+
+    Lazy like the loader: a template that never names `ai_report`, on an event that
+    doesn't already carry one, costs no query at all.
+    """
+    wants = bool(_MENTIONS_AI_REPORT.search(source))
+    if not wants and "ai_report" not in (event.context or {}):
+        return event
+    if not await report_permitted_for_route(route_scope, event, session, ctx):
+        return event.model_copy(update={"context": {**(event.context or {}), "ai_report": None}})
+    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    return event
+
+
+async def _with_ai_report_v1(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event to render with: `context.ai_report_v1` added when the template names it.
+
+    The block a webhook receives with `include_full_report` (`services/payload_v1.py`), for
+    templates that build their own JSON (`{{ context.ai_report_v1 | tojson }}`). Same lazy guard
+    as `_ensure_ai_report_context`, but **a copy of the event, never the shared one**: the block
+    depends on the route's scope (a customer route needs the AI report switch and never sees the
+    job id), and every route of a dispatch renders the same event. Null when the route may not
+    have it or there is none; `{% if context.ai_report_v1 %}` guards both.
+    """
+    if "ai_report_v1" not in source:
+        return event
+    block = await ai_report_v1_for_route(route_scope, event, session, ctx)
+    return event.model_copy(
+        update={"context": {**(event.context or {}), "ai_report_v1": block, "ai_report_v1_json": ai_report_v1_json(block)}},
+    )
+
+
+async def _report_variable(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Dict[str, Any]:
+    """`{{ report }}` for a template that names it: the flat report fields as a JSON string.
+
+    The `{{report}}` token predates Jinja templates, where a bare `{{report}}` became an
+    undefined variable and failed the template. It is a real variable now, with the value the
+    webhook substitutes for the literal token: `json.dumps` of the flat fields, or `null` when
+    there is no report or the route may not have it (`full_report_for_route`'s gate). Lazy like
+    the other report loaders. The webhook still replaces a literal `{{report}}` left in a body
+    (written as `{% raw %}`), through the same gate.
+    """
+    if not MENTIONS_REPORT_VAR.search(source or ""):
+        return {}
+    dispatch_ctx = ctx if ctx is not None else DispatchContext(session=session, event=event)
+    fields = await full_report_for_route(route_scope, event, dispatch_ctx)
+    return {"report": json.dumps(fields) if fields is not None else "null"}
 
 
 async def _record_log(
@@ -1131,7 +1243,11 @@ async def _record_log(
 
     # No prior record — insert fresh.
     log = NotificationDispatchLog(
-        customer_code=event.customer_code,
+        # NOT NULL on the table, and an internal-scope event (an assignment, an SLA
+        # notice) may belong to no customer: it is logged under "". A NULL here made
+        # the insert fail after the provider had already delivered, and the rollback
+        # broke every later route of the batch.
+        customer_code=event.customer_code or "",
         # Populated only for alert-shaped events; a case-task assignment
         # leaves it NULL and carries its identity in entity_type/entity_id.
         alert_id=event.entity_id if event.entity_type == EntityType.ALERT else None,
@@ -1341,12 +1457,34 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     return await dispatch_event(event_from_dispatch_request(req), session)
 
 
-async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> DispatchResponse:
+async def dispatch_event(
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    skip_route_ids: Optional[Collection[int]] = None,
+    on_route_settled: Optional[Callable[[DispatchOutcome], Awaitable[None]]] = None,
+    delivery_id: Optional[str] = None,
+    route_budget_seconds: Optional[float] = None,
+    budget_cap_seconds: Optional[float] = None,
+) -> DispatchResponse:
     """Walk the matching routes, fire each, log every outcome.
 
-    Idempotency is enforced at the log table — the insert is attempted *before*
-    the provider call, so a re-dispatch sees the existing row and short-circuits
-    without sending.
+    The log row is written *after* the provider call: a `sent` row for the same
+    (route, dedupe_key) refuses the log write, not the delivery, so dispatching
+    the same event twice delivers it twice (A → B → A reassignment relies on
+    that). What stops a retry re-sending is `skip_route_ids`: the routes an
+    earlier attempt at this same event already settled, which the outbox
+    (`services/outbox.py`) passes so a partial fan-out retries only the rest.
+    A skipped route is reported as `skipped` and its log row is left alone.
+
+    The outbox also passes `on_route_settled`, awaited with each route's outcome
+    as soon as that route is done (so an attempt that dies half-way has already
+    recorded what it delivered), `delivery_id`, which identifies this
+    delivery to providers that de-duplicate retries (Resend's idempotency key),
+    and a time budget sized to the batch: `route_budget_seconds` per route still
+    to deliver, at most `budget_cap_seconds`, after which `TimeoutError` is
+    raised (the routes done by then have been reported). Callers that pass none
+    of these get the behaviour they always had.
     """
     routes = await routes_for_event(event, session)
 
@@ -1358,9 +1496,46 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
         and _severity_meets(event.severity.value, r.min_severity)
         and not _self_assignment_suppressed(r, event)
     ]
+    # Detach the matched routes, with every column already loaded, before anything
+    # can commit or roll back. A rollback (a failed log write) or a commit on an
+    # expire-on-commit session expires every object still in the session, and the
+    # next route's first attribute read would then be an implicit refresh, which is
+    # MissingGreenlet under AsyncSession: one failure took every later route down.
+    # Nothing below reads a relationship off a route, and the route counters are
+    # written by explicit UPDATEs, so detached rows serve the loop and providers alike.
+    for route in matched_routes:
+        session.expunge(route)
+
+    async def settled(outcome: DispatchOutcome) -> None:
+        if on_route_settled is None:
+            return
+        try:
+            await on_route_settled(outcome)
+        except Exception as e:  # noqa: BLE001 — recording progress must not stop the batch
+            logger.warning(f"Recording route {outcome.route_id}'s outcome failed: {type(e).__name__}")
 
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
+
+    # Routes an earlier attempt already settled: reported, never re-sent.
+    already_settled = set(skip_route_ids or ())
+    to_dispatch = matched_routes
+    if already_settled:
+        to_dispatch = []
+        for route in matched_routes:
+            if route.id not in already_settled:
+                to_dispatch.append(route)
+                continue
+            skipped += 1
+            outcomes.append(
+                DispatchOutcome(
+                    route_id=route.id,
+                    route_name=route.name,
+                    channel=route.channel,
+                    status=DispatchStatus.SKIPPED,
+                    error_message="Already settled by an earlier attempt",
+                ),
+            )
 
     # AI-report opt-out gate. Checked AFTER matching so the dispatch log still
     # records which routes *would* have fired — "suppressed by the AI switch"
@@ -1376,8 +1551,8 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
     # so a batch can hold internal and customer routes at once — and aborting
     # the dispatch would silently take the SOC's own notification down with the
     # customer's, which is the exact opposite of what the opt-out is for.
-    deliverable_routes = matched_routes
-    gated_routes = [r for r in matched_routes if r.scope == NotificationScope.CUSTOMER.value]
+    deliverable_routes = to_dispatch
+    gated_routes = [r for r in to_dispatch if r.scope == NotificationScope.CUSTOMER.value]
     if gated_routes and not await _ai_reports_permitted(event.trigger.value, event.customer_code, session):
         logger.info(
             f"AI reports are not enabled for customer {event.customer_code}; "
@@ -1410,135 +1585,158 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
                     error_message=reason,
                 ),
             )
+            await settled(outcomes[-1])
         gated_ids = {r.id for r in gated_routes}
-        deliverable_routes = [r for r in matched_routes if r.id not in gated_ids]
+        deliverable_routes = [r for r in to_dispatch if r.id not in gated_ids]
 
     # Per-call context. Expensive lookups a provider needs (the Shuffle
     # connector row, an alert's AI report) are memoized on it, so a batch of
     # routes shares one read — the property the pre-refactor prefetch gave us,
     # now lazy: nothing is read unless a route actually reaches that provider.
-    ctx = DispatchContext(session=session, event=event)
+    ctx = DispatchContext(session=session, event=event, delivery_id=delivery_id)
 
-    for route in deliverable_routes:
-        # Cache every route attribute the LOOP needs into locals UP FRONT.
-        # Once we cross any `await` (let alone any rollback) the route
-        # SQLAlchemy state can be expired and a synchronous attribute
-        # access then triggers an implicit refresh query — which in
-        # AsyncSession throws MissingGreenlet. Providers do the same for
-        # the attributes they read; see ChannelProvider.send's docstring.
-        route_id = route.id
-        route_name = route.name
-        route_channel = route.channel
+    budget: Optional[float] = None
+    if route_budget_seconds is not None:
+        budget = route_budget_seconds * max(1, len(deliverable_routes))
+        if budget_cap_seconds is not None:
+            budget = min(budget, budget_cap_seconds)
 
-        message, template_error = await _render_body(route, event, session, ctx=ctx)
-        body_preview = message.body[:500]
+    async with asyncio.timeout(budget):
+        for route in deliverable_routes:
+            # Cache every route attribute the LOOP needs into locals UP FRONT.
+            # Once we cross any `await` (let alone any rollback) the route
+            # SQLAlchemy state can be expired and a synchronous attribute
+            # access then triggers an implicit refresh query — which in
+            # AsyncSession throws MissingGreenlet. Providers do the same for
+            # the attributes they read; see ChannelProvider.send's docstring.
+            route_id = route.id
+            route_name = route.name
+            route_channel = route.channel
 
-        latency_ms: Optional[int] = None
-        result_status = "sent"
-        error_message: Optional[str] = None
-        provider_reference: Optional[str] = None
-        # Stays None when the channel is unknown or send() raised. after_send
-        # guards on it rather than inferring from result_status — the two can
-        # only diverge via a future edit, and this way that edit is safe.
-        result: Optional[SendResult] = None
+            message, template_error = await _render_body(route, event, session, ctx=ctx)
+            body_preview = message.body[:500]
 
-        provider = get_channel(route_channel)
+            latency_ms: Optional[int] = None
+            result_status = "sent"
+            error_message: Optional[str] = None
+            provider_reference: Optional[str] = None
+            # Stays None when the channel is unknown or send() raised. after_send
+            # guards on it rather than inferring from result_status — the two can
+            # only diverge via a future edit, and this way that edit is safe.
+            result: Optional[SendResult] = None
 
-        try:
-            if provider is None:
-                # Unknown channel — recorded as a failure rather than silently
-                # dropped, so a misconfigured row surfaces in the dispatch log.
+            provider = get_channel(route_channel)
+
+            try:
+                if provider is None:
+                    # Unknown channel — recorded as a failure rather than silently
+                    # dropped, so a misconfigured row surfaces in the dispatch log.
+                    result_status = "failed"
+                    error_message = f"Unsupported channel: {route_channel}"
+                    latency_ms = None
+                else:
+                    result = await provider.send(
+                        route=route,
+                        event=event,
+                        message=message,
+                        ctx=ctx,
+                    )
+                    result_status = result.status
+                    error_message = result.error_message
+                    latency_ms = result.latency_ms
+                    provider_reference = result.provider_reference
+            except Exception as e:  # noqa: BLE001 — best-effort, never raise
+                logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
                 result_status = "failed"
-                error_message = f"Unsupported channel: {route_channel}"
-                latency_ms = None
-            else:
-                result = await provider.send(
-                    route=route,
-                    event=event,
-                    message=message,
-                    ctx=ctx,
+                error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
+
+            # A template failure is worth recording even when delivery succeeded:
+            # the operator got the channel default, not what they wrote, and would
+            # otherwise have no signal that their template is broken.
+            if template_error:
+                error_message = f"{error_message}; {template_error}" if error_message else template_error
+
+            # Record (or update) the dispatch outcome. _record_log handles
+            # the retry-after-failure case in-place so a previous failed
+            # row doesn't block a new attempt — the only way we get back
+            # `False` here is a true idempotency hit on a previously-sent
+            # dispatch.
+            recorded = await _record_log(
+                session,
+                event=event,
+                route_id=route_id,
+                status=result_status,
+                error_message=error_message,
+                latency_ms=latency_ms,
+                payload_preview=body_preview,
+                provider_reference=provider_reference,
+            )
+
+            if not recorded:
+                skipped += 1
+                outcomes.append(
+                    DispatchOutcome(
+                        route_id=route_id,
+                        route_name=route_name,
+                        channel=route_channel,
+                        status=DispatchStatus.SKIPPED,
+                        error_message="Already dispatched (idempotency)",
+                        latency_ms=None,
+                    ),
                 )
-                result_status = result.status
-                error_message = result.error_message
-                latency_ms = result.latency_ms
-                provider_reference = result.provider_reference
-        except Exception as e:  # noqa: BLE001 — best-effort, never raise
-            logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
-            result_status = "failed"
-            error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
+                # The log kept an earlier `sent` row, but the provider was called all the same:
+                # progress is told what actually happened (a re-emission sent, or failed and
+                # still owed a retry), not the log's refusal.
+                await settled(
+                    DispatchOutcome(
+                        route_id=route_id,
+                        route_name=route_name,
+                        channel=route_channel,
+                        status=DispatchStatus(result_status),
+                        error_message=error_message,
+                        latency_ms=latency_ms,
+                        provider_reference=provider_reference,
+                    ),
+                )
+                continue
 
-        # A template failure is worth recording even when delivery succeeded:
-        # the operator got the channel default, not what they wrote, and would
-        # otherwise have no signal that their template is broken.
-        if template_error:
-            error_message = f"{error_message}; {template_error}" if error_message else template_error
+            # Maintain denorm columns for the UI list. Cheaper than joining
+            # the log table on every render. We do this via an explicit
+            # UPDATE statement rather than mutating the loaded route
+            # object, so route's expiration state can't bite us.
+            if result_status == "sent":
+                sent += 1
+                await session.execute(
+                    update(CustomerNotificationRoute)
+                    .where(CustomerNotificationRoute.id == route_id)
+                    .values(
+                        dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
+                        last_dispatched_at=datetime.utcnow(),
+                    ),
+                )
+                # Channel-specific post-send side effects, inside the same commit.
+                # Shuffle stamps last_used_at on the integration row so its list can
+                # show "fired 2h ago" without joining the dispatch log.
+                if provider is not None and result is not None:
+                    await provider.after_send(route=route, result=result, ctx=ctx)
+                await session.commit()
+            elif result_status == "skipped":
+                skipped += 1
+            else:
+                failed += 1
 
-        # Record (or update) the dispatch outcome. _record_log handles
-        # the retry-after-failure case in-place so a previous failed
-        # row doesn't block a new attempt — the only way we get back
-        # `False` here is a true idempotency hit on a previously-sent
-        # dispatch.
-        recorded = await _record_log(
-            session,
-            event=event,
-            route_id=route_id,
-            status=result_status,
-            error_message=error_message,
-            latency_ms=latency_ms,
-            payload_preview=body_preview,
-            provider_reference=provider_reference,
-        )
-
-        if not recorded:
-            skipped += 1
             outcomes.append(
                 DispatchOutcome(
                     route_id=route_id,
                     route_name=route_name,
                     channel=route_channel,
-                    status=DispatchStatus.SKIPPED,
-                    error_message="Already dispatched (idempotency)",
-                    latency_ms=None,
+                    status=DispatchStatus(result_status),
+                    error_message=error_message,
+                    latency_ms=latency_ms,
+                    provider_reference=provider_reference,
                 ),
             )
-            continue
-
-        # Maintain denorm columns for the UI list. Cheaper than joining
-        # the log table on every render. We do this via an explicit
-        # UPDATE statement rather than mutating the loaded route
-        # object, so route's expiration state can't bite us.
-        if result_status == "sent":
-            sent += 1
-            await session.execute(
-                update(CustomerNotificationRoute)
-                .where(CustomerNotificationRoute.id == route_id)
-                .values(
-                    dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
-                    last_dispatched_at=datetime.utcnow(),
-                ),
-            )
-            # Channel-specific post-send side effects, inside the same commit.
-            # Shuffle stamps last_used_at on the integration row so its list can
-            # show "fired 2h ago" without joining the dispatch log.
-            if provider is not None and result is not None:
-                await provider.after_send(route=route, result=result, ctx=ctx)
-            await session.commit()
-        elif result_status == "skipped":
-            skipped += 1
-        else:
-            failed += 1
-
-        outcomes.append(
-            DispatchOutcome(
-                route_id=route_id,
-                route_name=route_name,
-                channel=route_channel,
-                status=DispatchStatus(result_status),
-                error_message=error_message,
-                latency_ms=latency_ms,
-                provider_reference=provider_reference,
-            ),
-        )
+            await settled(outcomes[-1])
 
     return DispatchResponse(
         success=True,

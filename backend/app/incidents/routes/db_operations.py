@@ -125,6 +125,8 @@ from app.incidents.schema.db_operations import VerdictTrendPoint
 from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
+from app.incidents.services.audit_trail import record_incident_event
+from app.incidents.services.audit_trail import record_status_changes
 from app.incidents.services.customer_reply import ensure_customer_may_set_status
 from app.incidents.services.customer_reply import resume_alert_on_reply
 from app.incidents.services.customer_reply import resume_case_on_reply
@@ -629,8 +631,14 @@ async def update_alert_status_endpoint(
     ensure_customer_may_set_status(current_user, alert_status.status)
     # Enforce per-object ownership: resolve the alert's customer and reject a
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
-    await _ensure_alert_access(alert_status.alert_id, current_user, db)
+    alert = await _ensure_alert_access(alert_status.alert_id, current_user, db)
+    old_status = alert.status
     updated = await update_alert_status(alert_status, db)
+    await record_status_changes(
+        "alert",
+        current_user,
+        [(alert_status.alert_id, alert.customer_code, old_status, alert_status.status.value)],
+    )
     await SlaLifecycleRecorder().alert_action(
         alert_status.alert_id,
         LifecycleAction.STATUS_CHANGED,
@@ -667,13 +675,16 @@ async def bulk_update_alert_status_endpoint(
     """
     updated_alert_ids = []
     not_updated_alert_ids = []
+    status_changes = []
 
     for alert_id in bulk_status.alert_ids:
         try:
             ensure_customer_may_set_status(current_user, bulk_status.status)
-            await _ensure_alert_access(alert_id, current_user, db)
+            alert = await _ensure_alert_access(alert_id, current_user, db)
+            old_status, customer_code = alert.status, alert.customer_code
             await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
             updated_alert_ids.append(alert_id)
+            status_changes.append((alert_id, customer_code, old_status, bulk_status.status.value))
         except HTTPException as e:
             logger.info(f"Skipping alert {alert_id} in bulk status update: {e.detail}")
             not_updated_alert_ids.append(alert_id)
@@ -685,6 +696,7 @@ async def bulk_update_alert_status_endpoint(
         to_status=bulk_status.status.value,
     )
     notify_status_change("alert", updated_alert_ids, bulk_status.status.value, current_user.id)
+    await record_status_changes("alert", current_user, status_changes)
 
     return BulkAlertUpdateResponse(
         message=f"Updated {len(updated_alert_ids)} alert(s) to {bulk_status.status.value}",
@@ -837,6 +849,14 @@ async def create_comment_endpoint(
     await SlaLifecycleRecorder().alert_action(comment.alert_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
     # A customer answering an alert the SOC waits on hands it back (and resumes its SLA).
     await resume_alert_on_reply(comment.alert_id, current_user, db)
+    await record_incident_event(
+        AuditAction.ALERT_COMMENT_CREATE,
+        current_user,
+        customer_code=alert.customer_code,
+        entity_type="alert",
+        entity_id=comment.alert_id,
+        new_value={"comment_id": created.id},
+    )
     # The SOC's comment answers the customer's open questions on this alert (#1305).
     await mark_answered_by_comment("alert", comment.alert_id, current_user, db)
     return CommentResponse(comment=created, success=True, message="Comment created successfully")
@@ -868,7 +888,16 @@ async def edit_comment_endpoint(
 
     _ensure_can_modify_comment(current_user, existing.user_name)
     comment.user_name = current_user.username
-    return CommentResponse(comment=await edit_comment(comment, db), success=True, message="Comment edited successfully")
+    edited = await edit_comment(comment, db)
+    await record_incident_event(
+        AuditAction.ALERT_COMMENT_EDIT,
+        current_user,
+        customer_code=alert.customer_code,
+        entity_type="alert",
+        entity_id=existing.alert_id,
+        new_value={"comment_id": comment.comment_id},
+    )
+    return CommentResponse(comment=edited, success=True, message="Comment edited successfully")
 
 
 @incidents_db_operations_router.delete(
@@ -897,7 +926,16 @@ async def delete_comment_endpoint(
         )
 
     _ensure_can_modify_comment(current_user, comment.user_name)
+    alert_id, customer_code = comment.alert_id, alert.customer_code
     await delete_comment(comment_id, db)
+    await record_incident_event(
+        AuditAction.ALERT_COMMENT_DELETE,
+        current_user,
+        customer_code=customer_code,
+        entity_type="alert",
+        entity_id=alert_id,
+        new_value={"comment_id": comment_id},
+    )
     return {"message": "Comment deleted successfully", "success": True}
 
 
@@ -935,6 +973,14 @@ async def create_case_comment_endpoint(
     )
     await SlaLifecycleRecorder().case_action(comment.case_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
     await resume_case_on_reply(comment.case_id, current_user, db)
+    await record_incident_event(
+        AuditAction.CASE_COMMENT_CREATE,
+        current_user,
+        customer_code=case.customer_code,
+        entity_type="case",
+        entity_id=comment.case_id,
+        new_value={"comment_id": created.id},
+    )
     # The SOC's comment answers the customer's open questions on this case (#1305).
     await mark_answered_by_comment("case", comment.case_id, current_user, db)
 
@@ -966,7 +1012,16 @@ async def edit_case_comment_endpoint(
 
     _ensure_can_modify_comment(current_user, existing.user_name)
     comment.user_name = current_user.username
-    return CaseCommentResponse(comment=await edit_case_comment(comment, db), success=True, message="Case comment edited successfully")
+    edited = await edit_case_comment(comment, db)
+    await record_incident_event(
+        AuditAction.CASE_COMMENT_EDIT,
+        current_user,
+        customer_code=case.customer_code,
+        entity_type="case",
+        entity_id=existing.case_id,
+        new_value={"comment_id": comment.comment_id},
+    )
+    return CaseCommentResponse(comment=edited, success=True, message="Case comment edited successfully")
 
 
 @incidents_db_operations_router.delete(
@@ -995,7 +1050,16 @@ async def delete_case_comment_endpoint(
         )
 
     _ensure_can_modify_comment(current_user, comment.user_name)
+    case_id, customer_code = comment.case_id, case.customer_code
     await delete_case_comment(comment_id, db)
+    await record_incident_event(
+        AuditAction.CASE_COMMENT_DELETE,
+        current_user,
+        customer_code=customer_code,
+        entity_type="case",
+        entity_id=case_id,
+        new_value={"comment_id": comment_id},
+    )
     return {"message": "Case comment deleted successfully", "success": True}
 
 
@@ -1580,6 +1644,15 @@ async def create_case_from_alert_endpoint(
     )
     if case is None:
         return CaseResponse(case=None, success=False, message="Case not created")
+    # Like a case opened by hand: the customer's audit log shows who opened it (#1298).
+    await record_incident_event(
+        AuditAction.CASE_CREATE,
+        current_user,
+        customer_code=case.customer_code,
+        entity_type="case",
+        entity_id=case.id,
+        new_value={"case_name": case.case_name, "customer_code": case.customer_code, "alert_id": alert_id.alert_id},
+    )
 
     # ``create_case_from_alert`` above already auto-applied the template
     # against the originating alert and stamped its id on the tasks. Skip
@@ -2546,6 +2619,7 @@ async def update_case_status_endpoint(
     # The case only: the alerts the cascade moved are the case's, and one notice says it (#1282).
     if old_status != new_status_value:
         notify_status_change("case", [case_status.case_id], new_status_value, current_user.id)
+    await record_status_changes("case", current_user, [(case_status.case_id, case.customer_code, old_status, new_status_value)])
     if new_alert_status:
         await recorder.alerts_action(
             [alert_id for alert_id in alert_ids if alert_id not in failed_alerts],

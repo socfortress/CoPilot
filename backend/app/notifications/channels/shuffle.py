@@ -11,6 +11,7 @@ HTTP 200 as sent. We do not poll for the downstream app's terminal state.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 from typing import Optional
@@ -29,6 +30,9 @@ from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_shuffle
+from app.notifications.services.payload_v1 import SHUFFLE_JSON_MARKER
+from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import v1_envelope
 
 _CREDS_MEMO_KEY = "shuffle_creds"
 
@@ -77,6 +81,11 @@ class ShuffleConfig(ChannelConfig):
 
     app_id: Optional[str] = None
     app_name: Optional[str] = None
+    #: The webhook's option of the same name. Shuffle's MCP call takes one natural-language
+    #: `input.text`, so the v1 payload (`schema` and the `ai_report` block) rides as one line of
+    #: compact JSON at the end of that text, after `SHUFFLE_JSON_MARKER`. Off by default: an app
+    #: agent that is not told to ignore it may quote the JSON wherever it delivers.
+    include_full_report: bool = False
 
 
 class ShuffleChannel(ChannelProvider):
@@ -107,6 +116,8 @@ class ShuffleChannel(ChannelProvider):
             # it against that route rather than failing the whole batch.
             return SendResult.failed(f"Invalid shuffle config: {e}")
         app_id = cfg.app_id
+        include_full_report = cfg.include_full_report
+        route_scope = getattr(route, "scope", None)
 
         # Memoized per dispatch call: several Shuffle routes for one customer
         # share a single connector read, matching the pre-refactor behaviour.
@@ -142,6 +153,11 @@ class ShuffleChannel(ChannelProvider):
         # Shuffle's input_text is natural language. We prepend a
         # "send to {destination}" hint so the app agent knows where to deliver.
         input_text = f"Send to {destination}: {message.body}" if destination else message.body
+        if include_full_report:
+            ai_report = await ai_report_v1_for_route(route_scope, event, ctx.session, ctx)
+            # ASCII escapes keep it one line for any splitter (U+2028 is a line break to some).
+            payload = json.dumps(v1_envelope(event, ai_report), separators=(",", ":"))
+            input_text = f"{input_text}\n\n{SHUFFLE_JSON_MARKER} {payload}"
 
         status, error_message, latency_ms, execution_id = await dispatch_shuffle(
             base_url=base_url,

@@ -123,6 +123,18 @@ const AI_REPORT_VARIABLES: TemplateVariable[] = [
 		name: "context.ai_report.iocs",
 		description: "Indicators with verdicts. Each has .value, .type, .vt_verdict and .vt_score.",
 		example: "{% for i in context.ai_report.iocs %}{{ i.value }} ({{ i.vt_verdict }}){% endfor %}"
+	},
+	{
+		name: "context.ai_report_v1",
+		description:
+			"The report as the structured payload v1 block (summary, recommended actions, alert, capped IOCs). Empty when the customer's AI Report setting is off.",
+		example: "{% if context.ai_report_v1 %}{{ context.ai_report_v1.ioc_count }} IOCs{% endif %}"
+	},
+	{
+		name: "context.ai_report_v1_json",
+		description:
+			"The same block as compact JSON, ready to embed in a JSON body. null when there is none. Use in text templates.",
+		example: '{"findings": {{ context.ai_report_v1_json }}}'
 	}
 ]
 

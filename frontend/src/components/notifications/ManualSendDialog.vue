@@ -54,7 +54,8 @@
 						</n-checkbox>
 						<div class="text-secondary text-xs">
 							Attaches the full write-up. Email renders it formatted; chat channels receive markdown.
-							Refused if this alert has no investigation.
+							Refused if this alert has no investigation. Left unticked, no part of the report is sent,
+							even to a route set to include the full AI report.
 						</div>
 					</div>
 				</n-form-item>

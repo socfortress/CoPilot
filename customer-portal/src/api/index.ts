@@ -2,6 +2,7 @@ import activity from "./endpoints/activity"
 import agents from "./endpoints/agents"
 import aiReports from "./endpoints/aiReports"
 import alerts from "./endpoints/alerts"
+import audit from "./endpoints/audit"
 import auth from "./endpoints/auth"
 import cases from "./endpoints/cases"
 import caseTemplates from "./endpoints/caseTemplates"
@@ -21,6 +22,7 @@ export default {
 	agents,
 	aiReports,
 	alerts,
+	audit,
 	cases,
 	caseTemplates,
 	exposure,

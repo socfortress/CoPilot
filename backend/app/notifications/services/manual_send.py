@@ -216,12 +216,19 @@ async def _attach_ai_report(
     delivering a notification that quietly lacks one is the wrong answer, and on
     a customer-facing send they would have no way to tell.
 
+    Unticked, the event is marked `exclude_ai_report`, so no route carries any
+    of the report (flat fields, `ai_report`, `{{report}}`, `context.ai_report`),
+    even one whose settings include the full report.
+
     Pre-populating `context["ai_report"]` also bypasses the template-source
     guard in `_ensure_ai_report_context`, which is deliberate: a manual send
     routinely targets a route with no template at all, where there is no source
     to inspect and the channel default renders the report instead.
     """
     if not include_ai_report:
+        # Unticked means without the report, on every route: the route's own
+        # `include_full_report` and report templates get nothing either.
+        event.exclude_ai_report = True
         return
 
     if entity_type != EntityType.ALERT:
@@ -230,7 +237,7 @@ async def _attach_ai_report(
             detail=f"Only an alert can carry an AI investigation report; this is a {entity_type}.",
         )
 
-    report = await safe_load_ai_report_context(event.entity_id, session)
+    report = await safe_load_ai_report_context(event.entity_id, session, event.customer_code, entity_type=entity_type)
     if report is None:
         raise HTTPException(
             status_code=400,

@@ -6,8 +6,18 @@ triggers added in #1006 sit somewhere much less forgiving: `alert_created` is on
 the **ingest hot path**, and a slow Resend or Teams endpoint must never back up
 alert creation.
 
-So emission is scheduled and abandoned. The dispatch log is the durable record
-of what happened; nothing is returned to the caller and nothing propagates back.
+So emission is scheduled and abandoned: nothing is returned to the caller and
+nothing propagates back.
+
+**Emission is durable** (the notification outbox, `services/outbox.py`). The
+background task first writes the event to `notification_outbox` in a short
+transaction of its own, then delivers that row at once; a restart or a crash
+before or during the delivery leaves the row for the `drain_notification_outbox`
+job, which retries it with backoff. The event is durable from that commit, a few
+milliseconds after the call, not atomic with the caller's write: a caller whose
+own transaction is about to commit should use `outbox.enqueue(event, session)`
+and `outbox.kick(event)` instead. If the outbox write itself fails, the event is
+dispatched directly as before, once, with no retry, and that is logged.
 
 Two hazards this module exists to contain:
 
@@ -98,9 +108,27 @@ def emit(event: NotificationEvent) -> None:
         )
         return
 
-    task = loop.create_task(_run(event))
+    task = loop.create_task(_emit_durably(event))
     _IN_FLIGHT.add(task)
     task.add_done_callback(_IN_FLIGHT.discard)
+
+
+async def _emit_durably(event: NotificationEvent) -> None:
+    """Queue `event` in the outbox, then deliver it; dispatch directly if it can't be queued."""
+    from app.notifications.services import outbox
+
+    try:
+        queued = await outbox.queue(event)
+    except Exception:  # noqa: BLE001 — `queue` doesn't raise; belt and braces for the contract
+        queued = False
+    if not queued:
+        logger.error(
+            f"Notification emit [{event.trigger.value}] {event.entity_type}#{event.entity_id}: "
+            f"the outbox is unavailable; dispatching directly, without retries.",
+        )
+        await _run(event)
+        return
+    await outbox.drain_key(event.dedupe_key)
 
 
 async def emit_now(event: NotificationEvent, session: Optional[AsyncSession] = None):

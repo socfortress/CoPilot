@@ -731,10 +731,27 @@ class DispatchLogRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OutboxSummary(BaseModel):
+    """The customer's notifications still in the outbox (`services/outbox.py`).
+
+    `pending` waits for its first attempt or a retry, `processing` is being delivered now, and
+    `dead` gave up after its retries (kept 30 days). The age is the oldest pending or processing
+    row's, in seconds; null when nothing is waiting.
+    """
+
+    pending: int = 0
+    processing: int = 0
+    dead: int = 0
+    oldest_pending_age_seconds: Optional[int] = None
+
+
 class DispatchLogListResponse(BaseModel):
     success: bool = True
     message: str = "Dispatch log retrieved"
     entries: List[DispatchLogRead]
+    # Notifications for this customer not yet in the log for good. Optional so the shape
+    # stays readable by anything that predates it.
+    outbox: Optional[OutboxSummary] = None
 
 
 # ---------------------------------------------------------------------------

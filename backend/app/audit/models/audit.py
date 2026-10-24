@@ -56,6 +56,9 @@ class AuditAction(str, Enum):
     CUSTOMER_USER_INVITE = "customer_user.invite"
     CUSTOMER_USER_TOTP_RESET = "customer_user.totp_reset"
     CUSTOMER_USER_PASSWORD_RESET = "customer_user.password_reset"
+    # A user's own two-factor authentication, set up or turned off from their profile (#1298)
+    USER_TOTP_ENABLE = "user.totp_enable"
+    USER_TOTP_DISABLE = "user.totp_disable"
 
     # Connectors
     CONNECTOR_CREATE = "connector.create"
@@ -75,10 +78,25 @@ class AuditAction(str, Enum):
 
     # Cases
     CASE_CREATE = "case.create"
+    # Status changes and comments on alerts and cases, by the SOC or a portal user, so a customer's
+    # audit log answers who closed what and who said what (#1298). A comment's text is never stored.
+    CASE_STATUS_CHANGE = "case.status_change"
+    CASE_COMMENT_CREATE = "case.comment_create"
+    CASE_COMMENT_EDIT = "case.comment_edit"
+    CASE_COMMENT_DELETE = "case.comment_delete"
 
     # Alert triage
     ALERT_VERDICT_SET = "alert.verdict_set"
     ALERT_VERDICT_CLEAR = "alert.verdict_clear"
+    ALERT_STATUS_CHANGE = "alert.status_change"
+    ALERT_COMMENT_CREATE = "alert.comment_create"
+    ALERT_COMMENT_EDIT = "alert.comment_edit"
+    ALERT_COMMENT_DELETE = "alert.comment_delete"
+
+    # Customer PDF reports: generated, downloaded and deleted (#1298)
+    REPORT_GENERATE = "report.generate"
+    REPORT_DOWNLOAD = "report.download"
+    REPORT_DELETE = "report.delete"
 
     # AI Analyst from the Customer Portal (#1215)
     AI_ANALYSIS_REQUEST = "ai_analysis.request"
@@ -87,6 +105,8 @@ class AuditAction(str, Enum):
     ACTIVITY_SETTINGS_UPDATE = "activity.settings_update"
     # The Customer Portal's Exposure page switch, per customer (#1289).
     EXPOSURE_SETTINGS_UPDATE = "exposure.settings_update"
+    # The Customer Portal's Audit Log page switch, per customer (#1298).
+    AUDIT_SETTINGS_UPDATE = "audit.settings_update"
     # "Ask the SOC" from the Customer Portal (#1305): a portal user's question (refusals as
     # failures), the SOC marking one answered by hand, and the per-customer switch.
     SOC_REQUEST_CREATE = "soc_request.create"

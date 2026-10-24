@@ -14,50 +14,19 @@
 			</n-button>
 		</n-button-group>
 
-		<!--
-			`show` keeps the details mounted while the modal is closed, so an update still in
-			flight when the user dismisses it can finish and emit.
-		-->
-		<n-modal
-			v-model:show="showDetails"
-			:title
-			preset="card"
-			display-directive="show"
-			class="min-h-135 w-11/12! max-w-200! overflow-hidden"
-		>
-			<!-- Next to the modal's close button: leave the modal for the entity's own page. -->
-			<template #header-extra>
-				<n-button
-					quaternary
-					:focusable="false"
-					circle
-					size="small"
-					:aria-label="pageLabel"
-					:title="pageLabel"
-					class="opacity-60"
-					@click="goToPage()"
-				>
-					<template #icon>
-						<Icon :name="PAGE_ICON" />
-					</template>
-				</n-button>
-			</template>
-
+		<EntityDetailsModal v-model:show="showDetails" :title :route :entity>
 			<slot :close />
-		</n-modal>
+		</EntityDetailsModal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import type { ButtonSize } from "naive-ui"
-import { NButton, NButtonGroup, NModal } from "naive-ui"
+import type { EntityPageRoute } from "./EntityDetailsModal.vue"
+import { NButton, NButtonGroup } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
-
-/** What a route helper from `useNavigation` returns, e.g. `routeAlertDetails(id)`. */
-export interface EntityPageRoute {
-	navigate: () => unknown
-}
+import EntityDetailsModal from "./EntityDetailsModal.vue"
 
 /**
  * The "View Details" + "open page" pair used for alerts, cases and agents: the first

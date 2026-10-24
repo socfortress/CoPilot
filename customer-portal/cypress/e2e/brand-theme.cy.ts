@@ -89,7 +89,7 @@ describe("brand color as the theme", () => {
 		visitIn("/overview", "light")
 		expectPrimary(TEAL)
 
-		cy.get("img[alt=avatar]:visible").first().click()
+		cy.get("[data-testid=toolbar-avatar]:visible").first().click()
 		cy.contains(".n-dropdown-option", "Logout").click()
 		cy.location("pathname").should("eq", "/login")
 		expectPrimary(DEFAULT_LIGHT_PRIMARY)

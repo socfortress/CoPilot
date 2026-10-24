@@ -230,6 +230,7 @@ async def dispatch_resend(
     cc: Optional[List[str]] = None,
     reply_to: Optional[str] = None,
     html_body: Optional[str] = None,
+    idempotency_key: Optional[str] = None,
 ) -> ResendDispatchResult:
     """Send one email via Resend's REST API.
 
@@ -240,6 +241,10 @@ async def dispatch_resend(
     declaring `format="html"` (#1038); the default body is markdown-ish plain
     text, and sending that as HTML would show the markup. When both are present
     Resend delivers a multipart message and the client picks.
+
+    `idempotency_key` (the outbox passes one) goes out as Resend's
+    `Idempotency-Key` header: a retry of a send Resend already accepted returns
+    the first answer instead of mailing again.
     """
     payload: Dict[str, Any] = {
         "from": from_address,
@@ -254,12 +259,16 @@ async def dispatch_resend(
     if reply_to:
         payload["reply_to"] = reply_to
 
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
+
     started = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=_RESEND_TIMEOUT_S) as client:
             response = await client.post(
                 f"{base_url.rstrip('/')}/emails",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                headers=headers,
                 json=payload,
             )
         latency_ms = int((time.monotonic() - started) * 1000)
@@ -341,7 +350,9 @@ async def dispatch_shuffle(
             "environment": environment,
         },
     }
-    logger.info(f"Dispatching payload to Shuffle body: {body}")
+    # The text is the message and, with the full report on, a customer's AI report: logged
+    # shortened, not whole.
+    logger.info(f"Dispatching payload to Shuffle app {app_id} ({len(input_text)} chars): {input_text[:500]!r}")
     started = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True, verify=_SHUFFLE_VERIFY_SSL) as client:
