@@ -139,6 +139,14 @@ const router = createRouter({
 			meta: { title: "Users", auth: true, roles: RouteRole.All }
 		},
 		{
+			// A customer admin's audit log of their customers (#1298), once the SOC turned it on;
+			// anyone else is told it isn't theirs.
+			path: "/audit",
+			name: "AuditLog",
+			component: () => import("@/views/AuditLog.vue"),
+			meta: { title: "Audit log", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/activity",
 			name: "Activity",
 			component: () => import("@/views/Activity.vue"),

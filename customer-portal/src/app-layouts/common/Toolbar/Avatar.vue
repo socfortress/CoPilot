@@ -29,13 +29,15 @@
 <script lang="ts" setup>
 import type { DropdownOption } from "naive-ui"
 import { NAvatar, NDropdown, NTag } from "naive-ui"
-import { computed, h, ref } from "vue"
+import { computed, h, ref, watch } from "vue"
 import { RouterLink, useRouter } from "vue-router"
+import { useAuditAvailability } from "@/composables/common/useAuditAvailability"
 import { useAuthStore } from "@/stores/auth"
 import { renderIcon } from "@/utils"
 
 const LogoutIcon = "carbon:logout"
 const UsersIcon = "carbon:user-multiple"
+const AuditIcon = "carbon:catalog"
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -85,10 +87,23 @@ function renderSignedInUser() {
 	)
 }
 
+// "Audit log" for a customer admin whose SOC turned it on for one of their customers (#1298).
+const { available: auditAvailable, check: checkAudit } = useAuditAvailability()
+watch(
+	() => authStore.isCustomerAdmin,
+	isAdmin => {
+		if (isAdmin) checkAudit()
+	},
+	{ immediate: true }
+)
+
 // "Users" only for a customer admin (#1296): the profile says so, read live.
 const options = computed<DropdownOption[]>(() => [
 	{ key: "signed-in-user", type: "render", render: renderSignedInUser },
 	...(authStore.isCustomerAdmin ? [{ label: "Users", key: "route-Users", icon: renderIcon(UsersIcon) }] : []),
+	...(authStore.isCustomerAdmin && auditAvailable.value
+		? [{ label: "Audit log", key: "route-AuditLog", icon: renderIcon(AuditIcon) }]
+		: []),
 	{
 		label: "Logout",
 		key: "route-Logout",
