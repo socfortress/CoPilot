@@ -350,7 +350,9 @@ async def dispatch_shuffle(
             "environment": environment,
         },
     }
-    logger.info(f"Dispatching payload to Shuffle body: {body}")
+    # The text is the message and, with the full report on, a customer's AI report: logged
+    # shortened, not whole.
+    logger.info(f"Dispatching payload to Shuffle app {app_id} ({len(input_text)} chars): {input_text[:500]!r}")
     started = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=_SHUFFLE_TIMEOUT_S, http2=True, verify=_SHUFFLE_VERIFY_SSL) as client:

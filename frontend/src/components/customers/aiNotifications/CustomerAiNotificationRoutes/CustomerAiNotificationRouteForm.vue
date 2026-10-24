@@ -99,6 +99,16 @@
 					Gmail, handle for chat apps, etc.
 				</template>
 			</n-form-item>
+
+			<n-form-item :show-feedback="false">
+				<n-checkbox v-model:checked="cfg.include_full_report">Include full AI report as JSON</n-checkbox>
+			</n-form-item>
+			<div class="text-secondary mb-2 text-xs">
+				For workflows that read the findings: the AI report (payload v1, with the summary, recommended actions
+				and IOCs) is appended to the message as its last line, one line of JSON after
+				<code>COPILOT_NOTIFICATION_V1_JSON:</code>
+				<span>. Leave off for apps that post the message as-is.</span>
+			</div>
 		</template>
 
 		<!-- ===== Webhook channel fields ===== -->
@@ -925,7 +935,8 @@ async function submit() {
 						shuffle_integration_id: form.shuffle_integration_id,
 						config: {
 							app_id: cfg.app_id ?? null,
-							app_name: cfg.app_name ?? null
+							app_name: cfg.app_name ?? null,
+							include_full_report: Boolean(cfg.include_full_report)
 						}
 					}
 

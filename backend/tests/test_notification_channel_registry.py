@@ -151,7 +151,9 @@ def _run_webhook(route, req=None, report=None, is_custom=False):
 
 
 def test_webhook_structured_payload_is_unchanged():
-    """Exact field set and values — customers' automation reads these names."""
+    """Exact field set and values — customers' automation reads these names.
+
+    v1 added one key, `schema`, after the original ones; nothing else moved."""
     _result, kwargs = _run_webhook(_webhook_route())
 
     assert kwargs["structured_payload"] == {
@@ -162,7 +164,17 @@ def test_webhook_structured_payload_is_unchanged():
         "summary": "Credential dumping observed on WKSTN-04.",
         "report_url": "https://copilot.invalid/alerts/42",
         "text": "RENDERED BODY",
+        "schema": "copilot.notification.v1",
     }
+    assert list(kwargs["structured_payload"])[:7] == [
+        "customer_code",
+        "alert_id",
+        "alert_name",
+        "severity",
+        "summary",
+        "report_url",
+        "text",
+    ]
 
 
 def test_webhook_preserves_none_for_absent_optional_fields():

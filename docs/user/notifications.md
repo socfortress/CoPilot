@@ -221,7 +221,7 @@ An unassigned item has nobody to email: pair this with a route to the team's Tea
 | Include full AI report | **On** |
 | Message template | *(none — you want the structured JSON, not prose)* |
 
-Leave the template empty so CoPilot sends its structured JSON object. A template replaces the entire body with its rendered output, which is what you want for a provider-specific shape like Discord's `{"content": …}` — and not what you want when you're parsing the payload.
+Leave the template empty so CoPilot sends its structured JSON object; the findings are in its `ai_report` object ([Payload v1](#payload-v1)). A template replaces the entire body with its rendered output, which is what you want for a provider-specific shape like Discord's `{"content": …}` — and not what you want when you're parsing the payload.
 
 ### Two audiences, two moments
 
@@ -335,6 +335,7 @@ Shuffle routes deliver through a customer's own authenticated Shuffle org, givin
 2. Create a route with **Shuffle** as the channel
 3. Pick the integration, then the app within it
 4. Set a **destination hint** — a channel name, email address or handle. This is prepended to the outgoing message so Shuffle's app agent knows where to deliver.
+5. Optionally tick **Include full AI report as JSON**, for a workflow that acts on the findings. The message then ends with one line of JSON carrying the [v1 payload](#payload-v1), including the `ai_report` block; see [Reading it in Shuffle](#reading-it-in-shuffle). Leave it off for an app that posts the message as it is, or the JSON is posted too.
 
 For the wider Shuffle setup, see [CoPilot ↔ Shuffle Integration](./shuffle-integration.md).
 
@@ -349,7 +350,7 @@ The generic option: an HTTPS POST to any endpoint.
 | **Webhook URL** | Required, must be `https://` |
 | **Method** | POST or PUT |
 | **Custom headers** | Optional. For `Authorization`, `X-API-Key` and similar. |
-| **Include full AI report** | Adds the report markdown, recommended actions and IOC list to the payload |
+| **Include full AI report** | Adds the AI report to the payload: the nested `ai_report` block ([Payload v1](#payload-v1)), and the older flat fields beside it |
 
 By default CoPilot sends a structured JSON object:
 
@@ -361,13 +362,182 @@ By default CoPilot sends a structured JSON object:
   "severity": "Critical",
   "summary": "Credential dumping observed on WKSTN-04.",
   "report_url": "https://copilot.example.com/alerts/42",
-  "text": "…the rendered message body…"
+  "text": "…the rendered message body…",
+  "schema": "copilot.notification.v1"
 }
 ```
 
-**Include full AI report** is a checkbox on the route, not something you reference in a template. When it's on, the report's extra fields are merged into that same JSON object.
+**Include full AI report** is a checkbox on the route, not something you reference in a template. When it's on, the payload gains the `ai_report` object described in [Payload v1](#payload-v1). For receivers written before v1, the report's older fields are still merged flat into the same object, unchanged: `report_id`, `recommended_actions`, `report_markdown`, `report_created_at` and `iocs` (each IOC as `ioc_value`, `ioc_type`, `vt_verdict`, `vt_score`, `details`). New receivers should read `ai_report`.
 
-If you set a **message template**, its rendered output is sent as the raw body *instead* of the structured object — which is how you match a provider-specific shape like Discord's `{"content": …}` or Slack's `{"text": …}`. If you're parsing the payload programmatically, leave the template empty.
+If you set a **message template**, its rendered output is sent as the raw body *instead* of the structured object — which is how you match a provider-specific shape like Discord's `{"content": …}` or Slack's `{"text": …}`. If you're parsing the payload programmatically, leave the template empty, or build your JSON from `{{ context.ai_report_v1 | tojson }}`.
+
+---
+
+## Payload v1
+
+Notifications that automation can act on: a Shuffle workflow or any webhook receiver gets the AI investigation's findings as structured data, versioned, without parsing the message text.
+
+`"schema": "copilot.notification.v1"` names the shape. It is on every structured webhook payload, and on the JSON a Shuffle route carries.
+
+### Where it appears
+
+| Channel | How |
+|---|---|
+| **Webhook**, no template | The structured payload above. With **Include full AI report** on, it has an `ai_report` key. |
+| **Shuffle** | With **Include full AI report as JSON** on, the message ends with one line: `COPILOT_NOTIFICATION_V1_JSON: ` followed by the JSON. See [Reading it in Shuffle](#reading-it-in-shuffle). |
+| **Any template** | `{{ context.ai_report_v1 }}` is the same block, for a template that builds its own JSON (pipe it through the `tojson` filter). Guard it with `{% if context.ai_report_v1 %}`. |
+
+A webhook template that sends its own JSON, with the block inside it:
+
+```jinja
+{"alert": {{ alert_id }}, "customer": {{ customer_code | tojson }}, "findings": {{ context.ai_report_v1 | tojson }}}
+```
+
+### Who gets the block
+
+The block is customer data, so it follows the same rules as the report itself:
+
+- A **customer** route gets it only while AI reports are enabled for that customer (*Customers → (customer) → AI Report*), whatever the trigger. While they're off the value is `null`, and the AI triggers don't reach the customer at all, as before.
+- An **internal** route is the SOC's own and always gets it.
+- `job_id` is filled in on internal routes only; a customer route gets `null`.
+- The report must belong to the alert and the customer of the notification, or the block is `null`.
+
+When **Include full AI report** is on, `ai_report` is always present: an object, or `null` when there is no report for the alert yet, when the notification isn't about an alert, or when the route may not receive it. When the option is off the key is absent.
+
+### Loaded when it's delivered
+
+The block is read from the database when the notification is delivered, not when it was raised. A notification retried later (see [Delivery survives a restart](#delivery-survives-a-restart-and-transient-failures-are-retried)) carries the report as it is at that moment, as the older flat fields always have. Which report:
+
+- *An AI report is reviewed*: the report that was reviewed.
+- Any other trigger: the alert's newest report.
+
+### Size limits
+
+Long values are cut, and the block as a whole is kept under **32 KB** of JSON, so a payload with it stays well under 64 KB. The older flat fields are not limited (`report_markdown` is the whole report).
+
+| Field | At most |
+|---|---|
+| `summary` | 2,000 characters |
+| `recommended_actions` | 4,000 characters |
+| an IOC's `details` | 500 characters |
+| an IOC's `value` | 512 characters |
+| `iocs` | 50 indicators |
+
+A cut string ends with `…`, and its name is listed in `truncated_fields`; an IOC with a cut field has `"truncated": true`. If the block would still be over 32 KB (very long non-ASCII text), indicators are dropped from the end of the list first (`iocs_truncated: true`), then `summary` and `recommended_actions` are shortened further. `ioc_count` is always the true total.
+
+### Fields
+
+| Field | Type | Meaning |
+|---|---|---|
+| `schema` | string | `copilot.notification.v1` (on the payload, beside `ai_report`) |
+| `ai_report.report_id` | integer | The report's id in CoPilot |
+| `ai_report.job_id` | string or null | The investigation job's id. `null` on customer routes. |
+| `ai_report.severity` | string or null | The AI's assessment of the finding: `Critical`, `High`, `Medium`, `Low` or `Informational`. Not the alert's own severity, which is the payload's `severity`. |
+| `ai_report.summary` | string or null | The report's summary |
+| `ai_report.recommended_actions` | string or null | The AI's suggested next steps, as written (often markdown) |
+| `ai_report.created_at` | string or null | When the report was written, ISO 8601 UTC: `2026-10-01T12:00:00Z` |
+| `ai_report.report_url` | string or null | Deep link into CoPilot. `null` when `COPILOT_URL` isn't set. |
+| `ai_report.alert.id` | integer | The alert's id |
+| `ai_report.alert.name` | string or null | The alert's title |
+| `ai_report.alert.source` | string or null | Where the alert came from: `wazuh`, `office365`, `crowdstrike`, … |
+| `ai_report.alert.asset_name` | string or null | The alert's first asset (host name), when it has one |
+| `ai_report.iocs` | array | Indicators, in the order they were recorded, at most 50 |
+| `ai_report.iocs[].value` | string | The indicator itself |
+| `ai_report.iocs[].type` | string | `ip`, `domain`, `hash`, `url`, `process`, `user`, `command`, … |
+| `ai_report.iocs[].verdict` | string | `malicious`, `suspicious`, `clean` or `unknown` |
+| `ai_report.iocs[].score` | string or null | The enrichment score as recorded, for example `12/90` |
+| `ai_report.iocs[].details` | string or null | The AI's note on the indicator |
+| `ai_report.iocs[].truncated` | boolean | One of this indicator's fields was cut |
+| `ai_report.ioc_count` | integer | How many indicators the report has in total |
+| `ai_report.iocs_truncated` | boolean | `iocs` holds fewer than `ioc_count` |
+| `ai_report.reviewed` | boolean | An analyst has reviewed this report |
+| `ai_report.review_verdict` | string or null | On *An AI report is reviewed* only: the reviewer's verdict, `up` or `down`, or `null` when they gave none. `null` on every other trigger. |
+| `ai_report.truncated_fields` | array of strings | The block's fields that were cut, for example `["summary"]`. Empty when nothing was. |
+
+`null` means CoPilot has no value; an empty list means there are none.
+
+### Example
+
+A webhook route on *An AI investigation completes*, with **Include full AI report** on. The flat fields are left out here for brevity; they are still sent.
+
+```json
+{
+  "customer_code": "ACME",
+  "alert_id": 4821,
+  "alert_name": "Suspicious PowerShell execution on WKSTN-014",
+  "severity": "High",
+  "summary": "An encoded PowerShell command was launched by winword.exe.",
+  "report_url": "https://copilot.example.com/alerts/4821",
+  "text": "*AI investigation complete* — severity: *High* …",
+  "schema": "copilot.notification.v1",
+  "ai_report": {
+    "report_id": 912,
+    "job_id": null,
+    "severity": "High",
+    "summary": "An encoded PowerShell command was launched by winword.exe.",
+    "recommended_actions": "1. Isolate WKSTN-014.
+2. Reset the user's password.
+3. Block 203.0.113.7 at the firewall.",
+    "created_at": "2026-10-01T12:00:00Z",
+    "report_url": "https://copilot.example.com/alerts/4821",
+    "alert": {
+      "id": 4821,
+      "name": "Suspicious PowerShell execution on WKSTN-014",
+      "source": "wazuh",
+      "asset_name": "WKSTN-014"
+    },
+    "iocs": [
+      {
+        "value": "203.0.113.7",
+        "type": "ip",
+        "verdict": "malicious",
+        "score": "12/90",
+        "details": "Contacted by the decoded command over HTTPS.",
+        "truncated": false
+      },
+      {
+        "value": "update-check.example.com",
+        "type": "domain",
+        "verdict": "unknown",
+        "score": null,
+        "details": null,
+        "truncated": false
+      }
+    ],
+    "ioc_count": 2,
+    "iocs_truncated": false,
+    "reviewed": false,
+    "review_verdict": null,
+    "truncated_fields": []
+  }
+}
+```
+
+### Reading it in Shuffle
+
+Shuffle's app call takes one text input, so a Shuffle route sends the message first and the JSON last:
+
+```text
+Send to #soc-alerts: *AI investigation complete* — severity: *High*
+…the rest of the message…
+
+COPILOT_NOTIFICATION_V1_JSON: {"schema":"copilot.notification.v1","customer_code":"ACME","alert_id":4821,…,"ai_report":{…}}
+```
+
+The JSON is always the **last line**, after `COPILOT_NOTIFICATION_V1_JSON: ` (with the space), and always one line: newlines and non-ASCII characters inside it are escaped. It holds the webhook's fields except `text` (the message is the rest of the input), plus `ai_report`.
+
+To act on the indicators in a workflow:
+
+1. Take the input text and keep what follows `COPILOT_NOTIFICATION_V1_JSON: ` on its last line.
+2. Parse that as JSON (any JSON-parsing step or a small Python step: `json.loads(text.rsplit("COPILOT_NOTIFICATION_V1_JSON: ", 1)[1])`).
+3. Check `schema` is `copilot.notification.v1` and `ai_report` isn't `null`.
+4. Loop over `ai_report.iocs`, branching on `verdict` and `type`; for example, block each `ip` whose `verdict` is `malicious`. Check `iocs_truncated`: when it is true there were more indicators than the list holds (`ioc_count`), and the rest are in the report in CoPilot.
+
+If the app's agent posts its input somewhere people read, tell it in the destination hint or the template to leave the JSON line out, or keep the option off for that route.
+
+### Stability
+
+`copilot.notification.v1` only ever grows. Fields may be **added** to the payload or to `ai_report`; none is removed, renamed or given a different type, and a field's `null` meaning doesn't change. Ignore keys you don't know. A change that would break a v1 receiver gets a new name, `copilot.notification.v2`, and v1 keeps being sent until it is retired with notice.
 
 ---
 
@@ -428,6 +598,7 @@ Available variables:
 | `{{ context.clock }}`, `{{ context.due_at }}`, `{{ context.opened_at }}`, `{{ context.remaining_minutes }}` / `{{ context.overdue_minutes }}`, `{{ context.status }}`, `{{ context.title }}` | SLA triggers only — which clock (`acknowledge` / `resolve`), when it was due (UTC), how long left or how late |
 | `{{ branding.… }}` | Customer logo and brand colours — `logo`, `title`, `accent`, `accent_strong`, `accent_text` |
 | `{{ context.ai_report.… }}` | The AI investigation report — see below |
+| `{{ context.ai_report_v1 }}` | The same report as the structured [v1 block](#payload-v1), for templates that build JSON (pipe it through the `tojson` filter) |
 
 `{{ alert_id }}`, `{{ alert_name }}` and `{{ report_url }}` are kept as aliases so anything written before templates became Jinja still works.
 

@@ -24,6 +24,8 @@ from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.services.dispatchers import dispatch_webhook
+from app.notifications.services.payload_v1 import SCHEMA_V1
+from app.notifications.services.payload_v1 import ai_report_v1_for_route
 
 
 async def build_full_report(alert_id: int, session) -> Optional[Dict[str, Any]]:
@@ -107,6 +109,7 @@ class WebhookChannel(ChannelProvider):
         # Read every attribute before the first await — an expired ORM object
         # would otherwise trigger a synchronous refresh and MissingGreenlet.
         has_template = message.is_custom
+        route_scope = getattr(route, "scope", None)
         try:
             cfg = self.parse_config(route)
         except ValueError as e:
@@ -132,11 +135,17 @@ class WebhookChannel(ChannelProvider):
             "summary": event.summary,
             "report_url": event.link_url,
             "text": message.body,
+            # Added with v1, after the original keys so their order is unchanged.
+            "schema": SCHEMA_V1,
         }
 
         # Two mutually-exclusive body modes (enforced in the UI, guarded here):
         #   1. include_full_report → merge the report's extra fields flat into
-        #      the structured payload. Template ignored.
+        #      the structured payload (the pre-v1 shape, kept byte for byte for
+        #      existing receivers), and add the same report as the nested,
+        #      bounded `ai_report` block (`services/payload_v1.py`). The key is
+        #      always present with the option on: null when there is no report,
+        #      or when this route may not receive one. Template ignored.
         #   2. custom template → that rendered string is the body. If it
         #      contains the {{report}} token, inject the same report fields as
         #      a JSON object at that spot.
@@ -145,6 +154,7 @@ class WebhookChannel(ChannelProvider):
             report_fields = await self._report(event, ctx)
             if report_fields is not None:
                 structured_payload.update(report_fields)
+            structured_payload["ai_report"] = await ai_report_v1_for_route(route_scope, event, ctx.session, ctx)
         elif has_template:
             rendered_template = message.body
             if "{{report}}" in rendered_template:

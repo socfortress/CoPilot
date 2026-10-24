@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from datetime import datetime
 from typing import Any
 from typing import Awaitable
@@ -80,6 +81,7 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
+from app.notifications.services.payload_v1 import ai_report_v1_for_route
 from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
@@ -725,6 +727,10 @@ def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
     return route_trigger == report_trigger
 
 
+#: `ai_report` as a name of its own, not the start of `ai_report_v1`.
+_MENTIONS_AI_REPORT = re.compile(r"ai_report(?!_v1)")
+
+
 async def _ai_reports_permitted(trigger: str, customer_code: str, session: AsyncSession) -> bool:
     """Whether AI-written findings may be delivered to this customer.
 
@@ -930,10 +936,12 @@ async def _render_body(
     already broken, just silently.
     """
     inline = route.format_template
+    route_scope = getattr(route, "scope", None)
     if inline:
         await _ensure_ai_report_context(inline, event, session, ctx=ctx)
         fallback = _format_default_body(event)
-        body, error = render_body(inline, event, fallback)
+        render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
+        body, error = render_body(inline, render_event, fallback)
         return (RenderedMessage(body=body, is_custom=error is None), error)
 
     template = await resolve_template_for_route(route, session)
@@ -953,8 +961,9 @@ async def _render_body(
 
     autoescape = template.format == "html"
     extra = await _branding_context(template, event, session, ctx=ctx)
+    render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
 
-    body, error = render_body(template.body_template, event, fallback, autoescape=autoescape, extra_context=extra)
+    body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
     if error:
         # The named template failed, so the channel default went out instead —
         # which is plain text with no subject, whatever the template declared.
@@ -962,7 +971,7 @@ async def _render_body(
 
     subject, subject_error = render_body(
         template.subject_template,
-        event,
+        render_event,
         # A failed subject falls back to the provider composing its own, which
         # is what a route with no named template already does.
         "",
@@ -1039,7 +1048,9 @@ async def _ensure_ai_report_context(
     same batch does not re-query. Templates guard with `{% if context.ai_report %}`
     and both a `None` and an absent key read as falsy.
     """
-    if "ai_report" not in source:
+    # `ai_report_v1` is a different block with its own loader and gate (`_with_ai_report_v1`);
+    # a template naming only that must not load this one too.
+    if not _MENTIONS_AI_REPORT.search(source):
         return
     if "ai_report" in (event.context or {}):
         return
@@ -1052,6 +1063,29 @@ async def _ensure_ai_report_context(
 
     report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
     event.context["ai_report"] = report
+
+
+async def _with_ai_report_v1(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event to render with: `context.ai_report_v1` added when the template names it.
+
+    The block a webhook receives with `include_full_report` (`services/payload_v1.py`), for
+    templates that build their own JSON (`{{ context.ai_report_v1 | tojson }}`). Same lazy guard
+    as `_ensure_ai_report_context`, but **a copy of the event, never the shared one**: the block
+    depends on the route's scope (a customer route needs the AI report switch and never sees the
+    job id), and every route of a dispatch renders the same event. Null when the route may not
+    have it or there is none; `{% if context.ai_report_v1 %}` guards both.
+    """
+    if "ai_report_v1" not in source:
+        return event
+    block = await ai_report_v1_for_route(route_scope, event, session, ctx)
+    return event.model_copy(update={"context": {**(event.context or {}), "ai_report_v1": block}})
 
 
 async def _record_log(
