@@ -10,8 +10,9 @@ Claim first, send second: two overlapping runs (a slow provider, two workers) ca
 *see* an unstamped clock, but only one can stamp it, so only one hands the notice on. This
 job never hands a notice on twice; delivery is ``emit()``'s, through the notification outbox,
 which retries a route only when nothing can have been delivered (no connection, a 429 or
-503) and never a route already sent. Delivery is at least once in one case: CoPilot stopping
-between a provider accepting the notice and the outbox recording it.
+503) and never a route already sent. Delivery is at least once in two narrow cases (see
+``notifications/services/outbox.py``): CoPilot stopping between a provider accepting the notice
+and the outbox recording it, and a provider request cut off in flight by the time budget.
 
 Notifications go to **internal routes only** (``sla_at_risk`` / ``sla_breached`` are in
 ``INTERNAL_TRIGGERS``): a SOC running late is never the customer's notification.
