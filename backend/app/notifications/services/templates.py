@@ -24,6 +24,7 @@ degrades to the channel default forever.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -42,6 +43,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import NotificationTemplate
 from app.notifications.schema.events import NotificationEvent
+from app.notifications.services.rendering import MENTIONS_REPORT_VAR
 from app.notifications.services.rendering import compile_template
 
 #: Formats a template can declare. `html` autoescapes; `json` is validated to
@@ -490,6 +492,20 @@ async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
     # raises under StrictUndefined and the preview reads as a broken template.
     # The password is the same obvious placeholder the send dialog previews
     # with — a preview must never mint a real credential.
+    # The AI report's v1 block and the `{{ report }}` token: a synthetic sample, so a template
+    # written against them previews with something in it rather than empty (`context` reads a
+    # missing key as "") or failing (`report` is a real variable only at send time).
+    if event.entity_type == "alert" and "ai_report_v1" in source:
+        from app.notifications.services.payload_v1 import ai_report_v1_json
+        from app.notifications.services.payload_v1 import sample_ai_report_v1
+
+        sample = sample_ai_report_v1()
+        event = event.model_copy(
+            update={"context": {**event.context, "ai_report_v1": sample, "ai_report_v1_json": ai_report_v1_json(sample)}},
+        )
+    if MENTIONS_REPORT_VAR.search(source):
+        extra["report"] = json.dumps({"report_id": 912, "recommended_actions": "1. Isolate WKSTN-014.", "iocs": []})
+
     if trigger == "temp_password_issued":
         from app.auth.services.temp_password_email import PREVIEW_PASSWORD
         from app.auth.services.temp_password_email import build_extra_context

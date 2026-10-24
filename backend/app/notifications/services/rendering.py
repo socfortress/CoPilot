@@ -27,6 +27,7 @@ alert.
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from typing import Any
 from typing import Dict
@@ -54,6 +55,13 @@ MAX_RENDERED_BYTES = 64 * 1024
 #: *sent*, not what gets built. That is acceptable because templates are
 #: operator-authored and validated at save time, not attacker-supplied. If that
 #: assumption ever changes, this needs a streaming limit instead.
+
+
+#: The `report` variable used in a Jinja expression or statement: `{{ report }}`, `{{report}}`,
+#: `{% if report %}`, `{{ x if report }}`. Not `report_url`, `context.ai_report`, `.report` or the
+#: word in prose. A template that names it gets the flat report fields as JSON (the dispatch
+#: loop's `_report_variable`, a sample in the editor's preview).
+MENTIONS_REPORT_VAR = re.compile(r"\{[{%][^}%]*(?<![\w.])report\b(?!_)")
 
 
 class TemplateTooLargeError(TemplateError):

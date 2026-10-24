@@ -15,55 +15,53 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
-from loguru import logger
 from pydantic import field_validator
-from sqlalchemy import select
 
-from app.db.universal_models import AiAnalystReport
 from app.notifications.channels.base import ChannelConfig
 from app.notifications.channels.base import ChannelProvider
 from app.notifications.channels.base import DispatchContext
 from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
+from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
+from app.notifications.services.ai_report_context import named_report_id
+from app.notifications.services.ai_report_context import select_report
 from app.notifications.services.dispatchers import dispatch_webhook
 from app.notifications.services.payload_v1 import SCHEMA_V1
 from app.notifications.services.payload_v1 import ai_report_v1_for_route
 from app.notifications.services.payload_v1 import report_permitted_for_route
 
 
-async def build_full_report(alert_id: int, session, customer_code: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Fetch the alert's latest AI report's *extra* fields as a flat dict.
+async def build_full_report(
+    alert_id: int,
+    session,
+    customer_code: Optional[str] = None,
+    *,
+    report_id: Optional[int] = None,
+    entity_type: str = EntityType.ALERT,
+) -> Optional[Dict[str, Any]]:
+    """Fetch the notification's AI report's *extra* fields as a flat dict.
 
     Returns only the fields NOT already present at the top level of the webhook
     payload — it deliberately omits ``summary`` and the severity to avoid
-    duplicating them. Returns None when no report exists yet, so a webhook never
-    fails just because the report write-back hasn't landed — and when
-    ``customer_code`` is given and the report is another customer's.
+    duplicating them. Returns None when there is no report to carry, so a webhook
+    never fails just because the report write-back hasn't landed.
 
     The shape (names, values, nulls, order) is the pre-v1 external contract and is
-    pinned by ``tests/test_notification_payload_v1.py``. The report is chosen the way
-    the v1 block and ``context.ai_report`` choose it, newest by ``created_at`` and
-    then ``id``, so the flat fields and the nested block never name different
-    reports. IOCs stay the alert's, newest first, read through the ai_analyst
-    service layer as before.
+    pinned by ``tests/test_notification_payload_v1.py``. The report is the one
+    ``select_report`` picks for the v1 block and ``context.ai_report`` too: the
+    reviewed one on a review event, else the alert's newest by ``created_at`` then
+    ``id``; nothing for a case or task, or another customer's report. So
+    ``report_id`` here is always the block's ``report_id``. ``iocs`` keep their
+    pre-v1 meaning: every IOC recorded for the **alert**, across its reports,
+    newest first, read through the ai_analyst service layer.
 
-    Callers check the route may receive the report first
-    (``payload_v1.report_permitted_for_route``).
+    Callers check the route may receive the report first (``full_report_for_route``).
     """
     from app.ai_analyst.services.ai_analyst import list_iocs_by_alert
 
-    result = await session.execute(
-        select(AiAnalystReport)
-        .where(AiAnalystReport.alert_id == alert_id)
-        .order_by(AiAnalystReport.created_at.desc(), AiAnalystReport.id.desc())
-        .limit(1),
-    )
-    report = result.scalars().first()
+    report = await select_report(alert_id, session, report_id=report_id, customer_code=customer_code, entity_type=entity_type)
     if report is None:
-        return None
-    if customer_code and report.customer_code != customer_code:
-        logger.warning(f"AI report {report.id} is not customer {customer_code}'s; no report fields for its webhook.")
         return None
     iocs = await list_iocs_by_alert(alert_id, session)
     return {
@@ -82,6 +80,35 @@ async def build_full_report(alert_id: int, session, customer_code: Optional[str]
             for i in iocs
         ],
     }
+
+
+async def full_report_for_route(
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    ctx: DispatchContext,
+) -> Optional[Dict[str, Any]]:
+    """The flat report fields one route may receive, or None: the ``include_full_report`` merge
+    and the ``{{report}}`` token, in a webhook and in a rendered template alike.
+
+    None when the route may not receive the report (``report_permitted_for_route``: a customer
+    whose AI report setting is off, on any trigger; a manual send without the report) — the
+    payload is then exactly the "no report yet" one, a shape receivers already handle. Internal
+    routes are not gated. Memoized per dispatch call and report, so several routes on one alert
+    share a single read.
+    """
+    if not await report_permitted_for_route(route_scope, event, ctx.session, ctx):
+        return None
+    report_id = named_report_id(event.context)
+    return await ctx.memoize(
+        f"full_report:{event.entity_type}:{event.entity_id}:{report_id}",
+        lambda: build_full_report(
+            event.entity_id,
+            ctx.session,
+            event.customer_code,
+            report_id=report_id,
+            entity_type=event.entity_type,
+        ),
+    )
 
 
 class WebhookConfig(ChannelConfig):
@@ -192,17 +219,4 @@ class WebhookChannel(ChannelProvider):
         return SendResult(status=status, error_message=error_message, latency_ms=latency_ms)
 
     async def _report(self, route_scope: Optional[str], event: NotificationEvent, ctx: DispatchContext) -> Optional[Dict[str, Any]]:
-        """The flat report fields this route may receive, or None.
-
-        None on a customer route while the customer's AI report setting is off,
-        on any trigger: the payload is then exactly the "no report yet" one, a
-        shape receivers already handle. Internal routes are not gated.
-
-        Memoized per dispatch call — several webhook routes on one alert
-        share a single report read."""
-        if not await report_permitted_for_route(route_scope, event, ctx.session, ctx):
-            return None
-        return await ctx.memoize(
-            f"full_report:{event.entity_id}",
-            lambda: build_full_report(event.entity_id, ctx.session, event.customer_code),
-        )
+        return await full_report_for_route(route_scope, event, ctx)

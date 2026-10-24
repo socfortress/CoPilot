@@ -65,6 +65,9 @@ from app.notifications.schema.notifications import NotificationTrigger  # noqa: 
 from app.notifications.services import outbox  # noqa: E402
 from app.notifications.services import payload_v1  # noqa: E402
 from app.notifications.services.ai_report_context import MAX_IOCS  # noqa: E402
+from app.notifications.services.ai_report_context import (  # noqa: E402
+    load_ai_report_context,
+)
 from app.notifications.services.event_builders import (  # noqa: E402
     ai_report_reviewed_event,
 )
@@ -250,7 +253,17 @@ def _investigation():
     )
 
 
-def _expected_block(report_id, *, job_id=None, reviewed=False, review_verdict=None, summary="Credential dumping observed."):
+def _expected_block(
+    report_id,
+    *,
+    job_id=None,
+    reviewed=False,
+    review_verdict=None,
+    review_rejected=None,
+    summary="Credential dumping observed.",
+):
+    """The block alert 14's report gives. The defaults are a customer route's view: `job_id`,
+    `review_verdict` and `review_rejected` null. An internal route passes them."""
     return {
         "report_id": report_id,
         "job_id": job_id,
@@ -267,6 +280,7 @@ def _expected_block(report_id, *, job_id=None, reviewed=False, review_verdict=No
         "ioc_count": 2,
         "iocs_truncated": False,
         "reviewed": reviewed,
+        "review_rejected": review_rejected,
         "review_verdict": review_verdict,
         "truncated_fields": [],
     }
@@ -365,6 +379,8 @@ def test_a_review_event_carries_the_reviewed_report_and_its_verdict(tmp_path, mo
             ),
         )
         await h.route("SOC", scope="internal", trigger="ai_report_reviewed")
+        # `submit_review` commits the review before its notification is delivered.
+        await h.add(AiAnalystReview(report_id=reviewed_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=3, overall_verdict="up"))
         event = ai_report_reviewed_event(
             alert_id=ALERT,
             report_id=reviewed_id,
@@ -379,22 +395,72 @@ def test_a_review_event_carries_the_reviewed_report_and_its_verdict(tmp_path, mo
         return reviewed_id, h.webhooks
 
     reviewed_id, (sent,) = run(tmp_path, monkeypatch, scenario)
-    assert sent["structured_payload"]["ai_report"] == _expected_block(reviewed_id, job_id=JOB, reviewed=True, review_verdict="up")
+    payload = sent["structured_payload"]
+    assert payload["ai_report"] == _expected_block(reviewed_id, job_id=JOB, reviewed=True, review_verdict="up", review_rejected=False)
+    # The flat fields name the reviewed report too, not the newer one.
+    assert payload["report_id"] == reviewed_id
+    assert payload["recommended_actions"] == "Isolate the host."
 
 
-def test_reviewed_reflects_a_stored_review_on_other_triggers(tmp_path, monkeypatch):
+@pytest.mark.parametrize(
+    "verdicts, reviewed, rejected",
+    [
+        ([], False, False),
+        (["up"], True, False),
+        ([None], True, False),
+        (["down"], False, True),
+        (["down", "up"], True, True),
+    ],
+)
+def test_reviewed_means_reviewed_and_not_rejected(tmp_path, monkeypatch, verdicts, reviewed, rejected):
+    """`reviewed` is "an analyst checked it and didn't reject it": a thumbs-down alone is not a
+    sign-off. `review_rejected` says one rejected it, on internal routes only; a customer route
+    gets null, like the verdict, which is the SOC's own rating."""
+
     async def scenario(h):
         report_id = await h.seed()
-        await h.add(AiAnalystReview(report_id=report_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=3, overall_verdict="down"))
+        for n, verdict in enumerate(verdicts):
+            await h.add(
+                AiAnalystReview(report_id=report_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=n + 1, overall_verdict=verdict),
+            )
         await h.ai_switch()
-        await h.route()
-        await h.dispatch(_investigation())
+        await h.route("Customer", trigger="alert_created")
+        await h.route("SOC", scope="internal", trigger="alert_created", customer_code=None)
+        await h.dispatch(_alert_created())
         return h.webhooks
 
-    (sent,) = run(tmp_path, monkeypatch, scenario)
-    block = sent["structured_payload"]["ai_report"]
-    # The verdict is announced only by the review trigger; elsewhere it stays null.
-    assert (block["reviewed"], block["review_verdict"]) == (True, None)
+    sent = run(tmp_path, monkeypatch, scenario)
+    # alert_created reaches the customer route only; the internal route, on an internal trigger.
+    (customer,) = sent
+    block = customer["structured_payload"]["ai_report"]
+    assert (block["reviewed"], block["review_rejected"], block["review_verdict"]) == (reviewed, None, None)
+
+
+@pytest.mark.parametrize("verdict, reviewed, rejected", [("up", True, False), ("down", False, True)])
+def test_an_internal_route_sees_the_rejection_and_the_verdict(tmp_path, monkeypatch, verdict, reviewed, rejected):
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.add(AiAnalystReview(report_id=report_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=3, overall_verdict=verdict))
+        await h.ai_switch()
+        await h.route("SOC", scope="internal", trigger="ai_report_reviewed")
+        await h.route("Customer", trigger="ai_report_reviewed")
+        event = ai_report_reviewed_event(
+            alert_id=ALERT,
+            report_id=report_id,
+            customer_code=CC,
+            severity="High",
+            summary="Credential dumping observed.",
+            reviewer="asmith",
+            verdict=verdict,
+        )
+        await h.dispatch(event)
+        return h.webhooks
+
+    sent = run(tmp_path, monkeypatch, scenario)
+    by_job = {kw["structured_payload"]["ai_report"]["job_id"]: kw["structured_payload"]["ai_report"] for kw in sent}
+    internal, customer = by_job[JOB], by_job[None]
+    assert (internal["reviewed"], internal["review_rejected"], internal["review_verdict"]) == (reviewed, rejected, verdict)
+    assert (customer["reviewed"], customer["review_rejected"], customer["review_verdict"]) == (reviewed, None, None)
 
 
 # ── the AI report switch and the scopes ─────────────────────────────────────────
@@ -461,7 +527,7 @@ def test_an_internal_route_is_not_gated_and_sees_the_job_id(tmp_path, monkeypatc
 
     report_id, (sent,) = run(tmp_path, monkeypatch, scenario)
     # An assignment carries no link, so neither does its block.
-    assert sent["structured_payload"]["ai_report"] == {**_expected_block(report_id, job_id=JOB), "report_url": None}
+    assert sent["structured_payload"]["ai_report"] == {**_expected_block(report_id, job_id=JOB, review_rejected=False), "report_url": None}
 
 
 def test_a_report_of_another_customer_or_alert_is_never_sent(tmp_path, monkeypatch):
@@ -663,38 +729,62 @@ def _admin():
 
 
 @pytest.mark.parametrize("enabled", [False, True])
-def test_a_manual_send_without_the_report_follows_the_setting(tmp_path, monkeypatch, enabled):
-    """`include_ai_report=False` to a customer route whose config has `include_full_report`:
-    off, no report fields (and no report in the template); on, the route's config as before."""
+@pytest.mark.parametrize("scope", ["customer", "internal"])
+def test_a_manual_send_without_the_report_carries_none_of_it(tmp_path, monkeypatch, enabled, scope):
+    """`include_ai_report=False`, to routes whose config has `include_full_report` or a report
+    template: no flat fields, `ai_report: null`, no `{{report}}`, no `context.ai_report`, whatever
+    the setting and the scope. The operator chose to send without it."""
+    import app.notifications.services.manual_send as ms
+
+    monkeypatch.setattr(ms, "_require_object_access", AsyncMock(return_value=None))
+
+    async def scenario(h):
+        await h.seed()
+        await h.ai_switch(enabled=enabled)
+        full = await h.route("Full", scope=scope, trigger="alert_created")
+        templated = await h.route(
+            "Templated",
+            scope=scope,
+            trigger="alert_created",
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template=REPORT_TEMPLATE + " T={{ report }}",
+        )
+        for route_id in (full, templated):
+            async with h.sessions() as session:
+                outcome = await ms.send_manual(entity_type="alert", entity_id=ALERT, route_id=route_id, user=_admin(), session=session)
+                assert outcome.status.value == "sent"
+        return h.webhooks
+
+    full, templated = run(tmp_path, monkeypatch, scenario)
+    assert list(full["structured_payload"]) == OLD_BASE_KEYS + ["schema", "ai_report"]
+    assert full["structured_payload"]["ai_report"] is None
+    assert templated["rendered_template"] == "NO-REPORT V1=null T=null"
+
+
+@pytest.mark.parametrize("scope", ["customer", "internal"])
+def test_a_manual_send_with_the_report_carries_it(tmp_path, monkeypatch, scope):
     import app.notifications.services.manual_send as ms
 
     monkeypatch.setattr(ms, "_require_object_access", AsyncMock(return_value=None))
 
     async def scenario(h):
         report_id = await h.seed()
-        await h.ai_switch(enabled=enabled)
-        full = await h.route("Full", trigger="alert_created")
-        templated = await h.route(
-            "Templated",
-            trigger="alert_created",
-            config={"url": HOOK, "method": "POST", "headers": None},
-            format_template=REPORT_TEMPLATE + " T={% raw %}{{report}}{% endraw %}",
-        )
-        for route_id in (full, templated):
-            async with h.sessions() as session:
-                outcome = await ms.send_manual(entity_type="alert", entity_id=ALERT, route_id=route_id, user=_admin(), session=session)
-                assert outcome.status.value == "sent"
+        await h.ai_switch()
+        full = await h.route("Full", scope=scope, trigger="alert_created")
+        async with h.sessions() as session:
+            await ms.send_manual(
+                entity_type="alert",
+                entity_id=ALERT,
+                route_id=full,
+                user=_admin(),
+                session=session,
+                include_ai_report=True,
+            )
         return report_id, h.webhooks
 
-    report_id, (full, templated) = run(tmp_path, monkeypatch, scenario)
-    if enabled:
-        assert full["structured_payload"]["report_id"] == report_id
-        assert full["structured_payload"]["ai_report"]["report_id"] == report_id
-        assert "SUMMARY=Credential dumping observed." in templated["rendered_template"]
-    else:
-        assert list(full["structured_payload"]) == OLD_BASE_KEYS + ["schema", "ai_report"]
-        assert full["structured_payload"]["ai_report"] is None
-        assert templated["rendered_template"] == "NO-REPORT V1=null T=null"
+    report_id, (full,) = run(tmp_path, monkeypatch, scenario)
+    assert full["structured_payload"]["report_id"] == report_id
+    assert full["structured_payload"]["ai_report"]["report_id"] == report_id
 
 
 def test_a_manual_send_asking_for_the_report_is_still_refused_with_the_setting_off(tmp_path, monkeypatch):
@@ -1037,7 +1127,9 @@ def test_a_replayed_outbox_row_carries_the_report_as_it_is_at_delivery(tmp_path,
     report_id, row, direct, (sent,) = run(tmp_path, monkeypatch, scenario)
     assert row.status == "done"
     # Nothing of the block is stored on the row.
-    assert "ai_report" not in row.event_json
+    stored = json.loads(row.event_json)
+    assert not [k for k in stored["context"] if k.startswith("ai_report")]
+    assert "summary" not in json.dumps(stored["context"])
     delivered = sent["structured_payload"]["ai_report"]
     assert delivered == _expected_block(report_id, summary="Corrected summary.")
     assert delivered == direct
@@ -1049,6 +1141,7 @@ def test_a_review_event_survives_the_outbox_round_trip(tmp_path, monkeypatch):
     async def scenario(h):
         report_id = await h.seed()
         await h.route("SOC", scope="internal", trigger="ai_report_reviewed")
+        await h.add(AiAnalystReview(report_id=report_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=3, overall_verdict="down"))
         event = ai_report_reviewed_event(
             alert_id=ALERT,
             report_id=report_id,
@@ -1064,4 +1157,339 @@ def test_a_review_event_survives_the_outbox_round_trip(tmp_path, monkeypatch):
         return report_id, h.webhooks
 
     report_id, (sent,) = run(tmp_path, monkeypatch, scenario)
-    assert sent["structured_payload"]["ai_report"] == _expected_block(report_id, job_id=JOB, reviewed=True, review_verdict="down")
+    # A thumbs-down is a review, not a sign-off.
+    assert sent["structured_payload"]["ai_report"] == _expected_block(
+        report_id,
+        job_id=JOB,
+        reviewed=False,
+        review_verdict="down",
+        review_rejected=True,
+    )
+
+
+# ── review findings: entity type, report choice, size, templates, docs ─────────
+
+
+def _case_event(trigger=NotificationTrigger.ALERT_CREATED):
+    """A case whose id is an alert's id: a manual case send, or a case assignment."""
+    return NotificationEvent(
+        customer_code=CC,
+        trigger=trigger,
+        severity=NotificationSeverity.INFORMATIONAL,
+        subject="Case 14",
+        summary="A case.",
+        entity_type=EntityType.CASE,
+        entity_id=ALERT,
+        dedupe_key=f"case:{ALERT}:{trigger.value}",
+        context={"alert_name": "Case 14", "title": "Case 14"},
+    )
+
+
+@pytest.mark.parametrize("scope, trigger", [("customer", "alert_created"), ("internal", "case_assigned")])
+def test_a_case_never_carries_the_report_of_the_alert_with_its_id(tmp_path, monkeypatch, scope, trigger):
+    """Case 14 is not alert 14: no flat fields, no `{{ report }}`, no `context.ai_report`, no block,
+    on a customer route and on an internal one (where the event may carry no customer at all)."""
+
+    async def scenario(h):
+        await h.seed()
+        await h.ai_switch()
+        await h.route("Full", scope=scope, trigger=trigger)
+        await h.route(
+            "Templated",
+            scope=scope,
+            trigger=trigger,
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template=REPORT_TEMPLATE + " T={{ report }}",
+        )
+        event = _case_event(NotificationTrigger(trigger))
+        if scope == "internal":
+            event = event.model_copy(update={"customer_code": None})
+        await h.dispatch(event)
+        async with h.sessions() as session:
+            loaders = (
+                await webhook_mod.build_full_report(ALERT, session, entity_type=EntityType.CASE),
+                await load_ai_report_context(ALERT, session, entity_type=EntityType.CASE),
+                await payload_v1.load_ai_report_v1(event, session),
+            )
+        return h.webhooks, loaders
+
+    sent, loaders = run(tmp_path, monkeypatch, scenario)
+    full, templated = sorted(sent, key=lambda kw: kw["rendered_template"] is not None)
+    assert list(full["structured_payload"]) == OLD_BASE_KEYS + ["schema", "ai_report"]
+    assert full["structured_payload"]["ai_report"] is None
+    assert templated["rendered_template"] == "NO-REPORT V1=null T=null"
+    assert loaders == (None, None, None)
+
+
+def test_every_report_surface_names_the_reviewed_report_not_the_newest(tmp_path, monkeypatch):
+    """A review of an older report while the alert has a newer one: the flat fields, `{{ report }}`,
+    `context.ai_report` and the block all carry the reviewed report."""
+
+    async def scenario(h):
+        reviewed_id = await h.seed()
+        await h.add(AiAnalystJob(id="copilot-inv-14-2", alert_id=ALERT, customer_code=CC, triggered_by="manual", created_at=T0))
+        (newer_id,) = await h.add(
+            AiAnalystReport(
+                job_id="copilot-inv-14-2",
+                alert_id=ALERT,
+                customer_code=CC,
+                summary="A later run.",
+                recommended_actions="Do nothing.",
+                report_markdown="# Later",
+                created_at=T0 + timedelta(hours=1),
+            ),
+        )
+        await h.add(AiAnalystReview(report_id=reviewed_id, alert_id=ALERT, customer_code=CC, reviewer_user_id=3, overall_verdict="up"))
+        await h.route("SOC full", scope="internal", trigger="ai_report_reviewed")
+        await h.route(
+            "SOC template",
+            scope="internal",
+            trigger="ai_report_reviewed",
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template='{"summary": {{ context.ai_report.summary | tojson }}, "flat": {{ report }}, "v1": {{ context.ai_report_v1_json }}}',
+        )
+        event = ai_report_reviewed_event(
+            alert_id=ALERT,
+            report_id=reviewed_id,
+            customer_code=CC,
+            severity="High",
+            summary="Credential dumping observed.",
+            reviewer="asmith",
+            verdict="up",
+        )
+        await h.dispatch(event)
+        return reviewed_id, newer_id, h.webhooks
+
+    reviewed_id, newer_id, sent = run(tmp_path, monkeypatch, scenario)
+    assert newer_id > reviewed_id
+    full, templated = sorted(sent, key=lambda kw: kw["rendered_template"] is not None)
+    payload = full["structured_payload"]
+    assert payload["report_id"] == payload["ai_report"]["report_id"] == reviewed_id
+    assert payload["report_markdown"] == "# Report\n\nFindings."
+    body = json.loads(templated["rendered_template"])
+    assert body["summary"] == "Credential dumping observed."
+    assert body["flat"]["report_id"] == reviewed_id
+    assert body["v1"]["report_id"] == reviewed_id
+
+
+def test_the_first_asset_is_the_one_recorded_first(tmp_path, monkeypatch):
+    async def scenario(h):
+        # Recorded first (lowest id), though seed() adds WIN-DC01 after it.
+        await h.add(
+            Asset(
+                id=1,
+                alert_linked=ALERT,
+                asset_name="AAA-FIRST",
+                alert_context_id=1,
+                customer_code=CC,
+                index_name="wazuh-alerts-1",
+                index_id="first",
+            ),
+        )
+        await h.seed()
+        async with h.sessions() as session:
+            return await payload_v1.load_ai_report_v1(_investigation(), session)
+
+    block = run(tmp_path, monkeypatch, scenario)
+    assert block["alert"]["asset_name"] == "AAA-FIRST"
+
+
+def test_a_manual_report_load_checks_the_customer(tmp_path, monkeypatch):
+    async def scenario(h):
+        await h.seed()
+        async with h.sessions() as session:
+            return (
+                await load_ai_report_context(ALERT, session, OTHER),
+                (await load_ai_report_context(ALERT, session, CC))["summary"],
+            )
+
+    assert run(tmp_path, monkeypatch, scenario) == (None, "Credential dumping observed.")
+
+
+# Size: the probes' shapes.
+
+
+def _probe_report(summary, actions, **over):
+    return _row(summary=summary, recommended_actions=actions, **over)
+
+
+def _probe_iocs(n=20):
+    details = "Contacted by the decoded command over HTTPS; seen in 3 other alerts. " * 3
+    return [_ioc(i, ioc_value=f"10.0.0.{i}", vt_verdict="malicious", vt_score="12/90", details=details) for i in range(n)]
+
+
+@pytest.mark.parametrize("summary_len, actions_len", [(1200, 3000), (2000, 4000), (800, 2500)])
+def test_cyrillic_texts_are_shortened_before_any_indicator_is_dropped(summary_len, actions_len):
+    """Cyrillic is six bytes a character escaped. The texts give way, down to their floor, so the
+    twenty indicators are all kept."""
+    block = _build(report=_probe_report("д" * summary_len, "д" * actions_len), iocs=_probe_iocs())
+    assert serialized_size(block) <= MAX_AI_REPORT_V1_BYTES
+    assert len(block["iocs"]) == 20 and block["iocs_truncated"] is False
+    assert len(block["summary"]) >= min(summary_len, payload_v1.TEXT_FLOOR_CHARS)
+    assert len(block["recommended_actions"]) >= min(actions_len, payload_v1.TEXT_FLOOR_CHARS)
+
+
+def test_texts_are_cut_no_further_than_needed():
+    block = _build(report=_probe_report("д" * 2000, "д" * 4000), iocs=_probe_iocs())
+    assert block["truncated_fields"] == ["recommended_actions"] or "summary" in block["truncated_fields"]
+    # One more character of the cut text would not fit.
+    name = block["truncated_fields"][-1]
+    longer = json.loads(json.dumps(block))
+    longer[name] = longer[name][:-1] + "д" + TRUNCATION_MARK
+    assert serialized_size(longer) > MAX_AI_REPORT_V1_BYTES
+
+
+def test_ascii_indicators_too_big_for_the_bound_are_kept_greedily_after_the_texts():
+    """Sixty indicators of over a kilobyte each can't all fit: the texts go to their floor first,
+    then as many indicators as fit are kept, in order, and not one more would."""
+    iocs = [_ioc(i, ioc_value=f"{i:03d}" + "a" * 509, details="d" * 500) for i in range(60)]
+    block = _build(report=_probe_report("x" * 2000, "y" * 4000), iocs=iocs)
+    assert serialized_size(block) <= MAX_AI_REPORT_V1_BYTES
+    assert len(block["summary"]) == len(block["recommended_actions"]) == payload_v1.TEXT_FLOOR_CHARS
+    kept = len(block["iocs"])
+    assert 0 < kept < MAX_IOCS and block["iocs_truncated"] is True and block["ioc_count"] == 60
+    assert [i["value"][:3] for i in block["iocs"]] == [f"{n:03d}" for n in range(kept)]
+    with_one_more = json.loads(json.dumps(block))
+    with_one_more["iocs"].append(payload_v1._ioc_v1(iocs[kept]))
+    assert serialized_size(with_one_more) > MAX_AI_REPORT_V1_BYTES
+
+
+def test_a_big_indicator_is_skipped_and_smaller_ones_after_it_kept():
+    huge = _ioc(1, ioc_value="\U0001f600" * 512, details="\U0001f600" * 500)
+    small = [_ioc(n) for n in range(2, 6)]
+    iocs = [_ioc(0)] + [huge] * 4 + small
+    block = _build(report=_probe_report("s", "a"), iocs=iocs)
+    values = [i["value"] for i in block["iocs"]]
+    assert values[0] == "198.51.100.0"
+    assert values[-4:] == [f"198.51.100.{n}" for n in range(2, 6)]
+    assert block["iocs_truncated"] is True
+
+
+def test_the_bound_holds_with_every_field_at_its_worst():
+    """Twelve-byte escapes in every string, the URL included."""
+    a = "\U0001f600"
+    block = _build(
+        report=_probe_report(a * 5000, a * 5000, severity_assessment=a * 100, job_id=a * 100),
+        iocs=[_ioc(n, ioc_value=a * 600, details=a * 600, ioc_type=a * 100, vt_verdict=a * 100, vt_score=a * 100) for n in range(80)],
+        job_id=a * 100,
+        alert=SimpleNamespace(alert_name=a * 1000, source=a * 100),
+        asset_name=a * 500,
+        reviewed=True,
+        review_verdict=a * 100,
+        report_url=a * 3000,
+    )
+    assert serialized_size(block) <= MAX_AI_REPORT_V1_BYTES
+    assert len(block["report_url"]) == payload_v1.MAX_URL_CHARS
+
+
+def test_the_last_resort_empties_fixed_fields_and_never_returns_an_over_size_block():
+    block = _build(report=_probe_report("s" * 3000, "a" * 3000), iocs=[_ioc()], report_url="https://copilot.example.com/" + "p" * 400)
+    # Just above what is left with no texts and no URL: the URL has to go.
+    bare = {**json.loads(json.dumps(block)), "summary": None, "recommended_actions": None, "report_url": None, "iocs": []}
+    limit = serialized_size(bare) + 40
+    small = payload_v1.enforce_size(json.loads(json.dumps(block)), limit=limit)
+    assert serialized_size(small) <= limit
+    assert small["report_url"] is None and "report_url" in small["truncated_fields"]
+    assert small["alert"]["name"] is not None, "only as much as needed goes"
+    with pytest.raises(AssertionError):
+        payload_v1.enforce_size(json.loads(json.dumps(block)), limit=50)
+
+
+# Templates.
+
+
+def test_the_bare_report_token_works_under_jinja(tmp_path, monkeypatch):
+    """`{{report}}` was an undefined variable once templates became Jinja; it is a real one now,
+    still behind the same gate."""
+
+    async def scenario(h):
+        report_id = await h.seed()
+        await h.ai_switch()
+        await h.route(trigger="alert_created", config={"url": HOOK, "method": "POST", "headers": None}, format_template='{"r": {{report}}}')
+        await h.route(
+            "Off for this customer",
+            trigger="alert_created",
+            customer_code=OTHER,
+            config={"url": HOOK, "method": "POST", "headers": None},
+            format_template='{"r": {{ report }}}',
+        )
+        await h.dispatch(_alert_created())
+        async with h.sessions() as session:
+            other = await svc._render_body(
+                SimpleNamespace(format_template='{"r": {{ report }}}', scope="customer", template_id=None),
+                _alert_created().model_copy(update={"customer_code": OTHER}),
+                session,
+            )
+        return report_id, h.webhooks, other
+
+    report_id, (sent,), (other, err) = run(tmp_path, monkeypatch, scenario)
+    body = json.loads(sent["rendered_template"])
+    assert body["r"]["report_id"] == report_id
+    assert sent["rendered_template"].count("report_markdown") == 1
+    assert (json.loads(other.body), err) == ({"r": None}, None)
+
+
+def test_the_v1_json_stays_within_the_template_limit_where_tojson_would_not():
+    """The reviewer's probe: `<`, `&` and `'` are one byte in the block and six through `tojson`."""
+    from app.notifications.services.rendering import MAX_RENDERED_BYTES
+    from app.notifications.services.rendering import render_body
+
+    block = _build(
+        report=_probe_report("<" * 2000, "&" * 4000),
+        iocs=[_ioc(n, ioc_value="<x>" * 100, ioc_type="url", details="'" * 500) for n in range(50)],
+    )
+    event = _alert_created().model_copy(
+        update={"context": {"ai_report_v1": block, "ai_report_v1_json": payload_v1.ai_report_v1_json(block)}},
+    )
+    body, err = render_body('{"findings": {{ context.ai_report_v1_json }}}', event, "FALLBACK")
+    assert err is None and len(body.encode()) <= MAX_RENDERED_BYTES
+    assert json.loads(body)["findings"] == block
+    assert payload_v1.ai_report_v1_json(block).isascii()
+    _escaped, tojson_err = render_body('{"findings": {{ context.ai_report_v1 | tojson }}}', event, "FALLBACK")
+    assert tojson_err is not None and "TemplateTooLarge" in tojson_err
+
+
+def test_the_preview_has_samples_for_the_v1_block_and_the_report_token(tmp_path, monkeypatch):
+    from app.notifications.services import templates
+
+    async def scenario(h):
+        async with h.sessions() as session:
+            return await templates.preview(
+                SimpleNamespace(
+                    format="text",
+                    trigger="investigation_complete",
+                    customer_code=CC,
+                    subject_template=None,
+                    body_template="{{ context.ai_report_v1.ioc_count }}|{{ context.ai_report_v1_json }}|{{ report }}",
+                ),
+                session,
+            )
+
+    result = run(tmp_path, monkeypatch, scenario)
+    assert result["error"] is None
+    count, v1, flat = result["body"].split("|")
+    assert count == "2"
+    assert json.loads(v1) == payload_v1.sample_ai_report_v1()
+    assert json.loads(flat)["report_id"] == 912
+
+
+# The docs.
+
+
+def _doc_example():
+    from pathlib import Path
+
+    doc = (Path(__file__).resolve().parents[2] / "docs" / "user" / "notifications.md").read_text()
+    section = doc[doc.index("## Payload v1") :]
+    example = section[section.index("### Example") :]
+    start = example.index("```json\n") + len("```json\n")
+    return json.loads(example[start : example.index("\n```", start)])
+
+
+def test_the_documented_example_is_valid_json_and_the_real_shape():
+    example = _doc_example()
+    assert example["schema"] == SCHEMA_V1
+    # Generated from the sample, which the real builder makes: the documented block is the shape
+    # a customer route receives, key for key.
+    assert example["ai_report"] == payload_v1.sample_ai_report_v1()
+    assert list(example)[:7] == OLD_BASE_KEYS

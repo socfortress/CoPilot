@@ -49,6 +49,7 @@ from app.notifications.channels import SendResult
 from app.notifications.channels import get_channel
 from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.channels.webhook import full_report_for_route
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
@@ -71,6 +72,7 @@ from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
+from app.notifications.services.ai_report_context import named_report_id
 from app.notifications.services.ai_report_context import safe_load_ai_report_context
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
@@ -82,7 +84,9 @@ from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
 from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import ai_report_v1_json
 from app.notifications.services.payload_v1 import report_permitted_for_route
+from app.notifications.services.rendering import MENTIONS_REPORT_VAR
 from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
@@ -942,7 +946,8 @@ async def _render_body(
         event = await _report_event_for_route(inline, route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
-        body, error = render_body(inline, render_event, fallback)
+        extra = await _report_variable(inline, route_scope, event, session, ctx=ctx)
+        body, error = render_body(inline, render_event, fallback, extra_context=extra)
         return (RenderedMessage(body=body, is_custom=error is None), error)
 
     template = await resolve_template_for_route(route, session)
@@ -965,6 +970,7 @@ async def _render_body(
 
     autoescape = template.format == "html"
     extra = await _branding_context(template, event, session, ctx=ctx)
+    extra.update(await _report_variable(source, route_scope, event, session, ctx=ctx))
     render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
 
     body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
@@ -1062,10 +1068,19 @@ async def _ensure_ai_report_context(
     if event.entity_type != EntityType.ALERT:
         return
 
-    async def _load():
-        return await safe_load_ai_report_context(event.entity_id, session, event.customer_code)
+    report_id = named_report_id(event.context)
 
-    report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
+    async def _load():
+        return await safe_load_ai_report_context(
+            event.entity_id,
+            session,
+            event.customer_code,
+            report_id=report_id,
+            entity_type=event.entity_type,
+        )
+
+    key = f"ai_report:{event.entity_type}:{event.entity_id}:{report_id}"
+    report = await ctx.memoize(key, _load) if ctx is not None else await _load()
     event.context["ai_report"] = report
 
 
@@ -1118,7 +1133,33 @@ async def _with_ai_report_v1(
     if "ai_report_v1" not in source:
         return event
     block = await ai_report_v1_for_route(route_scope, event, session, ctx)
-    return event.model_copy(update={"context": {**(event.context or {}), "ai_report_v1": block}})
+    return event.model_copy(
+        update={"context": {**(event.context or {}), "ai_report_v1": block, "ai_report_v1_json": ai_report_v1_json(block)}},
+    )
+
+
+async def _report_variable(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Dict[str, Any]:
+    """`{{ report }}` for a template that names it: the flat report fields as a JSON string.
+
+    The `{{report}}` token predates Jinja templates, where a bare `{{report}}` became an
+    undefined variable and failed the template. It is a real variable now, with the value the
+    webhook substitutes for the literal token: `json.dumps` of the flat fields, or `null` when
+    there is no report or the route may not have it (`full_report_for_route`'s gate). Lazy like
+    the other report loaders. The webhook still replaces a literal `{{report}}` left in a body
+    (written as `{% raw %}`), through the same gate.
+    """
+    if not MENTIONS_REPORT_VAR.search(source or ""):
+        return {}
+    dispatch_ctx = ctx if ctx is not None else DispatchContext(session=session, event=event)
+    fields = await full_report_for_route(route_scope, event, dispatch_ctx)
+    return {"report": json.dumps(fields) if fields is not None else "null"}
 
 
 async def _record_log(

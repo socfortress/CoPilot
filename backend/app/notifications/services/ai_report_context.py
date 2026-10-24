@@ -41,6 +41,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.universal_models import AiAnalystIoc
 from app.db.universal_models import AiAnalystReport
+from app.notifications.schema.events import EntityType
 from app.notifications.utils.markdown_html import markdown_to_html
 
 #: Cap on how many indicators reach a template. A pathological investigation
@@ -61,35 +62,84 @@ def _ioc_to_dict(ioc: AiAnalystIoc) -> Dict[str, Any]:
     }
 
 
-async def load_ai_report_context(
+def named_report_id(context: Optional[Dict[str, Any]]) -> Optional[int]:
+    """The report an event is about, when it names one (`ai_report_reviewed` does).
+
+    A bool is not an id, though Python says it is an int.
+    """
+    value = (context or {}).get("report_id")
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    return None
+
+
+async def select_report(
     alert_id: int,
     session: AsyncSession,
+    *,
+    report_id: Optional[int] = None,
     customer_code: Optional[str] = None,
-) -> Optional[Dict[str, Any]]:
-    """The newest AI report for `alert_id`, shaped for template rendering.
+    entity_type: str = EntityType.ALERT,
+) -> Optional[AiAnalystReport]:
+    """The one report a notification carries, for every report surface.
 
-    Returns `None` when the alert has no report — which the callers treat as
-    "nothing to include" rather than a failure — and when `customer_code` is
-    given and the report is another customer's: a notification only ever
-    carries its own customer's report.
+    The v1 block (`payload_v1`), the webhook's flat fields (`build_full_report`)
+    and `context.ai_report` all choose through here, so they never name different
+    reports:
 
-    **Newest wins.** An alert can accumulate several reports: the 15-minute
-    scheduled sweep and the real-time trigger both run the same workflow, and a
-    re-investigation adds a row rather than replacing one. Ordering by
-    `created_at` then `id` breaks the tie deterministically when two land in the
-    same second, which the bare timestamp would not.
+    - nothing unless the notification is about an **alert**: a case or a task with
+      the same id as an alert must not carry that alert's report;
+    - the report the event names (`report_id`, a review's) when there is one, and
+      nothing if that report is gone or is another alert's: a review is about one
+      report, never a different one announced in its place;
+    - otherwise the alert's newest, by `created_at` and then `id`, so two reports
+      landing in the same second still give one answer;
+    - nothing when `customer_code` is given and the report is another customer's.
     """
-    result = await session.execute(
-        select(AiAnalystReport)
-        .where(AiAnalystReport.alert_id == alert_id)
-        .order_by(AiAnalystReport.created_at.desc(), AiAnalystReport.id.desc())
-        .limit(1),
-    )
-    report = result.scalars().first()
+    if entity_type != EntityType.ALERT:
+        return None
+    if report_id is not None:
+        report = await session.get(AiAnalystReport, report_id)
+        if report is None or report.alert_id != alert_id:
+            logger.warning(f"Notification for alert {alert_id} names report {report_id}, not one of its own; no report.")
+            return None
+    else:
+        result = await session.execute(
+            select(AiAnalystReport)
+            .where(AiAnalystReport.alert_id == alert_id)
+            .order_by(AiAnalystReport.created_at.desc(), AiAnalystReport.id.desc())
+            .limit(1),
+        )
+        report = result.scalars().first()
     if report is None:
         return None
     if customer_code and report.customer_code != customer_code:
         logger.warning(f"AI report {report.id} is not customer {customer_code}'s; not loaded for its notification.")
+        return None
+    return report
+
+
+async def load_ai_report_context(
+    alert_id: int,
+    session: AsyncSession,
+    customer_code: Optional[str] = None,
+    *,
+    report_id: Optional[int] = None,
+    entity_type: str = EntityType.ALERT,
+) -> Optional[Dict[str, Any]]:
+    """The notification's AI report (`select_report`), shaped for template rendering.
+
+    Returns `None` when there is none to carry — which the callers treat as
+    "nothing to include" rather than a failure: no report yet, not an alert, a
+    named report that is gone, or another customer's report.
+
+    **Newest wins** unless the event names its report. An alert can accumulate
+    several reports: the 15-minute scheduled sweep and the real-time trigger both
+    run the same workflow, and a re-investigation adds a row rather than
+    replacing one.
+    """
+    report = await select_report(alert_id, session, report_id=report_id, customer_code=customer_code, entity_type=entity_type)
+    if report is None:
         return None
 
     ioc_result = await session.execute(
@@ -124,6 +174,9 @@ async def safe_load_ai_report_context(
     alert_id: int,
     session: AsyncSession,
     customer_code: Optional[str] = None,
+    *,
+    report_id: Optional[int] = None,
+    entity_type: str = EntityType.ALERT,
 ) -> Optional[Dict[str, Any]]:
     """`load_ai_report_context`, but a failure degrades instead of propagating.
 
@@ -133,7 +186,7 @@ async def safe_load_ai_report_context(
     than raise.
     """
     try:
-        return await load_ai_report_context(alert_id, session, customer_code)
+        return await load_ai_report_context(alert_id, session, customer_code, report_id=report_id, entity_type=entity_type)
     except Exception as e:  # noqa: BLE001 — a report must never break a dispatch
         logger.warning(f"Could not load AI report for alert {alert_id}: {type(e).__name__}: {e}")
         return None

@@ -79,6 +79,10 @@ class NotificationEvent(BaseModel):
     assignee_username: Optional[str] = None
     actor_username: Optional[str] = None
     context: Dict[str, Any] = Field(default_factory=dict)
+    #: Set by a manual send with "Include the AI investigation report" unticked: the operator
+    #: chose to send without it, so no route gets any of the report (no flat fields, no
+    #: `ai_report`, no `{{report}}`, no `context.ai_report`), whatever its own settings.
+    exclude_ai_report: bool = False
 
     @property
     def alert_id(self) -> int:

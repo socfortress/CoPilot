@@ -310,25 +310,30 @@ Example for a Slack-style banner:
 ## Structured findings for automation (payload v1)
 
 Webhook and Shuffle routes can carry the investigation as data rather
-than prose. Tick **Include full AI report** on a webhook route (or
+than prose. Every structured webhook payload carries
+`"schema": "copilot.notification.v1"`; receivers should ignore keys they
+don't recognise. Tick **Include full AI report** on a webhook route (or
 **Include full AI report as JSON** on a Shuffle route) and the
-notification carries `"schema": "copilot.notification.v1"` and an
-`ai_report` object: the AI's severity, summary and recommended actions,
-the alert's name, source and asset, and up to 50 IOCs, each with its
-type, verdict, score and details. Templates reach the same object as
-`{{ context.ai_report_v1 }}`.
+notification also carries an `ai_report` object: the AI's severity,
+summary and recommended actions, the alert's name, source and asset, up
+to 50 IOCs (each with its type, verdict, score and details), and whether
+an analyst has signed the report off (`reviewed`: reviewed and not
+rejected). Templates reach the same object as
+`{{ context.ai_report_v1 }}`, and as ready-to-embed JSON as
+`{{ context.ai_report_v1_json }}`.
 
 Customer routes get it only while AI reports are enabled for the
 customer. The AI-report setting now also governs the report fields on
 every trigger and on manual sends: while it is off, a customer route
 carries no report content at all (no flat report fields, a `null`
-`{{report}}` token and `ai_report`, empty `context.ai_report`), as if
-the alert had no investigation yet. Internal routes are not affected.
-The block is read when the notification is delivered, so a retried
-notification carries the current report. v1 fields are only
-ever added to; a breaking change would be `copilot.notification.v2`.
-The full field reference, an example and how a Shuffle workflow reads
-the JSON are in
+`{{ report }}` token and `ai_report`, empty `context.ai_report`), as if
+the alert had no investigation yet. Internal routes are not affected. A
+manual send carries the report only when *Include the AI investigation
+report* is ticked. The block is read when the notification is
+delivered, so a retried notification carries the current report.
+v1 fields are only ever added to; a breaking change would be
+`copilot.notification.v2`. The full field reference, an example and how
+a Shuffle workflow reads the JSON are in
 [Notifications → Payload v1](/user/notifications#payload-v1).
 
 ---
