@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from datetime import datetime
 from typing import Any
 from typing import Awaitable
@@ -48,6 +49,7 @@ from app.notifications.channels import SendResult
 from app.notifications.channels import get_channel
 from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.shuffle import get_shuffle_connector
+from app.notifications.channels.webhook import full_report_for_route
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
@@ -70,6 +72,7 @@ from app.notifications.schema.notifications import ShuffleApp
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
 from app.notifications.schema.notifications import ShuffleIntegrationUpdate
 from app.notifications.schema.notifications import ShuffleOrg
+from app.notifications.services.ai_report_context import named_report_id
 from app.notifications.services.ai_report_context import safe_load_ai_report_context
 from app.notifications.services.dispatchers import (
     list_shuffle_apps as shuffle_apps_client,
@@ -80,6 +83,10 @@ from app.notifications.services.dispatchers import (
 from app.notifications.services.dispatchers import (
     verify_shuffle_org as verify_shuffle_org_client,
 )
+from app.notifications.services.payload_v1 import ai_report_v1_for_route
+from app.notifications.services.payload_v1 import ai_report_v1_json
+from app.notifications.services.payload_v1 import report_permitted_for_route
+from app.notifications.services.rendering import MENTIONS_REPORT_VAR
 from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
@@ -725,6 +732,10 @@ def _trigger_applies(report_trigger: str, route_trigger: str) -> bool:
     return route_trigger == report_trigger
 
 
+#: `ai_report` as a name of its own, not the start of `ai_report_v1`.
+_MENTIONS_AI_REPORT = re.compile(r"ai_report(?!_v1)")
+
+
 async def _ai_reports_permitted(trigger: str, customer_code: str, session: AsyncSession) -> bool:
     """Whether AI-written findings may be delivered to this customer.
 
@@ -930,14 +941,20 @@ async def _render_body(
     already broken, just silently.
     """
     inline = route.format_template
+    route_scope = getattr(route, "scope", None)
     if inline:
-        await _ensure_ai_report_context(inline, event, session, ctx=ctx)
+        event = await _report_event_for_route(inline, route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
-        body, error = render_body(inline, event, fallback)
+        render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
+        extra = await _report_variable(inline, route_scope, event, session, ctx=ctx)
+        body, error = render_body(inline, render_event, fallback, extra_context=extra)
         return (RenderedMessage(body=body, is_custom=error is None), error)
 
     template = await resolve_template_for_route(route, session)
     if template is None:
+        # No template, but a manual send (or another route's template) may have put the
+        # report on the event for the default body's report section.
+        event = await _report_event_for_route("", route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         # A default body that carries a report is markdown, not plain text: the
         # report is markdown by nature, and flagging it lets the email channel
@@ -948,13 +965,15 @@ async def _render_body(
         return (RenderedMessage(body=fallback, format=fmt), None)
 
     source = f"{template.body_template}{template.subject_template or ''}"
-    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    event = await _report_event_for_route(source, route_scope, event, session, ctx=ctx)
     fallback = _format_default_body(event)
 
     autoescape = template.format == "html"
     extra = await _branding_context(template, event, session, ctx=ctx)
+    extra.update(await _report_variable(source, route_scope, event, session, ctx=ctx))
+    render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
 
-    body, error = render_body(template.body_template, event, fallback, autoescape=autoescape, extra_context=extra)
+    body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
     if error:
         # The named template failed, so the channel default went out instead —
         # which is plain text with no subject, whatever the template declared.
@@ -962,7 +981,7 @@ async def _render_body(
 
     subject, subject_error = render_body(
         template.subject_template,
-        event,
+        render_event,
         # A failed subject falls back to the provider composing its own, which
         # is what a route with no named template already does.
         "",
@@ -1039,7 +1058,9 @@ async def _ensure_ai_report_context(
     same batch does not re-query. Templates guard with `{% if context.ai_report %}`
     and both a `None` and an absent key read as falsy.
     """
-    if "ai_report" not in source:
+    # `ai_report_v1` is a different block with its own loader and gate (`_with_ai_report_v1`);
+    # a template naming only that must not load this one too.
+    if not _MENTIONS_AI_REPORT.search(source):
         return
     if "ai_report" in (event.context or {}):
         return
@@ -1047,11 +1068,98 @@ async def _ensure_ai_report_context(
     if event.entity_type != EntityType.ALERT:
         return
 
-    async def _load():
-        return await safe_load_ai_report_context(event.entity_id, session)
+    report_id = named_report_id(event.context)
 
-    report = await ctx.memoize(f"ai_report:{event.entity_id}", _load) if ctx is not None else await _load()
+    async def _load():
+        return await safe_load_ai_report_context(
+            event.entity_id,
+            session,
+            event.customer_code,
+            report_id=report_id,
+            entity_type=event.entity_type,
+        )
+
+    key = f"ai_report:{event.entity_type}:{event.entity_id}:{report_id}"
+    report = await ctx.memoize(key, _load) if ctx is not None else await _load()
     event.context["ai_report"] = report
+
+
+async def _report_event_for_route(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event this route renders with, as far as `context.ai_report` goes.
+
+    The customer's AI report setting governs the report on every customer route, on
+    every trigger and on manual and test sends (`payload_v1.report_permitted_for_route`;
+    `dispatch_event`'s own gate covers only the AI triggers). A route that may not have
+    it renders a **copy** of the event with `context.ai_report` set to None, so neither a
+    template nor the default body's report section can show it, while routes that may
+    keep sharing the one loaded report. Internal routes are not gated.
+
+    Lazy like the loader: a template that never names `ai_report`, on an event that
+    doesn't already carry one, costs no query at all.
+    """
+    wants = bool(_MENTIONS_AI_REPORT.search(source))
+    if not wants and "ai_report" not in (event.context or {}):
+        return event
+    if not await report_permitted_for_route(route_scope, event, session, ctx):
+        return event.model_copy(update={"context": {**(event.context or {}), "ai_report": None}})
+    await _ensure_ai_report_context(source, event, session, ctx=ctx)
+    return event
+
+
+async def _with_ai_report_v1(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> NotificationEvent:
+    """The event to render with: `context.ai_report_v1` added when the template names it.
+
+    The block a webhook receives with `include_full_report` (`services/payload_v1.py`), for
+    templates that build their own JSON (`{{ context.ai_report_v1 | tojson }}`). Same lazy guard
+    as `_ensure_ai_report_context`, but **a copy of the event, never the shared one**: the block
+    depends on the route's scope (a customer route needs the AI report switch and never sees the
+    job id), and every route of a dispatch renders the same event. Null when the route may not
+    have it or there is none; `{% if context.ai_report_v1 %}` guards both.
+    """
+    if "ai_report_v1" not in source:
+        return event
+    block = await ai_report_v1_for_route(route_scope, event, session, ctx)
+    return event.model_copy(
+        update={"context": {**(event.context or {}), "ai_report_v1": block, "ai_report_v1_json": ai_report_v1_json(block)}},
+    )
+
+
+async def _report_variable(
+    source: str,
+    route_scope: Optional[str],
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    ctx: Optional[DispatchContext] = None,
+) -> Dict[str, Any]:
+    """`{{ report }}` for a template that names it: the flat report fields as a JSON string.
+
+    The `{{report}}` token predates Jinja templates, where a bare `{{report}}` became an
+    undefined variable and failed the template. It is a real variable now, with the value the
+    webhook substitutes for the literal token: `json.dumps` of the flat fields, or `null` when
+    there is no report or the route may not have it (`full_report_for_route`'s gate). Lazy like
+    the other report loaders. The webhook still replaces a literal `{{report}}` left in a body
+    (written as `{% raw %}`), through the same gate.
+    """
+    if not MENTIONS_REPORT_VAR.search(source or ""):
+        return {}
+    dispatch_ctx = ctx if ctx is not None else DispatchContext(session=session, event=event)
+    fields = await full_report_for_route(route_scope, event, dispatch_ctx)
+    return {"report": json.dumps(fields) if fields is not None else "null"}
 
 
 async def _record_log(

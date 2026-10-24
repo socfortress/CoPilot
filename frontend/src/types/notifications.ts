@@ -114,6 +114,7 @@ export type ChannelConfig = Record<string, unknown>
 export interface ShuffleChannelConfig extends ChannelConfig {
 	app_id?: string | null
 	app_name?: string | null
+	include_full_report?: boolean
 }
 
 export interface ResendChannelConfig extends ChannelConfig {
