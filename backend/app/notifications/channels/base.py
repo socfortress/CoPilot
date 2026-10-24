@@ -109,9 +109,10 @@ class DispatchContext:
     def __init__(self, session: AsyncSession, event: NotificationEvent, delivery_id: Optional[str] = None) -> None:
         self.session = session
         self.event = event
-        #: The notification outbox row being delivered, when there is one. Stable across
-        #: that row's retries and new for every emission, so a provider that de-duplicates
-        #: (Resend's Idempotency-Key) can tell a retry from a new notification.
+        #: The notification outbox row being delivered (its random `delivery_uuid`), when
+        #: there is one. Stable across that row's retries, new for every emission and unique
+        #: across installs, so a provider that de-duplicates (Resend's Idempotency-Key) can
+        #: tell a retry from a new notification.
         self.delivery_id = delivery_id
         self._memo: Dict[str, Any] = {}
 

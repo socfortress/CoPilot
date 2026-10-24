@@ -81,10 +81,12 @@ _KEY_UNSAFE = re.compile(r"[^A-Za-z0-9._:/-]")
 def idempotency_key(dedupe_key: str, route_id: int, delivery_id: str) -> str:
     """`Idempotency-Key` for one outbox delivery to one route: `<dedupe_key>:<route>:<delivery>`.
 
-    The outbox row's id is part of it on purpose. Retries of one row reuse the key, so a send
-    Resend already accepted isn't sent again; a new emission of the same dedupe key (A → B → A)
-    is a new row and a new key, so it is delivered, where `<dedupe_key>:<route>` alone would get
-    the 409 for a reused key with a different payload. Header-safe characters only (anything
+    `delivery` is the outbox row's random `delivery_uuid`, on purpose. Retries of one row reuse
+    the key, so a send Resend already accepted isn't sent again; a new emission of the same
+    dedupe key (A → B → A) is a new row and a new key, so it is delivered, where
+    `<dedupe_key>:<route>` alone would get the 409 for a reused key with a different payload;
+    and being random, it can't collide with another install's keys on the same Resend team
+    (dedupe keys, route ids and row ids repeat across installs). Header-safe characters only (anything
     else becomes `_`), and over 256 characters the dedupe key is shortened and a digest of the
     whole key appended, so two long keys can't collide.
     """

@@ -10,6 +10,7 @@ marks it ``dead`` (``app/notifications/services/outbox.py``).
 
 - ``queued_key`` holds the dedupe key until the row's first attempt and is unique, so one key
   is never queued twice (MySQL lets any number of rows hold NULL);
+- ``delivery_uuid`` is random per row, the install-unique part of Resend's idempotency key;
 - ``(status, next_attempt_at)`` serves the drain, ``(status, updated_at)`` retention and the
   lease sweep, ``(customer_code, status)`` the counts beside a customer's dispatch log.
 
@@ -38,6 +39,7 @@ def upgrade() -> None:
         sa.Column("event_json", sa.Text().with_variant(mysql.MEDIUMTEXT(), "mysql"), nullable=False),
         sa.Column("dedupe_key", sa.String(length=255), nullable=False),
         sa.Column("queued_key", sa.String(length=255), nullable=True),
+        sa.Column("delivery_uuid", sa.String(length=32), nullable=False),
         sa.Column("customer_code", sa.String(length=64), nullable=True),
         sa.Column("trigger", sa.String(length=64), nullable=False),
         sa.Column("status", sa.String(length=16), nullable=False, server_default="pending"),

@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List
 from typing import Optional
+from uuid import uuid4
 
 from loguru import logger
 from sqlalchemy import JSON
@@ -1546,6 +1547,9 @@ class NotificationOutbox(SQLModel, table=True):
     event_json: str = Field(sa_column=Column(Text().with_variant(MEDIUMTEXT(), "mysql"), nullable=False))
     dedupe_key: str = Field(max_length=255, nullable=False, index=True)
     queued_key: Optional[str] = Field(default=None, max_length=255, nullable=True)
+    # Random per row (uuid4 hex), so unique across installs: Resend's Idempotency-Key is built
+    # from it, and two CoPilots sending through one Resend team must never share a key.
+    delivery_uuid: str = Field(default_factory=lambda: uuid4().hex, max_length=32, nullable=False)
     # Copied off the event for inspection and the per-customer counts. NULL or "" for an
     # internal event, which belongs to no customer.
     customer_code: Optional[str] = Field(default=None, max_length=64, nullable=True)
