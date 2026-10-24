@@ -54,6 +54,7 @@ from app.notifications.schema.notifications import NotificationTemplateRead
 from app.notifications.schema.notifications import NotificationTemplateResponse
 from app.notifications.schema.notifications import NotificationTemplateUpdate
 from app.notifications.schema.notifications import NotificationTrigger
+from app.notifications.schema.notifications import OutboxSummary
 from app.notifications.schema.notifications import ResendQuotaResponse
 from app.notifications.schema.notifications import ShuffleAppListResponse
 from app.notifications.schema.notifications import ShuffleIntegrationCreate
@@ -66,6 +67,7 @@ from app.notifications.schema.notifications import ShuffleVerifyResponse
 from app.notifications.schema.notifications import TemplatePreviewRequest
 from app.notifications.schema.notifications import TemplatePreviewResponse
 from app.notifications.services import notifications as svc
+from app.notifications.services import outbox
 from app.notifications.services import templates as templates_svc
 
 notifications_router = APIRouter()
@@ -456,6 +458,7 @@ async def list_dispatch_log_route(
         success=True,
         message=f"{len(entries)} entry/entries retrieved",
         entries=entries,
+        outbox=OutboxSummary(**await outbox.summary(customer_code, session)),
     )
 
 
