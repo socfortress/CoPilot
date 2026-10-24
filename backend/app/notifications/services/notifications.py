@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any
+from typing import Collection
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -1324,12 +1325,21 @@ async def dispatch(req: DispatchRequest, session: AsyncSession) -> DispatchRespo
     return await dispatch_event(event_from_dispatch_request(req), session)
 
 
-async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> DispatchResponse:
+async def dispatch_event(
+    event: NotificationEvent,
+    session: AsyncSession,
+    *,
+    skip_route_ids: Optional[Collection[int]] = None,
+) -> DispatchResponse:
     """Walk the matching routes, fire each, log every outcome.
 
-    Idempotency is enforced at the log table — the insert is attempted *before*
-    the provider call, so a re-dispatch sees the existing row and short-circuits
-    without sending.
+    The log row is written *after* the provider call: a `sent` row for the same
+    (route, dedupe_key) refuses the log write, not the delivery, so dispatching
+    the same event twice delivers it twice (A → B → A reassignment relies on
+    that). What stops a retry re-sending is `skip_route_ids`: the routes an
+    earlier attempt at this same event already settled, which the outbox
+    (`services/outbox.py`) passes so a partial fan-out retries only the rest.
+    A skipped route is reported as `skipped` and its log row is left alone.
     """
     routes = await routes_for_event(event, session)
 
@@ -1345,6 +1355,26 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
 
+    # Routes an earlier attempt already settled: reported, never re-sent.
+    already_settled = set(skip_route_ids or ())
+    to_dispatch = matched_routes
+    if already_settled:
+        to_dispatch = []
+        for route in matched_routes:
+            if route.id not in already_settled:
+                to_dispatch.append(route)
+                continue
+            skipped += 1
+            outcomes.append(
+                DispatchOutcome(
+                    route_id=route.id,
+                    route_name=route.name,
+                    channel=route.channel,
+                    status=DispatchStatus.SKIPPED,
+                    error_message="Already settled by an earlier attempt",
+                ),
+            )
+
     # AI-report opt-out gate. Checked AFTER matching so the dispatch log still
     # records which routes *would* have fired — "suppressed by the AI switch"
     # is far easier to debug than silence — but BEFORE the connector fetch and
@@ -1359,8 +1389,8 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
     # so a batch can hold internal and customer routes at once — and aborting
     # the dispatch would silently take the SOC's own notification down with the
     # customer's, which is the exact opposite of what the opt-out is for.
-    deliverable_routes = matched_routes
-    gated_routes = [r for r in matched_routes if r.scope == NotificationScope.CUSTOMER.value]
+    deliverable_routes = to_dispatch
+    gated_routes = [r for r in to_dispatch if r.scope == NotificationScope.CUSTOMER.value]
     if gated_routes and not await _ai_reports_permitted(event.trigger.value, event.customer_code, session):
         logger.info(
             f"AI reports are not enabled for customer {event.customer_code}; "
@@ -1394,7 +1424,7 @@ async def dispatch_event(event: NotificationEvent, session: AsyncSession) -> Dis
                 ),
             )
         gated_ids = {r.id for r in gated_routes}
-        deliverable_routes = [r for r in matched_routes if r.id not in gated_ids]
+        deliverable_routes = [r for r in to_dispatch if r.id not in gated_ids]
 
     # Per-call context. Expensive lookups a provider needs (the Shuffle
     # connector row, an alert's AI report) are memoized on it, so a batch of
