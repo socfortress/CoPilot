@@ -88,6 +88,17 @@ export interface CustomerPortalExposureSettings {
 	updated_by: number | null
 }
 
+/**
+ * Per-customer switch for the Customer Portal's Audit Log page (#1298): the customer's own administrators
+ * read who did what in their tenant. Opt-in: a missing row reads as off.
+ */
+export interface CustomerPortalAuditSettings {
+	customer_code: string
+	enabled: boolean
+	updated_at: string | null
+	updated_by: number | null
+}
+
 export interface CustomerPortalBrandingListItem {
 	customer_code: string
 	enabled: boolean

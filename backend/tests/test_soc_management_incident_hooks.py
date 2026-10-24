@@ -117,6 +117,7 @@ def test_bulk_status_records_only_the_alerts_that_changed():
     async def access(alert_id, user, db):
         if alert_id == 2:
             raise dbo.HTTPException(status_code=403, detail="no")
+        return SimpleNamespace(id=alert_id, status="OPEN", customer_code="ACME")
 
     with _patches(update_alert_status=AsyncMock(), _ensure_alert_access=access):
         asyncio.run(
@@ -202,7 +203,7 @@ def test_unlinking_retargets_the_case():
 
 def test_a_case_from_an_alert_takes_its_severity_before_the_creation_is_recorded():
     with _patches(
-        create_case_from_alert=AsyncMock(return_value=SimpleNamespace(id=3)),
+        create_case_from_alert=AsyncMock(return_value=SimpleNamespace(id=3, case_name="Brute force", customer_code="ACME")),
         create_case_alert_link=AsyncMock(return_value=MagicMock()),
         CaseAlertLinkResponse=lambda **kw: kw,
     ):

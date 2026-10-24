@@ -11,9 +11,6 @@ peerDependencyRules:
 
 shellEmulator: true
 
-overrides:
-  rolldown: 1.0.1
-
 allowBuilds:
   "@parcel/watcher": true
   "@tailwindcss/oxide": true

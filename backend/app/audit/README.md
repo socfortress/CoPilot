@@ -86,6 +86,12 @@ one instrumentation point.
 | `customer_admin.update` | SOC Security tab (#1296) | `user` / username | old/new = {is_customer_admin}; + customer_code |
 | `customer_user.invite` | a customer admin in the portal (#1296) | `user` / username | new = {username, email, customer_codes}; + customer_code |
 | `customer_user.totp_reset` / `customer_user.password_reset` | a customer admin in the portal (#1296) | `user` / username | + customer_code; the password is never recorded |
+| `user.totp_enable` / `user.totp_disable` | a user's own 2FA from their profile, `app/auth/routes/totp.py` (#1298) | `user` / username | + source_ip |
+| `alert.status_change` / `case.status_change` | the incidents routes, single and bulk (#1298) | `alert`/`case` / id | old/new = {status}; + customer_code; one row per item that moved |
+| `alert.comment_create/edit/delete` / `case.comment_*` | the incidents comment routes (#1298) | `alert`/`case` / id | new = {comment_id}; + customer_code; **never the comment's text** |
+| `case.create` (from an alert) | `POST /incidents/db_operations/case/from-alert` (#1298) | `case` / case_id | new = {case_name, customer_code, alert_id} |
+| `report.generate/download/delete` | `app/incidents/routes/customer_report.py` (#1298) | `report` / report_id | new = {report_name, date_from, date_to}; + customer_code |
+| `audit.settings_update` | the portal Audit Log switch, `PUT /customer_portal/audit/settings/{code}` (#1298) | `customer_portal_audit_settings` / code | old/new = {enabled} |
 | `connector.create/update/delete` | `app/connectors` services | `connector` / name | new/old = sanitized config (no secrets) |
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |

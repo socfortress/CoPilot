@@ -29,7 +29,7 @@ const FIXTURES = import.meta.glob("./fixtures/talon-v2/v2_*.txt", {
 
 function fixture(name: string): string {
 	const wire = FIXTURES[`./fixtures/talon-v2/${name}`]
-	if (typeof wire !== "string") throw new Error(`no fixture ${name}`)
+	if (typeof wire !== "string") throw new TypeError(`no fixture ${name}`)
 	return wire
 }
 

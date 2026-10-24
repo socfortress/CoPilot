@@ -674,6 +674,32 @@ class CustomerPortalExposureSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalAuditSettings(SQLModel, table=True):
+    """Per-customer switch for the Customer Portal's Audit Log page (#1298).
+
+    **Opt-in** like the Activity and Exposure switches: a customer with no row here does not
+    get the page. Its customer admins (#1296) read their tenant's audit trail through
+    ``app/customer_portal/services/audit.py``; nothing should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_audit_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 

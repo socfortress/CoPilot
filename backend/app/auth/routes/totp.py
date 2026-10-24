@@ -93,6 +93,18 @@ async def get_2fa_status(
     return TOTPStatusResponse(enabled=enabled)
 
 
+async def _audit_own_totp(action: AuditAction, user, request: Request) -> None:
+    """A user's own 2FA turned on or off, from their profile (#1298): a portal customer's audit log shows it."""
+    await record_audit_event(
+        action=action,
+        actor_user_id=user.id,
+        actor_username=user.username,
+        entity_type="user",
+        entity_id=user.username,
+        request=request,
+    )
+
+
 # ── Setup ────────────────────────────────────────────────────────────────────
 
 
@@ -127,6 +139,7 @@ async def start_2fa_setup(
 )
 async def verify_2fa_setup(
     body: TOTPVerifyRequest,
+    request: Request,
     token: str = Depends(AuthHandler().security),
 ):
     """Verify a TOTP code to activate 2FA."""
@@ -140,6 +153,7 @@ async def verify_2fa_setup(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    await _audit_own_totp(AuditAction.USER_TOTP_ENABLE, user, request)
     return {"message": "Two-factor authentication is now enabled.", "success": True}
 
 
@@ -152,6 +166,7 @@ async def verify_2fa_setup(
 )
 async def disable_2fa(
     body: TOTPDisableRequest,
+    request: Request,
     token: str = Depends(AuthHandler().security),
 ):
     """Disable 2FA. Requires a valid TOTP code or backup code."""
@@ -168,6 +183,7 @@ async def disable_2fa(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    await _audit_own_totp(AuditAction.USER_TOTP_DISABLE, user, request)
     return {"message": "Two-factor authentication has been disabled.", "success": True}
 
 
