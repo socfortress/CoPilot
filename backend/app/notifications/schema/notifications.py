@@ -56,6 +56,9 @@ class NotificationTrigger(str, Enum):
     SLA_AT_RISK = "sla_at_risk"
     SLA_BREACHED = "sla_breached"
 
+    # A Customer Portal user asked the SOC a question about an alert or a case (#1305).
+    CUSTOMER_QUESTION = "customer_question"
+
     # Not a dispatch trigger. #999 reuses `notification_template` as a second
     # event source: the admin-issued temporary-password email is authored in the
     # same editor and rendered by the same sandboxed Jinja, but it is delivered
@@ -214,6 +217,9 @@ INTERNAL_TRIGGERS: frozenset = frozenset(
         # business: internal routes only (#1187).
         "sla_at_risk",
         "sla_breached",
+        # A customer's question is for the SOC to answer; the customer asked it, so it
+        # never goes back out on their own channel (#1305).
+        "customer_question",
     },
 )
 

@@ -350,3 +350,50 @@ def sla_event(
             "status": status,
         },
     )
+
+
+#: A portal user's urgency (#1305) as the notification severity a route's minimum compares.
+QUESTION_URGENCY_SEVERITY = {
+    "low": NotificationSeverity.LOW,
+    "normal": NotificationSeverity.MEDIUM,
+    "high": NotificationSeverity.HIGH,
+}
+
+#: How much of the question an event carries: enough to triage from a chat message.
+QUESTION_EXCERPT = 500
+
+
+def customer_question_event(
+    *,
+    request_id: int,
+    entity_type: str,
+    entity_id: int,
+    title: Optional[str],
+    customer_code: str,
+    urgency: str,
+    asked_by: str,
+    question: str,
+) -> NotificationEvent:
+    """A Customer Portal user asked the SOC a question about an alert or a case (#1305).
+
+    Internal routes only: the customer asked it, so it never goes out on their own channel.
+    One notification per question (the dedupe key is the request's id); the urgency the user
+    picked is the severity a route's minimum compares.
+    """
+    what = "Case" if entity_type == EntityType.CASE else "Alert"
+    path = f"/incident-management/cases/{entity_id}" if entity_type == EntityType.CASE else f"/incident-management/alerts/{entity_id}"
+    excerpt = question if len(question) <= QUESTION_EXCERPT else question[: QUESTION_EXCERPT - 1] + "…"
+    return NotificationEvent(
+        customer_code=customer_code,
+        trigger=NotificationTrigger.CUSTOMER_QUESTION,
+        severity=QUESTION_URGENCY_SEVERITY.get(urgency, NotificationSeverity.MEDIUM),
+        subject=f"Customer question on {what.lower()} #{entity_id}" + (f" — {title}" if title else ""),
+        summary=f"{asked_by} ({customer_code}) asked the SOC about {what.lower()} #{entity_id}.",
+        entity_type=entity_type,
+        entity_id=entity_id,
+        dedupe_key=f"customer_question:{request_id}",
+        link_url=_copilot_link(path),
+        assignee_username=None,
+        actor_username=asked_by,
+        context={"title": title, "question": excerpt, "urgency": urgency, "asked_by": asked_by, "request_id": request_id},
+    )

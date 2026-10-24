@@ -459,6 +459,14 @@ SLA_SAMPLE_CONTEXT = {
         "overdue_minutes": 20,
         "status": "IN_PROGRESS",
     },
+    # Not an SLA trigger, but previewed and test-sent the same way: what
+    # ``event_builders.customer_question_event`` carries (#1305).
+    "customer_question": {
+        "question": "We see this sign-in from Lisbon every Monday: is it our VPN? Do we need to do anything?",
+        "urgency": "high",
+        "asked_by": "jane.doe",
+        "request_id": 42,
+    },
 }
 
 

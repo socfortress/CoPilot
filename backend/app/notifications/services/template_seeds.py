@@ -107,6 +107,21 @@ BUILTIN_TEMPLATES: List[Dict[str, Any]] = [
         ),
     },
     {
+        "name": "Customer question",
+        "description": "For internal routes on customer questions: who asked about what, how urgently, and the question itself.",
+        "trigger": "customer_question",
+        "format": "markdown",
+        "subject_template": "{{ subject }}",
+        "body_template": (
+            "*Customer question* — urgency *{{ context.urgency or 'normal' }}*\n\n"
+            "{{ entity_type | title }}: #{{ entity_id }}{% if context.title %} — {{ context.title }}{% endif %}\n"
+            "{% if customer_code %}Customer: `{{ customer_code }}`\n{% endif %}"
+            "Asked by: {{ context.asked_by or actor or 'a portal user' }}\n"
+            "{% if context.question %}\n> {{ context.question }}\n{% endif %}"
+            "{% if link_url %}\nOpen in CoPilot: {{ link_url }}{% endif %}"
+        ),
+    },
+    {
         "name": "AI investigation — customer summary",
         "description": "Plain-language wrap-up of an AI investigation, written for the end customer.",
         "trigger": "investigation_complete",
