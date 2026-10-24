@@ -17,6 +17,8 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import Any
+from typing import Awaitable
+from typing import Callable
 from typing import Collection
 from typing import Dict
 from typing import List
@@ -1115,7 +1117,11 @@ async def _record_log(
 
     # No prior record — insert fresh.
     log = NotificationDispatchLog(
-        customer_code=event.customer_code,
+        # NOT NULL on the table, and an internal-scope event (an assignment, an SLA
+        # notice) may belong to no customer: it is logged under "". A NULL here made
+        # the insert fail after the provider had already delivered, and the rollback
+        # broke every later route of the batch.
+        customer_code=event.customer_code or "",
         # Populated only for alert-shaped events; a case-task assignment
         # leaves it NULL and carries its identity in entity_type/entity_id.
         alert_id=event.entity_id if event.entity_type == EntityType.ALERT else None,
@@ -1330,6 +1336,8 @@ async def dispatch_event(
     session: AsyncSession,
     *,
     skip_route_ids: Optional[Collection[int]] = None,
+    on_route_settled: Optional[Callable[[DispatchOutcome], Awaitable[None]]] = None,
+    delivery_id: Optional[str] = None,
 ) -> DispatchResponse:
     """Walk the matching routes, fire each, log every outcome.
 
@@ -1340,6 +1348,12 @@ async def dispatch_event(
     earlier attempt at this same event already settled, which the outbox
     (`services/outbox.py`) passes so a partial fan-out retries only the rest.
     A skipped route is reported as `skipped` and its log row is left alone.
+
+    The outbox also passes `on_route_settled`, awaited with each route's outcome
+    as soon as that route is done (so an attempt that dies half-way has already
+    recorded what it delivered), and `delivery_id`, which identifies this
+    delivery to providers that de-duplicate retries (Resend's idempotency key).
+    Callers that pass none of the three get the behaviour they always had.
     """
     routes = await routes_for_event(event, session)
 
@@ -1351,6 +1365,23 @@ async def dispatch_event(
         and _severity_meets(event.severity.value, r.min_severity)
         and not _self_assignment_suppressed(r, event)
     ]
+    # Detach the matched routes, with every column already loaded, before anything
+    # can commit or roll back. A rollback (a failed log write) or a commit on an
+    # expire-on-commit session expires every object still in the session, and the
+    # next route's first attribute read would then be an implicit refresh, which is
+    # MissingGreenlet under AsyncSession: one failure took every later route down.
+    # Nothing below reads a relationship off a route, and the route counters are
+    # written by explicit UPDATEs, so detached rows serve the loop and providers alike.
+    for route in matched_routes:
+        session.expunge(route)
+
+    async def settled(outcome: DispatchOutcome) -> None:
+        if on_route_settled is None:
+            return
+        try:
+            await on_route_settled(outcome)
+        except Exception as e:  # noqa: BLE001 — recording progress must not stop the batch
+            logger.warning(f"Recording route {outcome.route_id}'s outcome failed: {type(e).__name__}")
 
     outcomes: List[DispatchOutcome] = []
     sent = failed = skipped = 0
@@ -1423,6 +1454,7 @@ async def dispatch_event(
                     error_message=reason,
                 ),
             )
+            await settled(outcomes[-1])
         gated_ids = {r.id for r in gated_routes}
         deliverable_routes = [r for r in to_dispatch if r.id not in gated_ids]
 
@@ -1430,7 +1462,7 @@ async def dispatch_event(
     # connector row, an alert's AI report) are memoized on it, so a batch of
     # routes shares one read — the property the pre-refactor prefetch gave us,
     # now lazy: nothing is read unless a route actually reaches that provider.
-    ctx = DispatchContext(session=session, event=event)
+    ctx = DispatchContext(session=session, event=event, delivery_id=delivery_id)
 
     for route in deliverable_routes:
         # Cache every route attribute the LOOP needs into locals UP FRONT.
@@ -1514,6 +1546,20 @@ async def dispatch_event(
                     latency_ms=None,
                 ),
             )
+            # The log kept an earlier `sent` row, but the provider was called all the same:
+            # progress is told what actually happened (a re-emission sent, or failed and
+            # still owed a retry), not the log's refusal.
+            await settled(
+                DispatchOutcome(
+                    route_id=route_id,
+                    route_name=route_name,
+                    channel=route_channel,
+                    status=DispatchStatus(result_status),
+                    error_message=error_message,
+                    latency_ms=latency_ms,
+                    provider_reference=provider_reference,
+                ),
+            )
             continue
 
         # Maintain denorm columns for the UI list. Cheaper than joining
@@ -1552,6 +1598,7 @@ async def dispatch_event(
                 provider_reference=provider_reference,
             ),
         )
+        await settled(outcomes[-1])
 
     return DispatchResponse(
         success=True,
