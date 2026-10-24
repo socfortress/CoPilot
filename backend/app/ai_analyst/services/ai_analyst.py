@@ -50,6 +50,7 @@ from app.db.universal_models import AiAnalystReport
 from app.db.universal_models import AiAnalystReview
 from app.incidents.models import Alert
 from app.incidents.models import Asset
+from app.notifications.services import outbox
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import ai_report_reviewed_event
 from app.notifications.services.event_builders import investigation_complete_event
@@ -267,10 +268,10 @@ async def _alert_display_fields(alert_id: int, session: AsyncSession) -> tuple[O
     read `Alert #14` instead of the alert's name, and the built-in template's
     asset line could never render (#1048).
 
-    Never raises. This runs on the write-back path, where the report is already
-    durably stored — failing to decorate a notification must not turn a
-    successful submission into a 500. A missing name degrades to the old
-    behaviour rather than losing the notification.
+    Never raises. This runs on the write-back path, just before the report is
+    stored — failing to decorate a notification must not turn a good
+    submission into a 500. A missing name degrades to the old behaviour rather
+    than losing the notification.
     """
     try:
         alert = await session.get(Alert, alert_id)
@@ -286,10 +287,9 @@ async def _alert_display_fields(alert_id: int, session: AsyncSession) -> tuple[O
 async def _username_for(user_id: int, session: AsyncSession) -> Optional[str]:
     """A reviewer's username, falling back to their id as a string.
 
-    Never raises, for the same reason as `_alert_display_fields`: the review is
-    already committed by the time this runs, and failing to label a notification
-    must not turn a successful submission into a 500. The fallback reproduces
-    the old behaviour rather than dropping the field entirely.
+    Never raises, for the same reason as `_alert_display_fields`: failing to
+    label a notification must not turn a good review submission into a 500. The
+    fallback reproduces the old behaviour rather than dropping the field entirely.
     """
     try:
         user = await session.get(User, user_id)
@@ -319,17 +319,36 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     if existing.scalars().first() is not None:
         raise HTTPException(status_code=409, detail=f"A report already exists for job {request.job_id}")
 
+    severity = request.severity_assessment.value if request.severity_assessment else None
+    # Notification routes (#1007). Emitted here rather than relying solely on Talon's
+    # POST /notifications/dispatch, which is single-attempt. The event goes into the
+    # notification outbox in the report's own transaction, so a committed report always has
+    # its notification queued, and a rolled-back one never does; the outbox retries it across
+    # restarts. The display fields are read before the report is added: a read after it would
+    # flush the report early, and a duplicate job's IntegrityError would surface there instead
+    # of at the commit below.
+    alert_name, asset_name = await _alert_display_fields(request.alert_id, session)
+    event = investigation_complete_event(
+        alert_id=request.alert_id,
+        customer_code=request.customer_code,
+        severity=severity,
+        summary=request.summary or "An AI investigation completed for this alert.",
+        alert_name=alert_name,
+        asset_name=asset_name,
+    )
+
     report = AiAnalystReport(
         job_id=request.job_id,
         alert_id=request.alert_id,
         customer_code=request.customer_code,
-        severity_assessment=request.severity_assessment.value if request.severity_assessment else None,
+        severity_assessment=severity,
         summary=request.summary,
         report_markdown=request.report_markdown,
         recommended_actions=request.recommended_actions,
         created_at=datetime.utcnow(),
     )
     session.add(report)
+    queued = await outbox.enqueue(event, session)
     try:
         await session.commit()
     except IntegrityError as e:
@@ -337,28 +356,17 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
         if REPORT_JOB_UNIQUE not in str(e.orig):
             raise
         # Two submissions for one job at once: the pre-check above passed for both, and the
-        # unique index let only one in.
+        # unique index let only one in. The rollback took the outbox row with it.
         raise HTTPException(status_code=409, detail=f"A report already exists for job {request.job_id}")
     await session.refresh(report)
 
     logger.info(f"AI analyst report {report.id} created for job {request.job_id}")
 
-    # Notification routes (#1007). Emitted here rather than relying solely on
-    # Talon's POST /notifications/dispatch, which is single-attempt: a network
-    # blip or a CoPilot restart loses the notification even though the report is
-    # already durably stored. Both paths build the same dedupe key, so whichever
-    # arrives first wins and the other is a no-op.
-    alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
-    emit(
-        investigation_complete_event(
-            alert_id=report.alert_id,
-            customer_code=report.customer_code,
-            severity=report.severity_assessment,
-            summary=report.summary or "An AI investigation completed for this alert.",
-            alert_name=alert_name,
-            asset_name=asset_name,
-        ),
-    )
+    if queued:
+        outbox.kick(event)
+    else:
+        # The outbox row couldn't be added (logged): durable, just not atomic with the report.
+        emit(event)
 
     return SubmitReportResponse(success=True, message="Report submitted", report=_report_to_response(report))
 
@@ -649,6 +657,28 @@ async def submit_review(
 
     is_edit = review is not None
 
+    # Notification routes (#1007). Creation only — an analyst revising their own
+    # review is not a new sign-off. Lets an operator run an internal route on
+    # report submission and a customer-facing route only after review. Built before
+    # anything is added to the session, so these reads can't flush the review early, and
+    # queued in the review's own transaction (the notification outbox) below.
+    review_event = None
+    if not is_edit:
+        alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
+        review_event = ai_report_reviewed_event(
+            alert_id=report.alert_id,
+            report_id=report_id,
+            customer_code=report.customer_code,
+            severity=report.severity_assessment,
+            summary=report.summary or "An analyst reviewed the AI investigation for this alert.",
+            # The reviewer's name, not their row id. This used to send
+            # `str(reviewer_user_id)`, so a notification read "Reviewed by: 3".
+            reviewer=await _username_for(reviewer_user_id, session),
+            verdict=request.overall_verdict.value if request.overall_verdict else None,
+            alert_name=alert_name,
+            asset_name=asset_name,
+        )
+
     if is_edit:
         # Update existing review in place
         review.overall_verdict = request.overall_verdict.value if request.overall_verdict else None
@@ -698,7 +728,13 @@ async def submit_review(
             ),
         )
 
+    queued = await outbox.enqueue(review_event, session) if review_event is not None else False
     await session.commit()
+    if review_event is not None:
+        if queued:
+            outbox.kick(review_event)
+        else:
+            emit(review_event)
 
     # Re-fetch with ioc_reviews eagerly loaded for the response
     result = await session.execute(
@@ -709,26 +745,6 @@ async def submit_review(
     action = "updated" if is_edit else "created"
     logger.info(f"Review {review.id} {action} for report {report_id}")
 
-    # Notification routes (#1007). Creation only — an analyst revising their own
-    # review is not a new sign-off. Lets an operator run an internal route on
-    # report submission and a customer-facing route only after review.
-    if not is_edit:
-        alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
-        emit(
-            ai_report_reviewed_event(
-                alert_id=report.alert_id,
-                report_id=report_id,
-                customer_code=report.customer_code,
-                severity=report.severity_assessment,
-                summary=report.summary or "An analyst reviewed the AI investigation for this alert.",
-                # The reviewer's name, not their row id. This used to send
-                # `str(reviewer_user_id)`, so a notification read "Reviewed by: 3".
-                reviewer=await _username_for(reviewer_user_id, session),
-                verdict=request.overall_verdict.value if request.overall_verdict else None,
-                alert_name=alert_name,
-                asset_name=asset_name,
-            ),
-        )
     return SubmitReviewResponse(
         success=True,
         message=f"Review {action}",
