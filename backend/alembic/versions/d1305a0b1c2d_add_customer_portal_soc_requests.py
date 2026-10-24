@@ -1,7 +1,7 @@
 """add customer portal soc requests and their per-customer switch
 
 Revision ID: d1305a0b1c2d
-Revises: b1296a0c1d2e
+Revises: d0b7e1a2c3f4
 Create Date: 2026-10-24 09:00:00.000000
 
 "Ask the SOC" in the Customer Portal (#1305): ``customer_portal_soc_request`` keeps each
@@ -19,7 +19,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "d1305a0b1c2d"
-down_revision: Union[str, None] = "b1296a0c1d2e"
+down_revision: Union[str, None] = "d0b7e1a2c3f4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
