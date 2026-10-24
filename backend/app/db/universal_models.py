@@ -7,12 +7,14 @@ from sqlalchemy import JSON
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import ForeignKey
+from sqlalchemy import Index
 from sqlalchemy import LargeBinary
 from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy import false
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -1497,6 +1499,70 @@ class NotificationDispatchLog(SQLModel, table=True):
     # SQLAlchemy has no join condition to infer — and a log row deliberately
     # survives its route, which makes "the route this belongs to" a question
     # that can have no answer. Callers that need the route look it up by id.
+
+
+#: The unique index that keeps one dedupe key from being queued twice.
+NOTIFICATION_OUTBOX_QUEUED_UNIQUE = "uq_notification_outbox_queued_key"
+
+
+class NotificationOutbox(SQLModel, table=True):
+    """A notification still to be dispatched, or already handled (`notifications/services/outbox.py`).
+
+    `emit()` used to hand the event straight to an in-memory asyncio task, so a restart or a
+    crash between the caller's commit and the dispatch lost it. Each event is now a row here
+    first; the drain (an immediate kick, plus the `drain_notification_outbox` job every minute)
+    claims it, dispatches it through `dispatch_event` and marks it `done`, or retries it with
+    backoff and in the end marks it `dead`.
+
+    `queued_key` is the dedupe key while the row waits for its first attempt, and NULL from its
+    first claim on. Its unique index (MySQL allows any number of NULLs) stops one key being
+    queued twice: an event for a key already queued replaces the queued event instead of adding
+    a row. Once a delivery has started, the same key can be queued again, which keeps the
+    dispatch log's meaning (a re-emission is delivered again, as A → B → A reassignment expects).
+
+    `route_outcomes` is a JSON object of the routes this row has settled (`{"12": "sent"}`). A
+    retry passes them to `dispatch_event` as `skip_route_ids`, so a partial fan-out retries only
+    the routes that failed transiently. The dispatch log can't do that by itself: it is written
+    after the provider call, so a `sent` row there never stops a second delivery.
+
+    No foreign keys: like the dispatch log, a queued notification may outlive the route or the
+    customer it was about, and the drain then simply finds nothing to deliver to.
+    """
+
+    __tablename__ = "notification_outbox"
+    __table_args__ = (
+        UniqueConstraint("queued_key", name=NOTIFICATION_OUTBOX_QUEUED_UNIQUE),
+        # The drain's query: due rows of one status, oldest first.
+        Index("ix_notification_outbox_status_next_attempt", "status", "next_attempt_at"),
+        # Retention (`done` / `dead` rows past their window) and the lease sweep.
+        Index("ix_notification_outbox_status_updated", "status", "updated_at"),
+        # The counts beside a customer's dispatch log.
+        Index("ix_notification_outbox_customer_status", "customer_code", "status"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    # `NotificationEvent.model_dump_json()`, read back with `model_validate_json`. MEDIUMTEXT on
+    # MySQL: an investigation's summary is the AI report's, which TEXT's 64 KB may not hold.
+    event_json: str = Field(sa_column=Column(Text().with_variant(MEDIUMTEXT(), "mysql"), nullable=False))
+    dedupe_key: str = Field(max_length=255, nullable=False, index=True)
+    queued_key: Optional[str] = Field(default=None, max_length=255, nullable=True)
+    # Copied off the event for inspection and the per-customer counts. NULL or "" for an
+    # internal event, which belongs to no customer.
+    customer_code: Optional[str] = Field(default=None, max_length=64, nullable=True)
+    trigger: str = Field(max_length=64, nullable=False)
+    # 'pending' | 'processing' | 'done' | 'dead'
+    status: str = Field(default="pending", max_length=16, nullable=False)
+    # Claims so far; incremented by the claim itself, so a crash mid-dispatch counts.
+    attempts: int = Field(default=0, nullable=False)
+    next_attempt_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    # A short, scrubbed summary of the last failure (URLs and credentials masked).
+    last_error: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    route_outcomes: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    # The current (or last) claim: when, and by which process (`host:pid`).
+    claimed_at: Optional[datetime] = Field(default=None, nullable=True)
+    claimed_by: Optional[str] = Field(default=None, max_length=128, nullable=True)
 
 
 class CustomerShuffleIntegration(SQLModel, table=True):
