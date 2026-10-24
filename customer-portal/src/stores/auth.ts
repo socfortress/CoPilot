@@ -13,6 +13,7 @@ import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvail
 import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
+import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { RouteRole } from "@/types/auth"
@@ -71,6 +72,8 @@ export const useAuthStore = defineStore("auth", {
 			useSlaAvailability().reset()
 			useActivityAvailability().reset()
 			useExposureAvailability().reset()
+			// Whether the user may ask the SOC is the customer's choice too (#1305).
+			useSocRequestsAvailability().reset()
 			// The bell's server notifications are the user's own (#1282).
 			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).

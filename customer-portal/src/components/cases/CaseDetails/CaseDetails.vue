@@ -38,6 +38,10 @@
 					<n-tab-pane name="files" tab="Files">
 						<CaseFiles :case-id="caseData.id" />
 					</n-tab-pane>
+					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
+					<n-tab-pane v-if="askSocEnabled" name="ask-soc" tab="Ask the SOC" display-directive="show:lazy">
+						<AskSoc entity="case" :entity-id="caseData.id" @asked="handleAsked" />
+					</n-tab-pane>
 					<n-tab-pane name="comments" :tab="`Comments (${caseData.comments?.length || 0})`">
 						<CaseComments
 							:case-data
@@ -62,6 +66,8 @@ import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
+import AskSoc from "@/components/socRequests/AskSoc.vue"
+import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
 import { getApiErrorMessage } from "@/utils"
 import { isWaitingOnCustomer } from "@/utils/workflowStatus"
 import CaseAlerts from "./CaseAlerts.vue"
@@ -84,6 +90,9 @@ const caseData = ref<Case | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const activeTab = ref("overview")
+const askSocEnabled = ref(false)
+
+const { isEnabledFor: isAskSocEnabledFor } = useSocRequestsAvailability()
 
 async function loadCaseDetails() {
 	if (props.caseId === null) return
@@ -101,6 +110,19 @@ async function loadCaseDetails() {
 		detailsError.value = getApiErrorMessage(err as ApiError)
 	} finally {
 		loadingDetails.value = false
+	}
+
+	// Checked against the case's own customer: a portal user may be scoped to more than one.
+	askSocEnabled.value = caseData.value ? await isAskSocEnabledFor(caseData.value.customer_code) : false
+}
+
+// A question is a comment signed by the user: read the case again. A comment hands a case
+// the SOC waits on back to it, so tell the list.
+async function handleAsked() {
+	const wasWaiting = caseData.value ? isWaitingOnCustomer(caseData.value.case_status) : false
+	await loadCaseDetails()
+	if (wasWaiting && caseData.value && !isWaitingOnCustomer(caseData.value.case_status)) {
+		emit("statusUpdated", { caseId: caseData.value.id, status: caseData.value.case_status })
 	}
 }
 
@@ -161,6 +183,7 @@ watch(
 	async newCaseId => {
 		caseData.value = null
 		detailsError.value = null
+		askSocEnabled.value = false
 		activeTab.value = "overview"
 
 		if (newCaseId !== null) {
