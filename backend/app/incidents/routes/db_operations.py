@@ -31,6 +31,7 @@ from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_
 from app.connectors.wazuh_indexer.utils.universal import get_index_source
 from app.customer_portal.services.notification_events import notify_alert_created
 from app.customer_portal.services.notification_events import notify_status_change
+from app.customer_portal.services.soc_request_answers import mark_answered_by_comment
 from app.customer_provisioning.routes.provision import check_customer_exists
 from app.data_store.data_store_operations import (
     list_case_report_template_data_store_files,
@@ -836,6 +837,8 @@ async def create_comment_endpoint(
     await SlaLifecycleRecorder().alert_action(comment.alert_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
     # A customer answering an alert the SOC waits on hands it back (and resumes its SLA).
     await resume_alert_on_reply(comment.alert_id, current_user, db)
+    # The SOC's comment answers the customer's open questions on this alert (#1305).
+    await mark_answered_by_comment("alert", comment.alert_id, current_user, db)
     return CommentResponse(comment=created, success=True, message="Comment created successfully")
 
 
@@ -932,6 +935,8 @@ async def create_case_comment_endpoint(
     )
     await SlaLifecycleRecorder().case_action(comment.case_id, LifecycleAction.COMMENTED, Actor.from_user(current_user))
     await resume_case_on_reply(comment.case_id, current_user, db)
+    # The SOC's comment answers the customer's open questions on this case (#1305).
+    await mark_answered_by_comment("case", comment.case_id, current_user, db)
 
     return CaseCommentResponse(comment=created, success=True, message="Case comment created successfully")
 
