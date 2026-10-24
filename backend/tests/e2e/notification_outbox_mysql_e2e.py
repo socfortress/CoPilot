@@ -189,8 +189,9 @@ async def deadlock_check(engine, factory):
     await other.execute(text("UPDATE e2e_outbox_heavy SET id = id + 100000"))
     await other.execute(
         text(
-            "INSERT INTO notification_outbox (event_json, dedupe_key, queued_key, customer_code, `trigger`, status, attempts, "
-            "next_attempt_at, created_at, updated_at) VALUES ('{}', :k, :k, :c, 't', 'pending', 0, NOW(), NOW(), NOW())",
+            "INSERT INTO notification_outbox (event_json, dedupe_key, queued_key, delivery_uuid, customer_code, `trigger`, status, "
+            "attempts, next_attempt_at, created_at, updated_at) "
+            "VALUES ('{}', :k, :k, REPLACE(UUID(), '-', ''), :c, 't', 'pending', 0, NOW(), NOW(), NOW())",
         ),
         {"k": key, "c": CUSTOMER},
     )
@@ -465,7 +466,7 @@ async def main() -> int:
     async with factory() as session:
         await session.execute(
             text("UPDATE notification_outbox SET updated_at = :t, claimed_at = :t WHERE id = :i"),
-            {"t": datetime.utcnow() - timedelta(minutes=10), "i": row.id},
+            {"t": datetime.utcnow() - timedelta(minutes=20), "i": row.id},
         )
         await session.commit()
     counts = await outbox.drain(settings)

@@ -714,7 +714,7 @@ def test_a_dispatch_that_times_out_keeps_what_it_sent(tmp_path, monkeypatch):
 
         h.channel = Hanging()
         monkeypatch.setattr(svc, "get_channel", lambda channel: h.channel)
-        settings = outbox.OutboxSettings(jitter=0.0, dispatch_timeout_seconds=0.5)
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=0.5)
         await outbox.queue(_event())
         await outbox.drain_key("alert:14:alert_created", settings)
         first = await h.row()
@@ -724,7 +724,7 @@ def test_a_dispatch_that_times_out_keeps_what_it_sent(tmp_path, monkeypatch):
 
     first, row, channel = run(tmp_path, monkeypatch, scenario)
     assert (first.status, first.attempts) == ("pending", 1)
-    assert "timed out" in first.last_error
+    assert "time budget" in first.last_error
     assert row.status == "done"
     assert (channel.count("Fast"), channel.count("Hangs")) == (1, 1)
 
@@ -774,7 +774,8 @@ def test_an_expired_lease_returns_the_row_without_resending(tmp_path, monkeypatc
             await session.commit()
         h.clock.advance(seconds=120)
         early = await outbox.drain(NO_JITTER)
-        h.clock.advance(seconds=300)
+        # Past the lease: longer than the largest dispatch budget (660 s with the defaults).
+        h.clock.advance(seconds=NO_JITTER.effective_lease_seconds)
         late = await outbox.drain(NO_JITTER)
         recovered = await h.row()
         h.clock.advance(seconds=600)
@@ -809,7 +810,8 @@ def test_a_worker_whose_lease_was_taken_over_cannot_overwrite(tmp_path, monkeypa
 
 
 def test_the_lease_always_outlasts_a_dispatch():
-    assert outbox.OutboxSettings(lease_seconds=10, dispatch_timeout_seconds=60).effective_lease_seconds == 120
+    assert outbox.OutboxSettings(lease_seconds=10).effective_lease_seconds == 600 + 45 + 15
+    assert outbox.OutboxSettings(lease_seconds=10, route_timeout_seconds=5, dispatch_timeout_max_seconds=20).effective_lease_seconds == 40
 
 
 # ── concurrency ──────────────────────────────────────────────────────────────
@@ -1193,7 +1195,7 @@ def test_progress_is_kept_route_by_route_so_a_re_emission_does_not_resend(tmp_pa
 
         h.channel = Hanging()
         monkeypatch.setattr(svc, "get_channel", lambda channel: h.channel)
-        settings = outbox.OutboxSettings(jitter=0.0, dispatch_timeout_seconds=0.5)
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=0.5)
         await outbox.queue(_event())
         await outbox.drain_key("alert:14:alert_created", settings)
         h.clock.advance(hours=1)
@@ -1206,7 +1208,7 @@ def test_progress_is_kept_route_by_route_so_a_re_emission_does_not_resend(tmp_pa
         return second, await h.rows(), h.channel
 
     second, rows, channel = run(tmp_path, monkeypatch, scenario)
-    assert second.status == "pending" and "timed out" in second.last_error
+    assert second.status == "pending" and "time budget" in second.last_error
     assert list(json.loads(second.route_outcomes).values()) == ["sent"], "A recorded, as sent, the moment it was sent"
     assert [r.status for r in rows] == ["done", "done"]
     assert (channel.count("A"), channel.count("B")) == (2, 2), "one each per emission"
@@ -1233,7 +1235,7 @@ def test_a_retry_skips_what_the_log_shows_sent_since_the_row_was_created(tmp_pat
         stuck = await h.row()
         monkeypatch.setattr(outbox, "_record_progress", real_progress)
         monkeypatch.setattr(outbox, "_finish", real_finish)
-        h.clock.advance(minutes=10)
+        h.clock.advance(seconds=NO_JITTER.effective_lease_seconds + 1)
         counts = await outbox.drain(NO_JITTER)
         h.clock.advance(minutes=10)
         await outbox.drain(NO_JITTER)
@@ -1324,7 +1326,7 @@ def test_each_delivery_tells_providers_its_outbox_row(tmp_path, monkeypatch):
         return await h.row(), h.channel.delivery_ids
 
     row, ids = run(tmp_path, monkeypatch, scenario)
-    assert ids == [str(row.id)]
+    assert ids == [row.delivery_uuid] and len(row.delivery_uuid) == 32
 
 
 # ── M1: an error that aborted the caller's transaction is raised ─────────────
@@ -1540,16 +1542,215 @@ def test_the_sweep_prunes_on_its_first_run_and_then_daily(tmp_path, monkeypatch)
 
         await old_done("a")
         await outbox.drain_notification_outbox()
+        await asyncio.gather(*list(outbox._PRUNES))
         after_first = [r.dedupe_key for r in await h.rows()]
         await old_done("b")
         h.clock.advance(hours=1)
         await outbox.drain_notification_outbox()
+        await asyncio.gather(*list(outbox._PRUNES))
         within_a_day = [r.dedupe_key for r in await h.rows()]
         h.clock.advance(hours=24)
         await outbox.drain_notification_outbox()
+        await asyncio.gather(*list(outbox._PRUNES))
         return after_first, within_a_day, [r.dedupe_key for r in await h.rows()]
 
     after_first, within_a_day, next_day = run(tmp_path, monkeypatch, scenario)
     assert after_first == []
     assert within_a_day == ["b"]
     assert next_day == []
+
+
+# ── last review: timeouts and outages are never final; the budget follows the fan-out ──
+
+
+def _slow_routes(h, delay, result=None):
+    """Every route's send takes `delay` s, then returns `result` (or is sent)."""
+    real = h.channel.send
+    calls = []
+
+    async def send(*, route, event, message, ctx):
+        name = route.name
+        calls.append(name)
+        await asyncio.sleep(delay)
+        if result is not None:
+            return result
+        return await real(route=route, event=event, message=message, ctx=ctx)
+
+    h.channel.send = send
+    return calls
+
+
+def test_a_progressing_fan_out_finishes_every_route(tmp_path, monkeypatch):
+    """The review's probe: five healthy, slow routes. One budget for the whole batch cut every
+    attempt short and two timeouts in a row made the row dead; the budget is now per route."""
+
+    async def scenario(h):
+        for n in range(5):
+            await h.add_route(f"r{n}")
+        _slow_routes(h, 0.3)
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=0.75)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", settings)
+        for _ in range(10):
+            h.clock.advance(hours=9)
+            await outbox.drain(settings)
+        return await h.row(), h.channel
+
+    row, channel = run(tmp_path, monkeypatch, scenario)
+    assert (row.status, row.attempts) == ("done", 1)
+    assert [channel.count(f"r{n}") for n in range(5)] == [1] * 5
+
+
+def test_two_budget_overruns_that_made_progress_are_not_final(tmp_path, monkeypatch):
+    """Even when the budget does run out (here: its cap), twice, a fan-out that delivered
+    routes each time goes on to finish."""
+
+    async def scenario(h):
+        for n in range(5):
+            await h.add_route(f"r{n}")
+        _slow_routes(h, 0.3)
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=1.0, dispatch_timeout_max_seconds=0.75)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", settings)
+        statuses = []
+        for _ in range(4):
+            statuses.append((await h.row()).status)
+            h.clock.advance(hours=9)
+            await outbox.drain(settings)
+        return statuses, await h.row(), h.channel
+
+    statuses, row, channel = run(tmp_path, monkeypatch, scenario)
+    assert statuses[:2] == ["pending", "pending"]
+    assert row.status == "done" and row.attempts >= 3
+    assert [channel.count(f"r{n}") for n in range(5)] == [1] * 5
+
+
+def test_an_outage_backs_off_instead_of_dying(tmp_path, monkeypatch):
+    """The review's probe: a provider black-holing connections. Every route fails slowly (and
+    retryably); the row is still pending with backoff after its attempts, not dead."""
+
+    async def scenario(h):
+        for n in range(5):
+            await h.add_route(f"r{n}")
+        _slow_routes(h, 0.3, failed("ConnectTimeout: timed out"))
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=1.0, dispatch_timeout_max_seconds=1.0)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", settings)
+        first = await h.row()
+        h.clock.advance(hours=9)
+        await outbox.drain(settings)
+        return first, await h.row()
+
+    first, second = run(tmp_path, monkeypatch, scenario)
+    assert (first.status, first.attempts) == ("pending", 1)
+    assert (second.status, second.attempts) == ("pending", 2)
+    assert second.next_attempt_at == T0 + timedelta(hours=9) + timedelta(seconds=360)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        "operational",
+        "pool",
+        "lost connection",
+        "os",
+    ],
+)
+def test_an_outage_shaped_error_twice_is_not_final(tmp_path, monkeypatch, error):
+    from sqlalchemy.exc import DBAPIError
+    from sqlalchemy.exc import TimeoutError as PoolTimeout
+
+    errors = {
+        "operational": lambda: _mysql_error(2013, "Lost connection to MySQL server during query"),
+        "pool": lambda: PoolTimeout("QueuePool limit of size 20 overflow 20 reached"),
+        "lost connection": lambda: DBAPIError("SELECT …", {}, Exception("gone"), connection_invalidated=True),
+        "os": lambda: ConnectionResetError("Connection reset by peer"),
+    }
+
+    async def scenario(h):
+        await h.add_route("R")
+
+        async def failover(event, session):
+            raise errors[error]()
+
+        monkeypatch.setattr(svc, "routes_for_event", failover)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        for _ in range(2):
+            h.clock.advance(hours=9)
+            await outbox.drain(NO_JITTER)
+        return await h.row()
+
+    row = run(tmp_path, monkeypatch, scenario)
+    assert (row.status, row.attempts) == ("pending", 3)
+
+
+def test_a_case_task_timed_out_after_one_send_finishes_without_resending_it(tmp_path, monkeypatch):
+    """The review's third probe: route `internal` was sent, `slow` hung past the budget. The retry
+    sends `slow` and leaves `internal` alone."""
+
+    async def scenario(h):
+        await h.add_route("internal", trigger="case_task_assigned", scope="internal")
+        await h.add_route("slow", trigger="case_task_assigned", scope="internal")
+        real = h.channel.send
+        state = {"hung": False}
+
+        async def send(*, route, event, message, ctx):
+            name = route.name
+            if name == "slow" and not state["hung"]:
+                state["hung"] = True
+                await asyncio.sleep(5)
+            return await real(route=route, event=event, message=message, ctx=ctx)
+
+        h.channel.send = send
+        settings = outbox.OutboxSettings(jitter=0.0, route_timeout_seconds=0.25)
+        event = _task_event()
+        await outbox.queue(event)
+        await outbox.drain_key(event.dedupe_key, settings)
+        h.clock.advance(hours=1)
+        await outbox.drain(settings)
+        return await h.row(), h.channel
+
+    row, channel = run(tmp_path, monkeypatch, scenario)
+    assert row.status == "done"
+    assert (channel.count("internal"), channel.count("slow")) == (1, 1)
+
+
+def test_the_resend_key_is_unique_per_row_and_install(tmp_path, monkeypatch):
+    from app.notifications.channels.resend import idempotency_key
+
+    async def scenario(h):
+        await outbox.queue(_event(key="k1"))
+        await outbox.queue(_event(key="k2"))
+        return await h.rows()
+
+    rows = run(tmp_path, monkeypatch, scenario)
+    uuids = [r.delivery_uuid for r in rows]
+    assert len(set(uuids)) == 2 and all(len(u) == 32 for u in uuids)
+    assert idempotency_key("alert:14:x", 3, uuids[0]) != idempotency_key("alert:14:x", 3, uuids[1])
+
+
+def test_the_prune_runs_beside_the_sweep_not_inside_it(tmp_path, monkeypatch):
+    async def scenario(h):
+        monkeypatch.setattr(outbox, "_last_prune", None)
+        started = asyncio.Event()
+        release = asyncio.Event()
+
+        async def slow_prune(settings=None, *, now=None, batch=outbox.PRUNE_BATCH):
+            started.set()
+            await release.wait()
+            return {"done": 0, "dead": 0}
+
+        monkeypatch.setattr(outbox, "prune", slow_prune)
+        await asyncio.wait_for(outbox.drain_notification_outbox(), timeout=2)
+        await asyncio.wait_for(started.wait(), timeout=2)
+        running = len(outbox._PRUNES)
+        await asyncio.wait_for(outbox.drain_notification_outbox(), timeout=2)
+        second = len(outbox._PRUNES)
+        release.set()
+        await asyncio.gather(*list(outbox._PRUNES))
+        return running, second
+
+    running, second = run(tmp_path, monkeypatch, scenario)
+    assert running == 1, "the sweep returned while the prune ran"
+    assert second == 1, "one prune at a time"
