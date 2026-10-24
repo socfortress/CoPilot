@@ -9,7 +9,10 @@ Every event is now a ``notification_outbox`` row first:
 
 - ``enqueue(event, session)`` adds the row to the caller's own transaction, so it commits
   (or rolls back) together with the caller's write. The caller then calls ``kick(event)``
-  after its commit, or ``emit(event)`` if ``enqueue`` returned False.
+  after its commit, or ``emit(event)`` if ``enqueue`` returned False (logged; the event is then
+  durable but not atomic with the write). An error that has already aborted the caller's
+  transaction (a MySQL deadlock, a lock-wait timeout that rolls back, a lost connection) is
+  raised, never swallowed: the caller's own write is gone, and it must not commit and notify.
 - ``queue(event)`` writes the row in a short transaction of its own. ``emit()`` uses it: the
   event is durable from that commit on, a few milliseconds after the call, but not atomic
   with the caller's write.
@@ -18,7 +21,8 @@ Every event is now a ``notification_outbox`` row first:
 it ``done``; or puts it back to ``pending`` with backoff; or, after ``max_attempts``, marks
 it ``dead`` and logs an error. It runs right after the enqueue (the kick: ``drain_key``) and
 from the ``drain_notification_outbox`` scheduler job every minute (``drain``), which also
-picks up whatever a crash or a failed kick left behind.
+picks up whatever a crash or a failed kick left behind, and prunes old rows (``prune``) on its
+first run in each process and then daily.
 
 **Claims are guarded UPDATEs**: ``UPDATE … SET status='processing', attempts=attempts+1 WHERE
 id=? AND status='pending' …``, and only ``rowcount == 1`` dispatches. On MySQL the UPDATE
@@ -30,20 +34,28 @@ the lease (a crash mid-dispatch) goes back to ``pending`` from the job.
 
 **Re-dispatch is safe per route, which the dispatch log alone does not give**: it is written
 after the provider call, so a ``sent`` row refuses the second log write but not the second
-delivery. The row therefore keeps ``route_outcomes``, the routes it has settled, and passes
-them to ``dispatch_event(skip_route_ids=…)``. A partial fan-out (route A sent, route B down)
-retries only B. When an attempt dies before it can record its outcomes (a timeout, a crash),
-the routes the dispatch log shows ``sent`` for this dedupe key since the attempt's claim are
-counted as settled. Delivery is at least once, not exactly once: a provider that accepted a
-message and then timed out, or a crash between a send and its log row, can repeat one.
+delivery. The row therefore keeps ``route_outcomes``, the routes it has settled, written as
+each route finishes (``dispatch_event(on_route_settled=…)``), and passes them back as
+``skip_route_ids``. A partial fan-out (route A sent, route B down) retries only B. On every
+retry, routes the dispatch log shows ``sent`` for the dedupe key since the row was created are
+skipped too. A new emission of the key is a new row with a new ``created_at``, so an earlier
+emission's ``sent`` rows never hold it back (A → B → A is delivered again).
 
-**What is retried** (``is_transient_failure``): a provider's 5xx, 408, 425 or 429; a transport
-error or timeout (httpx's ``ConnectError``, ``ReadTimeout`` …, as ``dispatchers.py`` formats
-them); a provider that raised (``Dispatcher exception: …``); and the whole dispatch raising or
-timing out. **Not retried**: any other 4xx (an unverified Resend domain, a bad webhook URL,
-Shuffle authentication), a connector that isn't configured, an invalid route config, an
-unresolvable recipient, and every ``skipped`` route (the AI-report switch, a disabled
-integration, no assignee). Those are settled; only the transient routes are tried again.
+**What is retried** (``is_transient_failure``) is only what cannot have delivered anything: a
+connection that was never made (httpx's ``ConnectError``, ``ConnectTimeout``, ``PoolTimeout``,
+a DNS failure) and a provider that refused the request for now (HTTP 429 and 503, read where
+``dispatchers.py`` writes the status). Everything else is settled and logged, not retried:
+a read or write timeout, a dropped connection, any other 5xx and a provider that raised could
+each have come after the provider accepted the message, and the endpoints behind a webhook,
+Teams or Shuffle don't de-duplicate; any other 4xx (an unverified Resend domain, a bad URL,
+Shuffle authentication), an unconfigured connector, an invalid config, an unresolvable
+recipient and every ``skipped`` route won't succeed by retrying. Resend also gets an
+``Idempotency-Key`` per outbox row and route (``channels/resend.py``), so a retried 429/503
+can't mail twice. The whole dispatch raising or timing out is retried, but the same error on
+two attempts in a row is final (``dead``).
+
+Delivery is therefore at least once in one case only: CoPilot stopping between a provider
+accepting a message and the route's outcome being written (one UPDATE later).
 
 **Queued once per key.** ``queued_key`` (unique) is the dedupe key until the row's first
 claim. A second event for a key that is still queued replaces the queued event (the newest
@@ -51,6 +63,18 @@ state wins: the latest report's summary, say) instead of adding a row; once deli
 started, the key can be queued afresh, so a re-emission is delivered again exactly as before
 the outbox (A → B → A reassignment). Manual and test sends don't come through here, and their
 per-invocation keys would never collide anyway.
+
+**Known limits, accepted:**
+
+- Throughput during a provider outage: a sweep claims at most ``batch_size`` (50) due rows a
+  minute and dispatches them one at a time, each bounded by the 60 s dispatch timeout, so a
+  large backlog behind a dead provider drains over several sweeps.
+- A retry matches routes as they are at the retry: a route created after the event (and
+  matching it) receives it; one disabled or deleted since does not.
+- ``event_json`` and ``last_error`` hold what the dispatch log already holds (the summary, the
+  provider's error text, scrubbed of URLs and credentials here) and are pruned with the row.
+- MySQL 8.0.20+ deprecates ``VALUES()`` in ``ON DUPLICATE KEY UPDATE`` (a warning, still
+  supported); it is what SQLAlchemy renders for the upsert.
 """
 
 from __future__ import annotations
@@ -76,9 +100,12 @@ from loguru import logger
 from sqlalchemy import delete
 from sqlalchemy import func
 from sqlalchemy import select
+from sqlalchemy import text
 from sqlalchemy import update
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import async_engine
@@ -157,7 +184,9 @@ class OutboxSettings:
 
     def backoff(self, attempts: int, rng: Callable[[float, float], float] = random.uniform) -> timedelta:
         """The wait before the next attempt, after ``attempts`` attempts (1 or more)."""
-        base = min(self.backoff_max_seconds, self.backoff_base_seconds * self.backoff_factor ** max(0, attempts - 1))
+        # The exponent is clamped: past it the cap applies anyway, and 4.0 ** 1000 overflows.
+        exponent = min(max(0, attempts - 1), 32)
+        base = min(self.backoff_max_seconds, self.backoff_base_seconds * self.backoff_factor**exponent)
         return timedelta(seconds=base * rng(1.0 - self.jitter, 1.0 + self.jitter))
 
 
@@ -185,30 +214,28 @@ def _worker_id() -> str:
 # What is worth retrying
 # ---------------------------------------------------------------------------
 
-#: `dispatchers.py` formats an HTTP refusal as "<Provider> returned <code>: …" and Teams'
-#: throttling as "… (429) …".
-_TRANSIENT_STATUS = re.compile(r"\breturned (?:5\d\d|408|425|429)\b|\(429\)")
-#: …and a transport failure as "<ExceptionClass>: …".
-_TRANSIENT_EXCEPTION = re.compile(
-    r"^(?:httpx\.)?(?:ConnectError|ConnectTimeout|ReadTimeout|WriteTimeout|PoolTimeout|TimeoutException|Timeout|ReadError|WriteError"
-    r"|CloseError|NetworkError|TransportError|RemoteProtocolError|ProxyError|TimeoutError|ConnectionError|ConnectionResetError"
-    r"|ConnectionRefusedError|ConnectionAbortedError|BrokenPipeError|gaierror|OSError)\b",
-)
+#: `dispatchers.py` starts every refusal with "<Provider> returned <code>: …", and Teams' throttle
+#: with "Teams rate-limited this request (429)". Anchored there, so a code quoted inside a
+#: response body (which follows the status) never counts.
+_RETRYABLE_STATUS = re.compile(r"^(?:Webhook|Teams|Resend|Shuffle) returned (?:429|503)\b|^Teams rate-limited this request \(429\)")
+#: …and a transport failure as "<ExceptionClass>: …". Only failures before the request left:
+#: the connection (or the DNS lookup) never happened, or no pooled connection was free.
+_NOT_SENT = re.compile(r"^(?:httpx\.)?(?:ConnectError|ConnectTimeout|PoolTimeout|gaierror|ConnectionRefusedError)\b")
 
 
 def is_transient_failure(error_message: Optional[str]) -> bool:
-    """Whether a route's `failed` outcome may succeed if tried again later.
+    """Whether a route's `failed` outcome is safe and worth trying again later.
 
-    Matched on the texts `dispatchers.py` and the providers produce (pinned by the tests), since
-    a failure reaches the dispatch loop as a status and a message, not an exception.
+    Only a failure where nothing can have been delivered: no connection was made, or the
+    provider answered 429 or 503. A read or write timeout, a dropped connection, any other 5xx
+    or a provider that raised (`Dispatcher exception: …`) may come after the provider accepted
+    the message, and a webhook, Teams or Shuffle won't de-duplicate a second one, so those are
+    final. Matched on the texts `dispatchers.py` and the providers produce (pinned by the
+    tests), since a failure reaches the dispatch loop as a status and a message.
     """
     if not error_message:
         return False
-    if error_message.startswith("Dispatcher exception:"):
-        # The provider raised instead of returning a result: nothing says it is permanent,
-        # and the attempts are capped.
-        return True
-    return bool(_TRANSIENT_STATUS.search(error_message) or _TRANSIENT_EXCEPTION.match(error_message))
+    return bool(_RETRYABLE_STATUS.match(error_message) or _NOT_SENT.match(error_message))
 
 
 _URL = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*://[^\s'\"<>]+")
@@ -279,20 +306,65 @@ async def _add(event: NotificationEvent, session: AsyncSession) -> None:
         await session.execute(update(table).where(table.c.id == row_id).values({c: values[c] for c in _REPLACED_ON_CONFLICT}))
 
 
+#: MySQL errors after which the whole transaction is gone, not just the statement.
+_DEADLOCK = 1213
+_LOCK_WAIT_TIMEOUT = 1205
+
+
+def _mysql_code(error: BaseException) -> Optional[int]:
+    args = getattr(getattr(error, "orig", None), "args", None) or ()
+    return args[0] if args and isinstance(args[0], int) else None
+
+
+async def _lock_timeout_rolls_back(session: AsyncSession) -> bool:
+    """Whether a lock-wait timeout (1205) rolled back the whole transaction:
+    `innodb_rollback_on_timeout` ON. When it can't be read, assume so."""
+    try:
+        value = (await session.execute(select(text("@@innodb_rollback_on_timeout")))).scalar()
+        return bool(int(value))
+    except Exception:  # noqa: BLE001
+        return True
+
+
+async def _aborts_transaction(error: Exception, session: AsyncSession) -> bool:
+    if isinstance(error, DBAPIError) and error.connection_invalidated:
+        return True
+    if not isinstance(error, OperationalError):
+        return False
+    code = _mysql_code(error)
+    if code == _DEADLOCK:
+        return True
+    return code == _LOCK_WAIT_TIMEOUT and await _lock_timeout_rolls_back(session)
+
+
 async def enqueue(event: NotificationEvent, session: AsyncSession) -> bool:
     """Add `event` to the caller's transaction, to commit (or roll back) with the caller's write.
 
-    Never raises, and never flushes the caller's pending objects (so a flush error of theirs is
-    still raised by their own commit, where they handle it). Returns False when the row could
-    not be added; that is logged, and the caller should then ``emit(event)`` after its commit,
-    which is durable but not atomic. After a successful commit, call ``kick(event)`` for an
-    immediate delivery; without it the scheduler job delivers within a minute.
+    Never flushes the caller's pending objects (so a flush error of theirs is still raised by
+    their own commit, where they handle it). Returns False when the row could not be added but
+    the caller's transaction is intact; that is logged, and the caller should then
+    ``emit(event)`` after its commit, which is durable but not atomic. After a successful
+    commit, call ``kick(event)`` for an immediate delivery; without it the scheduler job
+    delivers within a minute.
+
+    **Raises** when the failure has already aborted the caller's transaction: a MySQL deadlock
+    (1213), a lock-wait timeout (1205) with ``innodb_rollback_on_timeout`` on, or a lost
+    connection. MySQL has then rolled back everything the caller wrote, flushed rows included;
+    swallowing it would let the caller "commit" nothing and still notify. Call it before
+    flushing where you can, so such a failure costs nothing but the request.
     """
     try:
         with session.no_autoflush:
             await _add(event, session)
         return True
-    except Exception as e:  # noqa: BLE001 — failing to queue must not fail the caller's write
+    except Exception as e:  # noqa: BLE001 — failing to queue must not fail the caller's write…
+        if await _aborts_transaction(e, session):
+            # …unless the database has already failed it.
+            logger.error(
+                f"Notification outbox: queueing [{event.trigger.value}] {event.entity_type}#{event.entity_id} aborted the "
+                f"caller's transaction ({type(e).__name__} {_mysql_code(e)}); raising, so the caller's write fails as it must.",
+            )
+            raise
         logger.error(
             f"Notification outbox: could not queue [{event.trigger.value}] {event.entity_type}#{event.entity_id} "
             f"in the caller's transaction ({type(e).__name__}); it will be emitted after the commit instead.",
@@ -344,9 +416,12 @@ class _Claim:
     id: int
     dedupe_key: str
     attempts: int
+    created_at: datetime
     claimed_at: datetime
-    claimed_by: str
+    claimed_by: Optional[str]
     event_json: str
+    #: The error the previous attempt recorded, to tell a repeated failure from a new one.
+    previous_error: Optional[str] = None
     settled: Dict[str, str] = field(default_factory=dict)
 
 
@@ -392,7 +467,14 @@ async def _claim(row_id: int, due_by: datetime, *, queued_key: Optional[str] = N
             return None
         row = (
             await session.execute(
-                select(table.c.dedupe_key, table.c.attempts, table.c.event_json, table.c.route_outcomes).where(table.c.id == row_id),
+                select(
+                    table.c.dedupe_key,
+                    table.c.attempts,
+                    table.c.created_at,
+                    table.c.event_json,
+                    table.c.route_outcomes,
+                    table.c.last_error,
+                ).where(table.c.id == row_id),
             )
         ).one()
         await session.commit()
@@ -400,27 +482,29 @@ async def _claim(row_id: int, due_by: datetime, *, queued_key: Optional[str] = N
         id=row_id,
         dedupe_key=row.dedupe_key,
         attempts=row.attempts,
+        created_at=row.created_at,
         claimed_at=now,
         claimed_by=worker,
         event_json=row.event_json,
+        previous_error=row.last_error,
         settled=_outcomes(row.route_outcomes),
     )
+
+
+def _guard(table, claim: _Claim) -> list:
+    return [
+        table.c.id == claim.id,
+        table.c.status == OutboxStatus.PROCESSING,
+        table.c.claimed_by == claim.claimed_by,
+        table.c.attempts == claim.attempts,
+    ]
 
 
 async def _finish(claim: _Claim, **values) -> bool:
     """Write a claimed row's outcome, only while the claim is still this one."""
     table = NotificationOutbox.__table__
     async with new_session() as session:
-        result = await session.execute(
-            update(table)
-            .where(
-                table.c.id == claim.id,
-                table.c.status == OutboxStatus.PROCESSING,
-                table.c.claimed_by == claim.claimed_by,
-                table.c.attempts == claim.attempts,
-            )
-            .values(updated_at=_now(), **values),
-        )
+        result = await session.execute(update(table).where(*_guard(table, claim)).values(updated_at=_now(), **values))
         await session.commit()
     if result.rowcount != 1:
         logger.warning(f"Notification outbox row {claim.id}: the claim was taken over before its outcome was written; leaving it.")
@@ -428,12 +512,23 @@ async def _finish(claim: _Claim, **values) -> bool:
     return True
 
 
-async def _sent_since(dedupe_key: str, since: datetime) -> Set[int]:
-    """Routes the dispatch log shows `sent` for this key since an attempt began.
+async def _record_progress(claim: _Claim) -> None:
+    """Persist the routes settled so far, mid-attempt (and renew the lease while at it)."""
+    table = NotificationOutbox.__table__
+    async with new_session() as session:
+        await session.execute(
+            update(table).where(*_guard(table, claim)).values(route_outcomes=json.dumps(claim.settled, sort_keys=True), updated_at=_now()),
+        )
+        await session.commit()
 
-    Used when an attempt ended without reporting its outcomes, so what it did deliver isn't
-    delivered again. Misses a route whose `sent` row predates the attempt (the log keeps the
-    first `sent` and refuses later writes): such a route can be sent again.
+
+async def _sent_since(dedupe_key: str, since: datetime) -> Set[int]:
+    """Routes the dispatch log shows `sent` for this key since `since`: the row's creation.
+
+    A new emission of the key is a new row, so an earlier emission's `sent` rows predate it and
+    don't count (A → B → A delivers again). The other side of the same fact: the log keeps the
+    first `sent` row of a (route, key) and refuses later writes, so for a re-emission it can't
+    show what this row delivered; `route_outcomes`, written as each route finishes, does.
     """
     try:
         async with new_session() as session:
@@ -450,10 +545,15 @@ async def _sent_since(dedupe_key: str, since: datetime) -> Set[int]:
         return set()
 
 
-async def _retry_or_die(claim: _Claim, error: str, settings: OutboxSettings) -> str:
+async def _settle_from_log(claim: _Claim) -> None:
+    for route_id in await _sent_since(claim.dedupe_key, claim.created_at):
+        claim.settled.setdefault(str(route_id), "sent")
+
+
+async def _retry_or_die(claim: _Claim, error: str, settings: OutboxSettings, *, final: bool = False) -> str:
     error = safe_error(error)
     outcomes = json.dumps(claim.settled, sort_keys=True)
-    if claim.attempts >= settings.max_attempts:
+    if final or claim.attempts >= settings.max_attempts:
         if await _finish(claim, status=OutboxStatus.DEAD, last_error=error, route_outcomes=outcomes, claimed_by=None):
             logger.error(f"Notification outbox row {claim.id} ({claim.dedupe_key}) is dead after {claim.attempts} attempt(s): {error}")
         return OutboxStatus.DEAD
@@ -473,6 +573,25 @@ async def _retry_or_die(claim: _Claim, error: str, settings: OutboxSettings) -> 
     return OutboxStatus.PENDING
 
 
+def _settle(claim: _Claim, outcome, transient: List[str]) -> bool:
+    """Fold one route's outcome into the claim. True when it settled the route."""
+    key = str(outcome.route_id)
+    if key in claim.settled:
+        return False
+    status = outcome.status.value
+    if status == "failed" and is_transient_failure(outcome.error_message):
+        transient.append(f"route {outcome.route_id}: {outcome.error_message}")
+        return False
+    if status == "failed":
+        logger.warning(
+            f"Notification outbox row {claim.id} ({claim.dedupe_key}): route {outcome.route_id} failed and is not retried "
+            f"(it may already have been delivered, or a retry can't fix it): {safe_error(outcome.error_message or '')}",
+        )
+    # sent, skipped, or failed for good.
+    claim.settled[key] = status
+    return True
+
+
 async def _process(claim: _Claim, settings: OutboxSettings) -> str:
     """Dispatch one claimed row and record what happened. Returns the row's new status."""
     from app.notifications.services.notifications import dispatch_event
@@ -485,11 +604,22 @@ async def _process(claim: _Claim, settings: OutboxSettings) -> str:
             logger.error(f"Notification outbox row {claim.id} is dead: {error}")
         return OutboxStatus.DEAD
 
+    if claim.attempts > 1:
+        # A retry: whatever the log shows delivered since this row was created, from an attempt
+        # that died before recording it, is not delivered again.
+        await _settle_from_log(claim)
+
+    transient: List[str] = []
+
+    async def on_route_settled(outcome) -> None:
+        if _settle(claim, outcome, transient):
+            await _record_progress(claim)
+
     skip = {int(k) for k in claim.settled if k.isdigit()}
     try:
         async with new_session() as session:
             response = await asyncio.wait_for(
-                dispatch_event(event, session, skip_route_ids=skip),
+                dispatch_event(event, session, skip_route_ids=skip, on_route_settled=on_route_settled, delivery_id=str(claim.id)),
                 timeout=settings.dispatch_timeout_seconds,
             )
     except Exception as e:  # noqa: BLE001 — including the timeout: the whole attempt is retried
@@ -498,23 +628,15 @@ async def _process(claim: _Claim, settings: OutboxSettings) -> str:
         else:
             error = f"The dispatch raised {type(e).__name__}: {e}"
             logger.error(f"Notification outbox row {claim.id} ({claim.dedupe_key}): {safe_error(error)}")
-        for route_id in await _sent_since(claim.dedupe_key, claim.claimed_at):
-            claim.settled.setdefault(str(route_id), "sent")
-        return await _retry_or_die(claim, error, settings)
+        await _settle_from_log(claim)
+        # The same failure twice in a row is not going away by itself.
+        repeated = claim.previous_error is not None and safe_error(error) == claim.previous_error
+        return await _retry_or_die(claim, error, settings, final=repeated)
 
-    transient: List[str] = []
-    for outcome in response.outcomes:
-        key = str(outcome.route_id)
-        if key in claim.settled:
-            continue
-        status = outcome.status.value
-        if status == "failed" and is_transient_failure(outcome.error_message):
-            transient.append(f"route {outcome.route_id}: {outcome.error_message}")
-        else:
-            # sent, skipped, or failed for good: nothing a retry would change.
-            claim.settled[key] = status
+    # Every route's outcome reached `on_route_settled` as it finished (its real result, even
+    # where the response reports the log's "Already dispatched"); the response adds nothing.
     if transient:
-        return await _retry_or_die(claim, "; ".join(transient), settings)
+        return await _retry_or_die(claim, "; ".join(dict.fromkeys(transient)), settings)
 
     await _finish(
         claim,
@@ -540,7 +662,13 @@ async def _process(claim: _Claim, settings: OutboxSettings) -> str:
 
 
 async def _claim_and_process(row_id: int, due_by: datetime, settings: OutboxSettings, *, queued_key: Optional[str] = None) -> Optional[str]:
-    claim = await _claim(row_id, due_by, queued_key=queued_key)
+    """One row, start to end. Never raises: a failure is logged and the row left for the sweep
+    (still `pending`, or `processing` until its lease expires)."""
+    try:
+        claim = await _claim(row_id, due_by, queued_key=queued_key)
+    except Exception as e:  # noqa: BLE001 — e.g. a deadlock on the claim: another sweep will take it
+        logger.error(f"Notification outbox row {row_id}: the claim failed ({type(e).__name__}); leaving it for the next sweep.")
+        return None
     if claim is None:
         return None
     try:
@@ -573,7 +701,15 @@ async def _recover_expired(now: datetime, settings: OutboxSettings) -> int:
     async with new_session() as session:
         rows = (
             await session.execute(
-                select(table.c.id, table.c.dedupe_key, table.c.attempts, table.c.claimed_at, table.c.claimed_by, table.c.route_outcomes)
+                select(
+                    table.c.id,
+                    table.c.dedupe_key,
+                    table.c.attempts,
+                    table.c.created_at,
+                    table.c.claimed_at,
+                    table.c.claimed_by,
+                    table.c.route_outcomes,
+                )
                 .where(table.c.status == OutboxStatus.PROCESSING, table.c.updated_at < cutoff)
                 .order_by(table.c.updated_at)
                 .limit(settings.batch_size),
@@ -581,25 +717,29 @@ async def _recover_expired(now: datetime, settings: OutboxSettings) -> int:
         ).all()
     recovered = 0
     for row in rows:
-        claim = _Claim(
-            id=row.id,
-            dedupe_key=row.dedupe_key,
-            attempts=row.attempts,
-            claimed_at=row.claimed_at or cutoff,
-            claimed_by=row.claimed_by,
-            event_json="",
-            settled=_outcomes(row.route_outcomes),
-        )
-        for route_id in await _sent_since(claim.dedupe_key, claim.claimed_at):
-            claim.settled.setdefault(str(route_id), "sent")
-        logger.warning(f"Notification outbox row {row.id} ({row.dedupe_key}) was left processing by {row.claimed_by}; recovering it.")
-        await _retry_or_die(claim, f"The worker processing attempt {row.attempts} stopped before finishing it", settings)
-        recovered += 1
+        try:
+            claim = _Claim(
+                id=row.id,
+                dedupe_key=row.dedupe_key,
+                attempts=row.attempts,
+                created_at=row.created_at,
+                claimed_at=row.claimed_at or cutoff,
+                claimed_by=row.claimed_by,
+                event_json="",
+                settled=_outcomes(row.route_outcomes),
+            )
+            await _settle_from_log(claim)
+            logger.warning(f"Notification outbox row {row.id} ({row.dedupe_key}) was left processing by {row.claimed_by}; recovering it.")
+            await _retry_or_die(claim, f"The worker processing attempt {row.attempts} stopped before finishing it", settings)
+            recovered += 1
+        except Exception as e:  # noqa: BLE001 — one row must not stop the sweep
+            logger.error(f"Notification outbox row {row.id}: recovering the abandoned claim failed ({type(e).__name__}).")
     return recovered
 
 
 async def drain(settings: Optional[OutboxSettings] = None, *, now: Optional[datetime] = None) -> Dict[str, int]:
-    """One sweep: recover abandoned claims, then deliver up to `batch_size` due rows."""
+    """One sweep: recover abandoned claims, then deliver up to `batch_size` due rows. Each row is
+    handled on its own, so one failing row (or a deadlocked claim) never stops the rest."""
     settings = settings or OutboxSettings.from_env()
     now = now or _now()
     counts = {"recovered": await _recover_expired(now, settings), OutboxStatus.DONE: 0, OutboxStatus.PENDING: 0, OutboxStatus.DEAD: 0}
@@ -619,20 +759,34 @@ async def drain(settings: Optional[OutboxSettings] = None, *, now: Optional[date
     return counts
 
 
-async def prune(settings: Optional[OutboxSettings] = None, *, now: Optional[datetime] = None) -> Dict[str, int]:
+#: Rows one prune statement deletes at most, so a large backlog never holds one long lock.
+PRUNE_BATCH = 1000
+
+
+async def prune(settings: Optional[OutboxSettings] = None, *, now: Optional[datetime] = None, batch: int = PRUNE_BATCH) -> Dict[str, int]:
     """Delete `done` rows after `done_retention_days` and `dead` ones after `dead_retention_days`
-    (0 keeps them)."""
+    (0 keeps them), `batch` rows per transaction."""
     settings = settings or OutboxSettings.from_env()
     now = now or _now()
     table = NotificationOutbox.__table__
     deleted = {OutboxStatus.DONE: 0, OutboxStatus.DEAD: 0}
-    async with new_session() as session:
-        for status, days in ((OutboxStatus.DONE, settings.done_retention_days), (OutboxStatus.DEAD, settings.dead_retention_days)):
-            if days <= 0:
-                continue
-            result = await session.execute(delete(table).where(table.c.status == status, table.c.updated_at < now - timedelta(days=days)))
-            deleted[status] = result.rowcount or 0
-        await session.commit()
+    for status, days in ((OutboxStatus.DONE, settings.done_retention_days), (OutboxStatus.DEAD, settings.dead_retention_days)):
+        if days <= 0:
+            continue
+        cutoff = now - timedelta(days=days)
+        while True:
+            async with new_session() as session:
+                ids = (
+                    (await session.execute(select(table.c.id).where(table.c.status == status, table.c.updated_at < cutoff).limit(batch)))
+                    .scalars()
+                    .all()
+                )
+                if ids:
+                    await session.execute(delete(table).where(table.c.id.in_(ids), table.c.status == status))
+                    await session.commit()
+            deleted[status] += len(ids)
+            if len(ids) < batch:
+                break
     return deleted
 
 
@@ -667,11 +821,38 @@ async def summary(customer_code: str, session: AsyncSession, *, now: Optional[da
 # ---------------------------------------------------------------------------
 
 
-async def drain_notification_outbox() -> None:
-    """Scheduler entry point, every minute. A failed sweep is logged and re-raised, so the
-    scheduler records an error rather than `last_success`; the next sweep tries again."""
+#: When this process last pruned. None until its first sweep, which prunes: a deployment that
+#: restarts more often than daily still prunes (an interval job's first run would be a day
+#: after each start).
+_last_prune: Optional[datetime] = None
+PRUNE_EVERY = timedelta(hours=24)
+
+
+async def _prune_if_due(settings: OutboxSettings) -> None:
+    global _last_prune
+    now = _now()
+    if _last_prune is not None and now - _last_prune < PRUNE_EVERY:
+        return
+    _last_prune = now
     try:
-        counts = await drain()
+        deleted = await prune(settings, now=now)
+    except Exception as e:  # noqa: BLE001 — pruning must not fail the sweep
+        logger.error(f"Notification outbox prune failed ({type(e).__name__}); trying again in a day.")
+        return
+    if any(deleted.values()):
+        logger.info(
+            f"Notification outbox prune: deleted {deleted[OutboxStatus.DONE]} done row(s) older than {settings.done_retention_days} days "
+            f"and {deleted[OutboxStatus.DEAD]} dead row(s) older than {settings.dead_retention_days} days.",
+        )
+
+
+async def drain_notification_outbox() -> None:
+    """Scheduler entry point, every minute: one sweep, and the prune on the process's first
+    sweep and daily after. A failed sweep is logged and re-raised, so the scheduler records an
+    error rather than `last_success`; the next sweep tries again."""
+    settings = OutboxSettings.from_env()
+    try:
+        counts = await drain(settings)
     except Exception as e:
         logger.exception(f"Notification outbox sweep failed: {e}")
         raise
@@ -680,13 +861,4 @@ async def drain_notification_outbox() -> None:
             f"Notification outbox sweep: {counts[OutboxStatus.DONE]} delivered, {counts[OutboxStatus.PENDING]} to retry, "
             f"{counts[OutboxStatus.DEAD]} dead, {counts['recovered']} abandoned claim(s) recovered.",
         )
-
-
-async def prune_notification_outbox() -> None:
-    """Scheduler entry point, daily."""
-    settings = OutboxSettings.from_env()
-    deleted = await prune(settings)
-    logger.info(
-        f"Notification outbox prune: deleted {deleted[OutboxStatus.DONE]} done row(s) older than {settings.done_retention_days} days "
-        f"and {deleted[OutboxStatus.DEAD]} dead row(s) older than {settings.dead_retention_days} days.",
-    )
+    await _prune_if_due(settings)

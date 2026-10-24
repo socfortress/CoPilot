@@ -322,9 +322,10 @@ async def submit_report(request: SubmitReportRequest, session: AsyncSession) -> 
     severity = request.severity_assessment.value if request.severity_assessment else None
     # Notification routes (#1007). Emitted here rather than relying solely on Talon's
     # POST /notifications/dispatch, which is single-attempt. The event goes into the
-    # notification outbox in the report's own transaction, so a committed report always has
-    # its notification queued, and a rolled-back one never does; the outbox retries it across
-    # restarts. The display fields are read before the report is added: a read after it would
+    # notification outbox in the report's own transaction, so a committed report has its
+    # notification queued (unless queueing failed, which is logged and falls back to emit()
+    # after the commit) and a rolled-back one never does; the outbox retries it across
+    # restarts. A deadlock while queueing is raised before the report is written. The display fields are read before the report is added: a read after it would
     # flush the report early, and a duplicate job's IntegrityError would surface there instead
     # of at the commit below.
     alert_name, asset_name = await _alert_display_fields(request.alert_id, session)
@@ -659,10 +660,12 @@ async def submit_review(
 
     # Notification routes (#1007). Creation only — an analyst revising their own
     # review is not a new sign-off. Lets an operator run an internal route on
-    # report submission and a customer-facing route only after review. Built before
-    # anything is added to the session, so these reads can't flush the review early, and
-    # queued in the review's own transaction (the notification outbox) below.
+    # report submission and a customer-facing route only after review. Built and queued in
+    # the review's own transaction (the notification outbox) before anything is added or
+    # flushed: the reads can't flush the review early, and a deadlock while queueing (which
+    # `enqueue` raises: MySQL has rolled the transaction back) costs nothing but this request.
     review_event = None
+    queued = False
     if not is_edit:
         alert_name, asset_name = await _alert_display_fields(report.alert_id, session)
         review_event = ai_report_reviewed_event(
@@ -678,6 +681,7 @@ async def submit_review(
             alert_name=alert_name,
             asset_name=asset_name,
         )
+        queued = await outbox.enqueue(review_event, session)
 
     if is_edit:
         # Update existing review in place
@@ -728,7 +732,6 @@ async def submit_review(
             ),
         )
 
-    queued = await outbox.enqueue(review_event, session) if review_event is not None else False
     await session.commit()
     if review_event is not None:
         if queued:
