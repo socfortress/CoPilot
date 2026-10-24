@@ -1,6 +1,7 @@
 import type {
 	CustomerPortalActivitySettings,
 	CustomerPortalAiReportSettings,
+	CustomerPortalAuditSettings,
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
@@ -75,6 +76,14 @@ export interface CustomerPortalExposureSettingsPayload {
 
 type ExposureSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalExposureSettings
+}
+
+export interface CustomerPortalAuditSettingsPayload {
+	enabled: boolean
+}
+
+type AuditSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalAuditSettings
 }
 
 export interface CustomerPortalNotificationSettingsPayload {
@@ -161,5 +170,12 @@ export default {
 	/** Admin-only: shows or hides the portal's Exposure page for this customer (#1289). */
 	setCustomerExposureSettings(customerCode: string, payload: CustomerPortalExposureSettingsPayload) {
 		return HttpClient.put<ExposureSettingsResponse>(`/customer_portal/exposure/settings/${customerCode}`, payload)
+	},
+	getCustomerAuditSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<AuditSettingsResponse>(`/customer_portal/audit/settings/${customerCode}`, { signal })
+	},
+	/** Admin-only: shows or hides the portal's Audit Log page to this customer's administrators (#1298). */
+	setCustomerAuditSettings(customerCode: string, payload: CustomerPortalAuditSettingsPayload) {
+		return HttpClient.put<AuditSettingsResponse>(`/customer_portal/audit/settings/${customerCode}`, payload)
 	}
 }
