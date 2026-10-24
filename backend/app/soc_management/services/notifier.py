@@ -7,9 +7,10 @@ item, asks ``domain/notices.py`` what it owes, and for each notice:
 2. sends it only if the claim won (``rowcount == 1``).
 
 Claim first, send second: two overlapping runs (a slow provider, two workers) can both
-*see* an unstamped clock, but only one can stamp it, so only one sends. The cost is
-that a send that fails after its claim is not retried — the dispatch log records the
-failure, and a missed SLA nag is far cheaper than a duplicated one every two minutes.
+*see* an unstamped clock, but only one can stamp it, so only one sends. This job never
+sends a notice twice; delivery is ``emit()``'s, which queues the notice in the
+notification outbox, so a transient provider failure after the claim is retried there
+(with backoff, routes already sent skipped), not by a second claim.
 
 Notifications go to **internal routes only** (``sla_at_risk`` / ``sla_breached`` are in
 ``INTERNAL_TRIGGERS``): a SOC running late is never the customer's notification.
