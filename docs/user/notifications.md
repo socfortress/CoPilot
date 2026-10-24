@@ -323,7 +323,7 @@ The header is coloured by severity — red for Critical and High, amber for Medi
 ### Limits worth knowing
 
 - **28 KB per message.** Teams rejects anything larger. A long AI report is truncated with a note saying so, and the deep link is preserved so the full detail is one click away.
-- **~4 requests per second.** Above that Teams throttles and CoPilot records the notification as failed with a rate-limit message. This is transient — it means retry later, not that anything is misconfigured.
+- **~4 requests per second.** Above that Teams throttles and CoPilot records the notification as failed with a rate-limit message. This is transient — it means retry later, not that anything is misconfigured — and CoPilot retries it on its own (see [Delivery survives a restart](#delivery-survives-a-restart-and-transient-failures-are-retried)).
 
 ---
 
@@ -518,6 +518,16 @@ Every saved route has a **Send test** button. It sends a **real** notification t
 `skipped` is not an error. It's CoPilot recording a decision it made, which is usually what you want to see when asking "why didn't I get an email".
 
 A row also carries a **template error** when a custom template failed and the channel default went out in its place — so a broken template is visible without having to reproduce it.
+
+### Delivery survives a restart, and transient failures are retried
+
+Every notification CoPilot raises itself (new alerts, assignments, SLA notices, AI reports and reviews) is first written to a queue in the database, the **notification outbox**, and delivered from there, normally within a second. An AI report and its notification are saved in the same transaction, so a stored report always has its notification queued. If CoPilot restarts or crashes before or during a delivery, the job *drain_notification_outbox* (every minute) picks it up.
+
+When a route fails for a reason that may go away (the provider answers 5xx, 408 or 429, or the connection fails or times out), CoPilot tries **that route** again with growing waits: about 1.5 min, 6 min, 24 min, 1.6 h, then every 6–8 h, 8 attempts over about a day. Routes that already went out are not sent again. A failure that won't fix itself (any other 4xx, such as an unverified Resend domain, a bad webhook URL, or a connector that isn't configured) is not retried, and neither is anything `skipped`. Each attempt still writes its row in the dispatch log, so a route that failed and then succeeded reads `sent`.
+
+A notification that still fails after the last attempt is marked **dead** and logged as an error. The dispatch log's response carries the customer's outbox counts (`outbox`: pending, processing, dead, and the age of the oldest pending one). Delivered entries are kept 7 days and dead ones 30 (`NOTIFICATION_OUTBOX_DONE_RETENTION_DAYS`, `NOTIFICATION_OUTBOX_DEAD_RETENTION_DAYS`); the attempts and waits are set with `NOTIFICATION_OUTBOX_MAX_ATTEMPTS`, `NOTIFICATION_OUTBOX_BACKOFF_BASE_SECONDS` and `NOTIFICATION_OUTBOX_BACKOFF_MAX_SECONDS`.
+
+Delivery is *at least once*: a provider that accepted a message but timed out before answering can receive it twice. Manual sends and **Send test** don't go through the outbox; they report their result straight away, as before.
 
 ### Nothing arrived
 

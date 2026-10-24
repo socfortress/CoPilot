@@ -313,7 +313,7 @@ Example for a Slack-style banner:
 | "Test connection" stays neutral / turns red | Org-Id is invalid or the API key doesn't have access to that org | Verify the Org-Id in Shuffle's UI. Confirm your API key is admin-scoped or has access to that org |
 | Route saves but dispatch log says `routes_matched: 0` | Route's `min_severity` is higher than the alert's actual severity | Edit the route, lower `min_severity`. Or trigger an investigation on a higher-severity alert |
 | Dispatch log shows `status=failed` with `Shuffle returned 4xx` | The Shuffle app isn't authenticated in the customer's org, or the destination is wrong | Open Shuffle UI → Apps → check the app is authenticated. For unrecognized destinations, check Shuffle's app-specific docs (e.g. Slack channel must include `#`) |
-| Dispatch log shows `status=failed` with `ReadTimeout` | Shuffle backend was slow or temporarily unreachable | Re-trigger the investigation. The dispatch loop overwrites the `failed` row on retry |
+| Dispatch log shows `status=failed` with `ReadTimeout` | Shuffle backend was slow or temporarily unreachable | Nothing, usually: CoPilot retries a timed-out route on its own, with backoff, and the retry overwrites the `failed` row. If it keeps failing, check Shuffle |
 | Recipient gets a notification with the wrong content | A custom `format_template` is set on the route and doesn't include `{{summary}}` | Edit the route, either add `{{summary}}` to the template or clear the template field entirely |
 | Investigation completes but nothing in the dispatch log | Talon didn't call `DispatchNotificationsTool`. Either no routes configured or Talon's `notifications.md` not deployed | Check Talon container logs for the `tool_use: DispatchNotificationsTool` line. Confirm at least one route exists for the customer |
 
@@ -329,10 +329,14 @@ Example for a Slack-style banner:
   fails the underlying investigation. Talon's report is written
   before the dispatch attempt; failures are logged but don't
   propagate.
-- **No automatic retries** — a `failed` dispatch waits for the next
-  Talon run on the same alert (or a manual re-trigger) to overwrite
-  the log row. Phase 4 may add automatic retry semantics for
-  transient failures.
+- **Durable, retried delivery** — CoPilot's own `investigation_complete`
+  notification is queued in the same transaction as the report (the
+  notification outbox), so a CoPilot restart or crash can't lose it. A route
+  that fails transiently (a 5xx, 408 or 429, a timeout or a refused
+  connection) is retried on its own with backoff, 8 attempts over about a
+  day; routes that already went out are not sent again, and permanent
+  failures (other 4xx, an unconfigured connector) are not retried. See
+  [Notifications → Delivery survives a restart](/user/notifications#delivery-survives-a-restart-and-transient-failures-are-retried).
 - **Admin-tier auth** — only users with `admin` or `analyst` scope
   can read or modify routes. Operator-tier users see investigation
   reports but not the routing config.
