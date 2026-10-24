@@ -21,8 +21,9 @@ Every event is now a ``notification_outbox`` row first:
 it ``done``; or puts it back to ``pending`` with backoff; or, after ``max_attempts``, marks
 it ``dead`` and logs an error. It runs right after the enqueue (the kick: ``drain_key``) and
 from the ``drain_notification_outbox`` scheduler job every minute (``drain``), which also
-picks up whatever a crash or a failed kick left behind, and prunes old rows (``prune``) on its
-first run in each process and then daily.
+picks up whatever a crash or a failed kick left behind, and starts a prune of old rows
+(``prune``, a background task beside the sweep) on its first run in each process and then
+daily.
 
 **Claims are guarded UPDATEs**: ``UPDATE … SET status='processing', attempts=attempts+1 WHERE
 id=? AND status='pending' …``, and only ``rowcount == 1`` dispatches. On MySQL the UPDATE
@@ -50,12 +51,23 @@ each have come after the provider accepted the message, and the endpoints behind
 Teams or Shuffle don't de-duplicate; any other 4xx (an unverified Resend domain, a bad URL,
 Shuffle authentication), an unconfigured connector, an invalid config, an unresolvable
 recipient and every ``skipped`` route won't succeed by retrying. Resend also gets an
-``Idempotency-Key`` per outbox row and route (``channels/resend.py``), so a retried 429/503
-can't mail twice. The whole dispatch raising or timing out is retried, but the same error on
-two attempts in a row is final (``dead``).
+``Idempotency-Key`` per outbox row and route (``channels/resend.py``, built from the row's
+random ``delivery_uuid``), so a retried 429/503 can't mail twice.
 
-Delivery is therefore at least once in one case only: CoPilot stopping between a provider
-accepting a message and the route's outcome being written (one UPDATE later).
+**The attempt policy.** A row gets up to ``max_attempts`` (8) attempts with backoff, about a
+day; then it is ``dead``. One dispatch's time budget is ``route_timeout_seconds`` (45) per
+route still to deliver, at most ``dispatch_timeout_max_seconds`` (600), so a large, healthy
+fan-out isn't cut short; and the lease outlasts the largest budget. The whole dispatch raising
+or running past its budget is retried on the same backoff. Only the same error on two attempts
+in a row, from attempts that settled no route, is final at once (a broken route, a bug); never
+an error an outage or a failover produces (a timeout, the database unreachable, a pool timeout,
+a lost connection), and never an attempt that delivered something.
+
+**Delivery is at least once in two cases**, both narrow: CoPilot stopping between a provider
+accepting a message and the route's outcome being written (one UPDATE later); and the time
+budget running out while a provider request is in flight (the request is cancelled, may
+already have reached the provider, and is sent again on the retry; Resend's key covers that
+route, the other channels don't).
 
 **Queued once per key.** ``queued_key`` (unique) is the dedupe key until the row's first
 claim. A second event for a key that is still queued replaces the queued event (the newest
@@ -67,8 +79,8 @@ per-invocation keys would never collide anyway.
 **Known limits, accepted:**
 
 - Throughput during a provider outage: a sweep claims at most ``batch_size`` (50) due rows a
-  minute and dispatches them one at a time, each bounded by the 60 s dispatch timeout, so a
-  large backlog behind a dead provider drains over several sweeps.
+  minute and dispatches them one at a time, each within its time budget, so a large backlog
+  behind a dead provider drains over several sweeps.
 - A retry matches routes as they are at the retry: a route created after the event (and
   matching it) receives it; one disabled or deleted since does not.
 - ``event_json`` and ``last_error`` hold what the dispatch log already holds (the summary, the
@@ -95,6 +107,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
+from uuid import uuid4
 
 from loguru import logger
 from sqlalchemy import delete
@@ -105,7 +118,9 @@ from sqlalchemy import update
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DisconnectionError
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as SATimeoutError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import async_engine
@@ -154,8 +169,12 @@ class OutboxSettings:
     #: dispatch may take (see ``effective_lease_seconds``), or a slow dispatch would be
     #: taken over while still running.
     lease_seconds: float = 300.0
-    #: Ceiling for one dispatch of one row, every route and provider call included.
-    dispatch_timeout_seconds: float = 60.0
+    #: One dispatch's time budget is this much per route still to deliver (the slowest
+    #: provider, Shuffle, allows itself 30 s), so a large fan-out isn't cut short by a budget
+    #: meant for one route…
+    route_timeout_seconds: float = 45.0
+    #: …and never more than this, whatever the fan-out.
+    dispatch_timeout_max_seconds: float = 600.0
     #: Rows one job run claims at most.
     batch_size: int = 50
     done_retention_days: int = 7
@@ -163,7 +182,9 @@ class OutboxSettings:
 
     @property
     def effective_lease_seconds(self) -> float:
-        return max(self.lease_seconds, self.dispatch_timeout_seconds + 60.0)
+        """Longer than the largest budget plus the routes' lookup, so a dispatch still within
+        its budget is never taken over (11 min with the defaults)."""
+        return max(self.lease_seconds, self.dispatch_timeout_max_seconds + self.route_timeout_seconds + 15.0)
 
     @classmethod
     def from_env(cls) -> "OutboxSettings":
@@ -268,6 +289,7 @@ def _queue_values(event: NotificationEvent, now: datetime) -> Dict[str, Any]:
         "event_json": event.model_dump_json(),
         "dedupe_key": event.dedupe_key,
         "queued_key": event.dedupe_key,
+        "delivery_uuid": uuid4().hex,
         "customer_code": event.customer_code,
         "trigger": event.trigger.value,
         "status": OutboxStatus.PENDING,
@@ -422,6 +444,8 @@ class _Claim:
     event_json: str
     #: The error the previous attempt recorded, to tell a repeated failure from a new one.
     previous_error: Optional[str] = None
+    #: The row's install-unique delivery id (Resend's idempotency key is built from it).
+    delivery_uuid: Optional[str] = None
     settled: Dict[str, str] = field(default_factory=dict)
 
 
@@ -474,6 +498,7 @@ async def _claim(row_id: int, due_by: datetime, *, queued_key: Optional[str] = N
                     table.c.event_json,
                     table.c.route_outcomes,
                     table.c.last_error,
+                    table.c.delivery_uuid,
                 ).where(table.c.id == row_id),
             )
         ).one()
@@ -487,6 +512,7 @@ async def _claim(row_id: int, due_by: datetime, *, queued_key: Optional[str] = N
         claimed_by=worker,
         event_json=row.event_json,
         previous_error=row.last_error,
+        delivery_uuid=row.delivery_uuid,
         settled=_outcomes(row.route_outcomes),
     )
 
@@ -573,6 +599,13 @@ async def _retry_or_die(claim: _Claim, error: str, settings: OutboxSettings, *, 
     return OutboxStatus.PENDING
 
 
+def _outage_shaped(error: BaseException) -> bool:
+    """A failure an outage or a failover produces, which is never final however often it repeats."""
+    if isinstance(error, (asyncio.TimeoutError, OSError, OperationalError, SATimeoutError, DisconnectionError)):
+        return True
+    return isinstance(error, DBAPIError) and bool(error.connection_invalidated)
+
+
 def _settle(claim: _Claim, outcome, transient: List[str]) -> bool:
     """Fold one route's outcome into the claim. True when it settled the route."""
     key = str(outcome.route_id)
@@ -616,21 +649,40 @@ async def _process(claim: _Claim, settings: OutboxSettings) -> str:
             await _record_progress(claim)
 
     skip = {int(k) for k in claim.settled if k.isdigit()}
+    settled_before = len(claim.settled)
     try:
         async with new_session() as session:
             response = await asyncio.wait_for(
-                dispatch_event(event, session, skip_route_ids=skip, on_route_settled=on_route_settled, delivery_id=str(claim.id)),
-                timeout=settings.dispatch_timeout_seconds,
+                dispatch_event(
+                    event,
+                    session,
+                    skip_route_ids=skip,
+                    on_route_settled=on_route_settled,
+                    delivery_id=claim.delivery_uuid,
+                    route_budget_seconds=settings.route_timeout_seconds,
+                    budget_cap_seconds=settings.dispatch_timeout_max_seconds,
+                ),
+                # A backstop for the routes' lookup; the budget itself is dispatch_event's.
+                timeout=settings.dispatch_timeout_max_seconds + settings.route_timeout_seconds,
             )
     except Exception as e:  # noqa: BLE001 — including the timeout: the whole attempt is retried
         if isinstance(e, asyncio.TimeoutError):
-            error = f"The dispatch timed out after {settings.dispatch_timeout_seconds:g}s"
+            error = "The dispatch ran past its time budget"
         else:
             error = f"The dispatch raised {type(e).__name__}: {e}"
             logger.error(f"Notification outbox row {claim.id} ({claim.dedupe_key}): {safe_error(error)}")
         await _settle_from_log(claim)
-        # The same failure twice in a row is not going away by itself.
-        repeated = claim.previous_error is not None and safe_error(error) == claim.previous_error
+        # The same error twice in a row, from an attempt that settled nothing, is a fault that
+        # won't go away (a broken route, a bug), so it is final. Never for what an outage or a
+        # failover looks like (a timeout, the database unreachable, a lost connection): those
+        # back off up to max_attempts like any retry, and an attempt that settled a route was
+        # making progress, however it ended.
+        repeated = (
+            claim.previous_error is not None
+            and safe_error(error) == claim.previous_error
+            and len(claim.settled) == settled_before
+            and not _outage_shaped(e)
+        )
         return await _retry_or_die(claim, error, settings, final=repeated)
 
     # Every route's outcome reached `on_route_settled` as it finished (its real result, even
@@ -828,12 +880,24 @@ _last_prune: Optional[datetime] = None
 PRUNE_EVERY = timedelta(hours=24)
 
 
-async def _prune_if_due(settings: OutboxSettings) -> None:
+#: The running prune, held strongly (asyncio keeps only a weak reference to a task).
+_PRUNES: Set[asyncio.Task] = set()
+
+
+def _start_prune_if_due(settings: OutboxSettings) -> None:
+    """Start the prune in the background when it is due and none is running: a large backlog of
+    batches must not hold the sweep, which runs with `max_instances=1` and would skip ticks."""
     global _last_prune
     now = _now()
-    if _last_prune is not None and now - _last_prune < PRUNE_EVERY:
+    if _PRUNES or (_last_prune is not None and now - _last_prune < PRUNE_EVERY):
         return
     _last_prune = now
+    task = asyncio.get_running_loop().create_task(_prune(settings, now))
+    _PRUNES.add(task)
+    task.add_done_callback(_PRUNES.discard)
+
+
+async def _prune(settings: OutboxSettings, now: datetime) -> None:
     try:
         deleted = await prune(settings, now=now)
     except Exception as e:  # noqa: BLE001 — pruning must not fail the sweep
@@ -847,8 +911,8 @@ async def _prune_if_due(settings: OutboxSettings) -> None:
 
 
 async def drain_notification_outbox() -> None:
-    """Scheduler entry point, every minute: one sweep, and the prune on the process's first
-    sweep and daily after. A failed sweep is logged and re-raised, so the scheduler records an
+    """Scheduler entry point, every minute: one sweep, and (in a task of its own, so the sweep
+    doesn't wait for it) the prune on the process's first sweep and daily after. A failed sweep is logged and re-raised, so the scheduler records an
     error rather than `last_success`; the next sweep tries again."""
     settings = OutboxSettings.from_env()
     try:
@@ -861,4 +925,4 @@ async def drain_notification_outbox() -> None:
             f"Notification outbox sweep: {counts[OutboxStatus.DONE]} delivered, {counts[OutboxStatus.PENDING]} to retry, "
             f"{counts[OutboxStatus.DEAD]} dead, {counts['recovered']} abandoned claim(s) recovered.",
         )
-    await _prune_if_due(settings)
+    _start_prune_if_due(settings)

@@ -14,6 +14,7 @@ each trigger decides its own dedupe semantics.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime
 from typing import Any
@@ -1338,6 +1339,8 @@ async def dispatch_event(
     skip_route_ids: Optional[Collection[int]] = None,
     on_route_settled: Optional[Callable[[DispatchOutcome], Awaitable[None]]] = None,
     delivery_id: Optional[str] = None,
+    route_budget_seconds: Optional[float] = None,
+    budget_cap_seconds: Optional[float] = None,
 ) -> DispatchResponse:
     """Walk the matching routes, fire each, log every outcome.
 
@@ -1351,9 +1354,12 @@ async def dispatch_event(
 
     The outbox also passes `on_route_settled`, awaited with each route's outcome
     as soon as that route is done (so an attempt that dies half-way has already
-    recorded what it delivered), and `delivery_id`, which identifies this
-    delivery to providers that de-duplicate retries (Resend's idempotency key).
-    Callers that pass none of the three get the behaviour they always had.
+    recorded what it delivered), `delivery_id`, which identifies this
+    delivery to providers that de-duplicate retries (Resend's idempotency key),
+    and a time budget sized to the batch: `route_budget_seconds` per route still
+    to deliver, at most `budget_cap_seconds`, after which `TimeoutError` is
+    raised (the routes done by then have been reported). Callers that pass none
+    of these get the behaviour they always had.
     """
     routes = await routes_for_event(event, session)
 
@@ -1464,92 +1470,137 @@ async def dispatch_event(
     # now lazy: nothing is read unless a route actually reaches that provider.
     ctx = DispatchContext(session=session, event=event, delivery_id=delivery_id)
 
-    for route in deliverable_routes:
-        # Cache every route attribute the LOOP needs into locals UP FRONT.
-        # Once we cross any `await` (let alone any rollback) the route
-        # SQLAlchemy state can be expired and a synchronous attribute
-        # access then triggers an implicit refresh query — which in
-        # AsyncSession throws MissingGreenlet. Providers do the same for
-        # the attributes they read; see ChannelProvider.send's docstring.
-        route_id = route.id
-        route_name = route.name
-        route_channel = route.channel
+    budget: Optional[float] = None
+    if route_budget_seconds is not None:
+        budget = route_budget_seconds * max(1, len(deliverable_routes))
+        if budget_cap_seconds is not None:
+            budget = min(budget, budget_cap_seconds)
 
-        message, template_error = await _render_body(route, event, session, ctx=ctx)
-        body_preview = message.body[:500]
+    async with asyncio.timeout(budget):
+        for route in deliverable_routes:
+            # Cache every route attribute the LOOP needs into locals UP FRONT.
+            # Once we cross any `await` (let alone any rollback) the route
+            # SQLAlchemy state can be expired and a synchronous attribute
+            # access then triggers an implicit refresh query — which in
+            # AsyncSession throws MissingGreenlet. Providers do the same for
+            # the attributes they read; see ChannelProvider.send's docstring.
+            route_id = route.id
+            route_name = route.name
+            route_channel = route.channel
 
-        latency_ms: Optional[int] = None
-        result_status = "sent"
-        error_message: Optional[str] = None
-        provider_reference: Optional[str] = None
-        # Stays None when the channel is unknown or send() raised. after_send
-        # guards on it rather than inferring from result_status — the two can
-        # only diverge via a future edit, and this way that edit is safe.
-        result: Optional[SendResult] = None
+            message, template_error = await _render_body(route, event, session, ctx=ctx)
+            body_preview = message.body[:500]
 
-        provider = get_channel(route_channel)
+            latency_ms: Optional[int] = None
+            result_status = "sent"
+            error_message: Optional[str] = None
+            provider_reference: Optional[str] = None
+            # Stays None when the channel is unknown or send() raised. after_send
+            # guards on it rather than inferring from result_status — the two can
+            # only diverge via a future edit, and this way that edit is safe.
+            result: Optional[SendResult] = None
 
-        try:
-            if provider is None:
-                # Unknown channel — recorded as a failure rather than silently
-                # dropped, so a misconfigured row surfaces in the dispatch log.
+            provider = get_channel(route_channel)
+
+            try:
+                if provider is None:
+                    # Unknown channel — recorded as a failure rather than silently
+                    # dropped, so a misconfigured row surfaces in the dispatch log.
+                    result_status = "failed"
+                    error_message = f"Unsupported channel: {route_channel}"
+                    latency_ms = None
+                else:
+                    result = await provider.send(
+                        route=route,
+                        event=event,
+                        message=message,
+                        ctx=ctx,
+                    )
+                    result_status = result.status
+                    error_message = result.error_message
+                    latency_ms = result.latency_ms
+                    provider_reference = result.provider_reference
+            except Exception as e:  # noqa: BLE001 — best-effort, never raise
+                logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
                 result_status = "failed"
-                error_message = f"Unsupported channel: {route_channel}"
-                latency_ms = None
-            else:
-                result = await provider.send(
-                    route=route,
-                    event=event,
-                    message=message,
-                    ctx=ctx,
-                )
-                result_status = result.status
-                error_message = result.error_message
-                latency_ms = result.latency_ms
-                provider_reference = result.provider_reference
-        except Exception as e:  # noqa: BLE001 — best-effort, never raise
-            logger.exception(f"Dispatcher raised for route {route_id}: {e!r}")
-            result_status = "failed"
-            error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
+                error_message = f"Dispatcher exception: {type(e).__name__}: {e}"
 
-        # A template failure is worth recording even when delivery succeeded:
-        # the operator got the channel default, not what they wrote, and would
-        # otherwise have no signal that their template is broken.
-        if template_error:
-            error_message = f"{error_message}; {template_error}" if error_message else template_error
+            # A template failure is worth recording even when delivery succeeded:
+            # the operator got the channel default, not what they wrote, and would
+            # otherwise have no signal that their template is broken.
+            if template_error:
+                error_message = f"{error_message}; {template_error}" if error_message else template_error
 
-        # Record (or update) the dispatch outcome. _record_log handles
-        # the retry-after-failure case in-place so a previous failed
-        # row doesn't block a new attempt — the only way we get back
-        # `False` here is a true idempotency hit on a previously-sent
-        # dispatch.
-        recorded = await _record_log(
-            session,
-            event=event,
-            route_id=route_id,
-            status=result_status,
-            error_message=error_message,
-            latency_ms=latency_ms,
-            payload_preview=body_preview,
-            provider_reference=provider_reference,
-        )
-
-        if not recorded:
-            skipped += 1
-            outcomes.append(
-                DispatchOutcome(
-                    route_id=route_id,
-                    route_name=route_name,
-                    channel=route_channel,
-                    status=DispatchStatus.SKIPPED,
-                    error_message="Already dispatched (idempotency)",
-                    latency_ms=None,
-                ),
+            # Record (or update) the dispatch outcome. _record_log handles
+            # the retry-after-failure case in-place so a previous failed
+            # row doesn't block a new attempt — the only way we get back
+            # `False` here is a true idempotency hit on a previously-sent
+            # dispatch.
+            recorded = await _record_log(
+                session,
+                event=event,
+                route_id=route_id,
+                status=result_status,
+                error_message=error_message,
+                latency_ms=latency_ms,
+                payload_preview=body_preview,
+                provider_reference=provider_reference,
             )
-            # The log kept an earlier `sent` row, but the provider was called all the same:
-            # progress is told what actually happened (a re-emission sent, or failed and
-            # still owed a retry), not the log's refusal.
-            await settled(
+
+            if not recorded:
+                skipped += 1
+                outcomes.append(
+                    DispatchOutcome(
+                        route_id=route_id,
+                        route_name=route_name,
+                        channel=route_channel,
+                        status=DispatchStatus.SKIPPED,
+                        error_message="Already dispatched (idempotency)",
+                        latency_ms=None,
+                    ),
+                )
+                # The log kept an earlier `sent` row, but the provider was called all the same:
+                # progress is told what actually happened (a re-emission sent, or failed and
+                # still owed a retry), not the log's refusal.
+                await settled(
+                    DispatchOutcome(
+                        route_id=route_id,
+                        route_name=route_name,
+                        channel=route_channel,
+                        status=DispatchStatus(result_status),
+                        error_message=error_message,
+                        latency_ms=latency_ms,
+                        provider_reference=provider_reference,
+                    ),
+                )
+                continue
+
+            # Maintain denorm columns for the UI list. Cheaper than joining
+            # the log table on every render. We do this via an explicit
+            # UPDATE statement rather than mutating the loaded route
+            # object, so route's expiration state can't bite us.
+            if result_status == "sent":
+                sent += 1
+                await session.execute(
+                    update(CustomerNotificationRoute)
+                    .where(CustomerNotificationRoute.id == route_id)
+                    .values(
+                        dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
+                        last_dispatched_at=datetime.utcnow(),
+                    ),
+                )
+                # Channel-specific post-send side effects, inside the same commit.
+                # Shuffle stamps last_used_at on the integration row so its list can
+                # show "fired 2h ago" without joining the dispatch log.
+                if provider is not None and result is not None:
+                    await provider.after_send(route=route, result=result, ctx=ctx)
+                await session.commit()
+            elif result_status == "skipped":
+                skipped += 1
+            else:
+                failed += 1
+
+            outcomes.append(
                 DispatchOutcome(
                     route_id=route_id,
                     route_name=route_name,
@@ -1560,45 +1611,7 @@ async def dispatch_event(
                     provider_reference=provider_reference,
                 ),
             )
-            continue
-
-        # Maintain denorm columns for the UI list. Cheaper than joining
-        # the log table on every render. We do this via an explicit
-        # UPDATE statement rather than mutating the loaded route
-        # object, so route's expiration state can't bite us.
-        if result_status == "sent":
-            sent += 1
-            await session.execute(
-                update(CustomerNotificationRoute)
-                .where(CustomerNotificationRoute.id == route_id)
-                .values(
-                    dispatch_count=CustomerNotificationRoute.dispatch_count + 1,
-                    last_dispatched_at=datetime.utcnow(),
-                ),
-            )
-            # Channel-specific post-send side effects, inside the same commit.
-            # Shuffle stamps last_used_at on the integration row so its list can
-            # show "fired 2h ago" without joining the dispatch log.
-            if provider is not None and result is not None:
-                await provider.after_send(route=route, result=result, ctx=ctx)
-            await session.commit()
-        elif result_status == "skipped":
-            skipped += 1
-        else:
-            failed += 1
-
-        outcomes.append(
-            DispatchOutcome(
-                route_id=route_id,
-                route_name=route_name,
-                channel=route_channel,
-                status=DispatchStatus(result_status),
-                error_message=error_message,
-                latency_ms=latency_ms,
-                provider_reference=provider_reference,
-            ),
-        )
-        await settled(outcomes[-1])
+            await settled(outcomes[-1])
 
     return DispatchResponse(
         success=True,
