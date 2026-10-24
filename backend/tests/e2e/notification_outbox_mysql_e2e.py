@@ -24,7 +24,11 @@ What it proves, on MySQL's locking and types (the unit tests run on SQLite):
 - several drains and kicks at once deliver every (route, notification) exactly once;
 - many concurrent ``queue()`` calls for one key leave one row;
 - a row queued and kicked within the same second is delivered at once (DATETIME rounding);
-- an expired lease is recovered.
+- an expired lease is recovered;
+- a deadlock while queueing in a caller's transaction that has already flushed a row is raised,
+  not swallowed: the caller's row is gone (MySQL rolled the transaction back), and the caller
+  learns it instead of "committing" nothing and notifying anyway;
+- two internal routes each receive an internal event (no customer) exactly once.
 """
 import asyncio
 import os
@@ -43,6 +47,7 @@ from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 from sqlalchemy.exc import IntegrityError  # noqa: E402
+from sqlalchemy.exc import OperationalError  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 from sqlalchemy.ext.asyncio import async_sessionmaker  # noqa: E402
 from sqlalchemy.ext.asyncio import create_async_engine  # noqa: E402
@@ -61,6 +66,9 @@ from app.notifications.schema.events import NotificationEvent  # noqa: E402
 from app.notifications.schema.notifications import NotificationSeverity  # noqa: E402
 from app.notifications.schema.notifications import NotificationTrigger  # noqa: E402
 from app.notifications.services import outbox  # noqa: E402
+from app.notifications.services.event_builders import (  # noqa: E402
+    case_task_assigned_event,
+)
 
 BEFORE = "c1298a0b1c2d"
 REVISION = "d0b7e1a2c3f4"
@@ -164,6 +172,59 @@ def migration_checks():
         unique, column, _ = shape(conn)
     check("migration: the upgrade runs again", unique == 0 and column == "mediumtext")
     engine.dispose()
+
+
+async def deadlock_check(engine, factory):
+    """After the review probe: the caller has flushed a row (as `submit_review` used to before
+    queueing); another transaction holds the queued key and then waits on the caller's row, so
+    InnoDB must kill one of them, and it picks the caller (fewer rows changed)."""
+    key = "e2e:deadlock"
+    async with engine.begin() as conn:
+        await conn.execute(text("CREATE TABLE IF NOT EXISTS e2e_outbox_scratch (id INT AUTO_INCREMENT PRIMARY KEY, v VARCHAR(32))"))
+        await conn.execute(text("CREATE TABLE IF NOT EXISTS e2e_outbox_heavy (id INT PRIMARY KEY)"))
+        await conn.execute(text("DELETE FROM e2e_outbox_heavy"))
+        await conn.execute(text("INSERT INTO e2e_outbox_heavy VALUES " + ",".join(f"({i})" for i in range(1, 2001))))
+    other = await engine.connect()
+    await other.begin()
+    await other.execute(text("UPDATE e2e_outbox_heavy SET id = id + 100000"))
+    await other.execute(
+        text(
+            "INSERT INTO notification_outbox (event_json, dedupe_key, queued_key, customer_code, `trigger`, status, attempts, "
+            "next_attempt_at, created_at, updated_at) VALUES ('{}', :k, :k, :c, 't', 'pending', 0, NOW(), NOW(), NOW())",
+        ),
+        {"k": key, "c": CUSTOMER},
+    )
+    session = factory()
+    await session.execute(text("INSERT INTO e2e_outbox_scratch (v) VALUES ('the review')"))
+    flushed = (await session.execute(text("SELECT LAST_INSERT_ID()"))).scalar()
+
+    async def other_waits_on_the_caller():
+        await asyncio.sleep(0.5)
+        try:
+            await other.execute(text("SELECT * FROM e2e_outbox_scratch WHERE id = :i FOR UPDATE"), {"i": flushed})
+            await other.commit()
+        except Exception:
+            await other.rollback()
+
+    waiter = asyncio.create_task(other_waits_on_the_caller())
+    raised = None
+    try:
+        await outbox.enqueue(event(key), session)
+    except OperationalError as e:
+        raised = e.orig.args[0] if e.orig is not None and e.orig.args else "?"
+        await session.rollback()
+    else:
+        await session.commit()
+    await waiter
+    await session.close()
+    await other.close()
+    async with engine.begin() as conn:
+        present = (await conn.execute(text("SELECT COUNT(*) FROM e2e_outbox_scratch WHERE id = :i"), {"i": flushed})).scalar()
+        await conn.execute(text("DROP TABLE e2e_outbox_scratch"))
+        await conn.execute(text("DROP TABLE e2e_outbox_heavy"))
+        await conn.execute(text("DELETE FROM notification_outbox WHERE dedupe_key = :k"), {"k": key})
+    check("deadlock: enqueue raises the deadlock (1213) instead of returning False", raised == 1213, f"raised={raised}")
+    check("deadlock: the caller's flushed row is gone with its transaction", present == 0, f"present={present}")
 
 
 async def clean(factory):
@@ -358,6 +419,45 @@ async def main() -> int:
     same = await rows(factory, "dedupe_key = 'e2e:same'")
     check("queue: ten concurrent queues of one key leave one row", len(same) == 1, f"rows={len(same)} queued={sum(outcomes)}/10")
     print(f"        (of the ten, {10 - sum(outcomes)} reported a failure; such an emit falls back to a direct dispatch)")
+
+    # ── a deadlock while queueing aborts the caller's transaction: raised ─────
+    await deadlock_check(engine, factory)
+
+    # ── an internal event to two internal routes ──────────────────────────────
+    channel.sent.clear()
+    async with factory() as session:
+        for name in ("Internal 1", "Internal 2"):
+            session.add(
+                CustomerNotificationRoute(
+                    name=name,
+                    scope="internal",
+                    customer_code=None,
+                    trigger="case_task_assigned",
+                    channel="webhook",
+                    destination="",
+                    enabled=True,
+                    min_severity="Informational",
+                    recipient_mode="static",
+                    config="{}",
+                    created_at=datetime.utcnow(),
+                    created_by="e2e-outbox",
+                ),
+            )
+        await session.commit()
+    task_event = case_task_assigned_event(task_id=990777, case_id=1, title="e2e", assignee="e2e-bob", actor="e2e-al")
+    await outbox.queue(task_event)
+    await outbox.drain_key(task_event.dedupe_key, settings)
+    [row] = await rows(factory, "dedupe_key = :k", k=task_event.dedupe_key)
+    check(
+        "internal: each of two internal routes received the event once",
+        row.status == "done" and sorted(channel.sent) == [("Internal 1", task_event.dedupe_key), ("Internal 2", task_event.dedupe_key)],
+        f"{row.status} {channel.sent}",
+    )
+    async with factory() as session:
+        await session.execute(text("DELETE FROM notification_dispatch_log WHERE dedupe_key = :k"), {"k": task_event.dedupe_key})
+        await session.execute(text("DELETE FROM notification_outbox WHERE dedupe_key = :k"), {"k": task_event.dedupe_key})
+        await session.execute(text("DELETE FROM customer_notification_route WHERE created_by = 'e2e-outbox'"))
+        await session.commit()
 
     # ── an expired lease ──────────────────────────────────────────────────────
     [row] = same

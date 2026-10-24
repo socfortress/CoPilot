@@ -72,7 +72,9 @@ def _longtext_on_sqlite(type_, compiler, **kw):
 
 
 CC = "TENANT_A"
-T0 = datetime(2026, 10, 24, 12, 0, 0)
+#: The fake clock starts at the real one: the dispatch log's inserts take `dispatched_at` from
+#: the model's own default (real `utcnow()`), so the two must agree until a test moves time on.
+T0 = datetime.utcnow().replace(microsecond=0)
 NO_JITTER = outbox.OutboxSettings(jitter=0.0)
 
 TABLES = [
@@ -90,7 +92,9 @@ TABLES = [
 
 
 class Clock:
-    """What `outbox._now` returns: moved by hand, whole seconds like MySQL's DATETIME."""
+    """What `outbox._now` returns, and the dispatch log's `datetime.utcnow()`: moved by hand,
+    whole seconds like MySQL's DATETIME. One clock, so "sent since the row was created" compares
+    like with like."""
 
     def __init__(self, at=T0):
         self.at = at
@@ -112,10 +116,12 @@ class FakeChannel:
     def __init__(self):
         self.script = {}
         self.sent = []
+        self.delivery_ids = []
         self.delay = 0.0
 
     async def send(self, *, route, event, message, ctx):
         name = route.name  # before any await: the row may expire after one
+        self.delivery_ids.append(ctx.delivery_id)
         if self.delay:
             await asyncio.sleep(self.delay)
         results = self.script.get(name) or [SendResult(status="sent", latency_ms=1)]
@@ -145,6 +151,14 @@ class Harness:
         self.kicked = []
         monkeypatch.setattr(outbox, "new_session", self.sessions)
         monkeypatch.setattr(outbox, "_now", self.clock)
+        clock = self.clock
+
+        class _Datetime(datetime):
+            @classmethod
+            def utcnow(cls):
+                return clock()
+
+        monkeypatch.setattr(svc, "datetime", _Datetime)
         monkeypatch.setattr(svc, "get_channel", lambda channel: self.channel)
 
     async def create(self):
@@ -581,7 +595,7 @@ def test_transient_failures_back_off_then_die(tmp_path, monkeypatch, errors):
 
     async def scenario(h):
         await h.add_route("Webhook")
-        h.channel.script["Webhook"] = [failed("ReadTimeout: The read operation timed out")]
+        h.channel.script["Webhook"] = [failed("ConnectTimeout: timed out")]
         await outbox.queue(_event())
         await outbox.drain_key("alert:14:alert_created", settings)
         seen = [await h.row()]
@@ -602,7 +616,7 @@ def test_transient_failures_back_off_then_die(tmp_path, monkeypatch, errors):
     assert [(r.status, r.attempts) for r in seen] == [("pending", 1), ("pending", 2), ("dead", 3), ("dead", 3)]
     assert seen[0].next_attempt_at == T0 + timedelta(seconds=90)
     assert seen[1].next_attempt_at == T0 + timedelta(seconds=90 + 360)
-    assert "ReadTimeout" in seen[2].last_error
+    assert "ConnectTimeout" in seen[2].last_error
     assert any("is dead after 3 attempt(s)" in message for message in errors)
 
 
@@ -1007,23 +1021,36 @@ async def _resend():
 @pytest.mark.parametrize(
     "send, handler, transient",
     [
+        # Nothing can have been delivered: retried.
         (_webhook, _status(503), True),
-        (_webhook, _status(500), True),
         (_webhook, _status(429), True),
-        (_webhook, _status(408), True),
+        (_webhook, _raises(httpx.ConnectError("refused")), True),
+        (_webhook, _raises(httpx.ConnectTimeout("timed out")), True),
+        (_webhook, _raises(httpx.PoolTimeout("no connection")), True),
+        (_teams, _status(429), True),
+        (_teams, _status(503), True),
+        (_resend, _status(429, '{"message": "Too many requests"}'), True),
+        (_resend, _status(503, '{"message": "Unavailable"}'), True),
+        # The provider may have accepted it before the failure: final, never re-sent.
+        (_webhook, _status(500), False),
+        (_webhook, _status(502), False),
+        (_webhook, _status(504), False),
+        (_webhook, _status(408), False),
+        (_webhook, _raises(httpx.ReadTimeout("timed out")), False),
+        (_webhook, _raises(httpx.WriteTimeout("timed out")), False),
+        (_webhook, _raises(httpx.RemoteProtocolError("peer closed")), False),
+        (_webhook, _raises(httpx.ReadError("reset")), False),
+        (_teams, _status(502), False),
+        (_resend, _status(500, '{"message": "Internal error"}'), False),
+        # Won't succeed by retrying.
         (_webhook, _status(404), False),
         (_webhook, _status(400), False),
-        (_webhook, _raises(httpx.ConnectError("refused")), True),
-        (_webhook, _raises(httpx.ReadTimeout("timed out")), True),
-        (_webhook, _raises(httpx.ConnectTimeout("timed out")), True),
-        (_webhook, _raises(httpx.RemoteProtocolError("peer closed")), True),
-        (_teams, _status(429), True),
-        (_teams, _status(502), True),
         (_teams, _status(400), False),
         (_resend, _status(403, '{"message": "The example.com domain is not verified."}'), False),
         (_resend, _status(422, '{"message": "Invalid to field"}'), False),
-        (_resend, _status(500, '{"message": "Internal error"}'), True),
-        (_resend, _status(429, '{"message": "Too many requests"}'), True),
+        # A status quoted in a body never counts: only where dispatchers.py writes it.
+        (_webhook, _status(400, "upstream returned 503: busy"), False),
+        (_teams, _status(500, "Teams rate-limited this request (429)"), False),
     ],
 )
 def test_transient_failures_are_told_from_permanent_ones(monkeypatch, send, handler, transient):
@@ -1036,8 +1063,11 @@ def test_transient_failures_are_told_from_permanent_ones(monkeypatch, send, hand
 @pytest.mark.parametrize(
     "message, transient",
     [
-        ("Dispatcher exception: KeyError: 'x'", True),
+        ("Dispatcher exception: KeyError: 'x'", False),
         ("Webhook returned 503: x; Template error: 'foo' is undefined", True),
+        ("Shuffle returned 503: unavailable", True),
+        ("Shuffle returned 502: bad gateway", False),
+        ("gaierror: [Errno 8] nodename nor servname provided", True),
         ("Shuffle authentication failed (401): bad key", False),
         ("Shuffle returned non-JSON response", False),
         ("Shuffle reported failure: app not authenticated", False),
@@ -1067,3 +1097,459 @@ def test_one_row_per_queued_key_is_enforced_by_the_database(tmp_path, monkeypatc
             return (await session.execute(select(func.count()).select_from(NotificationOutbox))).scalar_one()
 
     assert run(tmp_path, monkeypatch, scenario) == 1
+
+
+# ── review findings: internal events, isolation, progress, signatures ─────────
+
+
+def _task_event():
+    from app.notifications.services.event_builders import case_task_assigned_event
+
+    return case_task_assigned_event(task_id=5, case_id=2, title="Contain the host", assignee="bob", actor="al")
+
+
+def test_an_internal_event_reaches_each_of_two_internal_routes_once(tmp_path, monkeypatch):
+    """The review's probe (H1). A case-task assignment carries no customer, the dispatch log's
+    customer_code is NOT NULL: the log write failed after the first route's send, its rollback
+    broke the second route, and every retry re-sent the first. Now each route gets it once."""
+
+    async def scenario(h):
+        first = await h.add_route("first", trigger="case_task_assigned", scope="internal")
+        second = await h.add_route("second", trigger="case_task_assigned", scope="internal")
+        event = _task_event()
+        assert event.customer_code is None
+        assert await outbox.queue(event)
+        await outbox.drain_key(event.dedupe_key, NO_JITTER)
+        for _ in range(12):
+            h.clock.advance(hours=9)
+            await outbox.drain(NO_JITTER)
+        return (first, second), await h.row(), await h.log(), h.channel
+
+    (first, second), row, log, channel = run(tmp_path, monkeypatch, scenario)
+    assert (channel.count("first"), channel.count("second")) == (1, 1)
+    assert (row.status, row.attempts) == ("done", 1)
+    assert json.loads(row.route_outcomes) == {str(first): "sent", str(second): "sent"}
+    assert sorted((entry.route_id, entry.status, entry.customer_code) for entry in log) == [(first, "sent", ""), (second, "sent", "")]
+
+
+def test_dispatch_without_the_outbox_also_reaches_both_internal_routes(tmp_path, monkeypatch):
+    async def scenario(h):
+        await h.add_route("first", trigger="case_task_assigned", scope="internal")
+        await h.add_route("second", trigger="case_task_assigned", scope="internal")
+        async with h.sessions() as session:
+            response = await svc.dispatch_event(_task_event(), session)
+        return response, h.channel
+
+    response, channel = run(tmp_path, monkeypatch, scenario)
+    assert response.dispatched == 2
+    assert (channel.count("first"), channel.count("second")) == (1, 1)
+
+
+@pytest.mark.parametrize("expire_on_commit", [False, True])
+def test_one_routes_rollback_cannot_break_the_next_route(tmp_path, monkeypatch, expire_on_commit):
+    """A log write that rolls back (or a commit on an expire-on-commit session, the old emit()
+    path's) used to expire every route still in the session; the next one's first attribute
+    read was MissingGreenlet."""
+
+    async def scenario(h):
+        await h.add_route("first")
+        await h.add_route("second")
+        real = svc._record_log
+        calls = []
+
+        async def rolls_back_first(session, **kw):
+            calls.append(kw["route_id"])
+            if len(calls) == 1:
+                await session.rollback()
+                return True
+            return await real(session, **kw)
+
+        monkeypatch.setattr(svc, "_record_log", rolls_back_first)
+        async with AsyncSession(h.engine, expire_on_commit=expire_on_commit) as session:
+            response = await svc.dispatch_event(_event(), session)
+        return response, h.channel
+
+    response, channel = run(tmp_path, monkeypatch, scenario)
+    assert (channel.count("first"), channel.count("second")) == (1, 1)
+    assert response.dispatched == 2
+
+
+def test_progress_is_kept_route_by_route_so_a_re_emission_does_not_resend(tmp_path, monkeypatch):
+    """A re-emission of a key (A → B → A): the log's `sent` rows are the first emission's, so the
+    log can't tell what this one delivered before its attempt timed out. The route outcomes,
+    written as each route finished, can."""
+
+    async def scenario(h):
+        await h.add_route("A")
+        await h.add_route("B")
+        hang = {"armed": False}
+
+        class Hanging(FakeChannel):
+            async def send(self, *, route, event, message, ctx):
+                if route.name == "B" and hang["armed"]:
+                    hang["armed"] = False
+                    await asyncio.sleep(10)
+                return await super().send(route=route, event=event, message=message, ctx=ctx)
+
+        h.channel = Hanging()
+        monkeypatch.setattr(svc, "get_channel", lambda channel: h.channel)
+        settings = outbox.OutboxSettings(jitter=0.0, dispatch_timeout_seconds=0.5)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", settings)
+        h.clock.advance(hours=1)
+        hang["armed"] = True
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", settings)
+        second = (await h.rows())[1]
+        h.clock.advance(minutes=5)
+        await outbox.drain(settings)
+        return second, await h.rows(), h.channel
+
+    second, rows, channel = run(tmp_path, monkeypatch, scenario)
+    assert second.status == "pending" and "timed out" in second.last_error
+    assert list(json.loads(second.route_outcomes).values()) == ["sent"], "A recorded, as sent, the moment it was sent"
+    assert [r.status for r in rows] == ["done", "done"]
+    assert (channel.count("A"), channel.count("B")) == (2, 2), "one each per emission"
+
+
+def test_a_retry_skips_what_the_log_shows_sent_since_the_row_was_created(tmp_path, monkeypatch):
+    """The attempt sent route A, B failed transiently, and then the database went away: neither
+    the progress write nor the outcome reached the row (a crash, in effect). The lease sweep
+    brings the row back, and the retry finds A in the dispatch log since the row's creation."""
+
+    async def scenario(h):
+        await h.add_route("A")
+        await h.add_route("B")
+        h.channel.script["B"] = [failed("ConnectError: [Errno 61] Connection refused"), SendResult(status="sent")]
+        real_progress, real_finish = outbox._record_progress, outbox._finish
+
+        async def lost(*args, **kwargs):
+            raise ConnectionError("database went away")
+
+        monkeypatch.setattr(outbox, "_record_progress", lost)
+        monkeypatch.setattr(outbox, "_finish", lost)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        stuck = await h.row()
+        monkeypatch.setattr(outbox, "_record_progress", real_progress)
+        monkeypatch.setattr(outbox, "_finish", real_finish)
+        h.clock.advance(minutes=10)
+        counts = await outbox.drain(NO_JITTER)
+        h.clock.advance(minutes=10)
+        await outbox.drain(NO_JITTER)
+        return stuck, counts, await h.row(), h.channel
+
+    stuck, counts, row, channel = run(tmp_path, monkeypatch, scenario)
+    assert (stuck.status, stuck.route_outcomes) == ("processing", None)
+    assert counts["recovered"] == 1
+    assert (row.status, row.attempts) == ("done", 2)
+    assert (channel.count("A"), channel.count("B")) == (1, 1), "A came from the log, B was retried"
+
+
+def test_a_re_emission_is_delivered_again_even_after_a_failed_first_attempt(tmp_path, monkeypatch):
+    """M2's other half: the earlier emission's `sent` row predates the new row, so it never
+    stops the new one, on its first attempt or a retry."""
+
+    async def scenario(h):
+        await h.add_route("R")
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        h.clock.advance(hours=2)
+        real = svc.routes_for_event
+        calls = []
+
+        async def fails_once(event, session):
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("database went away")
+            return await real(event, session)
+
+        monkeypatch.setattr(svc, "routes_for_event", fails_once)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        h.clock.advance(minutes=5)
+        await outbox.drain(NO_JITTER)
+        return await h.rows(), h.channel
+
+    rows, channel = run(tmp_path, monkeypatch, scenario)
+    assert [r.status for r in rows] == ["done", "done"]
+    assert channel.count("R") == 2
+
+
+def test_the_same_dispatch_error_twice_is_final(tmp_path, monkeypatch, errors):
+    async def scenario(h):
+        await h.add_route("R")
+
+        async def broken(event, session):
+            raise RuntimeError("schema mismatch")
+
+        monkeypatch.setattr(svc, "routes_for_event", broken)
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        first = await h.row()
+        h.clock.advance(minutes=5)
+        await outbox.drain(NO_JITTER)
+        return first, await h.row()
+
+    first, row = run(tmp_path, monkeypatch, scenario)
+    assert (first.status, first.attempts) == ("pending", 1)
+    assert (row.status, row.attempts) == ("dead", 2)
+    assert any("is dead after 2 attempt(s)" in message for message in errors)
+
+
+def test_a_failure_that_may_have_delivered_is_settled_and_logged(tmp_path, monkeypatch):
+    warnings = []
+    sink = logger.add(lambda m: warnings.append(m.record["message"]), level="WARNING")
+    try:
+
+        async def scenario(h):
+            await h.add_route("Webhook")
+            h.channel.script["Webhook"] = [failed("ReadTimeout: The read operation timed out")]
+            await outbox.queue(_event())
+            await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+            return await h.row()
+
+        row = run(tmp_path, monkeypatch, scenario)
+    finally:
+        logger.remove(sink)
+    assert (row.status, row.attempts) == ("done", 1)
+    assert any("is not retried" in message and "ReadTimeout" in message for message in warnings)
+
+
+def test_each_delivery_tells_providers_its_outbox_row(tmp_path, monkeypatch):
+    async def scenario(h):
+        await h.add_route("R")
+        await outbox.queue(_event())
+        await outbox.drain_key("alert:14:alert_created", NO_JITTER)
+        return await h.row(), h.channel.delivery_ids
+
+    row, ids = run(tmp_path, monkeypatch, scenario)
+    assert ids == [str(row.id)]
+
+
+# ── M1: an error that aborted the caller's transaction is raised ─────────────
+
+
+def _mysql_error(code, message="x"):
+    import pymysql
+    from sqlalchemy.exc import OperationalError
+
+    return OperationalError("INSERT INTO notification_outbox …", {}, pymysql.err.OperationalError(code, message))
+
+
+class _FailingSession:
+    """Just enough of an AsyncSession for `enqueue`: the upsert raises `error`; a later
+    `SELECT @@innodb_rollback_on_timeout` answers `rollback_on_timeout`."""
+
+    def __init__(self, error, rollback_on_timeout=0, dialect="mysql"):
+        from contextlib import nullcontext
+
+        self.error = error
+        self.rollback_on_timeout = rollback_on_timeout
+        self.no_autoflush = nullcontext()
+        self.dialect = dialect
+
+    def get_bind(self):
+        return SimpleNamespace(dialect=SimpleNamespace(name=self.dialect))
+
+    async def execute(self, statement, *args, **kwargs):
+        if "innodb_rollback_on_timeout" in str(statement):
+            return SimpleNamespace(scalar=lambda: self.rollback_on_timeout)
+        raise self.error
+
+
+@pytest.mark.parametrize(
+    "error, rollback_on_timeout, raises",
+    [
+        (_mysql_error(1213, "Deadlock found when trying to get lock"), 0, True),
+        (_mysql_error(1205, "Lock wait timeout exceeded"), 1, True),
+        (_mysql_error(1205, "Lock wait timeout exceeded"), 0, False),
+        (_mysql_error(1146, "Table 'copilot.notification_outbox' doesn't exist"), 0, False),
+    ],
+)
+def test_enqueue_raises_only_what_aborted_the_transaction(error, rollback_on_timeout, raises, errors):
+    from sqlalchemy.exc import OperationalError
+
+    session = _FailingSession(error, rollback_on_timeout)
+    if raises:
+        with pytest.raises(OperationalError):
+            asyncio.run(outbox.enqueue(_event(), session))
+        assert any("aborted the caller's transaction" in message for message in errors)
+    else:
+        assert asyncio.run(outbox.enqueue(_event(), session)) is False
+
+
+def test_a_lost_connection_is_raised():
+    from sqlalchemy.exc import DBAPIError
+
+    error = DBAPIError("INSERT …", {}, Exception("gone"), connection_invalidated=True)
+    with pytest.raises(DBAPIError):
+        asyncio.run(outbox.enqueue(_event(), _FailingSession(error)))
+
+
+def test_a_review_whose_notification_deadlocks_is_not_written_and_not_notified(tmp_path, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+
+    from app.ai_analyst.schema.ai_analyst import SubmitReviewRequest
+    from app.db.universal_models import AiAnalystReview
+
+    async def scenario(h):
+        await _seed_job(h)
+        emitted = _patch_ai_path(monkeypatch, h)
+
+        async def username(user_id, session):
+            return "asmith"
+
+        async def deadlocks(event, session):
+            raise _mysql_error(1213, "Deadlock found when trying to get lock")
+
+        monkeypatch.setattr(ai_svc, "_username_for", username)
+        monkeypatch.setattr(ai_svc.outbox, "enqueue", deadlocks)
+        async with h.sessions() as session:
+            report = AiAnalystReport(job_id=JOB, alert_id=14, customer_code=CC, summary="s", created_at=T0)
+            session.add(report)
+            await session.commit()
+            report_id = report.id
+        async with h.sessions() as session:
+            with pytest.raises(OperationalError):
+                await ai_svc.submit_review(report_id, SubmitReviewRequest(overall_verdict="up"), 3, session)
+        async with h.sessions() as session:
+            reviews = (await session.execute(select(AiAnalystReview))).scalars().all()
+        return reviews, emitted, h.kicked
+
+    reviews, emitted, kicked = run(tmp_path, monkeypatch, scenario)
+    assert reviews == [] and emitted == [] and kicked == []
+
+
+# ── Resend's idempotency key ─────────────────────────────────────────────────
+
+
+def test_the_resend_idempotency_key_is_safe_bounded_and_per_delivery():
+    from app.notifications.channels.resend import IDEMPOTENCY_KEY_MAX
+    from app.notifications.channels.resend import idempotency_key
+
+    key = idempotency_key("alert:14:investigation_complete", 3, "41")
+    assert key == "alert:14:investigation_complete:3:41"
+    assert idempotency_key("alert:14:investigation_complete", 3, "41") == key, "stable across a row's retries"
+    assert idempotency_key("alert:14:investigation_complete", 3, "42") != key, "a re-emission is a new key"
+    assert idempotency_key("case:1:case_assigned:Zoë Ångström", 3, "1") == "case:1:case_assigned:Zo___ngstr_m:3:1"
+    long_a = idempotency_key("x" * 400 + "a", 3, "1")
+    long_b = idempotency_key("x" * 400 + "b", 3, "1")
+    assert len(long_a) == IDEMPOTENCY_KEY_MAX and long_a != long_b
+    assert long_a.endswith(":3:1:" + long_a.rsplit(":", 1)[1])
+
+
+def test_dispatch_resend_sends_the_key_only_when_given(monkeypatch):
+    seen = []
+
+    def handler(request):
+        seen.append(request.headers.get("Idempotency-Key"))
+        return httpx.Response(200, json={"id": "msg_1"})
+
+    monkeypatch.setattr(dispatchers.httpx, "AsyncClient", _client_with(handler))
+
+    async def both():
+        await _resend()
+        await dispatchers.dispatch_resend(
+            base_url="https://resend.invalid",
+            api_key="re_key",
+            from_address="soc@example.com",
+            to=["a@example.com"],
+            subject="s",
+            text_body="b",
+            idempotency_key="alert:14:x:3:41",
+        )
+
+    asyncio.run(both())
+    assert seen == [None, "alert:14:x:3:41"]
+
+
+# ── L1 and L3: the sweep's own robustness, and pruning ───────────────────────
+
+
+def test_one_rows_failing_claim_does_not_stop_the_sweep(tmp_path, monkeypatch, errors):
+    async def scenario(h):
+        await h.add_route("R")
+        await outbox.queue(_event(key="alert:1:alert_created"))
+        await outbox.queue(_event(key="alert:2:alert_created"))
+        real = outbox._claim
+        calls = []
+
+        async def first_deadlocks(row_id, due_by, **kw):
+            calls.append(row_id)
+            if len(calls) == 1:
+                raise _mysql_error(1213, "Deadlock found")
+            return await real(row_id, due_by, **kw)
+
+        monkeypatch.setattr(outbox, "_claim", first_deadlocks)
+        counts = await outbox.drain(NO_JITTER)
+        return counts, [r.status for r in await h.rows()]
+
+    counts, statuses = run(tmp_path, monkeypatch, scenario)
+    assert counts["done"] == 1 and statuses == ["pending", "done"]
+    assert any("the claim failed" in message for message in errors)
+
+
+def test_backoff_never_overflows():
+    assert outbox.OutboxSettings().backoff(10_000, rng=lambda low, high: 1.0) == timedelta(hours=8)
+
+
+def test_prune_works_in_batches(tmp_path, monkeypatch):
+    async def scenario(h):
+        async with h.sessions() as session:
+            for n in range(5):
+                at = T0 - timedelta(days=9)
+                session.add(
+                    NotificationOutbox(
+                        event_json="{}",
+                        dedupe_key=f"old-{n}",
+                        trigger="t",
+                        status="done",
+                        next_attempt_at=at,
+                        created_at=at,
+                        updated_at=at,
+                    ),
+                )
+            await session.commit()
+        deleted = await outbox.prune(outbox.OutboxSettings(), batch=2)
+        return deleted, await h.rows()
+
+    deleted, left = run(tmp_path, monkeypatch, scenario)
+    assert deleted["done"] == 5 and left == []
+
+
+def test_the_sweep_prunes_on_its_first_run_and_then_daily(tmp_path, monkeypatch):
+    async def scenario(h):
+        monkeypatch.setattr(outbox, "_last_prune", None)
+
+        async def old_done(key):
+            at = h.clock() - timedelta(days=9)
+            async with h.sessions() as session:
+                session.add(
+                    NotificationOutbox(
+                        event_json="{}",
+                        dedupe_key=key,
+                        trigger="t",
+                        status="done",
+                        next_attempt_at=at,
+                        created_at=at,
+                        updated_at=at,
+                    ),
+                )
+                await session.commit()
+
+        await old_done("a")
+        await outbox.drain_notification_outbox()
+        after_first = [r.dedupe_key for r in await h.rows()]
+        await old_done("b")
+        h.clock.advance(hours=1)
+        await outbox.drain_notification_outbox()
+        within_a_day = [r.dedupe_key for r in await h.rows()]
+        h.clock.advance(hours=24)
+        await outbox.drain_notification_outbox()
+        return after_first, within_a_day, [r.dedupe_key for r in await h.rows()]
+
+    after_first, within_a_day, next_day = run(tmp_path, monkeypatch, scenario)
+    assert after_first == []
+    assert within_a_day == ["b"]
+    assert next_day == []
