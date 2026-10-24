@@ -18,6 +18,8 @@ rather than something you discover when delivery stops.
 
 from __future__ import annotations
 
+import hashlib
+import re
 from typing import Any
 from typing import List
 from typing import Optional
@@ -67,6 +69,34 @@ async def get_resend_connector(session) -> Tuple[str, str, Optional[str]]:
     if not api_key:
         raise HTTPException(status_code=503, detail="Resend connector is configured but has no API key set.")
     return (base_url, api_key, default_from)
+
+
+#: Resend accepts any key of 1–256 characters and keeps it 24 hours; a second request with
+#: the same key and payload returns the first one's answer without sending again, and with a
+#: different payload a 409. https://resend.com/docs/dashboard/emails/idempotency-keys
+IDEMPOTENCY_KEY_MAX = 256
+_KEY_UNSAFE = re.compile(r"[^A-Za-z0-9._:/-]")
+
+
+def idempotency_key(dedupe_key: str, route_id: int, delivery_id: str) -> str:
+    """`Idempotency-Key` for one outbox delivery to one route: `<dedupe_key>:<route>:<delivery>`.
+
+    `delivery` is the outbox row's random `delivery_uuid`, on purpose. Retries of one row reuse
+    the key, so a send Resend already accepted isn't sent again; a new emission of the same
+    dedupe key (A → B → A) is a new row and a new key, so it is delivered, where
+    `<dedupe_key>:<route>` alone would get the 409 for a reused key with a different payload;
+    and being random, it can't collide with another install's keys on the same Resend team
+    (dedupe keys, route ids and row ids repeat across installs). Header-safe characters only (anything
+    else becomes `_`), and over 256 characters the dedupe key is shortened and a digest of the
+    whole key appended, so two long keys can't collide.
+    """
+    raw = f"{dedupe_key}:{route_id}:{delivery_id}"
+    key = _KEY_UNSAFE.sub("_", raw)
+    if len(key) <= IDEMPOTENCY_KEY_MAX:
+        return key
+    digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+    tail = f":{route_id}:{delivery_id}:{digest}"
+    return key[: IDEMPOTENCY_KEY_MAX - len(tail)] + tail
 
 
 class ResendConfig(ChannelConfig):
@@ -208,6 +238,7 @@ class ResendChannel(ChannelProvider):
             subject=subject,
             text_body=message.body,
             html_body=html_body,
+            idempotency_key=idempotency_key(event.dedupe_key, route_id, ctx.delivery_id) if ctx.delivery_id else None,
         )
         return SendResult(
             status=status,

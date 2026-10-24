@@ -323,7 +323,7 @@ The header is coloured by severity — red for Critical and High, amber for Medi
 ### Limits worth knowing
 
 - **28 KB per message.** Teams rejects anything larger. A long AI report is truncated with a note saying so, and the deep link is preserved so the full detail is one click away.
-- **~4 requests per second.** Above that Teams throttles and CoPilot records the notification as failed with a rate-limit message. This is transient — it means retry later, not that anything is misconfigured.
+- **~4 requests per second.** Above that Teams throttles and CoPilot records the notification as failed with a rate-limit message. This is transient — it means retry later, not that anything is misconfigured — and CoPilot retries a 429 on its own (see [Delivery survives a restart](#delivery-survives-a-restart-and-transient-failures-are-retried)).
 
 ---
 
@@ -518,6 +518,18 @@ Every saved route has a **Send test** button. It sends a **real** notification t
 `skipped` is not an error. It's CoPilot recording a decision it made, which is usually what you want to see when asking "why didn't I get an email".
 
 A row also carries a **template error** when a custom template failed and the channel default went out in its place — so a broken template is visible without having to reproduce it.
+
+### Delivery survives a restart, and transient failures are retried
+
+The notifications routes deliver (new alerts, assignments, SLA notices, AI reports and reviews) are first written to a queue in the database, the **notification outbox**, and delivered from there, normally within a second. If CoPilot restarts or crashes before or during a delivery, the job *drain_notification_outbox* (every minute) picks it up. An AI report and its notification are saved in the same transaction, so a stored report has its notification queued; the one exception is a queue write that fails on its own, which is logged as an error and falls back to queueing the notification right after the report is saved.
+
+Outside the outbox: **Send test** and manual sends (they report their result straight away, as before), Talon's own `POST /notifications/dispatch`, the Customer Portal's bell and emails, including the daily digest (their own queue, `customer_portal_notification`), and the temporary-password email (sent over SMTP when an admin presses Send).
+
+CoPilot retries a route only when nothing can have been delivered: the connection was never made (refused, timed out while connecting, DNS) or the provider answered **429** or **503**. It tries **that route** again with growing waits: about 1.5 min, 6 min, 24 min, 1.6 h, then every 6–8 h, 8 attempts over about a day. A delivery that fails as a whole (it runs out of time, or the database is unreachable) is retried on the same schedule; only the same unexpected error twice in a row, with nothing delivered either time, ends it early. Routes that already went out are not sent again. Anything else is final and logged: a read timeout, a dropped connection or any other 5xx may come after the provider accepted the message, and a webhook, Teams or Shuffle would deliver a second copy; any other 4xx (an unverified Resend domain, a bad webhook URL, a connector that isn't configured) won't fix itself; and anything `skipped` was a decision. Each attempt writes its row in the dispatch log, so a route that failed and then succeeded reads `sent`. Resend is also sent an `Idempotency-Key` per notification and route, so a retried email can never go out twice.
+
+A notification that still fails after the last attempt is marked **dead** and logged as an error. The dispatch log's response carries the customer's outbox counts (`outbox`: pending, processing, dead, and the age of the oldest pending one). Delivered entries are kept 7 days and dead ones 30 (`NOTIFICATION_OUTBOX_DONE_RETENTION_DAYS`, `NOTIFICATION_OUTBOX_DEAD_RETENTION_DAYS`), pruned by the same job when it first runs and daily after; the attempts and waits are set with `NOTIFICATION_OUTBOX_MAX_ATTEMPTS`, `NOTIFICATION_OUTBOX_BACKOFF_BASE_SECONDS` and `NOTIFICATION_OUTBOX_BACKOFF_MAX_SECONDS`.
+
+A notification normally reaches a route once. It can arrive twice in two narrow cases: CoPilot stopping in the instant between a provider accepting it and CoPilot recording that; or a delivery running out of time (each notification is given 45 s per route, at most 10 minutes) while a request to a provider is in flight, when that request is abandoned and sent again on the retry (email through Resend is protected by its idempotency key; webhooks, Teams and Shuffle are not). A retry goes to the routes that match the notification at the time of the retry, so a route created in between receives it too.
 
 ### Nothing arrived
 

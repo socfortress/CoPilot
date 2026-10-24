@@ -106,9 +106,14 @@ class DispatchContext:
     routes up front; the number of DB reads is the same or lower.
     """
 
-    def __init__(self, session: AsyncSession, event: NotificationEvent) -> None:
+    def __init__(self, session: AsyncSession, event: NotificationEvent, delivery_id: Optional[str] = None) -> None:
         self.session = session
         self.event = event
+        #: The notification outbox row being delivered (its random `delivery_uuid`), when
+        #: there is one. Stable across that row's retries, new for every emission and unique
+        #: across installs, so a provider that de-duplicates (Resend's Idempotency-Key) can
+        #: tell a retry from a new notification.
+        self.delivery_id = delivery_id
         self._memo: Dict[str, Any] = {}
 
     async def memoize(self, key: str, factory: Callable[[], Awaitable[Any]]) -> Any:
