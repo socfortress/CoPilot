@@ -21,6 +21,7 @@
 			<template v-if="caseEntity" #mainExtra>
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div v-if="compact" class="flex flex-wrap items-center gap-3">
+						<CustomerQuestionBadge entity="case" :entity-id="caseEntity.id" />
 						<Badge type="splitted" size="small" bright :color="statusColor(caseEntity.case_status)">
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />
@@ -52,6 +53,7 @@
 					</div>
 
 					<div v-else class="flex flex-wrap items-center gap-3">
+						<CustomerQuestionBadge entity="case" :entity-id="caseEntity.id" />
 						<CaseStatusSwitch
 							v-slot="{ loading: loadingStatus }"
 							:case-data="caseEntity"
@@ -257,6 +259,7 @@ import { formatDate } from "@/utils/format"
 import AlertItem from "../alerts/AlertItem.vue"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
+import CustomerQuestionBadge from "../customerQuestions/CustomerQuestionBadge.vue"
 import CaseAssignUser from "./CaseAssignUser.vue"
 import CaseDetails from "./CaseDetails.vue"
 import CaseNotificationButton from "./CaseNotificationButton.vue"

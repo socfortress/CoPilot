@@ -10,6 +10,7 @@ import Api from "@/api"
 import { resetTalonActions } from "@/components/talonChat/v2/actionCards"
 import { resetAnnouncements } from "@/composables/useAnnouncements"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
+import { resetOpenCustomerQuestions } from "@/composables/useOpenCustomerQuestions"
 import { loginWithPasskey as performPasskeyLogin } from "@/composables/usePasskey"
 import { resetTalonApprovals } from "@/composables/useTalonApprovals"
 import { resetTalonV2Availability } from "@/composables/useTalonV2Availability"
@@ -63,6 +64,7 @@ export const useAuthStore = defineStore("auth", {
 			resetTalonActions()
 			resetCustomerOptions()
 			resetAnnouncements()
+			resetOpenCustomerQuestions()
 			removePersistentSessionKey()
 		},
 		async login(payload: LoginPayload) {

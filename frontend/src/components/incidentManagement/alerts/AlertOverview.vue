@@ -126,6 +126,8 @@
 					</CardKV>
 				</div>
 
+				<CustomerQuestionsPanel entity="alert" :entity-id="alert.id" :refresh-key="slaRefreshKey" />
+
 				<ItemSlaPanel entity="alert" :item-id="alert.id" :refresh-key="slaRefreshKey" />
 
 				<CardKV>
@@ -247,6 +249,7 @@ import CardKV from "@/components/common/cards/CardKV.vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
+import CustomerQuestionsPanel from "@/components/incidentManagement/customerQuestions/CustomerQuestionsPanel.vue"
 import ItemSlaPanel from "@/components/socManagement/ItemSlaPanel.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { getApiErrorMessage } from "@/utils"
