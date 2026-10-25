@@ -278,6 +278,14 @@ class CaseCommentResponse(BaseModel):
     message: str
 
 
+class CommentAuthorsResponse(BaseModel):
+    """The role name of each author of an alert's or a case's comments, by username."""
+
+    authors: Dict[str, str]
+    success: bool
+    message: str
+
+
 class AlertContextResponse(BaseModel):
     alert_context: AlertContext
     success: bool

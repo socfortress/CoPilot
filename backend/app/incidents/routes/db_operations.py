@@ -92,6 +92,7 @@ from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
+from app.incidents.schema.db_operations import CommentAuthorsResponse
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentEdit
 from app.incidents.schema.db_operations import CommentResponse
@@ -127,6 +128,8 @@ from app.incidents.schema.incident_alert import CreatedCaseNotificationPayload
 from app.incidents.services.alert_severity import severity_of
 from app.incidents.services.audit_trail import record_incident_event
 from app.incidents.services.audit_trail import record_status_changes
+from app.incidents.services.comment_authors import alert_comment_authors
+from app.incidents.services.comment_authors import case_comment_authors
 from app.incidents.services.customer_reply import ensure_customer_may_set_status
 from app.incidents.services.customer_reply import resume_alert_on_reply
 from app.incidents.services.customer_reply import resume_case_on_reply
@@ -1888,6 +1891,21 @@ async def get_alert_by_id_endpoint(
     return AlertOutResponse(alerts=[alert], success=True, message="Alert retrieved successfully")
 
 
+@incidents_db_operations_router.get(
+    "/alert/{alert_id}/comment-authors",
+    response_model=CommentAuthorsResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_comment_authors_endpoint(
+    alert_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """The role of each author of the alert's comments, for their role badges."""
+    authors = await alert_comment_authors(alert_id, current_user, db)
+    return CommentAuthorsResponse(authors=authors, success=True, message="Comment authors retrieved successfully")
+
+
 @incidents_db_operations_router.delete(
     "/alert/{alert_id}",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
@@ -3207,6 +3225,21 @@ async def get_case_by_id_endpoint(
         raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
 
     return CaseOutResponse(cases=[case], success=True, message="Case retrieved successfully")
+
+
+@incidents_db_operations_router.get(
+    "/case/{case_id}/comment-authors",
+    response_model=CommentAuthorsResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_case_comment_authors_endpoint(
+    case_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """The role of each author of the case's comments, for their role badges."""
+    authors = await case_comment_authors(case_id, current_user, db)
+    return CommentAuthorsResponse(authors=authors, success=True, message="Comment authors retrieved successfully")
 
 
 @incidents_db_operations_router.post(
