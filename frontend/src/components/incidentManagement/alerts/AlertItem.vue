@@ -40,7 +40,7 @@
 			<template v-if="alert" #mainExtra>
 				<div v-if="compact" class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex flex-wrap items-center gap-3">
-						<CustomerQuestionBadge entity="alert" :entity-id="alert.id" />
+						<CustomerQuestionBadge entity="alert" :entity-id="alert.id" size="small" />
 						<Badge type="splitted" size="small" bright :color="statusColor(alert.status)">
 							<template #iconLeft>
 								<StatusIcon :status="alert.status" />

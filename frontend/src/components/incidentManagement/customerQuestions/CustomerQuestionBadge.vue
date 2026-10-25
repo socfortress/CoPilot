@@ -2,7 +2,7 @@
 	<Badge
 		v-if="count"
 		type="splitted"
-		size="small"
+		:size
 		bright
 		color="warning"
 		:title="`The customer asked the SOC ${count === 1 ? 'a question' : `${count} questions`} not answered yet`"
@@ -12,7 +12,7 @@
 			<Icon name="carbon:help" :size="13" />
 		</template>
 		<template #label>Customer question</template>
-		<template v-if="count > 1" #value>{{ count }}</template>
+		<template #value>{{ count }} open</template>
 	</Badge>
 </template>
 
@@ -23,10 +23,14 @@ import Badge from "@/components/common/Badge.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useOpenCustomerQuestions } from "@/composables/useOpenCustomerQuestions"
 
-/** "Customer question" on a case or alert row while the customer waits for the SOC (#1305). */
-const { entity, entityId } = defineProps<{
+/**
+ * "Customer question" on a case or alert row while the customer waits for the SOC (#1305): a
+ * splitted badge like the row's Status and Assignee, at their size (small in a compact row).
+ */
+const { entity, entityId, size } = defineProps<{
 	entity: QuestionEntity
 	entityId: number
+	size?: "small" | "medium"
 }>()
 
 const { ensure, countFor } = useOpenCustomerQuestions()

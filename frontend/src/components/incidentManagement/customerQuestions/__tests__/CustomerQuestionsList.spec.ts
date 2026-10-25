@@ -86,6 +86,8 @@ describe("the customer questions page", () => {
 		expect(rows[0]?.text()).toContain("High")
 		expect(wrapper.get("[data-testid=customer-questions-status]").text()).toContain("Open (2)")
 		expect(wrapper.get("[data-testid=customer-questions-status]").text()).toContain("All (5)")
+		// Answered = every question but the open ones.
+		expect(wrapper.get("[data-testid=customer-questions-status]").text()).toContain("Answered (3)")
 	})
 
 	it("keeps the status in the URL, the default left out", async () => {

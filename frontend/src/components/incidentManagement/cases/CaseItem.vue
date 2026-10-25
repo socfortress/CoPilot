@@ -21,7 +21,7 @@
 			<template v-if="caseEntity" #mainExtra>
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div v-if="compact" class="flex flex-wrap items-center gap-3">
-						<CustomerQuestionBadge entity="case" :entity-id="caseEntity.id" />
+						<CustomerQuestionBadge entity="case" :entity-id="caseEntity.id" size="small" />
 						<Badge type="splitted" size="small" bright :color="statusColor(caseEntity.case_status)">
 							<template #iconLeft>
 								<StatusIcon :status="caseEntity.case_status" />

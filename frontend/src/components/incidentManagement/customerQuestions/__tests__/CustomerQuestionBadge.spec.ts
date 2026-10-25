@@ -18,18 +18,29 @@ beforeEach(() => {
 
 /** "Customer question" on case and alert rows (#1305). */
 describe("the customer question badge", () => {
-	it("shows on a row with open questions, with the count when there are several", async () => {
+	it("shows on a row with open questions, splitted like the row's other badges, with how many", async () => {
 		socRequests.list.mockImplementation(() => answer())
 		const onCase = mount(CustomerQuestionBadge, { props: { entity: "case", entityId: 4 } })
 		const onAlert = mount(CustomerQuestionBadge, { props: { entity: "alert", entityId: 9 } })
 		const none = mount(CustomerQuestionBadge, { props: { entity: "case", entityId: 5 } })
 		await flushPromises()
-		expect(onCase.get("[data-testid=customer-question-badge]").text()).toBe("Customer question2")
-		expect(onAlert.get("[data-testid=customer-question-badge]").text()).toBe("Customer question")
+		expect(onCase.get("[data-testid=customer-question-badge]").text()).toBe("Customer question2 open")
+		expect(onAlert.get("[data-testid=customer-question-badge]").text()).toBe("Customer question1 open")
+		// Splitted and at the row's size, like Status and Assignee: small only when asked.
+		const classes = onCase.get("[data-testid=customer-question-badge]").classes()
+		expect(classes).toEqual(expect.arrayContaining(["splitted", "warning", "bright"]))
+		expect(classes).not.toContain("badge-size-small")
 		expect(none.find("[data-testid=customer-question-badge]").exists()).toBe(false)
 		// One request for every row of a list.
 		expect(socRequests.list).toHaveBeenCalledTimes(1)
 		expect(socRequests.list).toHaveBeenCalledWith({ status: "open" })
+	})
+
+	it("is small in a compact row", async () => {
+		socRequests.list.mockImplementation(() => answer())
+		const small = mount(CustomerQuestionBadge, { props: { entity: "case", entityId: 4, size: "small" } })
+		await flushPromises()
+		expect(small.get("[data-testid=customer-question-badge]").classes()).toContain("badge-size-small")
 	})
 
 	it("shows nothing when the questions can't be read, and tries again next time", async () => {

@@ -15,7 +15,9 @@
 				@update:value="(value: StatusFilter) => setStatus(value)"
 			>
 				<n-radio-button value="open">Open{{ counts ? ` (${counts.open})` : "" }}</n-radio-button>
-				<n-radio-button value="answered">Answered</n-radio-button>
+				<n-radio-button value="answered">
+					Answered{{ counts ? ` (${counts.total - counts.open})` : "" }}
+				</n-radio-button>
 				<n-radio-button value="all">All{{ counts ? ` (${counts.total})` : "" }}</n-radio-button>
 			</n-radio-group>
 		</header>
@@ -81,12 +83,16 @@
 						>
 							Mark answered
 						</n-button>
-						<span v-else class="text-success flex items-center gap-1 text-xs" data-testid="customer-question-done">
+						<span
+							v-else
+							class="text-success flex items-center gap-1 text-xs"
+							data-testid="customer-question-done"
+						>
 							<Icon name="carbon:checkmark-outline" :size="14" />
 							{{ answeredText(request) }}
 						</span>
 					</div>
-					<p class="m-0 text-sm whitespace-pre-wrap" data-testid="customer-question-text">
+					<p class="text-default m-0 text-sm whitespace-pre-wrap" data-testid="customer-question-text">
 						<bdi>{{ request.question }}</bdi>
 					</p>
 					<div class="text-secondary text-xs">
