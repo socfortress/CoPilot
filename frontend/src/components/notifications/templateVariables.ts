@@ -1,5 +1,5 @@
 import type { NotificationTrigger } from "@/types/notifications"
-import { isPortalTrigger, SLA_TRIGGERS } from "@/types/notifications"
+import { isPortalTrigger, OPS_TRIGGER, SLA_TRIGGERS } from "@/types/notifications"
 
 // The variables a notification template can reference, mirroring
 // `build_context` in app/notifications/services/rendering.py.
@@ -84,6 +84,49 @@ const SLA_VARIABLES: TemplateVariable[] = [
 	},
 	{ name: "context.status", description: "The item's status when the notice was sent.", example: "IN_PROGRESS" },
 	{ name: "assignee", description: "Who has the item. Empty when unassigned.", example: "jdoe" }
+]
+
+// Set by Talon's ops findings (talon-analyst D96). `why` and `recommendation` are a model's
+// text: escaped in HTML and Markdown templates, as written anywhere else.
+const OPS_VARIABLES: TemplateVariable[] = [
+	{
+		name: "context.title",
+		description: "The finding's title, written by Talon's job.",
+		example: "WKSTN-014: not seen by Wazuh for 5 days"
+	},
+	{ name: "context.ops_finding.job", description: "The ops job that found it.", example: "quiet_endpoints" },
+	{ name: "context.ops_finding.kind", description: "What it found.", example: "wazuh_quiet" },
+	{
+		name: "context.ops_finding.severity",
+		description: "Talon's severity: info, low, medium or high.",
+		example: "medium"
+	},
+	{
+		name: "context.ops_finding.customer_code",
+		description: "The customer; empty for a platform finding.",
+		example: "ACME"
+	},
+	{
+		name: "context.ops_finding.evidence_summary",
+		description: "The evidence's simple fields, one line, made by CoPilot."
+	},
+	{ name: "context.ops_finding.why", description: "Why it matters, by Talon's model: untrusted plain text." },
+	{
+		name: "context.ops_finding.recommendation",
+		description: "What to do, by Talon's model or the job's hint: untrusted plain text."
+	},
+	{
+		name: "context.ops_finding.first_seen",
+		description: "When the job first found it, UTC.",
+		example: "2026-10-22T06:00:00Z"
+	},
+	{
+		name: "context.ops_finding.last_seen",
+		description: "The latest run that found it, UTC.",
+		example: "2026-10-24T06:00:00Z"
+	},
+	{ name: "context.ops_finding.ops_url", description: "Link to the finding on the AI Analyst page's Ops tab." },
+	{ name: "context.ops_finding_json", description: "The whole block as compact JSON, for a webhook body." }
 ]
 
 const ALERT_VARIABLES: TemplateVariable[] = [
@@ -236,9 +279,11 @@ export function variablesForTrigger(trigger: NotificationTrigger | null): Templa
 			? ASSIGNMENT_VARIABLES
 			: SLA_TRIGGERS.includes(trigger)
 				? SLA_VARIABLES
-				: trigger === "ai_report_reviewed"
-					? [...REVIEW_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
-					: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+				: trigger === OPS_TRIGGER
+					? OPS_VARIABLES
+					: trigger === "ai_report_reviewed"
+						? [...REVIEW_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
+						: [...ALERT_VARIABLES, ...AI_REPORT_VARIABLES]
 
 	// First mention wins: with no trigger picked, the assignment and SLA groups both
 	// list `assignee` and `context.title`, and the reference must show each once.

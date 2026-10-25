@@ -31,6 +31,7 @@ export type NotificationTrigger =
 	| "case_task_assigned"
 	| "sla_at_risk"
 	| "sla_breached"
+	| "talon_ops_finding"
 	| "temp_password_issued"
 	| PortalTrigger
 
@@ -59,11 +60,16 @@ export function isPortalTrigger(trigger: NotificationTrigger | null | undefined)
 // analyst whose alert or case is running late.
 export const SLA_TRIGGERS: NotificationTrigger[] = ["sla_at_risk", "sla_breached"]
 
+// Talon's ops findings (talon-analyst D96) are internal only: the SOC's business, never a
+// customer's. The backend refuses a customer route with this trigger.
+export const OPS_TRIGGER: NotificationTrigger = "talon_ops_finding"
+
 export const INTERNAL_TRIGGERS: NotificationTrigger[] = [
 	"alert_assigned",
 	"case_assigned",
 	"case_task_assigned",
-	...SLA_TRIGGERS
+	...SLA_TRIGGERS,
+	OPS_TRIGGER
 ]
 
 /** Display names, shared by every list, badge and filter that names a trigger. */
@@ -76,6 +82,7 @@ export const NOTIFICATION_TRIGGER_LABELS: Record<NotificationTrigger, string> = 
 	case_task_assigned: "Case task assigned",
 	sla_at_risk: "SLA at risk",
 	sla_breached: "SLA breached",
+	talon_ops_finding: "Talon ops finding",
 	// Never reachable on a route — the backend rejects it as a route trigger —
 	// but the map is exhaustive over NotificationTrigger, so it needs a label.
 	temp_password_issued: "Temporary password email",

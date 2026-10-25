@@ -84,6 +84,7 @@ If you expected an AI notification and didn't get one, that line is the first th
 | **A case task is assigned** | A task within a case is assigned |
 | **An alert or case SLA is at risk** | A running response or resolution clock entered the last quarter of its window (in working time for business-hours targets) |
 | **An alert or case SLA is breached** | A running clock ran out |
+| **Talon flags something in the stack** | One of Talon's ops jobs found a problem with running the stack: an endpoint gone quiet, a log source gone silent ([below](#talon-ops-findings)) |
 
 ### Both
 
@@ -96,6 +97,14 @@ This is the only trigger offered on **both** customer and internal routes, becau
 It counts as AI-written content, so a customer-facing review route is governed by the same *Customers → (customer) → AI Report* opt-in as the rest. An internal route is not: if the switch is off, the customer's route is suppressed and **your internal one still fires**.
 
 SLA triggers fire **once per clock and state**: an item can be at risk on its response and, later, on its resolution — each is told once, and a breach never follows with a stale "at risk". The check runs every two minutes. Items waiting on the customer are skipped (their clocks are stopped), and a breach that was already more than 24 hours old when first seen is recorded silently instead of sent, so the first run after an upgrade does not flood the channel.
+
+### Talon ops findings
+
+*Talon flags something in the stack* (`talon_ops_finding`) comes from Talon's **ops jobs**, scheduled read-only checks of the stack (see [Talon Ops](/power-features/talon-ops)). It is **internal only**: offered on internal routes, never on a customer's, and a customer route can't be saved with it. Customers never hear about ops findings, on a route or in the portal.
+
+CoPilot asks Talon for new findings every 3 minutes (only while the *Talon v2* setting is on) and sends each one **once per severity**: a finding that stays the same is never sent again, and one whose severity rises (medium to high, say) is sent again at the new severity. The route's *minimum severity* applies to the finding's severity, mapped as `info` → Informational, `low` → Low, `medium` → Medium and `high` → High; an ops finding is never Critical. A finding is recorded as notified once CoPilot has queued it, even when no route matches, so creating your first route doesn't deliver every old finding at once.
+
+The default message names the finding, its job, the customer (or *the platform*), its status and when it was first and last seen, with a link to the AI Analyst page's Ops tab. It leaves out Talon's explanation and recommendation, which a model wrote; a template can use them (`context.ops_finding`, [below](#the-ops_finding-block)).
 
 Assignment triggers only fire on an **actual change**. Re-saving the same assignee sends nothing. By default, assigning something to *yourself* also sends nothing — there's a per-route **Notify on self-assign** option if your team wants the audit trail anyway.
 
@@ -562,9 +571,72 @@ If the app's agent posts its input somewhere people read, tell it in the destina
 
 **Rolling back.** The Shuffle option is new in this version. A CoPilot backend from before it refuses a route whose settings carry `include_full_report`, so after a rollback, Shuffle routes that turned the option on fail to save or validate until it is turned off again (or the change is reapplied). Routes that never turned it on are unaffected.
 
+### The `ops_finding` block
+
+A *Talon flags something in the stack* notification carries the finding as data. On a webhook route with no template, the structured payload has an `ops_finding` object and `"ai_report": null`, always (there is no alert or report, so **Include full AI report** adds nothing, and a template's `{{report}}` is `null`). The payload's own keys keep their v1 names: `alert_id` holds the **finding's id** for this trigger, `alert_name` is `null`, `customer_code` is the finding's customer (`null` for a platform finding), `report_url` is the link to the Ops tab, and `severity` is the mapped CoPilot severity. Templates get the same block as `{{ context.ops_finding }}`, and as compact JSON text in `{{ context.ops_finding_json }}`.
+
+The block is a **snapshot**: the finding as it was when CoPilot sent it. The Ops tab shows it as it is now.
+
+**`why` and `recommendation` are untrusted text.** Talon's model wrote them (when `explained` is `false`, `recommendation` is the job's own fixed hint). Treat them as plain text: never render them as Markdown or HTML, and never act on them automatically. CoPilot escapes them for you in an `html` template (like every value) and in a `markdown` template (every Markdown character is backslash-escaped, so a link or image the model wrote shows as text); in a `markdown` template `context.ops_finding_json` carries the escaped text too; in a `text` template, a webhook template and the payload they are as written. Every other field is written by code: Talon's job decides the finding, its severity, its title and its evidence, and CoPilot makes the summary.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `ops_finding.id` | integer | The finding's id in Talon |
+| `ops_finding.job` | string | The ops job that found it: `quiet_endpoints`, `silent_log_sources`, … |
+| `ops_finding.kind` | string | What it found: `wazuh_quiet`, `velociraptor_quiet`, `never_connected`, `wazuh_only`, `velociraptor_only`, `silent`, `dropped`, `no_data`, … |
+| `ops_finding.severity` | string | Talon's severity: `info`, `low`, `medium` or `high` |
+| `ops_finding.title` | string | One line, written by the job (at most 500 characters) |
+| `ops_finding.customer_code` | string or null | The customer, or `null` for a platform finding |
+| `ops_finding.evidence_summary` | string or null | The evidence's simple fields as `key: value; …`, made by CoPilot (at most 12 fields, 1,000 characters) |
+| `ops_finding.why` | string or null | Why it matters, by Talon's model: **untrusted plain text** (at most 1,000 characters) |
+| `ops_finding.recommendation` | string or null | What to do, by Talon's model or the job's fixed hint: **untrusted plain text** (at most 1,500 characters) |
+| `ops_finding.explained` | boolean | Talon's model explained this finding (`false`: `why` is `null` and `recommendation` is the job's hint) |
+| `ops_finding.artifact` | object or null | A recommendation artifact Talon built from a template, `{type, body}` (a command, an XML snippet). None of today's jobs make one. Never run it unreviewed. |
+| `ops_finding.status` | string | `open`, `acknowledged`, `muted` or `resolved`; always `open` when it is sent |
+| `ops_finding.first_seen` | string or null | When the job first found it, ISO 8601 UTC |
+| `ops_finding.last_seen` | string or null | The latest run that found it, ISO 8601 UTC |
+| `ops_finding.ops_url` | string or null | Link to the finding on the AI Analyst page's Ops tab. `null` when `COPILOT_URL` isn't set. |
+| `ops_finding.truncated_fields` | array of strings | Fields that were cut, for example `["why"]`. The block is kept under 16 KB of JSON. |
+
+An internal webhook route on *Talon flags something in the stack*, no template. All values are made up.
+
+```json
+{
+  "customer_code": "ACME",
+  "alert_id": 1207,
+  "alert_name": null,
+  "severity": "Medium",
+  "summary": "Endpoints gone quiet found an endpoint Wazuh stopped seeing for customer ACME (severity medium, last seen 2026-10-24 06:00 UTC).",
+  "report_url": "https://copilot.example.com/ai-analyst?tab=ops&finding=1207",
+  "text": "*Talon ops finding* — severity: *Medium* …",
+  "schema": "copilot.notification.v1",
+  "ai_report": null,
+  "ops_finding": {
+    "id": 1207,
+    "job": "quiet_endpoints",
+    "kind": "wazuh_quiet",
+    "severity": "medium",
+    "title": "WKSTN-014: not seen by Wazuh for 5 days",
+    "customer_code": "ACME",
+    "evidence_summary": "agent_id: 017; agent_name: WKSTN-014; os: Windows 11; critical_asset: no; wazuh_last_seen: 2026-10-19T08:12:00+00:00; wazuh_days_quiet: 5.1; conditions: wazuh_quiet",
+    "why": "One workstation stopped reporting to Wazuh while Velociraptor still saw it until the same day.",
+    "recommendation": "Check the Wazuh agent service on WKSTN-014, then its network path to the manager.",
+    "explained": true,
+    "artifact": null,
+    "status": "open",
+    "first_seen": "2026-10-22T06:00:00Z",
+    "last_seen": "2026-10-24T06:00:00Z",
+    "ops_url": "https://copilot.example.com/ai-analyst?tab=ops&finding=1207",
+    "truncated_fields": []
+  }
+}
+```
+
+Shuffle routes are customer routes only, so this trigger never reaches Shuffle; if it ever did, the JSON line would carry `ops_finding` the same way.
+
 ### Stability
 
-`copilot.notification.v1` only ever grows. Fields may be **added** to the payload or to `ai_report`; none is removed, renamed or given a different type, and a field's `null` meaning doesn't change. Ignore keys you don't know. A change that would break a v1 receiver gets a new name, `copilot.notification.v2`, and v1 keeps being sent until it is retired with notice.
+`copilot.notification.v1` only ever grows. Fields may be **added** to the payload, to `ai_report` or to `ops_finding`; none is removed, renamed or given a different type, and a field's `null` meaning doesn't change. Ignore keys you don't know. A change that would break a v1 receiver gets a new name, `copilot.notification.v2`, and v1 keeps being sent until it is retired with notice.
 
 ---
 

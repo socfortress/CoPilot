@@ -1,0 +1,79 @@
+---
+title: Talon ops jobs
+description: Talon's scheduled, read-only ops jobs check the stack for endpoints gone quiet and log sources gone silent. The AI Analyst page's Ops tab shows their findings to the SOC, and an internal notification trigger delivers new ones.
+---
+
+[Talon](/power-features/ai-analyst) has a second kind of work besides investigating alerts: **ops jobs**, scheduled checks that look after the stack and tell the SOC what needs attention. Each job gathers its numbers with read-only calls and decides in code what counts as a finding; one model call per run then ranks the findings and explains why each matters and what to do.
+
+The **Ops** tab of the **AI Analyst** page shows the findings, and the **Talon flags something in the stack** notification trigger sends new ones to your SOC's own channels.
+
+<Note>
+  Ops findings are for the SOC only. Customers never see them: not in the customer portal, and not on customer notification routes. The Ops tab appears only with the [Talon v2 setting](/power-features/ai-analyst#the-talon-v2-setting) on, and needs a talon-analyst release with the ops API.
+</Note>
+
+---
+
+## What the jobs check
+
+| Job | When | Finds |
+|---|---|---|
+| **Endpoints gone quiet** (`quiet_endpoints`) | Daily at 06:00 UTC | Agents Wazuh or Velociraptor stopped seeing (medium from 3 days, high from 14), agents that never connected (low), and agents only one of the two tools sees (medium: a broken install). A critical asset is raised one level. |
+| **Log sources gone silent** (`silent_log_sources`) | Hourly at :15 | Event sources with no events in the last hour when they usually have some (medium, high after 6 hours), sources whose volume dropped below a tenth of normal (medium), and configured sources with no data at all (low). |
+
+Each finding is about one subject (an agent, or a source and its index pattern) and stays one finding across runs: Talon updates it while it lasts and resolves it once the subject is measured healthy again. A run that couldn't measure something resolves nothing, so an outage never makes problems disappear.
+
+**What is code and what is the model.** The severity, title, evidence (numbers, ids and times, never log text) and any artifact are written by the job's code. *Why it matters* and *what to do* are the model's explanation; when there isn't one (the model's budget was spent, say) the recommendation is the job's own fixed hint. CoPilot shows the model's text **as plain text**, never as Markdown or HTML.
+
+---
+
+## The Ops tab
+
+**AI Analyst → Ops**, for admins, analysts and responders, like the Memory tab.
+
+- **Findings.** Filter by job, customer, status (open by default), severity and, for admins, platform findings. Each row shows the severity, title, customer, job, when it was first and last seen and its status. **Load more** pages through older ones.
+- **A finding's detail** opens in a side drawer: the evidence as a list of fields, any artifact in a copyable code block, and Talon's explanation and recommendation as plain text.
+- **Actions** on a finding, each recorded in CoPilot's audit log (`talon_ops.acknowledge`, `talon_ops.mute`, `talon_ops.reopen`) and in Talon's, with you as the actor:
+  - **Acknowledge**: you've seen it; it stops being open.
+  - **Mute until** a date (at most 90 days ahead): it stays quiet until then, and is open again afterwards if it is still true.
+  - **Reopen** an acknowledged or muted finding.
+  A resolved finding can't be reopened by hand: it opens again when a run finds it again. An acknowledged finding whose severity rises is open again.
+- **Jobs.** Each job with its schedule, its last run (status, the counts of new, updated and resolved findings, when) and its next run. Admins have **Run now** for an enabled job (`talon_ops.run` in the audit log).
+
+**Who sees what.** You see findings for the customers you are assigned to; admins see every customer. **Platform findings** (about the stack as a whole, not one customer) are for admins only. CoPilot checks every finding's stored customer on every request, before showing or acting on it. None of today's jobs make platform findings.
+
+When no job is enabled in Talon, the tab says **Ops jobs are off in Talon** and how to turn them on (below).
+
+---
+
+## Notifications
+
+Create an **internal** route (*Notifications → Internal Routes*) with the trigger **Talon flags something in the stack**. CoPilot asks Talon for new findings every 3 minutes and sends each one **once per severity**: a finding that stays the same is never sent again, and one whose severity rises is sent again at the new severity. The route's minimum severity applies (Talon's `info`, `low`, `medium` and `high` are CoPilot's Informational, Low, Medium and High).
+
+- The default message names the finding, the job, the customer, its status and when it was first and last seen, with a link to the Ops tab (set `COPILOT_URL` for the link).
+- A webhook gets the finding as data in an `ops_finding` object: see [The `ops_finding` block](/user/notifications#the-ops_finding-block).
+- A template can use `{{ context.ops_finding }}`, including Talon's `why` and `recommendation`. CoPilot escapes them in HTML and Markdown templates, because a model wrote them.
+
+A finding is recorded as notified once CoPilot has queued it, even if no route matches, so your first route doesn't receive every old finding at once. Several CoPilot backends can run side by side: one takes each round (a database lock), and a finding already queued is never queued again.
+
+---
+
+## Turning the jobs on
+
+The jobs run in talon-analyst, and are off until you enable them there. In talon-analyst's `.env`, on **every** api and worker container:
+
+```bash
+TALON_V2_API=true
+TALON_OPS_JOBS=quiet_endpoints,silent_log_sources
+```
+
+`silent_log_sources` also needs Talon's indexer connection (`TALON_MCP_INDEXER_URL`), and the jobs need a worker running. Restart Talon after the change. Optional settings (see talon-analyst's INSTALL.md):
+
+| Setting | Default | What it does |
+|---|---|---|
+| `TALON_OPS_CUSTOMERS` | every customer | The customers the jobs run for |
+| `TALON_OPS_SCHEDULES` | the schedules above | Cron overrides (UTC), e.g. `quiet_endpoints=0 7 * * *` |
+| `TALON_OPS_THRESHOLDS` | the thresholds above | e.g. `{"quiet_endpoints": {"warn_days": 5, "high_days": 21}}` |
+| `TALON_OPS_MODEL` | a small model | The model that explains the findings |
+| `TALON_OPS_BUDGET_DAILY_USD` | `2` | All ops explanations together, per UTC day; spent, findings are stored without an explanation |
+
+In CoPilot, turn on the [Talon v2 setting](/power-features/ai-analyst#the-talon-v2-setting), then open **AI Analyst → Ops**. The [health dashboard](/power-features/talon-health-dashboard)'s **Ops jobs** row warns when a job's last run failed or was skipped; the Jobs panel shows its error.

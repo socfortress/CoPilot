@@ -56,6 +56,10 @@ class NotificationTrigger(str, Enum):
     SLA_AT_RISK = "sla_at_risk"
     SLA_BREACHED = "sla_breached"
 
+    # talon-analyst's ops jobs (D96): a finding about the stack (an endpoint gone quiet, a log source
+    # gone silent), polled by the `invoke_talon_ops_notifications` job. The SOC's, never a customer's.
+    TALON_OPS_FINDING = "talon_ops_finding"
+
     # Not a dispatch trigger. #999 reuses `notification_template` as a second
     # event source: the admin-issued temporary-password email is authored in the
     # same editor and rendered by the same sandboxed Jinja, but it is delivered
@@ -214,8 +218,15 @@ INTERNAL_TRIGGERS: frozenset = frozenset(
         # business: internal routes only (#1187).
         "sla_at_risk",
         "sla_breached",
+        # Talon's ops findings are about running the stack: SOC only (talon-analyst D96 decision 2),
+        # never a customer route or the portal.
+        "talon_ops_finding",
     },
 )
+
+#: Internal triggers a customer route may not be saved with: it would never fire (they resolve
+#: against internal routes only), and its content is the SOC's alone.
+INTERNAL_ONLY_ROUTE_TRIGGERS: frozenset = frozenset({"talon_ops_finding"})
 
 #: The SLA triggers, for the places that word or shape them differently from an
 #: assignment (default body, test send).

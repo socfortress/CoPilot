@@ -55,6 +55,7 @@ from app.notifications.schema.events import NotificationEvent
 from app.notifications.schema.events import event_from_dispatch_request
 from app.notifications.schema.notifications import AI_SOURCED_TRIGGERS
 from app.notifications.schema.notifications import DUAL_SCOPE_TRIGGERS
+from app.notifications.schema.notifications import INTERNAL_ONLY_ROUTE_TRIGGERS
 from app.notifications.schema.notifications import INTERNAL_TRIGGERS
 from app.notifications.schema.notifications import SEVERITY_ORDER
 from app.notifications.schema.notifications import SLA_TRIGGERS
@@ -91,6 +92,7 @@ from app.notifications.services.rendering import render_body
 from app.notifications.services.templates import SLA_SAMPLE_CONTEXT
 from app.notifications.services.templates import assert_template_usable
 from app.notifications.services.templates import build_branding_context
+from app.notifications.services.templates import ops_sample_context
 from app.notifications.services.templates import resolve_template_for_route
 
 # ---------------------------------------------------------------------------
@@ -121,6 +123,15 @@ async def get_route(route_id: int, customer_code: str, session: AsyncSession) ->
     if not route:
         raise HTTPException(status_code=404, detail="Route not found")
     return route
+
+
+def _refuse_internal_only_trigger(scope: str, trigger: Any) -> None:
+    """A customer route may not be saved with an internal-only trigger (`talon_ops_finding`): it
+    resolves against internal routes only, so the route would never fire, and what it carries is
+    the SOC's alone (talon-analyst D96). A 400 the operator can act on, not silent dead config."""
+    value = trigger.value if hasattr(trigger, "value") else trigger
+    if scope != NotificationScope.INTERNAL.value and value in INTERNAL_ONLY_ROUTE_TRIGGERS:
+        raise HTTPException(status_code=400, detail=f"{value!r} is for internal routes only: it never reaches a customer's route.")
 
 
 def _enforce_scope_invariant(scope: str, customer_code: Optional[str]) -> Optional[str]:
@@ -320,6 +331,7 @@ async def create_route(
         await _ensure_integration_belongs_to_customer(payload.shuffle_integration_id, customer_code, session)
 
     resolved_code = _enforce_scope_invariant(payload.scope.value, customer_code)
+    _refuse_internal_only_trigger(payload.scope.value, payload.trigger)
 
     if payload.template_id:
         await assert_template_usable(
@@ -418,6 +430,7 @@ async def update_route(
             new_scope_value,
             None if new_scope_value == NotificationScope.INTERNAL.value else (route.customer_code or customer_code),
         )
+    _refuse_internal_only_trigger(new_scope_value, data.get("trigger") or route.trigger)
 
     # Same rule as the internal path: an explicit null detaches, a real id is
     # re-checked whenever the channel or trigger moves under it.
@@ -836,6 +849,9 @@ def _format_default_body_core(event: NotificationEvent) -> str:
             parts.extend(["", f"Open in CoPilot: {event.link_url}"])
         return "\n".join(parts)
 
+    if trig == NotificationTrigger.TALON_OPS_FINDING.value:
+        return _ops_finding_body(event)
+
     if trig in INTERNAL_TRIGGERS:
         what = {
             "alert_assigned": "Alert",
@@ -911,6 +927,42 @@ def _format_default_body_core(event: NotificationEvent) -> str:
     return "\n".join(parts)
 
 
+def _ops_finding_body(event: NotificationEvent) -> str:
+    """The default body of a Talon ops finding: code's fields only. The model's `why` and
+    `recommendation` are left out (they are untrusted text, and Teams and chat channels render a
+    default body as Markdown); they are in `context.ops_finding` for a template or a receiver."""
+    block = (event.context or {}).get("ops_finding") or {}
+    parts = [
+        f"*Talon ops finding* — severity: *{event.severity.value}*",
+        "",
+        f"Finding: #{event.entity_id}" + (f" — {block.get('title')}" if block.get("title") else ""),
+        f"Job: {block.get('job') or 'unknown'}" + (f" ({block['kind']})" if block.get("kind") else ""),
+        f"Customer: `{event.customer_code}`" if event.customer_code else "Scope: the platform",
+    ]
+    if block.get("status"):
+        parts.append(f"Status: {block['status']}")
+    if block.get("first_seen") or block.get("last_seen"):
+        parts.append(f"First seen: {block.get('first_seen') or 'unknown'} · last seen: {block.get('last_seen') or 'unknown'}")
+    if event.summary:
+        parts.extend(["", event.summary.strip()])
+    if event.link_url:
+        parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+    return "\n".join(parts)
+
+
+def _ops_event_for_format(event: NotificationEvent, fmt: Optional[str]) -> NotificationEvent:
+    """The event a Markdown template renders an ops finding with: a copy whose `context.ops_finding`
+    has the model's text Markdown-escaped, so a link or an image it wrote can't render. HTML
+    templates need nothing (autoescape); text, a webhook body and the JSON form are left as sent."""
+    if fmt != "markdown" or not (event.context or {}).get("ops_finding"):
+        return event
+    from app.notifications.services.ops_finding_v1 import markdown_escaped
+    from app.notifications.services.ops_finding_v1 import ops_finding_v1_json
+
+    escaped = markdown_escaped(event.context["ops_finding"])
+    return event.model_copy(update={"context": {**event.context, "ops_finding": escaped, "ops_finding_json": ops_finding_v1_json(escaped)}})
+
+
 async def _render_body(
     route: CustomerNotificationRoute,
     event: NotificationEvent,
@@ -972,6 +1024,7 @@ async def _render_body(
     extra = await _branding_context(template, event, session, ctx=ctx)
     extra.update(await _report_variable(source, route_scope, event, session, ctx=ctx))
     render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
+    render_event = _ops_event_for_format(render_event, template.format)
 
     body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
     if error:
@@ -1275,12 +1328,16 @@ def _sample_event_for(route: CustomerNotificationRoute) -> NotificationEvent:
         else NotificationTrigger.INVESTIGATION_COMPLETE
     )
 
-    is_assignment = trigger.value in INTERNAL_TRIGGERS
+    is_ops = trigger == NotificationTrigger.TALON_OPS_FINDING
+    is_assignment = trigger.value in INTERNAL_TRIGGERS and not is_ops
     entity_type = EntityType.ALERT
     # The same context the template editor previews with: a template that previews
     # cleanly must test-send cleanly too.
     sla_context = SLA_SAMPLE_CONTEXT.get(trigger.value, {})
-    if trigger == NotificationTrigger.CASE_ASSIGNED:
+    if is_ops:
+        entity_type = EntityType.OPS_FINDING
+        sla_context = ops_sample_context()
+    elif trigger == NotificationTrigger.CASE_ASSIGNED:
         entity_type = EntityType.CASE
     elif trigger == NotificationTrigger.CASE_TASK_ASSIGNED:
         entity_type = EntityType.CASE_TASK

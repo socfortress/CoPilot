@@ -44,6 +44,8 @@ class EntityType:
     # provider — but it flows through the same `NotificationEvent` so it can be
     # rendered by the same sandboxed Jinja and authored in the same editor.
     USER = "user"
+    # A Talon ops finding (talon-analyst D96): `entity_id` is talon-analyst's finding id.
+    OPS_FINDING = "ops_finding"
 
 
 class NotificationEvent(BaseModel):
