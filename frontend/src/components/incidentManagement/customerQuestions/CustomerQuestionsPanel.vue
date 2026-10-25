@@ -10,7 +10,12 @@
 				<div class="flex flex-wrap items-center gap-2 text-sm">
 					<Icon name="carbon:help" :size="15" class="text-warning" />
 					<span class="font-semibold">Customer question</span>
-					<n-tag :type="URGENCY_TAG[request.urgency]" size="tiny" :bordered="false" data-testid="customer-question-urgency">
+					<n-tag
+						:type="URGENCY_TAG[request.urgency]"
+						size="tiny"
+						:bordered="false"
+						data-testid="customer-question-urgency"
+					>
 						{{ URGENCY_LABELS[request.urgency] }}
 					</n-tag>
 					<span class="text-secondary text-xs">
@@ -28,7 +33,7 @@
 					Mark answered
 				</n-button>
 			</div>
-			<p class="m-0 text-sm whitespace-pre-wrap" data-testid="customer-question-text">
+			<p class="text-default m-0 text-sm whitespace-pre-wrap" data-testid="customer-question-text">
 				<bdi>{{ request.question }}</bdi>
 			</p>
 			<p class="text-secondary m-0 text-xs">

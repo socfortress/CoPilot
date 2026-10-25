@@ -128,7 +128,7 @@
 							· {{ filedOn(request, entity) }}
 						</span>
 					</div>
-					<p class="m-0 text-sm whitespace-pre-wrap" data-testid="ask-soc-request-question">
+					<p class="text-default m-0 text-sm whitespace-pre-wrap" data-testid="ask-soc-request-question">
 						<bdi>{{ request.question }}</bdi>
 					</p>
 					<div class="text-secondary text-xs">
