@@ -54,6 +54,7 @@ import talonActions from "./endpoints/talonActions"
 import talonAutomation from "./endpoints/talonAutomation"
 import talonHealth from "./endpoints/talonHealth"
 import talonMemory from "./endpoints/talonMemory"
+import talonOps from "./endpoints/talonOps"
 import talonUsage from "./endpoints/talonUsage"
 import talonV2 from "./endpoints/talonV2"
 import threatIntel from "./endpoints/threat-intel"
@@ -127,6 +128,7 @@ export default {
 	talonAutomation,
 	talonHealth,
 	talonMemory,
+	talonOps,
 	talonUsage,
 	talonV2,
 	opencti,

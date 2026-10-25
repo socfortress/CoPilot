@@ -39,6 +39,10 @@
 			<n-tab-pane v-if="talonV2Available" name="memory" tab="Memory" display-directive="show:lazy">
 				<TalonMemory v-if="visited.has('memory')" class="pt-6" />
 			</n-tab-pane>
+			<!-- Talon's ops jobs and their findings (talon-analyst D96): only with the "Talon v2" setting on. -->
+			<n-tab-pane v-if="talonV2Available" name="ops" tab="Ops" display-directive="show:lazy">
+				<TalonOps v-if="visited.has('ops')" class="pt-6" :initial-finding="linkedFinding" />
+			</n-tab-pane>
 			<!-- Talon's cost (talon-analyst FR-COST-5): only with the "Talon v2" setting on. -->
 			<n-tab-pane v-if="talonV2Available" name="usage" tab="Usage" display-directive="show:lazy">
 				<TalonUsagePanel v-if="visited.has('usage')" class="pt-6" />
@@ -64,7 +68,8 @@
 <script setup lang="ts">
 import { NBadge, NSpin, NTabPane, NTabs } from "naive-ui"
 import { getActivePinia } from "pinia"
-import { computed, defineAsyncComponent, onBeforeUnmount, reactive, ref, watch } from "vue"
+import { computed, defineAsyncComponent, inject, onBeforeUnmount, reactive, ref, watch } from "vue"
+import { routeLocationKey } from "vue-router"
 import AlertsReportsList from "@/components/aiAnalyst/AlertsReportsList.vue"
 import FeedbackDashboard from "@/components/aiAnalyst/Feedback/FeedbackDashboard.vue"
 import TalonOverview from "@/components/aiAnalyst/TalonOverview.vue"
@@ -77,17 +82,32 @@ import { useAuthStore } from "@/stores/auth"
 const TalonV2Chat = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonV2Chat.vue"))
 const TalonApprovalsList = defineAsyncComponent(() => import("@/components/talonChat/v2/TalonApprovalsList.vue"))
 const TalonMemory = defineAsyncComponent(() => import("@/components/aiAnalyst/memory/TalonMemory.vue"))
+const TalonOps = defineAsyncComponent(() => import("@/components/aiAnalyst/ops/TalonOps.vue"))
 const TalonUsagePanel = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonUsagePanel.vue"))
 const TalonBudgets = defineAsyncComponent(() => import("@/components/aiAnalyst/usage/TalonBudgets.vue"))
 const TalonAutomationSettings = defineAsyncComponent(() => import("@/components/aiAnalyst/TalonAutomationSettings.vue"))
 
-const activeTab = ref("overview")
+// `?tab=ops&finding=<id>` (an ops notification's link) opens the Ops tab on that finding. Read
+// without `useRoute`, so the page also mounts without a router (its tests).
+const route = inject(routeLocationKey, null)
+const linkedTab = route?.query?.tab === "ops" ? "ops" : null
+const linkedId = Number(route?.query?.finding)
+const linkedFinding = linkedTab && Number.isSafeInteger(linkedId) && linkedId > 0 ? linkedId : null
+const activeTab = ref(linkedTab ?? "overview")
 const { available: talonV2Available, settled: talonV2Settled } = useTalonV2Availability()
 
 // The cost tabs mount their content when first opened and keep it (the panes' `show:lazy`, held
 // here too so nothing is asked for before the tab is).
 const visited = reactive(new Set<string>())
 watch(activeTab, tab => visited.add(tab), { immediate: true })
+// A link to the Ops tab while "Talon v2" is off: there is no such tab, so the Overview instead.
+watch(
+	[talonV2Settled, talonV2Available],
+	([settled, on]) => {
+		if (settled && !on && activeTab.value === "ops") activeTab.value = "overview"
+	},
+	{ immediate: true }
+)
 
 // The Budgets tab is an admin's (decision B). Read only when v2 is on; with no store there is no
 // session, so nobody is an admin.

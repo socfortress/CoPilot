@@ -24,6 +24,7 @@ from app.notifications.channels.base import RenderedMessage
 from app.notifications.channels.base import SendResult
 from app.notifications.schema.events import EntityType
 from app.notifications.schema.events import NotificationEvent
+from app.notifications.schema.notifications import NotificationTrigger
 from app.notifications.services.ai_report_context import named_report_id
 from app.notifications.services.ai_report_context import select_report
 from app.notifications.services.dispatchers import dispatch_webhook
@@ -195,7 +196,16 @@ class WebhookChannel(ChannelProvider):
         #      contains the {{report}} token, inject the same report fields as
         #      a JSON object at that spot.
         rendered_template: Optional[str] = None
-        if include_full_report:
+        if event.trigger == NotificationTrigger.TALON_OPS_FINDING:
+            # A Talon ops finding (talon-analyst D96): its own block, never an AI report. Internal
+            # routes only. `include_full_report` adds nothing here (there is no alert or report), and
+            # a template's `{{report}}` is null. `why` and `recommendation` in it are a model's plain
+            # text: a receiver must never render them as Markdown or HTML.
+            structured_payload["ai_report"] = None
+            structured_payload["ops_finding"] = (event.context or {}).get("ops_finding")
+            if has_template:
+                rendered_template = message.body.replace("{{report}}", "null")
+        elif include_full_report:
             report_fields = await self._report(route_scope, event, ctx)
             if report_fields is not None:
                 structured_payload.update(report_fields)

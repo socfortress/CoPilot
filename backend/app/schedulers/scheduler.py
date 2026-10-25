@@ -74,6 +74,9 @@ from app.schedulers.services.invoke_snapshot_and_restore import (
 from app.schedulers.services.invoke_talon_action_outcomes import (
     invoke_talon_action_outcomes,
 )
+from app.schedulers.services.invoke_talon_ops_notifications import (
+    invoke_talon_ops_notifications,
+)
 from app.schedulers.services.refresh_catalog_caches import refresh_catalog_caches
 from app.schedulers.services.refresh_sidebar_health import refresh_sidebar_health
 from app.schedulers.services.refresh_sidebar_indicators import (
@@ -242,6 +245,15 @@ async def initialize_job_metadata():
                 "time_interval": 1,
                 "function": invoke_talon_action_outcomes,
                 "description": "Reports approved Talon v2 actions' results to talon-analyst, retrying until accepted or 24 h after approval.",
+            },
+            {
+                "job_id": "invoke_talon_ops_notifications",
+                # Every 3 minutes: talon-analyst's ops jobs run hourly at the most often, so a
+                # finding reaches the SOC's internal routes within a few minutes of the run. Does
+                # nothing while the "Talon v2" setting is off; one replica a tick (a named lock).
+                "time_interval": 3,
+                "function": invoke_talon_ops_notifications,
+                "description": "Sends Talon's new ops findings (quiet endpoints, silent log sources) to internal notification routes, once each time a finding becomes news.",
             },
             {
                 "job_id": "refresh_wazuh_rules_cache",
@@ -448,6 +460,7 @@ def get_function_by_name(function_name: str):
         "invoke_palace_lesson_drainer": invoke_palace_lesson_drainer,
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
         "invoke_talon_action_outcomes": invoke_talon_action_outcomes,
+        "invoke_talon_ops_notifications": invoke_talon_ops_notifications,
         "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
         "refresh_catalog_caches": refresh_catalog_caches,
         "refresh_sidebar_health": refresh_sidebar_health,

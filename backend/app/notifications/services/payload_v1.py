@@ -486,7 +486,7 @@ def v1_envelope(event: NotificationEvent, ai_report: Optional[Dict[str, Any]]) -
     alert_name, _ = _cap((event.context or {}).get("alert_name"), MAX_ALERT_NAME_CHARS)
     summary, _ = _cap(event.summary, MAX_SUMMARY_CHARS)
     report_url, _ = _cap(event.link_url, MAX_URL_CHARS)
-    return {
+    envelope = {
         "schema": SCHEMA_V1,
         "customer_code": event.customer_code,
         "alert_id": event.entity_id,
@@ -496,6 +496,11 @@ def v1_envelope(event: NotificationEvent, ai_report: Optional[Dict[str, Any]]) -
         "report_url": report_url,
         "ai_report": ai_report,
     }
+    if event.trigger == NotificationTrigger.TALON_OPS_FINDING:
+        # A Talon ops finding's own block (``services/ops_finding_v1.py``), never an AI report.
+        envelope["ai_report"] = None
+        envelope["ops_finding"] = (event.context or {}).get("ops_finding")
+    return envelope
 
 
 def sample_ai_report_v1() -> Dict[str, Any]:

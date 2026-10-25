@@ -641,6 +641,9 @@ const INTERNAL_TRIGGER_OPTIONS = [
 	// enters its last quarter, or runs out. Minimum severity applies to the item's own.
 	{ label: "An alert or case SLA is at risk", value: "sla_at_risk" },
 	{ label: "An alert or case SLA is breached", value: "sla_breached" },
+	// Talon's ops jobs (talon-analyst D96): once each time a finding is news. Internal only: a
+	// customer never hears about them, so the customer list never offers it.
+	{ label: "Talon flags something in the stack", value: "talon_ops_finding" },
 	REVIEW_TRIGGER_OPTION
 ]
 

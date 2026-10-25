@@ -47,6 +47,10 @@ Two internal triggers watch the SLA clocks of every open alert and case ([SOC Ma
 
 Each fires **once per clock** (response and resolution separately), checked every two minutes. Items waiting on the customer are not chased, and a breach already more than a day old when first noticed (right after an upgrade, for instance) is recorded without a message, so a backlog does not flood the channel. The event carries the item's own severity — set the route's floor accordingly — and its assignee, so *Email → Whoever it's assigned to* tells the analyst whose item is running late. The built-in template **SLA — running late** fits both triggers.
 
+## Talon flags something in the stack
+
+With [Talon's ops jobs](/power-features/talon-ops) on, the internal trigger **Talon flags something in the stack** delivers each ops finding (an endpoint gone quiet, a log source gone silent) when it is new, and again when it comes back after resolving, its severity rises or a mute on it expires. A finding nobody's route took (none, disabled, or a severity floor above it) is not sent later. It is internal only, like the SLA triggers: customers never receive ops findings. The route's severity floor applies to the finding's severity (Informational, Low, Medium or High). The default message holds only what Talon's code wrote; a template can add Talon's explanation and recommendation through `context.ops_finding`. Every string from Talon is escaped in HTML and Markdown templates and everywhere on Teams.
+
 ## Sending one item on demand
 
 Open any alert or case and choose **Send to channel…** to push it to a configured route immediately, bypassing the trigger and severity filters. Alerts can carry their AI investigation report. Customer-facing targets are admin-only.

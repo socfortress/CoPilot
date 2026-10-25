@@ -129,3 +129,32 @@ async def talon_identity_headers(user: User, session: AsyncSession) -> Dict[str,
         TAGS_HEADER: tags_header(filters["accessible_tags"]),
         UNTAGGED_HEADER: "true" if filters["include_untagged"] else "false",
     }
+
+
+#: The ops notification poller's ``X-Talon-User`` (plan OJ-5). Not a CoPilot user id (those are
+#: numbers, ``str(user.id)``), so talon-analyst's logs can never take it for a person.
+OPS_POLLER_USER = "copilot-ops-poller"
+
+
+def ops_poller_identity() -> Dict[str, str]:
+    """The identity CoPilot's ops notification job sends talon-analyst (talon-analyst SPEC §5.7
+    "Notifications"; plan OJ-5). The one v2 request CoPilot makes for no signed-in user.
+
+    Every other server-to-server v2 call acts for a real user (the approver, the requester), with that
+    user's headers computed now. The poller acts for nobody: it reads the findings nobody has been
+    told about yet, across every customer and the platform, and records that it told the SOC. So it
+    needs ``X-Talon-Customers: *``, which talon-analyst accepts only with ``X-Talon-Role: admin``. It
+    is CoPilot vouching for itself, with the same API key that already authenticates every call.
+
+    What keeps it narrow is the caller, not the headers: only ``services/talon_ops_notify.py`` uses
+    it, and only for ``GET /v2/ops/findings`` (open, not notified), ``GET /v2/ops/jobs`` (the jobs'
+    titles, for the summary) and ``POST /v2/ops/findings/{id}/notified``. It never acknowledges,
+    mutes, reopens or runs anything, and no route takes it. Only an admin may add, run, start, pause,
+    reschedule or delete the poller's job (``schedulers/routes/scheduler.py:refuse_unless_admin_for``)."""
+    return {
+        USER_HEADER: OPS_POLLER_USER,
+        ROLE_HEADER: "admin",
+        CUSTOMERS_HEADER: ALL,
+        TAGS_HEADER: ALL,
+        UNTAGGED_HEADER: "true",
+    }
