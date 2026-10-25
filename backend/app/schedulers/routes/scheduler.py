@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 from typing import Optional
 
 from fastapi import APIRouter
@@ -183,6 +184,30 @@ async def get_next_run(job_id: str) -> JobsNextRunResponse:
     )
 
 
+#: Jobs only an admin (by the database role) may add, run, start, pause, reschedule or delete. The
+#: Talon ops poller talks to talon-analyst with an admin, every-customer identity
+#: (``identity.ops_poller_identity``), which an analyst must not set off at will; and pausing,
+#: deleting or rescheduling it silently stops the SOC's ops notifications (review of OJ-5).
+ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications"})
+
+
+def _job_names(job: Any) -> set:
+    """Every name a scheduled job goes by: its name and its function's name."""
+    if job is None:
+        return set()
+    names = {getattr(job, "name", None), getattr(getattr(job, "func", None), "__name__", None)}
+    return {name for name in names if isinstance(name, str)}
+
+
+def refuse_unless_admin_for(user: User, *names: Optional[str], job: Any = None) -> None:
+    """403 unless ``user`` is an admin (by ``role_id``, not the token's scopes) when any of ``names``
+    (a job id, a function name) or ``job``'s own names is in ``ADMIN_ONLY_JOBS``. Every route that
+    adds, runs, starts, pauses, reschedules or deletes a job calls it before it changes anything."""
+    touched = {name for name in names if isinstance(name, str)} | _job_names(job)
+    if touched & ADMIN_ONLY_JOBS and getattr(user, "role_id", None) != RoleEnum.admin:
+        raise HTTPException(status_code=403, detail="Only an admin may change or run this job")
+
+
 @scheduler_router.post("/add", description="Add a job")
 async def add_job(
     job_id: str,
@@ -190,6 +215,7 @@ async def add_job(
     time_interval: int,
     extra_data: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     """
     Add a job to the scheduler.
@@ -205,6 +231,8 @@ async def add_job(
         dict: A dictionary containing the success status and a message.
     """
     scheduler = await get_scheduler_instance()
+    # The id, the function, and whatever job the id would replace.
+    refuse_unless_admin_for(current_user, job_id, function_name, job=scheduler.get_job(job_id))
     job_function = get_function_by_name(function_name)
     scheduler.add_job(
         job_function,
@@ -224,12 +252,6 @@ async def add_job(
         scheduler.start()
     logger.info(f"Job {job_id} added successfully")
     return {"success": True, "message": "Job added successfully"}
-
-
-#: Jobs the manual run route runs for an admin only, by the database role: the Talon ops poller acts
-#: with an admin, every-customer identity towards talon-analyst (``identity.ops_poller_identity``),
-#: which an analyst must not be able to set off at will (review of OJ-5, L4).
-ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications"})
 
 
 @scheduler_router.post("/jobs/run/{job_id}", description="Run a job")
@@ -253,8 +275,7 @@ async def run_job_manually(
 
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    if {job_id, job.name} & ADMIN_ONLY_JOBS and current_user.role_id != RoleEnum.admin:
-        raise HTTPException(status_code=403, detail="Only an admin may run this job manually")
+    refuse_unless_admin_for(current_user, job_id, job=job)
 
     try:
         # Retrieve the function associated with the job and run it
@@ -273,7 +294,7 @@ async def run_job_manually(
 
 
 @scheduler_router.post("/start/{job_id}", description="Start a job")
-async def start_job(job_id: str):
+async def start_job(job_id: str, current_user: User = Depends(AuthHandler().get_current_user)):
     """
     Start a job by resuming its execution.
 
@@ -287,6 +308,7 @@ async def start_job(job_id: str):
     """
     scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
+    refuse_unless_admin_for(current_user, job_id, job=job)
     if job:
         job.resume()
         logger.info(f"Job {job_id} started successfully")
@@ -296,7 +318,7 @@ async def start_job(job_id: str):
 
 
 @scheduler_router.post("/pause/{job_id}", description="Pause a job")
-async def pause_job(job_id: str):
+async def pause_job(job_id: str, current_user: User = Depends(AuthHandler().get_current_user)):
     """
     Pause a job.
 
@@ -310,6 +332,7 @@ async def pause_job(job_id: str):
     """
     scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
+    refuse_unless_admin_for(current_user, job_id, job=job)
     if job:
         job.pause()
         logger.info(f"Job {job_id} paused successfully")
@@ -324,6 +347,7 @@ async def update_job(
     time_interval: int,
     extra_data: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     """
     Update a job with the specified job_id and time_interval.
@@ -344,6 +368,7 @@ async def update_job(
     """
     scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
+    refuse_unless_admin_for(current_user, job_id, job=job)
     if job:
         job.reschedule(trigger="interval", minutes=time_interval)
         await manage_job_metadata(
@@ -369,7 +394,11 @@ async def update_job(
 
 
 @scheduler_router.delete("/{job_id}", description="Delete a job")
-async def delete_job(job_id: str, session: AsyncSession = Depends(get_db)):
+async def delete_job(
+    job_id: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
     """
     Delete a job.
 
@@ -382,6 +411,7 @@ async def delete_job(job_id: str, session: AsyncSession = Depends(get_db)):
     """
     scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
+    refuse_unless_admin_for(current_user, job_id, job=job)
     if job:
         scheduler.remove_job(job_id)
         await manage_job_metadata(session, job_id, "delete")
