@@ -264,6 +264,13 @@ export default {
 			{ signal }
 		)
 	},
+	/** The role name of each author of the alert's comments, by username: their role badges. */
+	getAlertCommentAuthors(alertId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { authors: Record<string, string> }>(
+			`/incidents/db_operations/alert/${alertId}/comment-authors`,
+			{ signal }
+		)
+	},
 	newAlertComment(payload: AlertCommentPayload) {
 		return HttpClient.post<FlaskBaseResponse & { comment: AlertComment }>(
 			`/incidents/db_operations/alert/comment`,

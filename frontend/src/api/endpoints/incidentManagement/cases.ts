@@ -257,6 +257,13 @@ export default {
 	createCaseNotification(caseId: number) {
 		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/case/notification`, { case_id: caseId })
 	},
+	/** The role name of each author of the case's comments, by username: their role badges. */
+	getCaseCommentAuthors(caseId: number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { authors: Record<string, string> }>(
+			`/incidents/db_operations/case/${caseId}/comment-authors`,
+			{ signal }
+		)
+	},
 	newCaseComment(payload: CaseCommentPayload) {
 		return HttpClient.post<FlaskBaseResponse & { comment: CaseComment }>(
 			`/incidents/db_operations/case/comment`,
