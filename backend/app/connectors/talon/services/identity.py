@@ -147,8 +147,10 @@ def ops_poller_identity() -> Dict[str, str]:
     is CoPilot vouching for itself, with the same API key that already authenticates every call.
 
     What keeps it narrow is the caller, not the headers: only ``services/talon_ops_notify.py`` uses
-    it, and only for ``GET /v2/ops/findings`` (open, not notified) and ``POST /v2/ops/findings/{id}/notified``.
-    It never acknowledges, mutes, reopens or runs anything, and no route takes it."""
+    it, and only for ``GET /v2/ops/findings`` (open, not notified), ``GET /v2/ops/jobs`` (the jobs'
+    titles, for the summary) and ``POST /v2/ops/findings/{id}/notified``. It never acknowledges,
+    mutes, reopens or runs anything, and no route takes it. The scheduler's manual run route runs the
+    poller for an admin only (``schedulers/routes/scheduler.py:ADMIN_ONLY_JOBS``)."""
     return {
         USER_HEADER: OPS_POLLER_USER,
         ROLE_HEADER: "admin",

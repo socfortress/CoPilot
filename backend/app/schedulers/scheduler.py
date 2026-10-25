@@ -253,7 +253,7 @@ async def initialize_job_metadata():
                 # nothing while the "Talon v2" setting is off; one replica a tick (a named lock).
                 "time_interval": 3,
                 "function": invoke_talon_ops_notifications,
-                "description": "Sends Talon's new ops findings (quiet endpoints, silent log sources) to internal notification routes, once per finding and severity.",
+                "description": "Sends Talon's new ops findings (quiet endpoints, silent log sources) to internal notification routes, once each time a finding becomes news.",
             },
             {
                 "job_id": "refresh_wazuh_rules_cache",

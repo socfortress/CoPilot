@@ -47,13 +47,13 @@ When no job is enabled in Talon, the tab says **Ops jobs are off in Talon** and 
 
 ## Notifications
 
-Create an **internal** route (*Notifications → Internal Routes*) with the trigger **Talon flags something in the stack**. CoPilot asks Talon for new findings every 3 minutes and sends each one **once per severity**: a finding that stays the same is never sent again, and one whose severity rises is sent again at the new severity. The route's minimum severity applies (Talon's `info`, `low`, `medium` and `high` are CoPilot's Informational, Low, Medium and High).
+Create an **internal** route (*Notifications → Internal Routes*) with the trigger **Talon flags something in the stack**. CoPilot asks Talon for new findings every 3 minutes and sends each one **each time it becomes news**: when it is new, when it comes back after resolving, when its severity rises and when a mute on it expires. A finding that stays the same is not sent again, and a severity that falls is not sent. The route's minimum severity applies (Talon's `info`, `low`, `medium` and `high` are CoPilot's Informational, Low, Medium and High).
 
 - The default message names the finding, the job, the customer, its status and when it was first and last seen, with a link to the Ops tab (set `COPILOT_URL` for the link).
 - A webhook gets the finding as data in an `ops_finding` object: see [The `ops_finding` block](/user/notifications#the-ops_finding-block).
-- A template can use `{{ context.ops_finding }}`, including Talon's `why` and `recommendation`. CoPilot escapes them in HTML and Markdown templates, because a model wrote them.
+- A template can use `{{ context.ops_finding }}`, including Talon's `why` and `recommendation`. Every string from Talon (the model's text, but also titles and the host names and OS strings endpoints report) is escaped in HTML and Markdown templates and everywhere on Teams, so a link or image in it shows as text.
 
-A finding is recorded as notified once CoPilot has queued it, even if no route matches, so your first route doesn't receive every old finding at once. Several CoPilot backends can run side by side: one takes each round (a database lock), and a finding already queued is never queued again.
+A finding is recorded as notified once CoPilot has queued it, **whatever the routes do with it**: with no route, every route disabled, or every route's minimum severity above it, it is never sent later, even once you create, enable or lower a route. So your first route doesn't receive every old finding at once; the Ops tab still lists them. Several CoPilot backends can run side by side: one takes each round (a database lock), and a finding already queued for the same moment is never queued again. To read the findings, the job titles and to record what it sent, CoPilot talks to Talon as its own service identity (`copilot-ops-poller`, every customer); only an admin can run that job by hand from the scheduler.
 
 ---
 

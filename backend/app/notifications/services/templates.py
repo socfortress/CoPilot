@@ -507,14 +507,10 @@ async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
     event = sample_event(trigger, payload.customer_code)
     autoescape = fmt in _HTML_FORMATS
     if fmt == "markdown" and (event.context or {}).get("ops_finding"):
-        # As at send time (`notifications._ops_event_for_format`): the model's text Markdown-escaped.
-        from app.notifications.services.ops_finding_v1 import markdown_escaped
-        from app.notifications.services.ops_finding_v1 import ops_finding_v1_json
+        # As at send time (`notifications._ops_event_for_route`): every talon-analyst string escaped.
+        from app.notifications.services.ops_finding_v1 import markdown_safe_event
 
-        escaped = markdown_escaped(event.context["ops_finding"])
-        event = event.model_copy(
-            update={"context": {**event.context, "ops_finding": escaped, "ops_finding_json": ops_finding_v1_json(escaped)}},
-        )
+        event = markdown_safe_event(event)
 
     extra: Dict[str, Any] = {}
     source = f"{payload.body_template}{payload.subject_template or ''}"

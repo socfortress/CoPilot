@@ -9,6 +9,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.auth.models.users import RoleEnum
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.middleware.search_query import SearchParams
@@ -224,8 +226,18 @@ async def add_job(
     return {"success": True, "message": "Job added successfully"}
 
 
+#: Jobs the manual run route runs for an admin only, by the database role: the Talon ops poller acts
+#: with an admin, every-customer identity towards talon-analyst (``identity.ops_poller_identity``),
+#: which an analyst must not be able to set off at will (review of OJ-5, L4).
+ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications"})
+
+
 @scheduler_router.post("/jobs/run/{job_id}", description="Run a job")
-async def run_job_manually(job_id: str, session: AsyncSession = Depends(get_db)):
+async def run_job_manually(
+    job_id: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
     """
     Manually triggers a scheduled job for immediate execution.
 
@@ -241,6 +253,8 @@ async def run_job_manually(job_id: str, session: AsyncSession = Depends(get_db))
 
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
+    if {job_id, job.name} & ADMIN_ONLY_JOBS and current_user.role_id != RoleEnum.admin:
+        raise HTTPException(status_code=403, detail="Only an admin may run this job manually")
 
     try:
         # Retrieve the function associated with the job and run it

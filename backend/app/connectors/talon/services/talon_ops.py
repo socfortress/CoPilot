@@ -446,6 +446,7 @@ def parse_finding(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsFinding]:
         acted_by=cleaners.scrub(raw.get("acted_by"), ACTOR_MAX),
         acted_at=_time(raw.get("acted_at")),
         notified_at=_time(raw.get("notified_at")),
+        notify_epoch=_int(raw.get("notify_epoch"), maximum=2**31 - 1),
         updated_at=_time(raw.get("updated_at")),
     )
 

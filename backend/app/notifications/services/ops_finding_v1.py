@@ -11,12 +11,15 @@ event carries this block in ``context.ops_finding``; the webhook's structured pa
 the outbox row with it: it is the finding as it was when it was notified. The Ops page shows it as it
 is now (``ops_url``).
 
-**Code's fields and a model's.** ``job``, ``kind``, ``severity``, ``title``, ``customer_code``,
-``status``, the times, ``evidence_summary`` and ``artifact`` are code's (talon-analyst's job, then
-CoPilot). ``why`` and ``recommendation`` are a model's explanation (``recommendation`` is the job's
-fixed hint when ``explained`` is false): **untrusted plain text**. The default message body never
-includes them; an HTML template escapes them (autoescape), a Markdown template gets them with every
-Markdown character escaped (``markdown_escaped``), and a webhook receiver must treat them as text.
+**Every talon-analyst string is untrusted text.** ``why`` and ``recommendation`` are a model's
+explanation (``recommendation`` is the job's fixed hint when ``explained`` is false); ``title`` and
+``evidence_summary`` hold what endpoints report about themselves (host names, OS strings); ``job``,
+``kind`` and the artifact come from talon-analyst too. The default message body never includes the
+model's two. Where text is read as Markdown (a Teams route, any template; a ``markdown`` template on
+any channel; their default bodies and the Teams card's header) every one of them is backslash-escaped
+(``markdown_safe_event``), so no link, image or emphasis renders; an HTML template escapes them
+(autoescape); a webhook body and a Resend text body carry them as written, and a receiver must treat
+them as text.
 
 **v1 is append-only.** Fields may be added; none removed, renamed or retyped. ``docs/user/notifications.md``
 ("The `ops_finding` block") is the receivers' reference: keep it in step with ``build_ops_finding_v1``.
@@ -201,26 +204,67 @@ def enforce_size(block: Dict[str, Any], limit: int = MAX_OPS_FINDING_V1_BYTES) -
     return block
 
 
-#: Markdown's special characters (CommonMark's ASCII punctuation that can start or end markup).
-_MARKDOWN_SPECIAL = re.compile(r"([\\`*_{}\[\]()<>#+\-.!|~>])")
+#: Every ASCII punctuation character: CommonMark lets any of them be backslash-escaped, and escaping
+#: all of them (not only the ones that start markup today) also breaks a bare URL's ``://`` for a
+#: renderer that turns bare URLs into links (Teams' TextBlock).
+_MARKDOWN_SPECIAL = re.compile(r"([!-/:-@\[-`{-~])")
+
+#: The block's strings that come from talon-analyst (its job's code, its model, or an endpoint's own
+#: host name and OS in the evidence): escaped for a Markdown renderer. ``ops_url`` (CoPilot's own
+#: link), ``severity`` and ``status`` (fixed sets) and the times (CoPilot's ISO form) are not.
+UNTRUSTED_FIELDS = ("job", "kind", "title", "customer_code", "evidence_summary", "why", "recommendation")
+
+#: The channels whose message text is rendered as Markdown whatever the template's format: Teams'
+#: Adaptive Card TextBlock renders emphasis and links. (Shuffle is customer-only; a webhook receiver
+#: and a Resend text body get the text as written.)
+MARKDOWN_CHANNELS = frozenset({"teams"})
 
 
 def escape_markdown(text: Optional[str]) -> Optional[str]:
-    """``text`` with every Markdown character backslash-escaped, so a Markdown renderer shows it as
-    written (no link, image, emphasis or heading the model wrote can render)."""
+    """``text`` with every ASCII punctuation character backslash-escaped, so a Markdown renderer shows
+    it as written: no link, image, emphasis, heading, code span or autolinked URL it holds renders."""
     if text is None:
         return None
     return _MARKDOWN_SPECIAL.sub(r"\\\1", text)
 
 
 def markdown_escaped(block: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """A copy of the block for a Markdown template: the model's ``why`` and ``recommendation`` escaped."""
+    """A copy of the block for a Markdown renderer: every talon-analyst string escaped
+    (``UNTRUSTED_FIELDS`` and the artifact's type and body)."""
     if not block:
         return block
     copy = json.loads(json.dumps(block))
-    copy["why"] = escape_markdown(copy.get("why"))
-    copy["recommendation"] = escape_markdown(copy.get("recommendation"))
+    for name in UNTRUSTED_FIELDS:
+        if isinstance(copy.get(name), str):
+            copy[name] = escape_markdown(copy[name])
+    if isinstance(copy.get("artifact"), dict):
+        for name in ("type", "body"):
+            if isinstance(copy["artifact"].get(name), str):
+                copy["artifact"][name] = escape_markdown(copy["artifact"][name])
     return copy
+
+
+def markdown_safe_event(event: Any) -> Any:
+    """A copy of a ``talon_ops_finding`` event for a Markdown renderer: ``context.ops_finding`` (and its
+    JSON form) escaped, and the title, subject and summary too (they hold talon-analyst's title and
+    job name). Any other event is returned as it is. Never changes the event it is given."""
+    context = getattr(event, "context", None) or {}
+    block = context.get("ops_finding")
+    if not block:
+        return event
+    escaped = markdown_escaped(block)
+    return event.model_copy(
+        update={
+            "subject": escape_markdown(event.subject),
+            "summary": escape_markdown(event.summary),
+            "context": {
+                **context,
+                "title": escape_markdown(context.get("title")) if isinstance(context.get("title"), str) else context.get("title"),
+                "ops_finding": escaped,
+                "ops_finding_json": ops_finding_v1_json(escaped),
+            },
+        },
+    )
 
 
 def sample_ops_finding_v1() -> Dict[str, Any]:

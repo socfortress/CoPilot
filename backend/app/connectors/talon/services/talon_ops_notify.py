@@ -11,12 +11,20 @@ talon-analyst never calls CoPilot's dispatch (FR-WB-6); CoPilot polls. One tick:
    (``identity.ops_poller_identity``: ``*``, so platform findings too). Each finding is parsed by the
    Ops tab's own parser (``talon_ops.parse_finding``); a malformed one is skipped and logged.
 3. For each, one ``talon_ops_finding`` event (``event_builders.talon_ops_finding_event``) through the
-   **outbox** (``outbox.queue``, then ``kick``), dedupe key ``ops:<id>:<severity>``, so a severity
-   that rises is notified again and the same severity never twice. The trigger is internal-only
+   **outbox** (``outbox.queue``, then ``kick``), dedupe key ``ops:<id>:<notify_epoch>:<severity>``
+   (``event_builders.ops_dedupe_key``). talon-analyst raises ``notify_epoch`` whenever it clears
+   ``notified_at``: the finding is new or came back after resolving, its severity rose, its mute
+   expired. Each of those is notified again; the same epoch never twice. Without ``notify_epoch`` (a
+   talon-analyst before its migration 0024) the epoch is ``fs<first_seen>``, which covers a finding
+   that comes back but not an expired mute or a fall-then-rise. The trigger is internal-only
    (``INTERNAL_TRIGGERS``): it resolves against internal routes, whose ``min_severity`` applies.
 4. Then ``POST /v2/ops/findings/{id}/notified`` with the severity notified (and the stored
    ``customer_code``). A 409 means the severity rose since it was read: nothing more is done now; the
    next tick reads the finding again at its new severity (a new key) and notifies that.
+5. A tick stops starting pages and findings after ``TICK_DEADLINE_SECONDS`` (150 s); the rest are
+   still unnotified in talon-analyst and the next tick takes them.
+
+The job titles in the summary come from ``GET /v2/ops/jobs``, read with the same identity.
 
 **What a failure does.** talon-analyst unreachable, or a page that isn't usable: the tick stops,
 nothing is marked, the next tick starts again. The outbox can't be written: that finding isn't marked
@@ -27,10 +35,11 @@ in the outbox and only posts ``notified`` again. Nothing here raises into APSche
 **Several backend replicas: why nobody is told twice.** Three things, each covering a different race:
 
 - **The poller's lock.** Every replica runs the job. A tick first takes the MySQL named lock
-  ``LOCK_NAME`` with ``GET_LOCK(name, 0)`` (no wait) on a connection of its own and keeps it for the
-  tick; a replica that can't take it skips its tick. So two replicas never read and emit the same
-  page at once. (``max_instances=1`` already stops overlapping ticks within one process.) The lock is
-  the server's, released with the connection, so a replica that dies never holds it.
+  ``LOCK_PREFIX`` + ``DATABASE()`` with ``GET_LOCK(name, 0)`` (no wait) on a connection of its own and
+  keeps it for the tick; a replica that can't take it skips its tick. So two replicas never read and
+  emit the same page at once. (``max_instances=1`` already stops overlapping ticks within one
+  process.) The lock is the server's, released with the connection, so a replica that dies never
+  holds it, and a connection whose release failed is invalidated rather than pooled.
 - **The outbox, by dedupe key, across statuses.** Before queueing, the tick looks for any outbox row
   with the key (pending, processing, done or dead). The outbox's own ``queued_key`` stops a key being
   queued twice only *until its first claim*, after which the same key may be queued again (on
@@ -38,17 +47,21 @@ in the outbox and only posts ``notified`` again. Nothing here raises into APSche
   was delivered. The lookup does: a finding read again because ``notified`` failed, or after a crash
   between the queue and the POST, is never emitted again while its row is kept (done rows 7 days,
   ``NOTIFICATION_OUTBOX_DONE_RETENTION_DAYS``).
-- **talon-analyst's ``notified_at``.** Once posted, the finding leaves ``notified=false`` for good,
-  until its severity rises (which clears it, and is a new key).
+- **talon-analyst's ``notified_at``.** Once posted, the finding leaves ``notified=false`` until
+  talon-analyst clears it again, which always raises ``notify_epoch``: a new key.
 
 Delivery is then at least once in one narrow case, as everywhere in the outbox: a delivered row
 pruned (after 7 days) while ``notified`` has failed every tick since, which would notify again once.
 
-**No route, no backlog.** A finding with no route matching it is still marked notified: it was handed
-to the notification engine, which found nobody to tell. Otherwise the first route created would
-receive every old finding at once. A route created later hears about new findings, and rises.
+**No route, no backlog.** A finding is marked notified once its event is queued, whatever the routes
+make of it: none configured, every one disabled, or every one's ``min_severity`` above the finding's.
+It was handed to the notification engine, which found nobody to tell, and it is **never re-sent
+later** for that epoch: a route created, enabled or lowered afterwards hears only about findings that
+are new, come back, rise or whose mute expires from then on. Otherwise the first route created would
+receive every old finding at once.
 """
 import json
+import time
 from contextlib import asynccontextmanager
 from typing import Any
 from typing import AsyncIterator
@@ -75,8 +88,15 @@ from app.db.universal_models import NotificationOutbox
 from app.notifications.services import outbox
 from app.notifications.services.event_builders import talon_ops_finding_event
 
-#: The MySQL named lock one tick holds across every replica.
-LOCK_NAME = "copilot.talon_ops_notifications"
+#: The MySQL named lock one tick holds across every replica: this prefix and the database's name
+#: (``DATABASE()``), cut to MySQL's 64 characters.
+LOCK_PREFIX = "copilot.talon_ops:"
+LOCK_NAME_SQL = "SELECT LEFT(CONCAT(:prefix, COALESCE(DATABASE(), '')), 64)"
+#: One tick's whole budget (review L2): past it, no further page or finding is started, and the rest
+#: waits for the next tick (every 3 minutes), so ticks never queue up behind a slow Talon.
+TICK_DEADLINE_SECONDS = 150.0
+#: The tick's clock (the tests move it).
+_clock = time.monotonic
 PAGE_SIZE = 100
 #: At most this many pages a tick (1,000 findings); the rest wait for the next tick.
 MAX_PAGES = 10
@@ -92,32 +112,55 @@ def _counts() -> Dict[str, int]:
 @asynccontextmanager
 async def poll_lock() -> AsyncIterator[bool]:
     """Whether this tick may run: the MySQL named lock taken without waiting, held until the tick
-    ends (on its own connection). Another database (the tests' SQLite) has no named locks: one
-    process, so it may."""
+    ends, on one connection of its own. Another database (the tests' SQLite) has no named locks: one
+    process, so it may.
+
+    The name is ``LOCK_PREFIX`` and the current database (``lock_name_sql``), so two CoPilots on one
+    MySQL server, each with its own database, don't take each other's lock. A lock lives on the
+    connection that took it, and a pooled connection outlives the tick: so on **any** error taking
+    or releasing it (or a release that doesn't answer 1), the connection is invalidated, closed and
+    never returned to the pool, which releases the lock with it (review L1)."""
     session = outbox.new_session()
-    held = False
     try:
-        dialect = session.get_bind().dialect.name
-        if dialect != "mysql":
-            held = True
+        if session.get_bind().dialect.name != "mysql":
             yield True
             return
+        held = False
+        name = None
+        connection = None
         try:
-            result = await session.execute(text("SELECT GET_LOCK(:name, 0)"), {"name": LOCK_NAME})
-            held = result.scalar() == 1
-        except Exception as e:  # noqa: BLE001 - no lock, no tick
+            connection = await session.connection()
+            name = (await session.execute(text(LOCK_NAME_SQL), {"prefix": LOCK_PREFIX})).scalar()
+            held = (await session.execute(text("SELECT GET_LOCK(:name, 0)"), {"name": name})).scalar() == 1
+        except Exception as e:  # noqa: BLE001 - no lock, no tick; and no connection left holding one
             logger.error(f"Talon ops notifications: the poller's lock could not be taken ({type(e).__name__}); skipping this tick")
             held = False
+            await _invalidate(connection)
         try:
             yield held
         finally:
             if held:
+                released = None
                 try:
-                    await session.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": LOCK_NAME})
-                except Exception as e:  # noqa: BLE001 - closing the connection releases it anyway
-                    logger.warning(f"Talon ops notifications: releasing the poller's lock failed ({type(e).__name__})")
+                    released = (await session.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": name})).scalar()
+                except Exception as e:  # noqa: BLE001 - invalidated below, which releases it
+                    logger.warning(
+                        f"Talon ops notifications: releasing the poller's lock failed ({type(e).__name__}); dropping the connection",
+                    )
+                if released != 1:
+                    await _invalidate(connection)
     finally:
         await session.close()
+
+
+async def _invalidate(connection: Any) -> None:
+    """Close ``connection`` for good (never back to the pool): MySQL releases its named locks."""
+    if connection is None:
+        return
+    try:
+        await connection.invalidate()
+    except Exception as e:  # noqa: BLE001 - nothing more can be done for this connection
+        logger.warning(f"Talon ops notifications: invalidating the lock's connection failed ({type(e).__name__})")
 
 
 async def _v2_on_and_cleaners() -> Optional[Cleaners]:
@@ -215,7 +258,11 @@ async def _poll(cleaners: Cleaners, counts: Dict[str, Any]) -> None:
     caller = caller_from_identity(identity)
     titles: Optional[Dict[str, str]] = None
     cursor: Optional[str] = None
+    deadline = _clock() + TICK_DEADLINE_SECONDS
     for _ in range(MAX_PAGES):
+        if _clock() >= deadline:
+            counts["deadline"] = 1
+            return
         params: Dict[str, Any] = {"status": "open", "notified": "false", "limit": PAGE_SIZE}
         if cursor:
             params["cursor"] = cursor
@@ -240,6 +287,10 @@ async def _poll(cleaners: Cleaners, counts: Dict[str, Any]) -> None:
                 continue
             if finding.status != "open" or finding.notified_at is not None:
                 continue  # not what was asked for: never notified
+            if _clock() >= deadline:
+                # The rest of this page waits for the next tick (still unnotified there).
+                counts["deadline"] = 1
+                return
             counts["seen"] += 1
             if titles is None:
                 titles = await _job_titles(identity)

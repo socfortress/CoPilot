@@ -950,17 +950,18 @@ def _ops_finding_body(event: NotificationEvent) -> str:
     return "\n".join(parts)
 
 
-def _ops_event_for_format(event: NotificationEvent, fmt: Optional[str]) -> NotificationEvent:
-    """The event a Markdown template renders an ops finding with: a copy whose `context.ops_finding`
-    has the model's text Markdown-escaped, so a link or an image it wrote can't render. HTML
-    templates need nothing (autoescape); text, a webhook body and the JSON form are left as sent."""
-    if fmt != "markdown" or not (event.context or {}).get("ops_finding"):
+def _ops_event_for_route(event: NotificationEvent, *, markdown: bool) -> NotificationEvent:
+    """The event a Talon ops finding renders with where its text is read as Markdown: a copy with
+    every talon-analyst string escaped (`ops_finding_v1.markdown_safe_event`: the block, its JSON,
+    the title, subject and summary), so no link, image or emphasis in them renders. Where to: a
+    Markdown channel (Teams, any template format, inline or named, and its default body) and a
+    `markdown` named template on any channel. An HTML template needs nothing (autoescape); a webhook
+    body and a Resend text body get the text as written. Other triggers are untouched."""
+    if not markdown:
         return event
-    from app.notifications.services.ops_finding_v1 import markdown_escaped
-    from app.notifications.services.ops_finding_v1 import ops_finding_v1_json
+    from app.notifications.services.ops_finding_v1 import markdown_safe_event
 
-    escaped = markdown_escaped(event.context["ops_finding"])
-    return event.model_copy(update={"context": {**event.context, "ops_finding": escaped, "ops_finding_json": ops_finding_v1_json(escaped)}})
+    return markdown_safe_event(event)
 
 
 async def _render_body(
@@ -994,7 +995,13 @@ async def _render_body(
     """
     inline = route.format_template
     route_scope = getattr(route, "scope", None)
+    # Teams renders a message's text as Markdown whatever the template's format (ops findings only).
+    from app.notifications.services.ops_finding_v1 import MARKDOWN_CHANNELS
+
+    markdown_channel = getattr(route, "channel", None) in MARKDOWN_CHANNELS
+    plain_event = event
     if inline:
+        event = _ops_event_for_route(event, markdown=markdown_channel)
         event = await _report_event_for_route(inline, route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         render_event = await _with_ai_report_v1(inline, route_scope, event, session, ctx=ctx)
@@ -1006,6 +1013,7 @@ async def _render_body(
     if template is None:
         # No template, but a manual send (or another route's template) may have put the
         # report on the event for the default body's report section.
+        event = _ops_event_for_route(event, markdown=markdown_channel)
         event = await _report_event_for_route("", route_scope, event, session, ctx=ctx)
         fallback = _format_default_body(event)
         # A default body that carries a report is markdown, not plain text: the
@@ -1017,6 +1025,9 @@ async def _render_body(
         return (RenderedMessage(body=fallback, format=fmt), None)
 
     source = f"{template.body_template}{template.subject_template or ''}"
+    # The subject is plain text on email: escaped only where the channel renders Markdown.
+    subject_event = _ops_event_for_route(plain_event, markdown=markdown_channel)
+    event = _ops_event_for_route(event, markdown=markdown_channel or template.format == "markdown")
     event = await _report_event_for_route(source, route_scope, event, session, ctx=ctx)
     fallback = _format_default_body(event)
 
@@ -1024,7 +1035,6 @@ async def _render_body(
     extra = await _branding_context(template, event, session, ctx=ctx)
     extra.update(await _report_variable(source, route_scope, event, session, ctx=ctx))
     render_event = await _with_ai_report_v1(source, route_scope, event, session, ctx=ctx)
-    render_event = _ops_event_for_format(render_event, template.format)
 
     body, error = render_body(template.body_template, render_event, fallback, autoescape=autoescape, extra_context=extra)
     if error:
@@ -1032,9 +1042,11 @@ async def _render_body(
         # which is plain text with no subject, whatever the template declared.
         return (RenderedMessage(body=body), error)
 
+    # An ops finding's subject renders with its channel's form (plain on email), not the Markdown body's.
+    subject_render_event = subject_event if (plain_event.context or {}).get("ops_finding") else render_event
     subject, subject_error = render_body(
         template.subject_template,
-        render_event,
+        subject_render_event,
         # A failed subject falls back to the provider composing its own, which
         # is what a route with no named template already does.
         "",

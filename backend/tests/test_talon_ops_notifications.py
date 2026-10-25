@@ -91,6 +91,7 @@ def raw_finding(fid, customer="ACME", severity="medium", **over):
         "first_seen": T,
         "last_seen": T,
         "notified_at": None,
+        "notify_epoch": 1,
         "updated_at": T,
     }
     base.update(over)
@@ -222,8 +223,8 @@ def test_the_poller_pages_emits_once_per_finding_and_severity_and_records_notifi
     async def scenario(h):
         counts = await talon_ops_notify.run_poll()
         assert counts["emitted"] == 3 and counts["marked"] == 3 and counts["failed"] == 0
-        assert await h.outbox_keys() == ["ops:1:medium", "ops:2:high", "ops:3:low"]
-        assert h.kicked == ["ops:1:medium", "ops:2:high", "ops:3:low"]
+        assert await h.outbox_keys() == ["ops:1:1:medium", "ops:2:1:high", "ops:3:1:low"]
+        assert h.kicked == ["ops:1:1:medium", "ops:2:1:high", "ops:3:1:low"]
         assert talon.marked == [(1, "medium", "ACME"), (2, "high", None), (3, "low", "ACME")]
         pages = talon.finding_pages()
         assert len(pages) == 2
@@ -248,7 +249,7 @@ def test_a_finding_whose_notified_failed_is_never_emitted_twice(tmp_path, monkey
         talon.notified = {}
         second = await talon_ops_notify.run_poll()  # talon-analyst still lists it as unnotified
         assert second["emitted"] == 0 and second["already_queued"] == 1 and second["marked"] == 1
-        assert await h.outbox_keys() == ["ops:1:medium"]
+        assert await h.outbox_keys() == ["ops:1:1:medium"]
 
     run(tmp_path, monkeypatch, talon, scenario)
 
@@ -259,11 +260,11 @@ def test_a_severity_that_rose_is_left_for_the_next_tick_which_notifies_it_again(
     async def scenario(h):
         first = await talon_ops_notify.run_poll()
         assert first["rose"] == 1 and first["marked"] == 0
-        talon.pages = [[raw_finding(1, severity="high")]]
+        talon.pages = [[raw_finding(1, severity="high", notify_epoch=2)]]
         talon.notified = {}
         second = await talon_ops_notify.run_poll()
         assert second["emitted"] == 1 and second["marked"] == 1
-        assert await h.outbox_keys() == ["ops:1:medium", "ops:1:high"]
+        assert await h.outbox_keys() == ["ops:1:1:medium", "ops:1:2:high"]
         assert talon.marked == [(1, "high", "ACME")]
 
     run(tmp_path, monkeypatch, talon, scenario)
@@ -332,39 +333,161 @@ def test_a_tick_that_doesnt_hold_the_lock_does_nothing(tmp_path, monkeypatch):
     run(tmp_path, monkeypatch, talon, scenario)
 
 
-def test_the_lock_is_mysqls_named_lock_taken_without_waiting():
-    """On MySQL the tick takes ``GET_LOCK(name, 0)`` and releases it; a lock another replica holds (0) skips the tick."""
-    statements = []
+class LockSession:
+    """A MySQL session as `poll_lock` uses it: records statements, answers `GET_LOCK` with `got` and
+    `RELEASE_LOCK` with `released` (or raises), and records whether its connection was invalidated."""
 
-    class Session:
-        def __init__(self, got):
-            self.got = got
+    def __init__(self, got=1, released=1, fail_on=None):
+        self.got, self.released, self.fail_on = got, released, fail_on
+        self.statements = []
+        self.connection_obj = SimpleNamespace(invalidated=False)
 
-        def get_bind(self):
-            return SimpleNamespace(dialect=SimpleNamespace(name="mysql"))
+        async def invalidate():
+            self.connection_obj.invalidated = True
 
-        async def execute(self, statement, params):
-            statements.append((str(statement), params))
-            return SimpleNamespace(scalar=lambda: self.got)
+        self.connection_obj.invalidate = invalidate
+        self.closed = False
 
-        async def close(self):
-            statements.append(("close", None))
+    def get_bind(self):
+        return SimpleNamespace(dialect=SimpleNamespace(name="mysql"))
 
-    async def held(got):
-        statements.clear()
+    async def connection(self):
+        return self.connection_obj
+
+    async def execute(self, statement, params):
+        sql = str(statement)
+        self.statements.append((sql, params))
+        if self.fail_on and self.fail_on in sql:
+            raise RuntimeError("simulated failure")
+        if "GET_LOCK" in sql:
+            value = self.got
+        elif "RELEASE_LOCK" in sql:
+            value = self.released
+        else:
+            value = "copilot.talon_ops:copilot"
+        return SimpleNamespace(scalar=lambda: value)
+
+    async def close(self):
+        self.closed = True
+
+
+def _hold(session):
+    async def go():
         original = outbox.new_session
-        outbox.new_session = lambda: Session(got)
+        outbox.new_session = lambda: session
         try:
             async with talon_ops_notify.poll_lock() as ok:
-                return ok, list(statements)
+                inside = list(session.statements)
+            return ok, inside
         finally:
             outbox.new_session = original
 
-    ok, inside = asyncio.run(held(1))
-    assert ok is True and inside == [("SELECT GET_LOCK(:name, 0)", {"name": talon_ops_notify.LOCK_NAME})]
-    assert statements[-2:] == [("SELECT RELEASE_LOCK(:name)", {"name": talon_ops_notify.LOCK_NAME}), ("close", None)]
-    ok, _ = asyncio.run(held(0))
-    assert ok is False and all("RELEASE_LOCK" not in s for s, _ in statements)
+    return asyncio.run(go())
+
+
+def test_the_lock_is_mysqls_named_lock_for_this_database_taken_without_waiting():
+    session = LockSession()
+    ok, inside = _hold(session)
+    assert ok is True
+    assert inside[0] == (talon_ops_notify.LOCK_NAME_SQL, {"prefix": talon_ops_notify.LOCK_PREFIX})
+    assert "DATABASE()" in talon_ops_notify.LOCK_NAME_SQL and "64" in talon_ops_notify.LOCK_NAME_SQL
+    assert inside[1] == ("SELECT GET_LOCK(:name, 0)", {"name": "copilot.talon_ops:copilot"})
+    assert session.statements[-1] == ("SELECT RELEASE_LOCK(:name)", {"name": "copilot.talon_ops:copilot"})
+    assert session.closed and not session.connection_obj.invalidated
+
+
+def test_a_lock_another_replica_holds_skips_the_tick_and_releases_nothing():
+    session = LockSession(got=0)
+    ok, _ = _hold(session)
+    assert ok is False and all("RELEASE_LOCK" not in sql for sql, _ in session.statements)
+    assert not session.connection_obj.invalidated
+
+
+@pytest.mark.parametrize("release", [dict(fail_on="RELEASE_LOCK"), dict(released=0), dict(released=None)])
+def test_a_failed_release_drops_the_connection_so_no_pooled_connection_keeps_the_lock(release):
+    """Review L1 (the reviewer's `lock_probe.py`): before, a failed RELEASE_LOCK left the lock on a pooled connection."""
+    session = LockSession(**release)
+    ok, _ = _hold(session)
+    assert ok is True and session.connection_obj.invalidated and session.closed
+
+
+def test_a_failure_taking_the_lock_drops_the_connection_and_skips():
+    session = LockSession(fail_on="GET_LOCK")
+    ok, _ = _hold(session)
+    assert ok is False and session.connection_obj.invalidated
+
+
+def test_a_tick_stops_at_its_deadline_and_leaves_the_rest_unmarked(tmp_path, monkeypatch):
+    talon = OpsTalon([[raw_finding(1), raw_finding(2)], [raw_finding(3)]])
+    clock = iter([0.0, 1.0, 1.0, 1000.0])  # the deadline, page 1, finding 1, then past it at finding 2
+    monkeypatch.setattr(talon_ops_notify, "_clock", lambda: next(clock, 1000.0))
+
+    async def scenario(h):
+        counts = await talon_ops_notify.run_poll()
+        assert counts["deadline"] == 1 and counts["emitted"] == 1
+        assert talon.marked == [(1, "medium", "ACME")]
+        assert len(talon.finding_pages()) == 1  # the second page waits for the next tick
+
+    run(tmp_path, monkeypatch, talon, scenario)
+    assert talon_ops_notify.TICK_DEADLINE_SECONDS <= 160
+
+
+# ── a finding that comes back is notified again (review M1) ───────────────────
+
+
+def _tick_twice(tmp_path, monkeypatch, first, second, *, marks=True):
+    talon = OpsTalon([[first]])
+
+    async def scenario(h):
+        one = await talon_ops_notify.run_poll()
+        assert one["emitted"] == 1 and one["marked"] == 1
+        talon.pages = [[second]]
+        two = await talon_ops_notify.run_poll()
+        return two, await h.outbox_keys()
+
+    return run(tmp_path, monkeypatch, talon, scenario)
+
+
+@pytest.mark.parametrize(
+    "case,second,key",
+    [
+        # resolved, then found again: talon-analyst reopens the row (first_seen now) and raises the epoch
+        ("reopened after resolve", raw_finding(7, first_seen="2026-10-26T06:00:00+00:00", notify_epoch=2), "ops:7:2:medium"),
+        # muted, the mute expired: open again, same first_seen, the epoch raised
+        ("mute expired", raw_finding(7, notify_epoch=2), "ops:7:2:medium"),
+        # high, fell to medium (no new notice), rose to high again: the rise raised the epoch
+        ("fell then rose", raw_finding(7, severity="high", notify_epoch=2), "ops:7:2:high"),
+    ],
+)
+def test_a_finding_that_comes_back_is_notified_again(tmp_path, monkeypatch, case, second, key):
+    severity = "high" if case == "fell then rose" else "medium"
+    counts, keys = _tick_twice(tmp_path, monkeypatch, raw_finding(7, severity=severity), second)
+    assert counts["emitted"] == 1 and counts["already_queued"] == 0 and counts["marked"] == 1, case
+    assert keys == [f"ops:7:1:{severity}", key]
+
+
+def test_the_same_epoch_is_never_notified_twice(tmp_path, monkeypatch):
+    counts, keys = _tick_twice(tmp_path, monkeypatch, raw_finding(7), raw_finding(7))
+    assert counts["emitted"] == 0 and counts["already_queued"] == 1
+    assert keys == ["ops:7:1:medium"]
+
+
+def test_without_notify_epoch_a_reopened_finding_is_notified_again_by_its_first_seen(tmp_path, monkeypatch):
+    """The reviewer's `test_probe_reopen.py`, against a talon-analyst before `notify_epoch`: a finding
+    that resolved and came back (first_seen reset, same id and severity) used to be suppressed."""
+    old = {k: v for k, v in raw_finding(7).items() if k != "notify_epoch"}
+    back = {**old, "first_seen": "2026-10-26T06:00:00+00:00"}
+    counts, keys = _tick_twice(tmp_path, monkeypatch, old, back)
+    assert counts["emitted"] == 1 and counts["already_queued"] == 0 and counts["marked"] == 1
+    first = int(datetime.fromisoformat(T).timestamp())
+    again = int(datetime.fromisoformat("2026-10-26T06:00:00+00:00").timestamp())
+    assert keys == [f"ops:7:fs{first}:medium", f"ops:7:fs{again}:medium"]
+
+
+def test_the_epoch_is_read_from_talon_and_a_bad_one_falls_back():
+    assert parsed(raw_finding(7, notify_epoch=5)).notify_epoch == 5
+    for bad in (True, -1, "3", 2**40):
+        assert parsed(raw_finding(7, notify_epoch=bad)).notify_epoch is None
 
 
 def test_the_job_is_registered_in_both_scheduler_registries():
@@ -434,7 +557,7 @@ def test_a_customer_route_cant_be_saved_with_the_trigger():
 def test_severity_maps_to_copilots(ops, copilot):
     event = talon_ops_finding_event(parsed(raw_finding(7, severity=ops)))
     assert event.severity.value == copilot
-    assert event.dedupe_key == f"ops:7:{ops}"
+    assert event.dedupe_key == f"ops:7:1:{ops}"
 
 
 def test_the_subject_and_summary_are_codes_fields_only():
@@ -510,6 +633,15 @@ def test_the_block_is_bounded():
 # ── escaping ──────────────────────────────────────────────────────────────────
 
 
+def no_markup(text):
+    """Rendered as Markdown (CommonMark, as the email channel does; Teams' TextBlock is a subset), the
+    text holds no link, image, emphasis or heading, and the model's words are still there."""
+    from app.notifications.utils.markdown_html import markdown_to_html
+
+    html = str(markdown_to_html(text))
+    return not any(tag in html for tag in ("<a ", "<img", "<strong", "<em>", "<h1", "<code")) and "evil" in html
+
+
 def _template(fmt, body):
     return SimpleNamespace(id=1, format=fmt, body_template=body, subject_template="{{ context.ops_finding.title }}", customer_code=None)
 
@@ -525,7 +657,7 @@ def _template(fmt, body):
         (
             "markdown",
             "{{ context.ops_finding.why }}\n\n{{ context.ops_finding.recommendation }}",
-            lambda out: r"\[this\]\(http://evil\.example\)" in out and r"\!\[x\]" in out and out.count(r"\# Restart") == 1,
+            lambda out: no_markup(out) and "[this](" not in out,
         ),
     ],
 )
@@ -577,3 +709,166 @@ def test_the_documented_ops_finding_example_is_the_real_shape():
     example = json.loads(section[start : section.index("\n```", start)])
     assert example["schema"] == SCHEMA_V1 and example["ai_report"] is None
     assert example["ops_finding"] == ops_finding_v1.sample_ops_finding_v1()
+
+
+# ── every Talon string is untrusted, on every Markdown path (review M2, the reviewer's `test_probe_md.py`) ──
+
+#: A link, an image and emphasis in every talon-analyst string a message can carry: the model's two,
+#: the title, and an endpoint's own OS string in the evidence.
+EVIL = "[Reset VPN](https://evil.example/x) ![p](https://evil.example/p.png) **now**"
+
+
+def no_talon_markup(text):
+    """No link, image or the payload's emphasis renders (CoPilot's own `*Talon ops finding*` may)."""
+    from app.notifications.utils.markdown_html import markdown_to_html
+
+    html = str(markdown_to_html(text))
+    return "<a " not in html and "<img" not in html and "<strong>now</strong>" not in html
+
+
+def evil_event(monkeypatch):
+    monkeypatch.setenv("COPILOT_URL", "https://copilot.example.com")
+    raw = raw_finding(9, title=f"host-9 {EVIL}", why=f"why {EVIL}", recommendation=f"do {EVIL}", evidence={"agent_name": "h", "os": EVIL})
+    return talon_ops_finding_event(parsed(raw), job_title=f"job {EVIL}")
+
+
+def teams_route(format_template=None):
+    return SimpleNamespace(
+        id=4,
+        channel="teams",
+        scope="internal",
+        template_id=1 if format_template is None else None,
+        format_template=format_template,
+        config=json.dumps({"webhook_url": "https://teams.example.invalid/hook"}),
+    )
+
+
+def _teams_card(monkeypatch, route, event):
+    """Render the route's body as the dispatch loop does, then send it through the real Teams channel."""
+    from app.notifications.channels import teams as teams_mod
+
+    cards = []
+
+    async def dispatch_teams(**kwargs):
+        cards.append(kwargs["card"])
+        return ("sent", None, 1, None)
+
+    monkeypatch.setattr(teams_mod, "dispatch_teams", dispatch_teams)
+
+    async def go():
+        message, error = await svc._render_body(route, event, AsyncMock())
+        assert error is None
+        await teams_mod.TeamsChannel().send(route=route, event=event, message=message, ctx=SimpleNamespace(session=AsyncMock()))
+        return message
+
+    message = asyncio.run(go())
+    blocks = []
+
+    def walk(items):
+        for item in items:
+            if item.get("type") == "TextBlock":
+                blocks.append(item["text"])
+            walk(item.get("items", []))
+
+    walk(cards[0]["attachments"][0]["content"]["body"])
+    return message, blocks
+
+
+TEMPLATE = (
+    "{{ subject }} | {{ context.title }} | {{ context.ops_finding.why }} | {{ context.ops_finding.recommendation }}"
+    " | {{ context.ops_finding.evidence_summary }} | {{ summary }}"
+)
+
+
+@pytest.mark.parametrize("path", ["inline", "named text", "named markdown", "default body"])
+def test_on_teams_no_talon_string_renders_a_link_image_or_emphasis(monkeypatch, path):
+    event = evil_event(monkeypatch)
+    if path == "inline":
+        route = teams_route(TEMPLATE)
+        monkeypatch.setattr(svc, "resolve_template_for_route", AsyncMock(return_value=None))
+    else:
+        route = teams_route()
+        template = None if path == "default body" else _template("markdown" if "markdown" in path else "text", TEMPLATE)
+        monkeypatch.setattr(svc, "resolve_template_for_route", AsyncMock(return_value=template))
+    monkeypatch.setattr(svc, "_branding_context", AsyncMock(return_value={}))
+    message, blocks = _teams_card(monkeypatch, route, event)
+    assert "[Reset VPN](" not in message.body and "![p](" not in message.body
+    # The header and the body: every TextBlock but CoPilot's own "Open in CoPilot" link.
+    texts = [b for b in blocks if not b.startswith("[Open in CoPilot](https://copilot.example.com/")]
+    assert texts and all(no_talon_markup(t) for t in texts)
+    assert any("evil" in t for t in texts)  # the text is shown, as text
+    # The shared event is untouched: the webhook and other routes get it as sent.
+    assert event.context["ops_finding"]["why"] == f"why {EVIL}"
+
+
+def test_a_markdown_template_on_email_escapes_every_talon_string_but_keeps_a_plain_subject(monkeypatch):
+    event = evil_event(monkeypatch)
+    monkeypatch.setattr(svc, "resolve_template_for_route", AsyncMock(return_value=_template("markdown", TEMPLATE)))
+    monkeypatch.setattr(svc, "_branding_context", AsyncMock(return_value={}))
+    route = SimpleNamespace(id=3, format_template=None, scope="internal", channel="resend", template_id=1)
+    message, error = asyncio.run(svc._render_body(route, event, AsyncMock()))
+    assert error is None and no_markup(message.body)
+    assert message.subject == f"host-9 {EVIL}"  # the subject is plain text on email: as written
+
+
+def test_an_html_email_still_autoescapes_and_a_webhook_gets_the_text_as_written(monkeypatch):
+    event = evil_event(monkeypatch)
+    monkeypatch.setattr(svc, "_branding_context", AsyncMock(return_value={}))
+    monkeypatch.setattr(
+        svc,
+        "resolve_template_for_route",
+        AsyncMock(return_value=_template("html", "<p>{{ context.ops_finding.why }}</p>")),
+    )
+    email, _ = asyncio.run(
+        svc._render_body(
+            SimpleNamespace(id=3, format_template=None, scope="internal", channel="resend", template_id=1),
+            event,
+            AsyncMock(),
+        ),
+    )
+    assert "\\[" not in email.body and "[Reset VPN](https://evil.example/x)" in email.body  # HTML: no Markdown renders, autoescape applies
+    hook, _ = asyncio.run(
+        svc._render_body(
+            SimpleNamespace(id=5, format_template="{{ context.ops_finding.why }}", scope="internal", channel="webhook", template_id=None),
+            event,
+            AsyncMock(),
+        ),
+    )
+    assert hook.body == f"why {EVIL}"
+
+
+def test_the_escaped_block_escapes_every_talon_field():
+    block = ops_finding_v1.build_ops_finding_v1(
+        parsed(raw_finding(9, title=EVIL, why=EVIL, recommendation=EVIL, evidence={"os": EVIL}, artifact={"type": "xml", "body": EVIL})),
+        ops_url="https://copilot.example.com/ai-analyst?tab=ops&finding=9",
+    )
+    escaped = ops_finding_v1.markdown_escaped(block)
+    for name in ("title", "why", "recommendation", "evidence_summary"):
+        assert no_markup(escaped[name]), name
+    assert no_markup(escaped["artifact"]["body"])
+    assert escaped["ops_url"] == block["ops_url"] and escaped["severity"] == "medium"
+
+
+# ── the scheduler's manual run route (review L4) ──────────────────────────────
+
+
+@pytest.mark.parametrize("role,allowed", [(1, True), (2, False), (5, False)])
+def test_only_an_admin_runs_the_ops_poller_by_hand(monkeypatch, role, allowed):
+    """It talks to talon-analyst as an admin with every customer (`ops_poller_identity`)."""
+    from app.schedulers.routes import scheduler as routes
+
+    ran = AsyncMock(return_value=None)
+    scheduler = SimpleNamespace(get_job=lambda job_id: SimpleNamespace(name=job_id))
+    monkeypatch.setattr(routes, "get_scheduler_instance", AsyncMock(return_value=scheduler))
+    monkeypatch.setattr(routes, "get_function_by_name", lambda name: ran)
+    user = SimpleNamespace(id=9, role_id=role)
+    if allowed:
+        assert asyncio.run(routes.run_job_manually("invoke_talon_ops_notifications", AsyncMock(), user))["success"] is True
+        ran.assert_awaited_once()
+    else:
+        with pytest.raises(HTTPException) as refused:
+            asyncio.run(routes.run_job_manually("invoke_talon_ops_notifications", AsyncMock(), user))
+        assert refused.value.status_code == 403
+        ran.assert_not_awaited()
+    # Any other job is unchanged: an analyst still runs it.
+    assert asyncio.run(routes.run_job_manually("notify_sla_transitions", AsyncMock(), SimpleNamespace(id=9, role_id=2)))["success"] is True

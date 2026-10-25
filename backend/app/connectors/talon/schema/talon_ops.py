@@ -56,6 +56,9 @@ class TalonOpsFinding(BaseModel):
     acted_by: Optional[str] = None
     acted_at: Optional[datetime] = None
     notified_at: Optional[datetime] = None
+    #: Rises each time talon-analyst clears ``notified_at`` (new or reopened, a severity rise, an
+    #: expired mute; its migration 0024). None from a talon-analyst before it.
+    notify_epoch: Optional[int] = None
     updated_at: Optional[datetime] = None
 
 

@@ -40,6 +40,8 @@ export interface TalonOpsFinding {
 	acted_by: string | null
 	acted_at: string | null
 	notified_at: string | null
+	/** Rises each time Talon clears `notified_at`; null from a Talon before its migration 0024. */
+	notify_epoch?: number | null
 	updated_at: string | null
 }
 

@@ -49,7 +49,7 @@ Each fires **once per clock** (response and resolution separately), checked ever
 
 ## Talon flags something in the stack
 
-With [Talon's ops jobs](/power-features/talon-ops) on, the internal trigger **Talon flags something in the stack** delivers each new ops finding (an endpoint gone quiet, a log source gone silent) once, and again only if its severity rises. It is internal only, like the SLA triggers: customers never receive ops findings. The route's severity floor applies to the finding's severity (Informational, Low, Medium or High). The default message holds only what Talon's code wrote; a template can add Talon's explanation and recommendation through `context.ops_finding`, which CoPilot escapes in HTML and Markdown templates because a model wrote them.
+With [Talon's ops jobs](/power-features/talon-ops) on, the internal trigger **Talon flags something in the stack** delivers each ops finding (an endpoint gone quiet, a log source gone silent) when it is new, and again when it comes back after resolving, its severity rises or a mute on it expires. A finding nobody's route took (none, disabled, or a severity floor above it) is not sent later. It is internal only, like the SLA triggers: customers never receive ops findings. The route's severity floor applies to the finding's severity (Informational, Low, Medium or High). The default message holds only what Talon's code wrote; a template can add Talon's explanation and recommendation through `context.ops_finding`. Every string from Talon is escaped in HTML and Markdown templates and everywhere on Teams.
 
 ## Sending one item on demand
 
