@@ -126,5 +126,11 @@
 			"notApplicable": "niet van toepassing"
 		},
 		"range": "{from}–{to} van {total}"
+	},
+	"status": {
+		"active": "Actief",
+		"disconnected": "Verbroken",
+		"neverConnected": "Nooit verbonden",
+		"pending": "In afwachting"
 	}
 }

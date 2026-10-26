@@ -6,7 +6,7 @@ import { defineComponent, h } from "vue"
 import AgentCases from "@/components/agents/AgentDetails/AgentCases.vue"
 import { scaResultLabel, severityLabel } from "@/components/agents/AgentDetails/agentFindings"
 import AgentVulnerabilities from "@/components/agents/AgentDetails/AgentVulnerabilities.vue"
-import { agentStatusCells } from "@/components/agents/agentStats"
+import { agentStatusCells, agentStatusLabel } from "@/components/agents/agentStats"
 import i18n from "@/lang"
 
 const api = vi.hoisted(() => ({ getVulnerabilities: vi.fn(), getCases: vi.fn() }))
@@ -67,5 +67,17 @@ describe("an agent's tabs, translated", () => {
 			"offline",
 			"critici"
 		])
+	})
+
+	it("name Wazuh's agent statuses in the language in force, and an unknown one as sent", () => {
+		expect(agentStatusLabel("never_connected")).toBe("Never connected")
+		i18n.global.locale.value = "it"
+		expect(["active", "disconnected", "never_connected", "pending"].map(agentStatusLabel)).toEqual([
+			"Attivo",
+			"Disconnesso",
+			"Mai connesso",
+			"In attesa"
+		])
+		expect(agentStatusLabel("quarantined")).toBe("quarantined")
 	})
 })

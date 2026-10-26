@@ -95,6 +95,7 @@ import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AgentCriticalSelect from "./AgentCriticalSelect.vue"
 import AgentDetailsButton from "./AgentDetailsButton.vue"
+import { agentStatusLabel } from "./agentStats"
 
 const emit = defineEmits<{
 	(e: "stats", value: AgentsStats): void
@@ -198,7 +199,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		render: row => {
 			return (
 				<div class="flex items-center gap-2">
-					<Chip {...statusTagProps(row.wazuh_agent_status)} value={row.wazuh_agent_status.toUpperCase()} />
+					<Chip {...statusTagProps(row.wazuh_agent_status)} value={agentStatusLabel(row.wazuh_agent_status).toUpperCase()} />
 				</div>
 			)
 		}

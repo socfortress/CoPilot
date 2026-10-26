@@ -38,6 +38,7 @@
 import type { AgentStatus } from "@/types/agents"
 import { NButton, NCheckbox, NInput, NSelect } from "naive-ui"
 import { computed } from "vue"
+import { agentStatusLabel } from "./agentStats"
 
 export interface AgentsFilters {
 	status: AgentStatus | null
@@ -54,7 +55,7 @@ const props = defineProps<{
 const filters = defineModel<AgentsFilters>("value", { required: true })
 
 const statusOptions = computed(() => {
-	return props.status.map(status => ({ label: status, value: status }))
+	return props.status.map(status => ({ label: agentStatusLabel(status), value: status }))
 })
 
 const osOptions = computed(() => {

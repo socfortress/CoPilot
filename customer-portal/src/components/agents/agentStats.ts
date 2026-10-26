@@ -1,6 +1,6 @@
 import type { StatusStripCell } from "@/components/common/StatusStrip.vue"
 import type { StatusSegment } from "@/components/overview/shared/status"
-import type { AgentsStats } from "@/types/agents"
+import type { AgentsStats, AgentStatus } from "@/types/agents"
 import { i18nGlobal } from "@/lang"
 
 /**
@@ -35,4 +35,17 @@ export function agentStatusSplit(stats: AgentsStats): StatusSegment[] {
 		{ key: "offline", label: t("agents.stats.offline"), value: stats.offline, color: "error" },
 		...(other ? [{ key: "other", label: t("agents.stats.other"), value: other, color: "neutral" as const }] : [])
 	]
+}
+
+const STATUS_KEYS: Record<AgentStatus, "active" | "disconnected" | "neverConnected" | "pending"> = {
+	active: "active",
+	disconnected: "disconnected",
+	never_connected: "neverConnected",
+	pending: "pending"
+}
+
+/** An agent's Wazuh status in the user's language; a status the portal doesn't know is shown as sent. */
+export function agentStatusLabel(status: string): string {
+	const key = STATUS_KEYS[status as AgentStatus]
+	return key ? i18nGlobal.t(`agents.status.${key}`) : status
 }

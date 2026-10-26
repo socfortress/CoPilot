@@ -126,5 +126,11 @@
 			"notApplicable": "nicht zutreffend"
 		},
 		"range": "{from}–{to} von {total}"
+	},
+	"status": {
+		"active": "Aktiv",
+		"disconnected": "Getrennt",
+		"neverConnected": "Nie verbunden",
+		"pending": "Ausstehend"
 	}
 }

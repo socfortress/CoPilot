@@ -126,5 +126,11 @@
 			"notApplicable": "nelze použít"
 		},
 		"range": "{from}–{to} z {total}"
+	},
+	"status": {
+		"active": "Aktivní",
+		"disconnected": "Odpojený",
+		"neverConnected": "Nikdy nepřipojený",
+		"pending": "Čekající"
 	}
 }
