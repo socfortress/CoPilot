@@ -5,6 +5,7 @@ import type { ExposureCompliance, ExposureVulnerabilities } from "@/types/exposu
 import { ref, watch } from "vue"
 import Api from "@/api"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
+import { i18nGlobal } from "@/lang"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { getApiErrorMessage } from "@/utils"
 import { PAGE_SIZE } from "./exposure"
@@ -35,7 +36,7 @@ export function useExposureVulnerabilities(state: Ref<VulnerabilityState>) {
 				error.value = null
 			},
 			err => {
-				error.value = getApiErrorMessage(err as ApiError) || "Could not load the vulnerabilities."
+				error.value = getApiErrorMessage(err as ApiError) || i18nGlobal.t("exposure.vulnerabilities.loadFailed")
 			}
 		)
 	}
@@ -70,7 +71,7 @@ export function useExposureCompliance() {
 				error.value = null
 			},
 			err => {
-				error.value = getApiErrorMessage(err as ApiError) || "Could not load the compliance."
+				error.value = getApiErrorMessage(err as ApiError) || i18nGlobal.t("exposure.compliance.loadFailed")
 			}
 		)
 	}

@@ -9,7 +9,7 @@
 				v-if="kpi.delta.points !== null"
 				class="flex items-center gap-0.5 font-mono text-xs tabular-nums"
 				:class="deltaClass"
-				:title="`${deltaText} points vs the previous period`"
+				:title="$t('sla.kpi.deltaTitle', { delta: deltaText })"
 				data-testid="sla-kpi-delta"
 			>
 				<Icon v-if="kpi.delta.direction === 'up'" name="carbon:arrow-up" :size="12" />
@@ -41,7 +41,7 @@
 
 		<footer class="text-tertiary flex items-center justify-between gap-2 font-mono text-xs tabular-nums">
 			<span data-testid="sla-kpi-count">
-				{{ kpi.decided ? `${kpi.met} of ${kpi.decided} on target` : "no outcome yet" }}
+				{{ kpi.decided ? $t("sla.kpi.onTarget", { met: kpi.met, decided: kpi.decided }) : $t("sla.kpi.noOutcome") }}
 			</span>
 			<span :title="kpi.medianLabel" data-testid="sla-kpi-median">
 				<Icon name="carbon:time" :size="12" class="mr-1 inline-block align-[-1px]" />

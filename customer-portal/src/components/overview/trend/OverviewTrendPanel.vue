@@ -1,8 +1,8 @@
 <template>
 	<OverviewPanel
-		title="Trend"
+		:title="$t('overview.trend.title')"
 		icon="carbon:chart-line"
-		:meta="`last ${rangeLabel}`"
+		:meta="$t('overview.trend.meta', { range: rangeLabel })"
 		:loading="loading && !days"
 		:error="!days ? error : null"
 		data-testid="overview-trend"
@@ -13,7 +13,7 @@
 				<n-radio-group
 					v-model:value="entity"
 					size="small"
-					aria-label="Trend of"
+					:aria-label="$t('overview.trend.entityAria')"
 					data-testid="overview-trend-entity"
 				>
 					<n-radio-button
@@ -22,13 +22,13 @@
 						:value="item.key"
 						:data-testid="`overview-trend-entity-${item.key}`"
 					>
-						{{ item.label }}
+						{{ trendEntityLabel(item.key) }}
 					</n-radio-button>
 				</n-radio-group>
 				<n-radio-group
 					:value="range"
 					size="small"
-					aria-label="Trend period"
+					:aria-label="$t('overview.trend.rangeAria')"
 					data-testid="overview-trend-range"
 					@update:value="emit('update:range', $event)"
 				>
@@ -68,9 +68,11 @@
 				<div class="flex flex-wrap items-end gap-x-8 gap-y-3 px-5 pt-4" data-testid="overview-trend-totals">
 					<div
 						class="flex min-w-36 flex-col gap-1"
-						title="Not closed yet: open, in progress or waiting on you. The posture card above counts only those still open."
+						:title="$t('overview.trend.openNowHint')"
 					>
-						<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">Open · now</span>
+						<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">
+							{{ $t("overview.trend.openNow") }}
+						</span>
 						<span
 							class="font-mono text-4xl leading-none font-semibold tracking-tight tabular-nums"
 							data-testid="overview-trend-open"
@@ -112,7 +114,7 @@
 				<PanelEmpty
 					v-if="quiet"
 					icon="carbon:chart-line"
-					:text="`No ${entityNoun} opened, closed or still open in the last ${rangeLabel}`"
+					:text="emptyText"
 					data-testid="overview-trend-empty"
 				/>
 				<template v-else>
@@ -122,16 +124,14 @@
 
 					<table class="sr-only" data-testid="overview-trend-table">
 						<caption>
-							{{
-								`${entityLabel} still open at the end of each day, opened and closed, last ${rangeLabel}`
-							}}
+							{{ tableCaption }}
 						</caption>
 						<thead>
 							<tr>
-								<th scope="col">Day</th>
-								<th scope="col">Open at day end</th>
-								<th scope="col">Opened</th>
-								<th scope="col">Closed</th>
+								<th scope="col">{{ $t("overview.trend.table.day") }}</th>
+								<th scope="col">{{ $t("overview.trend.table.openAtDayEnd") }}</th>
+								<th scope="col">{{ $t("overview.trend.opened") }}</th>
+								<th scope="col">{{ $t("overview.trend.closed") }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -154,6 +154,7 @@ import type { TrendDay, TrendEntity } from "./trend"
 import type { OverviewTrend, OverviewTrendRange } from "@/types/portal"
 import { NRadioButton, NRadioGroup, NSkeleton } from "naive-ui"
 import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import { useThemeStore } from "@/stores/theme"
 import OverviewPanel from "../shared/OverviewPanel.vue"
 import PanelEmpty from "../shared/PanelEmpty.vue"
@@ -167,7 +168,9 @@ import {
 	TREND_COLORS,
 	TREND_ENTITIES,
 	TREND_RANGES,
+	trendEntityLabel,
 	trendPeak,
+	trendRangeLabel,
 	trendTotals
 } from "./trend"
 
@@ -186,12 +189,21 @@ const emit = defineEmits<{
 	(e: "retry"): void
 }>()
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 const entity = ref<TrendEntity>("alerts")
 
-const rangeLabel = computed(() => TREND_RANGES.find(item => item.key === range)?.label ?? range)
-const entityLabel = computed(() => TREND_ENTITIES.find(item => item.key === entity.value)?.label ?? "")
-const entityNoun = computed(() => entityLabel.value.toLowerCase())
+const rangeLabel = computed(() => trendRangeLabel(range))
+const emptyText = computed(() =>
+	entity.value === "alerts"
+		? t("overview.trend.empty.alerts", { range: rangeLabel.value })
+		: t("overview.trend.empty.cases", { range: rangeLabel.value })
+)
+const tableCaption = computed(() =>
+	entity.value === "alerts"
+		? t("overview.trend.table.captionAlerts", { range: rangeLabel.value })
+		: t("overview.trend.table.captionCases", { range: rangeLabel.value })
+)
 const entityError = computed(() => (entity.value === "alerts" ? trend?.alerts_error : trend?.cases_error) ?? null)
 const totals = computed(() => trendTotals(days ?? [], entity.value))
 const peak = computed(() => trendPeak(days ?? [], entity.value))
@@ -203,9 +215,9 @@ const quiet = computed(
 
 const openCaption = computed(() => {
 	const { open, openAtStart } = totals.value
-	if (open === null) return "not known"
-	const state = open > 0 ? "still open" : "all cleared"
-	return openAtStart === null ? state : `${state} · was ${openAtStart}`
+	if (open === null) return t("overview.trend.notKnown")
+	const state = open > 0 ? t("overview.trend.stillOpen") : t("overview.trend.allCleared")
+	return openAtStart === null ? state : t("overview.trend.was", { state, count: openAtStart })
 })
 
 const stats = computed(() => {
@@ -214,16 +226,16 @@ const stats = computed(() => {
 	return [
 		{
 			key: "net",
-			label: "Net",
+			label: t("overview.trend.net"),
 			value: formatNet(net),
 			sub: netWord(net),
 			tone: net > 0 ? "text-warning" : net < 0 ? "text-success" : "",
 			color: null,
-			hint: "Opened minus closed in the period. The closed include items opened before it, so it can be negative."
+			hint: t("overview.trend.netHint")
 		},
 		{
 			key: "opened",
-			label: "Opened",
+			label: t("overview.trend.opened"),
 			value: String(opened),
 			sub: "",
 			tone: "",
@@ -232,7 +244,7 @@ const stats = computed(() => {
 		},
 		{
 			key: "closed",
-			label: "Closed",
+			label: t("overview.trend.closed"),
 			value: String(closed),
 			sub: "",
 			tone: "",
@@ -241,12 +253,12 @@ const stats = computed(() => {
 		},
 		{
 			key: "peak",
-			label: "Peak open",
+			label: t("overview.trend.peakOpen"),
 			value: peak.value ? String(peak.value.open) : "—",
 			sub: peak.value && peak.value.open > 0 ? dayLabel(peak.value.day) : "",
 			tone: "",
 			color: null,
-			hint: "The most still open at the end of a day in the period"
+			hint: t("overview.trend.peakHint")
 		}
 	]
 })

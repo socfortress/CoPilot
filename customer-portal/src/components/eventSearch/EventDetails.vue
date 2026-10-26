@@ -1,6 +1,6 @@
 <template>
 	<n-drawer v-model:show="showDrawer" :width="600" class="max-w-[90vw]" :trap-focus="false">
-		<n-drawer-content title="Event Details" closable :native-scrollbar="false">
+		<n-drawer-content :title="$t('eventSearch.details.title')" closable :native-scrollbar="false">
 			<div class="divide-border divide-y">
 				<div
 					v-for="[key, value] in sortedEventFields"
@@ -17,12 +17,20 @@
 						<div
 							class="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
 						>
-							<n-button title="Filter for this value" text @click="addFilter(key, String(value))">
+							<n-button
+								:title="$t('eventSearch.details.filterFor')"
+								text
+								@click="addFilter(key, String(value))"
+							>
 								<template #icon>
 									<Icon name="carbon:add" />
 								</template>
 							</n-button>
-							<n-button title="Exclude this value" text @click="excludeFilter(key, String(value))">
+							<n-button
+								:title="$t('eventSearch.details.exclude')"
+								text
+								@click="excludeFilter(key, String(value))"
+							>
 								<template #icon>
 									<Icon name="carbon:subtract" />
 								</template>

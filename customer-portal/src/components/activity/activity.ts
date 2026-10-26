@@ -1,6 +1,8 @@
 import type { LocationQuery, LocationQueryValue, RouteLocationRaw } from "vue-router"
 import type { Activity, ActivityCount, ActivityRange, ActivityVerdictFigures } from "@/types/activity"
 import { EMPTY_ALERTS_FILTERS, filtersToQuery } from "@/components/alerts/filters/alertsFilters"
+import { severityText } from "@/components/sla/sla"
+import { i18nGlobal } from "@/lang"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 /**
@@ -15,11 +17,18 @@ export interface RangePreset {
 	days: number
 }
 
-export const RANGE_PRESETS: RangePreset[] = [
-	{ key: "7d", label: "7 days", days: 7 },
-	{ key: "30d", label: "30 days", days: 30 },
-	{ key: "90d", label: "90 days", days: 90 }
-]
+/** A preset whose label is read in the current language each time it is shown. */
+function preset(key: ActivityRange, days: number): RangePreset {
+	return {
+		key,
+		get label() {
+			return i18nGlobal.t("activity.range", { count: days })
+		},
+		days
+	}
+}
+
+export const RANGE_PRESETS: RangePreset[] = [preset("7d", 7), preset("30d", 30), preset("90d", 90)]
 
 export const DEFAULT_RANGE: ActivityRange = "30d"
 
@@ -50,7 +59,7 @@ export interface CountDelta {
  * itself good or bad news, so the page never colours it as one.
  */
 export function countDelta(count: number, previous: number): CountDelta {
-	if (previous === 0 && count > 0) return { text: "new", direction: "up" }
+	if (previous === 0 && count > 0) return { text: i18nGlobal.t("activity.delta.new"), direction: "up" }
 	const change = count - previous
 	if (change === 0) return { text: "0", direction: "flat" }
 	return change > 0 ? { text: `+${change}`, direction: "up" } : { text: `−${-change}`, direction: "down" }
@@ -66,10 +75,11 @@ export interface RateDelta {
 export function rateDelta(current: number | null, previous: number | null): RateDelta {
 	if (current === null || previous === null) return { points: null, text: "", direction: "flat" }
 	const points = Math.round((current - previous) * 10) / 10
-	if (points === 0) return { points, text: "0 pts", direction: "flat" }
+	const text = (value: string) => i18nGlobal.t("activity.delta.points", { points: value })
+	if (points === 0) return { points, text: text("0"), direction: "flat" }
 	return points > 0
-		? { points, text: `+${points} pts`, direction: "up" }
-		: { points, text: `−${-points} pts`, direction: "down" }
+		? { points, text: text(`+${points}`), direction: "up" }
+		: { points, text: text(`−${-points}`), direction: "down" }
 }
 
 export function formatRate(rate: number | null | undefined): string {
@@ -122,8 +132,9 @@ export function alertsLink(
 }
 
 /** What a slice is called on screen. */
-export function sliceLabel(item: ActivityCount, kind: "status" | null = null): string {
+export function sliceLabel(item: ActivityCount, kind: "status" | "severity" | null = null): string {
 	if (kind === "status") return workflowStatusLabel(item.key)
+	if (kind === "severity") return severityText(item.label ?? item.key)
 	return item.label ?? item.key
 }
 
@@ -137,7 +148,9 @@ export interface ActivityKpi {
 }
 
 function verdictCaption(figures: ActivityVerdictFigures): string {
-	return figures.reviewed ? `of ${figures.reviewed} reviewed` : "nothing reviewed yet"
+	return figures.reviewed
+		? i18nGlobal.t("activity.kpi.ofReviewed", { count: figures.reviewed })
+		: i18nGlobal.t("activity.kpi.nothingReviewed")
 }
 
 /** The four headline figures, each with how it moved from the previous period. */
@@ -145,40 +158,41 @@ export function buildKpis(activity: Activity): ActivityKpi[] {
 	const { alerts, cases, verdicts } = activity
 	const fp = rateDelta(verdicts.current.false_positive_rate, verdicts.previous.false_positive_rate)
 	const coverage = rateDelta(verdicts.current.coverage_rate, verdicts.previous.coverage_rate)
+	const t = i18nGlobal.t
 	return [
 		{
 			key: "alerts",
-			title: "Alerts received",
+			title: t("activity.kpi.alerts"),
 			value: String(alerts.opened.count),
-			caption: `${alerts.opened.previous} the period before`,
+			caption: t("activity.kpi.periodBefore", { count: alerts.opened.previous }),
 			delta: countDelta(alerts.opened.count, alerts.opened.previous),
-			deltaTitle: "Change from the period before"
+			deltaTitle: t("activity.kpi.changeTitle")
 		},
 		{
 			key: "cases",
-			title: "Cases opened",
+			title: t("activity.kpi.cases"),
 			value: String(cases.opened.count),
-			caption: `${cases.opened.previous} the period before`,
+			caption: t("activity.kpi.periodBefore", { count: cases.opened.previous }),
 			delta: countDelta(cases.opened.count, cases.opened.previous),
-			deltaTitle: "Change from the period before"
+			deltaTitle: t("activity.kpi.changeTitle")
 		},
 		{
 			key: "false-positives",
-			title: "False positives",
+			title: t("activity.kpi.falsePositives"),
 			value: formatRate(verdicts.current.false_positive_rate),
 			caption: verdictCaption(verdicts.current),
 			delta: fp.points === null ? null : fp,
-			deltaTitle: "Percentage points from the period before"
+			deltaTitle: t("activity.kpi.pointsTitle")
 		},
 		{
 			key: "coverage",
-			title: "Reviewed by the SOC",
+			title: t("activity.kpi.coverage"),
 			value: formatRate(verdicts.current.coverage_rate),
 			caption: verdicts.current.total
-				? `${verdicts.current.reviewed} of ${verdicts.current.total} alerts`
-				: "no alerts this period",
+				? t("activity.kpi.ofAlerts", { reviewed: verdicts.current.reviewed, total: verdicts.current.total })
+				: t("activity.kpi.noAlerts"),
 			delta: coverage.points === null ? null : coverage,
-			deltaTitle: "Percentage points from the period before"
+			deltaTitle: t("activity.kpi.pointsTitle")
 		}
 	]
 }

@@ -1,6 +1,12 @@
 <template>
 	<!-- Whether the card appears at all is decided by the page (useAiFindingsPlaceholder). -->
-	<OverviewPanel title="AI analyst findings" icon="carbon:ai-generate" :meta :loading data-testid="ai-findings">
+	<OverviewPanel
+		:title="$t('overview.panels.aiFindings.title')"
+		icon="carbon:ai-generate"
+		:meta
+		:loading
+		data-testid="ai-findings"
+	>
 		<template #skeleton>
 			<div :class="LAYOUT">
 				<AiSeveritySummarySkeleton :class="SUMMARY" />
@@ -28,6 +34,7 @@
 <script setup lang="ts">
 import type { AiInsights } from "@/types/aiReports"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import { useCustomers } from "@/composables/common/useCustomers"
 import { useIsMultiCustomer } from "@/composables/overview/useIsMultiCustomer"
@@ -54,12 +61,13 @@ const emit = defineEmits<{
 const LAYOUT = "flex flex-col lg:flex-row"
 const SUMMARY = "border-border shrink-0 border-b lg:w-68 lg:border-r lg:border-b-0"
 
+const { t } = useI18n()
 const showCustomer = useIsMultiCustomer()
 const { customerName } = useCustomers()
 
 const meta = computed(() => {
 	const total = insights.total_reports
-	return total ? `${total} ${total === 1 ? "alert" : "alerts"} analyzed` : undefined
+	return total ? t("overview.panels.aiFindings.analyzed", { count: total }, total) : undefined
 })
 
 const items = computed(() =>

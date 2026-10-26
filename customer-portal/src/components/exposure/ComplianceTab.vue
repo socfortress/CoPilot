@@ -30,14 +30,13 @@
 				:bordered="false"
 				data-testid="exposure-compliance-unavailable"
 			>
-				Wazuh could not answer for {{ plural(data.unavailable_agents, "agent") }}: their results are missing
-				from these figures.
+				{{ $t("exposure.compliance.unavailable", { agents: countLabel("agents", data.unavailable_agents) }) }}
 			</n-alert>
 
 			<n-alert v-if="failure" type="error" :bordered="false" data-testid="exposure-compliance-error">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<span>{{ failure }}</span>
-					<n-button size="small" secondary @click="reload()">Try again</n-button>
+					<n-button size="small" secondary @click="reload()">{{ $t("common.actions.tryAgain") }}</n-button>
 				</div>
 			</n-alert>
 
@@ -50,24 +49,28 @@
 					class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
 					:class="COLUMNS"
 				>
-					<span :class="HEAD">Policy</span>
-					<span :class="HEAD">Average score</span>
-					<span :class="HEAD" class="text-right">Agents</span>
-					<span :class="HEAD" class="text-right">Below {{ data?.weak_score ?? 50 }}%</span>
-					<span :class="HEAD" class="text-right">Failed checks</span>
+					<span :class="HEAD">{{ $t("exposure.compliance.columns.policy") }}</span>
+					<span :class="HEAD">{{ $t("exposure.compliance.averageScore") }}</span>
+					<span :class="HEAD" class="text-right">{{ $t("exposure.compliance.columns.agents") }}</span>
+					<span :class="HEAD" class="text-right">
+						{{ $t("exposure.compliance.columns.below", { score: data?.weak_score ?? 50 }) }}
+					</span>
+					<span :class="HEAD" class="text-right">{{ $t("exposure.compliance.failedChecks") }}</span>
 					<span />
 				</div>
 
 				<div v-if="!data" class="flex flex-col gap-3 p-3" data-testid="exposure-compliance-loading">
 					<p class="text-secondary m-0 flex items-start gap-2 text-sm" role="status">
 						<Icon name="carbon:renew" :size="16" class="text-primary mt-0.5 shrink-0 animate-spin" />
-						<span>Asking Wazuh for every agent's policies. This can take a moment on a large fleet.</span>
+						<span>{{ $t("exposure.compliance.asking") }}</span>
 					</p>
 					<n-skeleton v-for="n of 4" :key="n" :height="48" :sharp="false" class="rounded-md" />
 				</div>
 				<n-empty
 					v-else-if="!data.policies.length"
-					:description="data.agents_in_scope ? 'No SCA results on your agents yet' : 'No agent to assess yet'"
+					:description="
+						data.agents_in_scope ? $t('exposure.compliance.noResults') : $t('exposure.compliance.noAgent')
+					"
 					class="min-h-40 justify-center"
 					data-testid="exposure-compliance-empty"
 				/>
@@ -116,14 +119,18 @@
 								</span>
 							</span>
 							<span class="text-secondary text-right font-mono text-sm tabular-nums [grid-area:agents]">
-								<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">agents</span>
+								<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">
+									{{ $t("exposure.compliance.agentsShort") }}
+								</span>
 								{{ policy.agents.toLocaleString() }}
 							</span>
 							<span
 								class="text-right font-mono text-sm tabular-nums [grid-area:below]"
 								:class="policy.agents_below ? 'text-error' : 'text-tertiary'"
 							>
-								<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">below</span>
+								<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">
+									{{ $t("exposure.compliance.belowShort") }}
+								</span>
 								{{ policy.agents_below.toLocaleString() }}
 							</span>
 							<span
@@ -143,8 +150,11 @@
 							<p
 								class="text-tertiary text-xxs m-0 px-4 pb-1.5 pl-9 font-medium tracking-[0.12em] uppercase"
 							>
-								Agents on this policy · {{ agentsLoading ? "…" : agents.length.toLocaleString() }},
-								weakest first
+								{{
+									$t("exposure.compliance.policyAgents", {
+										count: agentsLoading ? "…" : agents.length.toLocaleString()
+									})
+								}}
 							</p>
 							<n-skeleton v-if="agentsLoading" text :repeat="3" class="px-4 pl-9" />
 							<n-alert v-else-if="agentsError" type="error" :bordered="false" class="mx-4">
@@ -193,7 +203,7 @@
 											class="text-secondary text-right font-mono text-xs tabular-nums [grid-area:failed] @3xl:text-sm"
 										>
 											{{ agent.failed.toLocaleString() }}
-											<span class="@3xl:hidden">failed</span>
+											<span class="@3xl:hidden">{{ $t("exposure.compliance.failedShort") }}</span>
 										</span>
 									</RouterLink>
 								</li>
@@ -207,8 +217,11 @@
 					class="text-tertiary border-default border-t px-4 py-2 text-xs"
 					data-testid="exposure-read-at"
 				>
-					Read from Wazuh at {{ formatDate(data.read_at, dFormats.datetime, { tz: true }) }}; refreshed every
-					few minutes.
+					{{
+						$t("exposure.compliance.readAt", {
+							time: String(formatDate(data.read_at, dFormats.datetime, { tz: true }))
+						})
+					}}
 				</p>
 			</section>
 		</template>
@@ -220,6 +233,7 @@ import type { ApiError } from "@/types/common"
 import type { PolicyAgent } from "@/types/exposure"
 import { NAlert, NButton, NEmpty, NSkeleton } from "naive-ui"
 import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import { RouterLink } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -228,7 +242,7 @@ import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import { agentLink, SCORE_COLORS, scoreLevel } from "./exposure"
+import { agentLink, countLabel, SCORE_COLORS, scoreLevel } from "./exposure"
 import ExposureDisabled from "./ExposureDisabled.vue"
 import { useExposureCompliance } from "./useExposure"
 
@@ -255,6 +269,7 @@ const AGENT_ROW = [
 ]
 const SCORE_TEXT = { good: "text-success", fair: "text-warning", poor: "text-error" } as const
 
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 const customerFilterStore = useCustomerFilterStore()
 const { data, error, loading, reload } = useExposureCompliance()
@@ -263,42 +278,41 @@ const failure = computed(() => error.value || data.value?.error || null)
 // No figures (—) while loading or when Wazuh could not be read: a 0 would read as "none".
 const known = computed(() => !!data.value && !data.value.error)
 
-function plural(count: number, word: string, many = `${word}s`) {
-	return `${count.toLocaleString()} ${count === 1 ? word : many}`
-}
-
 const cards = computed(() => {
 	const d = data.value
 	const average = d?.average_score
 	return [
 		{
 			key: "score",
-			label: "Average score",
+			label: t("exposure.compliance.averageScore"),
 			value: average === null || average === undefined ? "—" : `${average}%`,
-			caption: "across every agent and policy",
+			caption: t("exposure.compliance.averageScoreCaption"),
 			tone: average === null || average === undefined ? "text-tertiary" : SCORE_TEXT[scoreLevel(average)]
 		},
 		{
 			key: "agents",
-			label: "Agents assessed",
+			label: t("exposure.compliance.agentsAssessed"),
 			value: d ? `${d.agents_assessed.toLocaleString()} / ${d.agents_in_scope.toLocaleString()}` : "—",
-			caption: "with at least one policy",
+			caption: t("exposure.compliance.agentsAssessedCaption"),
 			tone: "text-default"
 		},
 		{
 			key: "policies",
-			label: "Policies",
+			label: t("exposure.compliance.policies"),
 			value: d ? d.policies.length.toLocaleString() : "—",
 			caption: d
-				? `${plural(d.policies.filter(p => p.agents_below).length, "policy", "policies")} with agents below ${d.weak_score}%`
+				? t("exposure.compliance.policiesCaption", {
+						policies: countLabel("policies", d.policies.filter(p => p.agents_below).length),
+						score: d.weak_score
+					})
 				: "",
 			tone: "text-default"
 		},
 		{
 			key: "failed",
-			label: "Failed checks",
+			label: t("exposure.compliance.failedChecks"),
 			value: d ? d.failed.toLocaleString() : "—",
-			caption: d ? `${d.passed.toLocaleString()} passed` : "",
+			caption: d ? t("exposure.compliance.passed", { count: d.passed.toLocaleString() }) : "",
 			tone: d?.failed ? "text-error" : "text-default"
 		}
 	]
@@ -329,7 +343,7 @@ function toggle(policyId: string) {
 			agentsError.value = response.data.error
 		},
 		err => {
-			agentsError.value = getApiErrorMessage(err as ApiError) || "Could not load the policy's agents."
+			agentsError.value = getApiErrorMessage(err as ApiError) || t("exposure.compliance.agentsFailed")
 		}
 	)
 }

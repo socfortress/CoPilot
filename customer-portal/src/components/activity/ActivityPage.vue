@@ -2,9 +2,11 @@
 	<div class="flex flex-col gap-6" data-testid="activity-page">
 		<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex min-w-0 flex-col gap-1.5">
-				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">Activity</h1>
+				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+					{{ $t("activity.page.title") }}
+				</h1>
 				<p class="text-secondary max-w-prose text-sm">
-					What reached the SOC for you, where it came from and how it was judged, beside the period before.
+					{{ $t("activity.page.intro") }}
 				</p>
 			</div>
 
@@ -21,7 +23,7 @@
 		</header>
 
 		<n-alert v-if="error && activity" type="warning" :bordered="false" data-testid="activity-refresh-error">
-			Could not refresh the figures: {{ error }}
+			{{ $t("activity.page.refreshError", { error }) }}
 		</n-alert>
 
 		<PanelError
@@ -37,10 +39,9 @@
 			data-testid="activity-disabled"
 		>
 			<Icon name="carbon:activity" :size="28" class="text-tertiary" />
-			<p class="font-semibold">Activity is not available yet</p>
+			<p class="font-semibold">{{ $t("activity.page.disabledTitle") }}</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC has not published the activity breakdown for this customer. Ask your SOC contact if you would
-				like to see it here.
+				{{ $t("activity.page.disabledText") }}
 			</p>
 		</div>
 
@@ -61,8 +62,7 @@
 			</div>
 
 			<p v-if="activity" class="text-tertiary -mt-2 text-xs" data-testid="activity-note">
-				Counted from when each alert and case reached the SOC, {{ periodText }}. Select a count to list those
-				alerts.
+				{{ $t("activity.page.note", { period: periodText }) }}
 			</p>
 
 			<div class="grid grid-cols-1 gap-6 xl:grid-cols-2" :class="{ 'opacity-60': loading && !!activity }">
@@ -82,13 +82,18 @@
 					<template #skeleton>
 						<div class="p-5"><n-skeleton text :repeat="5" /></div>
 					</template>
-					<ActivityRankList :items="panel.items" :link="panel.link" :testid="panel.testid" />
+					<ActivityRankList
+						:items="panel.items"
+						:link="panel.link"
+						:label-kind="panel.labelKind"
+						:testid="panel.testid"
+					/>
 					<p
 						v-if="panel.testid === 'activity-severities'"
 						class="text-tertiary border-default mt-auto border-t px-5 py-3 text-xs"
 						data-testid="activity-severity-note"
 					>
-						An alert whose source sent no severity counts at the SOC's default level.
+						{{ $t("activity.page.severityNote") }}
 					</p>
 					<p
 						v-if="panel.testid === 'activity-sources' && otherSources"
@@ -100,13 +105,13 @@
 				</OverviewPanel>
 
 				<OverviewPanel
-					title="Cases"
+					:title="$t('activity.cases.title')"
 					icon="carbon:folder"
 					:meta="periodMeta"
 					:loading="!activity"
 					:error="activity?.cases.error"
 					:empty="!!activity && !activity.cases.opened.count && !activity.cases.opened.previous"
-					empty-text="No case was opened in either period"
+					:empty-text="$t('activity.cases.empty')"
 					data-testid="activity-cases-panel"
 					@retry="reload()"
 				>
@@ -114,10 +119,10 @@
 						<div class="p-5"><n-skeleton text :repeat="5" /></div>
 					</template>
 					<template v-if="activity">
-						<h3 class="text-secondary px-5 pt-4 text-xs font-medium">By type</h3>
+						<h3 class="text-secondary px-5 pt-4 text-xs font-medium">{{ $t("activity.cases.byType") }}</h3>
 						<ActivityRankList :items="activity.cases.by_type" testid="activity-case-types" />
 						<h3 class="text-secondary border-default border-t px-5 pt-4 text-xs font-medium">
-							Where the cases opened stand now
+							{{ $t("activity.cases.byStatus") }}
 						</h3>
 						<ActivityRankList
 							:items="activity.cases.by_status"
@@ -127,13 +132,13 @@
 					</template>
 				</OverviewPanel>
 				<OverviewPanel
-					title="The SOC's verdicts"
+					:title="$t('activity.verdicts.title')"
 					icon="carbon:result"
 					:meta="periodMeta"
 					:loading="!activity"
 					:error="activity?.verdicts.error"
 					:empty="!!activity && !activity.verdicts.current.total"
-					empty-text="No alerts this period"
+					:empty-text="$t('activity.panels.noAlerts')"
 					class="xl:col-span-2"
 					data-testid="activity-verdicts-panel"
 					@retry="reload()"
@@ -155,18 +160,20 @@
 						<div class="divide-default grid grid-cols-1 lg:grid-cols-2 lg:divide-x">
 							<section>
 								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">
-									Why alerts were false positives
+									{{ $t("activity.verdicts.reasons") }}
 								</h3>
 								<ActivityRankList
 									v-if="activity.verdicts.reasons.length"
 									:items="activity.verdicts.reasons"
 									testid="activity-reasons"
 								/>
-								<p v-else class="text-tertiary px-5 py-4 text-xs">No false positive this period.</p>
+								<p v-else class="text-tertiary px-5 py-4 text-xs">
+									{{ $t("activity.verdicts.noFalsePositive") }}
+								</p>
 							</section>
 							<section>
 								<h3 class="text-secondary px-5 pt-4 text-xs font-medium">
-									Detections with the most false positives
+									{{ $t("activity.verdicts.noisy") }}
 								</h3>
 								<ul
 									v-if="activity.verdicts.noisy_detections.length"
@@ -180,12 +187,19 @@
 									>
 										<bdi class="min-w-0 truncate" :title="noisy.name">{{ noisy.name }}</bdi>
 										<span class="text-secondary font-mono text-xs whitespace-nowrap tabular-nums">
-											{{ noisy.false_positives }} of {{ noisy.reviewed }} reviewed ·
-											{{ formatRate(noisy.false_positive_rate) }}
+											{{
+												$t("activity.verdicts.noisyCount", {
+													falsePositives: noisy.false_positives,
+													reviewed: noisy.reviewed,
+													rate: formatRate(noisy.false_positive_rate)
+												})
+											}}
 										</span>
 									</li>
 								</ul>
-								<p v-else class="text-tertiary px-5 py-4 text-xs">No false positive this period.</p>
+								<p v-else class="text-tertiary px-5 py-4 text-xs">
+									{{ $t("activity.verdicts.noFalsePositive") }}
+								</p>
 							</section>
 						</div>
 					</template>
@@ -201,6 +215,7 @@ import type { DrillKind, Period } from "./activity"
 import type { ActivityCount, ActivityRange } from "@/types/activity"
 import { NAlert, NRadioButton, NRadioGroup, NSkeleton } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import OverviewPanel from "@/components/overview/shared/OverviewPanel.vue"
@@ -212,6 +227,7 @@ import { useActivity } from "./useActivity"
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 // The range lives in the URL (`?range=7d`), the default left out: a link or a reload
 // shows the same period. A change replaces the entry, like every filter in the portal.
@@ -223,10 +239,8 @@ function setRange(next: ActivityRange) {
 const { activity, error, loading, reload } = useActivity(range)
 
 const kpis = computed(() => (activity.value ? buildKpis(activity.value) : []))
-const periodMeta = computed(() => `last ${rangeLabel(range.value)}`)
-const periodText = computed(
-	() => `over the last ${rangeLabel(range.value)} beside the ${rangeLabel(range.value)} before`
-)
+const periodMeta = computed(() => t("activity.page.periodMeta", { period: rangeLabel(range.value) }))
+const periodText = computed(() => t("activity.page.periodText", { period: rangeLabel(range.value) }))
 
 /** Where a slice of `kind` leads: the alerts list showing exactly what it counted. */
 function drill(kind: DrillKind | null) {
@@ -240,6 +254,8 @@ interface AlertPanel {
 	icon: string
 	items: ActivityCount[]
 	link?: (item: ActivityCount, period: Period) => RouteLocationRaw | null
+	/** How a row's key reads: a severity is translated, a source or a tag is shown as sent. */
+	labelKind?: "severity"
 	empty: string
 	testid: string
 }
@@ -248,42 +264,43 @@ const alertPanels = computed<AlertPanel[]>(() => {
 	const alerts = activity.value?.alerts
 	return [
 		{
-			title: "Alerts by source",
+			title: t("activity.panels.sources"),
 			icon: "carbon:data-base",
 			items: alerts?.by_source ?? [],
 			link: drill("source"),
-			empty: "No alerts in either period",
+			empty: t("activity.panels.noAlertsEither"),
 			testid: "activity-sources"
 		},
 		{
-			title: "Alerts by severity",
+			title: t("activity.panels.severities"),
 			icon: "carbon:warning-alt",
 			items: (alerts?.by_severity ?? []).filter(item => item.count || item.previous),
-			empty: "No alerts in either period",
+			labelKind: "severity",
+			empty: t("activity.panels.noAlertsEither"),
 			testid: "activity-severities"
 		},
 		{
-			title: "Busiest detections",
+			title: t("activity.panels.detections"),
 			icon: "carbon:security",
 			items: alerts?.top_detections ?? [],
 			link: drill("detection"),
-			empty: "No alerts this period",
+			empty: t("activity.panels.noAlerts"),
 			testid: "activity-detections"
 		},
 		{
-			title: "Busiest assets",
+			title: t("activity.panels.assets"),
 			icon: "carbon:devices",
 			items: alerts?.top_assets ?? [],
 			link: drill("asset"),
-			empty: "No alert named an asset this period",
+			empty: t("activity.panels.noAssets"),
 			testid: "activity-assets"
 		},
 		{
-			title: "Busiest tags",
+			title: t("activity.panels.tags"),
 			icon: "carbon:tag",
 			items: alerts?.top_tags ?? [],
 			link: drill("tag"),
-			empty: "No tagged alert this period",
+			empty: t("activity.panels.noTags"),
 			testid: "activity-tags"
 		}
 	]
@@ -292,15 +309,15 @@ const alertPanels = computed<AlertPanel[]>(() => {
 const otherSources = computed(() => {
 	const other = activity.value?.alerts.other_sources
 	if (!other || (!other.count && !other.previous)) return null
-	return `Other sources: ${other.count} (${other.previous} the period before)`
+	return t("activity.page.otherSources", { count: other.count, previous: other.previous })
 })
 
 const verdictSplit = computed(() => {
 	const current = activity.value?.verdicts.current
 	return [
-		{ key: "true", label: "True positives", value: current?.true_positive ?? 0 },
-		{ key: "false", label: "False positives", value: current?.false_positive ?? 0 },
-		{ key: "untriaged", label: "Not reviewed yet", value: current?.untriaged ?? 0 }
+		{ key: "true", label: t("activity.verdicts.truePositives"), value: current?.true_positive ?? 0 },
+		{ key: "false", label: t("activity.verdicts.falsePositives"), value: current?.false_positive ?? 0 },
+		{ key: "untriaged", label: t("activity.verdicts.untriaged"), value: current?.untriaged ?? 0 }
 	]
 })
 </script>

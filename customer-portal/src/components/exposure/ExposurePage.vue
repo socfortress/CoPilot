@@ -1,17 +1,19 @@
 <template>
 	<div class="@container flex flex-col gap-6" data-testid="exposure-page">
 		<header class="flex flex-col gap-1.5">
-			<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">Exposure</h1>
+			<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+				{{ $t("exposure.page.title") }}
+			</h1>
 			<p class="text-secondary max-w-prose text-sm">
-				Vulnerabilities and compliance across all your agents, as Wazuh sees them now.
+				{{ $t("exposure.page.intro") }}
 			</p>
 		</header>
 
 		<n-tabs :value="tab" type="line" animated data-testid="exposure-tabs" @update:value="setTab">
-			<n-tab-pane name="vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
+			<n-tab-pane name="vulnerabilities" :tab="$t('exposure.page.vulnerabilitiesTab')" display-directive="show:lazy">
 				<VulnerabilitiesTab />
 			</n-tab-pane>
-			<n-tab-pane name="compliance" tab="Compliance" display-directive="show:lazy">
+			<n-tab-pane name="compliance" :tab="$t('exposure.page.complianceTab')" display-directive="show:lazy">
 				<ComplianceTab />
 			</n-tab-pane>
 		</n-tabs>

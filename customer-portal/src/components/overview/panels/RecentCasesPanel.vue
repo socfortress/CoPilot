@@ -1,14 +1,14 @@
 <template>
 	<OverviewPanel
 		data-testid="recent-cases"
-		title="Recent cases"
+		:title="$t('overview.panels.recentCases.title')"
 		:icon="ICONS.cases"
-		:meta="cases.length ? `latest ${cases.length}` : undefined"
-		:link="{ to: { name: 'CasesList' }, label: 'All cases' }"
+		:meta="cases.length ? $t('overview.panels.latest', { count: cases.length }) : undefined"
+		:link="{ to: { name: 'CasesList' }, label: $t('overview.panels.recentCases.link') }"
 		:loading
 		:error
 		:empty="!cases.length"
-		empty-text="No cases in the selected scope"
+		:empty-text="$t('overview.panels.recentCases.empty')"
 		@retry="emit('retry')"
 	>
 		<template #skeleton>

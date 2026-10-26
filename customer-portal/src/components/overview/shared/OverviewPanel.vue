@@ -27,7 +27,7 @@
 		<div class="flex grow flex-col" :aria-busy="loading || undefined">
 			<slot v-if="loading" name="skeleton" />
 			<PanelError v-else-if="error" :message="error" @retry="emit('retry')" />
-			<PanelEmpty v-else-if="empty" :text="emptyText" />
+			<PanelEmpty v-else-if="empty" :text="emptyText ?? $t('overview.panels.empty')" />
 			<slot v-else />
 		</div>
 	</section>
@@ -40,7 +40,7 @@ import Icon from "@/components/common/Icon.vue"
 import PanelEmpty from "./PanelEmpty.vue"
 import PanelError from "./PanelError.vue"
 
-const { emptyText = "Nothing to show" } = defineProps<{
+const { emptyText } = defineProps<{
 	title: string
 	icon?: string
 	/** Short muted text after the title, e.g. "latest 6". */

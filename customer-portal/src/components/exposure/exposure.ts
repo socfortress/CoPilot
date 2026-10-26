@@ -2,6 +2,8 @@ import type { LocationQuery, LocationQueryRaw, LocationQueryValue, RouteLocation
 import type { FilterStripOption } from "@/components/agents/AgentDetails/FilterStrip.vue"
 import type { ExposureSeverity, SeverityCount } from "@/types/exposure"
 import { severityDot } from "@/components/agents/AgentDetails/agentFindings"
+import { severityText } from "@/components/sla/sla"
+import { i18nGlobal } from "@/lang"
 
 /**
  * Pure presentation logic of the Exposure page (#1289): what lives in the URL, how figures
@@ -77,10 +79,10 @@ export function severityOptions(
 	const by = Object.fromEntries(counts.map(item => [item.severity, item.cves]))
 	const all = counts.reduce((sum, item) => sum + item.cves, 0)
 	return [
-		{ value: "All", label: "All", count: loading ? 0 : all, dot: "bg-muted" },
+		{ value: "All", label: i18nGlobal.t("exposure.vulnerabilities.all"), count: loading ? 0 : all, dot: "bg-muted" },
 		...SEVERITIES.map(level => ({
 			value: level,
-			label: level,
+			label: severityText(level),
 			count: loading ? 0 : (by[level] ?? 0),
 			dot: severityDot(level)
 		}))
@@ -98,8 +100,18 @@ export function formatEpss(epss: string | null | undefined): string {
 
 /** "5 CVEs on 3 agents · 12 findings", in the singular where it is one. */
 export function totalsLine(totals: { cves: number; hosts: number; findings: number }): string {
-	const plural = (count: number, word: string) => `${count.toLocaleString()} ${word}${count === 1 ? "" : "s"}`
-	return `${plural(totals.cves, "CVE")} on ${plural(totals.hosts, "agent")} · ${plural(totals.findings, "finding")}`
+	const t = i18nGlobal.t
+	return t("exposure.vulnerabilities.totals", {
+		cves: countLabel("cves", totals.cves),
+		agents: countLabel("agents", totals.hosts),
+		findings: countLabel("findings", totals.findings)
+	})
+}
+
+/** "3 agents", "1 policy": a count in words, in the current language. */
+export function countLabel(noun: "cves" | "agents" | "findings" | "policies", count: number): string {
+	const key = `exposure.counts.${noun}` as const
+	return i18nGlobal.t(key, { count: count.toLocaleString() }, count)
 }
 
 /** The agent's page, opened on the tab a row came from, filtered to what was clicked. */
@@ -128,6 +140,8 @@ export function exportFilename(state: { severity: ExposureSeverity | null; searc
 	]
 	return `${parts.filter(Boolean).join("-")}-${stamp}.csv`
 }
+
+export { severityText }
 
 /** The average score of a policy as a meter level, the agent tab's scale. */
 export { formatCvss, SCORE_COLORS, scoreLevel, severityClasses } from "@/components/agents/AgentDetails/agentFindings"

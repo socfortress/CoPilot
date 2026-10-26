@@ -37,7 +37,7 @@
 						left: `calc(${barWidth(item.previous, scale)}% - 1px)`,
 						backgroundColor: colors.previous
 					}"
-					:title="`The period before: ${item.previous}`"
+					:title="$t('activity.rank.previousTitle', { count: item.previous })"
 				/>
 			</div>
 
@@ -49,14 +49,14 @@
 					:is="linkFor(item, 'current') ? RouterLink : 'span'"
 					:to="linkFor(item, 'current') ?? undefined"
 					class="text-default hover:text-primary text-right text-sm font-semibold no-underline transition-colors"
-					:aria-label="`${item.count} this period`"
+					:aria-label="$t('activity.rank.countLabel', { count: item.count })"
 					data-testid="activity-row-count"
 				>
 					{{ item.count }}
 				</component>
 				<span
 					class="text-secondary flex items-center pl-1"
-					title="Change from the period before"
+					:title="$t('activity.kpi.changeTitle')"
 					data-testid="activity-row-delta"
 				>
 					<Icon v-if="delta(item).direction === 'up'" name="carbon:arrow-up" :size="12" />
@@ -67,10 +67,10 @@
 					:is="linkFor(item, 'previous') && item.previous ? RouterLink : 'span'"
 					:to="(item.previous && linkFor(item, 'previous')) || undefined"
 					class="text-tertiary hover:text-primary hidden text-right no-underline transition-colors md:inline"
-					:aria-label="`${item.previous} the period before`"
+					:aria-label="$t('activity.rank.previousLabel', { count: item.previous })"
 					data-testid="activity-row-previous"
 				>
-					was {{ item.previous }}
+					{{ $t("activity.rank.was", { count: item.previous }) }}
 				</component>
 			</div>
 		</li>
@@ -104,7 +104,7 @@ const {
 	items: ActivityCount[]
 	/** Where a row's count leads, per period; none when the slice cannot be listed. */
 	link?: (item: ActivityCount, period: Period) => RouteLocationRaw | null
-	labelKind?: "status" | null
+	labelKind?: "status" | "severity" | null
 	testid: string
 }>()
 

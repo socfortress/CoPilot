@@ -2,10 +2,10 @@
 	<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 		<div class="flex min-w-0 flex-col gap-1.5">
 			<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
-				Security overview
+				{{ $t("overview.header.title") }}
 			</h1>
 			<p class="text-secondary text-sm">
-				Your organization's security posture and the latest activity from the SOC.
+				{{ $t("overview.header.subtitle") }}
 			</p>
 		</div>
 
@@ -14,12 +14,14 @@
 				<Icon name="carbon:filter" :size="14" />
 				<span class="max-w-60 truncate" data-testid="overview-scope">{{ scopeLabel }}</span>
 			</span>
-			<span v-if="lastUpdated" class="tabular-nums">updated {{ formatDate(lastUpdated, dFormats.time) }}</span>
+			<span v-if="lastUpdated" class="tabular-nums">
+				{{ $t("overview.header.updated", { time: formatDate(lastUpdated, dFormats.time) }) }}
+			</span>
 			<n-button
 				size="small"
 				quaternary
 				:disabled="refreshing"
-				aria-label="Refresh overview"
+				:aria-label="$t('overview.header.refresh')"
 				@click="emit('refresh')"
 			>
 				<template #icon>
@@ -33,6 +35,7 @@
 <script setup lang="ts">
 import { NButton } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
@@ -48,6 +51,7 @@ const emit = defineEmits<{
 	(e: "refresh"): void
 }>()
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const customerFilterStore = useCustomerFilterStore()
 const dFormats = useSettingsStore().dateFormat
@@ -62,19 +66,20 @@ const scopeCodes = computed(() =>
 
 const scopeLabel = computed(() => {
 	if (!customerFilterStore.selectedCustomerCodes.length && authStore.accessibleCustomerCodes.length > 1) {
-		return `all customers (${authStore.accessibleCustomerCodes.length})`
+		return t("overview.header.scopeAll", { count: authStore.accessibleCustomerCodes.length })
 	}
-	return scopeCodes.value.map(code => authStore.customerName(code)).join(", ") || "no customer"
+	return scopeCodes.value.map(code => authStore.customerName(code)).join(", ") || t("overview.header.scopeNone")
 })
 
 // The tooltip names each customer with its code, which is what support quotes.
-const scopeTitle = computed(
-	() =>
-		`Scope: ${scopeCodes.value
+const scopeTitle = computed(() =>
+	t("overview.header.scopeTitle", {
+		customers: scopeCodes.value
 			.map(code => {
 				const name = authStore.customerName(code)
 				return name === code ? code : `${name} (${code})`
 			})
-			.join(", ")}`
+			.join(", ")
+	})
 )
 </script>

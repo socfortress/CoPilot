@@ -14,13 +14,13 @@
 			</div>
 			<div class="text-secondary flex items-center gap-2 text-xs" :title="templateDescription">
 				<Icon :name="TemplateIcon" :size="14" />
-				{{ templateLabel }} report
+				{{ templateLabel }}
 			</div>
 			<div class="flex flex-wrap gap-2">
-				<Chip size="small" :value="`${report.total_alerts}`" label="alerts" />
-				<Chip size="small" :value="`${report.total_cases}`" label="cases" />
-				<Chip size="small" :value="`${report.open_cases}`" label="open" />
-				<Chip size="small" :value="`${report.closed_cases}`" label="closed" />
+				<Chip size="small" :value="`${report.total_alerts}`" :label="$t('reports.card.alerts')" />
+				<Chip size="small" :value="`${report.total_cases}`" :label="$t('reports.card.cases')" />
+				<Chip size="small" :value="`${report.open_cases}`" :label="$t('reports.card.open')" />
+				<Chip size="small" :value="`${report.closed_cases}`" :label="$t('reports.card.closed')" />
 			</div>
 			<p v-if="report.status === 'failed' && report.error_message" class="text-error text-xs">
 				{{ report.error_message }}
@@ -43,11 +43,11 @@
 						@click="emit('download')"
 					>
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
-						Download
+						{{ $t("common.actions.download") }}
 					</n-button>
 					<n-button v-if="isCustomerGenerated" size="small" type="error" secondary @click="emit('delete')">
 						<template #icon><Icon :name="DeleteIcon" :size="14" /></template>
-						Delete
+						{{ $t("common.actions.delete") }}
 					</n-button>
 				</div>
 			</div>
@@ -60,6 +60,7 @@ import type { IncidentCustomerReport } from "@/types/reports"
 import { useIntervalFn, useNow } from "@vueuse/core"
 import { NButton, NCard, NTag } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -80,50 +81,42 @@ const DeleteIcon = "carbon:trash-can"
 const PeriodIcon = "carbon:calendar"
 const TemplateIcon = "carbon:document-multiple-01"
 
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 
 // Which report layout was used. Reports generated before templates existed have no
 // field, so default to the complete report (the only layout available back then).
-const templateMeta: Record<string, { label: string; description: string }> = {
-	full: {
-		label: "Complete",
-		description: "Executive summary, charts & trends, and open/closed cases with assets & IOCs"
-	},
-	executive: { label: "Executive", description: "One-look synthesis: KPIs, service metrics and a status chart" },
-	operational: {
-		label: "Operational",
-		description: "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)"
-	},
-	analytics: {
-		label: "Analytics",
-		description: "Metrics-centric: executive summary, all charts and the monthly trend table"
-	}
-}
-const templateInfo = computed(
-	() => templateMeta[String(report.filters_applied?.report_template ?? "full")] ?? templateMeta.full
-)
-const templateLabel = computed(() => templateInfo.value.label)
-const templateDescription = computed(() => templateInfo.value.description)
+const TEMPLATES = ["full", "executive", "operational", "analytics"] as const
+type Template = (typeof TEMPLATES)[number]
+
+const template = computed<Template>(() => {
+	const value = String(report.filters_applied?.report_template ?? "full")
+	return (TEMPLATES as readonly string[]).includes(value) ? (value as Template) : "full"
+})
+const templateLabel = computed(() => t(`reports.card.templates.${template.value}.name`))
+const templateDescription = computed(() => t(`reports.card.templates.${template.value}.description`))
 
 // Customers may only delete reports they generated themselves; analyst/admin
 // reports shared into the portal are read-only here (download still allowed).
 const isCustomerGenerated = computed(() => report.generated_by_role === "customer_user")
 
+const ROLE_KEYS = {
+	admin: "reports.card.roles.admin",
+	analyst: "reports.card.roles.analyst",
+	scheduler: "reports.card.roles.scheduler",
+	customer_user: "reports.card.roles.customer_user"
+} as const
+
 const authorText = computed(() => {
-	const roleLabels: Record<string, string> = {
-		admin: "Admin",
-		analyst: "Analyst",
-		scheduler: "Scheduler",
-		customer_user: "Customer"
-	}
-	const role = report.generated_by_role ? (roleLabels[report.generated_by_role] ?? report.generated_by_role) : null
+	const roleKey = ROLE_KEYS[report.generated_by_role as keyof typeof ROLE_KEYS]
+	const role = report.generated_by_role ? (roleKey ? t(roleKey) : report.generated_by_role) : null
 	const name = report.generated_by_name
 	if (name && role) return `${name} · ${role}`
 	return name || role || ""
 })
 
 function statusLabel(status: IncidentCustomerReport["status"]) {
-	return { completed: "Completed", processing: "Generating", failed: "Failed" }[status]
+	return t(`reports.card.status.${status}`)
 }
 
 // While it generates, say for how long (#1263): the times are stored as UTC, read as such.

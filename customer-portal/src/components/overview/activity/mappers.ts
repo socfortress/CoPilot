@@ -1,7 +1,8 @@
 import type { ActivityItem } from "./types"
 import type { AiInsightAlert } from "@/types/aiReports"
 import type { OverviewAlert, OverviewCase } from "@/types/portal"
-import { severityColor, workflowStatus } from "../shared/status"
+import { i18nGlobal } from "@/lang"
+import { severityColor, severityWord, workflowStatus } from "../shared/status"
 
 /**
  * Domain objects → feed rows. Pure functions: every rule about what a row shows
@@ -30,10 +31,6 @@ function distinctDetail(title: string, detail: string | null | undefined): strin
 	return trimmed && trimmed !== title ? trimmed : undefined
 }
 
-function pluralize(count: number, singular: string, plural = `${singular}s`) {
-	return `${count} ${count === 1 ? singular : plural}`
-}
-
 function assetsLabel(alert: OverviewAlert): string | null {
 	const [first, ...rest] = alert.asset_names
 	if (!first) return null
@@ -41,7 +38,7 @@ function assetsLabel(alert: OverviewAlert): string | null {
 }
 
 export function alertToActivityItem(alert: OverviewAlert, { customerLabel }: MapperOptions): ActivityItem {
-	const title = alert.alert_name || "Unnamed alert"
+	const title = alert.alert_name || i18nGlobal.t("overview.activity.unnamedAlert")
 
 	return {
 		id: alert.id,
@@ -54,7 +51,7 @@ export function alertToActivityItem(alert: OverviewAlert, { customerLabel }: Map
 }
 
 export function caseToActivityItem(caseItem: OverviewCase, { customerLabel }: MapperOptions): ActivityItem {
-	const title = caseItem.case_name || "Unnamed case"
+	const title = caseItem.case_name || i18nGlobal.t("overview.activity.unnamedCase")
 	const alertCount = caseItem.alert_count
 
 	return {
@@ -64,8 +61,8 @@ export function caseToActivityItem(caseItem: OverviewCase, { customerLabel }: Ma
 		status: workflowStatus(caseItem.case_status),
 		time: caseItem.case_creation_time,
 		meta: compact([
-			caseItem.assigned_to || "unassigned",
-			alertCount ? pluralize(alertCount, "alert") : null,
+			caseItem.assigned_to || i18nGlobal.t("overview.activity.unassigned"),
+			alertCount ? i18nGlobal.t("overview.activity.alertCount", { count: alertCount }, alertCount) : null,
 			customerMeta(caseItem.customer_code, customerLabel)
 		])
 	}
@@ -82,7 +79,7 @@ export function findingToActivityItem(finding: AiInsightAlert, { customerLabel }
 		detail: finding.summary?.trim() || undefined,
 		detailLines: 2,
 		status: {
-			label: (finding.severity_assessment || "unknown").toLowerCase(),
+			label: severityWord(finding.severity_assessment),
 			color: severityColor(finding.severity_assessment)
 		},
 		time: finding.report_created_at,

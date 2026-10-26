@@ -42,7 +42,7 @@
 						<template #trigger>
 							<Icon :name="InfoIcon" :size="16" class="text-secondary cursor-help" />
 						</template>
-						<div class="text-sm">Click on a segment to go to the event search page.</div>
+						<div class="text-sm">{{ $t("dashboards.viewer.segmentHint") }}</div>
 					</n-tooltip>
 				</template>
 
@@ -85,6 +85,7 @@ import type { DashboardPanel, DashboardPanelType, PanelResult } from "@/types/si
 import axios from "axios"
 import { NButton, NEmpty, NRadioButton, NRadioGroup, NSpin, NTooltip, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CardStats from "@/components/common/cards/CardStats.vue"
 import ChartBar from "@/components/common/charts/ChartBar.vue"
@@ -120,6 +121,7 @@ const chartByType: Record<DashboardPanelType, Component | undefined> = {
 const { routeDashboardsList, routeEventSearch } = useNavigation()
 const InfoIcon = "carbon:information"
 const message = useMessage()
+const { t } = useI18n()
 
 const timePresets = ["1h", "6h", "24h", "7d", "30d"]
 
@@ -161,7 +163,7 @@ async function fetchPanelData() {
 			customerCode.value = res.data.customer_code
 			sourceName.value = res.data.source_name
 		} else {
-			errorMsg.value = res.data.message || "Failed to fetch panel data"
+			errorMsg.value = res.data.message || t("dashboards.viewer.fetchFailed")
 			message.error(errorMsg.value)
 		}
 
@@ -169,7 +171,7 @@ async function fetchPanelData() {
 	} catch (error) {
 		if (!axios.isCancel(error)) {
 			loading.value = false
-			errorMsg.value = getApiErrorMessage(error as ApiError) || "Failed to fetch panel data"
+			errorMsg.value = getApiErrorMessage(error as ApiError) || t("dashboards.viewer.fetchFailed")
 			message.error(errorMsg.value)
 		}
 	}

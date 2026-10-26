@@ -2,7 +2,7 @@
 	<section
 		class="bg-default border-default divide-border grid grid-cols-2 divide-y rounded-lg border md:grid-cols-5 md:divide-x md:divide-y-0"
 		data-testid="sla-open-now"
-		aria-label="Open right now"
+		:aria-label="$t('sla.openNow.label')"
 	>
 		<div
 			v-for="item of items"
@@ -26,10 +26,10 @@
 				<span v-if="item.links && item.value" class="flex gap-2 text-xs">
 					<RouterLink
 						v-for="link of item.links"
-						:key="link.label"
+						:key="link.key"
 						:to="link.to"
 						class="text-secondary hover:text-primary flex items-center gap-0.5 no-underline transition-colors"
-						:data-testid="linkTestId(item, link.label)"
+						:data-testid="linkTestId(item, link.key)"
 					>
 						{{ link.label }}
 						<Icon name="carbon:arrow-right" :size="12" />
@@ -44,10 +44,11 @@
 import type { RouteLocationRaw } from "vue-router"
 import type { SlaOpenNow } from "@/types/sla"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { RouterLink } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import { ICONS } from "@/const"
-import { WAITING_ON_CUSTOMER } from "@/utils/workflowStatus"
+import { WAITING_ON_CUSTOMER, workflowStatusLabel } from "@/utils/workflowStatus"
 
 const { openNow } = defineProps<{
 	openNow: SlaOpenNow
@@ -61,12 +62,15 @@ interface Item {
 	value: number
 	/** Applied only while the value is not zero: a zero is never alarming. */
 	valueClass?: string
-	links?: { label: string; to: RouteLocationRaw }[]
+	/** `key` names the link in its test id, whatever the language: "view-all", "alerts", "cases". */
+	links?: { key: string; label: string; to: RouteLocationRaw }[]
 }
 
+const { t } = useI18n()
+
 /** `sla-open-alerts-view-all`, `sla-open-waiting-cases`, … */
-function linkTestId(item: Item, label: string) {
-	return `sla-open-${item.key}-${label.toLowerCase().replaceAll(" ", "-")}`
+function linkTestId(item: Item, key: string) {
+	return `sla-open-${item.key}-${key}`
 }
 
 // What is open now, whatever the period: the SOC's queue for this customer, and what
@@ -76,21 +80,21 @@ const items = computed<Item[]>(() => [
 	// time, so these open the whole list rather than a filter that would show fewer.
 	{
 		key: "alerts",
-		label: "Open alerts",
+		label: t("sla.openNow.alerts"),
 		icon: ICONS.alerts,
 		value: openNow.alerts,
-		links: [{ label: "View all", to: { name: "AlertsList" } }]
+		links: [{ key: "view-all", label: t("sla.openNow.viewAll"), to: { name: "AlertsList" } }]
 	},
 	{
 		key: "cases",
-		label: "Open cases",
+		label: t("sla.openNow.cases"),
 		icon: ICONS.cases,
 		value: openNow.cases,
-		links: [{ label: "View all", to: { name: "CasesList" } }]
+		links: [{ key: "view-all", label: t("sla.openNow.viewAll"), to: { name: "CasesList" } }]
 	},
 	{
 		key: "at-risk",
-		label: "Due soon",
+		label: t("sla.openNow.atRisk"),
 		icon: "carbon:hourglass",
 		iconClass: "text-warning",
 		value: openNow.at_risk,
@@ -98,7 +102,7 @@ const items = computed<Item[]>(() => [
 	},
 	{
 		key: "breached",
-		label: "Past target",
+		label: t("sla.openNow.breached"),
 		icon: "carbon:warning-alt-filled",
 		iconClass: "text-error",
 		value: openNow.breached,
@@ -106,14 +110,22 @@ const items = computed<Item[]>(() => [
 	},
 	{
 		key: "waiting",
-		label: "Waiting on you",
+		label: workflowStatusLabel(WAITING_ON_CUSTOMER),
 		icon: "carbon:user-follow",
 		iconClass: "text-waiting",
 		value: openNow.waiting_on_you,
 		valueClass: "text-waiting",
 		links: [
-			{ label: "Alerts", to: { name: "AlertsList", query: { status: WAITING_ON_CUSTOMER } } },
-			{ label: "Cases", to: { name: "CasesList", query: { status: WAITING_ON_CUSTOMER } } }
+			{
+				key: "alerts",
+				label: t("sla.openNow.alertsLink"),
+				to: { name: "AlertsList", query: { status: WAITING_ON_CUSTOMER } }
+			},
+			{
+				key: "cases",
+				label: t("sla.openNow.casesLink"),
+				to: { name: "CasesList", query: { status: WAITING_ON_CUSTOMER } }
+			}
 		]
 	}
 ])

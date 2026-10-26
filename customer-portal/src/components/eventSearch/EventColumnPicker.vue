@@ -2,7 +2,7 @@
 	<div class="flex flex-col gap-5" data-testid="column-picker">
 		<section class="flex min-w-0 flex-col gap-2">
 			<div class="flex items-baseline justify-between gap-3">
-				<span :class="HEAD">Columns shown · left to right</span>
+				<span :class="HEAD">{{ $t("eventSearch.picker.shown") }}</span>
 				<span class="text-tertiary font-mono text-xs tabular-nums">{{ columns.length }}</span>
 			</div>
 
@@ -10,8 +10,7 @@
 				v-if="!columns.length"
 				class="border-default text-tertiary m-0 rounded-md border border-dashed px-3 py-4 text-center text-xs"
 			>
-				No column picked: the table shows
-				{{ sourceColumns?.length ? "the SOC's layout for this source" : "the default layout" }}.
+				{{ sourceColumns?.length ? $t("eventSearch.picker.noneSoc") : $t("eventSearch.picker.noneDefault") }}
 			</p>
 			<div
 				v-else
@@ -33,7 +32,7 @@
 							size="small"
 							:placeholder="column.key"
 							class="shrink-0 @md:w-44!"
-							:aria-label="`Header of ${column.key}`"
+							:aria-label="$t('eventSearch.picker.headerOf', { field: column.key })"
 							data-testid="picked-column-label"
 						/>
 						<span
@@ -48,7 +47,7 @@
 							size="tiny"
 							quaternary
 							:disabled="index === 0"
-							aria-label="Move left"
+							:aria-label="$t('eventSearch.picker.moveLeft')"
 							@click="move(index, -1)"
 						>
 							<template #icon><Icon name="carbon:arrow-up" :size="14" /></template>
@@ -57,7 +56,7 @@
 							size="tiny"
 							quaternary
 							:disabled="index === columns.length - 1"
-							aria-label="Move right"
+							:aria-label="$t('eventSearch.picker.moveRight')"
 							data-testid="picked-column-down"
 							@click="move(index, 1)"
 						>
@@ -67,7 +66,7 @@
 							size="tiny"
 							quaternary
 							type="error"
-							:aria-label="`Remove ${column.key}`"
+							:aria-label="$t('eventSearch.picker.remove', { field: column.key })"
 							data-testid="picked-column-remove"
 							@click="columns.splice(index, 1)"
 						>
@@ -79,13 +78,13 @@
 		</section>
 
 		<section class="flex min-w-0 flex-col gap-2">
-			<span :class="HEAD">Add a field</span>
+			<span :class="HEAD">{{ $t("eventSearch.picker.addField") }}</span>
 			<n-select
 				:value="null"
 				:options="addable"
 				filterable
 				size="small"
-				:placeholder="fields.length ? 'Search the source\'s fields' : 'No field list for this source'"
+				:placeholder="fields.length ? $t('eventSearch.picker.searchFields') : $t('eventSearch.picker.noFields')"
 				:disabled="!fields.length"
 				data-testid="column-picker-add"
 				@update:value="add"
@@ -94,7 +93,7 @@
 
 		<section class="@container flex min-w-0 flex-col gap-2" data-testid="column-templates">
 			<div class="flex items-baseline justify-between gap-3">
-				<span :class="HEAD">Templates for this source</span>
+				<span :class="HEAD">{{ $t("eventSearch.picker.templates") }}</span>
 				<span class="text-tertiary font-mono text-xs tabular-nums">{{ templates.length }}</span>
 			</div>
 			<div
@@ -122,18 +121,18 @@
 						<n-button
 							size="tiny"
 							secondary
-							:title="`Put the columns of “${template.name}” above, to adjust or apply them`"
+							:title="$t('eventSearch.picker.loadTitle', { name: template.name })"
 							data-testid="column-template-load"
 							@click="load(template)"
 						>
-							Load
+							{{ $t("eventSearch.picker.load") }}
 						</n-button>
 						<n-button
 							size="tiny"
 							quaternary
 							type="error"
 							class="opacity-60 group-hover:opacity-100"
-							:aria-label="`Delete the template “${template.name}”`"
+							:aria-label="$t('eventSearch.layouts.deleteTemplate', { name: template.name })"
 							:disabled="savingTemplate"
 							data-testid="column-template-delete"
 							@click="confirmingId = template.id"
@@ -151,7 +150,7 @@
 				<n-input
 					v-model:value="templateName"
 					size="small"
-					placeholder="Save the columns above as…"
+					:placeholder="$t('eventSearch.picker.templateNamePlaceholder')"
 					:maxlength="80"
 					class="min-w-0 grow"
 					data-testid="column-template-name"
@@ -165,10 +164,10 @@
 					data-testid="column-template-save"
 				>
 					<template #icon><Icon name="carbon:template" /></template>
-					Save as template
+					{{ $t("eventSearch.picker.saveTemplate") }}
 				</n-button>
 			</form>
-			<span v-if="willReplace" class="text-warning text-xs">Updates the template saved under this name.</span>
+			<span v-if="willReplace" class="text-warning text-xs">{{ $t("eventSearch.picker.willReplace") }}</span>
 		</section>
 
 		<footer class="border-default flex flex-wrap items-center justify-between gap-2 border-t pt-4">
@@ -180,12 +179,12 @@
 				@click="emit('save', null)"
 			>
 				<template #icon><Icon name="carbon:reset" /></template>
-				Back to {{ sourceColumns?.length ? "the SOC's layout" : "the default" }}
+				{{ sourceColumns?.length ? $t("eventSearch.picker.backToSoc") : $t("eventSearch.picker.backToDefault") }}
 			</n-button>
 			<div class="flex gap-2">
-				<n-button size="small" @click="emit('cancel')">Cancel</n-button>
+				<n-button size="small" @click="emit('cancel')">{{ $t("common.actions.cancel") }}</n-button>
 				<n-button size="small" type="primary" :loading="saving" data-testid="column-picker-save" @click="save">
-					Apply
+					{{ $t("common.actions.apply") }}
 				</n-button>
 			</div>
 		</footer>

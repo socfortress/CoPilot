@@ -10,7 +10,7 @@
 		<template #trigger>
 			<n-button size="small" secondary :disabled :loading="busy" data-testid="column-layouts-toggle">
 				<template #icon><Icon name="carbon:data-table" /></template>
-				<span class="text-tertiary mr-1">Layout</span>
+				<span class="text-tertiary mr-1">{{ $t("eventSearch.layouts.toggle") }}</span>
 				<span class="max-w-40 truncate" data-testid="column-layouts-current">{{ activeName }}</span>
 			</n-button>
 		</template>
@@ -19,7 +19,7 @@
 			<div class="grid @xl:grid-cols-[16rem_minmax(0,1fr)]">
 				<section class="border-default flex min-w-0 flex-col @max-xl:border-b @xl:border-r">
 					<header class="bg-secondary border-default flex items-baseline justify-between border-b px-3 py-2">
-						<span :class="HEAD">Layouts</span>
+						<span :class="HEAD">{{ $t("eventSearch.layouts.title") }}</span>
 						<span class="text-tertiary font-mono text-xs tabular-nums">{{ templates.length + 1 }}</span>
 					</header>
 					<div class="divide-border flex max-h-[min(50vh,22rem)] flex-col divide-y overflow-y-auto">
@@ -72,7 +72,7 @@
 									quaternary
 									type="error"
 									class="mr-2 self-center opacity-50 group-hover:opacity-100 focus-visible:opacity-100"
-									:aria-label="`Delete the template “${option.name}”`"
+									:aria-label="$t('eventSearch.layouts.deleteTemplate', { name: option.name })"
 									data-testid="column-layout-delete"
 									@mouseenter="previewKey = option.key"
 									@click="confirmingId = option.template.id"
@@ -83,12 +83,12 @@
 						</div>
 					</div>
 					<p v-if="!templates.length" class="text-tertiary border-default m-0 border-t px-3 py-2 text-xs">
-						No template yet: arrange the columns, then save them as a template.
+						{{ $t("eventSearch.layouts.noTemplates") }}
 					</p>
 					<footer class="border-default border-t px-3 py-2">
 						<n-button text size="tiny" data-testid="column-layouts-manage" @click="manage">
 							<template #icon><Icon name="carbon:settings-adjust" :size="14" /></template>
-							Manage columns and templates
+							{{ $t("eventSearch.layouts.manage") }}
 						</n-button>
 					</footer>
 				</section>
@@ -111,6 +111,7 @@ import type { EventColumn } from "./eventColumns"
 import type { DisplayColumn, EventSearchColumnTemplate } from "@/types/siem"
 import { NButton, NPopover } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 import EventColumnsPreview from "./EventColumnsPreview.vue"
 import TemplateDeleteConfirm from "./TemplateDeleteConfirm.vue"
@@ -161,6 +162,7 @@ const emit = defineEmits<{
 }>()
 
 const HEAD = "text-tertiary text-xxs font-medium tracking-[0.12em] uppercase"
+const { t } = useI18n()
 const open = ref(false)
 const previewKey = ref<string | null>(null)
 /** The template whose deletion is being confirmed. */
@@ -176,7 +178,7 @@ const options = computed<LayoutOption[]>(() => [
 	}))
 ])
 
-const activeName = computed(() => options.value.find(option => option.key === activeKey)?.name ?? "Custom")
+const activeName = computed(() => options.value.find(option => option.key === activeKey)?.name ?? t("eventSearch.layouts.custom"))
 const previewed = computed(
 	() =>
 		options.value.find(option => option.key === previewKey.value) ??

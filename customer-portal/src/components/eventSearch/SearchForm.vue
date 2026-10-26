@@ -1,21 +1,21 @@
 <template>
 	<div class="flex flex-col gap-4">
-		<n-alert v-if="showNoSourcesWarning" title="No Event Sources Configured" type="warning" closable>
-			No event sources are configured for this customer. Contact your administrator to set up event sources.
+		<n-alert v-if="showNoSourcesWarning" :title="$t('eventSearch.form.noSourcesTitle')" type="warning" closable>
+			{{ $t("eventSearch.form.noSourcesText") }}
 		</n-alert>
 
 		<div class="@container flex w-full flex-col gap-3">
 			<div class="flex flex-col gap-2">
 				<div class="flex w-full flex-wrap items-center justify-between gap-2">
 					<div class="flex items-center gap-2">
-						Lucene Query
-						<p class="text-secondary text-xs">type # to autocomplete</p>
+						{{ $t("eventSearch.form.queryLabel") }}
+						<p class="text-secondary text-xs">{{ $t("eventSearch.form.autocompleteHint") }}</p>
 					</div>
 					<div class="flex items-center gap-2">
 						<n-select
 							v-model:value="selectedCustomerCode"
 							data-testid="event-search-customer"
-							placeholder="Select Customer"
+							:placeholder="$t('eventSearch.form.selectCustomer')"
 							filterable
 							size="tiny"
 							:options="customerOptions"
@@ -28,7 +28,7 @@
 						<n-select
 							v-model:value="selectedSourceName"
 							data-testid="event-search-source"
-							placeholder="Select Source"
+							:placeholder="$t('eventSearch.form.selectSource')"
 							filterable
 							size="tiny"
 							:options="eventSourceOptions"
@@ -45,7 +45,7 @@
 					type="textarea"
 					separator=" "
 					:autosize="{ minRows: 3, maxRows: 8 }"
-					placeholder="e.g. agent_name:web-server AND rule_level:>=10"
+					:placeholder="$t('eventSearch.form.queryPlaceholder', { example: QUERY_EXAMPLE })"
 					:options="suggestionOptions"
 					:prefix="['#']"
 					:loading="loadingFieldMappings"
@@ -54,7 +54,7 @@
 				>
 					<template #empty>
 						<n-spin :show="loadingFieldMappings">
-							<div class="text-secondary text-xs">No field mappings found</div>
+							<div class="text-secondary text-xs">{{ $t("eventSearch.form.noFieldMappings") }}</div>
 						</n-spin>
 					</template>
 				</n-mention>
@@ -76,7 +76,9 @@
 						@retry="memory.reload"
 					/>
 					<span v-if="!selectedCustomerCode || !selectedSourceName" class="text-secondary text-xs">
-						{{ !selectedCustomerCode ? "Select a customer to search" : "Select a source to search" }}
+						{{
+							!selectedCustomerCode ? $t("eventSearch.form.customerNeeded") : $t("eventSearch.form.sourceNeeded")
+						}}
 					</span>
 				</div>
 
@@ -88,7 +90,7 @@
 							:show-button="false"
 							:min="1"
 							size="small"
-							placeholder="Time"
+							:placeholder="$t('eventSearch.form.time')"
 							class="max-w-15! min-w-10! text-center"
 						/>
 						<n-select
@@ -96,7 +98,7 @@
 							v-model:value="filterTimeRange.unit"
 							:options="unitOptions"
 							class="max-w-25!"
-							placeholder="Time unit"
+							:placeholder="$t('eventSearch.form.timeUnit')"
 							:consistent-menu-width="false"
 							size="small"
 						/>
@@ -144,7 +146,7 @@
 						<template #icon>
 							<Icon name="carbon:search" />
 						</template>
-						Search
+						{{ $t("common.actions.search") }}
 					</n-button>
 				</div>
 			</div>
@@ -159,6 +161,7 @@ import type { ApiError } from "@/types/common"
 import type { EventSearchQueryTimerange, EventSearchState, EventSourceItem, FieldMapping } from "@/types/siem"
 import { NAlert, NButton, NDatePicker, NInputGroup, NInputNumber, NMention, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, h, nextTick, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -199,10 +202,13 @@ const emit = defineEmits<{
 const query = defineModel<string>("query")
 
 const TRAILING_WHITESPACE_RE = /\s$/
+/** A Lucene query, shown as an example: the same in every language. */
+const QUERY_EXAMPLE = "agent_name:web-server AND rule_level:>=10"
 
 const route = useRoute()
 const customerFilterStore = useCustomerFilterStore()
 const message = useMessage()
+const { t } = useI18n()
 
 const { customerOptions, filterCustomer, renderCustomerLabel, initialCustomerCode } = useCustomerPrefill()
 // Seeded by the same rule as the case and report forms: the global filter when it
@@ -226,24 +232,22 @@ const filterTimeRange = ref<{ unit: "h" | "d" | "w"; time: number }>({
 	unit: "h",
 	time: 24
 })
-const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
-	{ label: "Hours", value: "h" },
-	{ label: "Days", value: "d" },
-	{ label: "Weeks", value: "w" }
-]
+const unitOptions = computed<{ label: string; value: "h" | "d" | "w" }[]>(() => [
+	{ label: t("eventSearch.form.units.hours"), value: "h" },
+	{ label: t("eventSearch.form.units.days"), value: "d" },
+	{ label: t("eventSearch.form.units.weeks"), value: "w" }
+])
 const timerange = computed<EventSearchQueryTimerange>(
 	() => `${filterTimeRange.value.time}${filterTimeRange.value.unit}`
 )
 const daterange = ref<[number, number]>([dayjs().subtract(1, "day").valueOf(), Date.now()])
 const timerangeMode = ref<"relative" | "absolute">("relative")
 
-const pageSizeOptions = [
-	{ label: "25 per page", value: 25 },
-	{ label: "50 per page", value: 50 },
-	{ label: "100 per page", value: 100 },
-	{ label: "250 per page", value: 250 }
-]
-const pageSize = ref(pageSizeOptions[1].value)
+const PAGE_SIZES = [25, 50, 100, 250]
+const pageSizeOptions = computed(() =>
+	PAGE_SIZES.map(size => ({ label: t("eventSearch.form.perPage", { count: size }), value: size }))
+)
+const pageSize = ref(50)
 
 const loadingFieldMappings = ref(false)
 const fieldMappings = ref<FieldMapping[]>([])
@@ -271,7 +275,7 @@ async function loadEventSources(customerCode: string) {
 		const response = await Api.siem.getEventSources(customerCode)
 		eventSources.value = response.data.event_sources
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to load event sources")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.form.loadSourcesFailed"))
 	} finally {
 		loadingEventSources.value = false
 
@@ -329,9 +333,13 @@ async function saveCurrent(name: string) {
 	if (!state) return
 	try {
 		const replaced = await memory.save(name, state)
-		message.success(replaced ? `Updated “${name.trim()}”` : `Saved “${name.trim()}”`)
+		message.success(
+			replaced
+				? t("eventSearch.form.queryUpdated", { name: name.trim() })
+				: t("eventSearch.form.querySaved", { name: name.trim() })
+		)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the query")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.form.saveQueryFailed"))
 	}
 }
 
@@ -339,7 +347,7 @@ async function removeSaved(id: number) {
 	try {
 		await memory.remove(id)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the query")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.form.deleteQueryFailed"))
 	}
 }
 
@@ -347,14 +355,14 @@ async function clearRecent() {
 	try {
 		await memory.clearRecent()
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to clear the recent searches")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.form.clearRecentFailed"))
 	}
 }
 
 /** Puts a remembered search back on the form and runs it, if its source is still there. */
 async function restore(state: EventSearchState) {
 	if (!enabledSources.value.some(s => s.name === state.source_name)) {
-		message.warning(`The source “${state.source_name}” is no longer available for this customer`)
+		message.warning(t("eventSearch.form.sourceGone", { source: state.source_name }))
 		return
 	}
 	selectedSourceName.value = state.source_name
@@ -364,7 +372,7 @@ async function restore(state: EventSearchState) {
 	if (state.time_mode === "absolute" && state.time_from && state.time_to) {
 		daterange.value = [Date.parse(state.time_from), Date.parse(state.time_to)]
 	}
-	if (pageSizeOptions.some(o => o.value === state.page_size)) pageSize.value = state.page_size
+	if (PAGE_SIZES.includes(state.page_size)) pageSize.value = state.page_size
 	// `query` is the parent's model: it reads the new text only once the parent has rendered.
 	await nextTick()
 	searchEvents()

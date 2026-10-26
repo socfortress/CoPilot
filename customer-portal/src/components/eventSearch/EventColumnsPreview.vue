@@ -3,7 +3,7 @@
 		<div class="flex items-baseline justify-between gap-3">
 			<span :class="HEAD" class="truncate">{{ title }}</span>
 			<span class="text-tertiary shrink-0 font-mono text-xs tabular-nums">
-				{{ columns.length }} {{ columns.length === 1 ? "column" : "columns" }}
+				{{ $t("eventSearch.preview.columns", columns.length) }}
 			</span>
 		</div>
 
@@ -13,8 +13,8 @@
 				class="bg-secondary border-default text-tertiary text-xxs grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(0,1.2fr)] border-b font-medium tracking-[0.12em] uppercase"
 			>
 				<span class="px-2 py-1 text-right">#</span>
-				<span class="px-2 py-1">Header</span>
-				<span class="px-2 py-1">Field</span>
+				<span class="px-2 py-1">{{ $t("eventSearch.preview.header") }}</span>
+				<span class="px-2 py-1">{{ $t("eventSearch.preview.field") }}</span>
 			</div>
 			<div class="divide-border flex max-h-64 flex-col divide-y overflow-y-auto">
 				<div

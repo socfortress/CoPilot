@@ -1,4 +1,5 @@
 import type { DisplayColumn, EventSearchMemory, EventSearchState } from "@/types/siem"
+import { i18nGlobal } from "@/lang"
 
 /**
  * What event search remembers for a user, per customer (#1258): saved and recent searches,
@@ -10,14 +11,18 @@ export function emptyMemory(): EventSearchMemory {
 	return { saved: [], recent: [], columns: {}, templates: [] }
 }
 
-const UNIT_WORDS: Record<EventSearchState["time_unit"], string> = { h: "hour", d: "day", w: "week" }
+const UNIT_KEYS = {
+	h: "eventSearch.queries.lastHours",
+	d: "eventSearch.queries.lastDays",
+	w: "eventSearch.queries.lastWeeks"
+} as const satisfies Record<EventSearchState["time_unit"], string>
 
 /** "last 24 hours", or the absolute range as given by `formatTime`. */
 export function describeTime(state: EventSearchState, formatTime: (iso: string) => string): string {
 	if (state.time_mode === "absolute" && state.time_from && state.time_to) {
 		return `${formatTime(state.time_from)} → ${formatTime(state.time_to)}`
 	}
-	return `last ${state.time_amount} ${UNIT_WORDS[state.time_unit]}${state.time_amount === 1 ? "" : "s"}`
+	return i18nGlobal.t(UNIT_KEYS[state.time_unit], { count: state.time_amount }, state.time_amount)
 }
 
 /** Whether two column lists show the same thing: the same fields, in order, under the same headers. */

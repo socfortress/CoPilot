@@ -2,14 +2,14 @@
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex flex-col gap-1">
-				<h2 class="text-xl font-bold">Reports</h2>
-				<p class="text-secondary text-sm">Generate and download PDF activity reports for your organization</p>
+				<h2 class="text-xl font-bold">{{ $t("reports.list.title") }}</h2>
+				<p class="text-secondary text-sm">{{ $t("reports.list.subtitle") }}</p>
 			</div>
 			<n-button type="primary" data-testid="generate-report-button" @click="openGenerateModal()">
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
-				Generate Report
+				{{ $t("reports.list.generate") }}
 			</n-button>
 		</div>
 
@@ -25,28 +25,33 @@
 				/>
 			</div>
 
-			<n-empty v-else description="No reports generated yet" class="min-h-48 justify-center" />
+			<n-empty v-else :description="$t('reports.list.empty')" class="min-h-48 justify-center" />
 		</n-spin>
 
 		<n-modal
 			v-model:show="showGenerateModal"
 			preset="card"
-			title="Generate Report"
+			:title="$t('reports.list.generate')"
 			class="max-w-140!"
 			display-directive="show"
 			closable
 		>
 			<n-form ref="formRef" :model="formData" :rules label-placement="top">
-				<n-form-item label="Report Name" path="report_name">
+				<n-form-item :label="$t('reports.form.reportName')" path="report_name">
 					<n-input
 						v-model:value="formData.report_name"
 						data-testid="report-name"
-						placeholder="Leave empty for auto-generated name"
+						:placeholder="$t('reports.form.reportNamePlaceholder')"
 						clearable
 					/>
 				</n-form-item>
 
-				<n-form-item v-if="hasMultipleCustomers" label="Customer" path="customer_code" required>
+				<n-form-item
+					v-if="hasMultipleCustomers"
+					:label="$t('common.fields.customer')"
+					path="customer_code"
+					required
+				>
 					<n-select
 						v-model:value="formData.customer_code"
 						data-testid="report-customer"
@@ -57,15 +62,19 @@
 					/>
 				</n-form-item>
 
-				<n-form-item label="Time Range" path="range">
+				<n-form-item :label="$t('reports.form.timeRange')" path="range">
 					<n-select v-model:value="formData.range" :options="rangeOptions" />
 				</n-form-item>
 
-				<n-form-item v-if="formData.range === 'custom'" label="Custom Date Range" path="customRange">
+				<n-form-item
+					v-if="formData.range === 'custom'"
+					:label="$t('reports.form.customRange')"
+					path="customRange"
+				>
 					<n-date-picker v-model:value="formData.customRange" type="daterange" clearable class="w-full" />
 				</n-form-item>
 
-				<n-form-item label="Report template" path="reportTemplate">
+				<n-form-item :label="$t('reports.form.template')" path="reportTemplate">
 					<div class="flex w-full flex-col gap-1">
 						<n-select v-model:value="formData.reportTemplate" :options="templateOptions" />
 						<span class="text-secondary text-xs">{{ selectedTemplateDescription }}</span>
@@ -73,14 +82,14 @@
 				</n-form-item>
 
 				<div class="mt-6 flex justify-end gap-3">
-					<n-button @click="showGenerateModal = false">Cancel</n-button>
+					<n-button @click="showGenerateModal = false">{{ $t("common.actions.cancel") }}</n-button>
 					<n-button
 						type="primary"
 						:loading="generating"
 						data-testid="report-generate-submit"
 						@click="handleGenerate"
 					>
-						Generate Report
+						{{ $t("reports.list.generate") }}
 					</n-button>
 				</div>
 			</n-form>
@@ -89,14 +98,14 @@
 		<n-modal
 			v-model:show="showDeleteModal"
 			preset="dialog"
-			title="Delete Report"
-			positive-text="Delete"
-			negative-text="Cancel"
+			:title="$t('reports.delete.title')"
+			:positive-text="$t('common.actions.delete')"
+			:negative-text="$t('common.actions.cancel')"
 			@positive-click="confirmDelete"
 			@negative-click="showDeleteModal = false"
 		>
-			<p>Are you sure you want to delete "{{ reportToDelete?.report_name }}"?</p>
-			<p class="text-secondary mt-2">This action cannot be undone.</p>
+			<p>{{ $t("reports.delete.confirm", { name: reportToDelete?.report_name ?? "" }) }}</p>
+			<p class="text-secondary mt-2">{{ $t("reports.delete.irreversible") }}</p>
 		</n-modal>
 	</div>
 </template>
@@ -112,6 +121,7 @@ import type {
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NEmpty, NForm, NFormItem, NInput, NModal, NSelect, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -126,6 +136,7 @@ import { downloadQueryId, fileNameFromDisposition } from "./reportDownload"
 const AddIcon = "carbon:document-add"
 
 const message = useMessage()
+const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
 	useCustomerPrefill()
@@ -168,54 +179,40 @@ function openGenerateModal() {
 	showGenerateModal.value = true
 }
 
-const rangeOptions = [
-	{ label: "Last 30 days", value: "30d" },
-	{ label: "Last 3 months", value: "90d" },
-	{ label: "Custom range", value: "custom" }
-]
+const rangeOptions = computed(() => [
+	{ label: t("reports.form.ranges.last30"), value: "30d" },
+	{ label: t("reports.form.ranges.last90"), value: "90d" },
+	{ label: t("reports.form.ranges.custom"), value: "custom" }
+])
 
-const templateOptions: { label: string; value: IncidentReportTemplate; description: string }[] = [
-	{
-		label: "Complete report",
-		value: "full",
-		description: "Everything: executive summary, charts & trends, and open/closed cases with assets & IOCs."
-	},
-	{
-		label: "Executive summary",
-		value: "executive",
-		description: "One-look synthesis: headline KPIs, service metrics and a status chart. No case detail."
-	},
-	{
-		label: "Operational — cases",
-		value: "operational",
-		description: "Case-centric: every open/closed case in full detail (assets, IOCs, resolution). No charts."
-	},
-	{
-		label: "Analytics — trends",
-		value: "analytics",
-		description:
-			"Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
-	}
-]
+const TEMPLATES: IncidentReportTemplate[] = ["full", "executive", "operational", "analytics"]
 
-const selectedTemplateDescription = computed(
-	() => templateOptions.find(o => o.value === formData.value.reportTemplate)?.description ?? ""
+const templateOptions = computed(() =>
+	TEMPLATES.map(value => ({
+		label: t(`reports.form.templates.${value}.label`),
+		value,
+		description: t(`reports.form.templates.${value}.description`)
+	}))
 )
 
-const rules: FormRules = {
-	customer_code: [{ required: true, message: "Please select a customer", trigger: ["blur", "change"] }],
+const selectedTemplateDescription = computed(
+	() => templateOptions.value.find(o => o.value === formData.value.reportTemplate)?.description ?? ""
+)
+
+const rules = computed<FormRules>(() => ({
+	customer_code: [{ required: true, message: t("reports.form.selectCustomer"), trigger: ["blur", "change"] }],
 	customRange: [
 		{
 			validator: () => {
 				if (formData.value.range === "custom" && !formData.value.customRange) {
-					return new Error("Please select a date range")
+					return new Error(t("reports.form.selectRange"))
 				}
 				return true
 			},
 			trigger: ["change", "blur"]
 		}
 	]
-}
+}))
 
 /** Format a Date as a naive UTC "YYYY-MM-DDTHH:mm:ss" string (DB timestamps are UTC). */
 function toUtcNaive(date: Date): string {
@@ -246,10 +243,10 @@ function loadReports() {
 			if (response.data.success) {
 				reports.value = response.data.reports
 			} else {
-				message.error(response.data.message || "Failed to load reports")
+				message.error(response.data.message || t("reports.list.loadFailed"))
 			}
 		},
-		error => message.error(getApiErrorMessage(error as ApiError) || "Failed to load reports")
+		error => message.error(getApiErrorMessage(error as ApiError) || t("reports.list.loadFailed"))
 	)
 }
 
@@ -263,7 +260,7 @@ async function handleGenerate() {
 
 	const customerCode = formData.value.customer_code
 	if (!customerCode) {
-		message.error("No customer available for report generation")
+		message.error(t("reports.list.noCustomer"))
 		return
 	}
 
@@ -287,18 +284,16 @@ async function handleGenerate() {
 			showGenerateModal.value = false
 			formData.value = getDefaultFormData()
 			formRef.value?.restoreValidation()
-			message.info("Generating the report can take a while — you will be notified once it is ready.", {
-				duration: 6000
-			})
+			message.info(t("reports.list.queued"), { duration: 6000 })
 			// The watch lives in the app-level store, so the notification arrives even if
 			// the user leaves this page (or reloads) while the report is still generating.
 			reportGenerationStore.track({ id: response.data.report_id, name: response.data.report_name })
 			await loadReports()
 		} else {
-			message.error("Failed to queue report generation")
+			message.error(t("reports.list.queueFailed"))
 		}
 	} catch (error) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to generate report")
+		message.error(getApiErrorMessage(error as ApiError) || t("reports.list.generateFailed"))
 	} finally {
 		generating.value = false
 	}
@@ -310,9 +305,9 @@ async function downloadReport(reportId: number, fileName?: string) {
 		const name =
 			fileName ?? fileNameFromDisposition(response.headers?.["content-disposition"]) ?? `report-${reportId}.pdf`
 		saveAs(new Blob([response.data]), name)
-		message.success("Report downloaded successfully")
+		message.success(t("reports.list.downloaded"))
 	} catch (error) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to download report")
+		message.error(getApiErrorMessage(error as ApiError) || t("reports.list.downloadFailed"))
 	}
 }
 
@@ -349,10 +344,10 @@ async function confirmDelete() {
 			message.success(response.data.message)
 			await loadReports()
 		} else {
-			message.error("Failed to delete report")
+			message.error(t("reports.list.deleteFailed"))
 		}
 	} catch (error) {
-		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete report")
+		message.error(getApiErrorMessage(error as ApiError) || t("reports.list.deleteFailed"))
 	} finally {
 		showDeleteModal.value = false
 		reportToDelete.value = null

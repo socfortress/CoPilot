@@ -12,12 +12,14 @@
 		<div v-if="hasSearched" class="flex flex-col gap-2">
 			<!-- What is loaded, then the tools for it: the columns, and the export of what is loaded. -->
 			<div ref="headerRef" class="flex w-full flex-wrap items-center gap-2" data-testid="event-results-toolbar">
-				<p class="m-0 text-sm" data-testid="event-results-count">
-					<span class="font-semibold tabular-nums">{{ events.length.toLocaleString() }}</span>
-					of
-					<span class="font-semibold tabular-nums">{{ totalEvents.toLocaleString() }}</span>
-					events loaded
-				</p>
+				<i18n-t keypath="eventSearch.results.count" tag="p" class="m-0 text-sm" data-testid="event-results-count">
+					<template #loaded>
+						<span class="font-semibold tabular-nums">{{ events.length.toLocaleString() }}</span>
+					</template>
+					<template #total>
+						<span class="font-semibold tabular-nums">{{ totalEvents.toLocaleString() }}</span>
+					</template>
+				</i18n-t>
 				<div class="ml-auto flex flex-wrap items-center justify-end gap-2">
 					<EventColumnTemplates
 						:templates
@@ -35,11 +37,11 @@
 					/>
 					<n-button size="small" secondary data-testid="event-columns-toggle" @click="showColumns = true">
 						<template #icon><Icon name="carbon:column" /></template>
-						Columns
+						{{ $t("eventSearch.results.columns") }}
 						<span
 							v-if="userColumns"
 							class="bg-primary ml-1.5 size-1.5 rounded-full"
-							title="Your own columns"
+							:title="$t('eventSearch.results.ownColumns')"
 						/>
 					</n-button>
 					<n-button
@@ -50,7 +52,7 @@
 						@click="exportCsv"
 					>
 						<template #icon><Icon name="carbon:download" /></template>
-						Export CSV
+						{{ $t("eventSearch.results.exportCsv") }}
 					</n-button>
 				</div>
 			</div>
@@ -65,8 +67,8 @@
 				data-testid="event-results"
 			>
 				<template #empty>
-					<n-empty description="No events found">
-						<template #extra>Try adjusting your query or expanding the time range</template>
+					<n-empty :description="$t('eventSearch.results.empty')">
+						<template #extra>{{ $t("eventSearch.results.emptyHint") }}</template>
 					</n-empty>
 				</template>
 			</n-data-table>
@@ -74,7 +76,11 @@
 			<!-- Load More -->
 			<div v-if="scrollId && events.length < totalEvents" class="mt-2 text-center">
 				<n-button :loading @click="loadMoreEvents">
-					{{ loading ? "Loading..." : `Showing ${events.length} of ${totalEvents} events • Load More` }}
+					{{
+						loading
+							? $t("common.states.loading")
+							: $t("eventSearch.results.loadMore", { shown: events.length, total: totalEvents })
+					}}
 				</n-button>
 			</div>
 		</div>
@@ -82,7 +88,7 @@
 		<n-modal
 			v-model:show="showColumns"
 			preset="card"
-			:title="`Columns · ${selectedEventSource?.name ?? ''}`"
+			:title="$t('eventSearch.results.columnsTitle', { source: selectedEventSource?.name ?? '' })"
 			:style="{ maxWidth: 'min(640px, 94vw)' }"
 			segmented
 		>
@@ -128,6 +134,7 @@ import type {
 import { useElementSize } from "@vueuse/core"
 import { NButton, NDataTable, NEmpty, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -151,6 +158,7 @@ import { sameColumns } from "./eventSearchMemory"
 import { useEventSearchMemory } from "./useEventSearchMemory"
 
 const message = useMessage()
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 
 const searchFormParams = ref<SearchFormParams | null>(null)
@@ -210,7 +218,9 @@ const pickerStart = computed(() => userColumns.value ?? selectedEventSource.valu
 // copies its columns, so the layout in force is whichever one the columns match.
 const templates = computed(() => memory.templatesFor(selectedEventSource.value?.name))
 const sourceLayoutName = computed(() =>
-	selectedEventSource.value?.displayed_columns?.length ? "SOC layout" : "Default layout"
+	selectedEventSource.value?.displayed_columns?.length
+		? t("eventSearch.results.socLayout")
+		: t("eventSearch.results.defaultLayout")
 )
 const sourceLayoutColumns = computed(() =>
 	resolveColumns(null, selectedEventSource.value?.displayed_columns, timeField.value)
@@ -260,7 +270,7 @@ function tableColumn(column: EventColumn): DataTableColumn<EventSearchResult> {
 }
 
 const actionsColumn = computed<DataTableColumn<EventSearchResult>>(() => ({
-	title: "Actions",
+	title: t("common.fields.actions"),
 	key: "actions",
 	width: 150,
 	fixed: simpleMode.value ? undefined : "right",
@@ -271,7 +281,7 @@ const actionsColumn = computed<DataTableColumn<EventSearchResult>>(() => ({
 				icon: () => <Icon name="carbon:view" />
 			}}
 		>
-			View Details
+			{t("eventSearch.results.viewDetails")}
 		</NButton>
 	)
 }))
@@ -294,7 +304,7 @@ async function applyTemplate(template: EventSearchColumnTemplate | null) {
 	try {
 		await memory.setColumns(source, template ? template.columns : null)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to switch the columns")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.switchColumnsFailed"))
 	} finally {
 		savingColumns.value = false
 	}
@@ -306,9 +316,13 @@ async function saveTemplate(name: string, picked: DisplayColumn[]) {
 	savingTemplate.value = true
 	try {
 		const replaced = await memory.saveTemplate(source, name, picked)
-		message.success(replaced ? `Updated the template “${name}”` : `Saved the template “${name}”`)
+		message.success(
+			replaced
+				? t("eventSearch.results.templateUpdated", { name })
+				: t("eventSearch.results.templateSaved", { name })
+		)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the template")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.saveTemplateFailed"))
 	} finally {
 		savingTemplate.value = false
 	}
@@ -323,9 +337,11 @@ async function deleteTemplate(id: number) {
 	deletingTemplateId.value = id
 	try {
 		await memory.removeTemplate(id)
-		message.success(name ? `Deleted the template “${name}”` : "Template deleted")
+		message.success(
+			name ? t("eventSearch.results.templateDeletedNamed", { name }) : t("eventSearch.results.templateDeleted")
+		)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to delete the template")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.deleteTemplateFailed"))
 	} finally {
 		savingTemplate.value = false
 		deletingTemplateId.value = null
@@ -341,7 +357,7 @@ async function applyColumns(picked: DisplayColumn[] | null) {
 		await memory.setColumns(source, picked)
 		showColumns.value = false
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to save the columns")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.saveColumnsFailed"))
 	} finally {
 		savingColumns.value = false
 	}
@@ -355,8 +371,11 @@ function exportCsv() {
 	const more = totalEvents.value - events.value.length
 	message.success(
 		more > 0
-			? `Exported ${events.value.length.toLocaleString()} of ${totalEvents.value.toLocaleString()} events: load more to include the rest`
-			: `Exported ${events.value.length.toLocaleString()} events`
+			? t("eventSearch.results.exportedPartial", {
+					exported: events.value.length.toLocaleString(),
+					total: totalEvents.value.toLocaleString()
+				})
+			: t("eventSearch.results.exported", { exported: events.value.length.toLocaleString() })
 	)
 }
 
@@ -404,7 +423,7 @@ async function searchEvents() {
 		scrollId.value = response.data.scroll_id
 		hasSearched.value = true
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to search events")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.searchFailed"))
 	} finally {
 		loading.value = false
 	}
@@ -427,7 +446,7 @@ async function loadMoreEvents() {
 		events.value.push(...response.data.events)
 		scrollId.value = response.data.scroll_id
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to load more events")
+		message.error(getApiErrorMessage(err as ApiError) || t("eventSearch.results.loadMoreFailed"))
 	} finally {
 		loading.value = false
 	}

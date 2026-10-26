@@ -4,6 +4,7 @@ import type { ApiError, CommonResponse } from "@/types/common"
 import type { DisplayColumn, EventSearchColumnTemplate, EventSearchMemory, EventSearchState } from "@/types/siem"
 import { computed, ref, toValue, watch } from "vue"
 import Api from "@/api"
+import { i18nGlobal } from "@/lang"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 import { emptyMemory } from "./eventSearchMemory"
@@ -77,7 +78,7 @@ export function useEventSearchMemory(customerCode: MaybeRefOrGetter<string | nul
 				}
 				target.status.value = "ready"
 			} catch (err) {
-				target.error.value = getApiErrorMessage(err as ApiError) || "Could not load your saved searches"
+				target.error.value = getApiErrorMessage(err as ApiError) || i18nGlobal.t("eventSearch.queries.loadFailed")
 				target.status.value = "error"
 			} finally {
 				target.pending = undefined
