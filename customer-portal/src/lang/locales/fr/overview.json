@@ -39,7 +39,7 @@
 		"openCases": "dossier ouvert | dossiers ouverts",
 		"online": "en ligne",
 		"total": "{count} au total",
-		"critical": "{count} critiques",
+		"critical": "{count} critique | {count} critiques",
 		"sparkCaption": "nouveaux · {range}",
 		"sparkAlerts": "{count} alerte ouverte au cours des {days} derniers jours | {count} alertes ouvertes au cours des {days} derniers jours",
 		"sparkCases": "{count} dossier ouvert au cours des {days} derniers jours | {count} dossiers ouverts au cours des {days} derniers jours"

@@ -39,7 +39,7 @@
 		"openCases": "open zaak | open zaken",
 		"online": "online",
 		"total": "{count} totaal",
-		"critical": "{count} kritiek",
+		"critical": "{count} kritiek | {count} kritiek",
 		"sparkCaption": "nieuw · {range}",
 		"sparkAlerts": "{count} melding geopend in de afgelopen {days} dagen | {count} meldingen geopend in de afgelopen {days} dagen",
 		"sparkCases": "{count} zaak geopend in de afgelopen {days} dagen | {count} zaken geopend in de afgelopen {days} dagen"

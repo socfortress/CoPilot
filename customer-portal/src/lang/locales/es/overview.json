@@ -39,7 +39,7 @@
 		"openCases": "caso abierto | casos abiertos",
 		"online": "en línea",
 		"total": "{count} en total",
-		"critical": "{count} críticos",
+		"critical": "{count} crítico | {count} críticos",
 		"sparkCaption": "nuevos · {range}",
 		"sparkAlerts": "{count} alerta abierta en los últimos {days} días | {count} alertas abiertas en los últimos {days} días",
 		"sparkCases": "{count} caso abierto en los últimos {days} días | {count} casos abiertos en los últimos {days} días"

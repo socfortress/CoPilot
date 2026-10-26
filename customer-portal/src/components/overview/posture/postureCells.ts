@@ -111,7 +111,7 @@ export function buildPostureCells(counts: {
 				{ key: "online", label: t("overview.status.online"), value: agents.online, color: "success" },
 				{ key: "offline", label: t("overview.status.offline"), value: agents.offline, color: "error" }
 			],
-			footnote: t("overview.posture.critical", { count: agents.critical })
+			footnote: t("overview.posture.critical", { count: agents.critical }, agents.critical)
 		}
 	]
 }

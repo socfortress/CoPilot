@@ -39,7 +39,7 @@
 		"openCases": "offener Fall | offene Fälle",
 		"online": "online",
 		"total": "{count} insgesamt",
-		"critical": "{count} kritisch",
+		"critical": "{count} kritisch | {count} kritisch",
 		"sparkCaption": "neu · {range}",
 		"sparkAlerts": "{count} Alarm in den letzten {days} Tagen eröffnet | {count} Alarme in den letzten {days} Tagen eröffnet",
 		"sparkCases": "{count} Fall in den letzten {days} Tagen eröffnet | {count} Fälle in den letzten {days} Tagen eröffnet"

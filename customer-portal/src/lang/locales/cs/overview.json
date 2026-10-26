@@ -39,7 +39,7 @@
 		"openCases": "otevřený případ | otevřené případy | otevřených případů",
 		"online": "online",
 		"total": "celkem {count}",
-		"critical": "kritické: {count}",
+		"critical": "{count} kritický | {count} kritické | {count} kritických",
 		"sparkCaption": "nové · {range}",
 		"sparkAlerts": "{count} výstraha otevřena za posledních {days} dní | {count} výstrahy otevřeny za posledních {days} dní | {count} výstrah otevřeno za posledních {days} dní",
 		"sparkCases": "{count} případ otevřen za posledních {days} dní | {count} případy otevřeny za posledních {days} dní | {count} případů otevřeno za posledních {days} dní"
