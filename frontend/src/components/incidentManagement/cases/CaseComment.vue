@@ -1,13 +1,23 @@
 <template>
 	<div class="flex w-full gap-3">
-		<div v-if="userPic" class="pt-0.5">
-			<n-avatar round :size="32" :src="userPic" />
+		<div class="pt-0.5">
+			<CommentAuthorAvatar :user-name="comment.user_name" :role="authorRole" />
 		</div>
 		<div class="flex grow flex-col gap-1 overflow-hidden">
 			<div class="ml-0.5 flex items-center gap-3">
 				<div class="font-semibold">
 					{{ comment.user_name }}
 				</div>
+				<n-tag
+					v-if="authorRole"
+					:type="roleTagType(authorRole)"
+					size="tiny"
+					round
+					:bordered="false"
+					data-testid="comment-author-role"
+				>
+					{{ roleLabel(authorRole) }}
+				</n-tag>
 				<div class="text-secondary text-2xs font-mono">
 					{{ formatDate(comment.created_at, dFormats.datetime) }}
 				</div>
@@ -83,25 +93,28 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { CaseComment } from "@/types/incidentManagement/cases"
-import { NAvatar, NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
-import { onBeforeMount, ref, toRefs } from "vue"
+import { NButton, NInput, NPopconfirm, NTag, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { roleLabel, roleTagType } from "@/components/users/roles"
 import { useSettingsStore } from "@/stores/settings"
 
-import { getApiErrorMessage, getAvatar, getNameInitials } from "@/utils"
+import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import CommentAuthorAvatar from "../common/CommentAuthorAvatar.vue"
 
 type Mode = "view" | "edit"
 
-const props = defineProps<{ comment: CaseComment; embedded?: boolean }>()
+// authorRole: the role name of the comment's author, when the list could read it (#1305).
+const props = defineProps<{ comment: CaseComment; embedded?: boolean; authorRole?: string | null }>()
 
 const emit = defineEmits<{
 	(e: "deleted"): void
 	(e: "updated", value: CaseComment): void
 }>()
 
-const { comment, embedded } = toRefs(props)
+const { comment, embedded, authorRole } = toRefs(props)
 
 const ArrowLeftIcon = "carbon:arrow-left"
 const SaveIcon = "carbon:save"
@@ -111,7 +124,6 @@ const mode = ref<Mode>("view")
 const canceling = ref(false)
 const saving = ref(false)
 const dFormats = useSettingsStore().dateFormat
-const userPic = ref("")
 const commentModel = ref(comment.value.comment)
 const message = useMessage()
 
@@ -172,9 +184,4 @@ function deleteCaseComment() {
 			canceling.value = false
 		})
 }
-
-onBeforeMount(() => {
-	const initials = getNameInitials(comment.value.user_name)
-	userPic.value = getAvatar({ seed: initials, text: initials, size: 64 })
-})
 </script>

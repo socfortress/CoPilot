@@ -41,6 +41,11 @@
 						<AlertAiReport :alert-id="alert.id" />
 					</n-tab-pane>
 
+					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
+					<n-tab-pane v-if="askSocEnabled" name="ask-soc" tab="Ask the SOC" display-directive="show:lazy">
+						<AskSoc entity="alert" :entity-id="alert.id" @asked="handleAsked" />
+					</n-tab-pane>
+
 					<n-tab-pane name="comments" :tab="`Comments (${alert.comments?.length || 0})`">
 						<AlertComments
 							:alert
@@ -64,7 +69,9 @@ import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
 import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
+import AskSoc from "@/components/socRequests/AskSoc.vue"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
+import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
 import { getApiErrorMessage } from "@/utils"
 import { isWaitingOnCustomer } from "@/utils/workflowStatus"
 import AlertAiReport from "./AlertAiReport.vue"
@@ -86,9 +93,11 @@ const alert = ref<Alert | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const aiReportEnabled = ref(false)
+const askSocEnabled = ref(false)
 const activeTab = ref("overview")
 
 const { isEnabledFor } = useAiReportsAvailability()
+const { isEnabledFor: isAskSocEnabledFor } = useSocRequestsAvailability()
 
 async function loadAlertDetails() {
 	if (props.alertId === null) return
@@ -110,7 +119,22 @@ async function loadAlertDetails() {
 
 	// Resolved after the alert so the switch is checked against its owning
 	// customer — a portal user may be scoped to more than one.
-	aiReportEnabled.value = alert.value ? await isEnabledFor(alert.value.customer_code) : false
+	const customerCode = alert.value?.customer_code
+	const [aiReport, askSoc] = customerCode
+		? await Promise.all([isEnabledFor(customerCode), isAskSocEnabledFor(customerCode)])
+		: [false, false]
+	aiReportEnabled.value = aiReport
+	askSocEnabled.value = askSoc
+}
+
+// A question is a comment signed by the user, and may have opened a case: read the alert
+// again. A comment hands an alert the SOC waits on back to it, so tell the list.
+async function handleAsked() {
+	const wasWaiting = alert.value ? isWaitingOnCustomer(alert.value.status) : false
+	await loadAlertDetails()
+	if (wasWaiting && alert.value && !isWaitingOnCustomer(alert.value.status)) {
+		emit("statusUpdated", { alertId: alert.value.id, status: alert.value.status })
+	}
 }
 
 async function handleCommentAdded(comment: CommentItem) {
@@ -165,6 +189,7 @@ watch(
 		alert.value = null
 		detailsError.value = null
 		aiReportEnabled.value = false
+		askSocEnabled.value = false
 		activeTab.value = "overview"
 
 		if (newAlertId !== null) {

@@ -13,6 +13,7 @@ from app.customer_portal.routes.notifications import (
 )
 from app.customer_portal.routes.settings import customer_portal_settings_router
 from app.customer_portal.routes.sla import customer_portal_sla_router
+from app.customer_portal.routes.soc_requests import customer_portal_soc_requests_router
 from app.customer_portal.routes.tenant_users import customer_portal_tenant_users_router
 
 # Instantiate the APIRouter
@@ -88,4 +89,10 @@ router.include_router(
     customer_portal_audit_router,
     prefix="/customer_portal",
     tags=["Customer Portal Audit Log"],
+)
+# "Ask the SOC" about an alert or a case (#1305) — opt-in per customer; the SOC's list and its switch
+router.include_router(
+    customer_portal_soc_requests_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Ask the SOC"],
 )

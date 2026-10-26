@@ -12,6 +12,7 @@ import portal from "./endpoints/portal"
 import reports from "./endpoints/reports"
 import siem from "./endpoints/siem"
 import sla from "./endpoints/sla"
+import socRequests from "./endpoints/socRequests"
 import totp from "./endpoints/totp"
 import users from "./endpoints/users"
 
@@ -27,6 +28,7 @@ export default {
 	exposure,
 	siem,
 	sla,
+	socRequests,
 	notifications,
 	portal,
 	reports,

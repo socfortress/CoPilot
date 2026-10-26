@@ -86,6 +86,16 @@ const SLA_VARIABLES: TemplateVariable[] = [
 	{ name: "assignee", description: "Who has the item. Empty when unassigned.", example: "jdoe" }
 ]
 
+// Set by the customer question trigger (#1305): a portal user asked the SOC about an
+// alert or a case. `actor` is who asked; there is no assignee.
+const QUESTION_VARIABLES: TemplateVariable[] = [
+	{ name: "context.question", description: "The question, cut at 500 characters.", example: "Is this sign-in our VPN?" },
+	{ name: "context.urgency", description: "What the customer picked: low, normal or high.", example: "high" },
+	{ name: "context.asked_by", description: "The portal user who asked.", example: "jane.doe" },
+	{ name: "context.title", description: "Name of the case or alert the question is about." },
+	{ name: "context.request_id", description: "The question's id in CoPilot.", example: "42" }
+]
+
 // Set by Talon's ops findings (talon-analyst D96). `why` and `recommendation` are a model's
 // text: escaped in HTML and Markdown templates, as written anywhere else.
 const OPS_VARIABLES: TemplateVariable[] = [
@@ -274,11 +284,20 @@ export function variablesForTrigger(trigger: NotificationTrigger | null): Templa
 	// and a manual send can attach one to any alert. Assignment triggers never
 	// do, so listing it there would invite a template with a permanent hole.
 	const specific = !trigger
-		? [...ASSIGNMENT_VARIABLES, ...ALERT_VARIABLES, ...AI_REPORT_VARIABLES, ...REVIEW_VARIABLES, ...SLA_VARIABLES]
+		? [
+				...ASSIGNMENT_VARIABLES,
+				...ALERT_VARIABLES,
+				...AI_REPORT_VARIABLES,
+				...REVIEW_VARIABLES,
+				...SLA_VARIABLES,
+				...QUESTION_VARIABLES
+			]
 		: ASSIGNMENT_TRIGGERS.includes(trigger)
 			? ASSIGNMENT_VARIABLES
 			: SLA_TRIGGERS.includes(trigger)
 				? SLA_VARIABLES
+				: trigger === "customer_question"
+					? QUESTION_VARIABLES
 				: trigger === OPS_TRIGGER
 					? OPS_VARIABLES
 					: trigger === "ai_report_reviewed"

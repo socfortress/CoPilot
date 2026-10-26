@@ -5,6 +5,7 @@
 				v-for="comment of commentsList"
 				:key="comment.id"
 				:comment
+				:author-role="roleOf(comment.user_name)"
 				embedded
 				@deleted="removeComment(comment)"
 				@updated="updateComment($event)"
@@ -55,6 +56,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
+import { useCommentAuthors } from "../common/commentAuthors"
 import CaseCommentItem from "./CaseComment.vue"
 
 const props = defineProps<{ comments: CaseComment[]; caseId: number }>()
@@ -63,6 +65,7 @@ const emit = defineEmits<{
 }>()
 
 const { comments, caseId } = toRefs(props)
+const { roleOf } = useCommentAuthors("case", caseId)
 
 const CommentsIcon = "carbon:chat"
 const commentsList = ref<CaseComment[]>(comments.value)
