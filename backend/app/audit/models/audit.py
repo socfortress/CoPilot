@@ -131,6 +131,13 @@ class AuditAction(str, Enum):
     # lesson or chat `remember` lesson, or one of the caller's own chat memories. Refusals (by
     # CoPilot or by talon-analyst) are recorded as failures.
     TALON_MEMORY_FORGET = "talon_memory.forget"
+    # An ops finding acknowledged, muted or reopened, or an ops job run now, from the AI Analyst
+    # page's Ops tab (talon-analyst D96, plan OJ-5). Every request sent to talon-analyst is recorded;
+    # its refusals as failures, no answer as unknown.
+    TALON_OPS_ACKNOWLEDGE = "talon_ops.acknowledge"
+    TALON_OPS_MUTE = "talon_ops.mute"
+    TALON_OPS_REOPEN = "talon_ops.reopen"
+    TALON_OPS_RUN = "talon_ops.run"
 
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"

@@ -397,3 +397,70 @@ def customer_question_event(
         actor_username=asked_by,
         context={"title": title, "question": excerpt, "urgency": urgency, "asked_by": asked_by, "request_id": request_id},
     )
+
+
+#: Words for an ops finding's kind in the summary (talon-analyst's phase-1 kinds); any other kind is
+#: shown as written, underscores as spaces.
+OPS_KIND_WORDS = {
+    "never_connected": "an agent that never connected",
+    "wazuh_quiet": "an endpoint Wazuh stopped seeing",
+    "velociraptor_quiet": "an endpoint Velociraptor stopped seeing",
+    "wazuh_only": "an endpoint only Wazuh sees",
+    "velociraptor_only": "an endpoint only Velociraptor sees",
+    "silent": "a log source gone silent",
+    "dropped": "a log source whose volume dropped",
+    "no_data": "a log source with no data",
+}
+
+#: The Ops tab of the AI Analyst page, opened on one finding.
+OPS_PAGE_PATH = "/ai-analyst?tab=ops&finding={id}"
+
+
+def ops_dedupe_key(finding: Any) -> str:
+    """Once per notification epoch and severity: `ops:<id>:<notify_epoch>:<severity>`.
+
+    talon-analyst raises a finding's `notify_epoch` every time it clears `notified_at`: the finding
+    is new or came back after resolving, its severity rose, or its mute expired (its migration
+    0024). Each of those is news and gets a new key; a finding read again in the same epoch (its
+    `notified` post failed, a crash) keeps its key and is never sent twice.
+
+    A talon-analyst from before `notify_epoch` sends none: then the epoch is `fs<first_seen as Unix
+    seconds>`, which still moves when a resolved finding comes back (its `first_seen` is reset), but
+    not on an expired mute or a fall-then-rise in severity. The `fs` prefix keeps the two forms apart.
+    """
+    epoch = getattr(finding, "notify_epoch", None)
+    if not isinstance(epoch, int) or isinstance(epoch, bool):
+        first_seen = getattr(finding, "first_seen", None)
+        epoch = f"fs{int(first_seen.timestamp())}" if first_seen is not None else "fs0"
+    return f"ops:{finding.id}:{epoch}:{finding.severity}"
+
+
+def talon_ops_finding_event(finding: Any, *, job_title: Optional[str] = None) -> NotificationEvent:
+    """A Talon ops finding (talon-analyst D96, plan OJ-5) for the SOC's internal routes.
+
+    `finding` is one CoPilot already parsed and checked (`TalonOpsFinding`). The subject and summary
+    are made here from code's fields only (the title, the job, the kind, the customer, the times);
+    the model's `why` and `recommendation` travel only in `context.ops_finding`, as plain text.
+    """
+    from app.notifications.services.ops_finding_v1 import OPS_SEVERITY
+    from app.notifications.services.ops_finding_v1 import build_ops_finding_v1
+    from app.notifications.services.ops_finding_v1 import ops_finding_v1_json
+
+    link = _copilot_link(OPS_PAGE_PATH.format(id=finding.id))
+    block = build_ops_finding_v1(finding, ops_url=link)
+    customer = finding.customer_code
+    kind = OPS_KIND_WORDS.get(finding.kind, finding.kind.replace("_", " "))
+    where = f"customer {customer}" if customer else "the platform"
+    last_seen = f"{finding.last_seen:%Y-%m-%d %H:%M} UTC" if finding.last_seen else "unknown"
+    return NotificationEvent(
+        customer_code=customer,
+        trigger=NotificationTrigger.TALON_OPS_FINDING,
+        severity=OPS_SEVERITY[finding.severity],
+        subject=f"Talon ops: {block['title']}",
+        summary=f"{job_title or finding.job} found {kind} for {where} (severity {finding.severity}, last seen {last_seen}).",
+        entity_type=EntityType.OPS_FINDING,
+        entity_id=finding.id,
+        dedupe_key=ops_dedupe_key(finding),
+        link_url=link,
+        context={"title": block["title"], "ops_finding": block, "ops_finding_json": ops_finding_v1_json(block)},
+    )

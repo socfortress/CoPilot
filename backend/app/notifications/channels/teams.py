@@ -104,8 +104,13 @@ class TeamsChannel(ChannelProvider):
         if not cfg.webhook_url:
             return SendResult.failed("Route config has no webhook_url (data integrity issue)")
 
-        card = self._build_card(event, message.body, raw_body=has_template)
-        card = self._fit_within_size_limit(card, event, message.body)
+        # A Talon ops finding's subject holds talon-analyst's title, and the card's TextBlocks render
+        # Markdown: the header gets the escaped form (any other event is returned unchanged).
+        from app.notifications.services.ops_finding_v1 import markdown_safe_event
+
+        card_event = markdown_safe_event(event)
+        card = self._build_card(card_event, message.body, raw_body=has_template)
+        card = self._fit_within_size_limit(card, card_event, message.body)
 
         status, error_message, latency_ms, _ = await dispatch_teams(webhook_url=cfg.webhook_url, card=card)
         return SendResult(status=status, error_message=error_message, latency_ms=latency_ms)

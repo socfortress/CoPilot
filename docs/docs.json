@@ -219,6 +219,7 @@
               "power-features/talon-install",
               "power-features/talon-health-dashboard",
               "power-features/talon-memory",
+              "power-features/talon-ops",
               "power-features/ai-analyst-review",
               "power-features/ai-analyst-notifications",
               "power-features/user-behavior-analytics",

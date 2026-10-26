@@ -412,6 +412,20 @@ def sample_event(trigger: str, customer_code: Optional[str]) -> NotificationEven
         entity_type = EntityType.CASE
     elif parsed == NotificationTrigger.CASE_TASK_ASSIGNED:
         entity_type = EntityType.CASE_TASK
+    elif parsed == NotificationTrigger.TALON_OPS_FINDING:
+        # A Talon ops finding is not an alert: its own sample, built by the same code as a real one.
+        return NotificationEvent(
+            customer_code=None,
+            trigger=parsed,
+            severity=NotificationSeverity.MEDIUM,
+            subject="Talon ops: WKSTN-014: not seen by Wazuh for 5 days",
+            summary="Endpoints gone quiet found an endpoint Wazuh stopped seeing for customer ACME (severity medium, last seen 2026-10-24 06:00 UTC).",
+            entity_type=EntityType.OPS_FINDING,
+            entity_id=1207,
+            dedupe_key="preview",
+            link_url="https://copilot.example.com/ai-analyst?tab=ops&finding=1207",
+            context=ops_sample_context(),
+        )
 
     return NotificationEvent(
         customer_code=customer_code or "ACME",
@@ -472,6 +486,17 @@ SLA_SAMPLE_CONTEXT = {
 }
 
 
+def ops_sample_context() -> Dict[str, Any]:
+    """What a `talon_ops_finding` event carries in ``context`` (``event_builders.talon_ops_finding_event``),
+    with made-up values, so a template written against ``context.ops_finding`` previews and test-sends
+    as it will send for real."""
+    from app.notifications.services.ops_finding_v1 import ops_finding_v1_json
+    from app.notifications.services.ops_finding_v1 import sample_ops_finding_v1
+
+    block = sample_ops_finding_v1()
+    return {"title": block["title"], "ops_finding": block, "ops_finding_json": ops_finding_v1_json(block)}
+
+
 async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
     """Render template source against a sample event, without saving.
 
@@ -489,6 +514,11 @@ async def preview(payload: Any, session: AsyncSession) -> Dict[str, Any]:
 
     event = sample_event(trigger, payload.customer_code)
     autoescape = fmt in _HTML_FORMATS
+    if fmt == "markdown" and (event.context or {}).get("ops_finding"):
+        # As at send time (`notifications._ops_event_for_route`): every talon-analyst string escaped.
+        from app.notifications.services.ops_finding_v1 import markdown_safe_event
+
+        event = markdown_safe_event(event)
 
     extra: Dict[str, Any] = {}
     source = f"{payload.body_template}{payload.subject_template or ''}"

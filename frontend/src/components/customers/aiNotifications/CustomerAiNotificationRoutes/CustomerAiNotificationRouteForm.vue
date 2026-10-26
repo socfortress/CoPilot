@@ -644,6 +644,9 @@ const INTERNAL_TRIGGER_OPTIONS = [
 	// Ask the SOC (#1305): a portal user's question about an alert or a case. Minimum
 	// severity compares the urgency they picked (low, normal = Medium, high).
 	{ label: "A customer asks the SOC a question", value: "customer_question" },
+	// Talon's ops jobs (talon-analyst D96): once each time a finding is news. Internal only: a
+	// customer never hears about them, so the customer list never offers it.
+	{ label: "Talon flags something in the stack", value: "talon_ops_finding" },
 	REVIEW_TRIGGER_OPTION
 ]
 
