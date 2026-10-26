@@ -185,9 +185,7 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 	{
 		title: t("common.fields.actions"),
 		key: "actions",
-		// Always in view, like the alert's name on the left: the table scrolls sideways.
-		fixed: simpleMode.value ? undefined : "right",
-		// Room for the longest translation of "View details" (Czech).
+		// Room for the longest translation of "View details" (Czech) and the page link.
 		width: 250,
 		render: row => {
 			return <AlertDetailsButton alertId={row.id} onStatusUpdated={handleStatusUpdateSuccess} />
