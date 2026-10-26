@@ -78,4 +78,14 @@ describe("sparkline (#1273)", () => {
 		expect(wrapper.find("polyline").exists()).toBe(false)
 		expect(wrapper.get("line").attributes("stroke-dasharray")).toBe("2 4")
 	})
+
+	it("count critical agents with the language's plural (#1310)", async () => {
+		const { default: i18n } = await import("@/lang")
+		const cells = (critical: number) => buildPostureCells({ alerts: counts, cases: counts, agents: { ...agents, critical } })
+		expect(cells(1)[2]!.footnote).toBe("1 critical")
+		i18n.global.locale.value = "it"
+		expect([1, 2].map(n => cells(n)[2]!.footnote)).toEqual(["1 critico", "2 critici"])
+		i18n.global.locale.value = "cs"
+		expect([1, 3, 5].map(n => cells(n)[2]!.footnote)).toEqual(["1 kritický", "3 kritické", "5 kritických"])
+	})
 })

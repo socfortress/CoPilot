@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Aktivita",
+		"intro": "Co pro vás dorazilo do SOC, odkud to přišlo a jak to bylo posouzeno, ve srovnání s předchozím obdobím.",
+		"refreshError": "Údaje se nepodařilo obnovit: {error}",
+		"disabledTitle": "Aktivita zatím není k dispozici",
+		"disabledText": "Váš SOC zatím pro tohoto zákazníka nezveřejnil přehled aktivity. Pokud ho zde chcete vidět, obraťte se na svůj kontakt v SOC.",
+		"note": "Počítáno od okamžiku, kdy každá výstraha a případ dorazily do SOC, {period}. Vyberte počet a zobrazí se příslušné výstrahy.",
+		"periodText": "za posledních {period} vedle předchozích {period}",
+		"periodMeta": "posledních {period}",
+		"severityNote": "Výstraha, jejíž zdroj neposlal závažnost, se počítá s výchozí úrovní SOC.",
+		"otherSources": "Ostatní zdroje: {count} ({previous} v předchozím období)"
+	},
+	"range": "{count} dní",
+	"panels": {
+		"sources": "Výstrahy podle zdroje",
+		"severities": "Výstrahy podle závažnosti",
+		"detections": "Nejčastější detekce",
+		"assets": "Nejčastější aktiva",
+		"tags": "Nejčastější štítky",
+		"noAlertsEither": "Žádné výstrahy v žádném z obou období",
+		"noAlerts": "V tomto období žádné výstrahy",
+		"noAssets": "Žádná výstraha v tomto období neuvedla aktivum",
+		"noTags": "V tomto období žádná výstraha se štítkem"
+	},
+	"cases": {
+		"title": "Případy",
+		"empty": "V žádném z obou období nebyl otevřen žádný případ",
+		"byType": "Podle typu",
+		"byStatus": "Aktuální stav otevřených případů"
+	},
+	"verdicts": {
+		"title": "Verdikty SOC",
+		"truePositives": "Skutečné pozitivní",
+		"falsePositives": "Falešně pozitivní",
+		"untriaged": "Zatím neposouzeno",
+		"reasons": "Proč byly výstrahy falešně pozitivní",
+		"noisy": "Detekce s nejvíce falešně pozitivními výsledky",
+		"noFalsePositive": "V tomto období žádný falešně pozitivní výsledek.",
+		"noisyCount": "{falsePositives} z {reviewed} posouzených · {rate}"
+	},
+	"kpi": {
+		"alerts": "Přijaté výstrahy",
+		"cases": "Otevřené případy",
+		"falsePositives": "Falešně pozitivní",
+		"coverage": "Posouzeno SOC",
+		"periodBefore": "{count} v předchozím období",
+		"changeTitle": "Změna oproti předchozímu období",
+		"pointsTitle": "Procentní body oproti předchozímu období",
+		"ofReviewed": "z {count} posouzených",
+		"nothingReviewed": "zatím nic neposouzeno",
+		"ofAlerts": "{reviewed} z {total} výstrah",
+		"noAlerts": "v tomto období žádné výstrahy"
+	},
+	"delta": {
+		"new": "nové",
+		"points": "{points} b."
+	},
+	"rank": {
+		"previousTitle": "Předchozí období: {count}",
+		"countLabel": "{count} v tomto období",
+		"previousLabel": "{count} v předchozím období",
+		"was": "dříve {count}"
+	}
+}

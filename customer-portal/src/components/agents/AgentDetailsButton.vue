@@ -1,6 +1,6 @@
 <template>
 	<EntityDetailsButton
-		title="Agent Details"
+		:title="$t('agents.agentDetailsButton.title')"
 		entity="agent"
 		:route="routeAgentDetails(agentId.toString())"
 		:size

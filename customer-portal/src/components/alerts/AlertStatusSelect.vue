@@ -16,6 +16,7 @@ import type { AlertStatus } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { NSelect, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import { statusSelectOptions, workflowStatusLabel } from "@/utils/workflowStatus"
@@ -42,6 +43,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
 const selectedStatus = ref<AlertStatus>(props.status)
 // The waiting status is shown while the item is in it, never offered (see workflowStatus.ts).
@@ -64,7 +66,7 @@ async function handleStatusChange(value: string) {
 
 	try {
 		await Api.alerts.updateAlertStatus(props.alertId, selectedStatus.value)
-		message.success(`Alert status updated to ${workflowStatusLabel(selectedStatus.value)}`)
+		message.success(t("alerts.statusSelect.updated", { status: workflowStatusLabel(selectedStatus.value) }))
 		emit("success", {
 			alertId: props.alertId,
 			status: selectedStatus.value

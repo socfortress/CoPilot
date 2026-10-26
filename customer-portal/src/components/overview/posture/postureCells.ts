@@ -1,6 +1,7 @@
 import type { StatusSegment } from "../shared/status"
 import type { AgentCounts, StatusCounts } from "@/types/portal"
 import { ICONS } from "@/const"
+import { i18nGlobal } from "@/lang"
 
 export type PostureKey = "alerts" | "cases" | "agents"
 
@@ -38,22 +39,32 @@ export interface PostureTrend {
 }
 
 function spark(values: number[], noun: "alert" | "case", range: string): PostureSpark {
+	const { t } = i18nGlobal
 	const total = values.reduce((sum, value) => sum + value, 0)
+	const label = noun === "alert" ? "overview.posture.sparkAlerts" : "overview.posture.sparkCases"
 	return {
 		values,
-		caption: `opened · ${range}`,
-		label: `${total} ${total === 1 ? noun : `${noun}s`} opened over the last ${values.length} days`
+		caption: t("overview.posture.sparkCaption", { range }),
+		label: t(label, { count: total, days: values.length }, total)
 	}
 }
 
 // Same colours as the alert and case lists (getStatusColor), so a colour means the
 // same thing on every page. Also drives the status strip above the alert and case lists.
+// Labels are read when called (at render), so they follow a language change; each agrees
+// with its count ("9 open").
 export function workflowSegments(counts: StatusCounts): StatusSegment[] {
+	const { t } = i18nGlobal
 	return [
-		{ key: "open", label: "open", value: counts.open, color: "info" },
-		{ key: "in_progress", label: "in progress", value: counts.in_progress, color: "warning" },
-		{ key: "pending_customer", label: "waiting on you", value: counts.pending_customer ?? 0, color: "waiting" },
-		{ key: "closed", label: "closed", value: counts.closed, color: "success" }
+		{ key: "open", label: t("overview.segments.open", counts.open), value: counts.open, color: "info" },
+		{ key: "in_progress", label: t("overview.segments.inProgress", counts.in_progress), value: counts.in_progress, color: "warning" },
+		{
+			key: "pending_customer",
+			label: t("overview.segments.waiting", counts.pending_customer ?? 0),
+			value: counts.pending_customer ?? 0,
+			color: "waiting"
+		},
+		{ key: "closed", label: t("overview.segments.closed", counts.closed), value: counts.closed, color: "success" }
 	]
 }
 
@@ -64,42 +75,43 @@ export function buildPostureCells(counts: {
 	trend?: PostureTrend | null
 }): PostureCellModel[] {
 	const { alerts, cases, agents, trend } = counts
+	const { t } = i18nGlobal
 
 	return [
 		{
 			key: "alerts",
-			title: "Alerts",
+			title: t("overview.posture.alerts"),
 			icon: ICONS.alerts,
 			route: "AlertsList",
 			headline: String(alerts.open),
-			caption: alerts.open === 1 ? "open alert" : "open alerts",
+			caption: t("overview.posture.openAlerts", alerts.open),
 			segments: workflowSegments(alerts),
-			footnote: `${alerts.total} total`,
+			footnote: t("overview.posture.total", { count: alerts.total }),
 			spark: trend && !trend.alertsFailed ? spark(trend.alerts, "alert", trend.range) : undefined
 		},
 		{
 			key: "cases",
-			title: "Cases",
+			title: t("overview.posture.cases"),
 			icon: ICONS.cases,
 			route: "CasesList",
 			headline: String(cases.open),
-			caption: cases.open === 1 ? "open case" : "open cases",
+			caption: t("overview.posture.openCases", cases.open),
 			segments: workflowSegments(cases),
-			footnote: `${cases.total} total`,
+			footnote: t("overview.posture.total", { count: cases.total }),
 			spark: trend && !trend.casesFailed ? spark(trend.cases, "case", trend.range) : undefined
 		},
 		{
 			key: "agents",
-			title: "Agents",
+			title: t("overview.posture.agents"),
 			icon: ICONS.agents,
 			route: "AgentsList",
 			headline: `${agents.online}/${agents.total}`,
-			caption: "online",
+			caption: t("overview.posture.online"),
 			segments: [
-				{ key: "online", label: "online", value: agents.online, color: "success" },
-				{ key: "offline", label: "offline", value: agents.offline, color: "error" }
+				{ key: "online", label: t("overview.status.online"), value: agents.online, color: "success" },
+				{ key: "offline", label: t("overview.status.offline"), value: agents.offline, color: "error" }
 			],
-			footnote: `${agents.critical} critical`
+			footnote: t("overview.posture.critical", { count: agents.critical }, agents.critical)
 		}
 	]
 }

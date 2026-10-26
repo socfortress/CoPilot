@@ -2,7 +2,7 @@
 	<!-- One column (cells divided horizontally) below lg, then three side by side. -->
 	<section
 		class="bg-default border-default divide-border grid grid-cols-1 divide-y overflow-hidden rounded-lg border lg:grid-cols-3 lg:divide-x lg:divide-y-0"
-		aria-label="Security posture"
+		:aria-label="$t('overview.posture.ariaLabel')"
 	>
 		<PostureCell
 			v-for="cell of cells"

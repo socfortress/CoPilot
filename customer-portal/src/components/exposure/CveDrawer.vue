@@ -10,7 +10,9 @@
 		<n-drawer-content closable :native-scrollbar="false" body-content-class="flex flex-col gap-5">
 			<template #header>
 				<div class="flex min-w-0 flex-col gap-1">
-					<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">Vulnerability</span>
+					<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">
+						{{ $t("exposure.cve.heading") }}
+					</span>
 					<span class="text-default truncate font-mono text-base" data-testid="exposure-cve-id">
 						{{ cveId }}
 					</span>
@@ -29,10 +31,14 @@
 			<template v-else-if="detail">
 				<dl class="m-0 grid grid-cols-2 gap-x-6 gap-y-3 @md:grid-cols-4">
 					<div class="flex min-w-0 flex-col gap-1">
-						<dt :class="HEAD">Severity</dt>
+						<dt :class="HEAD">{{ $t("common.fields.severity") }}</dt>
 						<dd class="m-0">
 							<span :class="[CHIP, severityClasses(detail.severity)]">
-								{{ detail.severity ?? "unknown" }}
+								{{
+									detail.severity
+										? severityText(detail.severity)
+										: $t("exposure.vulnerabilities.unknownSeverity")
+								}}
 							</span>
 						</dd>
 					</div>
@@ -42,7 +48,7 @@
 					</div>
 					<div
 						class="flex min-w-0 flex-col gap-1"
-						title="The probability of exploitation in the next 30 days"
+						:title="$t('exposure.cve.epssTitle')"
 					>
 						<dt :class="HEAD">EPSS</dt>
 						<dd class="text-default m-0 font-mono text-sm tabular-nums" data-testid="exposure-cve-epss">
@@ -50,7 +56,7 @@
 						</dd>
 					</div>
 					<div class="flex min-w-0 flex-col gap-1">
-						<dt :class="HEAD">Published</dt>
+						<dt :class="HEAD">{{ $t("exposure.cve.published") }}</dt>
 						<dd class="text-default m-0 font-mono text-xs">
 							{{ detail.published ? formatDate(detail.published, dFormats.date, { tz: true }) : "—" }}
 						</dd>
@@ -63,11 +69,14 @@
 
 				<section class="flex flex-col gap-2">
 					<h3 :class="HEAD" class="m-0">
-						Your agents with it · {{ detail.agents.length.toLocaleString()
-						}}{{ detail.truncated ? "+" : "" }}
+						{{
+							$t("exposure.cve.agentsHeading", {
+								count: `${detail.agents.length.toLocaleString()}${detail.truncated ? "+" : ""}`
+							})
+						}}
 					</h3>
 					<p v-if="!detail.agents.length" class="text-tertiary m-0 text-sm" data-testid="exposure-cve-none">
-						None of your agents has it any more.
+						{{ $t("exposure.cve.none") }}
 					</p>
 					<ul
 						v-else
@@ -107,12 +116,14 @@
 						</li>
 					</ul>
 					<p v-if="detail.truncated" class="text-tertiary m-0 text-xs">
-						Only the first 1,000 are listed; the CSV export has them all.
+						{{ $t("exposure.cve.truncated") }}
 					</p>
 				</section>
 
 				<section v-if="detail.references.length" class="flex min-w-0 flex-col gap-1.5">
-					<h3 :class="HEAD" class="m-0">References · {{ detail.references.length }}</h3>
+					<h3 :class="HEAD" class="m-0">
+						{{ $t("exposure.cve.references", { count: detail.references.length }) }}
+					</h3>
 					<template v-for="reference of detail.references" :key="reference">
 						<a
 							v-if="isWebLink(reference)"
@@ -140,11 +151,12 @@ import { RouterLink } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
+import { i18nGlobal } from "@/lang"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import { agentLink, formatCvss, formatEpss, isWebLink, severityClasses } from "./exposure"
+import { agentLink, formatCvss, formatEpss, isWebLink, severityClasses, severityText } from "./exposure"
 
 /**
  * One CVE of the Exposure page (#1289): what Wazuh says of it, and the customer's agents it
@@ -175,7 +187,7 @@ function load(id: string) {
 			detail.value = response.data
 		},
 		err => {
-			error.value = getApiErrorMessage(err as ApiError) || "Could not load the vulnerability."
+			error.value = getApiErrorMessage(err as ApiError) || i18nGlobal.t("exposure.cve.loadFailed")
 		}
 	)
 }

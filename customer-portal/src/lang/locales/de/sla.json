@@ -1,0 +1,73 @@
+{
+	"page": {
+		"title": "Service-Level",
+		"intro": "Wie schnell das SOC Ihre Alarme und Fälle beantwortet und gelöst hat, gemessen an den mit Ihnen vereinbarten Zielen.",
+		"refreshError": "Die Zahlen konnten nicht aktualisiert werden: {error}",
+		"disabledTitle": "Service-Level sind noch nicht verfügbar",
+		"disabledText": "Ihr SOC hat für diesen Kunden noch keine Service-Level-Zahlen veröffentlicht. Wenden Sie sich an Ihren SOC-Ansprechpartner, wenn Sie sie hier sehen möchten.",
+		"trendTitle": "Innerhalb des Ziels gelöst",
+		"trendEmpty": "In diesem Zeitraum wurde nichts Erfasstes eröffnet oder gelöst",
+		"commitmentTitle": "Unsere Zusage",
+		"commitmentEmpty": "Für Ihre Alarme und Fälle gelten keine Ziele",
+		"periodMeta": "letzte {period}",
+		"measuredSince": "gemessen seit {date}"
+	},
+	"period": "{count} Tage",
+	"kpi": {
+		"alertResponse": "Reaktion auf Alarme",
+		"alertResolution": "Lösung von Alarmen",
+		"caseResponse": "Reaktion auf Fälle",
+		"caseResolution": "Lösung von Fällen",
+		"answeredWithinTarget": "innerhalb des Ziels beantwortet",
+		"resolvedWithinTarget": "innerhalb des Ziels gelöst",
+		"medianResponse": "Median der Reaktion",
+		"medianResolution": "Median der Lösung",
+		"deltaTitle": "{delta} Punkte gegenüber dem vorherigen Zeitraum",
+		"onTarget": "{met} von {decided} im Ziel",
+		"noOutcome": "noch kein Ergebnis"
+	},
+	"units": {
+		"seconds": "{n} s",
+		"minutes": "{n} min",
+		"hours": "{n} h",
+		"hoursMinutes": "{hours} h {minutes} min",
+		"days": "{n} T",
+		"daysHours": "{days} T {hours} h",
+		"targetMinutes": "{n} min",
+		"targetHours": "{n} h",
+		"targetDays": "{n} T",
+		"noTarget": "Kein Ziel"
+	},
+	"targets": {
+		"alerts": "Alarme",
+		"cases": "Fälle",
+		"response": "Reaktion",
+		"resolution": "Lösung",
+		"kept": "Eingehalten",
+		"businessHours": "Geschäftszeiten",
+		"businessHoursHint": "Diese Ziele zählen nur Arbeitsstunden: Nächte, Wochenenden und Feiertage lassen die Uhr nicht laufen.",
+		"nothing": "Nichts mit diesem Schweregrad im Zeitraum",
+		"keptNote": "Eingehalten: der Anteil, der innerhalb des Ziels gelöst wurde (oder beantwortet, wenn die Lösung noch kein Ergebnis hat). Zeit, in der auf Sie gewartet wird, zählt nicht gegen das SOC."
+	},
+	"openNow": {
+		"label": "Derzeit offen",
+		"alerts": "Offene Alarme",
+		"cases": "Offene Fälle",
+		"atRisk": "Bald fällig",
+		"breached": "Ziel überschritten",
+		"viewAll": "Alle anzeigen",
+		"alertsLink": "Alarme",
+		"casesLink": "Fälle"
+	},
+	"trend": {
+		"ariaLabel": "Lösung im Ziel pro Zeitraum, von {from} bis {to}",
+		"ariaEmpty": "Kein Lösungsergebnis in diesem Zeitraum",
+		"noOutcome": "Noch kein Lösungsergebnis",
+		"onTarget": "Im Ziel",
+		"onTargetLine": "Im Ziel: {rate}",
+		"volumes": "Eröffnet {opened} · gelöst {resolved}"
+	},
+	"severity": {
+		"informational": "Informativ"
+	}
+}

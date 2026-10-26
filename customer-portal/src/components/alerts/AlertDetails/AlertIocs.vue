@@ -7,7 +7,7 @@
 		</CardEntity>
 	</div>
 
-	<n-empty v-else description="No indicators of compromise found" class="min-h-50 justify-center" />
+	<n-empty v-else :description="$t('alerts.iocs.empty')" class="min-h-50 justify-center" />
 </template>
 
 <script setup lang="ts">

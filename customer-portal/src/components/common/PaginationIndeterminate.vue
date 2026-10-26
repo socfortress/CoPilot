@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { NInputNumber, NSelect } from "naive-ui"
 import { computed, toRefs, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ showPageSizes?: boolean; showSort?: boolean; pageSizes?: number[]; disabled?: boolean }>()
@@ -40,15 +41,16 @@ const pageSize = defineModel<number>("pageSize", { default: 10 })
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
 
 const { pageSizes, disabled, showPageSizes, showSort } = toRefs(props)
+const { t } = useI18n()
 
 const pageSizesOptions = computed(() =>
-	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: `${o} / page`, value: o }))
+	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: t("common.pagination.perPage", { size: o }), value: o }))
 )
 
-const sortOptions = [
-	{ label: "Desc", value: "desc" },
-	{ label: "Asc", value: "asc" }
-]
+const sortOptions = computed(() => [
+	{ label: t("common.pagination.desc"), value: "desc" },
+	{ label: t("common.pagination.asc"), value: "asc" }
+])
 
 const ArrowForwardIcon = "carbon:chevron-right"
 const ArrowBackIcon = "carbon:chevron-left"

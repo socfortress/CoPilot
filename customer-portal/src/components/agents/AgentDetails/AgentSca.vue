@@ -13,10 +13,10 @@
 				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
 				:class="POLICY_COLUMNS"
 			>
-				<span :class="HEAD">Policy</span>
-				<span :class="HEAD">Score</span>
-				<span :class="HEAD">Checks</span>
-				<span :class="HEAD">Last scan</span>
+				<span :class="HEAD">{{ $t("agents.agentSca.head.policy") }}</span>
+				<span :class="HEAD">{{ $t("agents.agentSca.head.score") }}</span>
+				<span :class="HEAD">{{ $t("agents.agentSca.head.checks") }}</span>
+				<span :class="HEAD">{{ $t("agents.agentSca.head.lastScan") }}</span>
 				<span />
 			</div>
 			<div v-if="loading" class="flex flex-col gap-2 p-3">
@@ -24,7 +24,7 @@
 			</div>
 			<n-empty
 				v-else-if="!policies.length"
-				description="No SCA scan on this agent yet"
+				:description="$t('agents.agentSca.empty')"
 				class="min-h-40 justify-center"
 				data-testid="sca-empty"
 			/>
@@ -57,9 +57,11 @@
 					<span
 						class="flex flex-wrap items-baseline gap-x-2 font-mono text-xs tabular-nums [grid-area:checks]"
 					>
-						<span class="text-success">{{ p.pass }} passed</span>
-						<span class="text-error">{{ p.fail }} failed</span>
-						<span v-if="p.invalid" class="text-tertiary">{{ p.invalid }} n/a</span>
+						<span class="text-success">{{ $t("agents.agentSca.passed", { count: p.pass }) }}</span>
+						<span class="text-error">{{ $t("agents.agentSca.failed", { count: p.fail }) }}</span>
+						<span v-if="p.invalid" class="text-tertiary">
+							{{ $t("agents.agentSca.notApplicable", { count: p.invalid }) }}
+						</span>
 					</span>
 					<span class="text-secondary hidden text-xs whitespace-nowrap [grid-area:scan] @3xl:block">
 						{{ p.end_scan ? relative(p.end_scan) : "—" }}
@@ -83,14 +85,16 @@
 			<div>
 				<n-button size="tiny" quaternary data-testid="sca-back" @click="closePolicy()">
 					<template #icon><Icon name="carbon:arrow-left" :size="14" /></template>
-					All policies
+					{{ $t("agents.agentSca.back") }}
 				</n-button>
 			</div>
 
 			<section class="border-default bg-default overflow-hidden rounded-lg border" data-testid="sca-policy">
 				<div class="flex items-start justify-between gap-4 px-4 pt-3 pb-3">
 					<div class="flex min-w-0 flex-col gap-1">
-						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">SCA policy</span>
+						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">
+							{{ $t("agents.agentSca.policy") }}
+						</span>
 						<span class="text-default text-base leading-snug font-semibold" data-testid="sca-policy-name">
 							{{ policy.name || policy.policy_id }}
 						</span>
@@ -100,7 +104,9 @@
 						</p>
 					</div>
 					<div class="flex shrink-0 flex-col items-end gap-1">
-						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">Score</span>
+						<span class="text-tertiary text-xxs font-medium tracking-[0.12em] uppercase">
+							{{ $t("agents.agentSca.score") }}
+						</span>
 						<span
 							class="font-mono text-2xl leading-none font-semibold tabular-nums"
 							:class="SCORE_TEXT[scoreLevel(policy.score)]"
@@ -120,12 +126,18 @@
 				<div
 					class="bg-secondary text-tertiary flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2 font-mono text-xs tabular-nums"
 				>
-					<span class="text-success">{{ policy.pass.toLocaleString() }} passed</span>
-					<span class="text-error">{{ policy.fail.toLocaleString() }} failed</span>
-					<span v-if="policy.invalid">{{ policy.invalid.toLocaleString() }} n/a</span>
-					<span>· {{ policy.total_checks.toLocaleString() }} checks</span>
+					<span class="text-success">
+						{{ $t("agents.agentSca.passed", { count: policy.pass.toLocaleString() }) }}
+					</span>
+					<span class="text-error">
+						{{ $t("agents.agentSca.failed", { count: policy.fail.toLocaleString() }) }}
+					</span>
+					<span v-if="policy.invalid">
+						{{ $t("agents.agentSca.notApplicable", { count: policy.invalid.toLocaleString() }) }}
+					</span>
+					<span>{{ $t("agents.agentSca.checks", { count: policy.total_checks.toLocaleString() }) }}</span>
 					<span v-if="policy.end_scan" class="ml-auto" :title="policy.end_scan">
-						scanned {{ relative(policy.end_scan) }}
+						{{ $t("agents.agentSca.scanned", { when: relative(policy.end_scan) }) }}
 					</span>
 				</div>
 			</section>
@@ -134,7 +146,7 @@
 				v-model="result"
 				:options="resultStrip"
 				:loading="loadingChecks"
-				label="Filter by result"
+				:label="$t('agents.agentSca.filterLabel')"
 				testid="result"
 				data-testid="sca-result"
 			/>
@@ -144,7 +156,7 @@
 					v-model:value="search"
 					size="small"
 					clearable
-					placeholder="Search check title or id"
+					:placeholder="$t('agents.agentSca.search')"
 					class="min-w-0 flex-1 @2xl:max-w-80!"
 					data-testid="sca-search"
 				>
@@ -154,7 +166,7 @@
 					v-if="!loadingChecks && checks.length"
 					class="text-tertiary hidden font-mono text-xs whitespace-nowrap tabular-nums @2xl:inline"
 				>
-					{{ shownChecks.length.toLocaleString() }} shown · failed first
+					{{ $t("agents.agentSca.shown", { count: shownChecks.length.toLocaleString() }) }}
 				</span>
 				<n-button
 					size="small"
@@ -166,7 +178,7 @@
 					@click="exportCsv()"
 				>
 					<template #icon><Icon name="carbon:download" /></template>
-					Export CSV
+					{{ $t("agents.exportCsv") }}
 				</n-button>
 			</div>
 
@@ -182,7 +194,7 @@
 				</div>
 				<n-empty
 					v-else-if="!shownChecks.length"
-					:description="checks.length ? 'No check matches the filters' : 'This policy has no checks'"
+					:description="checks.length ? $t('agents.agentSca.emptyFiltered') : $t('agents.agentSca.noChecks')"
 					class="min-h-40 justify-center"
 				/>
 				<div v-else class="divide-border flex flex-col divide-y">
@@ -200,7 +212,7 @@
 							@click="toggle(c.id)"
 						>
 							<span>
-								<span :class="[CHIP, scaResultClasses(c.result)]">{{ c.result }}</span>
+								<span :class="[CHIP, scaResultClasses(c.result)]">{{ scaResultLabel(c.result) }}</span>
 							</span>
 							<span class="text-tertiary hidden font-mono text-xs tabular-nums @3xl:block">
 								#{{ c.id }}
@@ -225,7 +237,7 @@
 								<p class="text-default m-0 text-sm whitespace-pre-line">{{ part.value }}</p>
 							</div>
 							<div v-if="c.compliance.length" class="flex flex-col gap-1.5">
-								<span :class="HEAD" class="text-tertiary">Compliance</span>
+								<span :class="HEAD" class="text-tertiary">{{ $t("agents.agentSca.compliance") }}</span>
 								<div class="flex flex-wrap gap-1.5">
 									<span
 										v-for="item of c.compliance"
@@ -262,11 +274,13 @@
 <script setup lang="ts">
 import type { ScaResultFilter } from "./agentFindings"
 import type { FilterStripOption } from "./FilterStrip.vue"
+import type { I18nString } from "@/lang/config"
 import type { AgentScaCheck, AgentScaPolicy } from "@/types/agents"
 import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
 import { NAlert, NButton, NEmpty, NInput, NPagination, NSkeleton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
@@ -275,8 +289,10 @@ import dayjs from "@/utils/dayjs"
 import {
 	exportFilename,
 	filterScaChecks,
+	pageRangeLabel,
 	scaResultClasses,
 	scaResultCounts,
+	scaResultLabel,
 	SCORE_COLORS,
 	scoreLevel,
 	sortScaPolicies
@@ -305,11 +321,12 @@ const POLICY_ROW = [
 	"@3xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_7rem_1rem]",
 	"@3xl:[grid-template-areas:'name_score_checks_scan_chev']"
 ].join(" ")
-const RESULT_OPTIONS: { label: string; value: ScaResultFilter; dot: string; testid: string }[] = [
-	{ label: "All", value: "all", dot: "bg-primary", testid: "all" },
-	{ label: "Failed", value: "failed", dot: "bg-error", testid: "failed" },
-	{ label: "Passed", value: "passed", dot: "bg-success", testid: "passed" },
-	{ label: "N/A", value: "not applicable", dot: "bg-muted", testid: "na" }
+// Each label is a message key, read when the strip renders so it follows a language change.
+const RESULT_OPTIONS: { labelKey: I18nString; value: ScaResultFilter; dot: string; testid: string }[] = [
+	{ labelKey: "agents.agentSca.filter.all", value: "all", dot: "bg-primary", testid: "all" },
+	{ labelKey: "agents.agentSca.filter.failed", value: "failed", dot: "bg-error", testid: "failed" },
+	{ labelKey: "agents.agentSca.filter.passed", value: "passed", dot: "bg-success", testid: "passed" },
+	{ labelKey: "agents.agentSca.filter.notApplicable", value: "not applicable", dot: "bg-muted", testid: "na" }
 ]
 const SCORE_TEXT: Record<ReturnType<typeof scoreLevel>, string> = {
 	good: "text-success",
@@ -318,6 +335,7 @@ const SCORE_TEXT: Record<ReturnType<typeof scoreLevel>, string> = {
 }
 
 const message = useMessage()
+const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const { loading: loadingChecks, run: runChecks } = useLatestRequest()
 const policies = ref<AgentScaPolicy[]>([])
@@ -334,14 +352,18 @@ const exporting = ref(false)
 
 const counts = computed(() => scaResultCounts(checks.value))
 const resultStrip = computed<FilterStripOption<ScaResultFilter>[]>(() =>
-	RESULT_OPTIONS.map(option => ({ ...option, count: counts.value[option.value] }))
+	RESULT_OPTIONS.map(({ labelKey, ...option }) => ({ ...option, label: t(labelKey), count: counts.value[option.value] }))
 )
 const shownChecks = computed(() => filterScaChecks(checks.value, { result: result.value, search: search.value }))
 const offset = computed(() => (pageNumber.value - 1) * pageSize.value)
 const pageChecks = computed(() => shownChecks.value.slice(offset.value, offset.value + pageSize.value))
 const rangeLabel = computed(
 	() =>
-		`${(offset.value + 1).toLocaleString()}–${Math.min(offset.value + pageSize.value, shownChecks.value.length).toLocaleString()} of ${shownChecks.value.length.toLocaleString()}`
+		pageRangeLabel(
+			offset.value + 1,
+			Math.min(offset.value + pageSize.value, shownChecks.value.length),
+			shownChecks.value.length
+		)
 )
 
 const relative = (ts: string) => dayjs(ts).fromNow()
@@ -350,10 +372,10 @@ const relative = (ts: string) => dayjs(ts).fromNow()
 function checkText(check: AgentScaCheck) {
 	const placeholder = /not found$/i
 	return [
-		{ label: "Description", value: check.description },
-		{ label: "Rationale", value: check.rationale },
-		{ label: "Remediation", value: check.remediation },
-		{ label: "Reason", value: check.reason }
+		{ label: t("common.fields.description"), value: check.description },
+		{ label: t("agents.agentSca.text.rationale"), value: check.rationale },
+		{ label: t("agents.agentSca.text.remediation"), value: check.remediation },
+		{ label: t("agents.agentSca.text.reason"), value: check.reason }
 	].filter((part): part is { label: string; value: string } => !!part.value && !placeholder.test(part.value))
 }
 
@@ -373,7 +395,7 @@ function loadPolicies() {
 			if (linked && !policy.value) openPolicy(linked)
 		},
 		err => {
-			error.value = getApiErrorMessage(err as ApiError) || "Could not load the SCA policies."
+			error.value = getApiErrorMessage(err as ApiError) || t("agents.agentSca.loadFailed")
 		}
 	)
 }
@@ -390,7 +412,7 @@ function openPolicy(selected: AgentScaPolicy) {
 				(await Api.agents.getScaChecks(agentId, selected.policy_id, signal)).data.sca_policy_results ?? []
 		},
 		err => {
-			checksError.value = getApiErrorMessage(err as ApiError) || "Could not load the policy's checks."
+			checksError.value = getApiErrorMessage(err as ApiError) || t("agents.agentSca.checksFailed")
 		}
 	)
 }
@@ -407,7 +429,7 @@ async function exportCsv() {
 		const response = await Api.agents.exportScaChecks(agentId, policy.value.policy_id)
 		saveAs(response.data, exportFilename(`sca-${policy.value.policy_id}`, agentLabel))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Could not export the policy's checks.")
+		message.error(getApiErrorMessage(err as ApiError) || t("agents.agentSca.exportFailed"))
 	} finally {
 		exporting.value = false
 	}

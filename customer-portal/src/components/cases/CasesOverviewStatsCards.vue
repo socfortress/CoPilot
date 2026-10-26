@@ -2,7 +2,7 @@
 	<n-spin :show="loading">
 		<StatusStrip
 			:total="stats.total"
-			entity="Cases"
+			:entity="$t('cases.stats.entity')"
 			:icon="ICONS.cases"
 			:cells="workflowSegments(stats)"
 			lift="pending_customer"

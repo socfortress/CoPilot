@@ -5,12 +5,12 @@
 			<template #header-extra>{{ asset.index_name }}</template>
 			<template #default>
 				<div class="flex flex-wrap gap-2">
-					<Chip size="small" :value="asset.agent_id" label="Agent ID" />
+					<Chip size="small" :value="asset.agent_id" :label="$t('alerts.assets.agentId')" />
 					<Chip
 						v-if="asset.velociraptor_id"
 						size="small"
 						:value="asset.velociraptor_id"
-						label="Velociraptor ID"
+						:label="$t('alerts.assets.velociraptorId')"
 					/>
 				</div>
 			</template>
@@ -19,12 +19,12 @@
 
 	<n-card v-else-if="alert.asset_name" size="small">
 		<template #header>
-			<div class="text-secondary text-sm">Asset name</div>
+			<div class="text-secondary text-sm">{{ $t("alerts.assets.assetName") }}</div>
 		</template>
 		{{ alert.asset_name }}
 	</n-card>
 
-	<n-empty v-else description="No assets found" class="min-h-50 justify-center" />
+	<n-empty v-else :description="$t('alerts.assets.empty')" class="min-h-50 justify-center" />
 </template>
 
 <script setup lang="ts">

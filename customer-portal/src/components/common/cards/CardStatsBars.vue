@@ -54,7 +54,7 @@
 				<div v-if="!listValues.length" class="item group/item muted flex items-center gap-3">
 					<div class="label flex items-center gap-2 truncate">
 						<span class="badge"></span>
-						<span class="truncate font-mono">No data</span>
+						<span class="truncate font-mono">{{ $t("common.states.noData") }}</span>
 					</div>
 					<div class="divider grow"></div>
 				</div>
@@ -67,6 +67,7 @@
 import _round from "lodash/round"
 import { NCard } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 
 export interface ItemProps {
@@ -102,6 +103,8 @@ const emit = defineEmits<{
 	select: [item: ItemProps]
 }>()
 
+const { t } = useI18n()
+
 const totItem = computed(
 	() =>
 		values.find(item => item.isTotal) || {
@@ -109,7 +112,7 @@ const totItem = computed(
 				return acc + cur.value
 			}, 0),
 			isTotal: true,
-			label: "Total"
+			label: t("common.charts.total")
 		}
 )
 

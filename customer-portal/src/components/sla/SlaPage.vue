@@ -3,10 +3,10 @@
 		<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex min-w-0 flex-col gap-1.5">
 				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
-					Service levels
+					{{ $t("sla.page.title") }}
 				</h1>
 				<p class="text-secondary text-sm">
-					How fast the SOC answered and resolved your alerts and cases, against the targets agreed with you.
+					{{ $t("sla.page.intro") }}
 				</p>
 			</div>
 
@@ -28,7 +28,7 @@
 		</header>
 
 		<n-alert v-if="error && overview" type="warning" :bordered="false" data-testid="sla-refresh-error">
-			Could not refresh the figures: {{ error }}
+			{{ $t("sla.page.refreshError", { error }) }}
 		</n-alert>
 
 		<PanelError
@@ -44,10 +44,9 @@
 			data-testid="sla-disabled"
 		>
 			<Icon name="carbon:meter" :size="28" class="text-tertiary" />
-			<p class="font-semibold">Service levels are not available yet</p>
+			<p class="font-semibold">{{ $t("sla.page.disabledTitle") }}</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC has not published service level figures for this customer. Ask your SOC contact if you would
-				like to see them here.
+				{{ $t("sla.page.disabledText") }}
 			</p>
 		</div>
 
@@ -65,12 +64,12 @@
 
 			<div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
 				<OverviewPanel
-					title="Resolved within target"
+					:title="$t('sla.page.trendTitle')"
 					icon="carbon:chart-line"
 					:meta="periodMeta"
 					:loading="!overview"
 					:empty="!!overview && !active"
-					empty-text="Nothing tracked was opened or resolved in this period"
+					:empty-text="$t('sla.page.trendEmpty')"
 					class="xl:col-span-3"
 					data-testid="sla-trend"
 				>
@@ -83,11 +82,11 @@
 				</OverviewPanel>
 
 				<OverviewPanel
-					title="Our commitment"
+					:title="$t('sla.page.commitmentTitle')"
 					icon="carbon:certificate-check"
 					:loading="!overview"
 					:empty="!!overview && !targetGroups.length"
-					empty-text="No targets apply to your alerts and cases"
+					:empty-text="$t('sla.page.commitmentEmpty')"
 					class="xl:col-span-2"
 				>
 					<template #skeleton>
@@ -104,6 +103,7 @@
 import type { PeriodPreset } from "./sla"
 import { NAlert, NRadioButton, NRadioGroup, NSkeleton } from "naive-ui"
 import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 import OverviewPanel from "@/components/overview/shared/OverviewPanel.vue"
 import PanelError from "@/components/overview/shared/PanelError.vue"
@@ -114,13 +114,16 @@ import SlaTargetsTable from "./SlaTargetsTable.vue"
 import SlaTrendChart from "./SlaTrendChart.vue"
 import { useSlaOverview } from "./useSlaOverview"
 
+const { t, locale } = useI18n()
 const period = ref<PeriodPreset["key"]>(DEFAULT_PERIOD)
 const { overview, error, loading, reload } = useSlaOverview(period)
 
 const kpis = computed(() => (overview.value ? buildKpis(overview.value) : []))
 const active = computed(() => !!overview.value && hasActivity(overview.value))
 const targetGroups = computed(() => groupTargets(overview.value?.targets ?? []))
-const periodMeta = computed(() => `last ${PERIOD_PRESETS.find(preset => preset.key === period.value)?.label}`)
+const periodMeta = computed(() =>
+	t("sla.page.periodMeta", { period: PERIOD_PRESETS.find(preset => preset.key === period.value)?.label ?? "" })
+)
 
 // Items from before the SOC started measuring count in no figure: say when that was,
 // when it falls inside the period shown.
@@ -128,6 +131,8 @@ const trackingNote = computed(() => {
 	const since = overview.value?.tracking_since
 	const from = overview.value?.date_from
 	if (!since || !from || new Date(since) <= new Date(from)) return null
-	return `measured since ${new Date(since).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+	return t("sla.page.measuredSince", {
+		date: new Date(since).toLocaleDateString(locale.value, { month: "short", day: "numeric" })
+	})
 })
 </script>

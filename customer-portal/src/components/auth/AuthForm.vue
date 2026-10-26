@@ -4,7 +4,7 @@
 			<Logo class="mb-4" max-height="40px" />
 			<div class="font-display mb-4 text-4xl font-bold" data-test="login-title">{{ portalTitle }}</div>
 			<div class="text-secondary text-lg">
-				Access the world of OpenSource security: Simplified, Streamlined, Accessible.
+				{{ $t("auth.authForm.tagline") }}
 			</div>
 		</div>
 
@@ -17,6 +17,7 @@
 <script lang="ts" setup>
 import type { FormType } from "./types"
 import { computed, onBeforeMount, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Logo from "@/app-layouts/common/Logo.vue"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 import SignIn from "./SignIn.vue"
@@ -28,8 +29,9 @@ const props = defineProps<{
 const type = ref<FormType>("signin")
 
 const portalSettingsStore = usePortalSettingsStore()
+const { t } = useI18n()
 
-const portalTitle = computed(() => portalSettingsStore.portalTitle || "SOCFortress Customer Portal")
+const portalTitle = computed(() => portalSettingsStore.portalTitle || t("auth.authForm.defaultTitle"))
 
 onBeforeMount(() => {
 	if (props.type) {

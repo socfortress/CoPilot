@@ -1,0 +1,49 @@
+{
+	"tab": "SOC fragen",
+	"title": "SOC fragen",
+	"introAlert": "Ihre Frage geht als von Ihnen gezeichneter Kommentar an die SOC-Analysten, auf dem Fall oder Alarm Ihrer Wahl. Die Antwort erscheint in den Kommentaren.",
+	"introCase": "Ihre Frage geht als von Ihnen gezeichneter Kommentar zum Fall an die SOC-Analysten. Die Antwort erscheint in den Kommentaren.",
+	"placeholder": "Was möchten Sie wissen?",
+	"questionLabel": "Ihre Frage an das SOC",
+	"urgencyLegend": "Wie dringend ist es?",
+	"targetLegend": "Wohin soll sie gehen?",
+	"send": "An das SOC senden",
+	"history": "Fragen an das SOC",
+	"emptyAlert": "Zu diesem Alarm wurde noch keine Frage gestellt.",
+	"emptyCase": "Zu diesem Fall wurde noch keine Frage gestellt.",
+	"urgencyLine": "Dringlichkeit: {urgency}",
+	"askedBy": "Gefragt von {user} · {date}",
+	"answeredAt": "· beantwortet {date}",
+	"sent": "Ihre Frage wurde an das SOC gesendet",
+	"loadFailed": "Die Fragen konnten nicht geladen werden.",
+	"sendFailed": "Ihre Frage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+	"urgency": {
+		"low": "Niedrig",
+		"normal": "Normal",
+		"high": "Hoch",
+		"lowHint": "Wann immer das SOC kann",
+		"normalHint": "Innerhalb der üblichen Antwortzeit",
+		"highHint": "Es blockiert uns"
+	},
+	"status": {
+		"open": "Wartet auf das SOC",
+		"answered": "Beantwortet"
+	},
+	"target": {
+		"addToCase": "Zu Fall #{id} hinzufügen",
+		"addToCaseHint": "Das SOC bearbeitet diesen Alarm bereits in diesem Fall",
+		"openCase": "Einen Fall aus diesem Alarm eröffnen",
+		"openCaseHint": "Das SOC verfolgt ihn als Fall, mit diesem Alarm darin",
+		"alertOnly": "Nur zu diesem Alarm",
+		"alertOnlyHint": "Ein Kommentar zum Alarm, kein Fall"
+	},
+	"problem": {
+		"empty": "Schreiben Sie Ihre Frage an das SOC",
+		"tooLong": "Die Frage muss unter {max} Zeichen bleiben",
+		"characters": "Die Frage enthält Zeichen, die nicht gesendet werden können"
+	},
+	"filed": {
+		"onCase": "Zu Fall #{id}",
+		"fromAlert": "Gefragt aus Alarm #{id}"
+	}
+}

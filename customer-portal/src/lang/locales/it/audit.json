@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Alert",
+		"cases": "Casi",
+		"reports": "Report",
+		"users": "Utenti",
+		"account": "Accessi e account"
+	},
+	"actors": {
+		"member": "Un utente del portale",
+		"soc": "SOC",
+		"other": "Un altro utente del portale",
+		"unknown": "Sconosciuto"
+	},
+	"targets": {
+		"alert": "Alert #{id}",
+		"case": "Caso #{id}",
+		"report": "Report #{id}"
+	},
+	"retention": {
+		"forever": "Conservato finché il tuo SOC conserva il proprio registro attività.",
+		"days": "Conservato per {count} giorno: le voci più vecchie vengono rimosse. | Conservato per {count} giorni: le voci più vecchie vengono rimosse."
+	},
+	"page": {
+		"title": "Registro attività",
+		"intro": "Chi ha fatto cosa nel portale della tua organizzazione: alert e casi spostati e commentati, report, e accessi e account dei tuoi utenti. Le azioni del tuo SOC sono indicate come SOC.",
+		"export": "Esporta CSV",
+		"forbiddenTitle": "Il registro attività è riservato agli amministratori della tua organizzazione",
+		"forbiddenText": "È il tuo SOC a decidere chi amministra la tua organizzazione e se il suo registro attività è visibile. Chiedi al tuo referente SOC se ti serve.",
+		"allActivity": "Tutte le attività",
+		"everyone": "Tutti",
+		"from": "Dal",
+		"to": "Al",
+		"allCustomers": "Tutti i clienti",
+		"clearFilters": "Cancella filtri",
+		"noMatches": "Nessun risultato per questi filtri",
+		"empty": "Ancora nessuna registrazione",
+		"failed": "Non riuscita",
+		"total": "{count} voce | {count} voci",
+		"truncated": "Il CSV contiene le 10.000 voci più recenti: restringi il periodo per vedere le altre.",
+		"loadFailed": "Impossibile caricare il registro attività.",
+		"exportFailed": "Impossibile esportare il registro attività."
+	}
+}

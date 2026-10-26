@@ -1,0 +1,78 @@
+{
+	"page": {
+		"title": "Blootstelling",
+		"intro": "Kwetsbaarheden en compliance over al je agents, zoals Wazuh ze nu ziet.",
+		"vulnerabilitiesTab": "Kwetsbaarheden",
+		"complianceTab": "Compliance"
+	},
+	"disabled": {
+		"title": "Blootstelling is nog niet beschikbaar",
+		"text": "Je SOC heeft de kwetsbaarheden en compliance over je agents nog niet gepubliceerd. De pagina van elke agent toont nog steeds die van die agent. Vraag je SOC-contactpersoon als je ze hier wilt zien."
+	},
+	"counts": {
+		"cves": "{count} CVE | {count} CVE's",
+		"agents": "{count} agent | {count} agents",
+		"findings": "{count} bevinding | {count} bevindingen",
+		"policies": "{count} policy | {count} policy's"
+	},
+	"vulnerabilities": {
+		"severityFilter": "Filteren op ernst",
+		"all": "Alle",
+		"searchPlaceholder": "Zoek een CVE-id of een pakket",
+		"totals": "{cves} op {agents} · {findings}",
+		"exportCsv": "CSV exporteren",
+		"columns": {
+			"vulnerability": "Kwetsbaarheid",
+			"agents": "Agents",
+			"firstSeen": "Eerst gezien"
+		},
+		"agentsShort": "agents",
+		"cvssShort": "cvss",
+		"epssShort": "epss",
+		"unknownSeverity": "onbekend",
+		"noAgent": "Nog geen agent om te beoordelen",
+		"noMatch": "Geen kwetsbaarheid komt overeen met de filters",
+		"none": "Geen kwetsbaarheden gevonden op je agents",
+		"range": "{start}–{end} van {total} CVE's",
+		"truncated": "Alleen de 10.000 CVE's met de hoogste score worden gerangschikt: verfijn de zoekopdracht of de ernst om de rest te zien.",
+		"exportTruncated": "De CSV bevat de eerste 100.000 bevindingen: verfijn de ernst of de zoekopdracht voor de rest.",
+		"exportFailed": "De kwetsbaarheden konden niet worden geëxporteerd.",
+		"loadFailed": "De kwetsbaarheden konden niet worden geladen."
+	},
+	"cve": {
+		"heading": "Kwetsbaarheid",
+		"published": "Gepubliceerd",
+		"epssTitle": "De kans op misbruik in de komende 30 dagen",
+		"agentsHeading": "Je agents waarop deze voorkomt · {count}",
+		"none": "Geen van je agents heeft deze nog.",
+		"truncated": "Alleen de eerste 1.000 worden getoond; de CSV-export bevat ze allemaal.",
+		"references": "Referenties · {count}",
+		"loadFailed": "De kwetsbaarheid kon niet worden geladen."
+	},
+	"compliance": {
+		"averageScore": "Gemiddelde score",
+		"averageScoreCaption": "over alle agents en policy's",
+		"agentsAssessed": "Beoordeelde agents",
+		"agentsAssessedCaption": "met minstens één policy",
+		"policies": "Policy's",
+		"policiesCaption": "{policies} met agents onder {score}%",
+		"failedChecks": "Mislukte controles",
+		"passed": "{count} geslaagd",
+		"unavailable": "Wazuh kon niet antwoorden voor {agents}: hun resultaten ontbreken in deze cijfers.",
+		"columns": {
+			"policy": "Policy",
+			"agents": "Agents",
+			"below": "Onder {score}%"
+		},
+		"agentsShort": "agents",
+		"belowShort": "onder",
+		"failedShort": "mislukt",
+		"asking": "Wazuh wordt gevraagd naar de policy's van elke agent. Bij een grote vloot kan dit even duren.",
+		"noResults": "Nog geen SCA-resultaten op je agents",
+		"noAgent": "Nog geen agent om te beoordelen",
+		"policyAgents": "Agents met deze policy · {count}, zwakste eerst",
+		"readAt": "Om {time} uit Wazuh gelezen; wordt om de paar minuten vernieuwd.",
+		"loadFailed": "De compliance kon niet worden geladen.",
+		"agentsFailed": "De agents van de policy konden niet worden geladen."
+	}
+}

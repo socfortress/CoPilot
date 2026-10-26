@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "No Event Sources Configured",
+		"noSourcesText": "No event sources are configured for this customer. Contact your administrator to set up event sources.",
+		"queryLabel": "Lucene Query",
+		"autocompleteHint": "type # to autocomplete",
+		"selectCustomer": "Select Customer",
+		"selectSource": "Select Source",
+		"queryPlaceholder": "e.g. {example}",
+		"noFieldMappings": "No field mappings found",
+		"customerNeeded": "Select a customer to search",
+		"sourceNeeded": "Select a source to search",
+		"time": "Time",
+		"timeUnit": "Time unit",
+		"units": {
+			"hours": "Hours",
+			"days": "Days",
+			"weeks": "Weeks"
+		},
+		"perPage": "{count} per page",
+		"loadSourcesFailed": "Failed to load event sources",
+		"queryUpdated": "Updated “{name}”",
+		"querySaved": "Saved “{name}”",
+		"saveQueryFailed": "Failed to save the query",
+		"deleteQueryFailed": "Failed to delete the query",
+		"clearRecentFailed": "Failed to clear the recent searches",
+		"sourceGone": "The source “{source}” is no longer available for this customer"
+	},
+	"results": {
+		"count": "{loaded} of {total} events loaded",
+		"columns": "Columns",
+		"ownColumns": "Your own columns",
+		"exportCsv": "Export CSV",
+		"empty": "No events found",
+		"emptyHint": "Try adjusting your query or expanding the time range",
+		"loadMore": "Showing {shown} of {total} events • Load More",
+		"columnsTitle": "Columns · {source}",
+		"socLayout": "SOC layout",
+		"defaultLayout": "Default layout",
+		"viewDetails": "View Details",
+		"switchColumnsFailed": "Failed to switch the columns",
+		"templateUpdated": "Updated the template “{name}”",
+		"templateSaved": "Saved the template “{name}”",
+		"saveTemplateFailed": "Failed to save the template",
+		"templateDeletedNamed": "Deleted the template “{name}”",
+		"templateDeleted": "Template deleted",
+		"deleteTemplateFailed": "Failed to delete the template",
+		"saveColumnsFailed": "Failed to save the columns",
+		"exportedPartial": "Exported {exported} of {total} events: load more to include the rest",
+		"exported": "Exported {exported} events",
+		"searchFailed": "Failed to search events",
+		"loadMoreFailed": "Failed to load more events"
+	},
+	"columns": {
+		"timestamp": "Timestamp",
+		"level": "Level",
+		"source": "Source",
+		"rule": "Rule"
+	},
+	"details": {
+		"title": "Event Details",
+		"filterFor": "Filter for this value",
+		"exclude": "Exclude this value"
+	},
+	"queries": {
+		"toggle": "Queries",
+		"saved": "Saved",
+		"recent": "Recent",
+		"loading": "Loading…",
+		"noSaved": "No saved query yet. Run a search, then save it with a name.",
+		"noRecent": "The searches you run show up here.",
+		"run": "Run “{name}”",
+		"delete": "Delete “{name}”",
+		"saveAs": "Save this search as",
+		"namePlaceholder": "e.g. Failed logins on web servers",
+		"willReplace": "Updates the query saved under this name.",
+		"loadFailed": "Could not load your saved searches",
+		"lastHours": "last {count} hour | last {count} hours",
+		"lastDays": "last {count} day | last {count} days",
+		"lastWeeks": "last {count} week | last {count} weeks"
+	},
+	"layouts": {
+		"toggle": "Layout",
+		"title": "Layouts",
+		"custom": "Custom",
+		"deleteTemplate": "Delete the template “{name}”",
+		"noTemplates": "No template yet: arrange the columns, then save them as a template.",
+		"manage": "Manage columns and templates"
+	},
+	"deleteConfirm": {
+		"label": "Delete the template “{name}”?",
+		"question": "Delete {name}?"
+	},
+	"preview": {
+		"columns": "{count} column | {count} columns",
+		"header": "Header",
+		"field": "Field"
+	},
+	"picker": {
+		"shown": "Columns shown · left to right",
+		"noneSoc": "No column picked: the table shows the SOC's layout for this source.",
+		"noneDefault": "No column picked: the table shows the default layout.",
+		"headerOf": "Header of {field}",
+		"moveLeft": "Move left",
+		"moveRight": "Move right",
+		"remove": "Remove {field}",
+		"addField": "Add a field",
+		"searchFields": "Search the source's fields",
+		"noFields": "No field list for this source",
+		"templates": "Templates for this source",
+		"loadTitle": "Put the columns of “{name}” above, to adjust or apply them",
+		"load": "Load",
+		"templateNamePlaceholder": "Save the columns above as…",
+		"saveTemplate": "Save as template",
+		"willReplace": "Updates the template saved under this name.",
+		"backToSoc": "Back to the SOC's layout",
+		"backToDefault": "Back to the default"
+	}
+}

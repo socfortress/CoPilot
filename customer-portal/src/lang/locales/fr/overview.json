@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Vue d'ensemble de la sécurité",
+		"subtitle": "La posture de sécurité de votre organisation et les dernières activités du SOC.",
+		"updated": "mis à jour {time}",
+		"refresh": "Actualiser la vue d'ensemble",
+		"scopeAll": "tous les clients ({count})",
+		"scopeNone": "aucun client",
+		"scopeTitle": "Périmètre : {customers}"
+	},
+	"status": {
+		"open": "ouvert",
+		"inProgress": "en cours",
+		"waiting": "en attente de vous",
+		"closed": "fermé",
+		"online": "en ligne",
+		"offline": "hors ligne"
+	},
+	"segments": {
+		"open": "ouvert | ouverts",
+		"inProgress": "en cours | en cours",
+		"waiting": "en attente de vous | en attente de vous",
+		"closed": "fermé | fermés"
+	},
+	"severity": {
+		"critical": "critique",
+		"high": "élevée",
+		"medium": "moyenne",
+		"low": "faible",
+		"informational": "informative",
+		"unknown": "inconnue"
+	},
+	"posture": {
+		"ariaLabel": "Posture de sécurité",
+		"alerts": "Alertes",
+		"cases": "Dossiers",
+		"agents": "Agents",
+		"openAlerts": "alerte ouverte | alertes ouvertes",
+		"openCases": "dossier ouvert | dossiers ouverts",
+		"online": "en ligne",
+		"total": "{count} au total",
+		"critical": "{count} critique | {count} critiques",
+		"sparkCaption": "nouveaux · {range}",
+		"sparkAlerts": "{count} alerte ouverte au cours des {days} derniers jours | {count} alertes ouvertes au cours des {days} derniers jours",
+		"sparkCases": "{count} dossier ouvert au cours des {days} derniers jours | {count} dossiers ouverts au cours des {days} derniers jours"
+	},
+	"activity": {
+		"unnamedAlert": "Alerte sans nom",
+		"unnamedCase": "Dossier sans nom",
+		"unassigned": "non attribué",
+		"alertCount": "{count} alerte | {count} alertes"
+	},
+	"panels": {
+		"latest": "{count} derniers",
+		"empty": "Rien à afficher",
+		"aiFindings": {
+			"title": "Conclusions de l'analyste AI",
+			"analyzed": "{count} alerte analysée | {count} alertes analysées",
+			"highOrCritical": "élevée ou critique"
+		},
+		"recentAlerts": {
+			"title": "Alertes récentes",
+			"link": "Toutes les alertes",
+			"empty": "Aucune alerte dans le périmètre sélectionné"
+		},
+		"recentCases": {
+			"title": "Dossiers récents",
+			"link": "Tous les dossiers",
+			"empty": "Aucun dossier dans le périmètre sélectionné"
+		}
+	},
+	"trend": {
+		"title": "Tendance",
+		"meta": "sur {range}",
+		"ranges": {
+			"days7": "7 jours",
+			"days30": "30 jours"
+		},
+		"entities": {
+			"alerts": "Alertes",
+			"cases": "Dossiers"
+		},
+		"entityAria": "Tendance des",
+		"rangeAria": "Période de la tendance",
+		"openNow": "Ouverts · maintenant",
+		"openNowHint": "Pas encore fermés : ouverts, en cours ou en attente de vous. La carte de posture ci-dessus ne compte que ceux encore ouverts.",
+		"notKnown": "inconnu",
+		"stillOpen": "encore ouverts",
+		"allCleared": "tous traités",
+		"was": "{state} · avant {count}",
+		"net": "Solde",
+		"opened": "Nouveaux",
+		"closed": "Fermés",
+		"peakOpen": "Pic d'ouverts",
+		"netHint": "Nouveaux moins fermés sur la période. Les fermés incluent des éléments ouverts avant celle-ci, la valeur peut donc être négative.",
+		"peakHint": "Le plus grand nombre encore ouverts à la fin d'une journée de la période",
+		"netWord": {
+			"grew": "en hausse",
+			"shrank": "en baisse",
+			"flat": "stable"
+		},
+		"empty": {
+			"alerts": "Aucune alerte ouverte, fermée ou encore ouverte sur {range}",
+			"cases": "Aucun dossier ouvert, fermé ou encore ouvert sur {range}"
+		},
+		"table": {
+			"captionAlerts": "Alertes encore ouvertes à la fin de chaque jour, nouvelles et fermées, sur {range}",
+			"captionCases": "Dossiers encore ouverts à la fin de chaque jour, nouveaux et fermés, sur {range}",
+			"day": "Jour",
+			"openAtDayEnd": "Ouverts en fin de journée"
+		},
+		"chart": {
+			"ariaAlerts": "alertes encore ouvertes à la fin de chaque jour sur {days} jours, avec les nouvelles et les fermées par jour",
+			"ariaAlertsOpen": "alertes encore ouvertes à la fin de chaque jour sur {days} jours, avec les nouvelles et les fermées par jour, {count} encore ouvertes",
+			"ariaCases": "dossiers encore ouverts à la fin de chaque jour sur {days} jours, avec les nouveaux et les fermés par jour",
+			"ariaCasesOpen": "dossiers encore ouverts à la fin de chaque jour sur {days} jours, avec les nouveaux et les fermés par jour, {count} encore ouverts",
+			"openAxis": "Ouverts · en fin de journée",
+			"flowAxis": "Nouveaux ↑  Fermés ↓",
+			"open": "Ouverts",
+			"peak": "pic {count}"
+		}
+	}
+}

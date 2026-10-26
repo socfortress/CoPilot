@@ -99,6 +99,18 @@ export interface CustomerPortalAuditSettings {
 	updated_by: number | null
 }
 
+/**
+ * The languages a customer's portal users may pick (#1310). English is always among them and is the
+ * default; a missing row reads as English only.
+ */
+export interface CustomerPortalLanguageSettings {
+	customer_code: string
+	/** English first, then the others in the portal's order. */
+	languages: string[]
+	updated_at: string | null
+	updated_by: number | null
+}
+
 export interface CustomerPortalBrandingListItem {
 	customer_code: string
 	enabled: boolean

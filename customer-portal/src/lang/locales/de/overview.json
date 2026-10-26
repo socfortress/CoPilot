@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Sicherheitsübersicht",
+		"subtitle": "Die Sicherheitslage Ihrer Organisation und die neuesten Aktivitäten des SOC.",
+		"updated": "aktualisiert {time}",
+		"refresh": "Übersicht aktualisieren",
+		"scopeAll": "alle Kunden ({count})",
+		"scopeNone": "kein Kunde",
+		"scopeTitle": "Bereich: {customers}"
+	},
+	"status": {
+		"open": "offen",
+		"inProgress": "in Bearbeitung",
+		"waiting": "wartet auf Sie",
+		"closed": "geschlossen",
+		"online": "online",
+		"offline": "offline"
+	},
+	"segments": {
+		"open": "offen | offen",
+		"inProgress": "in Bearbeitung | in Bearbeitung",
+		"waiting": "wartet auf Sie | warten auf Sie",
+		"closed": "geschlossen | geschlossen"
+	},
+	"severity": {
+		"critical": "kritisch",
+		"high": "hoch",
+		"medium": "mittel",
+		"low": "niedrig",
+		"informational": "informativ",
+		"unknown": "unbekannt"
+	},
+	"posture": {
+		"ariaLabel": "Sicherheitslage",
+		"alerts": "Alarme",
+		"cases": "Fälle",
+		"agents": "Agenten",
+		"openAlerts": "offener Alarm | offene Alarme",
+		"openCases": "offener Fall | offene Fälle",
+		"online": "online",
+		"total": "{count} insgesamt",
+		"critical": "{count} kritisch | {count} kritisch",
+		"sparkCaption": "neu · {range}",
+		"sparkAlerts": "{count} Alarm in den letzten {days} Tagen eröffnet | {count} Alarme in den letzten {days} Tagen eröffnet",
+		"sparkCases": "{count} Fall in den letzten {days} Tagen eröffnet | {count} Fälle in den letzten {days} Tagen eröffnet"
+	},
+	"activity": {
+		"unnamedAlert": "Unbenannter Alarm",
+		"unnamedCase": "Unbenannter Fall",
+		"unassigned": "nicht zugewiesen",
+		"alertCount": "{count} Alarm | {count} Alarme"
+	},
+	"panels": {
+		"latest": "neueste {count}",
+		"empty": "Nichts anzuzeigen",
+		"aiFindings": {
+			"title": "Erkenntnisse des AI-Analysten",
+			"analyzed": "{count} Alarm analysiert | {count} Alarme analysiert",
+			"highOrCritical": "hoch oder kritisch"
+		},
+		"recentAlerts": {
+			"title": "Neueste Alarme",
+			"link": "Alle Alarme",
+			"empty": "Keine Alarme im ausgewählten Bereich"
+		},
+		"recentCases": {
+			"title": "Neueste Fälle",
+			"link": "Alle Fälle",
+			"empty": "Keine Fälle im ausgewählten Bereich"
+		}
+	},
+	"trend": {
+		"title": "Verlauf",
+		"meta": "letzte {range}",
+		"ranges": {
+			"days7": "7 Tage",
+			"days30": "30 Tage"
+		},
+		"entities": {
+			"alerts": "Alarme",
+			"cases": "Fälle"
+		},
+		"entityAria": "Verlauf für",
+		"rangeAria": "Zeitraum des Verlaufs",
+		"openNow": "Offen · jetzt",
+		"openNowHint": "Noch nicht geschlossen: offen, in Bearbeitung oder wartet auf Sie. Die Karte oben zählt nur die noch offenen.",
+		"notKnown": "unbekannt",
+		"stillOpen": "noch offen",
+		"allCleared": "alle erledigt",
+		"was": "{state} · vorher {count}",
+		"net": "Netto",
+		"opened": "Neu",
+		"closed": "Geschlossen",
+		"peakOpen": "Höchststand offen",
+		"netHint": "Neue minus geschlossene im Zeitraum. Die geschlossenen enthalten auch vorher eröffnete Einträge, daher kann der Wert negativ sein.",
+		"peakHint": "Der höchste Stand noch offener Einträge am Ende eines Tages im Zeitraum",
+		"netWord": {
+			"grew": "gestiegen",
+			"shrank": "gesunken",
+			"flat": "unverändert"
+		},
+		"empty": {
+			"alerts": "Keine Alarme eröffnet, geschlossen oder noch offen (letzte {range})",
+			"cases": "Keine Fälle eröffnet, geschlossen oder noch offen (letzte {range})"
+		},
+		"table": {
+			"captionAlerts": "Alarme, die am Ende jedes Tages noch offen waren, neue und geschlossene, letzte {range}",
+			"captionCases": "Fälle, die am Ende jedes Tages noch offen waren, neue und geschlossene, letzte {range}",
+			"day": "Tag",
+			"openAtDayEnd": "Offen am Tagesende"
+		},
+		"chart": {
+			"ariaAlerts": "Alarme, die am Ende jedes Tages noch offen waren, über {days} Tage, mit neuen und geschlossenen pro Tag",
+			"ariaAlertsOpen": "Alarme, die am Ende jedes Tages noch offen waren, über {days} Tage, mit neuen und geschlossenen pro Tag, {count} noch offen",
+			"ariaCases": "Fälle, die am Ende jedes Tages noch offen waren, über {days} Tage, mit neuen und geschlossenen pro Tag",
+			"ariaCasesOpen": "Fälle, die am Ende jedes Tages noch offen waren, über {days} Tage, mit neuen und geschlossenen pro Tag, {count} noch offen",
+			"openAxis": "Offen · am Tagesende",
+			"flowAxis": "Neu ↑  Geschlossen ↓",
+			"open": "Offen",
+			"peak": "Höchststand {count}"
+		}
+	}
+}

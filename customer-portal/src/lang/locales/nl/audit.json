@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Meldingen",
+		"cases": "Zaken",
+		"reports": "Rapporten",
+		"users": "Gebruikers",
+		"account": "Aanmeldingen en accounts"
+	},
+	"actors": {
+		"member": "Een portaalgebruiker",
+		"soc": "SOC",
+		"other": "Een andere portaalgebruiker",
+		"unknown": "Onbekend"
+	},
+	"targets": {
+		"alert": "Melding #{id}",
+		"case": "Zaak #{id}",
+		"report": "Rapport #{id}"
+	},
+	"retention": {
+		"forever": "Bewaard zolang je SOC zijn auditlog bewaart.",
+		"days": "{count} dag bewaard: oudere items worden verwijderd. | {count} dagen bewaard: oudere items worden verwijderd."
+	},
+	"page": {
+		"title": "Auditlog",
+		"intro": "Wie wat deed in het portaal van je organisatie: verplaatste en becommentarieerde meldingen en zaken, rapporten, en aanmeldingen en accounts van je gebruikers. Acties van je SOC worden als SOC getoond.",
+		"export": "CSV exporteren",
+		"forbiddenTitle": "Het auditlog is voor de beheerders van je organisatie",
+		"forbiddenText": "Je SOC bepaalt wie je organisatie beheert en of het auditlog wordt getoond. Vraag je SOC-contactpersoon als je het nodig hebt.",
+		"allActivity": "Alle activiteit",
+		"everyone": "Iedereen",
+		"from": "Van",
+		"to": "Tot",
+		"allCustomers": "Alle klanten",
+		"clearFilters": "Filters wissen",
+		"noMatches": "Niets komt overeen met deze filters",
+		"empty": "Nog niets vastgelegd",
+		"failed": "Mislukt",
+		"total": "{count} item | {count} items",
+		"truncated": "De CSV bevat de nieuwste 10.000 items: beperk de periode voor de rest.",
+		"loadFailed": "Kan het auditlog niet laden.",
+		"exportFailed": "Kan het auditlog niet exporteren."
+	}
+}

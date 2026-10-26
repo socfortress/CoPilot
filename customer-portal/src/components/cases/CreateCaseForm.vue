@@ -1,6 +1,6 @@
 <template>
 	<n-form :disabled="loading" label-placement="top">
-		<n-form-item v-if="hasMultipleCustomers" label="Customer" required>
+		<n-form-item v-if="hasMultipleCustomers" :label="$t('common.fields.customer')" required>
 			<n-select
 				v-model:value="model.customer_code"
 				data-testid="case-customer"
@@ -8,36 +8,38 @@
 				:render-label="renderCustomerLabel"
 				:filter="filterCustomer"
 				filterable
-				placeholder="Select the customer this case belongs to"
+				:placeholder="$t('cases.createCaseForm.placeholders.customer')"
 			/>
 		</n-form-item>
-		<n-form-item label="Case name" required>
-			<n-input v-model:value="model.case_name" placeholder="Insert case name" />
+		<n-form-item :label="$t('cases.createCaseForm.fields.caseName')" required>
+			<n-input v-model:value="model.case_name" :placeholder="$t('cases.createCaseForm.placeholders.caseName')" />
 		</n-form-item>
-		<n-form-item label="Case status" required>
-			<n-select v-model:value="model.case_status" :options="statusOptions" placeholder="Select case status" />
+		<n-form-item :label="$t('cases.createCaseForm.fields.caseStatus')" required>
+			<n-select v-model:value="model.case_status" :options="statusOptions" :placeholder="$t('cases.createCaseForm.placeholders.caseStatus')" />
 		</n-form-item>
-		<n-form-item label="Case description" required>
+		<n-form-item :label="$t('cases.createCaseForm.fields.caseDescription')" required>
 			<n-input
 				v-model:value="model.case_description"
 				type="textarea"
 				:autosize="{ minRows: 4, maxRows: 8 }"
-				placeholder="Insert case description"
+				:placeholder="$t('cases.createCaseForm.placeholders.caseDescription')"
 			/>
 		</n-form-item>
-		<n-form-item label="Assigned to (optional)">
+		<n-form-item :label="$t('cases.createCaseForm.fields.assignedTo')">
 			<n-select
 				v-model:value="model.assigned_to"
 				:options="assignedToOptions"
 				:loading="optionsLoading"
 				clearable
 				filterable
-				placeholder="Select assignee"
+				:placeholder="$t('cases.createCaseForm.placeholders.assignedTo')"
 			/>
 		</n-form-item>
 		<div class="flex justify-end gap-3">
-			<n-button :disabled="loading" @click="emit('cancel')">Cancel</n-button>
-			<n-button type="primary" :loading :disabled="!isValidForm" @click="handleSubmit">Create case</n-button>
+			<n-button :disabled="loading" @click="emit('cancel')">{{ $t("common.actions.cancel") }}</n-button>
+			<n-button type="primary" :loading :disabled="!isValidForm" @click="handleSubmit">
+				{{ $t("cases.createCaseForm.submit") }}
+			</n-button>
 		</div>
 	</n-form>
 </template>
@@ -47,10 +49,11 @@ import type { CasePayload } from "@/api/endpoints/cases"
 import type { ApiError } from "@/types/common"
 import { NButton, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { getApiErrorMessage } from "@/utils"
-import { SETTABLE_STATUSES, WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
+import { SETTABLE_STATUSES, workflowStatusLabel } from "@/utils/workflowStatus"
 
 const emit = defineEmits<{
 	(e: "success"): void
@@ -58,12 +61,15 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
 	useCustomerPrefill()
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])
-const statusOptions = SETTABLE_STATUSES.map(value => ({ label: WORKFLOW_STATUS_LABELS[value], value }))
+// Computed, so the labels follow a language change.
+const statusOptions = computed(() => SETTABLE_STATUSES.map(value => ({ label: workflowStatusLabel(value), value })))
+
 function emptyModel(): CasePayload {
 	return {
 		case_name: "",
@@ -120,7 +126,7 @@ async function handleSubmit() {
 			case_status: model.value.case_status,
 			customer_code: model.value.customer_code
 		})
-		message.success(response.data.message || "Case created successfully")
+		message.success(response.data.message || t("cases.createCaseForm.created"))
 		emit("success")
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))

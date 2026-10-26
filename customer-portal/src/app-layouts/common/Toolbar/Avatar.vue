@@ -28,22 +28,32 @@
 
 <script lang="ts" setup>
 import type { DropdownOption } from "naive-ui"
-import { NAvatar, NDropdown, NTag } from "naive-ui"
+import { NAvatar, NDropdown, NTag, useMessage } from "naive-ui"
 import { computed, h, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { RouterLink, useRouter } from "vue-router"
 import { useAuditAvailability } from "@/composables/common/useAuditAvailability"
+import { isLocaleCode, LOCALE_NAMES } from "@/lang/config"
 import { useAuthStore } from "@/stores/auth"
+import { useLocalesStore } from "@/stores/i18n"
 import { renderIcon } from "@/utils"
 
 const LogoutIcon = "carbon:logout"
 const UsersIcon = "carbon:user-multiple"
 const AuditIcon = "carbon:catalog"
+const LanguageIcon = "carbon:language"
+const CheckIcon = "carbon:checkmark"
 
 const router = useRouter()
 const authStore = useAuthStore()
+const localesStore = useLocalesStore()
+const message = useMessage()
+const { t } = useI18n()
 
 const userPic = authStore.userPic
-const roleText = computed(() => (authStore.isCustomerAdmin ? "Customer admin" : "Portal user"))
+const roleText = computed(() =>
+	authStore.isCustomerAdmin ? t("profile.roles.customerAdmin") : t("profile.roles.portalUser")
+)
 
 const open = ref(false)
 
@@ -55,7 +65,7 @@ function renderSignedInUser() {
 		{
 			to: { name: "Profile" },
 			class: "border-default bg-secondary hover:border-primary focus-visible:border-primary mx-2 mt-2 mb-1 flex max-w-80 min-w-56 items-center gap-3 rounded-lg border px-3 py-2.5 no-underline transition-colors outline-none",
-			title: "Your profile",
+			title: t("navigation.toolbar.yourProfile"),
 			"data-testid": "toolbar-user",
 			onClick: () => {
 				open.value = false
@@ -97,20 +107,54 @@ watch(
 	{ immediate: true }
 )
 
+// The portal's language (#1310): only when the user's customers offer more than English.
+const languageOption = computed<DropdownOption[]>(() => {
+	if (!localesStore.canChoose) return []
+	const children: DropdownOption[] = localesStore.available.map(code => ({
+		label: LOCALE_NAMES[code],
+		key: `locale-${code}`,
+		icon: code === localesStore.locale ? renderIcon(CheckIcon) : undefined
+	}))
+	return [
+		{
+			label: t("common.language.label"),
+			key: "language",
+			icon: renderIcon(LanguageIcon),
+			children
+		}
+	]
+})
+
 // "Users" only for a customer admin (#1296): the profile says so, read live.
 const options = computed<DropdownOption[]>(() => [
 	{ key: "signed-in-user", type: "render", render: renderSignedInUser },
-	...(authStore.isCustomerAdmin ? [{ label: "Users", key: "route-Users", icon: renderIcon(UsersIcon) }] : []),
+	...(authStore.isCustomerAdmin ? [{ label: t("navigation.routes.users"), key: "route-Users", icon: renderIcon(UsersIcon) }] : []),
 	...(authStore.isCustomerAdmin && auditAvailable.value
-		? [{ label: "Audit log", key: "route-AuditLog", icon: renderIcon(AuditIcon) }]
+		? [{ label: t("navigation.routes.auditLog"), key: "route-AuditLog", icon: renderIcon(AuditIcon) }]
 		: []),
+	...languageOption.value,
 	{
-		label: "Logout",
+		label: t("navigation.toolbar.logout"),
 		key: "route-Logout",
 		icon: renderIcon(LogoutIcon)
 	}
 ])
+
+async function chooseLanguage(code: string) {
+	if (!isLocaleCode(code) || code === localesStore.locale) return
+	try {
+		await localesStore.choose(code)
+		message.success(t("common.language.saved"))
+	} catch {
+		message.error(t("common.language.failed"))
+	}
+}
+
 function handleSelect(key: string) {
+	if (key.startsWith("locale-")) {
+		chooseLanguage(key.slice("locale-".length))
+		return
+	}
 	if (key.indexOf("route-") === 0) {
 		const path = key.split("route-")[1]
 		router.push({ name: path })

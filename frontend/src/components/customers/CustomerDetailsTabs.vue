@@ -114,6 +114,14 @@
 				<n-tab-pane name="Audit Log" tab="Audit Log" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalAudit :customer-code="customer.customer_code" />
 				</n-tab-pane>
+				<n-tab-pane
+					name="Portal Languages"
+					tab="Portal Languages"
+					display-directive="show:lazy"
+					class="p-4!"
+				>
+					<CustomerPortalLanguages :customer-code="customer.customer_code" />
+				</n-tab-pane>
 				<n-tab-pane name="Ask the SOC" tab="Ask the SOC" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalAskSoc :customer-code="customer.customer_code" />
 				</n-tab-pane>
@@ -250,6 +258,7 @@ const CustomerPortalNotifications = defineAsyncComponent(
 const CustomerPortalExposure = defineAsyncComponent(() => import("@/components/customerPortal/ExposureSettings.vue"))
 // Per-customer switch for the portal's Audit Log page, read by the customer's own administrators (#1298).
 const CustomerPortalAudit = defineAsyncComponent(() => import("@/components/customerPortal/AuditSettings.vue"))
+const CustomerPortalLanguages = defineAsyncComponent(() => import("@/components/customerPortal/LanguageSettings.vue"))
 // Per-customer switch for "Ask the SOC": portal users' questions about their alerts and cases (#1305).
 const CustomerPortalAskSoc = defineAsyncComponent(() => import("@/components/customerPortal/AskSocSettings.vue"))
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
@@ -295,6 +304,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"Portal Notifications",
 	"Exposure",
 	"Audit Log",
+	"Portal Languages",
 	"Ask the SOC",
 	"Security"
 ])

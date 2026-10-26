@@ -15,6 +15,23 @@ vi.mock("@/composables/common/useAuditAvailability", async () => {
 	Object.defineProperty(audit, "available", { value: available })
 	return { useAuditAvailability: () => ({ available, check: audit.check }) }
 })
+// The portal's language (#1310): a store the tests set, and naive's messages recorded.
+const locales = vi.hoisted(() => ({ value: null as null | Record<string, unknown> }))
+vi.mock("@/stores/i18n", async () => {
+	const { reactive } = await import("vue")
+	const state = reactive({
+		locale: "en",
+		available: ["en"],
+		get canChoose() {
+			return state.available.length > 1
+		},
+		choose: vi.fn()
+	})
+	locales.value = state
+	return { useLocalesStore: () => state }
+})
+const message = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
+vi.mock("naive-ui", async importOriginal => ({ ...(await importOriginal<object>()), useMessage: () => message }))
 vi.mock("vue-router", async () => {
 	const { defineComponent, h } = await import("vue")
 	// A link that names where it goes, as the real one does in its href.
@@ -46,6 +63,10 @@ describe("avatar", () => {
 		push.mockReset()
 		audit.check.mockReset()
 		audit.available.value = false
+		Object.assign(locales.value ?? {}, { locale: "en", available: ["en"] })
+		;(locales.value?.choose as ReturnType<typeof vi.fn>)?.mockReset()
+		message.success.mockReset()
+		message.error.mockReset()
 	})
 
 	it("shows a portal user's name and role, tagged Portal user, with no Users", () => {
@@ -107,5 +128,51 @@ describe("avatar", () => {
 		audit.available.value = true
 		expect(keys()).toEqual(["signed-in-user", "route-Logout"])
 		expect(audit.check).not.toHaveBeenCalled()
+	})
+
+	it("offers no language menu while the customers offer English only (#1310)", () => {
+		store.isCustomerAdmin = false
+		expect(keys()).toEqual(["signed-in-user", "route-Logout"])
+	})
+
+	it("offers the customers' languages, each in its own name, the current one ticked", () => {
+		store.isCustomerAdmin = false
+		Object.assign(locales.value ?? {}, { locale: "it", available: ["en", "it", "nl"] })
+		const language = options().find(option => option.key === "language") as unknown as {
+			label: string
+			children: { key: string; label: string; icon?: unknown }[]
+		}
+		expect(keys()).toEqual(["signed-in-user", "language", "route-Logout"])
+		expect(language.label).toBe("Language")
+		expect(language.children.map(child => [child.key, child.label])).toEqual([
+			["locale-en", "English"],
+			["locale-it", "Italiano"],
+			["locale-nl", "Nederlands"]
+		])
+		expect(language.children.map(child => !!child.icon)).toEqual([false, true, false])
+	})
+
+	it("stores a picked language and says so; a failure says that instead", async () => {
+		store.isCustomerAdmin = false
+		Object.assign(locales.value ?? {}, { locale: "en", available: ["en", "it"] })
+		const choose = locales.value?.choose as ReturnType<typeof vi.fn>
+		choose.mockResolvedValueOnce(undefined)
+		mount(Avatar).getComponent(NDropdown).vm.$emit("select", "locale-it")
+		await vi.waitFor(() => expect(message.success).toHaveBeenCalledWith("Language saved"))
+		expect(choose).toHaveBeenCalledWith("it")
+		expect(push).not.toHaveBeenCalled()
+
+		choose.mockRejectedValueOnce(new Error("400"))
+		mount(Avatar).getComponent(NDropdown).vm.$emit("select", "locale-it")
+		await vi.waitFor(() => expect(message.error).toHaveBeenCalled())
+	})
+
+	it("ignores the current language and a code it doesn't ship", () => {
+		store.isCustomerAdmin = false
+		Object.assign(locales.value ?? {}, { locale: "en", available: ["en", "it"] })
+		const wrapper = mount(Avatar)
+		wrapper.getComponent(NDropdown).vm.$emit("select", "locale-en")
+		wrapper.getComponent(NDropdown).vm.$emit("select", "locale-jp")
+		expect(locales.value?.choose).not.toHaveBeenCalled()
 	})
 })

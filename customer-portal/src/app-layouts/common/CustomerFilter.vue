@@ -12,7 +12,7 @@
 		:filter="filterCustomer"
 		filterable
 		:max-tag-count="2"
-		placeholder="All customers"
+		:placeholder="$t('navigation.customerFilter.placeholder')"
 		:consistent-menu-width="false"
 	/>
 </template>

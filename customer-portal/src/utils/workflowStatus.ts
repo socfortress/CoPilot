@@ -1,5 +1,6 @@
 import type { SelectOption } from "naive-ui"
 import type { AlertStatus } from "@/types/alerts"
+import { i18nGlobal } from "@/lang"
 
 /**
  * Alert and case statuses as the customer reads them.
@@ -12,11 +13,23 @@ import type { AlertStatus } from "@/types/alerts"
  */
 export const WAITING_ON_CUSTOMER: AlertStatus = "PENDING_CUSTOMER"
 
+/**
+ * Each status's label in the user's language. Getters, so a label is translated when it is
+ * read (#1310): a list built from them follows a language change once it is rebuilt.
+ */
 export const WORKFLOW_STATUS_LABELS: Record<AlertStatus, string> = {
-	OPEN: "Open",
-	IN_PROGRESS: "In Progress",
-	PENDING_CUSTOMER: "Waiting on you",
-	CLOSED: "Closed"
+	get OPEN() {
+		return i18nGlobal.t("common.status.open")
+	},
+	get IN_PROGRESS() {
+		return i18nGlobal.t("common.status.inProgress")
+	},
+	get PENDING_CUSTOMER() {
+		return i18nGlobal.t("common.status.waitingOnYou")
+	},
+	get CLOSED() {
+		return i18nGlobal.t("common.status.closed")
+	}
 }
 
 /** The statuses a customer may pick, in workflow order. */

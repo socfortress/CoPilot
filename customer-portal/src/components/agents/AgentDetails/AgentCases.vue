@@ -9,7 +9,7 @@
 		>
 			<header class="bg-secondary border-default flex items-baseline justify-between gap-2 border-b px-4 py-2">
 				<span class="text-tertiary text-xs font-medium tracking-wider uppercase">
-					Cases involving this host
+					{{ $t("agents.agentCases.heading") }}
 				</span>
 				<span v-if="!loading" class="text-tertiary font-mono text-xs tabular-nums">{{ cases.length }}</span>
 			</header>
@@ -19,7 +19,7 @@
 			</div>
 			<n-empty
 				v-else-if="!cases.length"
-				description="No case involves this host"
+				:description="$t('agents.agentCases.empty')"
 				class="min-h-40 justify-center"
 				data-testid="agent-cases-empty"
 			/>
@@ -39,14 +39,14 @@
 					<span class="flex min-w-0 flex-col leading-tight [grid-area:name]">
 						<span class="text-default line-clamp-2 text-sm @3xl:line-clamp-1">{{ c.case_name }}</span>
 						<span class="text-tertiary font-mono text-xs tabular-nums">
-							#{{ c.id }} · {{ c.alerts?.length ?? 0 }} alert{{ c.alerts?.length === 1 ? "" : "s" }}
+							#{{ c.id }} · {{ $t("agents.agentCases.alerts", c.alerts?.length ?? 0) }}
 						</span>
 					</span>
 					<!-- Narrow: one line under the name; wide (contents): two columns of their own. -->
 					<span
 						class="text-secondary flex min-w-0 items-baseline gap-2 text-xs [grid-area:info] @3xl:contents"
 					>
-						<span class="truncate @3xl:[grid-area:owner]">{{ c.assigned_to ?? "unassigned" }}</span>
+						<span class="truncate @3xl:[grid-area:owner]">{{ c.assigned_to ?? $t("agents.agentCases.unassigned") }}</span>
 						<span class="text-tertiary @3xl:hidden">·</span>
 						<span
 							class="whitespace-nowrap @3xl:[grid-area:created]"
@@ -69,6 +69,7 @@ import type { Case } from "@/types/cases"
 import type { ApiError } from "@/types/common"
 import { NAlert, NEmpty, NSkeleton } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import Chip from "@/components/common/Chip.vue"
@@ -95,6 +96,7 @@ const ROW = [
 	"@3xl:[grid-template-areas:'status_name_owner_created_open']"
 ].join(" ")
 
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 const { loading, run } = useLatestRequest()
 const cases = ref<Case[]>([])
@@ -109,7 +111,7 @@ onBeforeMount(() => {
 			cases.value = (await Api.agents.getCases(hostname, signal)).data.cases ?? []
 		},
 		err => {
-			error.value = getApiErrorMessage(err as ApiError) || "Could not load the cases."
+			error.value = getApiErrorMessage(err as ApiError) || t("agents.agentCases.loadFailed")
 		}
 	)
 })

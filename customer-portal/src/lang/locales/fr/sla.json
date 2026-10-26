@@ -1,0 +1,73 @@
+{
+	"page": {
+		"title": "Niveaux de service",
+		"intro": "La rapidité avec laquelle le SOC a répondu à vos alertes et dossiers et les a résolus, par rapport aux objectifs convenus avec vous.",
+		"refreshError": "Impossible d'actualiser les chiffres : {error}",
+		"disabledTitle": "Les niveaux de service ne sont pas encore disponibles",
+		"disabledText": "Votre SOC n'a pas encore publié les chiffres de niveau de service pour ce client. Demandez à votre contact SOC si vous souhaitez les voir ici.",
+		"trendTitle": "Résolus dans l'objectif",
+		"trendEmpty": "Aucun élément suivi n'a été ouvert ni résolu sur cette période",
+		"commitmentTitle": "Notre engagement",
+		"commitmentEmpty": "Aucun objectif ne s'applique à vos alertes et dossiers",
+		"periodMeta": "sur {period}",
+		"measuredSince": "mesuré depuis le {date}"
+	},
+	"period": "{count} jours",
+	"kpi": {
+		"alertResponse": "Réponse aux alertes",
+		"alertResolution": "Résolution des alertes",
+		"caseResponse": "Réponse aux dossiers",
+		"caseResolution": "Résolution des dossiers",
+		"answeredWithinTarget": "traités dans l'objectif",
+		"resolvedWithinTarget": "résolus dans l'objectif",
+		"medianResponse": "réponse médiane",
+		"medianResolution": "résolution médiane",
+		"deltaTitle": "{delta} points par rapport à la période précédente",
+		"onTarget": "{met} sur {decided} dans l'objectif",
+		"noOutcome": "pas encore de résultat"
+	},
+	"units": {
+		"seconds": "{n} s",
+		"minutes": "{n} min",
+		"hours": "{n} h",
+		"hoursMinutes": "{hours} h {minutes} min",
+		"days": "{n} j",
+		"daysHours": "{days} j {hours} h",
+		"targetMinutes": "{n} min",
+		"targetHours": "{n} h",
+		"targetDays": "{n} j",
+		"noTarget": "Aucun objectif"
+	},
+	"targets": {
+		"alerts": "Alertes",
+		"cases": "Dossiers",
+		"response": "Réponse",
+		"resolution": "Résolution",
+		"kept": "Tenu",
+		"businessHours": "heures ouvrées",
+		"businessHoursHint": "Ces objectifs ne comptent que les heures ouvrées : les nuits, les week-ends et les jours fériés n'avancent pas le compteur.",
+		"nothing": "Rien de cette gravité sur la période",
+		"keptNote": "Tenu : la part résolue dans l'objectif (ou traitée, quand la résolution n'a pas encore de résultat). Le temps passé à vous attendre n'est pas compté contre le SOC."
+	},
+	"openNow": {
+		"label": "Ouverts en ce moment",
+		"alerts": "Alertes ouvertes",
+		"cases": "Dossiers ouverts",
+		"atRisk": "Bientôt dus",
+		"breached": "Objectif dépassé",
+		"viewAll": "Tout voir",
+		"alertsLink": "Alertes",
+		"casesLink": "Dossiers"
+	},
+	"trend": {
+		"ariaLabel": "Résolution dans l'objectif par période, de {from} à {to}",
+		"ariaEmpty": "Aucun résultat de résolution sur cette période",
+		"noOutcome": "Pas encore de résultat de résolution",
+		"onTarget": "Dans l'objectif",
+		"onTargetLine": "Dans l'objectif : {rate}",
+		"volumes": "Ouverts {opened} · résolus {resolved}"
+	},
+	"severity": {
+		"informational": "Informative"
+	}
+}

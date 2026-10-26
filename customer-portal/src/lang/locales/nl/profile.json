@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Klantbeheerder",
+		"portalUser": "Portaalgebruiker"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Nodigt de portaalgebruikers van {customers} uit en beheert ze. Aangesteld door je SOC.",
+		"adminBadge": "beheerder",
+		"noCustomer": "Geen klant"
+	},
+	"tabs": {
+		"settings": "Instellingen",
+		"notifications": "Notificaties",
+		"security": "Beveiliging"
+	},
+	"settings": {
+		"general": "Algemeen",
+		"dateFormat": "Datumnotatie",
+		"timeFormat": "Tijdnotatie",
+		"hours24": "24 uur [ {time} ]",
+		"hours12": "12 uur [ {time} ]",
+		"usernameRequired": "Voer een gebruikersnaam in",
+		"emailRequired": "Voer een e-mailadres in",
+		"saved": "Instellingen opgeslagen",
+		"error": "Er ging iets mis"
+	},
+	"notifications": {
+		"title": "Notificaties",
+		"intro": "Kies wat je bereikt via de bel van het portaal en per e-mail. Je krijgt nooit een notificatie over iets wat je zelf hebt gedaan.",
+		"inPortal": "In het portaal",
+		"email": "E-mail",
+		"from": "Vanaf",
+		"unsaved": "Niet-opgeslagen wijzigingen",
+		"emailOff": "Uit",
+		"emailImmediately": "Direct",
+		"digest": "Dagelijkse samenvatting ({hour}:00 UTC)",
+		"severityAndUp": "{severity} en hoger",
+		"severities": {
+			"critical": "Kritiek",
+			"high": "Hoog",
+			"medium": "Gemiddeld",
+			"low": "Laag",
+			"informational": "Informatief"
+		},
+		"noEmailAddress": "Je account heeft geen e-mailadres, dus notificaties komen alleen in het portaal binnen. Vraag je SOC om er een toe te voegen.",
+		"emailNotSetUp": "E-mailnotificaties zijn nog niet ingesteld op dit portaal, dus notificaties komen alleen in het portaal binnen.",
+		"saved": "Notificatie-instellingen opgeslagen",
+		"loadFailed": "Je notificatie-instellingen konden niet worden geladen.",
+		"saveFailed": "Je notificatie-instellingen konden niet worden opgeslagen.",
+		"events": {
+			"alertCreated": {
+				"label": "Nieuwe meldingen",
+				"description": "Een nieuwe melding van je organisatie, vanaf de ernst die je kiest."
+			},
+			"waitingOnYou": {
+				"label": "Wacht op jou",
+				"description": "Het SOC heeft je antwoord nodig over een melding of een zaak."
+			},
+			"caseClosed": {
+				"label": "Gesloten zaken",
+				"description": "Een zaak van je organisatie is gesloten."
+			},
+			"reportReady": {
+				"label": "Rapporten klaar",
+				"description": "Een rapport dat je hebt gemaakt, of dat het SOC met je heeft gedeeld, is klaar."
+			}
+		}
+	}
+}

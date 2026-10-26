@@ -4,7 +4,7 @@
 			<span class="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
 				{{ attention }}
 			</span>
-			<span class="text-secondary text-sm">high or critical</span>
+			<span class="text-secondary text-sm">{{ $t("overview.panels.aiFindings.highOrCritical") }}</span>
 		</div>
 
 		<StatusBar :segments />

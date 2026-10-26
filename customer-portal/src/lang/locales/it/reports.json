@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Report",
+		"subtitle": "Genera e scarica report PDF sulle attività della tua organizzazione",
+		"generate": "Genera report",
+		"empty": "Nessun report generato",
+		"loadFailed": "Impossibile caricare i report",
+		"noCustomer": "Nessun cliente disponibile per generare il report",
+		"queued": "La generazione del report può richiedere un po' di tempo: riceverai una notifica quando sarà pronto.",
+		"queueFailed": "Impossibile mettere in coda la generazione del report",
+		"generateFailed": "Impossibile generare il report",
+		"downloaded": "Report scaricato",
+		"downloadFailed": "Impossibile scaricare il report",
+		"deleteFailed": "Impossibile eliminare il report"
+	},
+	"form": {
+		"reportName": "Nome del report",
+		"reportNamePlaceholder": "Lascia vuoto per un nome automatico",
+		"timeRange": "Intervallo di tempo",
+		"customRange": "Intervallo di date personalizzato",
+		"template": "Modello del report",
+		"selectCustomer": "Seleziona un cliente",
+		"selectRange": "Seleziona un intervallo di date",
+		"ranges": {
+			"last30": "Ultimi 30 giorni",
+			"last90": "Ultimi 3 mesi",
+			"custom": "Intervallo personalizzato"
+		},
+		"templates": {
+			"full": {
+				"label": "Report completo",
+				"description": "Tutto: sintesi direzionale, grafici e andamenti, e casi aperti/chiusi con asset e IOC."
+			},
+			"executive": {
+				"label": "Sintesi direzionale",
+				"description": "Sintesi a colpo d'occhio: KPI principali, metriche di servizio e un grafico degli stati. Nessun dettaglio sui casi."
+			},
+			"operational": {
+				"label": "Operativo — casi",
+				"description": "Incentrato sui casi: ogni caso aperto/chiuso nel dettaglio (asset, IOC, risoluzione). Nessun grafico."
+			},
+			"analytics": {
+				"label": "Analisi — andamenti",
+				"description": "Incentrato sulle metriche: sintesi direzionale più tutti i grafici di distribuzione e la tabella dell'andamento mensile. Nessun dettaglio sui casi."
+			}
+		}
+	},
+	"delete": {
+		"title": "Elimina report",
+		"confirm": "Vuoi davvero eliminare \"{name}\"?",
+		"irreversible": "Questa azione non può essere annullata."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Report completo",
+				"description": "Sintesi direzionale, grafici e andamenti, e casi aperti/chiusi con asset e IOC"
+			},
+			"executive": {
+				"name": "Report direzionale",
+				"description": "Sintesi a colpo d'occhio: KPI, metriche di servizio e un grafico degli stati"
+			},
+			"operational": {
+				"name": "Report operativo",
+				"description": "Incentrato sui casi: casi aperti/chiusi nel dettaglio (asset, IOC, risoluzione)"
+			},
+			"analytics": {
+				"name": "Report analitico",
+				"description": "Incentrato sulle metriche: sintesi direzionale, tutti i grafici e la tabella dell'andamento mensile"
+			}
+		},
+		"alerts": "alert",
+		"cases": "casi",
+		"open": "aperti",
+		"closed": "chiusi",
+		"status": {
+			"completed": "Completato",
+			"processing": "In generazione",
+			"failed": "Non riuscito"
+		},
+		"roles": {
+			"admin": "Amministratore",
+			"analyst": "Analista",
+			"scheduler": "Pianificatore",
+			"customer_user": "Cliente"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Report pronto",
+		"readyDescription": "\"{name}\" è stato generato ed è pronto da scaricare.",
+		"failedTitle": "Report non riuscito",
+		"failedDescription": "Impossibile generare \"{name}\".",
+		"timeoutTitle": "Report ancora in corso",
+		"timeoutDescription": "\"{name}\" sta richiedendo più tempo del previsto. Controlla il suo stato nella pagina Report.",
+		"viewReports": "Vai ai report"
+	}
+}

@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "Keine Ereignisquellen konfiguriert",
+		"noSourcesText": "Für diesen Kunden sind keine Ereignisquellen konfiguriert. Wenden Sie sich an Ihren Administrator, um Ereignisquellen einzurichten.",
+		"queryLabel": "Lucene-Abfrage",
+		"autocompleteHint": "# eingeben für Autovervollständigung",
+		"selectCustomer": "Kunde auswählen",
+		"selectSource": "Quelle auswählen",
+		"queryPlaceholder": "z. B. {example}",
+		"noFieldMappings": "Keine Feldzuordnungen gefunden",
+		"customerNeeded": "Wählen Sie einen Kunden für die Suche aus",
+		"sourceNeeded": "Wählen Sie eine Quelle für die Suche aus",
+		"time": "Zeit",
+		"timeUnit": "Zeiteinheit",
+		"units": {
+			"hours": "Stunden",
+			"days": "Tage",
+			"weeks": "Wochen"
+		},
+		"perPage": "{count} pro Seite",
+		"loadSourcesFailed": "Ereignisquellen konnten nicht geladen werden",
+		"queryUpdated": "„{name}“ aktualisiert",
+		"querySaved": "„{name}“ gespeichert",
+		"saveQueryFailed": "Die Abfrage konnte nicht gespeichert werden",
+		"deleteQueryFailed": "Die Abfrage konnte nicht gelöscht werden",
+		"clearRecentFailed": "Die letzten Suchen konnten nicht gelöscht werden",
+		"sourceGone": "Die Quelle „{source}“ ist für diesen Kunden nicht mehr verfügbar"
+	},
+	"results": {
+		"count": "{loaded} von {total} Ereignissen geladen",
+		"columns": "Spalten",
+		"ownColumns": "Ihre eigenen Spalten",
+		"exportCsv": "CSV exportieren",
+		"empty": "Keine Ereignisse gefunden",
+		"emptyHint": "Passen Sie Ihre Abfrage an oder erweitern Sie den Zeitraum",
+		"loadMore": "{shown} von {total} Ereignissen • Mehr laden",
+		"columnsTitle": "Spalten · {source}",
+		"socLayout": "SOC-Layout",
+		"defaultLayout": "Standardlayout",
+		"viewDetails": "Details anzeigen",
+		"switchColumnsFailed": "Die Spalten konnten nicht gewechselt werden",
+		"templateUpdated": "Vorlage „{name}“ aktualisiert",
+		"templateSaved": "Vorlage „{name}“ gespeichert",
+		"saveTemplateFailed": "Die Vorlage konnte nicht gespeichert werden",
+		"templateDeletedNamed": "Vorlage „{name}“ gelöscht",
+		"templateDeleted": "Vorlage gelöscht",
+		"deleteTemplateFailed": "Die Vorlage konnte nicht gelöscht werden",
+		"saveColumnsFailed": "Die Spalten konnten nicht gespeichert werden",
+		"exportedPartial": "{exported} von {total} Ereignissen exportiert: Laden Sie mehr, um den Rest einzuschließen",
+		"exported": "{exported} Ereignisse exportiert",
+		"searchFailed": "Ereignisse konnten nicht gesucht werden",
+		"loadMoreFailed": "Weitere Ereignisse konnten nicht geladen werden"
+	},
+	"columns": {
+		"timestamp": "Zeitstempel",
+		"level": "Stufe",
+		"source": "Quelle",
+		"rule": "Regel"
+	},
+	"details": {
+		"title": "Ereignisdetails",
+		"filterFor": "Nach diesem Wert filtern",
+		"exclude": "Diesen Wert ausschließen"
+	},
+	"queries": {
+		"toggle": "Abfragen",
+		"saved": "Gespeichert",
+		"recent": "Zuletzt",
+		"loading": "Wird geladen…",
+		"noSaved": "Noch keine gespeicherte Abfrage. Führen Sie eine Suche aus und speichern Sie sie dann unter einem Namen.",
+		"noRecent": "Ihre ausgeführten Suchen erscheinen hier.",
+		"run": "„{name}“ ausführen",
+		"delete": "„{name}“ löschen",
+		"saveAs": "Diese Suche speichern als",
+		"namePlaceholder": "z. B. Fehlgeschlagene Anmeldungen auf Webservern",
+		"willReplace": "Aktualisiert die unter diesem Namen gespeicherte Abfrage.",
+		"loadFailed": "Ihre gespeicherten Suchen konnten nicht geladen werden",
+		"lastHours": "letzte {count} Stunde | letzte {count} Stunden",
+		"lastDays": "letzter {count} Tag | letzte {count} Tage",
+		"lastWeeks": "letzte {count} Woche | letzte {count} Wochen"
+	},
+	"layouts": {
+		"toggle": "Layout",
+		"title": "Layouts",
+		"custom": "Benutzerdefiniert",
+		"deleteTemplate": "Vorlage „{name}“ löschen",
+		"noTemplates": "Noch keine Vorlage: Ordnen Sie die Spalten an und speichern Sie sie dann als Vorlage.",
+		"manage": "Spalten und Vorlagen verwalten"
+	},
+	"deleteConfirm": {
+		"label": "Vorlage „{name}“ löschen?",
+		"question": "{name} löschen?"
+	},
+	"preview": {
+		"columns": "{count} Spalte | {count} Spalten",
+		"header": "Überschrift",
+		"field": "Feld"
+	},
+	"picker": {
+		"shown": "Angezeigte Spalten · von links nach rechts",
+		"noneSoc": "Keine Spalte gewählt: Die Tabelle zeigt das SOC-Layout für diese Quelle.",
+		"noneDefault": "Keine Spalte gewählt: Die Tabelle zeigt das Standardlayout.",
+		"headerOf": "Überschrift von {field}",
+		"moveLeft": "Nach links verschieben",
+		"moveRight": "Nach rechts verschieben",
+		"remove": "{field} entfernen",
+		"addField": "Feld hinzufügen",
+		"searchFields": "Felder der Quelle durchsuchen",
+		"noFields": "Keine Feldliste für diese Quelle",
+		"templates": "Vorlagen für diese Quelle",
+		"loadTitle": "Die Spalten von „{name}“ oben übernehmen, um sie anzupassen oder anzuwenden",
+		"load": "Laden",
+		"templateNamePlaceholder": "Die Spalten oben speichern als…",
+		"saveTemplate": "Als Vorlage speichern",
+		"willReplace": "Aktualisiert die unter diesem Namen gespeicherte Vorlage.",
+		"backToSoc": "Zurück zum SOC-Layout",
+		"backToDefault": "Zurück zum Standard"
+	}
+}

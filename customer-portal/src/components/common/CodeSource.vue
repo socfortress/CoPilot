@@ -11,7 +11,7 @@
 			:value="source"
 			type="textarea"
 			readonly
-			placeholder="Empty"
+			:placeholder="$t('common.codeSource.empty')"
 			size="large"
 			:autosize="{
 				minRows: 3,
@@ -25,7 +25,9 @@
 			</div>
 
 			<div v-if="showToggleButton" class="flex justify-end">
-				<n-button quaternary size="tiny" @click="showSource = !showSource">toggle source view</n-button>
+				<n-button quaternary size="tiny" @click="showSource = !showSource">
+					{{ $t("common.codeSource.toggle") }}
+				</n-button>
 			</div>
 		</div>
 	</div>

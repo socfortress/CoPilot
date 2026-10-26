@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Přehled zabezpečení",
+		"subtitle": "Stav zabezpečení vaší organizace a nejnovější aktivity SOC.",
+		"updated": "aktualizováno {time}",
+		"refresh": "Obnovit přehled",
+		"scopeAll": "všichni zákazníci ({count})",
+		"scopeNone": "žádný zákazník",
+		"scopeTitle": "Rozsah: {customers}"
+	},
+	"status": {
+		"open": "otevřeno",
+		"inProgress": "probíhá",
+		"waiting": "čeká na vás",
+		"closed": "uzavřeno",
+		"online": "online",
+		"offline": "offline"
+	},
+	"segments": {
+		"open": "otevřeno | otevřeno",
+		"inProgress": "probíhá | probíhá",
+		"waiting": "čeká na vás | čeká na vás",
+		"closed": "uzavřeno | uzavřeno"
+	},
+	"severity": {
+		"critical": "kritická",
+		"high": "vysoká",
+		"medium": "střední",
+		"low": "nízká",
+		"informational": "informativní",
+		"unknown": "neznámá"
+	},
+	"posture": {
+		"ariaLabel": "Stav zabezpečení",
+		"alerts": "Výstrahy",
+		"cases": "Případy",
+		"agents": "Agenti",
+		"openAlerts": "otevřená výstraha | otevřené výstrahy | otevřených výstrah",
+		"openCases": "otevřený případ | otevřené případy | otevřených případů",
+		"online": "online",
+		"total": "celkem {count}",
+		"critical": "{count} kritický | {count} kritické | {count} kritických",
+		"sparkCaption": "nové · {range}",
+		"sparkAlerts": "{count} výstraha otevřena za posledních {days} dní | {count} výstrahy otevřeny za posledních {days} dní | {count} výstrah otevřeno za posledních {days} dní",
+		"sparkCases": "{count} případ otevřen za posledních {days} dní | {count} případy otevřeny za posledních {days} dní | {count} případů otevřeno za posledních {days} dní"
+	},
+	"activity": {
+		"unnamedAlert": "Nepojmenovaná výstraha",
+		"unnamedCase": "Nepojmenovaný případ",
+		"unassigned": "nepřiřazeno",
+		"alertCount": "{count} výstraha | {count} výstrahy | {count} výstrah"
+	},
+	"panels": {
+		"latest": "posledních {count}",
+		"empty": "Nic k zobrazení",
+		"aiFindings": {
+			"title": "Zjištění AI analytika",
+			"analyzed": "{count} analyzovaná výstraha | {count} analyzované výstrahy | {count} analyzovaných výstrah",
+			"highOrCritical": "vysoká nebo kritická"
+		},
+		"recentAlerts": {
+			"title": "Nedávné výstrahy",
+			"link": "Všechny výstrahy",
+			"empty": "Ve vybraném rozsahu nejsou žádné výstrahy"
+		},
+		"recentCases": {
+			"title": "Nedávné případy",
+			"link": "Všechny případy",
+			"empty": "Ve vybraném rozsahu nejsou žádné případy"
+		}
+	},
+	"trend": {
+		"title": "Vývoj",
+		"meta": "posledních {range}",
+		"ranges": {
+			"days7": "7 dní",
+			"days30": "30 dní"
+		},
+		"entities": {
+			"alerts": "Výstrahy",
+			"cases": "Případy"
+		},
+		"entityAria": "Vývoj pro",
+		"rangeAria": "Období vývoje",
+		"openNow": "Otevřené · nyní",
+		"openNowHint": "Dosud neuzavřené: otevřené, probíhající nebo čekající na vás. Karta stavu výše počítá jen ty, které jsou stále otevřené.",
+		"notKnown": "neznámo",
+		"stillOpen": "stále otevřené",
+		"allCleared": "vše vyřešeno",
+		"was": "{state} · dříve {count}",
+		"net": "Rozdíl",
+		"opened": "Nové",
+		"closed": "Uzavřené",
+		"peakOpen": "Maximum otevřených",
+		"netHint": "Nové minus uzavřené v období. Uzavřené zahrnují i položky otevřené před ním, takže hodnota může být záporná.",
+		"peakHint": "Nejvyšší počet stále otevřených na konci dne v období",
+		"netWord": {
+			"grew": "nárůst",
+			"shrank": "pokles",
+			"flat": "beze změny"
+		},
+		"empty": {
+			"alerts": "Za posledních {range} nebyly otevřeny, uzavřeny ani nezůstaly otevřené žádné výstrahy",
+			"cases": "Za posledních {range} nebyly otevřeny, uzavřeny ani nezůstaly otevřené žádné případy"
+		},
+		"table": {
+			"captionAlerts": "Výstrahy stále otevřené na konci každého dne, nové a uzavřené, posledních {range}",
+			"captionCases": "Případy stále otevřené na konci každého dne, nové a uzavřené, posledních {range}",
+			"day": "Den",
+			"openAtDayEnd": "Otevřené na konci dne"
+		},
+		"chart": {
+			"ariaAlerts": "výstrahy stále otevřené na konci každého dne za {days} dní, s novými a uzavřenými za den",
+			"ariaAlertsOpen": "výstrahy stále otevřené na konci každého dne za {days} dní, s novými a uzavřenými za den, stále otevřené: {count}",
+			"ariaCases": "případy stále otevřené na konci každého dne za {days} dní, s novými a uzavřenými za den",
+			"ariaCasesOpen": "případy stále otevřené na konci každého dne za {days} dní, s novými a uzavřenými za den, stále otevřené: {count}",
+			"openAxis": "Otevřené · na konci dne",
+			"flowAxis": "Nové ↑  Uzavřené ↓",
+			"open": "Otevřené",
+			"peak": "maximum {count}"
+		}
+	}
+}

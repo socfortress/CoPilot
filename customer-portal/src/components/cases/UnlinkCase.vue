@@ -5,10 +5,10 @@
 				<template #icon>
 					<Icon name="carbon:unlink" />
 				</template>
-				{{ label || "Unlink Case" }}
+				{{ label || $t("cases.unlinkCase.label") }}
 			</n-button>
 		</template>
-		Are you sure you want to unlink this case from the alert?
+		{{ $t("cases.unlinkCase.confirm") }}
 	</n-popconfirm>
 </template>
 
@@ -17,6 +17,7 @@ import type { ButtonSize } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import { NButton, NPopconfirm, useMessage } from "naive-ui"
 import { ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 
 const unlinking = ref(false)
 const message = useMessage()
+const { t } = useI18n()
 
 async function unlinkCase() {
 	unlinking.value = true
@@ -42,12 +44,12 @@ async function unlinkCase() {
 		const res = await Api.cases.unlinkCaseFromAlert(props.caseId, props.alertId)
 		if (res.data.success) {
 			emit("unlinked", props.caseId)
-			message.success(res.data?.message || "Case unlinked from alert successfully")
+			message.success(res.data?.message || t("cases.unlinkCase.unlinked"))
 		} else {
-			message.warning(res.data?.message || "An error occurred. Please try again later.")
+			message.warning(res.data?.message || t("cases.unlinkCase.failed"))
 		}
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		message.error(getApiErrorMessage(err as ApiError) || t("cases.unlinkCase.failed"))
 	} finally {
 		unlinking.value = false
 	}

@@ -35,6 +35,11 @@ export interface PortalProfile {
 	customers: PortalCustomer[]
 	/** An admin chose the password and it has not been replaced yet (#1277). */
 	must_change_password: boolean
+	/** The language the portal shows and the ones the user may pick (#1310); English always among them. */
+	locale?: string
+	available_locales?: string[]
+	/** The user picked a language; without a pick the browser's may be used when available. */
+	locale_chosen?: boolean
 }
 
 export interface AuthUser {

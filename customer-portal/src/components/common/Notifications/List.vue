@@ -14,7 +14,7 @@
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)" />
 					</template>
-					<div class="px-2 py-1 text-sm">Set as read</div>
+					<div class="px-2 py-1 text-sm">{{ $t("common.notifications.setRead") }}</div>
 				</n-tooltip>
 			</div>
 			<div class="content grow">
@@ -25,7 +25,7 @@
 						{{ formatDatetime(item.date) }}
 					</div>
 					<div v-if="!!item.actionRoute" class="action-text">
-						{{ item.actionTitle || "Details" }}
+						{{ item.actionTitle || $t("common.actions.details") }}
 					</div>
 				</div>
 			</div>
@@ -35,11 +35,11 @@
 						<Icon :name="DeleteIcon" :size="14" />
 					</div>
 				</template>
-				<div class="px-2 py-1 text-sm">Delete</div>
+				<div class="px-2 py-1 text-sm">{{ $t("common.actions.delete") }}</div>
 			</n-tooltip>
 		</div>
 		<slot name="last" />
-		<n-empty v-if="!list.length" description="There is no notification" class="h-48 justify-center" />
+		<n-empty v-if="!list.length" :description="$t('common.notifications.empty')" class="h-48 justify-center" />
 	</n-scrollbar>
 </template>
 

@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Haz clic en un segmento para ir a la búsqueda de eventos.",
+		"fetchFailed": "No se pudieron obtener los datos de los paneles"
+	},
+	"list": {
+		"items": "elementos",
+		"empty": "No hay paneles habilitados",
+		"emptyHint": "Contacta con tu administrador para habilitar paneles en tu cuenta",
+		"custom": "Personalizado",
+		"view": "Ver panel",
+		"columns": {
+			"dashboard": "Panel",
+			"category": "Categoría",
+			"template": "Plantilla"
+		}
+	},
+	"panelTable": {
+		"empty": "No hay eventos"
+	}
+}

@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Users",
+		"intro": "Who can sign in to this portal for your organization. Invite colleagues, disable those who left, and help those who lost their authenticator or their password.",
+		"invite": "Invite a user",
+		"forbiddenTitle": "Only a customer administrator can manage users",
+		"forbiddenText": "Your SOC decides who administers your organization's users. Ask your SOC contact if you need to be one.",
+		"twoFaOn": "2FA on",
+		"twoFaOff": "2FA off",
+		"lastSignIn": "Last sign-in {date}",
+		"neverSignedIn": "Never signed in",
+		"twoFaNotOn": "Two-factor authentication is not on",
+		"resetTotp": "Reset 2FA",
+		"temporaryPassword": "Temporary password",
+		"enable": "Enable",
+		"disable": "Disable",
+		"loadFailed": "Could not load the users.",
+		"done": "Done",
+		"actionFailed": "The action failed.",
+		"issueFailed": "Could not issue a temporary password."
+	},
+	"confirm": {
+		"disableTitle": "Disable {username}?",
+		"disableText": "They will not be able to sign in, and a session they have open ends. You can enable them again.",
+		"resetTotpTitle": "Reset 2FA for {username}?",
+		"resetTotpText": "They sign in with their password alone, and can set up two-factor authentication again from their Profile.",
+		"temporaryPasswordTitle": "A temporary password for {username}?",
+		"temporaryPasswordText": "Their current password stops working. They sign in with the temporary one and choose their own.",
+		"issue": "Issue"
+	},
+	"tags": {
+		"self": "You",
+		"selfTitle": "Your own account",
+		"admin": "Admin",
+		"adminTitle": "Manages this customer's users. Appointed by your SOC.",
+		"disabled": "Disabled",
+		"disabledTitle": "Cannot sign in",
+		"password": "Password change pending",
+		"passwordTitle": "Signs in with a temporary password and must choose their own"
+	},
+	"invite": {
+		"title": "Invite a user",
+		"introEmail": "They receive a temporary password by email and choose their own at their first sign-in.",
+		"introShown": "They receive a temporary password from you: it is shown once after the invitation and choose their own at their first sign-in.",
+		"username": "Username",
+		"email": "Email",
+		"customers": "Customers they can see",
+		"willSee": "They will see {customer}.",
+		"submit": "Invite",
+		"failed": "Could not invite the user.",
+		"problems": {
+			"usernameRequired": "Enter a username",
+			"usernameInvalid": "Username must be 3 to 64 characters: letters, digits and . _ {'@'} -, starting with a letter or a digit",
+			"emailRequired": "Enter an email address",
+			"emailInvalid": "Enter a valid email address",
+			"customersRequired": "Choose at least one customer"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} was invited",
+		"title": "A temporary password for {username}",
+		"shownOnce": "This password is shown once. Give it to {username} yourself. They choose their own at their first sign-in.",
+		"shownOnceProblem": "This password is shown once. Give it to {username} yourself: {problem} They choose their own at their first sign-in.",
+		"emailed": "A temporary password was emailed to {email}. {username} chooses their own at their first sign-in.",
+		"copy": "Copy",
+		"copied": "Copied",
+		"done": "Done"
+	}
+}

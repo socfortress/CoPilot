@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Utilisateurs",
+		"intro": "Qui peut se connecter à ce portail pour votre organisation. Invitez vos collègues, désactivez ceux qui sont partis et aidez ceux qui ont perdu leur application d'authentification ou leur mot de passe.",
+		"invite": "Inviter un utilisateur",
+		"forbiddenTitle": "Seul un administrateur client peut gérer les utilisateurs",
+		"forbiddenText": "Votre SOC décide qui administre les utilisateurs de votre organisation. Adressez-vous à votre contact SOC si vous avez besoin de ce rôle.",
+		"twoFaOn": "2FA activée",
+		"twoFaOff": "2FA désactivée",
+		"lastSignIn": "Dernière connexion {date}",
+		"neverSignedIn": "Jamais connecté",
+		"twoFaNotOn": "L'authentification à deux facteurs n'est pas activée",
+		"resetTotp": "Réinitialiser la 2FA",
+		"temporaryPassword": "Mot de passe temporaire",
+		"enable": "Activer",
+		"disable": "Désactiver",
+		"loadFailed": "Impossible de charger les utilisateurs.",
+		"done": "Terminé",
+		"actionFailed": "L'action a échoué.",
+		"issueFailed": "Impossible d'émettre un mot de passe temporaire."
+	},
+	"confirm": {
+		"disableTitle": "Désactiver {username} ?",
+		"disableText": "Cette personne ne pourra plus se connecter et sa session ouverte prendra fin. Vous pourrez la réactiver.",
+		"resetTotpTitle": "Réinitialiser la 2FA de {username} ?",
+		"resetTotpText": "Cette personne se connectera avec son seul mot de passe et pourra reconfigurer l'authentification à deux facteurs depuis son profil.",
+		"temporaryPasswordTitle": "Un mot de passe temporaire pour {username} ?",
+		"temporaryPasswordText": "Son mot de passe actuel cesse de fonctionner. Elle se connectera avec le mot de passe temporaire et choisira le sien.",
+		"issue": "Émettre"
+	},
+	"tags": {
+		"self": "Vous",
+		"selfTitle": "Votre propre compte",
+		"admin": "Admin",
+		"adminTitle": "Gère les utilisateurs de ce client. Nommé par votre SOC.",
+		"disabled": "Désactivé",
+		"disabledTitle": "Ne peut pas se connecter",
+		"password": "Changement de mot de passe en attente",
+		"passwordTitle": "Se connecte avec un mot de passe temporaire et doit choisir le sien"
+	},
+	"invite": {
+		"title": "Inviter un utilisateur",
+		"introEmail": "Cette personne reçoit un mot de passe temporaire par e-mail et choisit le sien à sa première connexion.",
+		"introShown": "Cette personne reçoit un mot de passe temporaire de votre part (il est affiché une seule fois après l'invitation) et choisit le sien à sa première connexion.",
+		"username": "Nom d'utilisateur",
+		"email": "E-mail",
+		"customers": "Clients visibles",
+		"willSee": "Cette personne verra {customer}.",
+		"submit": "Inviter",
+		"failed": "Impossible d'inviter l'utilisateur.",
+		"problems": {
+			"usernameRequired": "Saisissez un nom d'utilisateur",
+			"usernameInvalid": "Le nom d'utilisateur doit compter de 3 à 64 caractères : lettres, chiffres et . _ {'@'} -, en commençant par une lettre ou un chiffre",
+			"emailRequired": "Saisissez une adresse e-mail",
+			"emailInvalid": "Saisissez une adresse e-mail valide",
+			"customersRequired": "Choisissez au moins un client"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} a été invité",
+		"title": "Un mot de passe temporaire pour {username}",
+		"shownOnce": "Ce mot de passe n'est affiché qu'une seule fois. Remettez-le vous-même à {username}. Le sien sera choisi à la première connexion.",
+		"shownOnceProblem": "Ce mot de passe n'est affiché qu'une seule fois. Remettez-le vous-même à {username} : {problem} Le sien sera choisi à la première connexion.",
+		"emailed": "Un mot de passe temporaire a été envoyé par e-mail à {email}. {username} choisira le sien à sa première connexion.",
+		"copy": "Copier",
+		"copied": "Copié",
+		"done": "Terminé"
+	}
+}

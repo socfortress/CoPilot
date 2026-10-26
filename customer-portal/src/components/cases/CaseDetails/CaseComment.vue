@@ -26,13 +26,13 @@
 					<template #icon>
 						<Icon name="carbon:save" />
 					</template>
-					Save
+					{{ $t("common.actions.save") }}
 				</n-button>
 				<n-button size="tiny" :focusable="false" :disabled="updating" @click="setEditMode(false)">
 					<template #icon>
 						<Icon name="carbon:delete" />
 					</template>
-					Cancel
+					{{ $t("common.actions.cancel") }}
 				</n-button>
 			</div>
 			<div v-else class="flex items-center gap-2">
@@ -40,7 +40,7 @@
 					<template #icon>
 						<Icon name="carbon:edit" />
 					</template>
-					Edit
+					{{ $t("common.actions.edit") }}
 				</n-button>
 
 				<n-popconfirm to="body" @positive-click="deleteComment">
@@ -49,10 +49,10 @@
 							<template #icon>
 								<Icon name="carbon:trash-can" />
 							</template>
-							Delete
+							{{ $t("common.actions.delete") }}
 						</n-button>
 					</template>
-					Are you sure you want to delete this comment?
+					{{ $t("cases.caseComment.confirmDelete") }}
 				</n-popconfirm>
 			</div>
 		</template>
@@ -64,6 +64,7 @@ import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NInput, NPopconfirm, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -83,6 +84,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const dFormats = useSettingsStore().dateFormat
 const editMode = ref(false)
@@ -114,7 +116,7 @@ async function updateComment() {
 
 		emit("updated", response.data.comment)
 		newComment.value = ""
-		message.success(response.data?.message || "Comment updated successfully")
+		message.success(response.data?.message || t("cases.caseComment.updated"))
 		setEditMode(false)
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
@@ -131,7 +133,7 @@ async function deleteComment() {
 	try {
 		const response = await Api.cases.deleteComment(comment.id)
 		emit("deleted", comment.id)
-		message.success(response.data?.message || "Comment deleted successfully")
+		message.success(response.data?.message || t("cases.caseComment.deleted"))
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {

@@ -1,0 +1,49 @@
+{
+	"tab": "Ask the SOC",
+	"title": "Ask the SOC",
+	"introAlert": "Your question goes to the SOC analysts as a comment signed by you on the case or alert you choose. Their reply appears in the comments.",
+	"introCase": "Your question goes to the SOC analysts as a comment signed by you on the case. Their reply appears in the comments.",
+	"placeholder": "What would you like to know?",
+	"questionLabel": "Your question for the SOC",
+	"urgencyLegend": "How urgent is it?",
+	"targetLegend": "Where should it go?",
+	"send": "Send to the SOC",
+	"history": "Questions to the SOC",
+	"emptyAlert": "No question asked about this alert yet.",
+	"emptyCase": "No question asked about this case yet.",
+	"urgencyLine": "Urgency: {urgency}",
+	"askedBy": "Asked by {user} · {date}",
+	"answeredAt": "· answered {date}",
+	"sent": "Your question was sent to the SOC",
+	"loadFailed": "Could not load the questions.",
+	"sendFailed": "Your question could not be sent. Please try again.",
+	"urgency": {
+		"low": "Low",
+		"normal": "Normal",
+		"high": "High",
+		"lowHint": "Whenever the SOC can",
+		"normalHint": "Within the usual response time",
+		"highHint": "It is blocking us"
+	},
+	"status": {
+		"open": "Waiting for the SOC",
+		"answered": "Answered"
+	},
+	"target": {
+		"addToCase": "Add to case #{id}",
+		"addToCaseHint": "The SOC is already working this alert in that case",
+		"openCase": "Open a case from this alert",
+		"openCaseHint": "The SOC follows it up as a case, with this alert in it",
+		"alertOnly": "On this alert only",
+		"alertOnlyHint": "A comment on the alert, no case"
+	},
+	"problem": {
+		"empty": "Write your question for the SOC",
+		"tooLong": "Keep the question under {max} characters",
+		"characters": "The question contains characters that cannot be sent"
+	},
+	"filed": {
+		"onCase": "On case #{id}",
+		"fromAlert": "Asked from alert #{id}"
+	}
+}

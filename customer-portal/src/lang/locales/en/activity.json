@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Activity",
+		"intro": "What reached the SOC for you, where it came from and how it was judged, beside the period before.",
+		"refreshError": "Could not refresh the figures: {error}",
+		"disabledTitle": "Activity is not available yet",
+		"disabledText": "Your SOC has not published the activity breakdown for this customer. Ask your SOC contact if you would like to see it here.",
+		"note": "Counted from when each alert and case reached the SOC, {period}. Select a count to list those alerts.",
+		"periodText": "over the last {period} beside the {period} before",
+		"periodMeta": "last {period}",
+		"severityNote": "An alert whose source sent no severity counts at the SOC's default level.",
+		"otherSources": "Other sources: {count} ({previous} the period before)"
+	},
+	"range": "{count} days",
+	"panels": {
+		"sources": "Alerts by source",
+		"severities": "Alerts by severity",
+		"detections": "Busiest detections",
+		"assets": "Busiest assets",
+		"tags": "Busiest tags",
+		"noAlertsEither": "No alerts in either period",
+		"noAlerts": "No alerts this period",
+		"noAssets": "No alert named an asset this period",
+		"noTags": "No tagged alert this period"
+	},
+	"cases": {
+		"title": "Cases",
+		"empty": "No case was opened in either period",
+		"byType": "By type",
+		"byStatus": "Where the cases opened stand now"
+	},
+	"verdicts": {
+		"title": "The SOC's verdicts",
+		"truePositives": "True positives",
+		"falsePositives": "False positives",
+		"untriaged": "Not reviewed yet",
+		"reasons": "Why alerts were false positives",
+		"noisy": "Detections with the most false positives",
+		"noFalsePositive": "No false positive this period.",
+		"noisyCount": "{falsePositives} of {reviewed} reviewed · {rate}"
+	},
+	"kpi": {
+		"alerts": "Alerts received",
+		"cases": "Cases opened",
+		"falsePositives": "False positives",
+		"coverage": "Reviewed by the SOC",
+		"periodBefore": "{count} the period before",
+		"changeTitle": "Change from the period before",
+		"pointsTitle": "Percentage points from the period before",
+		"ofReviewed": "of {count} reviewed",
+		"nothingReviewed": "nothing reviewed yet",
+		"ofAlerts": "{reviewed} of {total} alerts",
+		"noAlerts": "no alerts this period"
+	},
+	"delta": {
+		"new": "new",
+		"points": "{points} pts"
+	},
+	"rank": {
+		"previousTitle": "The period before: {count}",
+		"countLabel": "{count} this period",
+		"previousLabel": "{count} the period before",
+		"was": "was {count}"
+	}
+}

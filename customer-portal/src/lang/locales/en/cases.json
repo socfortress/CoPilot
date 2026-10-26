@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Cases"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Case Name",
+			"assignedTo": "Assigned To"
+		},
+		"items": "items",
+		"empty": "No cases found",
+		"emptyHint": "try changing the filters"
+	},
+	"createCaseButton": {
+		"label": "Create case",
+		"title": "Create Case"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Case name",
+			"caseStatus": "Case status",
+			"caseDescription": "Case description",
+			"assignedTo": "Assigned to (optional)"
+		},
+		"placeholders": {
+			"customer": "Select the customer this case belongs to",
+			"caseName": "Insert case name",
+			"caseStatus": "Select case status",
+			"caseDescription": "Insert case description",
+			"assignedTo": "Select assignee"
+		},
+		"submit": "Create case",
+		"created": "Case created successfully"
+	},
+	"caseAssignedSelect": {
+		"updated": "Assigned to updated to {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Case status updated to {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Case Details"
+	},
+	"unlinkCase": {
+		"label": "Unlink Case",
+		"confirm": "Are you sure you want to unlink this case from the alert?",
+		"unlinked": "Case unlinked from alert successfully",
+		"failed": "An error occurred. Please try again later."
+	},
+	"caseDetails": {
+		"error": "Error",
+		"notFound": "Case not found.",
+		"tabs": {
+			"overview": "Overview",
+			"alerts": "Alerts ({count})",
+			"tasks": "Tasks",
+			"timeline": "Timeline",
+			"files": "Files",
+			"comments": "Comments ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Case Name",
+		"escalated": "Escalated",
+		"notificationInvokedNumber": "Notification Invoked Number",
+		"assignedTo": "Assigned To"
+	},
+	"caseAlerts": {
+		"linkAlert": "Link Alert",
+		"unlinkAlert": "Unlink Alert",
+		"created": "Created: {date}",
+		"assignedTo": "Assigned to",
+		"alertId": "Alert #{id}",
+		"empty": "No alerts found"
+	},
+	"caseComment": {
+		"confirmDelete": "Are you sure you want to delete this comment?",
+		"updated": "Comment updated successfully",
+		"deleted": "Comment deleted successfully"
+	},
+	"caseComments": {
+		"empty": "No comments found",
+		"add": "Add Comment",
+		"placeholder": "Enter your comment...",
+		"added": "Comment added successfully"
+	},
+	"caseFiles": {
+		"files": "files",
+		"size": "size",
+		"type": "type",
+		"empty": "No files found",
+		"dropHint": "Click or drag a file to this area to upload",
+		"upload": "Upload"
+	},
+	"caseTasks": {
+		"tasks": "tasks",
+		"done": "done",
+		"mandatoryIncomplete": "mandatory incomplete",
+		"intro": "Read-only view of investigation tasks performed by the SOC team on this case.",
+		"mandatory": "mandatory",
+		"custom": "custom",
+		"guidelines": "Guidelines",
+		"notes": "Notes from analyst",
+		"completedBy": "Completed by {user}",
+		"markedBy": "Marked by {user}",
+		"createdBy": "Created by {user}",
+		"empty": "No tasks on this case yet",
+		"status": {
+			"todo": "To do",
+			"done": "Done",
+			"notNecessary": "Not necessary"
+		}
+	},
+	"caseTimeline": {
+		"events": "events",
+		"intro": "Read-only audit log of investigation activity on this case.",
+		"empty": "No timeline events yet",
+		"caseCreatedFromAlert": "Case created from alert #{id}",
+		"caseCreated": "Case created",
+		"statusForced": "Status forced from {from} to {to} (mandatory tasks bypassed)",
+		"statusChanged": "Status changed from {from} to {to}",
+		"reassigned": "Reassigned from {from} to {to}",
+		"assigned": "Assigned to {to}",
+		"unassigned": "unassigned",
+		"escalated": "Case escalated",
+		"deescalated": "Case de-escalated",
+		"alertsLinked": "{count} alert(s) linked to case",
+		"alertLinked": "Alert #{id} linked",
+		"alertUnlinked": "Alert #{id} unlinked",
+		"commentAdded": "Comment added",
+		"templateApplied": "Template applied: {name} ({count} task) | Template applied: {name} ({count} tasks)",
+		"taskAdded": "Task added: {title}",
+		"taskAddedMandatory": "Task added: {title} (mandatory)",
+		"taskStatusChanged": "Task {title}: {from} → {to}",
+		"taskCommented": "Notes added on task: {title}",
+		"alertsDetail": "Alerts: {list}"
+	}
+}

@@ -3,50 +3,57 @@
 		<div class="grid grid-cols-1 gap-4 @xl:grid-cols-2">
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Alert Name</div>
+					<div class="text-secondary text-sm">{{ $t("alerts.overview.alertName") }}</div>
 				</template>
 				{{ alert.alert_name }}
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header-main>
-					<div class="text-secondary text-sm">Status</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.status") }}</div>
 				</template>
 				<template #header-extra>
-					<Chip v-if="alert.escalated" type="error" value="Escalated" size="tiny" round :bordered="false" />
+					<Chip
+						v-if="alert.escalated"
+						type="error"
+						:value="$t('alerts.overview.escalated')"
+						size="tiny"
+						round
+						:bordered="false"
+					/>
 				</template>
 				<AlertStatusSelect :alert-id="alert.id" :status="alert.status" @success="handleStatusUpdateSuccess" />
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Source</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.source") }}</div>
 				</template>
 				{{ alert.source }}
 			</CardEntity>
 
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Customer</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.customer") }}</div>
 				</template>
 				<CustomerName :code="alert.customer_code" />
 			</CardEntity>
 
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Created</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.created") }}</div>
 				</template>
 				{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
 			</CardEntity>
 
 			<CardEntity v-if="alert.assigned_to" size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Assigned To</div>
+					<div class="text-secondary text-sm">{{ $t("alerts.overview.assignedTo") }}</div>
 				</template>
 				{{ alert.assigned_to }}
 			</CardEntity>
 
 			<CardEntity v-if="alert.alert_description" size="small" class="@xl:col-span-2">
 				<template #header>
-					<div class="text-secondary text-sm">Description</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.description") }}</div>
 				</template>
 				{{ alert.alert_description }}
 			</CardEntity>

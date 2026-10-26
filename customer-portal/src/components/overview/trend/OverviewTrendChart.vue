@@ -22,6 +22,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
 import VChart from "vue-echarts"
+import { useI18n } from "vue-i18n"
 import {
 	buildChartTooltipGlassBase,
 	CHART_GRID_CONTAIN_AXIS_LABELS,
@@ -47,14 +48,21 @@ type ChartOption = ComposeOption<
 	TooltipComponentOption | GridComponentOption | MarkPointComponentOption | LineSeriesOption | BarSeriesOption
 >
 
+const { t } = useI18n()
 const themeStore = useThemeStore()
 const colors = computed(() => TREND_COLORS[themeStore.isThemeDark ? "dark" : "light"])
 
 const ariaLabel = computed(() => {
 	const last = days.at(-1)?.[entity]
-	const noun = entity === "alerts" ? "alerts" : "cases"
-	const open = last?.open === null || last?.open === undefined ? "" : `, ${last.open} still open`
-	return `${noun} still open at the end of each day over ${days.length} days, with opened and closed per day${open}`
+	const count = last?.open
+	if (count === null || count === undefined) {
+		return entity === "alerts"
+			? t("overview.trend.chart.ariaAlerts", { days: days.length })
+			: t("overview.trend.chart.ariaCases", { days: days.length })
+	}
+	return entity === "alerts"
+		? t("overview.trend.chart.ariaAlertsOpen", { days: days.length, count })
+		: t("overview.trend.chart.ariaCasesOpen", { days: days.length, count })
 })
 
 function fade(color: string, alpha: number) {
@@ -63,7 +71,8 @@ function fade(color: string, alpha: number) {
 
 // Two bands on one calendar: above, how many are still open at the end of each day (a
 // level, with its own scale); below, opened up and closed down. Never two scales on one
-// axis: each band has its own.
+// axis: each band has its own. Every text goes through `t()` here, so the chart follows a
+// language change.
 const chartOption = computed((): ChartOption => {
 	const style = themeStore.style
 	const fg = style["fg-default-color"]
@@ -100,7 +109,7 @@ const chartOption = computed((): ChartOption => {
 		marks.push({
 			name: "peak",
 			coord: [peakIndex, peak.open],
-			value: `peak ${peak.open}`,
+			value: t("overview.trend.chart.peak", { count: peak.open }),
 			label: { position: "top" }
 		})
 	}
@@ -123,18 +132,18 @@ const chartOption = computed((): ChartOption => {
 				return formatChartTooltipAxisMultiSeries({
 					title: dayTitle(day.day),
 					rows: [
-						{ marker: undefined, color: opened, label: "Opened", valueHtml: String(counts.opened) },
-						{ marker: undefined, color: closed, label: "Closed", valueHtml: String(counts.closed) },
+						{ marker: undefined, color: opened, label: t("overview.trend.opened"), valueHtml: String(counts.opened) },
+						{ marker: undefined, color: closed, label: t("overview.trend.closed"), valueHtml: String(counts.closed) },
 						{
 							marker: undefined,
 							color: "transparent",
-							label: "Net",
+							label: t("overview.trend.net"),
 							valueHtml: formatNet(counts.opened - counts.closed)
 						},
 						{
 							marker: undefined,
 							color: open,
-							label: "Open at day end",
+							label: t("overview.trend.table.openAtDayEnd"),
 							valueHtml: counts.open === null ? "—" : String(counts.open)
 						}
 					]
@@ -149,7 +158,7 @@ const chartOption = computed((): ChartOption => {
 				gridIndex: 0,
 				min: 0,
 				minInterval: 1,
-				name: "Open · at day end",
+				name: t("overview.trend.chart.openAxis"),
 				nameGap: 10,
 				nameTextStyle: axisName,
 				axisLabel: { color: fg2, fontSize: 10 },
@@ -160,7 +169,7 @@ const chartOption = computed((): ChartOption => {
 				gridIndex: 1,
 				minInterval: 1,
 				splitNumber: 2,
-				name: "Opened ↑  Closed ↓",
+				name: t("overview.trend.chart.flowAxis"),
 				nameGap: 8,
 				nameTextStyle: axisName,
 				axisLabel: { color: fg2, fontSize: 10, formatter: (value: number) => String(Math.abs(value)) },
@@ -169,7 +178,7 @@ const chartOption = computed((): ChartOption => {
 		],
 		series: [
 			{
-				name: "Open",
+				name: t("overview.trend.chart.open"),
 				type: "line",
 				xAxisIndex: 0,
 				yAxisIndex: 0,
@@ -202,7 +211,7 @@ const chartOption = computed((): ChartOption => {
 				emphasis: { disabled: true }
 			},
 			{
-				name: "Opened",
+				name: t("overview.trend.opened"),
 				type: "bar",
 				stack: "flow",
 				xAxisIndex: 1,
@@ -213,7 +222,7 @@ const chartOption = computed((): ChartOption => {
 				emphasis: { disabled: true }
 			},
 			{
-				name: "Closed",
+				name: t("overview.trend.closed"),
 				type: "bar",
 				stack: "flow",
 				xAxisIndex: 1,

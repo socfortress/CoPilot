@@ -1,3 +1,4 @@
+import { i18nGlobal } from "@/lang"
 import { getStatusColor } from "@/utils"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 
@@ -81,7 +82,37 @@ export function severityColor(severity: string | null | undefined): StatusColor 
 	}
 }
 
-/** Alert / case status as shown in the activity lists: "IN_PROGRESS" → "in progress", "PENDING_CUSTOMER" → "waiting on you". */
+/** The lower-case status words of the activity lists and the posture legend, by status. */
+const STATUS_WORD_KEYS = {
+	OPEN: "overview.status.open",
+	IN_PROGRESS: "overview.status.inProgress",
+	PENDING_CUSTOMER: "overview.status.waiting",
+	CLOSED: "overview.status.closed"
+} as const
+
+/**
+ * Alert / case status as shown in the activity lists: "IN_PROGRESS" → "in progress", "PENDING_CUSTOMER" → "waiting on you".
+ * Each language writes its own lower-case form (German keeps its nouns capitalised); an unknown status
+ * reads as the shared label, lower-cased.
+ */
 export function workflowStatus(status: string) {
-	return { label: workflowStatusLabel(status).toLowerCase(), color: statusColor(status) }
+	const key = STATUS_WORD_KEYS[status as keyof typeof STATUS_WORD_KEYS]
+	const label = key ? i18nGlobal.t(key) : workflowStatusLabel(status).toLowerCase()
+	return { label, color: statusColor(status) }
+}
+
+const SEVERITY_WORD_KEYS = {
+	critical: "overview.severity.critical",
+	high: "overview.severity.high",
+	medium: "overview.severity.medium",
+	low: "overview.severity.low",
+	informational: "overview.severity.informational",
+	unknown: "overview.severity.unknown"
+} as const
+
+/** An AI report severity as a lower-case word ("High" → "high"); one the portal doesn't know is shown as sent. */
+export function severityWord(severity: string | null | undefined): string {
+	const value = (severity || "unknown").toLowerCase()
+	const key = SEVERITY_WORD_KEYS[value as keyof typeof SEVERITY_WORD_KEYS]
+	return key ? i18nGlobal.t(key) : value
 }

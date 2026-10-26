@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Správce zákazníka",
+		"portalUser": "Uživatel portálu"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Zve a spravuje uživatele portálu zákazníků {customers}. Jmenován vaším SOC.",
+		"adminBadge": "správce",
+		"noCustomer": "Žádný zákazník"
+	},
+	"tabs": {
+		"settings": "Nastavení",
+		"notifications": "Oznámení",
+		"security": "Zabezpečení"
+	},
+	"settings": {
+		"general": "Obecné",
+		"dateFormat": "Formát data",
+		"timeFormat": "Formát času",
+		"hours24": "24 hodin [ {time} ]",
+		"hours12": "12 hodin [ {time} ]",
+		"usernameRequired": "Zadejte prosím uživatelské jméno",
+		"emailRequired": "Zadejte prosím e-mail",
+		"saved": "Nastavení uloženo",
+		"error": "Něco se pokazilo"
+	},
+	"notifications": {
+		"title": "Oznámení",
+		"intro": "Zvolte, co k vám dorazí do zvonku portálu a e-mailem. O tom, co jste udělali sami, vás nikdy neupozorníme.",
+		"inPortal": "V portálu",
+		"email": "E-mail",
+		"from": "Od",
+		"unsaved": "Neuložené změny",
+		"emailOff": "Vypnuto",
+		"emailImmediately": "Okamžitě",
+		"digest": "Denní souhrn ({hour}:00 UTC)",
+		"severityAndUp": "{severity} a vyšší",
+		"severities": {
+			"critical": "Kritická",
+			"high": "Vysoká",
+			"medium": "Střední",
+			"low": "Nízká",
+			"informational": "Informativní"
+		},
+		"noEmailAddress": "Váš účet nemá e-mailovou adresu, takže oznámení dorazí jen do portálu. Požádejte svůj SOC o její doplnění.",
+		"emailNotSetUp": "E-mailová oznámení zatím nejsou na tomto portálu nastavena, takže oznámení dorazí jen do portálu.",
+		"saved": "Nastavení oznámení uloženo",
+		"loadFailed": "Nastavení oznámení se nepodařilo načíst.",
+		"saveFailed": "Nastavení oznámení se nepodařilo uložit.",
+		"events": {
+			"alertCreated": {
+				"label": "Nové výstrahy",
+				"description": "Nová výstraha vaší organizace od zvolené závažnosti."
+			},
+			"waitingOnYou": {
+				"label": "Čeká na vás",
+				"description": "SOC potřebuje vaši odpověď k výstraze nebo případu."
+			},
+			"caseClosed": {
+				"label": "Uzavřené případy",
+				"description": "Případ vaší organizace byl uzavřen."
+			},
+			"reportReady": {
+				"label": "Připravené zprávy",
+				"description": "Zpráva, kterou jste vygenerovali nebo kterou s vámi sdílel SOC, je připravena."
+			}
+		}
+	}
+}

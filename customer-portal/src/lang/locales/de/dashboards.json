@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Klicken Sie auf ein Segment, um zur Ereignissuche zu wechseln.",
+		"fetchFailed": "Die Paneldaten konnten nicht geladen werden"
+	},
+	"list": {
+		"items": "Einträge",
+		"empty": "Keine Dashboards aktiviert",
+		"emptyHint": "Wenden Sie sich an Ihren Administrator, um Dashboards für Ihr Konto zu aktivieren",
+		"custom": "Benutzerdefiniert",
+		"view": "Dashboard anzeigen",
+		"columns": {
+			"dashboard": "Dashboard",
+			"category": "Kategorie",
+			"template": "Vorlage"
+		}
+	},
+	"panelTable": {
+		"empty": "Keine Ereignisse"
+	}
+}

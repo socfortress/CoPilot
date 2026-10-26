@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "Nessuna sorgente di eventi configurata",
+		"noSourcesText": "Non ci sono sorgenti di eventi configurate per questo cliente. Contatta il tuo amministratore per configurarle.",
+		"queryLabel": "Query Lucene",
+		"autocompleteHint": "digita # per il completamento automatico",
+		"selectCustomer": "Seleziona cliente",
+		"selectSource": "Seleziona sorgente",
+		"queryPlaceholder": "es. {example}",
+		"noFieldMappings": "Nessuna mappatura dei campi trovata",
+		"customerNeeded": "Seleziona un cliente per cercare",
+		"sourceNeeded": "Seleziona una sorgente per cercare",
+		"time": "Tempo",
+		"timeUnit": "Unità di tempo",
+		"units": {
+			"hours": "Ore",
+			"days": "Giorni",
+			"weeks": "Settimane"
+		},
+		"perPage": "{count} per pagina",
+		"loadSourcesFailed": "Impossibile caricare le sorgenti di eventi",
+		"queryUpdated": "“{name}” aggiornata",
+		"querySaved": "“{name}” salvata",
+		"saveQueryFailed": "Impossibile salvare la query",
+		"deleteQueryFailed": "Impossibile eliminare la query",
+		"clearRecentFailed": "Impossibile cancellare le ricerche recenti",
+		"sourceGone": "La sorgente “{source}” non è più disponibile per questo cliente"
+	},
+	"results": {
+		"count": "{loaded} di {total} eventi caricati",
+		"columns": "Colonne",
+		"ownColumns": "Le tue colonne",
+		"exportCsv": "Esporta CSV",
+		"empty": "Nessun evento trovato",
+		"emptyHint": "Prova a modificare la query o ad ampliare l'intervallo di tempo",
+		"loadMore": "{shown} di {total} eventi • Carica altri",
+		"columnsTitle": "Colonne · {source}",
+		"socLayout": "Layout del SOC",
+		"defaultLayout": "Layout predefinito",
+		"viewDetails": "Vedi dettagli",
+		"switchColumnsFailed": "Impossibile cambiare le colonne",
+		"templateUpdated": "Modello “{name}” aggiornato",
+		"templateSaved": "Modello “{name}” salvato",
+		"saveTemplateFailed": "Impossibile salvare il modello",
+		"templateDeletedNamed": "Modello “{name}” eliminato",
+		"templateDeleted": "Modello eliminato",
+		"deleteTemplateFailed": "Impossibile eliminare il modello",
+		"saveColumnsFailed": "Impossibile salvare le colonne",
+		"exportedPartial": "Esportati {exported} di {total} eventi: carica gli altri per includerli",
+		"exported": "Esportati {exported} eventi",
+		"searchFailed": "Impossibile cercare gli eventi",
+		"loadMoreFailed": "Impossibile caricare altri eventi"
+	},
+	"columns": {
+		"timestamp": "Data e ora",
+		"level": "Livello",
+		"source": "Sorgente",
+		"rule": "Regola"
+	},
+	"details": {
+		"title": "Dettagli evento",
+		"filterFor": "Filtra per questo valore",
+		"exclude": "Escludi questo valore"
+	},
+	"queries": {
+		"toggle": "Query",
+		"saved": "Salvate",
+		"recent": "Recenti",
+		"loading": "Caricamento…",
+		"noSaved": "Ancora nessuna query salvata. Esegui una ricerca, poi salvala con un nome.",
+		"noRecent": "Le ricerche che esegui compaiono qui.",
+		"run": "Esegui “{name}”",
+		"delete": "Elimina “{name}”",
+		"saveAs": "Salva questa ricerca come",
+		"namePlaceholder": "es. Accessi non riusciti sui server web",
+		"willReplace": "Aggiorna la query salvata con questo nome.",
+		"loadFailed": "Impossibile caricare le tue ricerche salvate",
+		"lastHours": "ultima {count} ora | ultime {count} ore",
+		"lastDays": "ultimo {count} giorno | ultimi {count} giorni",
+		"lastWeeks": "ultima {count} settimana | ultime {count} settimane"
+	},
+	"layouts": {
+		"toggle": "Layout",
+		"title": "Layout",
+		"custom": "Personalizzato",
+		"deleteTemplate": "Elimina il modello “{name}”",
+		"noTemplates": "Ancora nessun modello: disponi le colonne, poi salvale come modello.",
+		"manage": "Gestisci colonne e modelli"
+	},
+	"deleteConfirm": {
+		"label": "Eliminare il modello “{name}”?",
+		"question": "Eliminare {name}?"
+	},
+	"preview": {
+		"columns": "{count} colonna | {count} colonne",
+		"header": "Intestazione",
+		"field": "Campo"
+	},
+	"picker": {
+		"shown": "Colonne mostrate · da sinistra a destra",
+		"noneSoc": "Nessuna colonna scelta: la tabella mostra il layout del SOC per questa sorgente.",
+		"noneDefault": "Nessuna colonna scelta: la tabella mostra il layout predefinito.",
+		"headerOf": "Intestazione di {field}",
+		"moveLeft": "Sposta a sinistra",
+		"moveRight": "Sposta a destra",
+		"remove": "Rimuovi {field}",
+		"addField": "Aggiungi un campo",
+		"searchFields": "Cerca tra i campi della sorgente",
+		"noFields": "Nessun elenco di campi per questa sorgente",
+		"templates": "Modelli per questa sorgente",
+		"loadTitle": "Porta sopra le colonne di “{name}”, per modificarle o applicarle",
+		"load": "Carica",
+		"templateNamePlaceholder": "Salva le colonne sopra come…",
+		"saveTemplate": "Salva come modello",
+		"willReplace": "Aggiorna il modello salvato con questo nome.",
+		"backToSoc": "Torna al layout del SOC",
+		"backToDefault": "Torna al predefinito"
+	}
+}

@@ -1,4 +1,5 @@
 import type { SlaEntity, SlaEntityKind, SlaOverview, SlaTarget } from "@/types/sla"
+import { i18nGlobal } from "@/lang"
 
 /**
  * Pure presentation logic of the SLA page: periods, number formatting and the shape of
@@ -11,11 +12,18 @@ export interface PeriodPreset {
 	days: number
 }
 
-export const PERIOD_PRESETS: PeriodPreset[] = [
-	{ key: "7d", label: "7 days", days: 7 },
-	{ key: "30d", label: "30 days", days: 30 },
-	{ key: "90d", label: "90 days", days: 90 }
-]
+/** A preset whose label is read in the current language each time it is shown. */
+function preset(key: PeriodPreset["key"], days: number): PeriodPreset {
+	return {
+		key,
+		get label() {
+			return i18nGlobal.t("sla.period", { count: days })
+		},
+		days
+	}
+}
+
+export const PERIOD_PRESETS: PeriodPreset[] = [preset("7d", 7), preset("30d", 30), preset("90d", 90)]
 
 export const DEFAULT_PERIOD: PeriodPreset["key"] = "30d"
 
@@ -44,21 +52,27 @@ export function formatRate(rate: number | null | undefined): string {
 export function formatDuration(seconds: number | null | undefined): string {
 	if (seconds === null || seconds === undefined) return "—"
 	const s = Math.max(0, Math.round(seconds))
-	if (s < 60) return `${s}s`
+	const t = i18nGlobal.t
+	if (s < 60) return t("sla.units.seconds", { n: s })
 	const minutes = Math.round(s / 60)
-	if (minutes < 60) return `${minutes}m`
+	if (minutes < 60) return t("sla.units.minutes", { n: minutes })
 	const hours = Math.floor(minutes / 60)
-	if (hours < 24) return minutes % 60 ? `${hours}h ${minutes % 60}m` : `${hours}h`
+	if (hours < 24) {
+		return minutes % 60
+			? t("sla.units.hoursMinutes", { hours, minutes: minutes % 60 })
+			: t("sla.units.hours", { n: hours })
+	}
 	const days = Math.floor(hours / 24)
-	return hours % 24 ? `${days}d ${hours % 24}h` : `${days}d`
+	return hours % 24 ? t("sla.units.daysHours", { days, hours: hours % 24 }) : t("sla.units.days", { n: days })
 }
 
 /** A promised target in minutes: "15 min", "8 h", "3 d"; `null` means no promise. */
 export function formatTarget(minutes: number | null | undefined): string {
-	if (minutes === null || minutes === undefined) return "No target"
-	if (minutes < 60 || minutes % 60) return `${minutes} min`
+	const t = i18nGlobal.t
+	if (minutes === null || minutes === undefined) return t("sla.units.noTarget")
+	if (minutes < 60 || minutes % 60) return t("sla.units.targetMinutes", { n: minutes })
 	const hours = minutes / 60
-	return hours < 24 || hours % 24 ? `${hours} h` : `${hours / 24} d`
+	return hours < 24 || hours % 24 ? t("sla.units.targetHours", { n: hours }) : t("sla.units.targetDays", { n: hours / 24 })
 }
 
 export interface RateDelta {
@@ -97,18 +111,22 @@ function kpi(
 ): SlaKpi {
 	const figures = current?.[clock]
 	const rate = figures?.rate ?? null
-	const noun = entity === "alert" ? "Alert" : "Case"
+	const t = i18nGlobal.t
+	const titles = {
+		alert: { acknowledge: t("sla.kpi.alertResponse"), resolve: t("sla.kpi.alertResolution") },
+		case: { acknowledge: t("sla.kpi.caseResponse"), resolve: t("sla.kpi.caseResolution") }
+	}
 	return {
 		key: `${entity}-${clock}`,
 		entity,
 		clock,
-		title: clock === "acknowledge" ? `${noun} response` : `${noun} resolution`,
-		caption: clock === "acknowledge" ? "answered within target" : "resolved within target",
+		title: titles[entity][clock],
+		caption: clock === "acknowledge" ? t("sla.kpi.answeredWithinTarget") : t("sla.kpi.resolvedWithinTarget"),
 		rate,
 		met: figures?.met ?? 0,
 		decided: (figures?.met ?? 0) + (figures?.breached ?? 0),
 		delta: rateDelta(rate, previous?.[clock]?.rate),
-		medianLabel: clock === "acknowledge" ? "median response" : "median resolution",
+		medianLabel: clock === "acknowledge" ? t("sla.kpi.medianResponse") : t("sla.kpi.medianResolution"),
 		median: formatDuration(clock === "acknowledge" ? current?.time_to_acknowledge : current?.time_to_resolve)
 	}
 }
@@ -140,16 +158,34 @@ export function groupTargets(targets: SlaTarget[]): TargetGroup[] {
 	return (["alert", "case"] as const)
 		.map(entity => ({
 			entity,
-			title: entity === "alert" ? "Alerts" : "Cases",
+			title: entity === "alert" ? i18nGlobal.t("sla.targets.alerts") : i18nGlobal.t("sla.targets.cases"),
 			rows: targets.filter(target => target.entity === entity)
 		}))
 		.filter(group => group.rows.length > 0)
 }
 
+const SEVERITY_KEYS = {
+	critical: "common.severity.critical",
+	high: "common.severity.high",
+	medium: "common.severity.medium",
+	low: "common.severity.low",
+	informational: "sla.severity.informational"
+} as const
+
+/**
+ * A severity the API sends ("Critical", "High", …) as the user reads it, in their language; a
+ * severity the portal doesn't know is shown as sent. The value itself never changes: it is what
+ * filters and test ids use.
+ */
+export function severityText(severity: string): string {
+	const key = SEVERITY_KEYS[severity.toLowerCase() as keyof typeof SEVERITY_KEYS]
+	return key ? i18nGlobal.t(key) : severity
+}
+
 /** An x-axis label for a trend bucket start: hours for a day, dates for weeks, months for a year. */
 export function bucketLabel(start: string, bucket: SlaOverview["bucket"]): string {
 	const date = new Date(start)
-	if (bucket === "hour") return date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-	if (bucket === "month") return date.toLocaleDateString(undefined, { month: "short", year: "2-digit" })
-	return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+	if (bucket === "hour") return date.toLocaleTimeString(i18nGlobal.locale.value, { hour: "2-digit", minute: "2-digit" })
+	if (bucket === "month") return date.toLocaleDateString(i18nGlobal.locale.value, { month: "short", year: "2-digit" })
+	return date.toLocaleDateString(i18nGlobal.locale.value, { month: "short", day: "numeric" })
 }

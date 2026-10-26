@@ -2,8 +2,8 @@
 	<footer class="footer py-4" :class="{ boxed }">
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
-				<template v-if="portalTitle">© Copyright {{ year }} {{ portalTitle }}</template>
-				<template v-else>© Copyright {{ year }}</template>
+				<template v-if="portalTitle">{{ $t("navigation.footer.copyright", { year, title: portalTitle }) }}</template>
+				<template v-else>{{ $t("navigation.footer.copyrightNoTitle", { year }) }}</template>
 			</div>
 		</div>
 	</footer>

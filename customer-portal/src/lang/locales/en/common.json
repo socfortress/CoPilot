@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Cancel",
+		"save": "Save",
+		"close": "Close",
+		"delete": "Delete",
+		"edit": "Edit",
+		"reset": "Reset",
+		"search": "Search",
+		"refresh": "Refresh",
+		"tryAgain": "Try again",
+		"retry": "Retry",
+		"back": "Back",
+		"next": "Next",
+		"previous": "Previous",
+		"download": "Download",
+		"export": "Export",
+		"apply": "Apply",
+		"clear": "Clear",
+		"confirm": "Confirm",
+		"remove": "Remove",
+		"add": "Add",
+		"view": "View",
+		"details": "Details",
+		"loadMore": "Load more"
+	},
+	"fields": {
+		"status": "Status",
+		"customer": "Customer",
+		"severity": "Severity",
+		"created": "Created",
+		"actions": "Actions",
+		"description": "Description",
+		"source": "Source",
+		"name": "Name"
+	},
+	"states": {
+		"loading": "Loading...",
+		"noData": "No data"
+	},
+	"language": {
+		"label": "Language",
+		"saved": "Language saved",
+		"failed": "Your language could not be saved. Please try again.",
+		"englishOnly": "Your organization offers the portal in English only.",
+		"hint": "The portal's language for your account, on every device."
+	},
+	"status": {
+		"open": "Open",
+		"inProgress": "In Progress",
+		"waitingOnYou": "Waiting on you",
+		"closed": "Closed"
+	},
+	"severity": {
+		"critical": "Critical",
+		"high": "High",
+		"medium": "Medium",
+		"low": "Low",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "Pending",
+		"running": "Running",
+		"completed": "Completed",
+		"failed": "Failed"
+	},
+	"boolean": {
+		"yes": "Yes",
+		"no": "No"
+	},
+	"timeRange": {
+		"hour1": "1 hour",
+		"hour6": "6 hours",
+		"hour12": "12 hours",
+		"day1": "1 day",
+		"day2": "2 days",
+		"day3": "3 days",
+		"week1": "1 week",
+		"week2": "2 weeks",
+		"month1": "1 month",
+		"month2": "2 months",
+		"month3": "3 months",
+		"month6": "6 months",
+		"year1": "1 year"
+	},
+	"similarity": {
+		"high": "High similarity",
+		"highDescription": "exact/near matches",
+		"good": "Good semantic similarity",
+		"moderate": "Moderate similarity",
+		"low": "Low similarity"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} h {minutes} min"
+	},
+	"dates": {
+		"invalid": "Invalid date"
+	},
+	"codeSource": {
+		"empty": "Empty",
+		"toggle": "toggle source view"
+	},
+	"copyableValue": {
+		"copy": "Copy",
+		"copied": "Copied"
+	},
+	"keyValueFilter": {
+		"key": "Filter key",
+		"value": "Filter value"
+	},
+	"notifications": {
+		"setRead": "Set as read",
+		"empty": "There is no notification",
+		"markAllRead": "Mark all as read",
+		"openAlert": "Open alert",
+		"openCase": "Open case",
+		"viewReports": "View reports"
+	},
+	"pagination": {
+		"perPage": "{size} / page",
+		"desc": "Desc",
+		"asc": "Asc"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Total alerts",
+			"cases": "Total cases",
+			"agents": "Total agents",
+			"other": "Total {entity}"
+		},
+		"byStatus": {
+			"alerts": "Alerts by status",
+			"cases": "Cases by status",
+			"agents": "Agents by status",
+			"other": "{entity} by status"
+		}
+	},
+	"waitingOnYou": {
+		"title": "The SOC is waiting on your reply",
+		"body": {
+			"alert": "Their response clock for this alert is paused until you answer. Reply in the comments to hand it back to the analysts.",
+			"case": "Their response clock for this case is paused until you answer. Reply in the comments to hand it back to the analysts."
+		},
+		"reply": "Reply"
+	},
+	"charts": {
+		"total": "Total"
+	},
+	"entityDetails": {
+		"viewDetails": "View Details",
+		"openPage": {
+			"alert": "Open alert page",
+			"case": "Open case page",
+			"agent": "Open agent page",
+			"other": "Open {entity} page"
+		}
+	},
+	"timeline": {
+		"title": "Timeline"
+	},
+	"passwordPolicy": {
+		"requirements": "8 to 72 characters, with an uppercase letter, a lowercase letter, a digit and a symbol",
+		"problems": {
+			"controlCharacter": "Password must not contain control or invisible characters",
+			"tooShort": "Password must be at least 8 characters long",
+			"tooLong": "Password must be at most 72 bytes long (an accented letter takes 2, an emoji 4)",
+			"noLowercase": "Password must contain a lowercase letter",
+			"noUppercase": "Password must contain an uppercase letter",
+			"noDigit": "Password must contain a digit",
+			"noSymbol": "Password must contain a symbol, such as ! {'@'} # $ % _ - . or +"
+		}
+	}
+}

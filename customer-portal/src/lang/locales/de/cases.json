@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Fälle"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Fallname",
+			"assignedTo": "Zugewiesen an"
+		},
+		"items": "Einträge",
+		"empty": "Keine Fälle gefunden",
+		"emptyHint": "Versuchen Sie, die Filter zu ändern"
+	},
+	"createCaseButton": {
+		"label": "Fall erstellen",
+		"title": "Fall erstellen"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Fallname",
+			"caseStatus": "Fallstatus",
+			"caseDescription": "Fallbeschreibung",
+			"assignedTo": "Zugewiesen an (optional)"
+		},
+		"placeholders": {
+			"customer": "Wählen Sie den Kunden, zu dem dieser Fall gehört",
+			"caseName": "Fallnamen eingeben",
+			"caseStatus": "Fallstatus auswählen",
+			"caseDescription": "Fallbeschreibung eingeben",
+			"assignedTo": "Bearbeiter auswählen"
+		},
+		"submit": "Fall erstellen",
+		"created": "Fall erfolgreich erstellt"
+	},
+	"caseAssignedSelect": {
+		"updated": "Zuweisung geändert auf {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Fallstatus geändert auf {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Falldetails"
+	},
+	"unlinkCase": {
+		"label": "Fall trennen",
+		"confirm": "Möchten Sie die Verknüpfung dieses Falls mit dem Alarm wirklich aufheben?",
+		"unlinked": "Verknüpfung des Falls mit dem Alarm aufgehoben",
+		"failed": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+	},
+	"caseDetails": {
+		"error": "Fehler",
+		"notFound": "Fall nicht gefunden.",
+		"tabs": {
+			"overview": "Übersicht",
+			"alerts": "Alarme ({count})",
+			"tasks": "Aufgaben",
+			"timeline": "Zeitverlauf",
+			"files": "Dateien",
+			"comments": "Kommentare ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Fallname",
+		"escalated": "Eskaliert",
+		"notificationInvokedNumber": "Anzahl ausgelöster Benachrichtigungen",
+		"assignedTo": "Zugewiesen an"
+	},
+	"caseAlerts": {
+		"linkAlert": "Alarm verknüpfen",
+		"unlinkAlert": "Alarm trennen",
+		"created": "Erstellt: {date}",
+		"assignedTo": "Zugewiesen an",
+		"alertId": "Alarm #{id}",
+		"empty": "Keine Alarme gefunden"
+	},
+	"caseComment": {
+		"confirmDelete": "Möchten Sie diesen Kommentar wirklich löschen?",
+		"updated": "Kommentar aktualisiert",
+		"deleted": "Kommentar gelöscht"
+	},
+	"caseComments": {
+		"empty": "Keine Kommentare vorhanden",
+		"add": "Kommentar hinzufügen",
+		"placeholder": "Geben Sie Ihren Kommentar ein...",
+		"added": "Kommentar hinzugefügt"
+	},
+	"caseFiles": {
+		"files": "Dateien",
+		"size": "Größe",
+		"type": "Typ",
+		"empty": "Keine Dateien gefunden",
+		"dropHint": "Klicken Sie oder ziehen Sie eine Datei in diesen Bereich, um sie hochzuladen",
+		"upload": "Hochladen"
+	},
+	"caseTasks": {
+		"tasks": "Aufgaben",
+		"done": "erledigt",
+		"mandatoryIncomplete": "Pflichtaufgaben offen",
+		"intro": "Schreibgeschützte Ansicht der Untersuchungsaufgaben, die das SOC-Team für diesen Fall durchgeführt hat.",
+		"mandatory": "Pflicht",
+		"custom": "benutzerdefiniert",
+		"guidelines": "Richtlinien",
+		"notes": "Notizen des Analysten",
+		"completedBy": "Erledigt von {user}",
+		"markedBy": "Markiert von {user}",
+		"createdBy": "Erstellt von {user}",
+		"empty": "Noch keine Aufgaben für diesen Fall",
+		"status": {
+			"todo": "Offen",
+			"done": "Erledigt",
+			"notNecessary": "Nicht erforderlich"
+		}
+	},
+	"caseTimeline": {
+		"events": "Ereignisse",
+		"intro": "Schreibgeschütztes Prüfprotokoll der Untersuchungsaktivitäten zu diesem Fall.",
+		"empty": "Noch keine Ereignisse im Zeitverlauf",
+		"caseCreatedFromAlert": "Fall aus Alarm #{id} erstellt",
+		"caseCreated": "Fall erstellt",
+		"statusForced": "Status zwangsweise von {from} auf {to} geändert (Pflichtaufgaben übergangen)",
+		"statusChanged": "Status von {from} auf {to} geändert",
+		"reassigned": "Neu zugewiesen von {from} an {to}",
+		"assigned": "Zugewiesen an {to}",
+		"unassigned": "nicht zugewiesen",
+		"escalated": "Fall eskaliert",
+		"deescalated": "Eskalation des Falls aufgehoben",
+		"alertsLinked": "{count} Alarm(e) mit dem Fall verknüpft",
+		"alertLinked": "Alarm #{id} verknüpft",
+		"alertUnlinked": "Alarm #{id} getrennt",
+		"commentAdded": "Kommentar hinzugefügt",
+		"templateApplied": "Vorlage angewendet: {name} ({count} Aufgabe) | Vorlage angewendet: {name} ({count} Aufgaben)",
+		"taskAdded": "Aufgabe hinzugefügt: {title}",
+		"taskAddedMandatory": "Aufgabe hinzugefügt: {title} (Pflicht)",
+		"taskStatusChanged": "Aufgabe {title}: {from} → {to}",
+		"taskCommented": "Notizen zur Aufgabe hinzugefügt: {title}",
+		"alertsDetail": "Alarme: {list}"
+	}
+}

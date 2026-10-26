@@ -1,0 +1,136 @@
+{
+	"stats": {
+		"entity": "Agents",
+		"active": "active",
+		"offline": "offline",
+		"critical": "critical",
+		"other": "other"
+	},
+	"exportCsv": "Export CSV",
+	"list": {
+		"columns": {
+			"agent": "Agent",
+			"ipAddress": "IP Address",
+			"os": "Operating System",
+			"lastSeen": "Last Seen",
+			"criticalAsset": "Critical Asset"
+		},
+		"items": "items",
+		"exported": "Exported {count} asset to CSV | Exported {count} assets to CSV",
+		"empty": "No agents found",
+		"emptyHint": "try changing the filters"
+	},
+	"filters": {
+		"os": "Operating System",
+		"search": "Search (hostname, ip address, agent id)",
+		"critical": "Critical Assets",
+		"reset": "Reset filters"
+	},
+	"agentCriticalSelect": {
+		"critical": "Critical",
+		"notCritical": "Not Critical",
+		"updated": "Agent criticality updated to {level}"
+	},
+	"agentDetailsButton": {
+		"title": "Agent Details"
+	},
+	"agentDetails": {
+		"error": "Error",
+		"notFound": "Agent not found.",
+		"tabs": {
+			"overview": "Overview",
+			"vulnerabilities": "Vulnerabilities",
+			"cases": "Cases"
+		}
+	},
+	"agentCases": {
+		"heading": "Cases involving this host",
+		"empty": "No case involves this host",
+		"unassigned": "unassigned",
+		"alerts": "{count} alert | {count} alerts",
+		"loadFailed": "Could not load the cases."
+	},
+	"agentVulnerabilities": {
+		"filterLabel": "Filter by severity",
+		"search": "Search CVE, title or package",
+		"shown": "{count} shown · worst first",
+		"head": {
+			"severity": "Severity",
+			"vulnerability": "Vulnerability",
+			"package": "Package",
+			"detected": "Detected"
+		},
+		"loading": "Fetching the vulnerabilities from Wazuh. This can take up to a minute on an agent with many packages.",
+		"emptyFiltered": "No vulnerability matches the filters",
+		"empty": "No vulnerabilities found on this agent",
+		"facts": {
+			"package": "Package",
+			"architecture": "Architecture",
+			"type": "Type",
+			"published": "Published",
+			"detected": "Detected"
+		},
+		"references": "References · {count}",
+		"loadFailed": "Could not load the vulnerabilities.",
+		"exportFailed": "Could not export the vulnerabilities."
+	},
+	"agentSca": {
+		"head": {
+			"policy": "Policy",
+			"score": "Score",
+			"checks": "Checks",
+			"lastScan": "Last scan"
+		},
+		"empty": "No SCA scan on this agent yet",
+		"passed": "{count} passed",
+		"failed": "{count} failed",
+		"notApplicable": "{count} n/a",
+		"checks": "· {count} checks",
+		"scanned": "scanned {when}",
+		"back": "All policies",
+		"policy": "SCA policy",
+		"score": "Score",
+		"filterLabel": "Filter by result",
+		"search": "Search check title or id",
+		"shown": "{count} shown · failed first",
+		"emptyFiltered": "No check matches the filters",
+		"noChecks": "This policy has no checks",
+		"text": {
+			"rationale": "Rationale",
+			"remediation": "Remediation",
+			"reason": "Reason"
+		},
+		"compliance": "Compliance",
+		"filter": {
+			"all": "All",
+			"failed": "Failed",
+			"passed": "Passed",
+			"notApplicable": "N/A"
+		},
+		"loadFailed": "Could not load the SCA policies.",
+		"checksFailed": "Could not load the policy's checks.",
+		"exportFailed": "Could not export the policy's checks."
+	},
+	"findings": {
+		"severity": {
+			"All": "All",
+			"Critical": "Critical",
+			"High": "High",
+			"Medium": "Medium",
+			"Low": "Low",
+			"unknown": "unknown"
+		},
+		"results": {
+			"failed": "failed",
+			"passed": "passed",
+			"notApplicable": "not applicable"
+		},
+		"range": "{from}–{to} of {total}"
+	},
+	"status": {
+		"active": "Active",
+		"disconnected": "Disconnected",
+		"neverConnected": "Never connected",
+		"pending": "Pending"
+	}
+}

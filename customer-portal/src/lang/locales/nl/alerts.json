@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "items",
+		"empty": "Geen meldingen gevonden",
+		"clearFilters": "Filters wissen",
+		"columns": {
+			"alert": "Melding",
+			"assets": "Assets",
+			"tags": "Tags"
+		}
+	},
+	"statusSelect": {
+		"updated": "Status van de melding gewijzigd in {status}"
+	},
+	"detailsButton": {
+		"title": "Meldingsdetails"
+	},
+	"linkAlert": {
+		"linkAlert": "Melding koppelen",
+		"link": "Koppelen",
+		"idsRequired": "Zaak-ID en meldings-ID zijn verplicht",
+		"linked": "Melding gekoppeld aan de zaak",
+		"genericError": "Er is een fout opgetreden. Probeer het later opnieuw."
+	},
+	"details": {
+		"error": "Fout",
+		"notFound": "Melding niet gevonden.",
+		"tabs": {
+			"overview": "Overzicht",
+			"assets": "Assets",
+			"linkedCases": "Gekoppelde zaken ({count})",
+			"iocs": "Indicatoren van compromittering (IoCs)",
+			"aiReport": "AI-rapport",
+			"comments": "Opmerkingen ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Naam van de melding",
+		"escalated": "Geëscaleerd",
+		"assignedTo": "Toegewezen aan"
+	},
+	"assets": {
+		"agentId": "Agent-ID",
+		"velociraptorId": "Velociraptor-ID",
+		"assetName": "Assetnaam",
+		"empty": "Geen assets gevonden"
+	},
+	"iocs": {
+		"empty": "Geen indicatoren van compromittering gevonden"
+	},
+	"cases": {
+		"createCase": "Zaak aanmaken",
+		"linkCase": "Zaak koppelen",
+		"assignedTo": "Toegewezen aan",
+		"created": "Aangemaakt: {date}",
+		"caseNumber": "Zaak #{id}",
+		"empty": "Geen gekoppelde zaken gevonden",
+		"createdSuccess": "Zaak aangemaakt",
+		"genericError": "Er is een fout opgetreden. Probeer het later opnieuw."
+	},
+	"comments": {
+		"empty": "Geen opmerkingen gevonden",
+		"add": "Opmerking toevoegen",
+		"placeholder": "Typ je opmerking...",
+		"added": "Opmerking toegevoegd",
+		"updated": "Opmerking bijgewerkt",
+		"deleted": "Opmerking verwijderd",
+		"confirmDelete": "Weet je zeker dat je deze opmerking wilt verwijderen?"
+	},
+	"aiReport": {
+		"error": "Fout",
+		"investigation": "Onderzoek",
+		"started": "Gestart",
+		"completed": "Voltooid",
+		"requestedTitle": "AI-analyse aangevraagd",
+		"requestedText": "De AI-analist pakt dit binnenkort op. Deze pagina werkt zichzelf bij, en de nieuwe bevindingen vervangen deze zodra de analyse klaar is.",
+		"progressTitle": "Onderzoek bezig",
+		"progressFor": "De AI-analist werkt al {elapsed} aan deze melding. De bevindingen verschijnen hier zodra het onderzoek klaar is.",
+		"progress": "De AI-analist werkt aan deze melding. De bevindingen verschijnen hier zodra het onderzoek klaar is.",
+		"stalledTitle": "Onderzoek niet afgerond",
+		"stalledText": "De AI-analist is met deze melding gestopt voordat de bevindingen waren geschreven.",
+		"stalledCanRequest": "Je kunt een nieuwe analyse aanvragen.",
+		"summary": "Samenvatting",
+		"recommendedActions": "Aanbevolen acties",
+		"fullReport": "Volledig rapport",
+		"iocsTitle": "Indicatoren gevonden door de AI-analist",
+		"vtVerdict": "VT-oordeel",
+		"vtScore": "VT-score",
+		"generated": "Rapport gemaakt op {date}",
+		"notEnabled": "Bevindingen van de AI-analist zijn niet ingeschakeld voor deze klant",
+		"requestedEmpty": "AI-analyse aangevraagd: de bevindingen verschijnen hier zodra de AI-analist klaar is",
+		"noAnalysis": "Er is nog geen AI-analyse uitgevoerd voor deze melding",
+		"requestFailed": "De analyse kon niet worden aangevraagd. Probeer het later opnieuw."
+	},
+	"aiRequest": {
+		"runAgain": "Opnieuw uitvoeren",
+		"run": "Analyse uitvoeren",
+		"confirmAgain": "De AI-analist vragen deze melding opnieuw te analyseren? De nieuwe bevindingen vervangen deze zodra de analyse klaar is.",
+		"confirm": "De AI-analist vragen deze melding te analyseren? De bevindingen verschijnen hier zodra de analyse klaar is.",
+		"inProgress": "Analyse bezig",
+		"rerun": "AI-analyse opnieuw uitvoeren",
+		"runAi": "AI-analyse uitvoeren"
+	},
+	"aiStatus": {
+		"queued": "In wachtrij",
+		"analysing": "Wordt geanalyseerd",
+		"completed": "Voltooid",
+		"failed": "Mislukt",
+		"stalled": "Vastgelopen",
+		"unknown": "Onbekend"
+	},
+	"filters": {
+		"labels": {
+			"status": "Status",
+			"source": "Bron",
+			"asset": "Asset",
+			"tag": "Tag",
+			"date": "Aangemaakt",
+			"detection": "Detectie",
+			"opened": "Binnengekomen bij het SOC"
+		},
+		"remove": {
+			"status": "Statusfilter verwijderen",
+			"source": "Bronfilter verwijderen",
+			"asset": "Assetfilter verwijderen",
+			"tag": "Tagfilter verwijderen",
+			"date": "Filter op aanmaakdatum verwijderen",
+			"detection": "Detectiefilter verwijderen",
+			"opened": "Filter op binnenkomst bij het SOC verwijderen"
+		},
+		"searchTitles": "Zoeken in titels van meldingen",
+		"anyStatus": "Elke status",
+		"anySource": "Elke bron",
+		"searchAssets": "Assets zoeken",
+		"anyTags": "Een van deze tags",
+		"from": "Van",
+		"to": "Tot",
+		"add": "Filter toevoegen",
+		"clear": "Filters wissen",
+		"openedSince": "sinds {date}",
+		"openedBefore": "vóór {date}"
+	}
+}

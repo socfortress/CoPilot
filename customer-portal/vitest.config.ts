@@ -9,6 +9,8 @@ export default defineConfig(env =>
 			test: {
 				environment: "jsdom",
 				include: ["src/**/*.spec.ts"],
+				// i18n for every mounted component, back to English after each test (#1310).
+				setupFiles: ["src/test-setup.ts"],
 				// The Cypress specs run in a browser against a real backend: `pnpm test:e2e`.
 				exclude: [...configDefaults.exclude, "cypress/**"],
 				root: fileURLToPath(new URL("./", import.meta.url))

@@ -6,6 +6,7 @@ import type {
 	CustomerPortalBrandingOverride,
 	CustomerPortalEffectiveBranding,
 	CustomerPortalExposureSettings,
+	CustomerPortalLanguageSettings,
 	CustomerPortalNotificationSettings,
 	CustomerPortalSettings,
 	CustomerPortalSlaSettings
@@ -85,6 +86,17 @@ export interface CustomerPortalAuditSettingsPayload {
 
 type AuditSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalAuditSettings
+}
+
+export interface CustomerPortalLanguageSettingsPayload {
+	/** The whole set, English included. */
+	languages: string[]
+}
+
+type LanguageSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalLanguageSettings
+	/** Every language the portal ships, English first. */
+	supported: string[]
 }
 
 export interface CustomerPortalSocRequestSettingsPayload {
@@ -188,6 +200,15 @@ export default {
 	/** Admin-only: shows or hides the portal's Audit Log page to this customer's administrators (#1298). */
 	setCustomerAuditSettings(customerCode: string, payload: CustomerPortalAuditSettingsPayload) {
 		return HttpClient.put<AuditSettingsResponse>(`/customer_portal/audit/settings/${customerCode}`, payload)
+	},
+	getCustomerLanguageSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<LanguageSettingsResponse>(`/customer_portal/languages/settings/${customerCode}`, {
+			signal
+		})
+	},
+	/** Admin-only: the languages this customer's portal users may pick (#1310); English always stays. */
+	setCustomerLanguageSettings(customerCode: string, payload: CustomerPortalLanguageSettingsPayload) {
+		return HttpClient.put<LanguageSettingsResponse>(`/customer_portal/languages/settings/${customerCode}`, payload)
 	},
 	getCustomerSocRequestSettings(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<SocRequestSettingsResponse>(`/customer_portal/soc_requests/settings/${customerCode}`, {

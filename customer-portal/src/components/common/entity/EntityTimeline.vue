@@ -1,5 +1,5 @@
 <template>
-	<n-card :title segmented :size>
+	<n-card :title="title ?? $t('common.timeline.title')" segmented :size>
 		<n-timeline class="mt-2">
 			<n-timeline-item
 				v-for="item in timelineItems"
@@ -25,7 +25,7 @@ export interface TimelineItem {
 }
 
 const {
-	title = "Timeline",
+	title,
 	size = "small",
 	items,
 	format = "datetime"

@@ -4,7 +4,11 @@
 
 		<div class="flex flex-col gap-2">
 			<div ref="headerRef" class="flex items-center justify-between">
-				<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
+				<Chip
+					size="small"
+					:value="loading ? $t('common.states.loading') : pagination.total"
+					:label="$t('alerts.list.items')"
+				/>
 
 				<div class="flex items-center gap-2 whitespace-nowrap">
 					<n-pagination
@@ -32,14 +36,14 @@
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 				>
 					<template #empty>
-						<n-empty description="No alerts found">
+						<n-empty :description="$t('alerts.list.empty')">
 							<template v-if="hasFilters(filters)" #extra>
 								<n-button
 									size="small"
 									data-testid="alerts-empty-clear"
 									@click="emit('change', EMPTY_ALERTS_FILTERS)"
 								>
-									Clear filters
+									{{ $t("alerts.list.clearFilters") }}
 								</n-button>
 							</template>
 						</n-empty>
@@ -71,6 +75,7 @@ import type { ApiError, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
 import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import AlertDetailsButton from "@/components/alerts/AlertDetailsButton.vue"
 import AlertStatusSelect from "@/components/alerts/AlertStatusSelect.vue"
@@ -98,6 +103,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const data = ref<Alert[]>([])
 const dFormats = useSettingsStore().dateFormat
@@ -117,27 +123,27 @@ const pagination = ref({
 
 const columns = computed<DataTableColumns<Alert>>(() => [
 	{
-		title: "Alert",
+		title: t("alerts.list.columns.alert"),
 		key: "alert",
 		fixed: simpleMode.value ? undefined : "left",
 		width: 380,
 		render: row => <div>{row.alert_name}</div>
 	},
 	{
-		title: "Source",
+		title: t("common.fields.source"),
 		key: "source",
 		width: 180,
 		render: row => <div>{row.source}</div>
 	},
 	{
-		title: "Assets",
+		title: t("alerts.list.columns.assets"),
 		key: "assets",
 		ellipsis: true,
 		render: row => row.assets.map(asset => asset.asset_name).join(", ")
 	},
 	{
 		// Shown because they can be filtered on: a match must be explainable from the row.
-		title: "Tags",
+		title: t("alerts.list.columns.tags"),
 		key: "tags",
 		width: 200,
 		render: row => (
@@ -151,13 +157,13 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		)
 	},
 	{
-		title: "Created",
+		title: t("common.fields.created"),
 		key: "alert_creation_time",
 		width: 200,
 		render: row => <span class="font-mono text-sm">{formatDate(row.alert_creation_time, dFormats.datetime)}</span>
 	},
 	{
-		title: "Status",
+		title: t("common.fields.status"),
 		key: "status",
 		width: 200,
 		render: row => {
@@ -177,9 +183,10 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 		}
 	},
 	{
-		title: "Actions",
+		title: t("common.fields.actions"),
 		key: "actions",
-		width: 194,
+		// Room for the longest translation of "View details" (Czech) and the page link.
+		width: 250,
 		render: row => {
 			return <AlertDetailsButton alertId={row.id} onStatusUpdated={handleStatusUpdateSuccess} />
 		}

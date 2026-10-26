@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "éléments",
+		"empty": "Aucune alerte trouvée",
+		"clearFilters": "Effacer les filtres",
+		"columns": {
+			"alert": "Alerte",
+			"assets": "Actifs",
+			"tags": "Étiquettes"
+		}
+	},
+	"statusSelect": {
+		"updated": "Statut de l'alerte mis à jour : {status}"
+	},
+	"detailsButton": {
+		"title": "Détails de l'alerte"
+	},
+	"linkAlert": {
+		"linkAlert": "Lier une alerte",
+		"link": "Lier",
+		"idsRequired": "Les identifiants du dossier et de l'alerte sont obligatoires",
+		"linked": "Alerte liée au dossier",
+		"genericError": "Une erreur s'est produite. Veuillez réessayer plus tard."
+	},
+	"details": {
+		"error": "Erreur",
+		"notFound": "Alerte introuvable.",
+		"tabs": {
+			"overview": "Vue d'ensemble",
+			"assets": "Actifs",
+			"linkedCases": "Dossiers liés ({count})",
+			"iocs": "Indicateurs de compromission (IoCs)",
+			"aiReport": "Rapport AI",
+			"comments": "Commentaires ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Nom de l'alerte",
+		"escalated": "Escaladée",
+		"assignedTo": "Assignée à"
+	},
+	"assets": {
+		"agentId": "ID de l'agent",
+		"velociraptorId": "ID Velociraptor",
+		"assetName": "Nom de l'actif",
+		"empty": "Aucun actif trouvé"
+	},
+	"iocs": {
+		"empty": "Aucun indicateur de compromission trouvé"
+	},
+	"cases": {
+		"createCase": "Créer un dossier",
+		"linkCase": "Lier un dossier",
+		"assignedTo": "Assigné à",
+		"created": "Créé : {date}",
+		"caseNumber": "Dossier #{id}",
+		"empty": "Aucun dossier lié",
+		"createdSuccess": "Dossier créé",
+		"genericError": "Une erreur s'est produite. Veuillez réessayer plus tard."
+	},
+	"comments": {
+		"empty": "Aucun commentaire",
+		"add": "Ajouter un commentaire",
+		"placeholder": "Saisissez votre commentaire...",
+		"added": "Commentaire ajouté",
+		"updated": "Commentaire mis à jour",
+		"deleted": "Commentaire supprimé",
+		"confirmDelete": "Voulez-vous vraiment supprimer ce commentaire ?"
+	},
+	"aiReport": {
+		"error": "Erreur",
+		"investigation": "Investigation",
+		"started": "Démarrée",
+		"completed": "Terminée",
+		"requestedTitle": "Analyse AI demandée",
+		"requestedText": "L'analyste AI va la prendre en charge sous peu. Cette page se met à jour d'elle-même, et les nouveaux résultats remplaceront ceux-ci une fois l'analyse terminée.",
+		"progressTitle": "Investigation en cours",
+		"progressFor": "L'analyste AI travaille sur cette alerte depuis {elapsed}. Les résultats apparaîtront ici une fois l'investigation terminée.",
+		"progress": "L'analyste AI travaille sur cette alerte. Les résultats apparaîtront ici une fois l'investigation terminée.",
+		"stalledTitle": "L'investigation n'a pas abouti",
+		"stalledText": "L'analyste AI a cessé de travailler sur cette alerte avant d'en rédiger les résultats.",
+		"stalledCanRequest": "Vous pouvez demander une nouvelle analyse.",
+		"summary": "Résumé",
+		"recommendedActions": "Actions recommandées",
+		"fullReport": "Rapport complet",
+		"iocsTitle": "Indicateurs identifiés par l'analyste AI",
+		"vtVerdict": "Verdict VT",
+		"vtScore": "Score VT",
+		"generated": "Rapport généré le {date}",
+		"notEnabled": "Les résultats de l'analyste AI ne sont pas activés pour ce client",
+		"requestedEmpty": "Analyse AI demandée : les résultats apparaîtront ici une fois que l'analyste AI aura terminé",
+		"noAnalysis": "Aucune analyse AI n'a été effectuée pour cette alerte",
+		"requestFailed": "L'analyse n'a pas pu être demandée. Veuillez réessayer plus tard."
+	},
+	"aiRequest": {
+		"runAgain": "Relancer",
+		"run": "Lancer l'analyse",
+		"confirmAgain": "Demander à l'analyste AI d'analyser à nouveau cette alerte ? Les nouveaux résultats remplaceront ceux-ci une fois l'analyse terminée.",
+		"confirm": "Demander à l'analyste AI d'analyser cette alerte ? Les résultats apparaîtront ici une fois l'analyse terminée.",
+		"inProgress": "Analyse en cours",
+		"rerun": "Relancer l'analyse AI",
+		"runAi": "Lancer l'analyse AI"
+	},
+	"aiStatus": {
+		"queued": "En file d'attente",
+		"analysing": "Analyse en cours",
+		"completed": "Terminée",
+		"failed": "Échouée",
+		"stalled": "Bloquée",
+		"unknown": "Inconnu"
+	},
+	"filters": {
+		"labels": {
+			"status": "Statut",
+			"source": "Source",
+			"asset": "Actif",
+			"tag": "Étiquette",
+			"date": "Créée",
+			"detection": "Détection",
+			"opened": "Arrivée au SOC"
+		},
+		"remove": {
+			"status": "Retirer le filtre de statut",
+			"source": "Retirer le filtre de source",
+			"asset": "Retirer le filtre d'actif",
+			"tag": "Retirer le filtre d'étiquette",
+			"date": "Retirer le filtre de date de création",
+			"detection": "Retirer le filtre de détection",
+			"opened": "Retirer le filtre d'arrivée au SOC"
+		},
+		"searchTitles": "Rechercher dans les titres d'alerte",
+		"anyStatus": "Tous les statuts",
+		"anySource": "Toutes les sources",
+		"searchAssets": "Rechercher des actifs",
+		"anyTags": "L'une de ces étiquettes",
+		"from": "Du",
+		"to": "Au",
+		"add": "Ajouter un filtre",
+		"clear": "Effacer les filtres",
+		"openedSince": "depuis le {date}",
+		"openedBefore": "avant le {date}"
+	}
+}

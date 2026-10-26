@@ -8,7 +8,7 @@
 						:size="100"
 						:src="userPic"
 						round
-						:img-props="{ alt: 'avatar' }"
+						:img-props="{ alt: $t('profile.header.avatarAlt') }"
 						:style="
 							administered.length
 								? { boxShadow: '0 0 0 3px var(--bg-default-color), 0 0 0 5px var(--info-color)' }
@@ -27,17 +27,17 @@
 							data-testid="profile-customer-admin"
 						>
 							<template #icon><Icon name="carbon:user-multiple" :size="14" /></template>
-							Customer admin
+							{{ $t("profile.roles.customerAdmin") }}
 						</n-tag>
 					</div>
 					<!-- What the account is for, in one line: the SOC appointed a customer admin (#1296). -->
 					<p class="text-secondary m-0 text-sm" data-testid="profile-role-description">
-						<template v-if="administered.length">
-							Invites and manages the portal users of
-							<bdi>{{ administered.map(customer => customer.customer_name).join(", ") }}</bdi>
-							<span>. Appointed by your SOC.</span>
-						</template>
-						<template v-else>Portal user</template>
+						<i18n-t v-if="administered.length" keypath="profile.header.managesUsersOf" scope="global">
+							<template #customers>
+								<bdi>{{ administered.map(customer => customer.customer_name).join(", ") }}</bdi>
+							</template>
+						</i18n-t>
+						<template v-else>{{ $t("profile.roles.portalUser") }}</template>
 					</p>
 					<div class="flex flex-wrap items-center gap-2" data-testid="profile-customers">
 						<span
@@ -52,20 +52,22 @@
 								class="text-info mt-0.5 font-mono text-[10px] leading-none font-semibold tracking-wider uppercase"
 								data-testid="profile-customer-admin-of"
 							>
-								admin
+								{{ $t("profile.header.adminBadge") }}
 							</span>
 						</span>
-						<span v-if="!customers.length" class="text-secondary text-sm">No customer</span>
+						<span v-if="!customers.length" class="text-secondary text-sm">
+							{{ $t("profile.header.noCustomer") }}
+						</span>
 					</div>
 				</div>
 			</div>
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
-					<n-tab name="settings">Settings</n-tab>
+					<n-tab name="settings">{{ $t("profile.tabs.settings") }}</n-tab>
 					<n-tab v-if="notificationsOn" name="notifications" data-testid="profile-tab-notifications">
-						Notifications
+						{{ $t("profile.tabs.notifications") }}
 					</n-tab>
-					<n-tab name="security">Security</n-tab>
+					<n-tab name="security">{{ $t("profile.tabs.security") }}</n-tab>
 				</n-tabs>
 			</div>
 		</n-card>

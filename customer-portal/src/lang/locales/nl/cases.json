@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Zaken"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Zaaknaam",
+			"assignedTo": "Toegewezen aan"
+		},
+		"items": "items",
+		"empty": "Geen zaken gevonden",
+		"emptyHint": "probeer de filters aan te passen"
+	},
+	"createCaseButton": {
+		"label": "Zaak aanmaken",
+		"title": "Zaak aanmaken"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Zaaknaam",
+			"caseStatus": "Zaakstatus",
+			"caseDescription": "Zaakbeschrijving",
+			"assignedTo": "Toegewezen aan (optioneel)"
+		},
+		"placeholders": {
+			"customer": "Kies de klant waartoe deze zaak behoort",
+			"caseName": "Voer de zaaknaam in",
+			"caseStatus": "Kies de zaakstatus",
+			"caseDescription": "Voer de zaakbeschrijving in",
+			"assignedTo": "Kies wie de zaak behandelt"
+		},
+		"submit": "Zaak aanmaken",
+		"created": "Zaak aangemaakt"
+	},
+	"caseAssignedSelect": {
+		"updated": "Toewijzing gewijzigd naar {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Zaakstatus gewijzigd naar {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Zaakdetails"
+	},
+	"unlinkCase": {
+		"label": "Zaak ontkoppelen",
+		"confirm": "Weet je zeker dat je deze zaak van de melding wilt ontkoppelen?",
+		"unlinked": "Zaak ontkoppeld van de melding",
+		"failed": "Er is een fout opgetreden. Probeer het later opnieuw."
+	},
+	"caseDetails": {
+		"error": "Fout",
+		"notFound": "Zaak niet gevonden.",
+		"tabs": {
+			"overview": "Overzicht",
+			"alerts": "Meldingen ({count})",
+			"tasks": "Taken",
+			"timeline": "Tijdlijn",
+			"files": "Bestanden",
+			"comments": "Opmerkingen ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Zaaknaam",
+		"escalated": "Geëscaleerd",
+		"notificationInvokedNumber": "Aantal verstuurde notificaties",
+		"assignedTo": "Toegewezen aan"
+	},
+	"caseAlerts": {
+		"linkAlert": "Melding koppelen",
+		"unlinkAlert": "Melding ontkoppelen",
+		"created": "Aangemaakt: {date}",
+		"assignedTo": "Toegewezen aan",
+		"alertId": "Melding #{id}",
+		"empty": "Geen meldingen gevonden"
+	},
+	"caseComment": {
+		"confirmDelete": "Weet je zeker dat je deze opmerking wilt verwijderen?",
+		"updated": "Opmerking bijgewerkt",
+		"deleted": "Opmerking verwijderd"
+	},
+	"caseComments": {
+		"empty": "Geen opmerkingen",
+		"add": "Opmerking toevoegen",
+		"placeholder": "Typ je opmerking...",
+		"added": "Opmerking toegevoegd"
+	},
+	"caseFiles": {
+		"files": "bestanden",
+		"size": "grootte",
+		"type": "type",
+		"empty": "Geen bestanden gevonden",
+		"dropHint": "Klik of sleep een bestand naar dit gebied om het te uploaden",
+		"upload": "Uploaden"
+	},
+	"caseTasks": {
+		"tasks": "taken",
+		"done": "afgerond",
+		"mandatoryIncomplete": "verplicht, niet afgerond",
+		"intro": "Alleen-lezen overzicht van de onderzoekstaken die het SOC-team voor deze zaak heeft uitgevoerd.",
+		"mandatory": "verplicht",
+		"custom": "aangepast",
+		"guidelines": "Richtlijnen",
+		"notes": "Notities van de analist",
+		"completedBy": "Afgerond door {user}",
+		"markedBy": "Gemarkeerd door {user}",
+		"createdBy": "Aangemaakt door {user}",
+		"empty": "Nog geen taken voor deze zaak",
+		"status": {
+			"todo": "Te doen",
+			"done": "Afgerond",
+			"notNecessary": "Niet nodig"
+		}
+	},
+	"caseTimeline": {
+		"events": "gebeurtenissen",
+		"intro": "Alleen-lezen auditlog van de onderzoeksactiviteit voor deze zaak.",
+		"empty": "Nog geen gebeurtenissen in de tijdlijn",
+		"caseCreatedFromAlert": "Zaak aangemaakt vanuit melding #{id}",
+		"caseCreated": "Zaak aangemaakt",
+		"statusForced": "Status geforceerd van {from} naar {to} (verplichte taken overgeslagen)",
+		"statusChanged": "Status gewijzigd van {from} naar {to}",
+		"reassigned": "Opnieuw toegewezen van {from} aan {to}",
+		"assigned": "Toegewezen aan {to}",
+		"unassigned": "niet toegewezen",
+		"escalated": "Zaak geëscaleerd",
+		"deescalated": "Escalatie van de zaak ingetrokken",
+		"alertsLinked": "{count} melding(en) aan de zaak gekoppeld",
+		"alertLinked": "Melding #{id} gekoppeld",
+		"alertUnlinked": "Melding #{id} ontkoppeld",
+		"commentAdded": "Opmerking toegevoegd",
+		"templateApplied": "Sjabloon toegepast: {name} ({count} taak) | Sjabloon toegepast: {name} ({count} taken)",
+		"taskAdded": "Taak toegevoegd: {title}",
+		"taskAddedMandatory": "Taak toegevoegd: {title} (verplicht)",
+		"taskStatusChanged": "Taak {title}: {from} → {to}",
+		"taskCommented": "Notities toegevoegd aan taak: {title}",
+		"alertsDetail": "Meldingen: {list}"
+	}
+}

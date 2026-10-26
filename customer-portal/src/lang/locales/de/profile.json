@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Kundenadministrator",
+		"portalUser": "Portalbenutzer"
+	},
+	"header": {
+		"avatarAlt": "Avatar",
+		"managesUsersOf": "Lädt die Portalbenutzer von {customers} ein und verwaltet sie. Von Ihrem SOC ernannt.",
+		"adminBadge": "Admin",
+		"noCustomer": "Kein Kunde"
+	},
+	"tabs": {
+		"settings": "Einstellungen",
+		"notifications": "Benachrichtigungen",
+		"security": "Sicherheit"
+	},
+	"settings": {
+		"general": "Allgemein",
+		"dateFormat": "Datumsformat",
+		"timeFormat": "Zeitformat",
+		"hours24": "24 Stunden [ {time} ]",
+		"hours12": "12 Stunden [ {time} ]",
+		"usernameRequired": "Bitte geben Sie einen Benutzernamen ein",
+		"emailRequired": "Bitte geben Sie eine E-Mail-Adresse ein",
+		"saved": "Einstellungen gespeichert",
+		"error": "Etwas ist schiefgelaufen"
+	},
+	"notifications": {
+		"title": "Benachrichtigungen",
+		"intro": "Wählen Sie, was Sie über die Glocke des Portals und per E-Mail erreicht. Über Ihre eigenen Aktionen werden Sie nie benachrichtigt.",
+		"inPortal": "Im Portal",
+		"email": "E-Mail",
+		"from": "Ab",
+		"unsaved": "Nicht gespeicherte Änderungen",
+		"emailOff": "Aus",
+		"emailImmediately": "Sofort",
+		"digest": "Tägliche Zusammenfassung ({hour}:00 UTC)",
+		"severityAndUp": "{severity} und höher",
+		"severities": {
+			"critical": "Kritisch",
+			"high": "Hoch",
+			"medium": "Mittel",
+			"low": "Niedrig",
+			"informational": "Informativ"
+		},
+		"noEmailAddress": "Ihr Konto hat keine E-Mail-Adresse, daher erreichen Benachrichtigungen nur das Portal. Bitten Sie Ihr SOC, eine hinzuzufügen.",
+		"emailNotSetUp": "E-Mail-Benachrichtigungen sind auf diesem Portal noch nicht eingerichtet, daher erreichen Benachrichtigungen nur das Portal.",
+		"saved": "Benachrichtigungseinstellungen gespeichert",
+		"loadFailed": "Ihre Benachrichtigungseinstellungen konnten nicht geladen werden.",
+		"saveFailed": "Ihre Benachrichtigungseinstellungen konnten nicht gespeichert werden.",
+		"events": {
+			"alertCreated": {
+				"label": "Neue Alarme",
+				"description": "Ein neuer Alarm Ihrer Organisation, ab dem von Ihnen gewählten Schweregrad."
+			},
+			"waitingOnYou": {
+				"label": "Wartet auf Sie",
+				"description": "Das SOC benötigt Ihre Antwort zu einem Alarm oder einem Fall."
+			},
+			"caseClosed": {
+				"label": "Geschlossene Fälle",
+				"description": "Ein Fall Ihrer Organisation wurde geschlossen."
+			},
+			"reportReady": {
+				"label": "Fertige Berichte",
+				"description": "Ein von Ihnen erstellter oder vom SOC mit Ihnen geteilter Bericht ist fertig."
+			}
+		}
+	}
+}

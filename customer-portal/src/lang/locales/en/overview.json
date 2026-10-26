@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Security overview",
+		"subtitle": "Your organization's security posture and the latest activity from the SOC.",
+		"updated": "updated {time}",
+		"refresh": "Refresh overview",
+		"scopeAll": "all customers ({count})",
+		"scopeNone": "no customer",
+		"scopeTitle": "Scope: {customers}"
+	},
+	"status": {
+		"open": "open",
+		"inProgress": "in progress",
+		"waiting": "waiting on you",
+		"closed": "closed",
+		"online": "online",
+		"offline": "offline"
+	},
+	"segments": {
+		"open": "open | open",
+		"inProgress": "in progress | in progress",
+		"waiting": "waiting on you | waiting on you",
+		"closed": "closed | closed"
+	},
+	"severity": {
+		"critical": "critical",
+		"high": "high",
+		"medium": "medium",
+		"low": "low",
+		"informational": "informational",
+		"unknown": "unknown"
+	},
+	"posture": {
+		"ariaLabel": "Security posture",
+		"alerts": "Alerts",
+		"cases": "Cases",
+		"agents": "Agents",
+		"openAlerts": "open alert | open alerts",
+		"openCases": "open case | open cases",
+		"online": "online",
+		"total": "{count} total",
+		"critical": "{count} critical | {count} critical",
+		"sparkCaption": "opened · {range}",
+		"sparkAlerts": "{count} alert opened over the last {days} days | {count} alerts opened over the last {days} days",
+		"sparkCases": "{count} case opened over the last {days} days | {count} cases opened over the last {days} days"
+	},
+	"activity": {
+		"unnamedAlert": "Unnamed alert",
+		"unnamedCase": "Unnamed case",
+		"unassigned": "unassigned",
+		"alertCount": "{count} alert | {count} alerts"
+	},
+	"panels": {
+		"latest": "latest {count}",
+		"empty": "Nothing to show",
+		"aiFindings": {
+			"title": "AI analyst findings",
+			"analyzed": "{count} alert analyzed | {count} alerts analyzed",
+			"highOrCritical": "high or critical"
+		},
+		"recentAlerts": {
+			"title": "Recent alerts",
+			"link": "All alerts",
+			"empty": "No alerts in the selected scope"
+		},
+		"recentCases": {
+			"title": "Recent cases",
+			"link": "All cases",
+			"empty": "No cases in the selected scope"
+		}
+	},
+	"trend": {
+		"title": "Trend",
+		"meta": "last {range}",
+		"ranges": {
+			"days7": "7 days",
+			"days30": "30 days"
+		},
+		"entities": {
+			"alerts": "Alerts",
+			"cases": "Cases"
+		},
+		"entityAria": "Trend of",
+		"rangeAria": "Trend period",
+		"openNow": "Open · now",
+		"openNowHint": "Not closed yet: open, in progress or waiting on you. The posture card above counts only those still open.",
+		"notKnown": "not known",
+		"stillOpen": "still open",
+		"allCleared": "all cleared",
+		"was": "{state} · was {count}",
+		"net": "Net",
+		"opened": "Opened",
+		"closed": "Closed",
+		"peakOpen": "Peak open",
+		"netHint": "Opened minus closed in the period. The closed include items opened before it, so it can be negative.",
+		"peakHint": "The most still open at the end of a day in the period",
+		"netWord": {
+			"grew": "grew",
+			"shrank": "shrank",
+			"flat": "flat"
+		},
+		"empty": {
+			"alerts": "No alerts opened, closed or still open in the last {range}",
+			"cases": "No cases opened, closed or still open in the last {range}"
+		},
+		"table": {
+			"captionAlerts": "Alerts still open at the end of each day, opened and closed, last {range}",
+			"captionCases": "Cases still open at the end of each day, opened and closed, last {range}",
+			"day": "Day",
+			"openAtDayEnd": "Open at day end"
+		},
+		"chart": {
+			"ariaAlerts": "alerts still open at the end of each day over {days} days, with opened and closed per day",
+			"ariaAlertsOpen": "alerts still open at the end of each day over {days} days, with opened and closed per day, {count} still open",
+			"ariaCases": "cases still open at the end of each day over {days} days, with opened and closed per day",
+			"ariaCasesOpen": "cases still open at the end of each day over {days} days, with opened and closed per day, {count} still open",
+			"openAxis": "Open · at day end",
+			"flowAxis": "Opened ↑  Closed ↓",
+			"open": "Open",
+			"peak": "peak {count}"
+		}
+	}
+}

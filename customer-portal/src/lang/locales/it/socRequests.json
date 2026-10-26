@@ -1,0 +1,49 @@
+{
+	"tab": "Chiedi al SOC",
+	"title": "Chiedi al SOC",
+	"introAlert": "La tua domanda arriva agli analisti del SOC come commento firmato da te sul caso o sull'alert che scegli. La risposta compare nei commenti.",
+	"introCase": "La tua domanda arriva agli analisti del SOC come commento firmato da te sul caso. La risposta compare nei commenti.",
+	"placeholder": "Cosa vorresti sapere?",
+	"questionLabel": "La tua domanda per il SOC",
+	"urgencyLegend": "Quanto è urgente?",
+	"targetLegend": "Dove deve andare?",
+	"send": "Invia al SOC",
+	"history": "Domande al SOC",
+	"emptyAlert": "Nessuna domanda ancora su questo alert.",
+	"emptyCase": "Nessuna domanda ancora su questo caso.",
+	"urgencyLine": "Urgenza: {urgency}",
+	"askedBy": "Chiesta da {user} · {date}",
+	"answeredAt": "· risposta {date}",
+	"sent": "La tua domanda è stata inviata al SOC",
+	"loadFailed": "Impossibile caricare le domande.",
+	"sendFailed": "Non è stato possibile inviare la domanda. Riprova.",
+	"urgency": {
+		"low": "Bassa",
+		"normal": "Normale",
+		"high": "Alta",
+		"lowHint": "Quando il SOC può",
+		"normalHint": "Nei consueti tempi di risposta",
+		"highHint": "Ci sta bloccando"
+	},
+	"status": {
+		"open": "In attesa del SOC",
+		"answered": "Risposta data"
+	},
+	"target": {
+		"addToCase": "Aggiungi al caso #{id}",
+		"addToCaseHint": "Il SOC sta già lavorando questo alert in quel caso",
+		"openCase": "Apri un caso da questo alert",
+		"openCaseHint": "Il SOC lo segue come caso, con questo alert dentro",
+		"alertOnly": "Solo su questo alert",
+		"alertOnlyHint": "Un commento sull'alert, senza caso"
+	},
+	"problem": {
+		"empty": "Scrivi la tua domanda per il SOC",
+		"tooLong": "Mantieni la domanda sotto i {max} caratteri",
+		"characters": "La domanda contiene caratteri che non possono essere inviati"
+	},
+	"filed": {
+		"onCase": "Sul caso #{id}",
+		"fromAlert": "Chiesta dall'alert #{id}"
+	}
+}

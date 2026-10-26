@@ -15,6 +15,7 @@
 import type { ApiError } from "@/types/common"
 import { NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -41,6 +42,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
 const assignedToOptions = ref<{ label: string; value: string }[]>([])
 
@@ -63,7 +65,7 @@ async function handleAssignedToChange(value: string) {
 
 	try {
 		await Api.cases.updateCaseAssignedTo(props.caseId, selectedAssignedTo.value)
-		message.success(`Assigned to updated to ${selectedAssignedTo.value}`)
+		message.success(t("cases.caseAssignedSelect.updated", { name: selectedAssignedTo.value }))
 		emit("success", {
 			caseId: props.caseId,
 			assignedTo: selectedAssignedTo.value

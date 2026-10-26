@@ -2,10 +2,11 @@
 	<div class="flex flex-col gap-6" data-testid="users-page">
 		<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex min-w-0 flex-col gap-1.5">
-				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">Users</h1>
+				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+					{{ $t("users.page.title") }}
+				</h1>
 				<p class="text-secondary max-w-prose text-sm">
-					Who can sign in to this portal for your organization. Invite colleagues, disable those who left, and
-					help those who lost their authenticator or their password.
+					{{ $t("users.page.intro") }}
 				</p>
 			</div>
 			<n-button
@@ -16,7 +17,7 @@
 				@click="inviteOpen = true"
 			>
 				<template #icon><Icon name="carbon:user-follow" :size="16" /></template>
-				Invite a user
+				{{ $t("users.page.invite") }}
 			</n-button>
 		</header>
 
@@ -26,9 +27,9 @@
 			data-testid="users-forbidden"
 		>
 			<Icon name="carbon:user-admin" :size="28" class="text-tertiary" />
-			<p class="text-default font-semibold">Only a customer administrator can manage users</p>
+			<p class="text-default font-semibold">{{ $t("users.page.forbiddenTitle") }}</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC decides who administers your organization's users. Ask your SOC contact if you need to be one.
+				{{ $t("users.page.forbiddenText") }}
 			</p>
 		</div>
 
@@ -87,12 +88,14 @@
 							<span v-if="data.customers.length > 1" data-testid="users-customers">
 								<bdi>{{ user.customers.map(c => c.customer_name).join(", ") }}</bdi>
 							</span>
-							<span>2FA {{ user.totp_enabled ? "on" : "off" }}</span>
+							<span>{{ user.totp_enabled ? $t("users.page.twoFaOn") : $t("users.page.twoFaOff") }}</span>
 							<span>
 								{{
 									user.last_login_at
-										? `Last sign-in ${formatDate(user.last_login_at, dFormats.datetime, { tz: true })}`
-										: "Never signed in"
+										? $t("users.page.lastSignIn", {
+											date: formatDate(user.last_login_at, dFormats.datetime, { tz: true })
+										})
+										: $t("users.page.neverSignedIn")
 								}}
 							</span>
 						</span>
@@ -103,11 +106,11 @@
 							size="small"
 							secondary
 							:disabled="busy === user.id || !user.totp_enabled"
-							:title="user.totp_enabled ? undefined : 'Two-factor authentication is not on'"
+							:title="user.totp_enabled ? undefined : $t('users.page.twoFaNotOn')"
 							data-testid="users-reset-totp"
 							@click="confirmResetTotp(user)"
 						>
-							Reset 2FA
+							{{ $t("users.page.resetTotp") }}
 						</n-button>
 						<n-button
 							size="small"
@@ -116,7 +119,7 @@
 							data-testid="users-temporary-password"
 							@click="confirmTemporaryPassword(user)"
 						>
-							Temporary password
+							{{ $t("users.page.temporaryPassword") }}
 						</n-button>
 						<n-button
 							size="small"
@@ -126,7 +129,7 @@
 							data-testid="users-toggle-disabled"
 							@click="toggleDisabled(user)"
 						>
-							{{ user.disabled ? "Enable" : "Disable" }}
+							{{ user.disabled ? $t("users.page.enable") : $t("users.page.disable") }}
 						</n-button>
 					</div>
 					<!-- Why not, rather than buttons that would only be refused. -->
@@ -164,6 +167,7 @@ import type { ApiError } from "@/types/common"
 import type { TemporaryPasswordDelivery, TenantUser, TenantUsers } from "@/types/users"
 import { NButton, NSkeleton, NTag, useDialog, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import PanelError from "@/components/overview/shared/PanelError.vue"
@@ -183,6 +187,7 @@ import { sortUsers, statusTags } from "./users"
 
 const message = useMessage()
 const dialog = useDialog()
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 
 const data = ref<TenantUsers | null>(null)
@@ -216,7 +221,7 @@ function load() {
 		err => {
 			const status = (err as ApiError).response?.status
 			if (status === 403) forbidden.value = true
-			else error.value = getApiErrorMessage(err as ApiError) || "Could not load the users."
+			else error.value = getApiErrorMessage(err as ApiError) || t("users.page.loadFailed")
 		}
 	)
 }
@@ -234,9 +239,9 @@ async function act(user: TenantUser, action: () => Promise<{ data: { user: Tenan
 	try {
 		const response = await action()
 		replace(response.data.user)
-		message.success(response.data.message || "Done")
+		message.success(response.data.message || t("users.page.done"))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "The action failed.")
+		message.error(getApiErrorMessage(err as ApiError) || t("users.page.actionFailed"))
 		await load()
 	} finally {
 		busy.value = null
@@ -249,10 +254,10 @@ function toggleDisabled(user: TenantUser) {
 		return
 	}
 	dialog.warning({
-		title: `Disable ${user.username}?`,
-		content: "They will not be able to sign in, and a session they have open ends. You can enable them again.",
-		positiveText: "Disable",
-		negativeText: "Cancel",
+		title: t("users.confirm.disableTitle", { username: user.username }),
+		content: t("users.confirm.disableText"),
+		positiveText: t("users.page.disable"),
+		negativeText: t("common.actions.cancel"),
 		onPositiveClick: () => {
 			act(user, () => Api.users.disable(user.id))
 		}
@@ -261,11 +266,10 @@ function toggleDisabled(user: TenantUser) {
 
 function confirmResetTotp(user: TenantUser) {
 	dialog.warning({
-		title: `Reset 2FA for ${user.username}?`,
-		content:
-			"They sign in with their password alone, and can set up two-factor authentication again from their Profile.",
-		positiveText: "Reset 2FA",
-		negativeText: "Cancel",
+		title: t("users.confirm.resetTotpTitle", { username: user.username }),
+		content: t("users.confirm.resetTotpText"),
+		positiveText: t("users.page.resetTotp"),
+		negativeText: t("common.actions.cancel"),
 		onPositiveClick: () => {
 			act(user, () => Api.users.resetTotp(user.id))
 		}
@@ -274,10 +278,10 @@ function confirmResetTotp(user: TenantUser) {
 
 function confirmTemporaryPassword(user: TenantUser) {
 	dialog.warning({
-		title: `A temporary password for ${user.username}?`,
-		content: "Their current password stops working. They sign in with the temporary one and choose their own.",
-		positiveText: "Issue",
-		negativeText: "Cancel",
+		title: t("users.confirm.temporaryPasswordTitle", { username: user.username }),
+		content: t("users.confirm.temporaryPasswordText"),
+		positiveText: t("users.confirm.issue"),
+		negativeText: t("common.actions.cancel"),
 		onPositiveClick: () => {
 			issueTemporaryPassword(user)
 		}
@@ -292,7 +296,7 @@ async function issueTemporaryPassword(user: TenantUser) {
 		replace(response.data.user)
 		showPassword(response.data.user, { delivery, temporary_password, email_problem }, false)
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Could not issue a temporary password.")
+		message.error(getApiErrorMessage(err as ApiError) || t("users.page.issueFailed"))
 	} finally {
 		busy.value = null
 	}

@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Alertas",
+		"cases": "Casos",
+		"reports": "Informes",
+		"users": "Usuarios",
+		"account": "Inicios de sesión y cuentas"
+	},
+	"actors": {
+		"member": "Un usuario del portal",
+		"soc": "SOC",
+		"other": "Otro usuario del portal",
+		"unknown": "Desconocido"
+	},
+	"targets": {
+		"alert": "Alerta n.º {id}",
+		"case": "Caso n.º {id}",
+		"report": "Informe n.º {id}"
+	},
+	"retention": {
+		"forever": "Se conserva mientras tu SOC conserve su registro de auditoría.",
+		"days": "Se conserva {count} día: las entradas más antiguas se eliminan. | Se conserva {count} días: las entradas más antiguas se eliminan."
+	},
+	"page": {
+		"title": "Registro de auditoría",
+		"intro": "Quién hizo qué en el portal de tu organización: alertas y casos movidos y comentados, informes, e inicios de sesión y cuentas de tus usuarios. Las acciones de tu SOC aparecen como SOC.",
+		"export": "Exportar CSV",
+		"forbiddenTitle": "El registro de auditoría es para los administradores de tu organización",
+		"forbiddenText": "Tu SOC decide quién administra tu organización y si se muestra su registro de auditoría. Pregunta a tu contacto del SOC si lo necesitas.",
+		"allActivity": "Toda la actividad",
+		"everyone": "Todos",
+		"from": "Desde",
+		"to": "Hasta",
+		"allCustomers": "Todos los clientes",
+		"clearFilters": "Borrar filtros",
+		"noMatches": "Nada coincide con estos filtros",
+		"empty": "Aún no hay nada registrado",
+		"failed": "Fallido",
+		"total": "{count} entrada | {count} entradas",
+		"truncated": "El CSV contiene las 10.000 entradas más recientes: acota el periodo para obtener el resto.",
+		"loadFailed": "No se ha podido cargar el registro de auditoría.",
+		"exportFailed": "No se ha podido exportar el registro de auditoría."
+	}
+}

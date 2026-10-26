@@ -1,0 +1,8 @@
+{
+	"bell": {
+		"title": "Oznámení",
+		"generating": "Generuje se {count} zpráva | Generují se {count} zprávy | Generuje se {count} zpráv",
+		"viewAll": "Zobrazit vše",
+		"loadOlder": "Načíst starší oznámení"
+	}
+}

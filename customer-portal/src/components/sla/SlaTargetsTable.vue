@@ -11,10 +11,10 @@
 			</caption>
 			<thead>
 				<tr class="text-tertiary text-left text-xs">
-					<th scope="col" class="px-5 py-2 font-medium">Severity</th>
-					<th scope="col" class="px-2 py-2 font-medium">Response</th>
-					<th scope="col" class="px-2 py-2 font-medium">Resolution</th>
-					<th scope="col" class="px-5 py-2 text-right font-medium">Kept</th>
+					<th scope="col" class="px-5 py-2 font-medium">{{ $t("common.fields.severity") }}</th>
+					<th scope="col" class="px-2 py-2 font-medium">{{ $t("sla.targets.response") }}</th>
+					<th scope="col" class="px-2 py-2 font-medium">{{ $t("sla.targets.resolution") }}</th>
+					<th scope="col" class="px-5 py-2 text-right font-medium">{{ $t("sla.targets.kept") }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -27,7 +27,7 @@
 					<th scope="row" class="px-5 py-2.5 text-left font-medium">
 						<span class="flex items-center gap-2">
 							<span class="size-2 shrink-0 rounded-full" :class="bgClass(severityColor(row.severity))" />
-							{{ row.severity }}
+							{{ severityText(row.severity) }}
 						</span>
 					</th>
 					<td class="px-2 py-2.5 font-mono text-xs tabular-nums">
@@ -42,11 +42,10 @@
 										class="border-default text-tertiary rounded border px-1 font-sans text-[10px] leading-4"
 										data-testid="sla-business-hours"
 									>
-										business hours
+										{{ $t("sla.targets.businessHours") }}
 									</span>
 								</template>
-								These targets count working hours only: nights, weekends and holidays do not run the
-								clock.
+								{{ $t("sla.targets.businessHoursHint") }}
 							</n-tooltip>
 						</span>
 					</td>
@@ -54,14 +53,13 @@
 						<span v-if="row.opened" :class="keptClass(row.resolve_rate ?? row.acknowledge_rate)">
 							{{ formatRate(row.resolve_rate ?? row.acknowledge_rate) }}
 						</span>
-						<span v-else class="text-tertiary" title="Nothing of this severity in the period">—</span>
+						<span v-else class="text-tertiary" :title="$t('sla.targets.nothing')">—</span>
 					</td>
 				</tr>
 			</tbody>
 		</table>
 		<p class="text-tertiary px-5 pt-3 pb-4 text-xs">
-			Kept: the share resolved within target (or answered, when resolution has no outcome yet). Time spent waiting
-			on you does not count against the SOC.
+			{{ $t("sla.targets.keptNote") }}
 		</p>
 	</div>
 </template>
@@ -70,7 +68,7 @@
 import type { TargetGroup } from "./sla"
 import { NTooltip } from "naive-ui"
 import { bgClass, severityColor, textClass } from "@/components/overview/shared/status"
-import { formatRate, formatTarget, rateTone } from "./sla"
+import { formatRate, formatTarget, rateTone, severityText } from "./sla"
 
 defineProps<{
 	groups: TargetGroup[]

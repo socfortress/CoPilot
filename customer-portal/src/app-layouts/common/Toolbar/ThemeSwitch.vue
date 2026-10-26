@@ -1,5 +1,10 @@
 <template>
-	<button class="theme-switch" alt="theme-switch" aria-label="theme-switch" @click="toggleTheme">
+	<button
+		class="theme-switch"
+		:alt="$t('navigation.toolbar.theme')"
+		:aria-label="$t('navigation.toolbar.theme')"
+		@click="toggleTheme"
+	>
 		<Transition name="rotate">
 			<Icon v-if="isThemeDark" :size="20">
 				<Iconify :icon="Sunny" class="hover" />

@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Klik op een segment om naar gebeurtenissen zoeken te gaan.",
+		"fetchFailed": "Kan de paneelgegevens niet ophalen"
+	},
+	"list": {
+		"items": "items",
+		"empty": "Geen dashboards ingeschakeld",
+		"emptyHint": "Neem contact op met je beheerder om dashboards voor je account in te schakelen",
+		"custom": "Aangepast",
+		"view": "Dashboard bekijken",
+		"columns": {
+			"dashboard": "Dashboard",
+			"category": "Categorie",
+			"template": "Sjabloon"
+		}
+	},
+	"panelTable": {
+		"empty": "Geen gebeurtenissen"
+	}
+}

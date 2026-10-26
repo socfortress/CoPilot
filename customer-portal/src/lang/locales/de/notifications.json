@@ -1,0 +1,8 @@
+{
+	"bell": {
+		"title": "Benachrichtigungen",
+		"generating": "{count} Bericht wird erstellt | {count} Berichte werden erstellt",
+		"viewAll": "Alle anzeigen",
+		"loadOlder": "Ältere Benachrichtigungen laden"
+	}
+}

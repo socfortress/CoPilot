@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Abbrechen",
+		"save": "Speichern",
+		"close": "Schließen",
+		"delete": "Löschen",
+		"edit": "Bearbeiten",
+		"reset": "Zurücksetzen",
+		"search": "Suchen",
+		"refresh": "Aktualisieren",
+		"tryAgain": "Erneut versuchen",
+		"retry": "Wiederholen",
+		"back": "Zurück",
+		"next": "Weiter",
+		"previous": "Zurück",
+		"download": "Herunterladen",
+		"export": "Exportieren",
+		"apply": "Anwenden",
+		"clear": "Leeren",
+		"confirm": "Bestätigen",
+		"remove": "Entfernen",
+		"add": "Hinzufügen",
+		"view": "Anzeigen",
+		"details": "Details",
+		"loadMore": "Mehr laden"
+	},
+	"fields": {
+		"status": "Status",
+		"customer": "Kunde",
+		"severity": "Schweregrad",
+		"created": "Erstellt",
+		"actions": "Aktionen",
+		"description": "Beschreibung",
+		"source": "Quelle",
+		"name": "Name"
+	},
+	"states": {
+		"loading": "Wird geladen...",
+		"noData": "Keine Daten"
+	},
+	"language": {
+		"label": "Sprache",
+		"saved": "Sprache gespeichert",
+		"failed": "Die Sprache konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+		"englishOnly": "Ihre Organisation bietet das Portal nur auf Englisch an.",
+		"hint": "Die Sprache des Portals für Ihr Konto, auf jedem Gerät."
+	},
+	"status": {
+		"open": "Offen",
+		"inProgress": "In Bearbeitung",
+		"waitingOnYou": "Wartet auf Sie",
+		"closed": "Geschlossen"
+	},
+	"severity": {
+		"critical": "Kritisch",
+		"high": "Hoch",
+		"medium": "Mittel",
+		"low": "Niedrig",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "Ausstehend",
+		"running": "Läuft",
+		"completed": "Abgeschlossen",
+		"failed": "Fehlgeschlagen"
+	},
+	"boolean": {
+		"yes": "Ja",
+		"no": "Nein"
+	},
+	"timeRange": {
+		"hour1": "1 Stunde",
+		"hour6": "6 Stunden",
+		"hour12": "12 Stunden",
+		"day1": "1 Tag",
+		"day2": "2 Tage",
+		"day3": "3 Tage",
+		"week1": "1 Woche",
+		"week2": "2 Wochen",
+		"month1": "1 Monat",
+		"month2": "2 Monate",
+		"month3": "3 Monate",
+		"month6": "6 Monate",
+		"year1": "1 Jahr"
+	},
+	"similarity": {
+		"high": "Hohe Ähnlichkeit",
+		"highDescription": "exakte oder nahezu exakte Treffer",
+		"good": "Gute semantische Ähnlichkeit",
+		"moderate": "Mittlere Ähnlichkeit",
+		"low": "Geringe Ähnlichkeit"
+	},
+	"elapsed": {
+		"underMinute": "<1 Min.",
+		"minutes": "{minutes} Min.",
+		"hours": "{hours} Std. {minutes} Min."
+	},
+	"dates": {
+		"invalid": "Ungültiges Datum"
+	},
+	"codeSource": {
+		"empty": "Leer",
+		"toggle": "Quellansicht umschalten"
+	},
+	"copyableValue": {
+		"copy": "Kopieren",
+		"copied": "Kopiert"
+	},
+	"keyValueFilter": {
+		"key": "Filterschlüssel",
+		"value": "Filterwert"
+	},
+	"notifications": {
+		"setRead": "Als gelesen markieren",
+		"empty": "Keine Benachrichtigungen",
+		"markAllRead": "Alle als gelesen markieren",
+		"openAlert": "Alarm öffnen",
+		"openCase": "Fall öffnen",
+		"viewReports": "Berichte anzeigen"
+	},
+	"pagination": {
+		"perPage": "{size} / Seite",
+		"desc": "Absteigend",
+		"asc": "Aufsteigend"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Alarme gesamt",
+			"cases": "Fälle gesamt",
+			"agents": "Agents gesamt",
+			"other": "{entity} gesamt"
+		},
+		"byStatus": {
+			"alerts": "Alarme nach Status",
+			"cases": "Fälle nach Status",
+			"agents": "Agents nach Status",
+			"other": "{entity} nach Status"
+		}
+	},
+	"waitingOnYou": {
+		"title": "Das SOC wartet auf Ihre Antwort",
+		"body": {
+			"alert": "Ihre Reaktionszeit für diesen Alarm ist angehalten, bis Sie antworten. Antworten Sie in den Kommentaren, um ihn an die Analysten zurückzugeben.",
+			"case": "Ihre Reaktionszeit für diesen Fall ist angehalten, bis Sie antworten. Antworten Sie in den Kommentaren, um ihn an die Analysten zurückzugeben."
+		},
+		"reply": "Antworten"
+	},
+	"charts": {
+		"total": "Gesamt"
+	},
+	"entityDetails": {
+		"viewDetails": "Details anzeigen",
+		"openPage": {
+			"alert": "Alarmseite öffnen",
+			"case": "Fallseite öffnen",
+			"agent": "Agent-Seite öffnen",
+			"other": "Seite {entity} öffnen"
+		}
+	},
+	"timeline": {
+		"title": "Zeitleiste"
+	},
+	"passwordPolicy": {
+		"requirements": "8 bis 72 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben, einer Ziffer und einem Sonderzeichen",
+		"problems": {
+			"controlCharacter": "Das Passwort darf keine Steuer- oder unsichtbaren Zeichen enthalten",
+			"tooShort": "Das Passwort muss mindestens 8 Zeichen lang sein",
+			"tooLong": "Das Passwort darf höchstens 72 Byte lang sein (ein Buchstabe mit Akzent belegt 2, ein Emoji 4)",
+			"noLowercase": "Das Passwort muss einen Kleinbuchstaben enthalten",
+			"noUppercase": "Das Passwort muss einen Großbuchstaben enthalten",
+			"noDigit": "Das Passwort muss eine Ziffer enthalten",
+			"noSymbol": "Das Passwort muss ein Sonderzeichen enthalten, z. B. ! {'@'} # $ % _ - . oder +"
+		}
+	}
+}

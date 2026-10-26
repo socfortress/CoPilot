@@ -1,0 +1,8 @@
+{
+	"bell": {
+		"title": "Notifiche",
+		"generating": "{count} report in generazione | {count} report in generazione",
+		"viewAll": "Vedi tutte",
+		"loadOlder": "Carica notifiche precedenti"
+	}
+}

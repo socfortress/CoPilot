@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<n-alert type="info">Backup codes generated. Save them — they are shown only once.</n-alert>
+		<n-alert type="info">{{ $t("auth.backupCodes.generated") }}</n-alert>
 
 		<div class="grid max-w-140 grid-cols-2 gap-2">
 			<n-code v-for="code in codes" :key="code" class="p-2 text-center">
@@ -13,13 +13,13 @@
 				<template #icon>
 					<Icon name="carbon:copy" />
 				</template>
-				Copy all
+				{{ $t("auth.backupCodes.copyAll") }}
 			</n-button>
 			<n-button size="small" secondary @click="downloadBackupCodes(codes)">
 				<template #icon>
 					<Icon name="carbon:download" />
 				</template>
-				Download .txt
+				{{ $t("auth.backupCodes.download") }}
 			</n-button>
 		</div>
 	</div>
@@ -30,6 +30,7 @@ import { useClipboard } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NAlert, NButton, NCode, useMessage } from "naive-ui"
 import { watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
@@ -37,6 +38,7 @@ defineProps<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const { copy, copied, isSupported: isCopySupported } = useClipboard()
 
 function copyBackupCodes(codes: string[]) {
@@ -44,16 +46,16 @@ function copyBackupCodes(codes: string[]) {
 }
 
 function downloadBackupCodes(codes: string[]) {
-	const text = `CoPilot — 2FA Backup Codes\n${"=".repeat(30)}\n\n${codes.join(
+	const text = `${t("auth.backupCodes.fileTitle")}\n${"=".repeat(30)}\n\n${codes.join(
 		"\n"
-	)}\n\nKeep these codes safe. Each code can only be used once.\n`
+	)}\n\n${t("auth.backupCodes.fileFooter")}\n`
 
 	saveAs(new Blob([text], { type: "text/plain" }), "copilot-2fa-backup-codes.txt")
 }
 
 watch(copied, newVal => {
 	if (newVal) {
-		message.success("Backup codes copied to clipboard")
+		message.success(t("auth.backupCodes.copied"))
 	}
 })
 </script>

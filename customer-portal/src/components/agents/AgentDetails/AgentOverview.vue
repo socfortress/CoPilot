@@ -4,7 +4,7 @@
 			<CardKV label="wazuh_agent_status">
 				<Chip
 					v-bind="statusTagProps(agent.wazuh_agent_status)"
-					:value="agent.wazuh_agent_status.toUpperCase()"
+					:value="agentStatusLabel(agent.wazuh_agent_status).toUpperCase()"
 				/>
 			</CardKV>
 
@@ -30,6 +30,7 @@ import Chip from "@/components/common/Chip.vue"
 import EntityDetailsCard from "@/components/common/entity/EntityDetailsCard.vue"
 import { statusTagProps } from "@/utils"
 import AgentCriticalSelect from "../AgentCriticalSelect.vue"
+import { agentStatusLabel } from "../agentStats"
 
 const props = defineProps<{
 	agent: Agent

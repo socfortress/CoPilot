@@ -11,14 +11,14 @@
 			/>
 		</div>
 
-		<n-empty v-else description="No comments found" class="min-h-50 justify-center" />
+		<n-empty v-else :description="$t('alerts.comments.empty')" class="min-h-50 justify-center" />
 
 		<div class="mt-10 flex flex-col gap-2">
-			<n-form-item label="Add Comment" :show-feedback="false">
+			<n-form-item :label="$t('alerts.comments.add')" :show-feedback="false">
 				<n-input
 					v-model:value.trim="newComment"
 					data-testid="comment-input"
-					placeholder="Enter your comment..."
+					:placeholder="$t('alerts.comments.placeholder')"
 					clearable
 					type="textarea"
 					:disabled="loading"
@@ -33,7 +33,7 @@
 					data-testid="comment-submit"
 					@click="addComment"
 				>
-					Add Comment
+					{{ $t("alerts.comments.add") }}
 				</n-button>
 			</div>
 		</div>
@@ -46,6 +46,7 @@ import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
@@ -62,6 +63,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const newComment = ref<string | null>(null)
@@ -81,7 +83,7 @@ async function addComment() {
 
 		emit("added", response.data.comment)
 		newComment.value = ""
-		message.success(response.data?.message || "Comment added successfully")
+		message.success(response.data?.message || t("alerts.comments.added"))
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {

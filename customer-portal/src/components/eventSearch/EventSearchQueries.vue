@@ -4,7 +4,7 @@
 			<template #trigger>
 				<n-button size="small" secondary :disabled="!available" :loading data-testid="saved-queries-toggle">
 					<template #icon><Icon name="carbon:bookmark" /></template>
-					Queries
+					{{ $t("eventSearch.queries.toggle") }}
 					<span v-if="saved.length" class="text-tertiary ml-1.5 font-mono text-xs tabular-nums">
 						{{ saved.length }}
 					</span>
@@ -21,15 +21,15 @@
 					data-testid="saved-queries-error"
 				>
 					<span class="text-error text-xs">{{ error }}</span>
-					<n-button size="tiny" secondary @click="emit('retry')">Retry</n-button>
+					<n-button size="tiny" secondary @click="emit('retry')">{{ $t("common.actions.retry") }}</n-button>
 				</div>
 				<section class="flex flex-col">
 					<header class="bg-secondary border-default flex items-baseline justify-between border-b px-3 py-2">
-						<span :class="HEAD">Saved</span>
+						<span :class="HEAD">{{ $t("eventSearch.queries.saved") }}</span>
 						<span class="text-tertiary font-mono text-xs tabular-nums">{{ saved.length }}</span>
 					</header>
 					<p v-if="!saved.length" class="text-tertiary m-0 px-3 py-3 text-xs">
-						{{ loading ? "Loading…" : "No saved query yet. Run a search, then save it with a name." }}
+						{{ loading ? $t("eventSearch.queries.loading") : $t("eventSearch.queries.noSaved") }}
 					</p>
 					<div v-else class="divide-border flex flex-col divide-y">
 						<div
@@ -41,7 +41,7 @@
 							<button
 								type="button"
 								class="flex min-w-0 grow cursor-pointer flex-col gap-0.5 text-left"
-								:title="`Run “${entry.name}”`"
+								:title="$t('eventSearch.queries.run', { name: entry.name })"
 								@click="pick(entry)"
 							>
 								<span class="text-default truncate text-sm font-medium">{{ entry.name }}</span>
@@ -56,7 +56,7 @@
 								size="tiny"
 								quaternary
 								class="opacity-60 group-hover:opacity-100"
-								:aria-label="`Delete “${entry.name}”`"
+								:aria-label="$t('eventSearch.queries.delete', { name: entry.name })"
 								data-testid="saved-query-delete"
 								@click="emit('delete', entry.id)"
 							>
@@ -68,7 +68,7 @@
 
 				<section class="border-default flex flex-col border-t">
 					<header class="bg-secondary border-default flex items-baseline justify-between border-b px-3 py-2">
-						<span :class="HEAD">Recent</span>
+						<span :class="HEAD">{{ $t("eventSearch.queries.recent") }}</span>
 						<n-button
 							v-if="recent.length"
 							text
@@ -76,11 +76,11 @@
 							data-testid="recent-queries-clear"
 							@click="emit('clearRecent')"
 						>
-							Clear
+							{{ $t("common.actions.clear") }}
 						</n-button>
 					</header>
 					<p v-if="!recent.length" class="text-tertiary m-0 px-3 py-3 text-xs">
-						{{ loading ? "Loading…" : "The searches you run show up here." }}
+						{{ loading ? $t("eventSearch.queries.loading") : $t("eventSearch.queries.noRecent") }}
 					</p>
 					<div v-else class="divide-border flex flex-col divide-y">
 						<button
@@ -107,7 +107,7 @@
 			<template #trigger>
 				<n-button size="small" secondary :disabled="!available || !canSave" data-testid="save-query-toggle">
 					<template #icon><Icon name="carbon:bookmark-add" /></template>
-					Save
+					{{ $t("common.actions.save") }}
 				</n-button>
 			</template>
 			<form
@@ -115,18 +115,20 @@
 				data-testid="save-query-form"
 				@submit.prevent="submitSave"
 			>
-				<span :class="HEAD" class="text-tertiary">Save this search as</span>
+				<span :class="HEAD" class="text-tertiary">{{ $t("eventSearch.queries.saveAs") }}</span>
 				<n-input
 					ref="nameInput"
 					v-model:value="name"
 					size="small"
-					placeholder="e.g. Failed logins on web servers"
+					:placeholder="$t('eventSearch.queries.namePlaceholder')"
 					:maxlength="80"
 					data-testid="save-query-name"
 				/>
-				<span v-if="willReplace" class="text-warning text-xs">Updates the query saved under this name.</span>
+				<span v-if="willReplace" class="text-warning text-xs">{{ $t("eventSearch.queries.willReplace") }}</span>
 				<div class="flex justify-end gap-2">
-					<n-button size="small" quaternary @click="showSave = false">Cancel</n-button>
+					<n-button size="small" quaternary @click="showSave = false">
+						{{ $t("common.actions.cancel") }}
+					</n-button>
 					<n-button
 						size="small"
 						type="primary"
@@ -134,7 +136,7 @@
 						:disabled="!name.trim()"
 						data-testid="save-query-submit"
 					>
-						Save
+						{{ $t("common.actions.save") }}
 					</n-button>
 				</div>
 			</form>

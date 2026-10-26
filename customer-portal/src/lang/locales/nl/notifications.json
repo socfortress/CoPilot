@@ -1,0 +1,8 @@
+{
+	"bell": {
+		"title": "Notificaties",
+		"generating": "{count} rapport wordt gemaakt | {count} rapporten worden gemaakt",
+		"viewAll": "Alles bekijken",
+		"loadOlder": "Oudere notificaties laden"
+	}
+}

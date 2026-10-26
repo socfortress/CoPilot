@@ -1,5 +1,5 @@
 <template>
-	<EntityDetailsButton title="Case Details" entity="case" :route="routeCaseDetails(caseId)" :size :ghost>
+	<EntityDetailsButton :title="$t('cases.caseDetailsButton.title')" entity="case" :route="routeCaseDetails(caseId)" :size :ghost>
 		<CaseDetails
 			:case-id
 			@status-updated="emit('statusUpdated', $event)"

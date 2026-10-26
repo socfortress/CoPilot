@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Click on a segment to go to the event search page.",
+		"fetchFailed": "Failed to fetch panel data"
+	},
+	"list": {
+		"items": "items",
+		"empty": "No dashboards enabled",
+		"emptyHint": "Contact your administrator to enable dashboards for your account",
+		"custom": "Custom",
+		"view": "View Dashboard",
+		"columns": {
+			"dashboard": "Dashboard",
+			"category": "Category",
+			"template": "Template"
+		}
+	},
+	"panelTable": {
+		"empty": "No events"
+	}
+}

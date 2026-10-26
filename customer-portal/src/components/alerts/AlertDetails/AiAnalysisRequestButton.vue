@@ -1,8 +1,8 @@
 <template>
 	<n-popconfirm
 		:disabled="inProgress || requesting"
-		:positive-text="hasAnalysis ? 'Run again' : 'Run analysis'"
-		negative-text="Cancel"
+		:positive-text="hasAnalysis ? $t('alerts.aiRequest.runAgain') : $t('alerts.aiRequest.run')"
+		:negative-text="$t('common.actions.cancel')"
 		@positive-click="emit('request')"
 	>
 		<template #trigger>
@@ -23,11 +23,7 @@
 			</n-button>
 		</template>
 		<div class="max-w-72" data-testid="ai-request-confirm">
-			{{
-				hasAnalysis
-					? "Ask the AI analyst to analyse this alert again? The new findings replace these once it has finished."
-					: "Ask the AI analyst to analyse this alert? The findings appear here once it has finished."
-			}}
+			{{ hasAnalysis ? $t("alerts.aiRequest.confirmAgain") : $t("alerts.aiRequest.confirm") }}
 		</div>
 	</n-popconfirm>
 </template>
@@ -37,6 +33,7 @@
 // analysis counts, and stays disabled while one is under way.
 import { NButton, NPopconfirm } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 
 const { hasAnalysis, inProgress, requesting } = defineProps<{
@@ -47,8 +44,10 @@ const { hasAnalysis, inProgress, requesting } = defineProps<{
 
 const emit = defineEmits<{ request: [] }>()
 
+const { t } = useI18n()
+
 const label = computed(() => {
-	if (inProgress) return "Analysis in progress"
-	return hasAnalysis ? "Re-run AI analysis" : "Run AI analysis"
+	if (inProgress) return t("alerts.aiRequest.inProgress")
+	return hasAnalysis ? t("alerts.aiRequest.rerun") : t("alerts.aiRequest.runAi")
 })
 </script>

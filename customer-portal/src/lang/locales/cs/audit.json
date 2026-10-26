@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Výstrahy",
+		"cases": "Případy",
+		"reports": "Zprávy",
+		"users": "Uživatelé",
+		"account": "Přihlášení a účty"
+	},
+	"actors": {
+		"member": "Uživatel portálu",
+		"soc": "SOC",
+		"other": "Jiný uživatel portálu",
+		"unknown": "Neznámý"
+	},
+	"targets": {
+		"alert": "Výstraha č. {id}",
+		"case": "Případ č. {id}",
+		"report": "Zpráva č. {id}"
+	},
+	"retention": {
+		"forever": "Uchovává se po dobu, po kterou váš SOC uchovává svůj auditní protokol.",
+		"days": "Uchovává se {count} den: starší záznamy se odstraňují. | Uchovává se {count} dny: starší záznamy se odstraňují. | Uchovává se {count} dní: starší záznamy se odstraňují."
+	},
+	"page": {
+		"title": "Auditní protokol",
+		"intro": "Kdo co udělal v portálu vaší organizace: přesunuté a okomentované výstrahy a případy, zprávy a také přihlášení a účty vašich uživatelů. Akce vašeho SOC jsou uvedeny jako SOC.",
+		"export": "Exportovat CSV",
+		"forbiddenTitle": "Auditní protokol je určen správcům vaší organizace",
+		"forbiddenText": "O tom, kdo spravuje vaši organizaci a zda se zobrazuje její auditní protokol, rozhoduje váš SOC. Pokud ho potřebujete, obraťte se na svůj kontakt v SOC.",
+		"allActivity": "Veškerá aktivita",
+		"everyone": "Všichni",
+		"from": "Od",
+		"to": "Do",
+		"allCustomers": "Všichni zákazníci",
+		"clearFilters": "Vymazat filtry",
+		"noMatches": "Těmto filtrům nic neodpovídá",
+		"empty": "Zatím nic nezaznamenáno",
+		"failed": "Nezdařilo se",
+		"total": "{count} záznam | {count} záznamy | {count} záznamů",
+		"truncated": "CSV obsahuje 10 000 nejnovějších záznamů: pro ostatní zužte období.",
+		"loadFailed": "Auditní protokol se nepodařilo načíst.",
+		"exportFailed": "Auditní protokol se nepodařilo exportovat."
+	}
+}

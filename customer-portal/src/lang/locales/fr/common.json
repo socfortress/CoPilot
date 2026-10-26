@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Annuler",
+		"save": "Enregistrer",
+		"close": "Fermer",
+		"delete": "Supprimer",
+		"edit": "Modifier",
+		"reset": "Réinitialiser",
+		"search": "Rechercher",
+		"refresh": "Actualiser",
+		"tryAgain": "Réessayer",
+		"retry": "Réessayer",
+		"back": "Retour",
+		"next": "Suivant",
+		"previous": "Précédent",
+		"download": "Télécharger",
+		"export": "Exporter",
+		"apply": "Appliquer",
+		"clear": "Effacer",
+		"confirm": "Confirmer",
+		"remove": "Retirer",
+		"add": "Ajouter",
+		"view": "Afficher",
+		"details": "Détails",
+		"loadMore": "Charger plus"
+	},
+	"fields": {
+		"status": "Statut",
+		"customer": "Client",
+		"severity": "Gravité",
+		"created": "Créé",
+		"actions": "Actions",
+		"description": "Description",
+		"source": "Source",
+		"name": "Nom"
+	},
+	"states": {
+		"loading": "Chargement...",
+		"noData": "Aucune donnée"
+	},
+	"language": {
+		"label": "Langue",
+		"saved": "Langue enregistrée",
+		"failed": "Impossible d'enregistrer la langue. Veuillez réessayer.",
+		"englishOnly": "Votre organisation propose le portail uniquement en anglais.",
+		"hint": "La langue du portail pour votre compte, sur tous vos appareils."
+	},
+	"status": {
+		"open": "Ouvert",
+		"inProgress": "En cours",
+		"waitingOnYou": "En attente de vous",
+		"closed": "Fermé"
+	},
+	"severity": {
+		"critical": "Critique",
+		"high": "Élevée",
+		"medium": "Moyenne",
+		"low": "Faible",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "En attente",
+		"running": "En cours d'exécution",
+		"completed": "Terminé",
+		"failed": "Échec"
+	},
+	"boolean": {
+		"yes": "Oui",
+		"no": "Non"
+	},
+	"timeRange": {
+		"hour1": "1 heure",
+		"hour6": "6 heures",
+		"hour12": "12 heures",
+		"day1": "1 jour",
+		"day2": "2 jours",
+		"day3": "3 jours",
+		"week1": "1 semaine",
+		"week2": "2 semaines",
+		"month1": "1 mois",
+		"month2": "2 mois",
+		"month3": "3 mois",
+		"month6": "6 mois",
+		"year1": "1 an"
+	},
+	"similarity": {
+		"high": "Similarité élevée",
+		"highDescription": "correspondances exactes ou proches",
+		"good": "Bonne similarité sémantique",
+		"moderate": "Similarité modérée",
+		"low": "Faible similarité"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} h {minutes} min"
+	},
+	"dates": {
+		"invalid": "Date non valide"
+	},
+	"codeSource": {
+		"empty": "Vide",
+		"toggle": "basculer la vue source"
+	},
+	"copyableValue": {
+		"copy": "Copier",
+		"copied": "Copié"
+	},
+	"keyValueFilter": {
+		"key": "Clé du filtre",
+		"value": "Valeur du filtre"
+	},
+	"notifications": {
+		"setRead": "Marquer comme lue",
+		"empty": "Aucune notification",
+		"markAllRead": "Tout marquer comme lu",
+		"openAlert": "Ouvrir l'alerte",
+		"openCase": "Ouvrir le dossier",
+		"viewReports": "Voir les rapports"
+	},
+	"pagination": {
+		"perPage": "{size} / page",
+		"desc": "Décroissant",
+		"asc": "Croissant"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Total des alertes",
+			"cases": "Total des dossiers",
+			"agents": "Total des agents",
+			"other": "Total : {entity}"
+		},
+		"byStatus": {
+			"alerts": "Alertes par statut",
+			"cases": "Dossiers par statut",
+			"agents": "Agents par statut",
+			"other": "{entity} par statut"
+		}
+	},
+	"waitingOnYou": {
+		"title": "Le SOC attend votre réponse",
+		"body": {
+			"alert": "Leur délai de réponse pour cette alerte est suspendu jusqu'à votre réponse. Répondez dans les commentaires pour la renvoyer aux analystes.",
+			"case": "Leur délai de réponse pour ce dossier est suspendu jusqu'à votre réponse. Répondez dans les commentaires pour le renvoyer aux analystes."
+		},
+		"reply": "Répondre"
+	},
+	"charts": {
+		"total": "Total"
+	},
+	"entityDetails": {
+		"viewDetails": "Voir les détails",
+		"openPage": {
+			"alert": "Ouvrir la page de l'alerte",
+			"case": "Ouvrir la page du dossier",
+			"agent": "Ouvrir la page de l'agent",
+			"other": "Ouvrir la page {entity}"
+		}
+	},
+	"timeline": {
+		"title": "Chronologie"
+	},
+	"passwordPolicy": {
+		"requirements": "8 à 72 caractères, avec une majuscule, une minuscule, un chiffre et un symbole",
+		"problems": {
+			"controlCharacter": "Le mot de passe ne doit pas contenir de caractères de contrôle ou invisibles",
+			"tooShort": "Le mot de passe doit contenir au moins 8 caractères",
+			"tooLong": "Le mot de passe ne doit pas dépasser 72 octets (une lettre accentuée en occupe 2, un emoji 4)",
+			"noLowercase": "Le mot de passe doit contenir une lettre minuscule",
+			"noUppercase": "Le mot de passe doit contenir une lettre majuscule",
+			"noDigit": "Le mot de passe doit contenir un chiffre",
+			"noSymbol": "Le mot de passe doit contenir un symbole, comme ! {'@'} # $ % _ - . ou +"
+		}
+	}
+}

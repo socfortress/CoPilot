@@ -70,6 +70,9 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("PUT", "/api/siem/event_search/{customer_code}/columns"),
         ("POST", "/api/siem/event_search/{customer_code}/templates"),
         ("DELETE", "/api/siem/event_search/{customer_code}/templates/{template_id}"),
+        # Their own portal language (#1310): the user comes from the token, the language must be
+        # enabled for one of their customers.
+        ("PUT", "/api/customer_portal/languages/me"),
         # Their own notification choices and bell (#1282): every query is scoped to the caller.
         ("PUT", "/api/customer_portal/notifications/preferences"),
         ("POST", "/api/customer_portal/notifications/read"),

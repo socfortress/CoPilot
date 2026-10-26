@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "Aucune source d'événements configurée",
+		"noSourcesText": "Aucune source d'événements n'est configurée pour ce client. Contactez votre administrateur pour en configurer.",
+		"queryLabel": "Requête Lucene",
+		"autocompleteHint": "tapez # pour l'autocomplétion",
+		"selectCustomer": "Sélectionner un client",
+		"selectSource": "Sélectionner une source",
+		"queryPlaceholder": "ex. {example}",
+		"noFieldMappings": "Aucun mappage de champs trouvé",
+		"customerNeeded": "Sélectionnez un client pour rechercher",
+		"sourceNeeded": "Sélectionnez une source pour rechercher",
+		"time": "Durée",
+		"timeUnit": "Unité de temps",
+		"units": {
+			"hours": "Heures",
+			"days": "Jours",
+			"weeks": "Semaines"
+		},
+		"perPage": "{count} par page",
+		"loadSourcesFailed": "Impossible de charger les sources d'événements",
+		"queryUpdated": "« {name} » mise à jour",
+		"querySaved": "« {name} » enregistrée",
+		"saveQueryFailed": "Impossible d'enregistrer la requête",
+		"deleteQueryFailed": "Impossible de supprimer la requête",
+		"clearRecentFailed": "Impossible d'effacer les recherches récentes",
+		"sourceGone": "La source « {source} » n'est plus disponible pour ce client"
+	},
+	"results": {
+		"count": "{loaded} sur {total} événements chargés",
+		"columns": "Colonnes",
+		"ownColumns": "Vos propres colonnes",
+		"exportCsv": "Exporter en CSV",
+		"empty": "Aucun événement trouvé",
+		"emptyHint": "Essayez d'ajuster votre requête ou d'élargir la plage de temps",
+		"loadMore": "{shown} sur {total} événements • Charger plus",
+		"columnsTitle": "Colonnes · {source}",
+		"socLayout": "Disposition du SOC",
+		"defaultLayout": "Disposition par défaut",
+		"viewDetails": "Voir les détails",
+		"switchColumnsFailed": "Impossible de changer les colonnes",
+		"templateUpdated": "Modèle « {name} » mis à jour",
+		"templateSaved": "Modèle « {name} » enregistré",
+		"saveTemplateFailed": "Impossible d'enregistrer le modèle",
+		"templateDeletedNamed": "Modèle « {name} » supprimé",
+		"templateDeleted": "Modèle supprimé",
+		"deleteTemplateFailed": "Impossible de supprimer le modèle",
+		"saveColumnsFailed": "Impossible d'enregistrer les colonnes",
+		"exportedPartial": "{exported} événements exportés sur {total} : chargez-en plus pour inclure le reste",
+		"exported": "{exported} événements exportés",
+		"searchFailed": "Impossible de rechercher les événements",
+		"loadMoreFailed": "Impossible de charger plus d'événements"
+	},
+	"columns": {
+		"timestamp": "Horodatage",
+		"level": "Niveau",
+		"source": "Source",
+		"rule": "Règle"
+	},
+	"details": {
+		"title": "Détails de l'événement",
+		"filterFor": "Filtrer sur cette valeur",
+		"exclude": "Exclure cette valeur"
+	},
+	"queries": {
+		"toggle": "Requêtes",
+		"saved": "Enregistrées",
+		"recent": "Récentes",
+		"loading": "Chargement…",
+		"noSaved": "Aucune requête enregistrée pour l'instant. Lancez une recherche, puis enregistrez-la sous un nom.",
+		"noRecent": "Les recherches que vous lancez apparaissent ici.",
+		"run": "Lancer « {name} »",
+		"delete": "Supprimer « {name} »",
+		"saveAs": "Enregistrer cette recherche sous",
+		"namePlaceholder": "ex. Échecs de connexion sur les serveurs web",
+		"willReplace": "Met à jour la requête enregistrée sous ce nom.",
+		"loadFailed": "Impossible de charger vos recherches enregistrées",
+		"lastHours": "{count} dernière heure | {count} dernières heures",
+		"lastDays": "{count} dernier jour | {count} derniers jours",
+		"lastWeeks": "{count} dernière semaine | {count} dernières semaines"
+	},
+	"layouts": {
+		"toggle": "Disposition",
+		"title": "Dispositions",
+		"custom": "Personnalisée",
+		"deleteTemplate": "Supprimer le modèle « {name} »",
+		"noTemplates": "Aucun modèle pour l'instant : organisez les colonnes, puis enregistrez-les comme modèle.",
+		"manage": "Gérer les colonnes et les modèles"
+	},
+	"deleteConfirm": {
+		"label": "Supprimer le modèle « {name} » ?",
+		"question": "Supprimer {name} ?"
+	},
+	"preview": {
+		"columns": "{count} colonne | {count} colonnes",
+		"header": "En-tête",
+		"field": "Champ"
+	},
+	"picker": {
+		"shown": "Colonnes affichées · de gauche à droite",
+		"noneSoc": "Aucune colonne choisie : le tableau affiche la disposition du SOC pour cette source.",
+		"noneDefault": "Aucune colonne choisie : le tableau affiche la disposition par défaut.",
+		"headerOf": "En-tête de {field}",
+		"moveLeft": "Déplacer à gauche",
+		"moveRight": "Déplacer à droite",
+		"remove": "Retirer {field}",
+		"addField": "Ajouter un champ",
+		"searchFields": "Rechercher dans les champs de la source",
+		"noFields": "Aucune liste de champs pour cette source",
+		"templates": "Modèles pour cette source",
+		"loadTitle": "Placer les colonnes de « {name} » ci-dessus, pour les ajuster ou les appliquer",
+		"load": "Charger",
+		"templateNamePlaceholder": "Enregistrer les colonnes ci-dessus sous…",
+		"saveTemplate": "Enregistrer comme modèle",
+		"willReplace": "Met à jour le modèle enregistré sous ce nom.",
+		"backToSoc": "Revenir à la disposition du SOC",
+		"backToDefault": "Revenir à la disposition par défaut"
+	}
+}

@@ -9,7 +9,7 @@
 				v-model="severityModel"
 				:options="severityOptions(data?.severities ?? [], !countsKnown)"
 				:loading="!countsKnown"
-				label="Filter by severity"
+				:label="$t('exposure.vulnerabilities.severityFilter')"
 				testid="exposure-severity"
 			/>
 
@@ -19,7 +19,7 @@
 					v-model:value="searchInput"
 					size="small"
 					clearable
-					placeholder="Search a CVE id or a package"
+					:placeholder="$t('exposure.vulnerabilities.searchPlaceholder')"
 					class="col-span-2 min-w-0 @xl:flex-1 @2xl:max-w-80!"
 					:maxlength="100"
 					data-testid="exposure-search"
@@ -44,14 +44,14 @@
 					@click="exportCsv()"
 				>
 					<template #icon><Icon name="carbon:download" /></template>
-					Export CSV
+					{{ $t("exposure.vulnerabilities.exportCsv") }}
 				</n-button>
 			</div>
 
 			<n-alert v-if="failure" type="error" :bordered="false" data-testid="exposure-error">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<span>{{ failure }}</span>
-					<n-button size="small" secondary @click="reload()">Try again</n-button>
+					<n-button size="small" secondary @click="reload()">{{ $t("common.actions.tryAgain") }}</n-button>
 				</div>
 			</n-alert>
 
@@ -64,12 +64,12 @@
 					class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
 					:class="COLUMNS"
 				>
-					<span :class="HEAD">Severity</span>
-					<span :class="HEAD">Vulnerability</span>
-					<span :class="HEAD" class="text-right">Agents</span>
+					<span :class="HEAD">{{ $t("common.fields.severity") }}</span>
+					<span :class="HEAD">{{ $t("exposure.vulnerabilities.columns.vulnerability") }}</span>
+					<span :class="HEAD" class="text-right">{{ $t("exposure.vulnerabilities.columns.agents") }}</span>
 					<span :class="HEAD" class="text-right">CVSS</span>
 					<span :class="HEAD" class="text-right">EPSS</span>
-					<span :class="HEAD">First seen</span>
+					<span :class="HEAD">{{ $t("exposure.vulnerabilities.columns.firstSeen") }}</span>
 					<span />
 				</div>
 
@@ -80,10 +80,10 @@
 					v-else-if="!data.cves.length"
 					:description="
 						data.agents_in_scope === 0
-							? 'No agent to assess yet'
+							? $t('exposure.vulnerabilities.noAgent')
 							: state.severity || state.search
-								? 'No vulnerability matches the filters'
-								: 'No vulnerabilities found on your agents'
+								? $t('exposure.vulnerabilities.noMatch')
+								: $t('exposure.vulnerabilities.none')
 					"
 					class="min-h-40 justify-center"
 					data-testid="exposure-empty"
@@ -101,7 +101,9 @@
 					>
 						<!-- Everything sits on the CVE id's line: the chip, the figures and the chevron. -->
 						<span class="flex h-5 items-center [grid-area:sev]">
-							<span :class="[CHIP, severityClasses(row.severity)]">{{ row.severity ?? "unknown" }}</span>
+							<span :class="[CHIP, severityClasses(row.severity)]">{{
+								row.severity ? severityText(row.severity) : $t("exposure.vulnerabilities.unknownSeverity")
+							}}</span>
 						</span>
 						<span class="flex min-w-0 flex-col gap-0.5 leading-tight [grid-area:vuln]">
 							<span class="text-default truncate font-mono text-sm">{{ row.cve_id }}</span>
@@ -114,18 +116,20 @@
 							</span>
 						</span>
 						<span class="text-default text-right font-mono text-sm tabular-nums [grid-area:hosts]">
-							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">agents</span>
+							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">{{ $t("exposure.vulnerabilities.agentsShort") }}</span>
 							{{ row.hosts.toLocaleString() }}
 						</span>
 						<span
 							class="text-right font-mono text-sm tabular-nums [grid-area:cvss]"
 							:class="cvssClass(row.cvss)"
 						>
-							<span class="text-tertiary mr-1 text-xs font-normal uppercase @3xl:hidden">cvss</span>
+							<span class="text-tertiary mr-1 text-xs font-normal uppercase @3xl:hidden">
+								{{ $t("exposure.vulnerabilities.cvssShort") }}
+							</span>
 							{{ formatCvss(row.cvss) }}
 						</span>
 						<span class="text-secondary text-right font-mono text-sm tabular-nums [grid-area:epss]">
-							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">epss</span>
+							<span class="text-tertiary mr-1 text-xs uppercase @3xl:hidden">{{ $t("exposure.vulnerabilities.epssShort") }}</span>
 							{{ formatEpss(row.epss) }}
 						</span>
 						<span
@@ -162,7 +166,7 @@
 					class="text-tertiary border-default border-t px-4 py-2 text-xs"
 					data-testid="exposure-truncated"
 				>
-					Only the 10,000 highest-scoring CVEs are ranked: narrow the search or the severity to see the rest.
+					{{ $t("exposure.vulnerabilities.truncated") }}
 				</p>
 			</section>
 		</template>
@@ -179,6 +183,7 @@ import { refDebounced } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NAlert, NButton, NEmpty, NInput, NPagination, NSkeleton, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import FilterStrip from "@/components/agents/AgentDetails/FilterStrip.vue"
@@ -195,6 +200,7 @@ import {
 	PAGE_SIZE,
 	severityClasses,
 	severityOptions,
+	severityText,
 	totalsLine,
 	vulnerabilityStateFromQuery,
 	withExposureQuery
@@ -221,6 +227,7 @@ const COLUMNS_ROW = [
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 const customerFilterStore = useCustomerFilterStore()
 
@@ -233,7 +240,11 @@ const pageCount = computed(() => Math.max(1, Math.ceil(Math.min(data.value?.tota
 const rangeLabel = computed(() => {
 	const total = data.value?.total_cves ?? 0
 	const start = (state.value.page - 1) * PAGE_SIZE + 1
-	return `${start.toLocaleString()}–${Math.min(start + PAGE_SIZE - 1, total).toLocaleString()} of ${total.toLocaleString()} CVEs`
+	return t("exposure.vulnerabilities.range", {
+		start: start.toLocaleString(),
+		end: Math.min(start + PAGE_SIZE - 1, total).toLocaleString(),
+		total: total.toLocaleString()
+	})
 })
 
 function write(next: Partial<VulnerabilityState>) {
@@ -290,10 +301,10 @@ async function exportCsv() {
 		)
 		saveAs(response.data, exportFilename({ severity, search }))
 		if (response.headers?.["x-export-truncated"] === "true") {
-			message.warning("The CSV holds the first 100,000 findings: narrow the severity or the search for the rest.")
+			message.warning(t("exposure.vulnerabilities.exportTruncated"))
 		}
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Could not export the vulnerabilities.")
+		message.error(getApiErrorMessage(err as ApiError) || t("exposure.vulnerabilities.exportFailed"))
 	} finally {
 		exporting.value = false
 	}

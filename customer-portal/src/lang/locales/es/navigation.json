@@ -1,0 +1,45 @@
+{
+	"portalName": "Portal de clientes",
+	"routes": {
+		"overview": "Resumen",
+		"alerts": "Alertas",
+		"alertDetails": "Detalles de la alerta",
+		"cases": "Casos",
+		"caseDetails": "Detalles del caso",
+		"agents": "Agentes",
+		"agentDetails": "Detalles del agente",
+		"reports": "Informes",
+		"eventSearch": "Búsqueda de eventos",
+		"dashboards": "Paneles",
+		"dashboardDetails": "Detalles del panel",
+		"exposure": "Exposición",
+		"users": "Usuarios",
+		"auditLog": "Registro de auditoría",
+		"activity": "Actividad",
+		"sla": "Niveles de servicio",
+		"profile": "Perfil",
+		"login": "Inicio de sesión",
+		"changePassword": "Elige una nueva contraseña"
+	},
+	"sidebar": {
+		"documentation": "Documentación"
+	},
+	"toolbar": {
+		"fullscreen": "Pantalla completa",
+		"theme": "Cambiar tema",
+		"shortcuts": "Accesos directos",
+		"yourProfile": "Tu perfil",
+		"logout": "Cerrar sesión"
+	},
+	"customerFilter": {
+		"placeholder": "Todos los clientes"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Página no encontrada",
+		"home": "Ir al inicio"
+	}
+}

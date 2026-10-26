@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "elementi",
+		"empty": "Nessun alert trovato",
+		"clearFilters": "Rimuovi i filtri",
+		"columns": {
+			"alert": "Alert",
+			"assets": "Asset",
+			"tags": "Tag"
+		}
+	},
+	"statusSelect": {
+		"updated": "Stato dell'alert aggiornato a {status}"
+	},
+	"detailsButton": {
+		"title": "Dettagli alert"
+	},
+	"linkAlert": {
+		"linkAlert": "Collega alert",
+		"link": "Collega",
+		"idsRequired": "Gli ID del caso e dell'alert sono obbligatori",
+		"linked": "Alert collegato al caso",
+		"genericError": "Si è verificato un errore. Riprova più tardi."
+	},
+	"details": {
+		"error": "Errore",
+		"notFound": "Alert non trovato.",
+		"tabs": {
+			"overview": "Panoramica",
+			"assets": "Asset",
+			"linkedCases": "Casi collegati ({count})",
+			"iocs": "Indicatori di compromissione (IoC)",
+			"aiReport": "Report AI",
+			"comments": "Commenti ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Nome dell'alert",
+		"escalated": "In escalation",
+		"assignedTo": "Assegnato a"
+	},
+	"assets": {
+		"agentId": "ID agent",
+		"velociraptorId": "ID Velociraptor",
+		"assetName": "Nome asset",
+		"empty": "Nessun asset trovato"
+	},
+	"iocs": {
+		"empty": "Nessun indicatore di compromissione trovato"
+	},
+	"cases": {
+		"createCase": "Crea caso",
+		"linkCase": "Collega caso",
+		"assignedTo": "Assegnato a",
+		"created": "Creato: {date}",
+		"caseNumber": "Caso #{id}",
+		"empty": "Nessun caso collegato",
+		"createdSuccess": "Caso creato",
+		"genericError": "Si è verificato un errore. Riprova più tardi."
+	},
+	"comments": {
+		"empty": "Nessun commento",
+		"add": "Aggiungi commento",
+		"placeholder": "Scrivi il tuo commento...",
+		"added": "Commento aggiunto",
+		"updated": "Commento aggiornato",
+		"deleted": "Commento eliminato",
+		"confirmDelete": "Vuoi davvero eliminare questo commento?"
+	},
+	"aiReport": {
+		"error": "Errore",
+		"investigation": "Indagine",
+		"started": "Avviata",
+		"completed": "Completata",
+		"requestedTitle": "Analisi AI richiesta",
+		"requestedText": "L'analista AI la prenderà in carico a breve. Questa pagina si aggiorna da sola e, al termine, i nuovi risultati sostituiranno questi.",
+		"progressTitle": "Indagine in corso",
+		"progressFor": "L'analista AI sta lavorando a questo alert da {elapsed}. I risultati appariranno qui al termine dell'indagine.",
+		"progress": "L'analista AI sta lavorando a questo alert. I risultati appariranno qui al termine dell'indagine.",
+		"stalledTitle": "L'indagine non è stata completata",
+		"stalledText": "L'analista AI ha smesso di lavorare a questo alert prima di scriverne i risultati.",
+		"stalledCanRequest": "Puoi richiedere una nuova analisi.",
+		"summary": "Riepilogo",
+		"recommendedActions": "Azioni consigliate",
+		"fullReport": "Report completo",
+		"iocsTitle": "Indicatori individuati dall'analista AI",
+		"vtVerdict": "Verdetto VT",
+		"vtScore": "Punteggio VT",
+		"generated": "Report generato il {date}",
+		"notEnabled": "I risultati dell'analista AI non sono abilitati per questo cliente",
+		"requestedEmpty": "Analisi AI richiesta: i risultati appariranno qui quando l'analista AI avrà finito",
+		"noAnalysis": "Per questo alert non è stata eseguita alcuna analisi AI",
+		"requestFailed": "Non è stato possibile richiedere l'analisi. Riprova più tardi."
+	},
+	"aiRequest": {
+		"runAgain": "Esegui di nuovo",
+		"run": "Esegui analisi",
+		"confirmAgain": "Chiedere all'analista AI di analizzare di nuovo questo alert? Al termine, i nuovi risultati sostituiranno questi.",
+		"confirm": "Chiedere all'analista AI di analizzare questo alert? I risultati appariranno qui al termine.",
+		"inProgress": "Analisi in corso",
+		"rerun": "Riesegui l'analisi AI",
+		"runAi": "Esegui l'analisi AI"
+	},
+	"aiStatus": {
+		"queued": "In coda",
+		"analysing": "In analisi",
+		"completed": "Completata",
+		"failed": "Non riuscita",
+		"stalled": "Bloccata",
+		"unknown": "Sconosciuto"
+	},
+	"filters": {
+		"labels": {
+			"status": "Stato",
+			"source": "Origine",
+			"asset": "Asset",
+			"tag": "Tag",
+			"date": "Creato",
+			"detection": "Rilevamento",
+			"opened": "Arrivato al SOC"
+		},
+		"remove": {
+			"status": "Rimuovi il filtro per stato",
+			"source": "Rimuovi il filtro per origine",
+			"asset": "Rimuovi il filtro per asset",
+			"tag": "Rimuovi il filtro per tag",
+			"date": "Rimuovi il filtro per data di creazione",
+			"detection": "Rimuovi il filtro per rilevamento",
+			"opened": "Rimuovi il filtro per arrivo al SOC"
+		},
+		"searchTitles": "Cerca nei titoli degli alert",
+		"anyStatus": "Qualsiasi stato",
+		"anySource": "Qualsiasi origine",
+		"searchAssets": "Cerca asset",
+		"anyTags": "Uno di questi tag",
+		"from": "Da",
+		"to": "A",
+		"add": "Aggiungi filtro",
+		"clear": "Rimuovi i filtri",
+		"openedSince": "dal {date}",
+		"openedBefore": "prima del {date}"
+	}
+}

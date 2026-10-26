@@ -1,14 +1,14 @@
 <template>
 	<OverviewPanel
 		data-testid="recent-alerts"
-		title="Recent alerts"
+		:title="$t('overview.panels.recentAlerts.title')"
 		:icon="ICONS.alerts"
-		:meta="alerts.length ? `latest ${alerts.length}` : undefined"
-		:link="{ to: { name: 'AlertsList' }, label: 'All alerts' }"
+		:meta="alerts.length ? $t('overview.panels.latest', { count: alerts.length }) : undefined"
+		:link="{ to: { name: 'AlertsList' }, label: $t('overview.panels.recentAlerts.link') }"
 		:loading
 		:error
 		:empty="!alerts.length"
-		empty-text="No alerts in the selected scope"
+		:empty-text="$t('overview.panels.recentAlerts.empty')"
 		@retry="emit('retry')"
 	>
 		<template #skeleton>

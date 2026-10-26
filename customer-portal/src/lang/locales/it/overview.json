@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Panoramica della sicurezza",
+		"subtitle": "La postura di sicurezza della tua organizzazione e le ultime attività del SOC.",
+		"updated": "aggiornato {time}",
+		"refresh": "Aggiorna la panoramica",
+		"scopeAll": "tutti i clienti ({count})",
+		"scopeNone": "nessun cliente",
+		"scopeTitle": "Ambito: {customers}"
+	},
+	"status": {
+		"open": "aperto",
+		"inProgress": "in corso",
+		"waiting": "in attesa di te",
+		"closed": "chiuso",
+		"online": "online",
+		"offline": "offline"
+	},
+	"segments": {
+		"open": "aperto | aperti",
+		"inProgress": "in corso | in corso",
+		"waiting": "in attesa di te | in attesa di te",
+		"closed": "chiuso | chiusi"
+	},
+	"severity": {
+		"critical": "critica",
+		"high": "alta",
+		"medium": "media",
+		"low": "bassa",
+		"informational": "informativa",
+		"unknown": "sconosciuta"
+	},
+	"posture": {
+		"ariaLabel": "Postura di sicurezza",
+		"alerts": "Alert",
+		"cases": "Casi",
+		"agents": "Agent",
+		"openAlerts": "alert aperto | alert aperti",
+		"openCases": "caso aperto | casi aperti",
+		"online": "online",
+		"total": "{count} in totale",
+		"critical": "{count} critico | {count} critici",
+		"sparkCaption": "nuovi · {range}",
+		"sparkAlerts": "{count} alert aperto negli ultimi {days} giorni | {count} alert aperti negli ultimi {days} giorni",
+		"sparkCases": "{count} caso aperto negli ultimi {days} giorni | {count} casi aperti negli ultimi {days} giorni"
+	},
+	"activity": {
+		"unnamedAlert": "Alert senza nome",
+		"unnamedCase": "Caso senza nome",
+		"unassigned": "non assegnato",
+		"alertCount": "{count} alert | {count} alert"
+	},
+	"panels": {
+		"latest": "ultimi {count}",
+		"empty": "Niente da mostrare",
+		"aiFindings": {
+			"title": "Risultati dell'analista AI",
+			"analyzed": "{count} alert analizzato | {count} alert analizzati",
+			"highOrCritical": "alta o critica"
+		},
+		"recentAlerts": {
+			"title": "Alert recenti",
+			"link": "Tutti gli alert",
+			"empty": "Nessun alert nell'ambito selezionato"
+		},
+		"recentCases": {
+			"title": "Casi recenti",
+			"link": "Tutti i casi",
+			"empty": "Nessun caso nell'ambito selezionato"
+		}
+	},
+	"trend": {
+		"title": "Andamento",
+		"meta": "ultimi {range}",
+		"ranges": {
+			"days7": "7 giorni",
+			"days30": "30 giorni"
+		},
+		"entities": {
+			"alerts": "Alert",
+			"cases": "Casi"
+		},
+		"entityAria": "Andamento di",
+		"rangeAria": "Periodo dell'andamento",
+		"openNow": "Aperti · ora",
+		"openNowHint": "Non ancora chiusi: aperti, in corso o in attesa di te. La scheda della postura qui sopra conta solo quelli ancora aperti.",
+		"notKnown": "non noto",
+		"stillOpen": "ancora aperti",
+		"allCleared": "tutti risolti",
+		"was": "{state} · prima {count}",
+		"net": "Saldo",
+		"opened": "Nuovi",
+		"closed": "Chiusi",
+		"peakOpen": "Picco aperti",
+		"netHint": "Nuovi meno chiusi nel periodo. I chiusi includono elementi aperti prima del periodo, quindi può essere negativo.",
+		"peakHint": "Il numero più alto ancora aperto alla fine di un giorno nel periodo",
+		"netWord": {
+			"grew": "cresciuto",
+			"shrank": "diminuito",
+			"flat": "stabile"
+		},
+		"empty": {
+			"alerts": "Nessun alert aperto, chiuso o ancora aperto negli ultimi {range}",
+			"cases": "Nessun caso aperto, chiuso o ancora aperto negli ultimi {range}"
+		},
+		"table": {
+			"captionAlerts": "Alert ancora aperti alla fine di ogni giorno, nuovi e chiusi, ultimi {range}",
+			"captionCases": "Casi ancora aperti alla fine di ogni giorno, nuovi e chiusi, ultimi {range}",
+			"day": "Giorno",
+			"openAtDayEnd": "Aperti a fine giornata"
+		},
+		"chart": {
+			"ariaAlerts": "alert ancora aperti alla fine di ogni giorno in {days} giorni, con nuovi e chiusi per giorno",
+			"ariaAlertsOpen": "alert ancora aperti alla fine di ogni giorno in {days} giorni, con nuovi e chiusi per giorno, {count} ancora aperti",
+			"ariaCases": "casi ancora aperti alla fine di ogni giorno in {days} giorni, con nuovi e chiusi per giorno",
+			"ariaCasesOpen": "casi ancora aperti alla fine di ogni giorno in {days} giorni, con nuovi e chiusi per giorno, {count} ancora aperti",
+			"openAxis": "Aperti · a fine giornata",
+			"flowAxis": "Nuovi ↑  Chiusi ↓",
+			"open": "Aperti",
+			"peak": "picco {count}"
+		}
+	}
+}

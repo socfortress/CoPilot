@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Benutzer",
+		"intro": "Wer sich für Ihre Organisation an diesem Portal anmelden kann. Laden Sie Kollegen ein, deaktivieren Sie Ausgeschiedene und helfen Sie denen, die ihren Authenticator oder ihr Passwort verloren haben.",
+		"invite": "Benutzer einladen",
+		"forbiddenTitle": "Nur ein Kundenadministrator kann Benutzer verwalten",
+		"forbiddenText": "Ihr SOC entscheidet, wer die Benutzer Ihrer Organisation verwaltet. Wenden Sie sich an Ihren SOC-Ansprechpartner, wenn Sie diese Rolle benötigen.",
+		"twoFaOn": "2FA an",
+		"twoFaOff": "2FA aus",
+		"lastSignIn": "Letzte Anmeldung {date}",
+		"neverSignedIn": "Noch nie angemeldet",
+		"twoFaNotOn": "Die Zwei-Faktor-Authentifizierung ist nicht aktiviert",
+		"resetTotp": "2FA zurücksetzen",
+		"temporaryPassword": "Temporäres Passwort",
+		"enable": "Aktivieren",
+		"disable": "Deaktivieren",
+		"loadFailed": "Die Benutzer konnten nicht geladen werden.",
+		"done": "Erledigt",
+		"actionFailed": "Die Aktion ist fehlgeschlagen.",
+		"issueFailed": "Es konnte kein temporäres Passwort ausgestellt werden."
+	},
+	"confirm": {
+		"disableTitle": "{username} deaktivieren?",
+		"disableText": "Die Person kann sich nicht mehr anmelden, und eine offene Sitzung wird beendet. Sie können sie später wieder aktivieren.",
+		"resetTotpTitle": "2FA für {username} zurücksetzen?",
+		"resetTotpText": "Die Person meldet sich nur mit ihrem Passwort an und kann die Zwei-Faktor-Authentifizierung in ihrem Profil erneut einrichten.",
+		"temporaryPasswordTitle": "Ein temporäres Passwort für {username}?",
+		"temporaryPasswordText": "Das aktuelle Passwort funktioniert nicht mehr. Die Person meldet sich mit dem temporären an und wählt ein eigenes.",
+		"issue": "Ausstellen"
+	},
+	"tags": {
+		"self": "Sie",
+		"selfTitle": "Ihr eigenes Konto",
+		"admin": "Admin",
+		"adminTitle": "Verwaltet die Benutzer dieses Kunden. Von Ihrem SOC ernannt.",
+		"disabled": "Deaktiviert",
+		"disabledTitle": "Kann sich nicht anmelden",
+		"password": "Passwortänderung ausstehend",
+		"passwordTitle": "Meldet sich mit einem temporären Passwort an und muss ein eigenes wählen"
+	},
+	"invite": {
+		"title": "Benutzer einladen",
+		"introEmail": "Die Person erhält ein temporäres Passwort per E-Mail und wählt bei der ersten Anmeldung ein eigenes.",
+		"introShown": "Die Person erhält ein temporäres Passwort von Ihnen (es wird nach der Einladung einmal angezeigt) und wählt bei der ersten Anmeldung ein eigenes.",
+		"username": "Benutzername",
+		"email": "E-Mail",
+		"customers": "Sichtbare Kunden",
+		"willSee": "Die Person sieht {customer}.",
+		"submit": "Einladen",
+		"failed": "Der Benutzer konnte nicht eingeladen werden.",
+		"problems": {
+			"usernameRequired": "Geben Sie einen Benutzernamen ein",
+			"usernameInvalid": "Der Benutzername muss 3 bis 64 Zeichen lang sein: Buchstaben, Ziffern und . _ {'@'} -, beginnend mit einem Buchstaben oder einer Ziffer",
+			"emailRequired": "Geben Sie eine E-Mail-Adresse ein",
+			"emailInvalid": "Geben Sie eine gültige E-Mail-Adresse ein",
+			"customersRequired": "Wählen Sie mindestens einen Kunden"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} wurde eingeladen",
+		"title": "Ein temporäres Passwort für {username}",
+		"shownOnce": "Dieses Passwort wird nur einmal angezeigt. Geben Sie es {username} selbst. Bei der ersten Anmeldung wird ein eigenes gewählt.",
+		"shownOnceProblem": "Dieses Passwort wird nur einmal angezeigt. Geben Sie es {username} selbst: {problem} Bei der ersten Anmeldung wird ein eigenes gewählt.",
+		"emailed": "Ein temporäres Passwort wurde per E-Mail an {email} gesendet. {username} wählt bei der ersten Anmeldung ein eigenes.",
+		"copy": "Kopieren",
+		"copied": "Kopiert",
+		"done": "Fertig"
+	}
+}

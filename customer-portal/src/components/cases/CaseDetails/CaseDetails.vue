@@ -1,7 +1,7 @@
 <template>
 	<n-spin :show="loadingDetails">
 		<div class="@container min-h-50">
-			<n-alert v-if="detailsError" title="Error" type="error" :description="detailsError" />
+			<n-alert v-if="detailsError" :title="$t('cases.caseDetails.error')" type="error" :description="detailsError" />
 
 			<template v-else-if="caseData">
 				<WaitingOnYouNotice
@@ -11,7 +11,7 @@
 				/>
 
 				<n-tabs v-model:value="activeTab" type="line" animated>
-					<n-tab-pane name="overview" tab="Overview">
+					<n-tab-pane name="overview" :tab="$t('cases.caseDetails.tabs.overview')">
 						<CaseOverview
 							:case-data
 							@status-updated="handleStatusUpdated"
@@ -20,7 +20,11 @@
 					</n-tab-pane>
 					<n-tab-pane
 						name="alerts"
-						:tab="`Alerts (${caseData?.alerts?.length || caseData?.alert_ids?.length || 0})`"
+						:tab="
+							$t('cases.caseDetails.tabs.alerts', {
+								count: caseData?.alerts?.length || caseData?.alert_ids?.length || 0
+							})
+						"
 					>
 						<CaseAlerts
 							:case-data
@@ -29,20 +33,20 @@
 							@linked="handleAlertLinked"
 						/>
 					</n-tab-pane>
-					<n-tab-pane name="tasks" tab="Tasks">
+					<n-tab-pane name="tasks" :tab="$t('cases.caseDetails.tabs.tasks')">
 						<CaseTasks :case-id="caseData.id" />
 					</n-tab-pane>
-					<n-tab-pane name="timeline" tab="Timeline">
+					<n-tab-pane name="timeline" :tab="$t('cases.caseDetails.tabs.timeline')">
 						<CaseTimeline :case-id="caseData.id" />
 					</n-tab-pane>
-					<n-tab-pane name="files" tab="Files">
+					<n-tab-pane name="files" :tab="$t('cases.caseDetails.tabs.files')">
 						<CaseFiles :case-id="caseData.id" />
 					</n-tab-pane>
 					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
-					<n-tab-pane v-if="askSocEnabled" name="ask-soc" tab="Ask the SOC" display-directive="show:lazy">
+					<n-tab-pane v-if="askSocEnabled" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
 						<AskSoc entity="case" :entity-id="caseData.id" @asked="handleAsked" />
 					</n-tab-pane>
-					<n-tab-pane name="comments" :tab="`Comments (${caseData.comments?.length || 0})`">
+					<n-tab-pane name="comments" :tab="$t('cases.caseDetails.tabs.comments', { count: caseData.comments?.length || 0 })">
 						<CaseComments
 							:case-data
 							@added="handleCommentAdded"
@@ -64,6 +68,7 @@ import type { CommentItem } from "@/types/comments"
 import type { ApiError } from "@/types/common"
 import { NAlert, NSpin, NTabPane, NTabs } from "naive-ui"
 import { ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import AskSoc from "@/components/socRequests/AskSoc.vue"
@@ -86,6 +91,7 @@ const emit = defineEmits<{
 	(e: "assignedToUpdated", value: CaseAssignedUpdateSuccessPayload): void
 }>()
 
+const { t } = useI18n()
 const caseData = ref<Case | null>(null)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
@@ -104,7 +110,7 @@ async function loadCaseDetails() {
 		const response = await Api.cases.getCase(props.caseId)
 		caseData.value = response.data.cases[0] || null
 		if (!caseData.value) {
-			detailsError.value = "Case not found."
+			detailsError.value = t("cases.caseDetails.notFound")
 		}
 	} catch (err) {
 		detailsError.value = getApiErrorMessage(err as ApiError)

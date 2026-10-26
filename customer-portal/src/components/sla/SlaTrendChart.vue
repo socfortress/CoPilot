@@ -22,6 +22,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
 import VChart from "vue-echarts"
+import { useI18n } from "vue-i18n"
 import {
 	buildChartTooltipGlassBase,
 	CHART_GRID_CONTAIN_AXIS_LABELS,
@@ -46,13 +47,17 @@ use([CanvasRenderer, LineChart, TitleComponent, TooltipComponent, GridComponent]
 type ChartOption = ComposeOption<TitleComponentOption | TooltipComponentOption | GridComponentOption | LineSeriesOption>
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 
 const labels = computed(() => points.map(point => bucketLabel(point.start, bucket)))
 const decided = computed(() => points.filter(point => point.rate !== null))
 const ariaLabel = computed(() =>
 	decided.value.length
-		? `Resolution on target per period, from ${formatRate(decided.value[0]!.rate)} to ${formatRate(decided.value.at(-1)!.rate)}`
-		: "No resolution outcome in this period"
+		? t("sla.trend.ariaLabel", {
+				from: formatRate(decided.value[0]!.rate),
+				to: formatRate(decided.value.at(-1)!.rate)
+			})
+		: t("sla.trend.ariaEmpty")
 )
 
 // One measure, one axis: the share of items resolved within target per bucket, 0–100%.
@@ -68,7 +73,7 @@ const chartOption = computed((): ChartOption => {
 		return {
 			backgroundColor: "transparent",
 			title: {
-				text: "No resolution outcome yet",
+				text: t("sla.trend.noOutcome"),
 				left: "center",
 				top: "center",
 				textStyle: { color: fg, fontSize: 13, fontWeight: "normal", fontFamily }
@@ -91,8 +96,8 @@ const chartOption = computed((): ChartOption => {
 					color: primary,
 					title: labels.value[first.dataIndex ?? 0] ?? "",
 					lines: [
-						`On target: <strong>${formatRate(point.rate)}</strong>`,
-						`Opened ${point.opened} · resolved ${point.resolved}`
+						t("sla.trend.onTargetLine", { rate: `<strong>${formatRate(point.rate)}</strong>` }),
+						t("sla.trend.volumes", { opened: point.opened, resolved: point.resolved })
 					]
 				})
 			}
@@ -115,7 +120,7 @@ const chartOption = computed((): ChartOption => {
 		},
 		series: [
 			{
-				name: "On target",
+				name: t("sla.trend.onTarget"),
 				type: "line",
 				data: points.map(point => point.rate),
 				connectNulls: false,

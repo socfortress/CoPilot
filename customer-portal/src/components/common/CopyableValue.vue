@@ -10,7 +10,7 @@
 					</template>
 				</n-button>
 			</template>
-			<span class="text-xs">{{ copied ? "Copied" : "Copy" }}</span>
+			<span class="text-xs">{{ copied ? $t("common.copyableValue.copied") : $t("common.copyableValue.copy") }}</span>
 		</n-tooltip>
 	</span>
 </template>

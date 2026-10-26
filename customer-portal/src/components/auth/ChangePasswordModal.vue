@@ -5,7 +5,7 @@
 		display-directive="show"
 		class="w-[90vw]! max-w-133!"
 		segmented
-		title="Change Password"
+		:title="$t('auth.changePassword.title')"
 	>
 		<ChangePasswordForm ref="form" v-model:loading="loading" @cancel="closeModal" @success="succeeded" />
 	</n-modal>

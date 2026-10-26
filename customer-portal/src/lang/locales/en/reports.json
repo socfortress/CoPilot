@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Reports",
+		"subtitle": "Generate and download PDF activity reports for your organization",
+		"generate": "Generate Report",
+		"empty": "No reports generated yet",
+		"loadFailed": "Failed to load reports",
+		"noCustomer": "No customer available for report generation",
+		"queued": "Generating the report can take a while — you will be notified once it is ready.",
+		"queueFailed": "Failed to queue report generation",
+		"generateFailed": "Failed to generate report",
+		"downloaded": "Report downloaded successfully",
+		"downloadFailed": "Failed to download report",
+		"deleteFailed": "Failed to delete report"
+	},
+	"form": {
+		"reportName": "Report Name",
+		"reportNamePlaceholder": "Leave empty for auto-generated name",
+		"timeRange": "Time Range",
+		"customRange": "Custom Date Range",
+		"template": "Report template",
+		"selectCustomer": "Please select a customer",
+		"selectRange": "Please select a date range",
+		"ranges": {
+			"last30": "Last 30 days",
+			"last90": "Last 3 months",
+			"custom": "Custom range"
+		},
+		"templates": {
+			"full": {
+				"label": "Complete report",
+				"description": "Everything: executive summary, charts & trends, and open/closed cases with assets & IOCs."
+			},
+			"executive": {
+				"label": "Executive summary",
+				"description": "One-look synthesis: headline KPIs, service metrics and a status chart. No case detail."
+			},
+			"operational": {
+				"label": "Operational — cases",
+				"description": "Case-centric: every open/closed case in full detail (assets, IOCs, resolution). No charts."
+			},
+			"analytics": {
+				"label": "Analytics — trends",
+				"description": "Metrics-centric: executive summary plus all distribution charts and the monthly trend table. No case detail."
+			}
+		}
+	},
+	"delete": {
+		"title": "Delete Report",
+		"confirm": "Are you sure you want to delete \"{name}\"?",
+		"irreversible": "This action cannot be undone."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Complete report",
+				"description": "Executive summary, charts & trends, and open/closed cases with assets & IOCs"
+			},
+			"executive": {
+				"name": "Executive report",
+				"description": "One-look synthesis: KPIs, service metrics and a status chart"
+			},
+			"operational": {
+				"name": "Operational report",
+				"description": "Case-centric: open/closed cases in full detail (assets, IOCs, resolution)"
+			},
+			"analytics": {
+				"name": "Analytics report",
+				"description": "Metrics-centric: executive summary, all charts and the monthly trend table"
+			}
+		},
+		"alerts": "alerts",
+		"cases": "cases",
+		"open": "open",
+		"closed": "closed",
+		"status": {
+			"completed": "Completed",
+			"processing": "Generating",
+			"failed": "Failed"
+		},
+		"roles": {
+			"admin": "Admin",
+			"analyst": "Analyst",
+			"scheduler": "Scheduler",
+			"customer_user": "Customer"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Report ready",
+		"readyDescription": "\"{name}\" has been generated and is ready to download.",
+		"failedTitle": "Report failed",
+		"failedDescription": "\"{name}\" could not be generated.",
+		"timeoutTitle": "Report still running",
+		"timeoutDescription": "\"{name}\" is taking longer than expected. Check the Reports page for its status.",
+		"viewReports": "View reports"
+	}
+}

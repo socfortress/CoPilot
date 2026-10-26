@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Zprávy",
+		"subtitle": "Vytvářejte a stahujte PDF zprávy o aktivitě vaší organizace",
+		"generate": "Vytvořit zprávu",
+		"empty": "Zatím nebyly vytvořeny žádné zprávy",
+		"loadFailed": "Zprávy se nepodařilo načíst",
+		"noCustomer": "Pro vytvoření zprávy není k dispozici žádný zákazník",
+		"queued": "Vytvoření zprávy může chvíli trvat — jakmile bude hotová, dostanete oznámení.",
+		"queueFailed": "Vytvoření zprávy se nepodařilo zařadit do fronty",
+		"generateFailed": "Zprávu se nepodařilo vytvořit",
+		"downloaded": "Zpráva byla stažena",
+		"downloadFailed": "Zprávu se nepodařilo stáhnout",
+		"deleteFailed": "Zprávu se nepodařilo smazat"
+	},
+	"form": {
+		"reportName": "Název zprávy",
+		"reportNamePlaceholder": "Ponechte prázdné pro automaticky vytvořený název",
+		"timeRange": "Časové období",
+		"customRange": "Vlastní rozsah dat",
+		"template": "Šablona zprávy",
+		"selectCustomer": "Vyberte prosím zákazníka",
+		"selectRange": "Vyberte prosím rozsah dat",
+		"ranges": {
+			"last30": "Posledních 30 dní",
+			"last90": "Poslední 3 měsíce",
+			"custom": "Vlastní rozsah"
+		},
+		"templates": {
+			"full": {
+				"label": "Kompletní zpráva",
+				"description": "Vše: manažerské shrnutí, grafy a trendy a otevřené/uzavřené případy s aktivy a IOC."
+			},
+			"executive": {
+				"label": "Manažerské shrnutí",
+				"description": "Přehled na první pohled: hlavní KPI, metriky služby a graf stavů. Bez podrobností o případech."
+			},
+			"operational": {
+				"label": "Provozní — případy",
+				"description": "Zaměřeno na případy: každý otevřený/uzavřený případ podrobně (aktiva, IOC, řešení). Bez grafů."
+			},
+			"analytics": {
+				"label": "Analytika — trendy",
+				"description": "Zaměřeno na metriky: manažerské shrnutí, všechny grafy rozložení a tabulka měsíčního vývoje. Bez podrobností o případech."
+			}
+		}
+	},
+	"delete": {
+		"title": "Smazat zprávu",
+		"confirm": "Opravdu chcete smazat „{name}“?",
+		"irreversible": "Tuto akci nelze vrátit zpět."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Kompletní zpráva",
+				"description": "Manažerské shrnutí, grafy a trendy a otevřené/uzavřené případy s aktivy a IOC"
+			},
+			"executive": {
+				"name": "Manažerská zpráva",
+				"description": "Přehled na první pohled: KPI, metriky služby a graf stavů"
+			},
+			"operational": {
+				"name": "Provozní zpráva",
+				"description": "Zaměřeno na případy: otevřené/uzavřené případy podrobně (aktiva, IOC, řešení)"
+			},
+			"analytics": {
+				"name": "Analytická zpráva",
+				"description": "Zaměřeno na metriky: manažerské shrnutí, všechny grafy a tabulka měsíčního vývoje"
+			}
+		},
+		"alerts": "výstrahy",
+		"cases": "případy",
+		"open": "otevřené",
+		"closed": "uzavřené",
+		"status": {
+			"completed": "Dokončeno",
+			"processing": "Vytváří se",
+			"failed": "Selhalo"
+		},
+		"roles": {
+			"admin": "Správce",
+			"analyst": "Analytik",
+			"scheduler": "Plánovač",
+			"customer_user": "Zákazník"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Zpráva je připravena",
+		"readyDescription": "„{name}“ byla vytvořena a je připravena ke stažení.",
+		"failedTitle": "Zprávu se nepodařilo vytvořit",
+		"failedDescription": "„{name}“ se nepodařilo vytvořit.",
+		"timeoutTitle": "Zpráva se stále vytváří",
+		"timeoutDescription": "„{name}“ trvá déle, než se čekalo. Stav zjistíte na stránce Zprávy.",
+		"viewReports": "Zobrazit zprávy"
+	}
+}

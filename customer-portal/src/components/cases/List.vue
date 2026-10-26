@@ -14,7 +14,7 @@
 
 		<div class="flex flex-col gap-2">
 			<div ref="headerRef" class="flex items-center justify-between">
-				<Chip size="small" :value="loading ? 'Loading...' : pagination.total" label="items" />
+				<Chip size="small" :value="loading ? $t('common.states.loading') : pagination.total" :label="$t('cases.list.items')" />
 
 				<div class="flex items-center gap-2 whitespace-nowrap">
 					<n-pagination
@@ -42,8 +42,8 @@
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 				>
 					<template #empty>
-						<n-empty description="No cases found">
-							<template #extra>try changing the filters</template>
+						<n-empty :description="$t('cases.list.empty')">
+							<template #extra>{{ $t("cases.list.emptyHint") }}</template>
 						</n-empty>
 					</template>
 				</n-data-table>
@@ -75,6 +75,7 @@ import type { ApiError, CommonResponse, Pagination } from "@/types/common"
 import { useElementSize } from "@vueuse/core"
 import { NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import CaseAssignedSelect from "@/components/cases/CaseAssignedSelect.vue"
@@ -93,6 +94,7 @@ import { formatDate } from "@/utils/format"
 import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
 
 const message = useMessage()
+const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const data = ref<Case[]>([])
 const dFormats = useSettingsStore().dateFormat
@@ -122,20 +124,20 @@ async function loadFilterOptions(): Promise<Record<string, string[]>> {
 
 const columns = computed<DataTableColumns<Case>>(() => [
 	{
-		title: "Case Name",
+		title: t("cases.list.columns.caseName"),
 		key: "case_name",
 		fixed: simpleMode.value ? undefined : "left",
 		width: 380,
 		render: row => <div>{row.case_name}</div>
 	},
 	{
-		title: "Created",
+		title: t("common.fields.created"),
 		key: "case_creation_time",
 		minWidth: 200,
 		render: row => <span class="font-mono text-sm">{formatDate(row.case_creation_time, dFormats.datetime)}</span>
 	},
 	{
-		title: "Assigned To",
+		title: t("cases.list.columns.assignedTo"),
 		key: "assigned_to",
 		width: 120,
 		render: row => {
@@ -150,7 +152,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 		}
 	},
 	{
-		title: "Status",
+		title: t("common.fields.status"),
 		key: "status",
 		width: 200,
 		render: row => {
@@ -170,7 +172,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 		}
 	},
 	{
-		title: "Actions",
+		title: t("common.fields.actions"),
 		key: "actions",
 		width: 194,
 		render: row => {

@@ -16,6 +16,7 @@ import type { CaseStatus } from "@/types/cases"
 import type { ApiError } from "@/types/common"
 import { NSelect, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import { statusSelectOptions, workflowStatusLabel } from "@/utils/workflowStatus"
@@ -42,6 +43,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
 const selectedStatus = ref<CaseStatus>(props.status)
 // The waiting status is shown while the item is in it, never offered (see workflowStatus.ts).
@@ -64,7 +66,7 @@ async function handleStatusChange(value: string) {
 
 	try {
 		await Api.cases.updateCaseStatus(props.caseId, selectedStatus.value)
-		message.success(`Case status updated to ${workflowStatusLabel(selectedStatus.value)}`)
+		message.success(t("cases.caseStatusSelect.updated", { status: workflowStatusLabel(selectedStatus.value) }))
 		emit("success", {
 			caseId: props.caseId,
 			status: selectedStatus.value

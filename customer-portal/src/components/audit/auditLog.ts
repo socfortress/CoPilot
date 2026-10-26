@@ -1,6 +1,7 @@
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue, RouteLocationRaw } from "vue-router"
 import type { AuditActor, AuditCategory, AuditEntry, AuditQuery, AuditTarget } from "@/types/audit"
 import { dayToTimestamp, isDay } from "@/components/alerts/filters/alertsFilters"
+import { i18nGlobal } from "@/lang"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 
 /**
@@ -11,16 +12,28 @@ import { workflowStatusLabel } from "@/utils/workflowStatus"
  * defaults left out. Days are the viewer's local calendar days; the API gets local midnight of
  * the first and of the day after the last, as UTC instants. Every change replaces the entry,
  * like every filter in the portal.
+ *
+ * Every text is translated when it is read (#1310), never at import, so it follows a language change.
  */
 
 export const PAGE_SIZE = 25
 
-export const CATEGORY_LABELS: Record<AuditCategory, string> = {
-	alerts: "Alerts",
-	cases: "Cases",
-	reports: "Reports",
-	users: "Users",
-	account: "Sign-ins and accounts"
+export const CATEGORY_LABELS: Readonly<Record<AuditCategory, string>> = {
+	get alerts() {
+		return i18nGlobal.t("audit.categories.alerts")
+	},
+	get cases() {
+		return i18nGlobal.t("audit.categories.cases")
+	},
+	get reports() {
+		return i18nGlobal.t("audit.categories.reports")
+	},
+	get users() {
+		return i18nGlobal.t("audit.categories.users")
+	},
+	get account() {
+		return i18nGlobal.t("audit.categories.account")
+	}
 }
 
 export const CATEGORIES = Object.keys(CATEGORY_LABELS) as AuditCategory[]
@@ -125,18 +138,18 @@ export function stateToQuery(state: AuditState, pageSize = PAGE_SIZE): AuditQuer
 
 /** Who did it, in words: one of the customer's users by name, the SOC never by name. */
 export function actorLabel(actor: AuditActor): string {
-	if (actor.kind === "member") return actor.username ?? "A portal user"
-	if (actor.kind === "soc") return "SOC"
-	if (actor.kind === "other") return "Another portal user"
-	return "Unknown"
+	if (actor.kind === "member") return actor.username ?? i18nGlobal.t("audit.actors.member")
+	if (actor.kind === "soc") return i18nGlobal.t("audit.actors.soc")
+	if (actor.kind === "other") return i18nGlobal.t("audit.actors.other")
+	return i18nGlobal.t("audit.actors.unknown")
 }
 
 /** What it was done to, in words. */
 export function targetLabel(target: AuditTarget | null): string {
 	if (!target) return ""
 	if (target.type === "user") return target.label ?? target.id
-	const kind = { alert: "Alert", case: "Case", report: "Report" }[target.type]
-	return `${kind} #${target.id}${target.label ? ` · ${target.label}` : ""}`
+	const kind = i18nGlobal.t(`audit.targets.${target.type}`, { id: target.id })
+	return `${kind}${target.label ? ` · ${target.label}` : ""}`
 }
 
 /** An alert or a case the log names, opened in its modal (whose header leads to its page). */
@@ -171,8 +184,8 @@ export function changeLabel(entry: AuditEntry): string {
 
 /** How long the log goes back. */
 export function retentionText(days: number): string {
-	if (!days) return "Kept for as long as your SOC keeps its audit log."
-	return `Kept for ${days} ${days === 1 ? "day" : "days"}: older entries are removed.`
+	if (!days) return i18nGlobal.t("audit.retention.forever")
+	return i18nGlobal.t("audit.retention.days", days)
 }
 
 export function exportFilename(now = new Date()): string {

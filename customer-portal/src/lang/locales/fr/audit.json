@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Alertes",
+		"cases": "Dossiers",
+		"reports": "Rapports",
+		"users": "Utilisateurs",
+		"account": "Connexions et comptes"
+	},
+	"actors": {
+		"member": "Un utilisateur du portail",
+		"soc": "SOC",
+		"other": "Un autre utilisateur du portail",
+		"unknown": "Inconnu"
+	},
+	"targets": {
+		"alert": "Alerte n° {id}",
+		"case": "Dossier n° {id}",
+		"report": "Rapport n° {id}"
+	},
+	"retention": {
+		"forever": "Conservé aussi longtemps que votre SOC conserve son journal d'audit.",
+		"days": "Conservé {count} jour : les entrées plus anciennes sont supprimées. | Conservé {count} jours : les entrées plus anciennes sont supprimées."
+	},
+	"page": {
+		"title": "Journal d'audit",
+		"intro": "Qui a fait quoi dans le portail de votre organisation : alertes et dossiers déplacés et commentés, rapports, ainsi que les connexions et comptes de vos utilisateurs. Les actions de votre SOC apparaissent comme SOC.",
+		"export": "Exporter en CSV",
+		"forbiddenTitle": "Le journal d'audit est réservé aux administrateurs de votre organisation",
+		"forbiddenText": "Votre SOC décide qui administre votre organisation et si son journal d'audit est affiché. Adressez-vous à votre contact SOC si vous en avez besoin.",
+		"allActivity": "Toute l'activité",
+		"everyone": "Tout le monde",
+		"from": "Du",
+		"to": "Au",
+		"allCustomers": "Tous les clients",
+		"clearFilters": "Effacer les filtres",
+		"noMatches": "Aucun résultat pour ces filtres",
+		"empty": "Rien d'enregistré pour l'instant",
+		"failed": "Échec",
+		"total": "{count} entrée | {count} entrées",
+		"truncated": "Le CSV contient les 10 000 entrées les plus récentes : réduisez la période pour obtenir les autres.",
+		"loadFailed": "Impossible de charger le journal d'audit.",
+		"exportFailed": "Impossible d'exporter le journal d'audit."
+	}
+}

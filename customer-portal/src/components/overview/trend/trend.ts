@@ -1,18 +1,29 @@
 import type { OverviewTrend, OverviewTrendHour, OverviewTrendRange } from "@/types/portal"
+import { i18nGlobal } from "@/lang"
 import dayjs from "@/utils/dayjs"
 
 export type TrendEntity = "alerts" | "cases"
 
-export const TREND_RANGES: { key: OverviewTrendRange; label: string; days: number }[] = [
-	{ key: "7d", label: "7 days", days: 7 },
-	{ key: "30d", label: "30 days", days: 30 }
+export const TREND_RANGES: { key: OverviewTrendRange; days: number }[] = [
+	{ key: "7d", days: 7 },
+	{ key: "30d", days: 30 }
 ]
 export const DEFAULT_TREND_RANGE: OverviewTrendRange = "30d"
 
-export const TREND_ENTITIES: { key: TrendEntity; label: string }[] = [
-	{ key: "alerts", label: "Alerts" },
-	{ key: "cases", label: "Cases" }
-]
+export const TREND_ENTITIES: { key: TrendEntity }[] = [{ key: "alerts" }, { key: "cases" }]
+
+const RANGE_LABEL_KEYS = { "7d": "overview.trend.ranges.days7", "30d": "overview.trend.ranges.days30" } as const
+
+/** `7 days`, in the user's language; an unknown range is shown as its code. */
+export function trendRangeLabel(range: OverviewTrendRange): string {
+	const key = RANGE_LABEL_KEYS[range as keyof typeof RANGE_LABEL_KEYS]
+	return key ? i18nGlobal.t(key) : range
+}
+
+/** `Alerts` / `Cases`, in the user's language. */
+export function trendEntityLabel(entity: TrendEntity): string {
+	return entity === "alerts" ? i18nGlobal.t("overview.trend.entities.alerts") : i18nGlobal.t("overview.trend.entities.cases")
+}
 
 export interface TrendCounts {
 	opened: number
@@ -127,9 +138,9 @@ export function trendPeak(days: TrendDay[], entity: TrendEntity): { open: number
 
 /** How the period moved the backlog, in a word beside the relative Net. */
 export function netWord(net: number): string {
-	if (net > 0) return "grew"
-	if (net < 0) return "shrank"
-	return "flat"
+	if (net > 0) return i18nGlobal.t("overview.trend.netWord.grew")
+	if (net < 0) return i18nGlobal.t("overview.trend.netWord.shrank")
+	return i18nGlobal.t("overview.trend.netWord.flat")
 }
 
 /** `+3`, `−2`, `0`: the sign is part of the figure. */

@@ -1,7 +1,7 @@
 <template>
 	<div class="flex flex-col">
 		<div class="min-h-17">
-			<div class="mb-2 text-sm">Two-Factor Authentication</div>
+			<div class="mb-2 text-sm">{{ $t("auth.totpForm.title") }}</div>
 
 			<n-collapse-transition :show="!showBackupInput">
 				<n-input-otp
@@ -31,7 +31,7 @@
 			<n-collapse-transition :show="showBackupInput">
 				<n-input
 					v-model:value="backupCode"
-					placeholder="Backup code (e.g. ABCD1234EF)"
+					:placeholder="$t('auth.totpForm.backupPlaceholder')"
 					size="large"
 					@keydown.enter="verify2fa({ useBackupCode: true })"
 				/>
@@ -48,13 +48,13 @@
 			:disabled="!isValid"
 			@click="verify2fa({ useBackupCode: showBackupInput })"
 		>
-			{{ showBackupInput ? "Use backup code" : "Verify" }}
+			{{ showBackupInput ? $t("auth.totpForm.useBackupCode") : $t("auth.totpForm.verify") }}
 		</n-button>
 
 		<div class="mt-4 flex items-center justify-between gap-2">
-			<n-button text size="small" @click="cancel2fa()">← Back to login</n-button>
+			<n-button text size="small" @click="cancel2fa()">{{ $t("auth.totpForm.backToLogin") }}</n-button>
 			<n-button text size="small" @click="showBackupInput = !showBackupInput">
-				{{ showBackupInput ? "Use authenticator code" : "Use a backup code instead" }}
+				{{ showBackupInput ? $t("auth.totpForm.useAuthenticator") : $t("auth.totpForm.useBackupInstead") }}
 			</n-button>
 		</div>
 	</div>
@@ -66,6 +66,7 @@ import type { VNodeRef } from "vue"
 import type { TOTPValidateRequest } from "@/api/endpoints/totp"
 import { NButton, NCollapseTransition, NInput, NInputOtp, useMessage } from "naive-ui"
 import { computed, onMounted, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { getSafeRedirect } from "@/utils/auth"
@@ -90,6 +91,7 @@ function allowDigitsOnly(char: string) {
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
+const { t } = useI18n()
 const twoFaCodeRef = ref<InputOtpInst | null>(null)
 const authStore = useAuthStore()
 
@@ -131,7 +133,7 @@ async function verify2fa(params?: { useBackupCode?: boolean }) {
 		await authStore.verify2fa(payload)
 		router.replace(getSafeRedirect(route.query.redirect))
 	} catch (err) {
-		message.error((err as Error)?.message || "An error occurred. Please try again later.")
+		message.error((err as Error)?.message || t("auth.signIn.genericError"))
 	} finally {
 		twoFaLoading.value = false
 	}

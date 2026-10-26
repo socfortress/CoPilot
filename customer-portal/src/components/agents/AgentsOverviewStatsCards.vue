@@ -2,7 +2,7 @@
 	<n-spin :show="loading">
 		<StatusStrip
 			:total="stats.total"
-			entity="Agents"
+			:entity="$t('agents.stats.entity')"
 			:icon="ICONS.agents"
 			:cells="agentStatusCells(stats)"
 			:split="agentStatusSplit(stats)"

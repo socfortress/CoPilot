@@ -2,7 +2,7 @@
 	<n-popover trigger="click" :show-arrow="false" to="body" placement="left" @update:show="show => show && loadList()">
 		<template #trigger>
 			<n-button :size :focusable="false" :loading="!!linkingCaseId || !!linkingAlertId" :secondary>
-				{{ label || "Link Alert" }}
+				{{ label || $t("alerts.linkAlert.linkAlert") }}
 			</n-button>
 		</template>
 
@@ -32,7 +32,7 @@
 								<template #icon>
 									<Icon name="carbon:link" />
 								</template>
-								Link
+								{{ $t("alerts.linkAlert.link") }}
 							</n-button>
 						</template>
 					</CardEntity>
@@ -60,7 +60,7 @@
 								<template #icon>
 									<Icon name="carbon:link" />
 								</template>
-								Link
+								{{ $t("alerts.linkAlert.link") }}
 							</n-button>
 						</template>
 					</CardEntity>
@@ -87,6 +87,7 @@ import type { Case } from "@/types/cases"
 import type { ApiError, Pagination } from "@/types/common"
 import { NButton, NPagination, NPopover, NSpin, useMessage } from "naive-ui"
 import { ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -108,6 +109,7 @@ const linkingCaseId = ref<number | null>(null)
 const linkingAlertId = ref<number | null>(null)
 const loading = ref(false)
 const message = useMessage()
+const { t } = useI18n()
 const pagination = ref({
 	page: 1,
 	pageSize: 5,
@@ -118,7 +120,7 @@ const alerts = ref<Alert[]>([])
 
 async function linkAlert(caseId: number, alertId: number) {
 	if (!caseId || !alertId) {
-		message.error("Case and alert IDs are required")
+		message.error(t("alerts.linkAlert.idsRequired"))
 		return
 	}
 
@@ -129,12 +131,12 @@ async function linkAlert(caseId: number, alertId: number) {
 		const res = await Api.cases.linkCaseToAlert(caseId, alertId)
 		if (res.data.success) {
 			emit("linked", alertId)
-			message.success(res.data?.message || "Alert linked to case successfully")
+			message.success(res.data?.message || t("alerts.linkAlert.linked"))
 		} else {
-			message.warning(res.data?.message || "An error occurred. Please try again later.")
+			message.warning(res.data?.message || t("alerts.linkAlert.genericError"))
 		}
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		message.error(getApiErrorMessage(err as ApiError) || t("alerts.linkAlert.genericError"))
 	} finally {
 		linkingCaseId.value = null
 		linkingAlertId.value = null

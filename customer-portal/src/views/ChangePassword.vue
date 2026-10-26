@@ -8,28 +8,28 @@
 				<Logo max-height="32px" class="justify-start!" />
 				<div class="flex flex-col gap-1.5">
 					<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">
-						Account security
+						{{ $t("auth.forcedChange.eyebrow") }}
 					</span>
 					<h1 id="change-password-title" class="text-2xl leading-tight font-semibold">
-						Choose a new password
+						{{ $t("auth.forcedChange.title") }}
 					</h1>
 					<p class="text-secondary text-sm">
-						Your password was set by your security team, so they know it too.
-						<template v-if="userName">
-							Choose your own for
-							<span class="text-default font-mono">{{ userName }}</span>
-							to continue.
-						</template>
+						{{ $t("auth.forcedChange.intro") }}
+						<i18n-t v-if="userName" keypath="auth.forcedChange.chooseFor" scope="global">
+							<template #username>
+								<span class="text-default font-mono">{{ userName }}</span>
+							</template>
+						</i18n-t>
 					</p>
 				</div>
 			</header>
 
 			<ChangePasswordForm
 				v-model:loading="loading"
-				current-label="Password you received"
-				current-placeholder="The password you were given"
-				submit-label="Save and continue"
-				cancel-label="Sign out"
+				:current-label="$t('auth.forcedChange.currentLabel')"
+				:current-placeholder="$t('auth.forcedChange.currentPlaceholder')"
+				:submit-label="$t('auth.forcedChange.submit')"
+				:cancel-label="$t('auth.forcedChange.signOut')"
 				@cancel="signOut()"
 				@success="continueToPortal()"
 			/>

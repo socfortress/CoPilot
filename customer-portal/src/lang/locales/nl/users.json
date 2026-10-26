@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Gebruikers",
+		"intro": "Wie namens je organisatie kan inloggen op dit portaal. Nodig collega's uit, schakel wie vertrokken is uit en help wie zijn authenticator of wachtwoord kwijt is.",
+		"invite": "Gebruiker uitnodigen",
+		"forbiddenTitle": "Alleen een klantbeheerder kan gebruikers beheren",
+		"forbiddenText": "Je SOC bepaalt wie de gebruikers van je organisatie beheert. Vraag je SOC-contactpersoon als je dat moet worden.",
+		"twoFaOn": "2FA aan",
+		"twoFaOff": "2FA uit",
+		"lastSignIn": "Laatst ingelogd {date}",
+		"neverSignedIn": "Nog nooit ingelogd",
+		"twoFaNotOn": "Tweestapsverificatie staat niet aan",
+		"resetTotp": "2FA resetten",
+		"temporaryPassword": "Tijdelijk wachtwoord",
+		"enable": "Inschakelen",
+		"disable": "Uitschakelen",
+		"loadFailed": "Kan de gebruikers niet laden.",
+		"done": "Klaar",
+		"actionFailed": "De actie is mislukt.",
+		"issueFailed": "Kan geen tijdelijk wachtwoord uitgeven."
+	},
+	"confirm": {
+		"disableTitle": "{username} uitschakelen?",
+		"disableText": "Deze persoon kan niet meer inloggen en een open sessie wordt beëindigd. Je kunt de gebruiker later weer inschakelen.",
+		"resetTotpTitle": "2FA van {username} resetten?",
+		"resetTotpText": "Deze persoon logt alleen met het wachtwoord in en kan tweestapsverificatie opnieuw instellen via het profiel.",
+		"temporaryPasswordTitle": "Een tijdelijk wachtwoord voor {username}?",
+		"temporaryPasswordText": "Het huidige wachtwoord werkt niet meer. De gebruiker logt in met het tijdelijke wachtwoord en kiest een eigen wachtwoord.",
+		"issue": "Uitgeven"
+	},
+	"tags": {
+		"self": "Jij",
+		"selfTitle": "Je eigen account",
+		"admin": "Beheerder",
+		"adminTitle": "Beheert de gebruikers van deze klant. Aangesteld door je SOC.",
+		"disabled": "Uitgeschakeld",
+		"disabledTitle": "Kan niet inloggen",
+		"password": "Wachtwoordwijziging in behandeling",
+		"passwordTitle": "Logt in met een tijdelijk wachtwoord en moet een eigen wachtwoord kiezen"
+	},
+	"invite": {
+		"title": "Gebruiker uitnodigen",
+		"introEmail": "De gebruiker ontvangt een tijdelijk wachtwoord per e-mail en kiest bij de eerste keer inloggen een eigen wachtwoord.",
+		"introShown": "De gebruiker ontvangt een tijdelijk wachtwoord van jou (het wordt na de uitnodiging één keer getoond) en kiest bij de eerste keer inloggen een eigen wachtwoord.",
+		"username": "Gebruikersnaam",
+		"email": "E-mail",
+		"customers": "Zichtbare klanten",
+		"willSee": "De gebruiker ziet {customer}.",
+		"submit": "Uitnodigen",
+		"failed": "Kan de gebruiker niet uitnodigen.",
+		"problems": {
+			"usernameRequired": "Voer een gebruikersnaam in",
+			"usernameInvalid": "De gebruikersnaam moet 3 tot 64 tekens zijn: letters, cijfers en . _ {'@'} -, beginnend met een letter of een cijfer",
+			"emailRequired": "Voer een e-mailadres in",
+			"emailInvalid": "Voer een geldig e-mailadres in",
+			"customersRequired": "Kies minstens één klant"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} is uitgenodigd",
+		"title": "Een tijdelijk wachtwoord voor {username}",
+		"shownOnce": "Dit wachtwoord wordt maar één keer getoond. Geef het zelf aan {username}. Bij de eerste keer inloggen wordt een eigen wachtwoord gekozen.",
+		"shownOnceProblem": "Dit wachtwoord wordt maar één keer getoond. Geef het zelf aan {username}: {problem} Bij de eerste keer inloggen wordt een eigen wachtwoord gekozen.",
+		"emailed": "Er is een tijdelijk wachtwoord gemaild naar {email}. {username} kiest bij de eerste keer inloggen een eigen wachtwoord.",
+		"copy": "Kopiëren",
+		"copied": "Gekopieerd",
+		"done": "Klaar"
+	}
+}

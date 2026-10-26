@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Annuleren",
+		"save": "Opslaan",
+		"close": "Sluiten",
+		"delete": "Verwijderen",
+		"edit": "Bewerken",
+		"reset": "Herstellen",
+		"search": "Zoeken",
+		"refresh": "Vernieuwen",
+		"tryAgain": "Opnieuw proberen",
+		"retry": "Opnieuw",
+		"back": "Terug",
+		"next": "Volgende",
+		"previous": "Vorige",
+		"download": "Downloaden",
+		"export": "Exporteren",
+		"apply": "Toepassen",
+		"clear": "Wissen",
+		"confirm": "Bevestigen",
+		"remove": "Verwijderen",
+		"add": "Toevoegen",
+		"view": "Bekijken",
+		"details": "Details",
+		"loadMore": "Meer laden"
+	},
+	"fields": {
+		"status": "Status",
+		"customer": "Klant",
+		"severity": "Ernst",
+		"created": "Aangemaakt",
+		"actions": "Acties",
+		"description": "Beschrijving",
+		"source": "Bron",
+		"name": "Naam"
+	},
+	"states": {
+		"loading": "Laden...",
+		"noData": "Geen gegevens"
+	},
+	"language": {
+		"label": "Taal",
+		"saved": "Taal opgeslagen",
+		"failed": "De taal kon niet worden opgeslagen. Probeer het opnieuw.",
+		"englishOnly": "Je organisatie biedt het portaal alleen in het Engels aan.",
+		"hint": "De taal van het portaal voor je account, op elk apparaat."
+	},
+	"status": {
+		"open": "Open",
+		"inProgress": "In behandeling",
+		"waitingOnYou": "Wacht op jou",
+		"closed": "Gesloten"
+	},
+	"severity": {
+		"critical": "Kritiek",
+		"high": "Hoog",
+		"medium": "Gemiddeld",
+		"low": "Laag",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "In afwachting",
+		"running": "Bezig",
+		"completed": "Voltooid",
+		"failed": "Mislukt"
+	},
+	"boolean": {
+		"yes": "Ja",
+		"no": "Nee"
+	},
+	"timeRange": {
+		"hour1": "1 uur",
+		"hour6": "6 uur",
+		"hour12": "12 uur",
+		"day1": "1 dag",
+		"day2": "2 dagen",
+		"day3": "3 dagen",
+		"week1": "1 week",
+		"week2": "2 weken",
+		"month1": "1 maand",
+		"month2": "2 maanden",
+		"month3": "3 maanden",
+		"month6": "6 maanden",
+		"year1": "1 jaar"
+	},
+	"similarity": {
+		"high": "Hoge gelijkenis",
+		"highDescription": "exacte of bijna exacte overeenkomsten",
+		"good": "Goede semantische gelijkenis",
+		"moderate": "Matige gelijkenis",
+		"low": "Lage gelijkenis"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} u {minutes} min"
+	},
+	"dates": {
+		"invalid": "Ongeldige datum"
+	},
+	"codeSource": {
+		"empty": "Leeg",
+		"toggle": "bronweergave wisselen"
+	},
+	"copyableValue": {
+		"copy": "Kopiëren",
+		"copied": "Gekopieerd"
+	},
+	"keyValueFilter": {
+		"key": "Filtersleutel",
+		"value": "Filterwaarde"
+	},
+	"notifications": {
+		"setRead": "Markeren als gelezen",
+		"empty": "Er zijn geen notificaties",
+		"markAllRead": "Alles als gelezen markeren",
+		"openAlert": "Melding openen",
+		"openCase": "Zaak openen",
+		"viewReports": "Rapporten bekijken"
+	},
+	"pagination": {
+		"perPage": "{size} / pagina",
+		"desc": "Aflopend",
+		"asc": "Oplopend"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Totaal meldingen",
+			"cases": "Totaal zaken",
+			"agents": "Totaal agents",
+			"other": "Totaal {entity}"
+		},
+		"byStatus": {
+			"alerts": "Meldingen per status",
+			"cases": "Zaken per status",
+			"agents": "Agents per status",
+			"other": "{entity} per status"
+		}
+	},
+	"waitingOnYou": {
+		"title": "Het SOC wacht op je antwoord",
+		"body": {
+			"alert": "Hun reactietijd voor deze melding staat stil tot je antwoordt. Reageer in de opmerkingen om die terug te geven aan de analisten.",
+			"case": "Hun reactietijd voor deze zaak staat stil tot je antwoordt. Reageer in de opmerkingen om die terug te geven aan de analisten."
+		},
+		"reply": "Reageren"
+	},
+	"charts": {
+		"total": "Totaal"
+	},
+	"entityDetails": {
+		"viewDetails": "Details bekijken",
+		"openPage": {
+			"alert": "Meldingspagina openen",
+			"case": "Zaakpagina openen",
+			"agent": "Agentpagina openen",
+			"other": "Pagina {entity} openen"
+		}
+	},
+	"timeline": {
+		"title": "Tijdlijn"
+	},
+	"passwordPolicy": {
+		"requirements": "8 tot 72 tekens, met een hoofdletter, een kleine letter, een cijfer en een symbool",
+		"problems": {
+			"controlCharacter": "Het wachtwoord mag geen besturings- of onzichtbare tekens bevatten",
+			"tooShort": "Het wachtwoord moet minstens 8 tekens lang zijn",
+			"tooLong": "Het wachtwoord mag hoogstens 72 bytes lang zijn (een letter met accent telt voor 2, een emoji voor 4)",
+			"noLowercase": "Het wachtwoord moet een kleine letter bevatten",
+			"noUppercase": "Het wachtwoord moet een hoofdletter bevatten",
+			"noDigit": "Het wachtwoord moet een cijfer bevatten",
+			"noSymbol": "Het wachtwoord moet een symbool bevatten, zoals ! {'@'} # $ % _ - . of +"
+		}
+	}
+}

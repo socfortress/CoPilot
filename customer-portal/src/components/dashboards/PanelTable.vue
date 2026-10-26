@@ -10,7 +10,7 @@
 		class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 	>
 		<template #empty>
-			<n-empty description="No events" />
+			<n-empty :description="$t('dashboards.panelTable.empty')" />
 		</template>
 	</n-data-table>
 </template>

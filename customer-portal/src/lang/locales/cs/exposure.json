@@ -1,0 +1,78 @@
+{
+	"page": {
+		"title": "Expozice",
+		"intro": "Zranitelnosti a shoda napříč všemi vašimi agenty, jak je Wazuh vidí právě teď.",
+		"vulnerabilitiesTab": "Zranitelnosti",
+		"complianceTab": "Shoda"
+	},
+	"disabled": {
+		"title": "Expozice zatím není k dispozici",
+		"text": "Váš SOC zatím nezveřejnil zranitelnosti a shodu napříč vašimi agenty. Stránka každého agenta stále zobrazuje ty jeho. Pokud je zde chcete vidět, obraťte se na svůj kontakt v SOC."
+	},
+	"counts": {
+		"cves": "{count} CVE | {count} CVE",
+		"agents": "{count} agent | {count} agenti | {count} agentů",
+		"findings": "{count} nález | {count} nálezy | {count} nálezů",
+		"policies": "{count} zásada | {count} zásady | {count} zásad"
+	},
+	"vulnerabilities": {
+		"severityFilter": "Filtrovat podle závažnosti",
+		"all": "Vše",
+		"searchPlaceholder": "Vyhledejte ID CVE nebo balíček",
+		"totals": "{cves} · {agents} · {findings}",
+		"exportCsv": "Exportovat CSV",
+		"columns": {
+			"vulnerability": "Zranitelnost",
+			"agents": "Agenti",
+			"firstSeen": "Poprvé zjištěno"
+		},
+		"agentsShort": "agenti",
+		"cvssShort": "cvss",
+		"epssShort": "epss",
+		"unknownSeverity": "neznámá",
+		"noAgent": "Zatím žádný agent k posouzení",
+		"noMatch": "Filtrům neodpovídá žádná zranitelnost",
+		"none": "Na vašich agentech nebyly nalezeny žádné zranitelnosti",
+		"range": "{start}–{end} z {total} CVE",
+		"truncated": "Seřazeno je pouze 10 000 CVE s nejvyšším skóre: pro zobrazení ostatních zužte vyhledávání nebo závažnost.",
+		"exportTruncated": "CSV obsahuje prvních 100 000 nálezů: pro ostatní zužte závažnost nebo vyhledávání.",
+		"exportFailed": "Zranitelnosti se nepodařilo exportovat.",
+		"loadFailed": "Zranitelnosti se nepodařilo načíst."
+	},
+	"cve": {
+		"heading": "Zranitelnost",
+		"published": "Zveřejněno",
+		"epssTitle": "Pravděpodobnost zneužití v příštích 30 dnech",
+		"agentsHeading": "Vaši dotčení agenti · {count}",
+		"none": "Žádný z vašich agentů ji už nemá.",
+		"truncated": "Uvedeno je pouze prvních 1 000; export CSV obsahuje všechny.",
+		"references": "Odkazy · {count}",
+		"loadFailed": "Zranitelnost se nepodařilo načíst."
+	},
+	"compliance": {
+		"averageScore": "Průměrné skóre",
+		"averageScoreCaption": "napříč všemi agenty a zásadami",
+		"agentsAssessed": "Posouzení agenti",
+		"agentsAssessedCaption": "s alespoň jednou zásadou",
+		"policies": "Zásady",
+		"policiesCaption": "{policies} s agenty pod {score} %",
+		"failedChecks": "Neúspěšné kontroly",
+		"passed": "{count} úspěšných",
+		"unavailable": "Wazuh neodpověděl za {agents}: jejich výsledky v těchto údajích chybí.",
+		"columns": {
+			"policy": "Zásada",
+			"agents": "Agenti",
+			"below": "Pod {score} %"
+		},
+		"agentsShort": "agenti",
+		"belowShort": "pod",
+		"failedShort": "neúspěšných",
+		"asking": "Dotazujeme se Wazuh na zásady každého agenta. U velkého počtu zařízení to může chvíli trvat.",
+		"noResults": "Na vašich agentech zatím nejsou žádné výsledky SCA",
+		"noAgent": "Zatím žádný agent k posouzení",
+		"policyAgents": "Agenti s touto zásadou · {count}, od nejslabšího",
+		"readAt": "Načteno z Wazuh v {time}; obnovuje se každých několik minut.",
+		"loadFailed": "Shodu se nepodařilo načíst.",
+		"agentsFailed": "Agenty zásady se nepodařilo načíst."
+	}
+}

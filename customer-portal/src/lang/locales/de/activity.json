@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Aktivität",
+		"intro": "Was für Sie beim SOC eingegangen ist, woher es kam und wie es bewertet wurde, im Vergleich zum vorherigen Zeitraum.",
+		"refreshError": "Die Zahlen konnten nicht aktualisiert werden: {error}",
+		"disabledTitle": "Die Aktivität ist noch nicht verfügbar",
+		"disabledText": "Ihr SOC hat die Aufschlüsselung der Aktivität für diesen Kunden noch nicht veröffentlicht. Wenden Sie sich an Ihren SOC-Ansprechpartner, wenn Sie sie hier sehen möchten.",
+		"note": "Gezählt ab dem Eingang jedes Alarms und Falls beim SOC, {period}. Wählen Sie eine Zahl aus, um diese Alarme aufzulisten.",
+		"periodText": "über die letzten {period} und die {period} davor",
+		"periodMeta": "letzte {period}",
+		"severityNote": "Ein Alarm, dessen Quelle keinen Schweregrad gesendet hat, zählt mit der Standardstufe des SOC.",
+		"otherSources": "Andere Quellen: {count} ({previous} im vorherigen Zeitraum)"
+	},
+	"range": "{count} Tage",
+	"panels": {
+		"sources": "Alarme nach Quelle",
+		"severities": "Alarme nach Schweregrad",
+		"detections": "Häufigste Erkennungen",
+		"assets": "Häufigste Assets",
+		"tags": "Häufigste Tags",
+		"noAlertsEither": "In keinem der beiden Zeiträume Alarme",
+		"noAlerts": "Keine Alarme in diesem Zeitraum",
+		"noAssets": "Kein Alarm hat in diesem Zeitraum ein Asset genannt",
+		"noTags": "Kein Alarm mit Tag in diesem Zeitraum"
+	},
+	"cases": {
+		"title": "Fälle",
+		"empty": "In keinem der beiden Zeiträume wurde ein Fall eröffnet",
+		"byType": "Nach Typ",
+		"byStatus": "Aktueller Stand der eröffneten Fälle"
+	},
+	"verdicts": {
+		"title": "Die Bewertungen des SOC",
+		"truePositives": "Echte Treffer",
+		"falsePositives": "Fehlalarme",
+		"untriaged": "Noch nicht geprüft",
+		"reasons": "Warum Alarme Fehlalarme waren",
+		"noisy": "Erkennungen mit den meisten Fehlalarmen",
+		"noFalsePositive": "Kein Fehlalarm in diesem Zeitraum.",
+		"noisyCount": "{falsePositives} von {reviewed} geprüft · {rate}"
+	},
+	"kpi": {
+		"alerts": "Eingegangene Alarme",
+		"cases": "Eröffnete Fälle",
+		"falsePositives": "Fehlalarme",
+		"coverage": "Vom SOC geprüft",
+		"periodBefore": "{count} im vorherigen Zeitraum",
+		"changeTitle": "Veränderung gegenüber dem vorherigen Zeitraum",
+		"pointsTitle": "Prozentpunkte gegenüber dem vorherigen Zeitraum",
+		"ofReviewed": "von {count} geprüften",
+		"nothingReviewed": "noch nichts geprüft",
+		"ofAlerts": "{reviewed} von {total} Alarmen",
+		"noAlerts": "keine Alarme in diesem Zeitraum"
+	},
+	"delta": {
+		"new": "neu",
+		"points": "{points} Pkt."
+	},
+	"rank": {
+		"previousTitle": "Vorheriger Zeitraum: {count}",
+		"countLabel": "{count} in diesem Zeitraum",
+		"previousLabel": "{count} im vorherigen Zeitraum",
+		"was": "vorher {count}"
+	}
+}

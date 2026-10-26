@@ -5,7 +5,7 @@
 				v-model:value="filters.status"
 				data-testid="agents-status"
 				:options="statusOptions"
-				placeholder="Status"
+				:placeholder="$t('common.fields.status')"
 				:consistent-menu-width="false"
 				clearable
 			/>
@@ -14,7 +14,7 @@
 			<n-select
 				v-model:value="filters.os"
 				:options="osOptions"
-				placeholder="Operating System"
+				:placeholder="$t('agents.filters.os')"
 				:consistent-menu-width="false"
 				clearable
 			/>
@@ -22,14 +22,14 @@
 		<div>
 			<n-input
 				v-model:value="filters.search"
-				placeholder="Search (hostname, ip address, agent id)"
+				:placeholder="$t('agents.filters.search')"
 				clearable
 				data-testid="agents-search"
 			/>
 		</div>
 		<div class="flex items-center justify-between gap-2">
-			<n-checkbox v-model:checked="filters.critical">Critical Assets</n-checkbox>
-			<n-button size="small" secondary @click="resetFilters">Reset filters</n-button>
+			<n-checkbox v-model:checked="filters.critical">{{ $t("agents.filters.critical") }}</n-checkbox>
+			<n-button size="small" secondary @click="resetFilters">{{ $t("agents.filters.reset") }}</n-button>
 		</div>
 	</div>
 </template>
@@ -38,6 +38,7 @@
 import type { AgentStatus } from "@/types/agents"
 import { NButton, NCheckbox, NInput, NSelect } from "naive-ui"
 import { computed } from "vue"
+import { agentStatusLabel } from "./agentStats"
 
 export interface AgentsFilters {
 	status: AgentStatus | null
@@ -54,7 +55,7 @@ const props = defineProps<{
 const filters = defineModel<AgentsFilters>("value", { required: true })
 
 const statusOptions = computed(() => {
-	return props.status.map(status => ({ label: status, value: status }))
+	return props.status.map(status => ({ label: agentStatusLabel(status), value: status }))
 })
 
 const osOptions = computed(() => {

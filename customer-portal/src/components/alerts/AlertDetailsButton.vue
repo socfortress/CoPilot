@@ -1,5 +1,11 @@
 <template>
-	<EntityDetailsButton title="Alert Details" entity="alert" :route="routeAlertDetails(alertId)" :size :ghost>
+	<EntityDetailsButton
+		:title="$t('alerts.detailsButton.title')"
+		entity="alert"
+		:route="routeAlertDetails(alertId)"
+		:size
+		:ghost
+	>
 		<AlertDetails :alert-id @status-updated="emit('statusUpdated', $event)" />
 	</EntityDetailsButton>
 </template>

@@ -1,4 +1,5 @@
 import type { AgentScaCheck, AgentScaPolicy, AgentVulnerability, VulnerabilitySeverity } from "@/types/agents"
+import { i18nGlobal } from "@/lang"
 
 /**
  * What an agent's Vulnerabilities and SCA tabs show (#1256), as pure functions: filtering,
@@ -54,6 +55,17 @@ export function filterVulnerabilities(
 				(b.cvss3_score ?? -1) - (a.cvss3_score ?? -1) ||
 				(a.cve ?? "").localeCompare(b.cve ?? "")
 		)
+}
+
+/**
+ * A severity as the reader's language names it: a known one by its label, anything else Wazuh
+ * sent as it came, and none as "unknown". "All" names the filter that shows every severity.
+ */
+export function severityLabel(severity: string | null | undefined): string {
+	if (severity === "All") return i18nGlobal.t("agents.findings.severity.All")
+	const known = normalizeSeverity(severity)
+	if (known) return i18nGlobal.t(`agents.findings.severity.${known}`)
+	return severity ?? i18nGlobal.t("agents.findings.severity.unknown")
 }
 
 /** Tailwind classes of a severity chip: a word, an outline, a tint — coloured by how bad it is. */
@@ -117,6 +129,29 @@ export function filterScaChecks(
 	return checks
 		.filter(c => (result === "all" || c.result.toLowerCase() === result) && matches(needle, c.title, String(c.id)))
 		.sort((a, b) => order(a) - order(b) || a.id - b.id)
+}
+
+/** A check's result as the reader's language names it; one Wazuh reports otherwise is shown as it came. */
+export function scaResultLabel(result: string): string {
+	switch (result.toLowerCase()) {
+		case "failed":
+			return i18nGlobal.t("agents.findings.results.failed")
+		case "passed":
+			return i18nGlobal.t("agents.findings.results.passed")
+		case "not applicable":
+			return i18nGlobal.t("agents.findings.results.notApplicable")
+		default:
+			return result
+	}
+}
+
+/** "1–25 of 300": the rows a page shows, out of how many. */
+export function pageRangeLabel(from: number, to: number, total: number): string {
+	return i18nGlobal.t("agents.findings.range", {
+		from: from.toLocaleString(),
+		to: to.toLocaleString(),
+		total: total.toLocaleString()
+	})
 }
 
 export function scaResultClasses(result: string): string {

@@ -1,13 +1,14 @@
 import type { TenantUser } from "@/types/users"
+import { i18nGlobal } from "@/lang"
 
 /**
  * Pure logic of the Users page (#1296): what an invitation must satisfy before it is sent (the
- * API's own rules, so the form never accepts what it refuses) and how a user's state reads.
+ * API's own rules, so the form never accepts what it refuses) and how a user's state reads. Its
+ * texts are translated when they are asked for (#1310), so they follow a language change.
  */
 
-/** The API's username rule (`schema/tenant_users.py:USERNAME_PATTERN`). */
+/** The API's username rule (`schema/tenant_users.py:USERNAME_PATTERN`), worded in `users.invite.problems.usernameInvalid`. */
 export const USERNAME_PATTERN = /^[A-Z0-9][\w.@-]{2,63}$/i
-export const USERNAME_RULE = "3 to 64 characters: letters, digits and . _ @ -, starting with a letter or a digit"
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 
 export interface InviteForm {
@@ -20,12 +21,13 @@ export interface InviteForm {
 export function inviteProblems(form: InviteForm): Partial<Record<keyof InviteForm, string>> {
 	const problems: Partial<Record<keyof InviteForm, string>> = {}
 	const username = form.username.trim()
-	if (!username) problems.username = "Enter a username"
-	else if (!USERNAME_PATTERN.test(username)) problems.username = `Username must be ${USERNAME_RULE}`
+	const t = i18nGlobal.t
+	if (!username) problems.username = t("users.invite.problems.usernameRequired")
+	else if (!USERNAME_PATTERN.test(username)) problems.username = t("users.invite.problems.usernameInvalid")
 	const email = form.email.trim()
-	if (!email) problems.email = "Enter an email address"
-	else if (!EMAIL_PATTERN.test(email)) problems.email = "Enter a valid email address"
-	if (!form.customerCodes.length) problems.customerCodes = "Choose at least one customer"
+	if (!email) problems.email = t("users.invite.problems.emailRequired")
+	else if (!EMAIL_PATTERN.test(email)) problems.email = t("users.invite.problems.emailInvalid")
+	if (!form.customerCodes.length) problems.customerCodes = t("users.invite.problems.customersRequired")
 	return problems
 }
 
@@ -40,25 +42,28 @@ export interface StatusTag {
 
 /** The tags beside a user's name: what an admin needs to know at a glance, in that order. */
 export function statusTags(user: TenantUser): StatusTag[] {
+	const t = i18nGlobal.t
 	const tags: StatusTag[] = []
-	if (user.is_self) tags.push({ key: "self", label: "You", type: "default", title: "Your own account" })
+	if (user.is_self) {
+		tags.push({ key: "self", label: t("users.tags.self"), type: "default", title: t("users.tags.selfTitle") })
+	}
 	if (user.is_customer_admin) {
-		tags.push({
-			key: "admin",
-			label: "Admin",
-			type: "info",
-			title: "Manages this customer's users. Appointed by your SOC."
-		})
+		tags.push({ key: "admin", label: t("users.tags.admin"), type: "info", title: t("users.tags.adminTitle") })
 	}
 	if (user.disabled) {
-		tags.push({ key: "disabled", label: "Disabled", type: "error", title: "Cannot sign in" })
+		tags.push({
+			key: "disabled",
+			label: t("users.tags.disabled"),
+			type: "error",
+			title: t("users.tags.disabledTitle")
+		})
 	}
 	if (user.must_change_password && !user.disabled) {
 		tags.push({
 			key: "password",
-			label: "Password change pending",
+			label: t("users.tags.password"),
 			type: "warning",
-			title: "Signs in with a temporary password and must choose their own"
+			title: t("users.tags.passwordTitle")
 		})
 	}
 	return tags

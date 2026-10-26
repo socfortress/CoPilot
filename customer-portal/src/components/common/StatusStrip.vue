@@ -3,7 +3,7 @@
 	<section
 		class="bg-default border-default divide-border grid grid-cols-2 divide-y overflow-hidden rounded-lg border @3xl:divide-x @3xl:divide-y-0"
 		:class="WIDE_COLUMNS[cells.length + 1]"
-		:aria-label="`${entity} by status`"
+		:aria-label="byStatusLabel"
 		data-testid="status-strip"
 	>
 		<component
@@ -15,7 +15,7 @@
 		>
 			<span class="text-tertiary flex items-center gap-1.5 text-xs">
 				<Icon :name="icon" :size="14" />
-				Total {{ entity.toLowerCase() }}
+				{{ totalLabel }}
 			</span>
 			<span
 				class="font-display text-2xl leading-none font-semibold tabular-nums"
@@ -77,6 +77,8 @@
 // emits `null` ("all"), and
 // `selected` marks the one in force.
 import type { StatusSegment } from "@/components/overview/shared/status"
+import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import Icon from "@/components/common/Icon.vue"
 import { bgClass, rgbVar, textClass } from "@/components/overview/shared/status"
 import StatusBar from "@/components/overview/shared/StatusBar.vue"
@@ -105,6 +107,33 @@ const { total, entity, icon, cells, split, lift, selectable, selected } = define
 const emit = defineEmits<{
 	(e: "select", key: string | null): void
 }>()
+
+const { t } = useI18n()
+
+/**
+ * The strip's labels (#1310). The lists name their entity in English ("Alerts", "Cases", "Agents"):
+ * those read from whole translated sentences, since a noun cannot be slotted into every language's
+ * phrase; any other entity is slotted in as given.
+ */
+const KNOWN_ENTITIES = ["alerts", "cases", "agents"] as const
+type KnownEntity = (typeof KNOWN_ENTITIES)[number]
+
+const knownEntity = computed(() => {
+	const key = entity.toLowerCase()
+	return (KNOWN_ENTITIES as readonly string[]).includes(key) ? (key as KnownEntity) : null
+})
+
+const totalLabel = computed(() =>
+	knownEntity.value
+		? t(`common.statusStrip.total.${knownEntity.value}`)
+		: t("common.statusStrip.total.other", { entity: entity.toLowerCase() })
+)
+
+const byStatusLabel = computed(() =>
+	knownEntity.value
+		? t(`common.statusStrip.byStatus.${knownEntity.value}`)
+		: t("common.statusStrip.byStatus.other", { entity })
+)
 
 /** Button attributes for a cell (`null`: the total) of a selectable strip. */
 function pressable(key: string | null) {

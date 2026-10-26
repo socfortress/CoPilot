@@ -2,21 +2,20 @@
 	<div class="flex flex-col gap-6" data-testid="ask-soc">
 		<form class="flex flex-col gap-4" data-testid="ask-soc-form" @submit.prevent="send()">
 			<div class="flex flex-col gap-1">
-				<h3 class="m-0 text-base font-semibold">Ask the SOC</h3>
+				<h3 class="m-0 text-base font-semibold">{{ $t("socRequests.title") }}</h3>
 				<p class="text-secondary m-0 max-w-prose text-sm">
-					Your question goes to the SOC analysts as a comment signed by you on the
-					{{ entity === "alert" ? "case or alert you choose" : "case" }}. Their reply appears in the comments.
+					{{ entity === "alert" ? $t("socRequests.introAlert") : $t("socRequests.introCase") }}
 				</p>
 			</div>
 
 			<n-input
 				v-model:value="question"
 				type="textarea"
-				placeholder="What would you like to know?"
+				:placeholder="$t('socRequests.placeholder')"
 				:autosize="{ minRows: 3, maxRows: 10 }"
 				:status="touched && problem ? 'error' : undefined"
 				:disabled="sending"
-				:input-props="{ 'aria-label': 'Your question for the SOC' }"
+				:input-props="{ 'aria-label': $t('socRequests.questionLabel') }"
 				data-testid="ask-soc-question"
 				@blur="touched = true"
 			/>
@@ -32,7 +31,7 @@
 			</div>
 
 			<fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
-				<legend class="mb-2 text-sm font-medium">How urgent is it?</legend>
+				<legend class="mb-2 text-sm font-medium">{{ $t("socRequests.urgencyLegend") }}</legend>
 				<n-radio-group v-model:value="urgency" :disabled="sending" data-testid="ask-soc-urgency">
 					<div class="flex flex-wrap gap-x-6 gap-y-2">
 						<n-radio v-for="option of URGENCY_OPTIONS" :key="option.value" :value="option.value">
@@ -44,7 +43,7 @@
 			</fieldset>
 
 			<fieldset v-if="entity === 'alert'" class="m-0 flex flex-col gap-2 border-0 p-0">
-				<legend class="mb-2 text-sm font-medium">Where should it go?</legend>
+				<legend class="mb-2 text-sm font-medium">{{ $t("socRequests.targetLegend") }}</legend>
 				<n-radio-group v-model:value="target" :disabled="sending" data-testid="ask-soc-target">
 					<div class="flex flex-col gap-2">
 						<n-radio
@@ -75,26 +74,26 @@
 					<template #icon>
 						<Icon name="carbon:send" />
 					</template>
-					Send to the SOC
+					{{ $t("socRequests.send") }}
 				</n-button>
 			</div>
 		</form>
 
 		<section class="flex flex-col gap-3" aria-labelledby="ask-soc-history">
 			<div class="flex items-center justify-between gap-2">
-				<h3 id="ask-soc-history" class="m-0 text-base font-semibold">Questions to the SOC</h3>
+				<h3 id="ask-soc-history" class="m-0 text-base font-semibold">{{ $t("socRequests.history") }}</h3>
 				<n-spin v-if="loading" size="small" />
 			</div>
 
 			<n-alert v-if="listError" type="warning" :bordered="false" data-testid="ask-soc-list-error">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<span>{{ listError }}</span>
-					<n-button size="small" secondary @click="load()">Try again</n-button>
+					<n-button size="small" secondary @click="load()">{{ $t("common.actions.tryAgain") }}</n-button>
 				</div>
 			</n-alert>
 
 			<p v-else-if="!requests.length && !loading" class="text-secondary m-0 text-sm" data-testid="ask-soc-empty">
-				No question asked about this {{ entity }} yet.
+				{{ entity === "alert" ? $t("socRequests.emptyAlert") : $t("socRequests.emptyCase") }}
 			</p>
 
 			<ul v-else class="m-0 flex list-none flex-col gap-3 p-0">
@@ -119,7 +118,7 @@
 							</template>
 							{{ STATUS_LABELS[request.status] }}
 						</n-tag>
-						<span class="text-secondary">Urgency: {{ URGENCY_LABELS[request.urgency] }}</span>
+						<span class="text-secondary">{{ $t("socRequests.urgencyLine", { urgency: URGENCY_LABELS[request.urgency] }) }}</span>
 						<span
 							v-if="filedOn(request, entity)"
 							class="text-secondary"
@@ -132,11 +131,18 @@
 						<bdi>{{ request.question }}</bdi>
 					</p>
 					<div class="text-secondary text-xs">
-						Asked by
-						<bdi>{{ request.requested_by }}</bdi>
-						· {{ formatDate(request.requested_at, dFormats.datetime, { tz: true }) }}
+						<i18n-t keypath="socRequests.askedBy" tag="span">
+							<template #user>
+								<bdi>{{ request.requested_by }}</bdi>
+							</template>
+							<template #date>{{ formatDate(request.requested_at, dFormats.datetime, { tz: true }) }}</template>
+						</i18n-t>
 						<template v-if="request.answered_at">
-							· answered {{ formatDate(request.answered_at, dFormats.datetime, { tz: true }) }}
+							{{
+								$t("socRequests.answeredAt", {
+									date: formatDate(request.answered_at, dFormats.datetime, { tz: true })
+								})
+							}}
 						</template>
 					</div>
 				</li>
@@ -150,6 +156,7 @@ import type { ApiError } from "@/types/common"
 import type { SocRequest, SocRequestAlertTarget, SocRequestUrgency } from "@/types/socRequests"
 import { NAlert, NButton, NInput, NRadio, NRadioGroup, NSpin, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
@@ -183,6 +190,7 @@ const { entity, entityId } = defineProps<{
 const emit = defineEmits<{ asked: [request: SocRequest] }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 
 const question = ref("")
@@ -213,7 +221,7 @@ function load() {
 			openCaseId.value = res.data.open_case_id ?? null
 		},
 		err => {
-			listError.value = getApiErrorMessage(err as ApiError) || "Could not load the questions."
+			listError.value = getApiErrorMessage(err as ApiError) || t("socRequests.loadFailed")
 		}
 	)
 }
@@ -230,7 +238,7 @@ async function send() {
 			entity === "alert"
 				? await Api.socRequests.askOnAlert(entityId, { ...payload, target: target.value })
 				: await Api.socRequests.askOnCase(entityId, payload)
-		message.success("Your question was sent to the SOC")
+		message.success(t("socRequests.sent"))
 		question.value = ""
 		urgency.value = "normal"
 		target.value = "case"
@@ -239,7 +247,7 @@ async function send() {
 		await load()
 	} catch (err) {
 		// Refusals are the backend's fixed texts (switched off, too soon, the daily limit).
-		sendError.value = getApiErrorMessage(err as ApiError) || "Your question could not be sent. Please try again."
+		sendError.value = getApiErrorMessage(err as ApiError) || t("socRequests.sendFailed")
 	} finally {
 		sending.value = false
 	}

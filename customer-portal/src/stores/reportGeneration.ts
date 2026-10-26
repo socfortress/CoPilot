@@ -4,6 +4,7 @@ import { acceptHMRUpdate, defineStore } from "pinia"
 import Api from "@/api"
 import { useNotifications } from "@/composables/common/useNotifications"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
+import { i18nGlobal } from "@/lang"
 
 /**
  * Tracks report generations until the backend reports them done, wherever the user
@@ -50,6 +51,7 @@ function notify(
 	status: IncidentCustomerReportStatus["status"] | "timeout",
 	error?: string | null
 ) {
+	const { t } = i18nGlobal
 	const base = {
 		id: `report-${report.id}`,
 		category: "report" as const,
@@ -62,28 +64,28 @@ function notify(
 			? {
 					...base,
 					type: "success",
-					title: "Report ready",
-					description: `"${report.name}" has been generated and is ready to download.`,
+					title: t("reports.notifications.readyTitle"),
+					description: t("reports.notifications.readyDescription", { name: report.name }),
 					// Straight to the file, from the toast or later from the bell.
 					actionRoute: downloadRoute(report.id),
-					actionTitle: "Download"
+					actionTitle: t("common.actions.download")
 				}
 			: status === "failed"
 				? {
 						...base,
 						type: "error",
-						title: "Report failed",
-						description: error?.trim() || `"${report.name}" could not be generated.`,
+						title: t("reports.notifications.failedTitle"),
+						description: error?.trim() || t("reports.notifications.failedDescription", { name: report.name }),
 						actionRoute: { name: "ReportsList" },
-						actionTitle: "View reports"
+						actionTitle: t("reports.notifications.viewReports")
 					}
 				: {
 						...base,
 						type: "warning",
-						title: "Report still running",
-						description: `"${report.name}" is taking longer than expected. Check the Reports page for its status.`,
+						title: t("reports.notifications.timeoutTitle"),
+						description: t("reports.notifications.timeoutDescription", { name: report.name }),
 						actionRoute: { name: "ReportsList" },
-						actionTitle: "View reports"
+						actionTitle: t("reports.notifications.viewReports")
 					}
 
 	// With server notifications on, the bell gets "report ready" from the server (#1282).

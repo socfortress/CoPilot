@@ -10,7 +10,7 @@
 				:class="`index-${index}`"
 				@click="goto({ path: item.path })"
 			>
-				{{ item.name }}
+				{{ label(item) }}
 			</n-breadcrumb-item>
 		</TransitionGroup>
 	</n-breadcrumb>
@@ -25,6 +25,7 @@ import _isEqual from "lodash/isEqual"
 import _split from "lodash/split"
 import { NBreadcrumb, NBreadcrumbItem } from "naive-ui"
 import { onBeforeMount } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 import { useBreadcrumb } from "@/composables/common/useBreadcrumb"
@@ -33,6 +34,16 @@ const HomeIcon = "carbon:home"
 const router = useRouter()
 const route = useRoute()
 const { items, setItems } = useBreadcrumb()
+const { t } = useI18n()
+
+/**
+ * A crumb in the user's language (#1310): the page its path leads to, by its `meta.titleKey`, when that
+ * page is what the crumb names in English; anything else (an id, a path without a page) as it is.
+ */
+function label(item: BreadcrumbItem): string {
+	const meta = router.resolve(item.path).meta
+	return meta.titleKey && meta.title === item.name ? t(meta.titleKey) : item.name
+}
 
 function goto(page: Partial<BreadcrumbItem>) {
 	if (page.name && page.name !== route.name) {

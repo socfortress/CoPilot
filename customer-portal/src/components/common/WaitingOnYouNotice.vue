@@ -6,17 +6,16 @@
 	>
 		<Icon name="carbon:user-follow" :size="22" class="text-waiting shrink-0" />
 		<div class="min-w-0 grow basis-64">
-			<div class="font-semibold">The SOC is waiting on your reply</div>
+			<div class="font-semibold">{{ $t("common.waitingOnYou.title") }}</div>
 			<div class="text-secondary text-sm">
-				Their response clock for this {{ entity }} is paused until you answer. Reply in the comments to hand it
-				back to the analysts.
+				{{ entity === "case" ? $t("common.waitingOnYou.body.case") : $t("common.waitingOnYou.body.alert") }}
 			</div>
 		</div>
 		<n-button size="small" type="primary" secondary data-testid="waiting-on-you-reply" @click="emit('reply')">
 			<template #icon>
 				<Icon name="carbon:reply" />
 			</template>
-			Reply
+			{{ $t("common.waitingOnYou.reply") }}
 		</n-button>
 	</div>
 </template>

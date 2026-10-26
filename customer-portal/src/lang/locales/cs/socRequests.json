@@ -1,0 +1,49 @@
+{
+	"tab": "Zeptat se SOC",
+	"title": "Zeptat se SOC",
+	"introAlert": "Váš dotaz dostanou analytici SOC jako komentář podepsaný vámi u případu nebo výstrahy, které zvolíte. Jejich odpověď se objeví v komentářích.",
+	"introCase": "Váš dotaz dostanou analytici SOC jako komentář podepsaný vámi u případu. Jejich odpověď se objeví v komentářích.",
+	"placeholder": "Co byste chtěli vědět?",
+	"questionLabel": "Váš dotaz pro SOC",
+	"urgencyLegend": "Jak je to naléhavé?",
+	"targetLegend": "Kam má dotaz jít?",
+	"send": "Odeslat do SOC",
+	"history": "Dotazy na SOC",
+	"emptyAlert": "K této výstraze zatím nebyl položen žádný dotaz.",
+	"emptyCase": "K tomuto případu zatím nebyl položen žádný dotaz.",
+	"urgencyLine": "Naléhavost: {urgency}",
+	"askedBy": "Zeptal(a) se {user} · {date}",
+	"answeredAt": "· zodpovězeno {date}",
+	"sent": "Váš dotaz byl odeslán do SOC",
+	"loadFailed": "Dotazy se nepodařilo načíst.",
+	"sendFailed": "Váš dotaz se nepodařilo odeslat. Zkuste to prosím znovu.",
+	"urgency": {
+		"low": "Nízká",
+		"normal": "Běžná",
+		"high": "Vysoká",
+		"lowHint": "Až bude SOC moci",
+		"normalHint": "V obvyklé době odezvy",
+		"highHint": "Blokuje nás to"
+	},
+	"status": {
+		"open": "Čeká na SOC",
+		"answered": "Zodpovězeno"
+	},
+	"target": {
+		"addToCase": "Přidat k případu #{id}",
+		"addToCaseHint": "SOC už tuto výstrahu v tomto případu řeší",
+		"openCase": "Otevřít případ z této výstrahy",
+		"openCaseHint": "SOC ji bude sledovat jako případ, s touto výstrahou v něm",
+		"alertOnly": "Jen u této výstrahy",
+		"alertOnlyHint": "Komentář k výstraze, bez případu"
+	},
+	"problem": {
+		"empty": "Napište svůj dotaz pro SOC",
+		"tooLong": "Dotaz musí mít méně než {max} znaků",
+		"characters": "Dotaz obsahuje znaky, které nelze odeslat"
+	},
+	"filed": {
+		"onCase": "U případu #{id}",
+		"fromAlert": "Dotaz z výstrahy #{id}"
+	}
+}

@@ -3,6 +3,7 @@ import { useStorage } from "@vueuse/core"
 import _uniqBy from "lodash/uniqBy"
 import { NButton } from "naive-ui"
 import { computed, h } from "vue"
+import { i18nGlobal } from "@/lang"
 import router from "@/router"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
@@ -121,7 +122,7 @@ export function useNotifications() {
 									openRoute(newItem.actionRoute)
 								}
 							},
-							{ default: () => newItem.actionTitle || "Details" }
+							{ default: () => newItem.actionTitle || i18nGlobal.t("common.actions.details") }
 						)
 				}
 

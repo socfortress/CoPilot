@@ -1,0 +1,136 @@
+{
+	"stats": {
+		"entity": "Agenti",
+		"active": "aktivní",
+		"offline": "offline",
+		"critical": "kritické",
+		"other": "ostatní"
+	},
+	"exportCsv": "Exportovat CSV",
+	"list": {
+		"columns": {
+			"agent": "Agent",
+			"ipAddress": "IP adresa",
+			"os": "Operační systém",
+			"lastSeen": "Naposledy viděn",
+			"criticalAsset": "Kritické aktivum"
+		},
+		"items": "položek",
+		"exported": "Exportováno {count} aktivum do CSV | Exportována {count} aktiva do CSV | Exportováno {count} aktiv do CSV",
+		"empty": "Nebyli nalezeni žádní agenti",
+		"emptyHint": "zkuste změnit filtry"
+	},
+	"filters": {
+		"os": "Operační systém",
+		"search": "Hledat (název hostitele, IP adresa, ID agenta)",
+		"critical": "Kritická aktiva",
+		"reset": "Obnovit filtry"
+	},
+	"agentCriticalSelect": {
+		"critical": "Kritické",
+		"notCritical": "Nekritické",
+		"updated": "Kritičnost agenta změněna na {level}"
+	},
+	"agentDetailsButton": {
+		"title": "Podrobnosti agenta"
+	},
+	"agentDetails": {
+		"error": "Chyba",
+		"notFound": "Agent nebyl nalezen.",
+		"tabs": {
+			"overview": "Přehled",
+			"vulnerabilities": "Zranitelnosti",
+			"cases": "Případy"
+		}
+	},
+	"agentCases": {
+		"heading": "Případy týkající se tohoto hostitele",
+		"empty": "Tohoto hostitele se netýká žádný případ",
+		"unassigned": "nepřiřazeno",
+		"alerts": "{count} výstraha | {count} výstrahy | {count} výstrah",
+		"loadFailed": "Případy se nepodařilo načíst."
+	},
+	"agentVulnerabilities": {
+		"filterLabel": "Filtrovat podle závažnosti",
+		"search": "Hledat CVE, název nebo balíček",
+		"shown": "zobrazeno {count} · nejzávažnější první",
+		"head": {
+			"severity": "Závažnost",
+			"vulnerability": "Zranitelnost",
+			"package": "Balíček",
+			"detected": "Zjištěno"
+		},
+		"loading": "Načítání zranitelností z Wazuh. U agenta s mnoha balíčky to může trvat až minutu.",
+		"emptyFiltered": "Filtrům neodpovídá žádná zranitelnost",
+		"empty": "Na tomto agentovi nebyly nalezeny žádné zranitelnosti",
+		"facts": {
+			"package": "Balíček",
+			"architecture": "Architektura",
+			"type": "Typ",
+			"published": "Zveřejněno",
+			"detected": "Zjištěno"
+		},
+		"references": "Odkazy · {count}",
+		"loadFailed": "Zranitelnosti se nepodařilo načíst.",
+		"exportFailed": "Zranitelnosti se nepodařilo exportovat."
+	},
+	"agentSca": {
+		"head": {
+			"policy": "Zásada",
+			"score": "Skóre",
+			"checks": "Kontroly",
+			"lastScan": "Poslední kontrola"
+		},
+		"empty": "Na tomto agentovi zatím neproběhla žádná kontrola SCA",
+		"passed": "{count} vyhovělo",
+		"failed": "{count} nevyhovělo",
+		"notApplicable": "{count} N/A",
+		"checks": "· {count} kontrol",
+		"scanned": "zkontrolováno {when}",
+		"back": "Všechny zásady",
+		"policy": "Zásada SCA",
+		"score": "Skóre",
+		"filterLabel": "Filtrovat podle výsledku",
+		"search": "Hledat podle názvu nebo ID kontroly",
+		"shown": "zobrazeno {count} · nevyhovující první",
+		"emptyFiltered": "Filtrům neodpovídá žádná kontrola",
+		"noChecks": "Tato zásada nemá žádné kontroly",
+		"text": {
+			"rationale": "Zdůvodnění",
+			"remediation": "Náprava",
+			"reason": "Důvod"
+		},
+		"compliance": "Shoda",
+		"filter": {
+			"all": "Vše",
+			"failed": "Nevyhovělo",
+			"passed": "Vyhovělo",
+			"notApplicable": "N/A"
+		},
+		"loadFailed": "Zásady SCA se nepodařilo načíst.",
+		"checksFailed": "Kontroly zásady se nepodařilo načíst.",
+		"exportFailed": "Kontroly zásady se nepodařilo exportovat."
+	},
+	"findings": {
+		"severity": {
+			"All": "Vše",
+			"Critical": "Kritická",
+			"High": "Vysoká",
+			"Medium": "Střední",
+			"Low": "Nízká",
+			"unknown": "neznámá"
+		},
+		"results": {
+			"failed": "nevyhovělo",
+			"passed": "vyhovělo",
+			"notApplicable": "nelze použít"
+		},
+		"range": "{from}–{to} z {total}"
+	},
+	"status": {
+		"active": "Aktivní",
+		"disconnected": "Odpojený",
+		"neverConnected": "Nikdy nepřipojený",
+		"pending": "Čekající"
+	}
+}

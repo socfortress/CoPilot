@@ -43,6 +43,7 @@ from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalAuditSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import CustomerPortalExposureSettings  # noqa: E402
+from app.db.universal_models import CustomerPortalLanguageSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalSocRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalSocRequestSettings  # noqa: E402
@@ -198,6 +199,8 @@ async def cleanup(s):
     await s.execute(delete(CustomerPortalActivitySettings).where(CustomerPortalActivitySettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalExposureSettings).where(CustomerPortalExposureSettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalAuditSettings).where(CustomerPortalAuditSettings.customer_code.in_(codes)))
+    # The customers' portal languages (#1310): a foreign key to the customer.
+    await s.execute(delete(CustomerPortalLanguageSettings).where(CustomerPortalLanguageSettings.customer_code.in_(codes)))
     # Questions to the SOC (#1305) and their switch: foreign keys to the customer, its alerts and cases.
     await s.execute(delete(CustomerPortalSocRequest).where(CustomerPortalSocRequest.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalSocRequestSettings).where(CustomerPortalSocRequestSettings.customer_code.in_(codes)))

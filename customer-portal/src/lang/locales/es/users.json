@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Usuarios",
+		"intro": "Quién puede iniciar sesión en este portal para tu organización. Invita a tus compañeros, desactiva a quienes se han ido y ayuda a quienes han perdido su app de autenticación o su contraseña.",
+		"invite": "Invitar a un usuario",
+		"forbiddenTitle": "Solo un administrador del cliente puede gestionar usuarios",
+		"forbiddenText": "Tu SOC decide quién administra los usuarios de tu organización. Pregunta a tu contacto del SOC si necesitas serlo.",
+		"twoFaOn": "2FA activada",
+		"twoFaOff": "2FA desactivada",
+		"lastSignIn": "Último inicio de sesión {date}",
+		"neverSignedIn": "Nunca ha iniciado sesión",
+		"twoFaNotOn": "La autenticación en dos pasos no está activada",
+		"resetTotp": "Restablecer 2FA",
+		"temporaryPassword": "Contraseña temporal",
+		"enable": "Activar",
+		"disable": "Desactivar",
+		"loadFailed": "No se han podido cargar los usuarios.",
+		"done": "Hecho",
+		"actionFailed": "La acción ha fallado.",
+		"issueFailed": "No se ha podido emitir una contraseña temporal."
+	},
+	"confirm": {
+		"disableTitle": "¿Desactivar a {username}?",
+		"disableText": "No podrá iniciar sesión y la sesión que tenga abierta terminará. Puedes volver a activarlo.",
+		"resetTotpTitle": "¿Restablecer la 2FA de {username}?",
+		"resetTotpText": "Iniciará sesión solo con su contraseña y podrá volver a configurar la autenticación en dos pasos desde su perfil.",
+		"temporaryPasswordTitle": "¿Una contraseña temporal para {username}?",
+		"temporaryPasswordText": "Su contraseña actual dejará de funcionar. Iniciará sesión con la temporal y elegirá una propia.",
+		"issue": "Emitir"
+	},
+	"tags": {
+		"self": "Tú",
+		"selfTitle": "Tu propia cuenta",
+		"admin": "Admin",
+		"adminTitle": "Gestiona los usuarios de este cliente. Designado por tu SOC.",
+		"disabled": "Desactivado",
+		"disabledTitle": "No puede iniciar sesión",
+		"password": "Cambio de contraseña pendiente",
+		"passwordTitle": "Inicia sesión con una contraseña temporal y debe elegir una propia"
+	},
+	"invite": {
+		"title": "Invitar a un usuario",
+		"introEmail": "Recibirá una contraseña temporal por correo electrónico y elegirá una propia en su primer inicio de sesión.",
+		"introShown": "Recibirá una contraseña temporal de tu parte (se muestra una sola vez tras la invitación) y elegirá una propia en su primer inicio de sesión.",
+		"username": "Nombre de usuario",
+		"email": "Correo electrónico",
+		"customers": "Clientes que puede ver",
+		"willSee": "Verá {customer}.",
+		"submit": "Invitar",
+		"failed": "No se ha podido invitar al usuario.",
+		"problems": {
+			"usernameRequired": "Introduce un nombre de usuario",
+			"usernameInvalid": "El nombre de usuario debe tener de 3 a 64 caracteres: letras, dígitos y . _ {'@'} -, empezando por una letra o un dígito",
+			"emailRequired": "Introduce una dirección de correo electrónico",
+			"emailInvalid": "Introduce una dirección de correo electrónico válida",
+			"customersRequired": "Elige al menos un cliente"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} ha sido invitado",
+		"title": "Una contraseña temporal para {username}",
+		"shownOnce": "Esta contraseña solo se muestra una vez. Dásela tú mismo a {username}. Elegirá una propia en su primer inicio de sesión.",
+		"shownOnceProblem": "Esta contraseña solo se muestra una vez. Dásela tú mismo a {username}: {problem} Elegirá una propia en su primer inicio de sesión.",
+		"emailed": "Se ha enviado una contraseña temporal por correo electrónico a {email}. {username} elegirá una propia en su primer inicio de sesión.",
+		"copy": "Copiar",
+		"copied": "Copiada",
+		"done": "Listo"
+	}
+}

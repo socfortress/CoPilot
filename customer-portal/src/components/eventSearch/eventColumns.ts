@@ -1,4 +1,5 @@
 import type { DisplayColumn, EventSearchResult } from "@/types/siem"
+import { i18nGlobal } from "@/lang"
 import dayjs from "@/utils/dayjs"
 
 /**
@@ -60,11 +61,31 @@ export function parseEventTime(value: unknown): number {
 	return parsed.isValid() ? parsed.valueOf() : Number.NaN
 }
 
+/**
+ * A column of the default layout: its `key` names it in code, its header is read in the current
+ * language each time it is shown (the table's and the CSV's alike).
+ */
+function defaultColumn(
+	key: "Timestamp" | "Level" | "Source" | "Rule",
+	header: "timestamp" | "level" | "source" | "rule",
+	options: { time?: boolean; width?: number } = {}
+): EventColumn {
+	return {
+		key,
+		get label() {
+			return i18nGlobal.t(`eventSearch.columns.${header}` as const)
+		},
+		field: null,
+		time: options.time ?? false,
+		...(options.width ? { width: options.width } : {})
+	}
+}
+
 export const DEFAULT_COLUMNS: EventColumn[] = [
-	{ key: "Timestamp", label: "Timestamp", field: null, time: true, width: 160 },
-	{ key: "Level", label: "Level", field: null, time: false, width: 60 },
-	{ key: "Source", label: "Source", field: null, time: false },
-	{ key: "Rule", label: "Rule", field: null, time: false }
+	defaultColumn("Timestamp", "timestamp", { time: true, width: 160 }),
+	defaultColumn("Level", "level", { width: 60 }),
+	defaultColumn("Source", "source"),
+	defaultColumn("Rule", "rule")
 ]
 
 /** The columns in force: the user's, else the SOC's for the source, else the default layout. */

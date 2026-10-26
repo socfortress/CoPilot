@@ -1,0 +1,45 @@
+{
+	"portalName": "Portail client",
+	"routes": {
+		"overview": "Vue d'ensemble",
+		"alerts": "Alertes",
+		"alertDetails": "Détails de l'alerte",
+		"cases": "Dossiers",
+		"caseDetails": "Détails du dossier",
+		"agents": "Agents",
+		"agentDetails": "Détails de l'agent",
+		"reports": "Rapports",
+		"eventSearch": "Recherche d'événements",
+		"dashboards": "Tableaux de bord",
+		"dashboardDetails": "Détails du tableau de bord",
+		"exposure": "Exposition",
+		"users": "Utilisateurs",
+		"auditLog": "Journal d'audit",
+		"activity": "Activité",
+		"sla": "Niveaux de service",
+		"profile": "Profil",
+		"login": "Connexion",
+		"changePassword": "Choisir un nouveau mot de passe"
+	},
+	"sidebar": {
+		"documentation": "Documentation"
+	},
+	"toolbar": {
+		"fullscreen": "Basculer en plein écran",
+		"theme": "Changer de thème",
+		"shortcuts": "Raccourcis",
+		"yourProfile": "Votre profil",
+		"logout": "Se déconnecter"
+	},
+	"customerFilter": {
+		"placeholder": "Tous les clients"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Page introuvable",
+		"home": "Retour à l'accueil"
+	}
+}
