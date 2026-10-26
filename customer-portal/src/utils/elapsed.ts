@@ -1,3 +1,4 @@
+import { i18nGlobal } from "@/lang"
 import dayjs from "@/utils/dayjs"
 
 /**
@@ -16,7 +17,10 @@ export function secondsSince(storedUtc: string, now: number): number | null {
 /** "<1 min", "4 min", "1 h 05 min": short enough for a tag. */
 export function elapsedLabel(seconds: number): string {
 	const minutes = Math.floor(seconds / 60)
-	if (minutes < 1) return "<1 min"
-	if (minutes < 60) return `${minutes} min`
-	return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")} min`
+	if (minutes < 1) return i18nGlobal.t("common.elapsed.underMinute")
+	if (minutes < 60) return i18nGlobal.t("common.elapsed.minutes", { minutes })
+	return i18nGlobal.t("common.elapsed.hours", {
+		hours: Math.floor(minutes / 60),
+		minutes: String(minutes % 60).padStart(2, "0")
+	})
 }

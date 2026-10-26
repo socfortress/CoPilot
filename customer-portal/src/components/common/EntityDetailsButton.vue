@@ -5,7 +5,7 @@
 				<template #icon>
 					<Icon name="carbon:view" />
 				</template>
-				{{ label }}
+				{{ label ?? $t("common.entityDetails.viewDetails") }}
 			</n-button>
 			<n-button :focusable="false" :ghost :aria-label="pageLabel" :title="pageLabel" @click="goToPage()">
 				<template #icon>
@@ -27,23 +27,21 @@ import { NButton, NButtonGroup } from "naive-ui"
 import { computed, ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import EntityDetailsModal from "./EntityDetailsModal.vue"
+import { entityPageLabel } from "./entityPageLabel"
 
 /**
  * The "View Details" + "open page" pair used for alerts, cases and agents: the first
  * shows the entity in a modal, the second (also in the modal header) opens its page.
  * Wrappers such as AlertDetailsButton choose the details component and the route.
  */
-const {
-	route,
-	entity,
-	label = "View Details"
-} = defineProps<{
+const { route, entity, label } = defineProps<{
 	/** Modal title, e.g. "Alert Details". */
 	title: string
 	/** The entity's own page. */
 	route: EntityPageRoute
 	/** Singular noun used in accessible labels, e.g. "alert". */
 	entity: string
+	/** The button's text; "View Details" when left out. */
 	label?: string
 	size?: ButtonSize
 	/** Transparent background, for buttons sitting on a surface that already has one. */
@@ -58,7 +56,7 @@ defineSlots<{
 const PAGE_ICON = "carbon:launch"
 
 const showDetails = ref(false)
-const pageLabel = computed(() => `Open ${entity} page`)
+const pageLabel = computed(() => entityPageLabel(entity))
 
 function open() {
 	showDetails.value = true

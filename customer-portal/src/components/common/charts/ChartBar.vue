@@ -20,6 +20,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed, ref } from "vue"
 import VChart from "vue-echarts"
+import { useI18n } from "vue-i18n"
 import { useThemeStore } from "@/stores/theme"
 import {
 	buildChartTooltipGlassBase,
@@ -52,6 +53,7 @@ use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, GridComponent])
 type ChartOption = ComposeOption<TitleComponentOption | TooltipComponentOption | GridComponentOption | BarSeriesOption>
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 const chartRef = ref<InstanceType<typeof VChart> | null>(null)
 const chartWidth = ref(0)
 
@@ -82,7 +84,7 @@ const chartOption = computed((): ChartOption => {
 		return {
 			backgroundColor: "transparent",
 			title: {
-				text: "No data",
+				text: t("common.states.noData"),
 				left: "center",
 				top: "center",
 				textStyle: { color: fg, fontSize: 16, fontFamily: ff }

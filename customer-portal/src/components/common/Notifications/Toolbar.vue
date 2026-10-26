@@ -1,6 +1,8 @@
 <template>
 	<div class="flex w-full" :class="{ 'justify-between': showClear, 'justify-end': !showClear }">
-		<n-button v-if="showClear" quaternary @click="bell.deleteAll()">Clear</n-button>
+		<n-button v-if="showClear" quaternary @click="bell.deleteAll()">
+			{{ $t("common.actions.clear") }}
+		</n-button>
 		<n-button
 			strong
 			secondary
@@ -9,7 +11,7 @@
 			data-testid="notifications-mark-all-read"
 			@click="bell.setAllRead()"
 		>
-			Mark all as read
+			{{ $t("common.notifications.markAllRead") }}
 		</n-button>
 	</div>
 </template>

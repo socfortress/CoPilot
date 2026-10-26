@@ -12,6 +12,7 @@ import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { computed } from "vue"
 import VChart from "vue-echarts"
+import { useI18n } from "vue-i18n"
 import { useThemeStore } from "@/stores/theme"
 import { buildChartTooltipGlassBase, CHART_COLORS, chartTooltipThemeFromStyle, formatChartTooltipPieItem } from "."
 
@@ -40,6 +41,7 @@ type ChartOption = ComposeOption<
 >
 
 const themeStore = useThemeStore()
+const { t } = useI18n()
 
 const pieData = computed(() =>
 	(props.labels || []).map((label, i) => ({
@@ -61,7 +63,7 @@ const chartOption = computed((): ChartOption => {
 		return {
 			backgroundColor: "transparent",
 			title: {
-				text: "No data",
+				text: t("common.states.noData"),
 				left: "center",
 				top: "center",
 				textStyle: { color: fg, fontSize: 16, fontFamily: ff }
@@ -88,7 +90,7 @@ const chartOption = computed((): ChartOption => {
 				left: "center",
 				top: "33%",
 				style: {
-					text: `Total\n\n${totalValue.value}`,
+					text: `${t("common.charts.total")}\n\n${totalValue.value}`,
 					fill: fg,
 					fontSize: 14,
 					fontFamily: ff,

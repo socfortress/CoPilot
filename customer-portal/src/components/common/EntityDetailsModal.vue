@@ -37,6 +37,7 @@
 import { NButton, NModal } from "naive-ui"
 import { computed } from "vue"
 import Icon from "@/components/common/Icon.vue"
+import { entityPageLabel } from "./entityPageLabel"
 
 /** What a route helper from `useNavigation` returns, e.g. `routeAlertDetails(id)`. */
 export interface EntityPageRoute {
@@ -65,7 +66,7 @@ defineSlots<{
 const show = defineModel<boolean>("show", { default: false })
 
 const PAGE_ICON = "carbon:launch"
-const pageLabel = computed(() => `Open ${entity} page`)
+const pageLabel = computed(() => entityPageLabel(entity))
 
 function close() {
 	show.value = false

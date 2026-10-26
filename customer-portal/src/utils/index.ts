@@ -11,6 +11,7 @@ import _trim from "lodash/trim"
 import { h } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import tokens from "@/design-tokens.json"
+import { i18nGlobal } from "@/lang"
 import dayjs from "@/utils/dayjs"
 
 const URL_PROTOCOL_REGEX = /^https?:\/\//i
@@ -193,8 +194,8 @@ export function isDate(val?: SafeAny): boolean {
 
 export function getBooleanOptions(): { value: boolean; label: string }[] {
 	return [
-		{ value: true, label: "Yes" },
-		{ value: false, label: "No" }
+		{ value: true, label: i18nGlobal.t("common.boolean.yes") },
+		{ value: false, label: i18nGlobal.t("common.boolean.no") }
 	]
 }
 
@@ -202,19 +203,19 @@ export function getHoursBackOptions(options?: { min?: number; max?: number }): {
 	const { min, max } = options ?? {}
 
 	const list: { value: number; label: string }[] = [
-		{ value: 1, label: "1 hour" },
-		{ value: 6, label: "6 hours" },
-		{ value: 12, label: "12 hours" },
-		{ value: 24, label: "1 day" },
-		{ value: 48, label: "2 days" },
-		{ value: 72, label: "3 days" },
-		{ value: 168, label: "1 week" },
-		{ value: 336, label: "2 weeks" },
-		{ value: 720, label: "1 month" },
-		{ value: 1440, label: "2 months" },
-		{ value: 2160, label: "3 months" },
-		{ value: 4320, label: "6 months" },
-		{ value: 8760, label: "1 year" }
+		{ value: 1, label: i18nGlobal.t("common.timeRange.hour1") },
+		{ value: 6, label: i18nGlobal.t("common.timeRange.hour6") },
+		{ value: 12, label: i18nGlobal.t("common.timeRange.hour12") },
+		{ value: 24, label: i18nGlobal.t("common.timeRange.day1") },
+		{ value: 48, label: i18nGlobal.t("common.timeRange.day2") },
+		{ value: 72, label: i18nGlobal.t("common.timeRange.day3") },
+		{ value: 168, label: i18nGlobal.t("common.timeRange.week1") },
+		{ value: 336, label: i18nGlobal.t("common.timeRange.week2") },
+		{ value: 720, label: i18nGlobal.t("common.timeRange.month1") },
+		{ value: 1440, label: i18nGlobal.t("common.timeRange.month2") },
+		{ value: 2160, label: i18nGlobal.t("common.timeRange.month3") },
+		{ value: 4320, label: i18nGlobal.t("common.timeRange.month6") },
+		{ value: 8760, label: i18nGlobal.t("common.timeRange.year1") }
 	]
 
 	return list.filter(item => (min == null || item.value >= min) && (max == null || item.value <= max))
@@ -224,16 +225,16 @@ export function getDaysBackOptions(options?: { min?: number; max?: number }): { 
 	const { min, max } = options ?? {}
 
 	const list: { value: number; label: string }[] = [
-		{ value: 1, label: "1 day" },
-		{ value: 2, label: "2 days" },
-		{ value: 3, label: "3 days" },
-		{ value: 7, label: "1 week" },
-		{ value: 14, label: "2 weeks" },
-		{ value: 30, label: "1 month" },
-		{ value: 60, label: "2 months" },
-		{ value: 90, label: "3 months" },
-		{ value: 180, label: "6 months" },
-		{ value: 365, label: "1 year" }
+		{ value: 1, label: i18nGlobal.t("common.timeRange.day1") },
+		{ value: 2, label: i18nGlobal.t("common.timeRange.day2") },
+		{ value: 3, label: i18nGlobal.t("common.timeRange.day3") },
+		{ value: 7, label: i18nGlobal.t("common.timeRange.week1") },
+		{ value: 14, label: i18nGlobal.t("common.timeRange.week2") },
+		{ value: 30, label: i18nGlobal.t("common.timeRange.month1") },
+		{ value: 60, label: i18nGlobal.t("common.timeRange.month2") },
+		{ value: 90, label: i18nGlobal.t("common.timeRange.month3") },
+		{ value: 180, label: i18nGlobal.t("common.timeRange.month6") },
+		{ value: 365, label: i18nGlobal.t("common.timeRange.year1") }
 	]
 
 	return list.filter(item => (min == null || item.value >= min) && (max == null || item.value <= max))
@@ -241,13 +242,13 @@ export function getDaysBackOptions(options?: { min?: number; max?: number }): { 
 
 export function getSeverityOptions(options?: { include?: Severity[] }): { value: Severity; label: string }[] {
 	const base: { value: Severity; label: string }[] = [
-		{ value: "critical", label: "Critical" },
-		{ value: "high", label: "High" },
-		{ value: "medium", label: "Medium" },
-		{ value: "low", label: "Low" }
+		{ value: "critical", label: i18nGlobal.t("common.severity.critical") },
+		{ value: "high", label: i18nGlobal.t("common.severity.high") },
+		{ value: "medium", label: i18nGlobal.t("common.severity.medium") },
+		{ value: "low", label: i18nGlobal.t("common.severity.low") }
 	]
 
-	const extra: { value: Severity; label: string }[] = [{ value: "info", label: "Info" }]
+	const extra: { value: Severity; label: string }[] = [{ value: "info", label: i18nGlobal.t("common.severity.info") }]
 
 	const include = extra.filter(item => (options?.include?.length ? options.include.includes(item.value) : false))
 
@@ -256,10 +257,10 @@ export function getSeverityOptions(options?: { include?: Severity[] }): { value:
 
 export function getStatusOptions(): { value: string; label: string }[] {
 	return [
-		{ value: "pending", label: "Pending" },
-		{ value: "running", label: "Running" },
-		{ value: "completed", label: "Completed" },
-		{ value: "failed", label: "Failed" }
+		{ value: "pending", label: i18nGlobal.t("common.jobStatus.pending") },
+		{ value: "running", label: i18nGlobal.t("common.jobStatus.running") },
+		{ value: "completed", label: i18nGlobal.t("common.jobStatus.completed") },
+		{ value: "failed", label: i18nGlobal.t("common.jobStatus.failed") }
 	]
 }
 
@@ -287,8 +288,8 @@ export function getSimilarityCategory(score: number): SimilarityResult {
 		return {
 			category: "high",
 			status: "success",
-			label: "High similarity",
-			description: "exact/near matches",
+			label: i18nGlobal.t("common.similarity.high"),
+			description: i18nGlobal.t("common.similarity.highDescription"),
 			score: normalizedScore
 		}
 	}
@@ -297,7 +298,7 @@ export function getSimilarityCategory(score: number): SimilarityResult {
 		return {
 			category: "good",
 			status: "info",
-			label: "Good semantic similarity",
+			label: i18nGlobal.t("common.similarity.good"),
 			description: "",
 			score: normalizedScore
 		}
@@ -307,7 +308,7 @@ export function getSimilarityCategory(score: number): SimilarityResult {
 		return {
 			category: "moderate",
 			status: "warning",
-			label: "Moderate similarity",
+			label: i18nGlobal.t("common.similarity.moderate"),
 			description: "",
 			score: normalizedScore
 		}
@@ -316,7 +317,7 @@ export function getSimilarityCategory(score: number): SimilarityResult {
 	return {
 		category: "low",
 		status: "default",
-		label: "Low similarity",
+		label: i18nGlobal.t("common.similarity.low"),
 		description: "",
 		score: normalizedScore
 	}

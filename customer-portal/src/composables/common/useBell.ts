@@ -2,6 +2,7 @@ import type { Notification, NotificationType } from "./useNotifications"
 import type { PortalNotification } from "@/types/notifications"
 import { computed } from "vue"
 import { utcMillis } from "@/components/alerts/AlertDetails/aiInvestigation"
+import { i18nGlobal } from "@/lang"
 import { useNotifications } from "./useNotifications"
 import { useServerNotifications } from "./useServerNotifications"
 
@@ -36,15 +37,15 @@ function target(item: PortalNotification): Pick<Notification, "actionRoute" | "a
 		case "alert":
 			return {
 				actionRoute: { name: "AlertDetails", params: { id: String(item.entity_id) } },
-				actionTitle: "Open alert"
+				actionTitle: i18nGlobal.t("common.notifications.openAlert")
 			}
 		case "case":
 			return {
 				actionRoute: { name: "CaseDetails", params: { id: String(item.entity_id) } },
-				actionTitle: "Open case"
+				actionTitle: i18nGlobal.t("common.notifications.openCase")
 			}
 		default:
-			return { actionRoute: { name: "ReportsList" }, actionTitle: "View reports" }
+			return { actionRoute: { name: "ReportsList" }, actionTitle: i18nGlobal.t("common.notifications.viewReports") }
 	}
 }
 

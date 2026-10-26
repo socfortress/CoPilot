@@ -2,6 +2,7 @@ import bytes from "bytes"
 import { md5 } from "js-md5"
 import _split from "lodash/split"
 import _toNumber from "lodash/toNumber"
+import { i18nGlobal } from "@/lang"
 import dayjs from "@/utils/dayjs"
 import { isTimestamp } from "@/utils/index"
 
@@ -65,7 +66,7 @@ export function formatTimeAgo(date: Date | string | number, format: string) {
 			return formatDate(timestamp, format)
 		}
 	} catch {
-		return "Invalid date"
+		return i18nGlobal.t("common.dates.invalid")
 	}
 }
 

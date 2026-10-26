@@ -5,7 +5,7 @@
 			:data-testid="`${testid}-filter-key`"
 			:options="keyOptions"
 			clearable
-			placeholder="Filter key"
+			:placeholder="$t('common.keyValueFilter.key')"
 			class="min-w-20 basis-1/2"
 			:consistent-menu-width="false"
 		/>
@@ -18,7 +18,7 @@
 			:loading="searching"
 			filterable
 			clearable
-			placeholder="Filter value"
+			:placeholder="$t('common.keyValueFilter.value')"
 			class="min-w-20 basis-1/2"
 			:consistent-menu-width="false"
 			@search="onSearch"
