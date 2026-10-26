@@ -105,6 +105,8 @@ class AuditAction(str, Enum):
     ACTIVITY_SETTINGS_UPDATE = "activity.settings_update"
     # The Customer Portal's Exposure page switch, per customer (#1289).
     EXPOSURE_SETTINGS_UPDATE = "exposure.settings_update"
+    # The languages a customer's portal users may pick (#1310).
+    PORTAL_LANGUAGES_SETTINGS_UPDATE = "portal_languages.settings_update"
     # The Customer Portal's Audit Log page switch, per customer (#1298).
     AUDIT_SETTINGS_UPDATE = "audit.settings_update"
 

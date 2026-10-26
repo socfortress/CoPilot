@@ -43,6 +43,7 @@ from app.db.universal_models import CustomerPortalAiRequest  # noqa: E402
 from app.db.universal_models import CustomerPortalAuditSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import CustomerPortalExposureSettings  # noqa: E402
+from app.db.universal_models import CustomerPortalLanguageSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
 from app.db.universal_models import EventSources  # noqa: E402
@@ -196,6 +197,8 @@ async def cleanup(s):
     await s.execute(delete(CustomerPortalActivitySettings).where(CustomerPortalActivitySettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalExposureSettings).where(CustomerPortalExposureSettings.customer_code.in_(codes)))
     await s.execute(delete(CustomerPortalAuditSettings).where(CustomerPortalAuditSettings.customer_code.in_(codes)))
+    # The customers' portal languages (#1310): a foreign key to the customer.
+    await s.execute(delete(CustomerPortalLanguageSettings).where(CustomerPortalLanguageSettings.customer_code.in_(codes)))
     await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
     await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))

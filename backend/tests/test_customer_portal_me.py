@@ -89,16 +89,37 @@ def test_only_the_users_customers_are_asked_for():
 
 
 def test_the_profile_names_the_user_and_role():
-    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])):
+    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])), patch.object(
+        me_service,
+        "portal_locale",
+        AsyncMock(return_value=("en", ["en"])),
+    ):
         profile = asyncio.run(me_service.get_portal_profile(PORTAL_USER, AsyncMock()))
     assert (profile.username, profile.role, profile.customers) == ("acme.viewer", "customer_user", [])
     assert profile.must_change_password is False
 
 
+def test_the_profile_carries_the_users_language_and_the_ones_they_may_pick():
+    # #1310: the portal shows this language and offers these in its picker.
+    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])), patch.object(
+        me_service,
+        "portal_locale",
+        AsyncMock(return_value=("it", ["en", "it"])),
+    ):
+        profile = asyncio.run(me_service.get_portal_profile(PORTAL_USER, AsyncMock()))
+    assert (profile.locale, profile.available_locales) == ("it", ["en", "it"])
+    # Nothing picked on this account yet.
+    assert profile.locale_chosen is False
+
+
 def test_the_profile_says_when_the_password_must_be_replaced():
     # An admin chose it (#1277): the portal holds the user on the change until they do.
     held = SimpleNamespace(id=7, username="acme.viewer", role_id=4, must_change_password=True)
-    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])):
+    with patch.object(me_service, "portal_customers", AsyncMock(return_value=[])), patch.object(
+        me_service,
+        "portal_locale",
+        AsyncMock(return_value=("en", ["en"])),
+    ):
         profile = asyncio.run(me_service.get_portal_profile(held, AsyncMock()))
     assert profile.must_change_password is True
 

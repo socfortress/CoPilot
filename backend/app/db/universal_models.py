@@ -677,6 +677,32 @@ class CustomerPortalExposureSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalLanguageSettings(SQLModel, table=True):
+    """The languages a customer's portal users may pick (#1310).
+
+    English is always among them, and is the default: ``languages`` is stored with ``en``
+    first. A customer with no row has English only. Read and written through
+    ``app/customer_portal/services/languages.py``; nothing should read this table directly.
+    """
+
+    __tablename__ = "customer_portal_language_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    languages: List[str] = Field(default_factory=lambda: ["en"], sa_column=Column(JSON, nullable=False))
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
 class CustomerPortalAuditSettings(SQLModel, table=True):
     """Per-customer switch for the Customer Portal's Audit Log page (#1298).
 

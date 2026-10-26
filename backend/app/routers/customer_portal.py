@@ -7,6 +7,7 @@ from app.customer_portal.routes.audit import customer_portal_audit_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.exposure import customer_portal_exposure_router
+from app.customer_portal.routes.languages import customer_portal_languages_router
 from app.customer_portal.routes.me import customer_portal_me_router
 from app.customer_portal.routes.notifications import (
     customer_portal_notifications_router,
@@ -64,6 +65,12 @@ router.include_router(
     customer_portal_exposure_router,
     prefix="/customer_portal",
     tags=["Customer Portal Exposure"],
+)
+# The portal's languages: a customer's set (CoPilot) and the portal user's own pick (#1310)
+router.include_router(
+    customer_portal_languages_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Languages"],
 )
 # The portal user and their customers, with names (the token carries only codes)
 router.include_router(

@@ -7,6 +7,7 @@ from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.customer_portal.schema.me import PortalCustomer
 from app.customer_portal.schema.me import PortalMeResponse
+from app.customer_portal.services.languages import portal_locale
 from app.customer_portal.services.tenant_users import administered_customer_codes
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
@@ -38,6 +39,7 @@ async def portal_customers(user: User, session: AsyncSession) -> List[PortalCust
 
 
 async def get_portal_profile(user: User, session: AsyncSession) -> PortalMeResponse:
+    locale, available = await portal_locale(user, session)
     return PortalMeResponse(
         success=True,
         message="Profile retrieved successfully",
@@ -45,4 +47,7 @@ async def get_portal_profile(user: User, session: AsyncSession) -> PortalMeRespo
         role=RoleEnum(user.role_id).name,
         customers=await portal_customers(user, session),
         must_change_password=bool(user.must_change_password),
+        locale=locale,
+        available_locales=available,
+        locale_chosen=bool(getattr(user, "locale", None)),
     )

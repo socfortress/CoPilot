@@ -92,6 +92,7 @@ one instrumentation point.
 | `case.create` (from an alert) | `POST /incidents/db_operations/case/from-alert` (#1298) | `case` / case_id | new = {case_name, customer_code, alert_id} |
 | `report.generate/download/delete` | `app/incidents/routes/customer_report.py` (#1298) | `report` / report_id | new = {report_name, date_from, date_to}; + customer_code |
 | `audit.settings_update` | the portal Audit Log switch, `PUT /customer_portal/audit/settings/{code}` (#1298) | `customer_portal_audit_settings` / code | old/new = {enabled} |
+| `portal_languages.settings_update` | the languages a customer's portal users may pick, `PUT /customer_portal/languages/settings/{code}` (#1310), only when the set changes | `customer_portal_language_settings` / code | old/new = {languages} |
 | `connector.create/update/delete` | `app/connectors` services | `connector` / name | new/old = sanitized config (no secrets) |
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |

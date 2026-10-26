@@ -29,3 +29,10 @@ class PortalMeResponse(BaseModel):
     # An admin chose the password and the user has not replaced it yet: the portal holds
     # them on the password change until they do (#1277).
     must_change_password: bool = False
+    # The language the portal shows and the ones the user may pick (#1310): English, plus every
+    # language enabled for at least one of their customers.
+    locale: str = "en"
+    available_locales: List[str] = ["en"]
+    # The user has picked a language (#1310): without a pick the portal may use the browser's
+    # language when it is one of ``available_locales``.
+    locale_chosen: bool = False

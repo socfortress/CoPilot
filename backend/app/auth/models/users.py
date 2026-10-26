@@ -87,6 +87,10 @@ class User(SQLModel, table=True):
     # user, #1296): no token is issued to it and every request it makes is refused
     # (app/auth/services/account_status.py). Naive UTC; NULL means active.
     disabled_at: Optional[datetime.datetime] = Field(default=None, nullable=True)
+    # The portal language the user picked (#1310): one of the codes in
+    # app/customer_portal/utils/locales.py. NULL means none picked; the portal shows English
+    # whenever this one isn't enabled for any of the user's customers.
+    locale: Optional[str] = Field(default=None, max_length=8, nullable=True)
 
     role: Optional["Role"] = Relationship(back_populates="user")
     customer_access: List["UserCustomerAccess"] = Relationship(back_populates="user")
