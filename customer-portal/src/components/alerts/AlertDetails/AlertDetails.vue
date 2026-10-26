@@ -51,7 +51,7 @@
 					</n-tab-pane>
 
 					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
-					<n-tab-pane v-if="askSocEnabled" name="ask-soc" tab="Ask the SOC" display-directive="show:lazy">
+					<n-tab-pane v-if="askSocEnabled" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
 						<AskSoc entity="alert" :entity-id="alert.id" @asked="handleAsked" />
 					</n-tab-pane>
 

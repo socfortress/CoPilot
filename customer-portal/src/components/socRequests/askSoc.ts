@@ -1,4 +1,5 @@
 import type { SocRequest, SocRequestAlertTarget, SocRequestStatus, SocRequestUrgency } from "@/types/socRequests"
+import { i18nGlobal } from "@/lang"
 
 /**
  * "Ask the SOC" (#1305): what the form checks before sending, and how a question reads.
@@ -39,23 +40,45 @@ export function questionLength(text: string): number {
 /** Why the question can't be sent, or null when it can. */
 export function questionProblem(text: string): string | null {
 	const question = normalizeQuestion(text)
-	if (!question) return "Write your question for the SOC"
-	if ([...question].length > QUESTION_MAX) return `Keep the question under ${QUESTION_MAX} characters`
-	if ([...question].some(forbidden)) return "The question contains characters that cannot be sent"
+	const t = i18nGlobal.t
+	if (!question) return t("socRequests.problem.empty")
+	if ([...question].length > QUESTION_MAX) return t("socRequests.problem.tooLong", { max: QUESTION_MAX })
+	if ([...question].some(forbidden)) return t("socRequests.problem.characters")
 	return null
 }
 
-export const URGENCY_OPTIONS: { value: SocRequestUrgency; label: string; description: string }[] = [
-	{ value: "low", label: "Low", description: "Whenever the SOC can" },
-	{ value: "normal", label: "Normal", description: "Within the usual response time" },
-	{ value: "high", label: "High", description: "It is blocking us" }
-]
+// Labels are getters, read in the user's language when shown (#1310).
+export const URGENCY_OPTIONS: { value: SocRequestUrgency; label: string; description: string }[] = (
+	["low", "normal", "high"] as const
+).map(value => ({
+	value,
+	get label() {
+		return i18nGlobal.t(`socRequests.urgency.${value}`)
+	},
+	get description() {
+		return i18nGlobal.t(`socRequests.urgency.${value}Hint`)
+	}
+}))
 
-export const URGENCY_LABELS: Record<SocRequestUrgency, string> = { low: "Low", normal: "Normal", high: "High" }
+export const URGENCY_LABELS: Record<SocRequestUrgency, string> = {
+	get low() {
+		return i18nGlobal.t("socRequests.urgency.low")
+	},
+	get normal() {
+		return i18nGlobal.t("socRequests.urgency.normal")
+	},
+	get high() {
+		return i18nGlobal.t("socRequests.urgency.high")
+	}
+}
 
 export const STATUS_LABELS: Record<SocRequestStatus, string> = {
-	open: "Waiting for the SOC",
-	answered: "Answered"
+	get open() {
+		return i18nGlobal.t("socRequests.status.open")
+	},
+	get answered() {
+		return i18nGlobal.t("socRequests.status.answered")
+	}
 }
 
 /** Where a question on an alert can go: the alert's open case (or a new one), or the alert itself. */
@@ -64,24 +87,25 @@ export function targetOptions(openCaseId: number | null | undefined): {
 	label: string
 	description: string
 }[] {
+	const t = i18nGlobal.t
 	return [
 		openCaseId
 			? {
 					value: "case",
-					label: `Add to case #${openCaseId}`,
-					description: "The SOC is already working this alert in that case"
+					label: t("socRequests.target.addToCase", { id: openCaseId }),
+					description: t("socRequests.target.addToCaseHint")
 				}
 			: {
 					value: "case",
-					label: "Open a case from this alert",
-					description: "The SOC follows it up as a case, with this alert in it"
+					label: t("socRequests.target.openCase"),
+					description: t("socRequests.target.openCaseHint")
 				},
-		{ value: "alert", label: "On this alert only", description: "A comment on the alert, no case" }
+		{ value: "alert", label: t("socRequests.target.alertOnly"), description: t("socRequests.target.alertOnlyHint") }
 	]
 }
 
 /** Where a listed question was filed, when that isn't the page it is shown on. */
 export function filedOn(request: SocRequest, entity: "alert" | "case"): string | null {
-	if (entity === "alert") return request.case_id ? `On case #${request.case_id}` : null
-	return request.origin_alert_id ? `Asked from alert #${request.origin_alert_id}` : null
+	if (entity === "alert") return request.case_id ? i18nGlobal.t("socRequests.filed.onCase", { id: request.case_id }) : null
+	return request.origin_alert_id ? i18nGlobal.t("socRequests.filed.fromAlert", { id: request.origin_alert_id }) : null
 }

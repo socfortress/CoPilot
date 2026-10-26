@@ -43,7 +43,7 @@
 						<CaseFiles :case-id="caseData.id" />
 					</n-tab-pane>
 					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
-					<n-tab-pane v-if="askSocEnabled" name="ask-soc" tab="Ask the SOC" display-directive="show:lazy">
+					<n-tab-pane v-if="askSocEnabled" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
 						<AskSoc entity="case" :entity-id="caseData.id" @asked="handleAsked" />
 					</n-tab-pane>
 					<n-tab-pane name="comments" :tab="$t('cases.caseDetails.tabs.comments', { count: caseData.comments?.length || 0 })">

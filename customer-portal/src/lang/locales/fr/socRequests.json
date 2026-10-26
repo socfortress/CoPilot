@@ -1,0 +1,49 @@
+{
+	"tab": "Demander au SOC",
+	"title": "Demander au SOC",
+	"introAlert": "Votre question est transmise aux analystes du SOC sous forme de commentaire signé par vous, sur le dossier ou l'alerte de votre choix. Leur réponse apparaît dans les commentaires.",
+	"introCase": "Votre question est transmise aux analystes du SOC sous forme de commentaire signé par vous sur le dossier. Leur réponse apparaît dans les commentaires.",
+	"placeholder": "Que souhaitez-vous savoir ?",
+	"questionLabel": "Votre question pour le SOC",
+	"urgencyLegend": "Quelle est l'urgence ?",
+	"targetLegend": "Où doit-elle aller ?",
+	"send": "Envoyer au SOC",
+	"history": "Questions au SOC",
+	"emptyAlert": "Aucune question posée sur cette alerte pour l'instant.",
+	"emptyCase": "Aucune question posée sur ce dossier pour l'instant.",
+	"urgencyLine": "Urgence : {urgency}",
+	"askedBy": "Posée par {user} · {date}",
+	"answeredAt": "· répondue le {date}",
+	"sent": "Votre question a été envoyée au SOC",
+	"loadFailed": "Impossible de charger les questions.",
+	"sendFailed": "Votre question n'a pas pu être envoyée. Veuillez réessayer.",
+	"urgency": {
+		"low": "Faible",
+		"normal": "Normale",
+		"high": "Élevée",
+		"lowHint": "Quand le SOC le peut",
+		"normalHint": "Dans le délai de réponse habituel",
+		"highHint": "Cela nous bloque"
+	},
+	"status": {
+		"open": "En attente du SOC",
+		"answered": "Répondue"
+	},
+	"target": {
+		"addToCase": "Ajouter au dossier #{id}",
+		"addToCaseHint": "Le SOC traite déjà cette alerte dans ce dossier",
+		"openCase": "Ouvrir un dossier à partir de cette alerte",
+		"openCaseHint": "Le SOC la suit comme un dossier, avec cette alerte dedans",
+		"alertOnly": "Sur cette alerte uniquement",
+		"alertOnlyHint": "Un commentaire sur l'alerte, sans dossier"
+	},
+	"problem": {
+		"empty": "Écrivez votre question pour le SOC",
+		"tooLong": "La question doit faire moins de {max} caractères",
+		"characters": "La question contient des caractères qui ne peuvent pas être envoyés"
+	},
+	"filed": {
+		"onCase": "Sur le dossier #{id}",
+		"fromAlert": "Posée depuis l'alerte #{id}"
+	}
+}

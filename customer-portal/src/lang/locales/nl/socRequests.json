@@ -1,0 +1,49 @@
+{
+	"tab": "Vraag het SOC",
+	"title": "Vraag het SOC",
+	"introAlert": "Je vraag gaat naar de SOC-analisten als een opmerking die jij ondertekent, op de zaak of melding die je kiest. Hun antwoord verschijnt in de opmerkingen.",
+	"introCase": "Je vraag gaat naar de SOC-analisten als een opmerking die jij ondertekent op de zaak. Hun antwoord verschijnt in de opmerkingen.",
+	"placeholder": "Wat wil je weten?",
+	"questionLabel": "Je vraag voor het SOC",
+	"urgencyLegend": "Hoe dringend is het?",
+	"targetLegend": "Waar moet hij heen?",
+	"send": "Naar het SOC sturen",
+	"history": "Vragen aan het SOC",
+	"emptyAlert": "Nog geen vraag gesteld over deze melding.",
+	"emptyCase": "Nog geen vraag gesteld over deze zaak.",
+	"urgencyLine": "Urgentie: {urgency}",
+	"askedBy": "Gevraagd door {user} · {date}",
+	"answeredAt": "· beantwoord {date}",
+	"sent": "Je vraag is naar het SOC gestuurd",
+	"loadFailed": "De vragen konden niet worden geladen.",
+	"sendFailed": "Je vraag kon niet worden verstuurd. Probeer het opnieuw.",
+	"urgency": {
+		"low": "Laag",
+		"normal": "Normaal",
+		"high": "Hoog",
+		"lowHint": "Wanneer het SOC kan",
+		"normalHint": "Binnen de gebruikelijke reactietijd",
+		"highHint": "Het houdt ons tegen"
+	},
+	"status": {
+		"open": "Wacht op het SOC",
+		"answered": "Beantwoord"
+	},
+	"target": {
+		"addToCase": "Toevoegen aan zaak #{id}",
+		"addToCaseHint": "Het SOC werkt al aan deze melding in die zaak",
+		"openCase": "Een zaak openen vanuit deze melding",
+		"openCaseHint": "Het SOC volgt het op als zaak, met deze melding erin",
+		"alertOnly": "Alleen op deze melding",
+		"alertOnlyHint": "Een opmerking op de melding, geen zaak"
+	},
+	"problem": {
+		"empty": "Schrijf je vraag voor het SOC",
+		"tooLong": "Houd de vraag onder de {max} tekens",
+		"characters": "De vraag bevat tekens die niet kunnen worden verstuurd"
+	},
+	"filed": {
+		"onCase": "Op zaak #{id}",
+		"fromAlert": "Gevraagd vanuit melding #{id}"
+	}
+}
