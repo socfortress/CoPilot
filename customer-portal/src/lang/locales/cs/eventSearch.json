@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "Nejsou nakonfigurovány žádné zdroje událostí",
+		"noSourcesText": "Pro tohoto zákazníka nejsou nakonfigurovány žádné zdroje událostí. Obraťte se na svého správce, aby je nastavil.",
+		"queryLabel": "Dotaz Lucene",
+		"autocompleteHint": "zadejte # pro automatické doplňování",
+		"selectCustomer": "Vyberte zákazníka",
+		"selectSource": "Vyberte zdroj",
+		"queryPlaceholder": "např. {example}",
+		"noFieldMappings": "Nenalezena žádná mapování polí",
+		"customerNeeded": "Pro vyhledávání vyberte zákazníka",
+		"sourceNeeded": "Pro vyhledávání vyberte zdroj",
+		"time": "Čas",
+		"timeUnit": "Jednotka času",
+		"units": {
+			"hours": "Hodiny",
+			"days": "Dny",
+			"weeks": "Týdny"
+		},
+		"perPage": "{count} na stránku",
+		"loadSourcesFailed": "Zdroje událostí se nepodařilo načíst",
+		"queryUpdated": "„{name}“ aktualizováno",
+		"querySaved": "„{name}“ uloženo",
+		"saveQueryFailed": "Dotaz se nepodařilo uložit",
+		"deleteQueryFailed": "Dotaz se nepodařilo smazat",
+		"clearRecentFailed": "Nedávná vyhledávání se nepodařilo vymazat",
+		"sourceGone": "Zdroj „{source}“ již pro tohoto zákazníka není k dispozici"
+	},
+	"results": {
+		"count": "Načteno {loaded} z {total} událostí",
+		"columns": "Sloupce",
+		"ownColumns": "Vaše vlastní sloupce",
+		"exportCsv": "Exportovat CSV",
+		"empty": "Nenalezeny žádné události",
+		"emptyHint": "Zkuste upravit dotaz nebo rozšířit časové období",
+		"loadMore": "{shown} z {total} událostí • Načíst další",
+		"columnsTitle": "Sloupce · {source}",
+		"socLayout": "Rozvržení SOC",
+		"defaultLayout": "Výchozí rozvržení",
+		"viewDetails": "Zobrazit podrobnosti",
+		"switchColumnsFailed": "Sloupce se nepodařilo přepnout",
+		"templateUpdated": "Šablona „{name}“ aktualizována",
+		"templateSaved": "Šablona „{name}“ uložena",
+		"saveTemplateFailed": "Šablonu se nepodařilo uložit",
+		"templateDeletedNamed": "Šablona „{name}“ smazána",
+		"templateDeleted": "Šablona smazána",
+		"deleteTemplateFailed": "Šablonu se nepodařilo smazat",
+		"saveColumnsFailed": "Sloupce se nepodařilo uložit",
+		"exportedPartial": "Exportováno {exported} z {total} událostí: pro zahrnutí ostatních načtěte další",
+		"exported": "Exportováno {exported} událostí",
+		"searchFailed": "Události se nepodařilo vyhledat",
+		"loadMoreFailed": "Další události se nepodařilo načíst"
+	},
+	"columns": {
+		"timestamp": "Časové razítko",
+		"level": "Úroveň",
+		"source": "Zdroj",
+		"rule": "Pravidlo"
+	},
+	"details": {
+		"title": "Podrobnosti události",
+		"filterFor": "Filtrovat podle této hodnoty",
+		"exclude": "Vyloučit tuto hodnotu"
+	},
+	"queries": {
+		"toggle": "Dotazy",
+		"saved": "Uložené",
+		"recent": "Nedávné",
+		"loading": "Načítání…",
+		"noSaved": "Zatím žádný uložený dotaz. Spusťte vyhledávání a pak ho uložte pod názvem.",
+		"noRecent": "Zde se zobrazí vyhledávání, která spustíte.",
+		"run": "Spustit „{name}“",
+		"delete": "Smazat „{name}“",
+		"saveAs": "Uložit toto vyhledávání jako",
+		"namePlaceholder": "např. Neúspěšná přihlášení na webových serverech",
+		"willReplace": "Aktualizuje dotaz uložený pod tímto názvem.",
+		"loadFailed": "Vaše uložená vyhledávání se nepodařilo načíst",
+		"lastHours": "poslední {count} hodina | poslední {count} hodiny | posledních {count} hodin",
+		"lastDays": "poslední {count} den | poslední {count} dny | posledních {count} dní",
+		"lastWeeks": "poslední {count} týden | poslední {count} týdny | posledních {count} týdnů"
+	},
+	"layouts": {
+		"toggle": "Rozvržení",
+		"title": "Rozvržení",
+		"custom": "Vlastní",
+		"deleteTemplate": "Smazat šablonu „{name}“",
+		"noTemplates": "Zatím žádná šablona: uspořádejte sloupce a pak je uložte jako šablonu.",
+		"manage": "Spravovat sloupce a šablony"
+	},
+	"deleteConfirm": {
+		"label": "Smazat šablonu „{name}“?",
+		"question": "Smazat {name}?"
+	},
+	"preview": {
+		"columns": "{count} sloupec | {count} sloupce | {count} sloupců",
+		"header": "Záhlaví",
+		"field": "Pole"
+	},
+	"picker": {
+		"shown": "Zobrazené sloupce · zleva doprava",
+		"noneSoc": "Není vybrán žádný sloupec: tabulka zobrazuje rozvržení SOC pro tento zdroj.",
+		"noneDefault": "Není vybrán žádný sloupec: tabulka zobrazuje výchozí rozvržení.",
+		"headerOf": "Záhlaví pole {field}",
+		"moveLeft": "Posunout doleva",
+		"moveRight": "Posunout doprava",
+		"remove": "Odebrat {field}",
+		"addField": "Přidat pole",
+		"searchFields": "Hledat v polích zdroje",
+		"noFields": "Pro tento zdroj není seznam polí",
+		"templates": "Šablony pro tento zdroj",
+		"loadTitle": "Přenést sloupce šablony „{name}“ nahoru, abyste je mohli upravit nebo použít",
+		"load": "Načíst",
+		"templateNamePlaceholder": "Uložit sloupce výše jako…",
+		"saveTemplate": "Uložit jako šablonu",
+		"willReplace": "Aktualizuje šablonu uloženou pod tímto názvem.",
+		"backToSoc": "Zpět na rozvržení SOC",
+		"backToDefault": "Zpět na výchozí"
+	}
+}

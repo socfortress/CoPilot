@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Alerts",
+		"cases": "Cases",
+		"reports": "Reports",
+		"users": "Users",
+		"account": "Sign-ins and accounts"
+	},
+	"actors": {
+		"member": "A portal user",
+		"soc": "SOC",
+		"other": "Another portal user",
+		"unknown": "Unknown"
+	},
+	"targets": {
+		"alert": "Alert #{id}",
+		"case": "Case #{id}",
+		"report": "Report #{id}"
+	},
+	"retention": {
+		"forever": "Kept for as long as your SOC keeps its audit log.",
+		"days": "Kept for {count} day: older entries are removed. | Kept for {count} days: older entries are removed."
+	},
+	"page": {
+		"title": "Audit log",
+		"intro": "Who did what in your organization's portal: alerts and cases moved and commented on, reports, and your users' sign-ins and accounts. Your SOC's actions are shown as SOC.",
+		"export": "Export CSV",
+		"forbiddenTitle": "The audit log is for your organization's administrators",
+		"forbiddenText": "Your SOC decides who administers your organization and whether its audit log is shown. Ask your SOC contact if you need it.",
+		"allActivity": "All activity",
+		"everyone": "Everyone",
+		"from": "From",
+		"to": "To",
+		"allCustomers": "All customers",
+		"clearFilters": "Clear filters",
+		"noMatches": "Nothing matches these filters",
+		"empty": "Nothing recorded yet",
+		"failed": "Failed",
+		"total": "{count} entry | {count} entries",
+		"truncated": "The CSV holds the newest 10,000 entries: narrow the period for the rest.",
+		"loadFailed": "Could not load the audit log.",
+		"exportFailed": "Could not export the audit log."
+	}
+}

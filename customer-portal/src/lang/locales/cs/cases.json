@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Případy"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Název případu",
+			"assignedTo": "Přiřazeno"
+		},
+		"items": "položek",
+		"empty": "Nebyly nalezeny žádné případy",
+		"emptyHint": "zkuste změnit filtry"
+	},
+	"createCaseButton": {
+		"label": "Vytvořit případ",
+		"title": "Vytvořit případ"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Název případu",
+			"caseStatus": "Stav případu",
+			"caseDescription": "Popis případu",
+			"assignedTo": "Přiřazeno (nepovinné)"
+		},
+		"placeholders": {
+			"customer": "Vyberte zákazníka, kterému tento případ patří",
+			"caseName": "Zadejte název případu",
+			"caseStatus": "Vyberte stav případu",
+			"caseDescription": "Zadejte popis případu",
+			"assignedTo": "Vyberte řešitele"
+		},
+		"submit": "Vytvořit případ",
+		"created": "Případ byl úspěšně vytvořen"
+	},
+	"caseAssignedSelect": {
+		"updated": "Přiřazení změněno na {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Stav případu změněn na {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Podrobnosti případu"
+	},
+	"unlinkCase": {
+		"label": "Odpojit případ",
+		"confirm": "Opravdu chcete odpojit tento případ od výstrahy?",
+		"unlinked": "Případ byl odpojen od výstrahy",
+		"failed": "Došlo k chybě. Zkuste to prosím později znovu."
+	},
+	"caseDetails": {
+		"error": "Chyba",
+		"notFound": "Případ nebyl nalezen.",
+		"tabs": {
+			"overview": "Přehled",
+			"alerts": "Výstrahy ({count})",
+			"tasks": "Úkoly",
+			"timeline": "Časová osa",
+			"files": "Soubory",
+			"comments": "Komentáře ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Název případu",
+		"escalated": "Eskalováno",
+		"notificationInvokedNumber": "Počet odeslaných oznámení",
+		"assignedTo": "Přiřazeno"
+	},
+	"caseAlerts": {
+		"linkAlert": "Připojit výstrahu",
+		"unlinkAlert": "Odpojit výstrahu",
+		"created": "Vytvořeno: {date}",
+		"assignedTo": "Přiřazeno",
+		"alertId": "Výstraha #{id}",
+		"empty": "Nebyly nalezeny žádné výstrahy"
+	},
+	"caseComment": {
+		"confirmDelete": "Opravdu chcete tento komentář smazat?",
+		"updated": "Komentář byl upraven",
+		"deleted": "Komentář byl smazán"
+	},
+	"caseComments": {
+		"empty": "Žádné komentáře",
+		"add": "Přidat komentář",
+		"placeholder": "Napište svůj komentář...",
+		"added": "Komentář byl přidán"
+	},
+	"caseFiles": {
+		"files": "souborů",
+		"size": "velikost",
+		"type": "typ",
+		"empty": "Nebyly nalezeny žádné soubory",
+		"dropHint": "Klikněte nebo přetáhněte soubor do této oblasti a nahrajte ho",
+		"upload": "Nahrát"
+	},
+	"caseTasks": {
+		"tasks": "úkolů",
+		"done": "hotovo",
+		"mandatoryIncomplete": "povinných nedokončeno",
+		"intro": "Přehled úkolů šetření, které tým SOC u tohoto případu provedl, pouze pro čtení.",
+		"mandatory": "povinný",
+		"custom": "vlastní",
+		"guidelines": "Pokyny",
+		"notes": "Poznámky analytika",
+		"completedBy": "Dokončil(a) {user}",
+		"markedBy": "Označil(a) {user}",
+		"createdBy": "Vytvořil(a) {user}",
+		"empty": "K tomuto případu zatím nejsou žádné úkoly",
+		"status": {
+			"todo": "K provedení",
+			"done": "Hotovo",
+			"notNecessary": "Není nutné"
+		}
+	},
+	"caseTimeline": {
+		"events": "událostí",
+		"intro": "Auditní záznam aktivit šetření u tohoto případu, pouze pro čtení.",
+		"empty": "Zatím žádné události",
+		"caseCreatedFromAlert": "Případ vytvořen z výstrahy #{id}",
+		"caseCreated": "Případ vytvořen",
+		"statusForced": "Stav vynuceně změněn z {from} na {to} (povinné úkoly přeskočeny)",
+		"statusChanged": "Stav změněn z {from} na {to}",
+		"reassigned": "Znovu přiřazeno z {from} na {to}",
+		"assigned": "Přiřazeno: {to}",
+		"unassigned": "nepřiřazeno",
+		"escalated": "Případ eskalován",
+		"deescalated": "Eskalace případu zrušena",
+		"alertsLinked": "K případu připojeno výstrah: {count}",
+		"alertLinked": "Výstraha #{id} připojena",
+		"alertUnlinked": "Výstraha #{id} odpojena",
+		"commentAdded": "Přidán komentář",
+		"templateApplied": "Použita šablona: {name} ({count} úkol) | Použita šablona: {name} ({count} úkoly) | Použita šablona: {name} ({count} úkolů)",
+		"taskAdded": "Přidán úkol: {title}",
+		"taskAddedMandatory": "Přidán úkol: {title} (povinný)",
+		"taskStatusChanged": "Úkol {title}: {from} → {to}",
+		"taskCommented": "Přidány poznámky k úkolu: {title}",
+		"alertsDetail": "Výstrahy: {list}"
+	}
+}

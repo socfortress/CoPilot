@@ -1,0 +1,73 @@
+{
+	"page": {
+		"title": "Úrovně služeb",
+		"intro": "Jak rychle SOC reagoval na vaše výstrahy a případy a vyřešil je, ve srovnání s cíli, které jsme s vámi dohodli.",
+		"refreshError": "Údaje se nepodařilo obnovit: {error}",
+		"disabledTitle": "Úrovně služeb zatím nejsou k dispozici",
+		"disabledText": "Váš SOC zatím pro tohoto zákazníka nezveřejnil údaje o úrovních služeb. Pokud je zde chcete vidět, obraťte se na svůj kontakt v SOC.",
+		"trendTitle": "Vyřešeno v rámci cíle",
+		"trendEmpty": "V tomto období nebylo nic sledovaného otevřeno ani vyřešeno",
+		"commitmentTitle": "Náš závazek",
+		"commitmentEmpty": "Na vaše výstrahy a případy se nevztahují žádné cíle",
+		"periodMeta": "posledních {period}",
+		"measuredSince": "měřeno od {date}"
+	},
+	"period": "{count} dní",
+	"kpi": {
+		"alertResponse": "Reakce na výstrahy",
+		"alertResolution": "Vyřešení výstrah",
+		"caseResponse": "Reakce na případy",
+		"caseResolution": "Vyřešení případů",
+		"answeredWithinTarget": "zodpovězeno v rámci cíle",
+		"resolvedWithinTarget": "vyřešeno v rámci cíle",
+		"medianResponse": "medián reakce",
+		"medianResolution": "medián vyřešení",
+		"deltaTitle": "{delta} bodu oproti předchozímu období",
+		"onTarget": "{met} z {decided} v rámci cíle",
+		"noOutcome": "zatím bez výsledku"
+	},
+	"units": {
+		"seconds": "{n} s",
+		"minutes": "{n} min",
+		"hours": "{n} h",
+		"hoursMinutes": "{hours} h {minutes} min",
+		"days": "{n} d",
+		"daysHours": "{days} d {hours} h",
+		"targetMinutes": "{n} min",
+		"targetHours": "{n} h",
+		"targetDays": "{n} d",
+		"noTarget": "Bez cíle"
+	},
+	"targets": {
+		"alerts": "Výstrahy",
+		"cases": "Případy",
+		"response": "Reakce",
+		"resolution": "Vyřešení",
+		"kept": "Splněno",
+		"businessHours": "pracovní doba",
+		"businessHoursHint": "Tyto cíle počítají pouze pracovní hodiny: noci, víkendy a svátky se do času nezapočítávají.",
+		"nothing": "V tomto období nic s touto závažností",
+		"keptNote": "Splněno: podíl vyřešený v rámci cíle (nebo zodpovězený, pokud vyřešení zatím nemá výsledek). Čas, kdy se čeká na vás, se SOC nezapočítává."
+	},
+	"openNow": {
+		"label": "Právě otevřeno",
+		"alerts": "Otevřené výstrahy",
+		"cases": "Otevřené případy",
+		"atRisk": "Brzy po termínu",
+		"breached": "Po cíli",
+		"viewAll": "Zobrazit vše",
+		"alertsLink": "Výstrahy",
+		"casesLink": "Případy"
+	},
+	"trend": {
+		"ariaLabel": "Vyřešení v rámci cíle za období, od {from} do {to}",
+		"ariaEmpty": "V tomto období žádný výsledek vyřešení",
+		"noOutcome": "Zatím žádný výsledek vyřešení",
+		"onTarget": "V rámci cíle",
+		"onTargetLine": "V rámci cíle: {rate}",
+		"volumes": "Otevřeno {opened} · vyřešeno {resolved}"
+	},
+	"severity": {
+		"informational": "Informativní"
+	}
+}

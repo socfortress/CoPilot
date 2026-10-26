@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Berichte",
+		"subtitle": "Erstellen Sie PDF-Aktivitätsberichte für Ihre Organisation und laden Sie sie herunter",
+		"generate": "Bericht erstellen",
+		"empty": "Noch keine Berichte erstellt",
+		"loadFailed": "Die Berichte konnten nicht geladen werden",
+		"noCustomer": "Kein Kunde für die Berichterstellung verfügbar",
+		"queued": "Die Erstellung des Berichts kann eine Weile dauern – Sie werden benachrichtigt, sobald er fertig ist.",
+		"queueFailed": "Die Berichterstellung konnte nicht eingeplant werden",
+		"generateFailed": "Der Bericht konnte nicht erstellt werden",
+		"downloaded": "Bericht heruntergeladen",
+		"downloadFailed": "Der Bericht konnte nicht heruntergeladen werden",
+		"deleteFailed": "Der Bericht konnte nicht gelöscht werden"
+	},
+	"form": {
+		"reportName": "Berichtsname",
+		"reportNamePlaceholder": "Leer lassen für einen automatisch erzeugten Namen",
+		"timeRange": "Zeitraum",
+		"customRange": "Benutzerdefinierter Datumsbereich",
+		"template": "Berichtsvorlage",
+		"selectCustomer": "Bitte wählen Sie einen Kunden aus",
+		"selectRange": "Bitte wählen Sie einen Datumsbereich aus",
+		"ranges": {
+			"last30": "Letzte 30 Tage",
+			"last90": "Letzte 3 Monate",
+			"custom": "Benutzerdefinierter Zeitraum"
+		},
+		"templates": {
+			"full": {
+				"label": "Vollständiger Bericht",
+				"description": "Alles: Management-Zusammenfassung, Diagramme und Trends sowie offene/geschlossene Fälle mit Assets und IOCs."
+			},
+			"executive": {
+				"label": "Management-Zusammenfassung",
+				"description": "Überblick auf einen Blick: zentrale KPIs, Servicekennzahlen und ein Statusdiagramm. Keine Falldetails."
+			},
+			"operational": {
+				"label": "Operativ — Fälle",
+				"description": "Fallorientiert: jeder offene/geschlossene Fall im Detail (Assets, IOCs, Lösung). Keine Diagramme."
+			},
+			"analytics": {
+				"label": "Analyse — Trends",
+				"description": "Kennzahlenorientiert: Management-Zusammenfassung plus alle Verteilungsdiagramme und die monatliche Trendtabelle. Keine Falldetails."
+			}
+		}
+	},
+	"delete": {
+		"title": "Bericht löschen",
+		"confirm": "Möchten Sie \"{name}\" wirklich löschen?",
+		"irreversible": "Diese Aktion kann nicht rückgängig gemacht werden."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Vollständiger Bericht",
+				"description": "Management-Zusammenfassung, Diagramme und Trends sowie offene/geschlossene Fälle mit Assets und IOCs"
+			},
+			"executive": {
+				"name": "Management-Bericht",
+				"description": "Überblick auf einen Blick: KPIs, Servicekennzahlen und ein Statusdiagramm"
+			},
+			"operational": {
+				"name": "Operativer Bericht",
+				"description": "Fallorientiert: offene/geschlossene Fälle im Detail (Assets, IOCs, Lösung)"
+			},
+			"analytics": {
+				"name": "Analysebericht",
+				"description": "Kennzahlenorientiert: Management-Zusammenfassung, alle Diagramme und die monatliche Trendtabelle"
+			}
+		},
+		"alerts": "Alarme",
+		"cases": "Fälle",
+		"open": "offen",
+		"closed": "geschlossen",
+		"status": {
+			"completed": "Abgeschlossen",
+			"processing": "Wird erstellt",
+			"failed": "Fehlgeschlagen"
+		},
+		"roles": {
+			"admin": "Administrator",
+			"analyst": "Analyst",
+			"scheduler": "Planer",
+			"customer_user": "Kunde"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Bericht bereit",
+		"readyDescription": "\"{name}\" wurde erstellt und steht zum Herunterladen bereit.",
+		"failedTitle": "Bericht fehlgeschlagen",
+		"failedDescription": "\"{name}\" konnte nicht erstellt werden.",
+		"timeoutTitle": "Bericht wird noch erstellt",
+		"timeoutDescription": "\"{name}\" dauert länger als erwartet. Den Status finden Sie auf der Seite Berichte.",
+		"viewReports": "Berichte anzeigen"
+	}
+}

@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "items",
+		"empty": "No alerts found",
+		"clearFilters": "Clear filters",
+		"columns": {
+			"alert": "Alert",
+			"assets": "Assets",
+			"tags": "Tags"
+		}
+	},
+	"statusSelect": {
+		"updated": "Alert status updated to {status}"
+	},
+	"detailsButton": {
+		"title": "Alert Details"
+	},
+	"linkAlert": {
+		"linkAlert": "Link Alert",
+		"link": "Link",
+		"idsRequired": "Case and alert IDs are required",
+		"linked": "Alert linked to case successfully",
+		"genericError": "An error occurred. Please try again later."
+	},
+	"details": {
+		"error": "Error",
+		"notFound": "Alert not found.",
+		"tabs": {
+			"overview": "Overview",
+			"assets": "Assets",
+			"linkedCases": "Linked Cases ({count})",
+			"iocs": "Indicators of Compromise (IoCs)",
+			"aiReport": "AI Report",
+			"comments": "Comments ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Alert Name",
+		"escalated": "Escalated",
+		"assignedTo": "Assigned To"
+	},
+	"assets": {
+		"agentId": "Agent ID",
+		"velociraptorId": "Velociraptor ID",
+		"assetName": "Asset name",
+		"empty": "No assets found"
+	},
+	"iocs": {
+		"empty": "No indicators of compromise found"
+	},
+	"cases": {
+		"createCase": "Create Case",
+		"linkCase": "Link Case",
+		"assignedTo": "Assigned to",
+		"created": "Created: {date}",
+		"caseNumber": "Case #{id}",
+		"empty": "No linked cases found",
+		"createdSuccess": "Case created successfully",
+		"genericError": "An error occurred. Please try again later."
+	},
+	"comments": {
+		"empty": "No comments found",
+		"add": "Add Comment",
+		"placeholder": "Enter your comment...",
+		"added": "Comment added successfully",
+		"updated": "Comment updated successfully",
+		"deleted": "Comment deleted successfully",
+		"confirmDelete": "Are you sure you want to delete this comment?"
+	},
+	"aiReport": {
+		"error": "Error",
+		"investigation": "Investigation",
+		"started": "Started",
+		"completed": "Completed",
+		"requestedTitle": "AI analysis requested",
+		"requestedText": "The AI analyst will pick it up shortly. This page updates by itself, and the new findings replace these once it has finished.",
+		"progressTitle": "Investigation in progress",
+		"progressFor": "The AI analyst has been working on this alert for {elapsed}. Findings will appear here once the investigation completes.",
+		"progress": "The AI analyst is working on this alert. Findings will appear here once the investigation completes.",
+		"stalledTitle": "Investigation did not finish",
+		"stalledText": "The AI analyst stopped working on this alert before writing its findings.",
+		"stalledCanRequest": "You can ask for a new analysis.",
+		"summary": "Summary",
+		"recommendedActions": "Recommended Actions",
+		"fullReport": "Full Report",
+		"iocsTitle": "Indicators identified by the AI analyst",
+		"vtVerdict": "VT Verdict",
+		"vtScore": "VT Score",
+		"generated": "Report generated {date}",
+		"notEnabled": "AI analyst findings are not enabled for this customer",
+		"requestedEmpty": "AI analysis requested: the findings appear here once the AI analyst has finished",
+		"noAnalysis": "No AI analysis has been performed for this alert",
+		"requestFailed": "The analysis could not be requested. Please try again later."
+	},
+	"aiRequest": {
+		"runAgain": "Run again",
+		"run": "Run analysis",
+		"confirmAgain": "Ask the AI analyst to analyse this alert again? The new findings replace these once it has finished.",
+		"confirm": "Ask the AI analyst to analyse this alert? The findings appear here once it has finished.",
+		"inProgress": "Analysis in progress",
+		"rerun": "Re-run AI analysis",
+		"runAi": "Run AI analysis"
+	},
+	"aiStatus": {
+		"queued": "Queued",
+		"analysing": "Analysing",
+		"completed": "Completed",
+		"failed": "Failed",
+		"stalled": "Stalled",
+		"unknown": "Unknown"
+	},
+	"filters": {
+		"labels": {
+			"status": "Status",
+			"source": "Source",
+			"asset": "Asset",
+			"tag": "Tag",
+			"date": "Created",
+			"detection": "Detection",
+			"opened": "Reached the SOC"
+		},
+		"remove": {
+			"status": "Remove the status filter",
+			"source": "Remove the source filter",
+			"asset": "Remove the asset filter",
+			"tag": "Remove the tag filter",
+			"date": "Remove the created filter",
+			"detection": "Remove the detection filter",
+			"opened": "Remove the reached the soc filter"
+		},
+		"searchTitles": "Search alert titles",
+		"anyStatus": "Any status",
+		"anySource": "Any source",
+		"searchAssets": "Search assets",
+		"anyTags": "Any of these tags",
+		"from": "From",
+		"to": "To",
+		"add": "Add filter",
+		"clear": "Clear filters",
+		"openedSince": "since {date}",
+		"openedBefore": "before {date}"
+	}
+}

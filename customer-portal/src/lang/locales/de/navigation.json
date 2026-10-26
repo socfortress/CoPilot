@@ -1,0 +1,45 @@
+{
+	"portalName": "Kundenportal",
+	"routes": {
+		"overview": "Übersicht",
+		"alerts": "Alarme",
+		"alertDetails": "Alarmdetails",
+		"cases": "Fälle",
+		"caseDetails": "Falldetails",
+		"agents": "Agents",
+		"agentDetails": "Agent-Details",
+		"reports": "Berichte",
+		"eventSearch": "Ereignissuche",
+		"dashboards": "Dashboards",
+		"dashboardDetails": "Dashboard-Details",
+		"exposure": "Gefährdung",
+		"users": "Benutzer",
+		"auditLog": "Audit-Protokoll",
+		"activity": "Aktivität",
+		"sla": "Service-Level",
+		"profile": "Profil",
+		"login": "Anmeldung",
+		"changePassword": "Neues Passwort wählen"
+	},
+	"sidebar": {
+		"documentation": "Dokumentation"
+	},
+	"toolbar": {
+		"fullscreen": "Vollbild umschalten",
+		"theme": "Design umschalten",
+		"shortcuts": "Verknüpfungen",
+		"yourProfile": "Ihr Profil",
+		"logout": "Abmelden"
+	},
+	"customerFilter": {
+		"placeholder": "Alle Kunden"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Seite nicht gefunden",
+		"home": "Zur Startseite"
+	}
+}

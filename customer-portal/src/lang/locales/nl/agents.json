@@ -1,0 +1,130 @@
+{
+	"stats": {
+		"entity": "Agents",
+		"active": "actief",
+		"offline": "offline",
+		"critical": "kritiek",
+		"other": "overig"
+	},
+	"exportCsv": "CSV exporteren",
+	"list": {
+		"columns": {
+			"agent": "Agent",
+			"ipAddress": "IP-adres",
+			"os": "Besturingssysteem",
+			"lastSeen": "Laatst gezien",
+			"criticalAsset": "Kritiek asset"
+		},
+		"items": "items",
+		"exported": "{count} asset naar CSV geëxporteerd | {count} assets naar CSV geëxporteerd",
+		"empty": "Geen agents gevonden",
+		"emptyHint": "probeer de filters aan te passen"
+	},
+	"filters": {
+		"os": "Besturingssysteem",
+		"search": "Zoeken (hostnaam, IP-adres, agent-ID)",
+		"critical": "Kritieke assets",
+		"reset": "Filters wissen"
+	},
+	"agentCriticalSelect": {
+		"critical": "Kritiek",
+		"notCritical": "Niet kritiek",
+		"updated": "Kritikaliteit van de agent gewijzigd naar {level}"
+	},
+	"agentDetailsButton": {
+		"title": "Agentdetails"
+	},
+	"agentDetails": {
+		"error": "Fout",
+		"notFound": "Agent niet gevonden.",
+		"tabs": {
+			"overview": "Overzicht",
+			"vulnerabilities": "Kwetsbaarheden",
+			"cases": "Zaken"
+		}
+	},
+	"agentCases": {
+		"heading": "Zaken waarbij deze host betrokken is",
+		"empty": "Geen enkele zaak betreft deze host",
+		"unassigned": "niet toegewezen",
+		"alerts": "{count} melding | {count} meldingen",
+		"loadFailed": "De zaken konden niet worden geladen."
+	},
+	"agentVulnerabilities": {
+		"filterLabel": "Filteren op ernst",
+		"search": "Zoek op CVE, titel of pakket",
+		"shown": "{count} getoond · ernstigste eerst",
+		"head": {
+			"severity": "Ernst",
+			"vulnerability": "Kwetsbaarheid",
+			"package": "Pakket",
+			"detected": "Gedetecteerd"
+		},
+		"loading": "De kwetsbaarheden worden uit Wazuh opgehaald. Bij een agent met veel pakketten kan dit tot een minuut duren.",
+		"emptyFiltered": "Geen kwetsbaarheid voldoet aan de filters",
+		"empty": "Geen kwetsbaarheden gevonden op deze agent",
+		"facts": {
+			"package": "Pakket",
+			"architecture": "Architectuur",
+			"type": "Type",
+			"published": "Gepubliceerd",
+			"detected": "Gedetecteerd"
+		},
+		"references": "Referenties · {count}",
+		"loadFailed": "De kwetsbaarheden konden niet worden geladen.",
+		"exportFailed": "De kwetsbaarheden konden niet worden geëxporteerd."
+	},
+	"agentSca": {
+		"head": {
+			"policy": "Beleid",
+			"score": "Score",
+			"checks": "Controles",
+			"lastScan": "Laatste scan"
+		},
+		"empty": "Nog geen SCA-scan op deze agent",
+		"passed": "{count} geslaagd",
+		"failed": "{count} mislukt",
+		"notApplicable": "{count} n.v.t.",
+		"checks": "· {count} controles",
+		"scanned": "gescand {when}",
+		"back": "Alle beleidsregels",
+		"policy": "SCA-beleid",
+		"score": "Score",
+		"filterLabel": "Filteren op resultaat",
+		"search": "Zoek op titel of ID van de controle",
+		"shown": "{count} getoond · mislukte eerst",
+		"emptyFiltered": "Geen controle voldoet aan de filters",
+		"noChecks": "Dit beleid heeft geen controles",
+		"text": {
+			"rationale": "Onderbouwing",
+			"remediation": "Herstel",
+			"reason": "Reden"
+		},
+		"compliance": "Compliance",
+		"filter": {
+			"all": "Alle",
+			"failed": "Mislukt",
+			"passed": "Geslaagd",
+			"notApplicable": "N.v.t."
+		},
+		"loadFailed": "Het SCA-beleid kon niet worden geladen.",
+		"checksFailed": "De controles van het beleid konden niet worden geladen.",
+		"exportFailed": "De controles van het beleid konden niet worden geëxporteerd."
+	},
+	"findings": {
+		"severity": {
+			"All": "Alle",
+			"Critical": "Kritiek",
+			"High": "Hoog",
+			"Medium": "Gemiddeld",
+			"Low": "Laag",
+			"unknown": "onbekend"
+		},
+		"results": {
+			"failed": "mislukt",
+			"passed": "geslaagd",
+			"notApplicable": "niet van toepassing"
+		},
+		"range": "{from}–{to} van {total}"
+	}
+}

@@ -1,0 +1,123 @@
+{
+	"header": {
+		"title": "Beveiligingsoverzicht",
+		"subtitle": "De beveiligingsstatus van je organisatie en de laatste activiteit van het SOC.",
+		"updated": "bijgewerkt {time}",
+		"refresh": "Overzicht vernieuwen",
+		"scopeAll": "alle klanten ({count})",
+		"scopeNone": "geen klant",
+		"scopeTitle": "Bereik: {customers}"
+	},
+	"status": {
+		"open": "open",
+		"inProgress": "in behandeling",
+		"waiting": "wacht op jou",
+		"closed": "gesloten",
+		"online": "online",
+		"offline": "offline"
+	},
+	"segments": {
+		"open": "open | open",
+		"inProgress": "in behandeling | in behandeling",
+		"waiting": "wacht op jou | wachten op jou",
+		"closed": "gesloten | gesloten"
+	},
+	"severity": {
+		"critical": "kritiek",
+		"high": "hoog",
+		"medium": "gemiddeld",
+		"low": "laag",
+		"informational": "informatief",
+		"unknown": "onbekend"
+	},
+	"posture": {
+		"ariaLabel": "Beveiligingsstatus",
+		"alerts": "Meldingen",
+		"cases": "Zaken",
+		"agents": "Agents",
+		"openAlerts": "open melding | open meldingen",
+		"openCases": "open zaak | open zaken",
+		"online": "online",
+		"total": "{count} totaal",
+		"critical": "{count} kritiek",
+		"sparkCaption": "nieuw · {range}",
+		"sparkAlerts": "{count} melding geopend in de afgelopen {days} dagen | {count} meldingen geopend in de afgelopen {days} dagen",
+		"sparkCases": "{count} zaak geopend in de afgelopen {days} dagen | {count} zaken geopend in de afgelopen {days} dagen"
+	},
+	"activity": {
+		"unnamedAlert": "Naamloze melding",
+		"unnamedCase": "Naamloze zaak",
+		"unassigned": "niet toegewezen",
+		"alertCount": "{count} melding | {count} meldingen"
+	},
+	"panels": {
+		"latest": "laatste {count}",
+		"empty": "Niets om te tonen",
+		"aiFindings": {
+			"title": "Bevindingen van de AI-analist",
+			"analyzed": "{count} melding geanalyseerd | {count} meldingen geanalyseerd",
+			"highOrCritical": "hoog of kritiek"
+		},
+		"recentAlerts": {
+			"title": "Recente meldingen",
+			"link": "Alle meldingen",
+			"empty": "Geen meldingen in het geselecteerde bereik"
+		},
+		"recentCases": {
+			"title": "Recente zaken",
+			"link": "Alle zaken",
+			"empty": "Geen zaken in het geselecteerde bereik"
+		}
+	},
+	"trend": {
+		"title": "Trend",
+		"meta": "afgelopen {range}",
+		"ranges": {
+			"days7": "7 dagen",
+			"days30": "30 dagen"
+		},
+		"entities": {
+			"alerts": "Meldingen",
+			"cases": "Zaken"
+		},
+		"entityAria": "Trend van",
+		"rangeAria": "Periode van de trend",
+		"openNow": "Open · nu",
+		"openNowHint": "Nog niet gesloten: open, in behandeling of wacht op jou. De statuskaart hierboven telt alleen de items die nog open zijn.",
+		"notKnown": "onbekend",
+		"stillOpen": "nog open",
+		"allCleared": "alles afgehandeld",
+		"was": "{state} · eerst {count}",
+		"net": "Netto",
+		"opened": "Nieuw",
+		"closed": "Gesloten",
+		"peakOpen": "Piek open",
+		"netHint": "Nieuw min gesloten in de periode. De gesloten items omvatten ook items die eerder zijn geopend, dus het kan negatief zijn.",
+		"peakHint": "Het hoogste aantal dat aan het einde van een dag in de periode nog open was",
+		"netWord": {
+			"grew": "gegroeid",
+			"shrank": "gekrompen",
+			"flat": "gelijk"
+		},
+		"empty": {
+			"alerts": "Geen meldingen geopend, gesloten of nog open in de afgelopen {range}",
+			"cases": "Geen zaken geopend, gesloten of nog open in de afgelopen {range}"
+		},
+		"table": {
+			"captionAlerts": "Meldingen die aan het einde van elke dag nog open waren, nieuw en gesloten, afgelopen {range}",
+			"captionCases": "Zaken die aan het einde van elke dag nog open waren, nieuw en gesloten, afgelopen {range}",
+			"day": "Dag",
+			"openAtDayEnd": "Open aan het einde van de dag"
+		},
+		"chart": {
+			"ariaAlerts": "meldingen die aan het einde van elke dag nog open waren over {days} dagen, met nieuw en gesloten per dag",
+			"ariaAlertsOpen": "meldingen die aan het einde van elke dag nog open waren over {days} dagen, met nieuw en gesloten per dag, {count} nog open",
+			"ariaCases": "zaken die aan het einde van elke dag nog open waren over {days} dagen, met nieuw en gesloten per dag",
+			"ariaCasesOpen": "zaken die aan het einde van elke dag nog open waren over {days} dagen, met nieuw en gesloten per dag, {count} nog open",
+			"openAxis": "Open · aan einde dag",
+			"flowAxis": "Nieuw ↑  Gesloten ↓",
+			"open": "Open",
+			"peak": "piek {count}"
+		}
+	}
+}

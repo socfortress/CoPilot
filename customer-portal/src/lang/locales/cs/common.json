@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Zrušit",
+		"save": "Uložit",
+		"close": "Zavřít",
+		"delete": "Smazat",
+		"edit": "Upravit",
+		"reset": "Obnovit",
+		"search": "Hledat",
+		"refresh": "Obnovit",
+		"tryAgain": "Zkusit znovu",
+		"retry": "Opakovat",
+		"back": "Zpět",
+		"next": "Další",
+		"previous": "Předchozí",
+		"download": "Stáhnout",
+		"export": "Exportovat",
+		"apply": "Použít",
+		"clear": "Vymazat",
+		"confirm": "Potvrdit",
+		"remove": "Odebrat",
+		"add": "Přidat",
+		"view": "Zobrazit",
+		"details": "Podrobnosti",
+		"loadMore": "Načíst další"
+	},
+	"fields": {
+		"status": "Stav",
+		"customer": "Zákazník",
+		"severity": "Závažnost",
+		"created": "Vytvořeno",
+		"actions": "Akce",
+		"description": "Popis",
+		"source": "Zdroj",
+		"name": "Název"
+	},
+	"states": {
+		"loading": "Načítání...",
+		"noData": "Žádná data"
+	},
+	"language": {
+		"label": "Jazyk",
+		"saved": "Jazyk uložen",
+		"failed": "Jazyk se nepodařilo uložit. Zkuste to prosím znovu.",
+		"englishOnly": "Vaše organizace nabízí portál pouze v angličtině.",
+		"hint": "Jazyk portálu pro váš účet, na každém zařízení."
+	},
+	"status": {
+		"open": "Otevřeno",
+		"inProgress": "Probíhá",
+		"waitingOnYou": "Čeká na vás",
+		"closed": "Uzavřeno"
+	},
+	"severity": {
+		"critical": "Kritická",
+		"high": "Vysoká",
+		"medium": "Střední",
+		"low": "Nízká",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "Čeká",
+		"running": "Běží",
+		"completed": "Dokončeno",
+		"failed": "Selhalo"
+	},
+	"boolean": {
+		"yes": "Ano",
+		"no": "Ne"
+	},
+	"timeRange": {
+		"hour1": "1 hodina",
+		"hour6": "6 hodin",
+		"hour12": "12 hodin",
+		"day1": "1 den",
+		"day2": "2 dny",
+		"day3": "3 dny",
+		"week1": "1 týden",
+		"week2": "2 týdny",
+		"month1": "1 měsíc",
+		"month2": "2 měsíce",
+		"month3": "3 měsíce",
+		"month6": "6 měsíců",
+		"year1": "1 rok"
+	},
+	"similarity": {
+		"high": "Vysoká podobnost",
+		"highDescription": "přesné nebo téměř přesné shody",
+		"good": "Dobrá sémantická podobnost",
+		"moderate": "Střední podobnost",
+		"low": "Nízká podobnost"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} h {minutes} min"
+	},
+	"dates": {
+		"invalid": "Neplatné datum"
+	},
+	"codeSource": {
+		"empty": "Prázdné",
+		"toggle": "přepnout zobrazení zdroje"
+	},
+	"copyableValue": {
+		"copy": "Kopírovat",
+		"copied": "Zkopírováno"
+	},
+	"keyValueFilter": {
+		"key": "Klíč filtru",
+		"value": "Hodnota filtru"
+	},
+	"notifications": {
+		"setRead": "Označit jako přečtené",
+		"empty": "Žádná oznámení",
+		"markAllRead": "Označit vše jako přečtené",
+		"openAlert": "Otevřít výstrahu",
+		"openCase": "Otevřít případ",
+		"viewReports": "Zobrazit zprávy"
+	},
+	"pagination": {
+		"perPage": "{size} / stránka",
+		"desc": "Sestupně",
+		"asc": "Vzestupně"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Výstrahy celkem",
+			"cases": "Případy celkem",
+			"agents": "Agenti celkem",
+			"other": "{entity} celkem"
+		},
+		"byStatus": {
+			"alerts": "Výstrahy podle stavu",
+			"cases": "Případy podle stavu",
+			"agents": "Agenti podle stavu",
+			"other": "{entity} podle stavu"
+		}
+	},
+	"waitingOnYou": {
+		"title": "SOC čeká na vaši odpověď",
+		"body": {
+			"alert": "Jejich lhůta pro odpověď na tuto výstrahu je pozastavena, dokud neodpovíte. Odpovězte v komentářích a vraťte ji tak analytikům.",
+			"case": "Jejich lhůta pro odpověď na tento případ je pozastavena, dokud neodpovíte. Odpovězte v komentářích a vraťte jej tak analytikům."
+		},
+		"reply": "Odpovědět"
+	},
+	"charts": {
+		"total": "Celkem"
+	},
+	"entityDetails": {
+		"viewDetails": "Zobrazit podrobnosti",
+		"openPage": {
+			"alert": "Otevřít stránku výstrahy",
+			"case": "Otevřít stránku případu",
+			"agent": "Otevřít stránku agenta",
+			"other": "Otevřít stránku {entity}"
+		}
+	},
+	"timeline": {
+		"title": "Časová osa"
+	},
+	"passwordPolicy": {
+		"requirements": "8 až 72 znaků, s velkým písmenem, malým písmenem, číslicí a symbolem",
+		"problems": {
+			"controlCharacter": "Heslo nesmí obsahovat řídicí ani neviditelné znaky",
+			"tooShort": "Heslo musí mít alespoň 8 znaků",
+			"tooLong": "Heslo smí mít nejvýše 72 bajtů (písmeno s diakritikou zabírá 2, emoji 4)",
+			"noLowercase": "Heslo musí obsahovat malé písmeno",
+			"noUppercase": "Heslo musí obsahovat velké písmeno",
+			"noDigit": "Heslo musí obsahovat číslici",
+			"noSymbol": "Heslo musí obsahovat symbol, například ! {'@'} # $ % _ - . nebo +"
+		}
+	}
+}

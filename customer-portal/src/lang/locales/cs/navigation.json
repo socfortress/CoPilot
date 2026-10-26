@@ -1,0 +1,45 @@
+{
+	"portalName": "Zákaznický portál",
+	"routes": {
+		"overview": "Přehled",
+		"alerts": "Výstrahy",
+		"alertDetails": "Podrobnosti výstrahy",
+		"cases": "Případy",
+		"caseDetails": "Podrobnosti případu",
+		"agents": "Agenti",
+		"agentDetails": "Podrobnosti agenta",
+		"reports": "Zprávy",
+		"eventSearch": "Vyhledávání událostí",
+		"dashboards": "Nástěnky",
+		"dashboardDetails": "Podrobnosti nástěnky",
+		"exposure": "Expozice",
+		"users": "Uživatelé",
+		"auditLog": "Auditní protokol",
+		"activity": "Aktivita",
+		"sla": "Úrovně služeb",
+		"profile": "Profil",
+		"login": "Přihlášení",
+		"changePassword": "Zvolte nové heslo"
+	},
+	"sidebar": {
+		"documentation": "Dokumentace"
+	},
+	"toolbar": {
+		"fullscreen": "Celá obrazovka",
+		"theme": "Přepnout motiv",
+		"shortcuts": "Zkratky",
+		"yourProfile": "Váš profil",
+		"logout": "Odhlásit se"
+	},
+	"customerFilter": {
+		"placeholder": "Všichni zákazníci"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Stránka nenalezena",
+		"home": "Přejít na úvod"
+	}
+}

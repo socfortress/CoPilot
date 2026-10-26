@@ -1,0 +1,130 @@
+{
+	"stats": {
+		"entity": "Agents",
+		"active": "aktiv",
+		"offline": "offline",
+		"critical": "kritisch",
+		"other": "sonstige"
+	},
+	"exportCsv": "CSV exportieren",
+	"list": {
+		"columns": {
+			"agent": "Agent",
+			"ipAddress": "IP-Adresse",
+			"os": "Betriebssystem",
+			"lastSeen": "Zuletzt gesehen",
+			"criticalAsset": "Kritisches Asset"
+		},
+		"items": "Einträge",
+		"exported": "{count} Asset als CSV exportiert | {count} Assets als CSV exportiert",
+		"empty": "Keine Agents gefunden",
+		"emptyHint": "Versuchen Sie, die Filter zu ändern"
+	},
+	"filters": {
+		"os": "Betriebssystem",
+		"search": "Suche (Hostname, IP-Adresse, Agent-ID)",
+		"critical": "Kritische Assets",
+		"reset": "Filter zurücksetzen"
+	},
+	"agentCriticalSelect": {
+		"critical": "Kritisch",
+		"notCritical": "Nicht kritisch",
+		"updated": "Kritikalität des Agents geändert auf {level}"
+	},
+	"agentDetailsButton": {
+		"title": "Agent-Details"
+	},
+	"agentDetails": {
+		"error": "Fehler",
+		"notFound": "Agent nicht gefunden.",
+		"tabs": {
+			"overview": "Übersicht",
+			"vulnerabilities": "Schwachstellen",
+			"cases": "Fälle"
+		}
+	},
+	"agentCases": {
+		"heading": "Fälle mit diesem Host",
+		"empty": "Kein Fall betrifft diesen Host",
+		"unassigned": "nicht zugewiesen",
+		"alerts": "{count} Alarm | {count} Alarme",
+		"loadFailed": "Die Fälle konnten nicht geladen werden."
+	},
+	"agentVulnerabilities": {
+		"filterLabel": "Nach Schweregrad filtern",
+		"search": "CVE, Titel oder Paket suchen",
+		"shown": "{count} angezeigt · schwerste zuerst",
+		"head": {
+			"severity": "Schweregrad",
+			"vulnerability": "Schwachstelle",
+			"package": "Paket",
+			"detected": "Erkannt"
+		},
+		"loading": "Die Schwachstellen werden von Wazuh abgerufen. Bei einem Agent mit vielen Paketen kann das bis zu einer Minute dauern.",
+		"emptyFiltered": "Keine Schwachstelle entspricht den Filtern",
+		"empty": "Keine Schwachstellen auf diesem Agent gefunden",
+		"facts": {
+			"package": "Paket",
+			"architecture": "Architektur",
+			"type": "Typ",
+			"published": "Veröffentlicht",
+			"detected": "Erkannt"
+		},
+		"references": "Referenzen · {count}",
+		"loadFailed": "Die Schwachstellen konnten nicht geladen werden.",
+		"exportFailed": "Die Schwachstellen konnten nicht exportiert werden."
+	},
+	"agentSca": {
+		"head": {
+			"policy": "Richtlinie",
+			"score": "Bewertung",
+			"checks": "Prüfungen",
+			"lastScan": "Letzter Scan"
+		},
+		"empty": "Noch kein SCA-Scan auf diesem Agent",
+		"passed": "{count} bestanden",
+		"failed": "{count} nicht bestanden",
+		"notApplicable": "{count} n. z.",
+		"checks": "· {count} Prüfungen",
+		"scanned": "gescannt {when}",
+		"back": "Alle Richtlinien",
+		"policy": "SCA-Richtlinie",
+		"score": "Bewertung",
+		"filterLabel": "Nach Ergebnis filtern",
+		"search": "Titel oder ID der Prüfung suchen",
+		"shown": "{count} angezeigt · nicht bestandene zuerst",
+		"emptyFiltered": "Keine Prüfung entspricht den Filtern",
+		"noChecks": "Diese Richtlinie hat keine Prüfungen",
+		"text": {
+			"rationale": "Begründung",
+			"remediation": "Behebung",
+			"reason": "Grund"
+		},
+		"compliance": "Compliance",
+		"filter": {
+			"all": "Alle",
+			"failed": "Nicht bestanden",
+			"passed": "Bestanden",
+			"notApplicable": "N. z."
+		},
+		"loadFailed": "Die SCA-Richtlinien konnten nicht geladen werden.",
+		"checksFailed": "Die Prüfungen der Richtlinie konnten nicht geladen werden.",
+		"exportFailed": "Die Prüfungen der Richtlinie konnten nicht exportiert werden."
+	},
+	"findings": {
+		"severity": {
+			"All": "Alle",
+			"Critical": "Kritisch",
+			"High": "Hoch",
+			"Medium": "Mittel",
+			"Low": "Niedrig",
+			"unknown": "unbekannt"
+		},
+		"results": {
+			"failed": "nicht bestanden",
+			"passed": "bestanden",
+			"notApplicable": "nicht zutreffend"
+		},
+		"range": "{from}–{to} von {total}"
+	}
+}

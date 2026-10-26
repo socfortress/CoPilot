@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Attività",
+		"intro": "Cosa è arrivato al SOC per te, da dove proveniva e come è stato valutato, a confronto con il periodo precedente.",
+		"refreshError": "Impossibile aggiornare i dati: {error}",
+		"disabledTitle": "L'attività non è ancora disponibile",
+		"disabledText": "Il tuo SOC non ha ancora pubblicato il dettaglio delle attività per questo cliente. Chiedi al tuo referente SOC se desideri vederlo qui.",
+		"note": "Conteggiato da quando ogni alert e caso è arrivato al SOC, {period}. Seleziona un conteggio per elencare quegli alert.",
+		"periodText": "negli ultimi {period} a confronto con i {period} precedenti",
+		"periodMeta": "ultimi {period}",
+		"severityNote": "Un alert la cui sorgente non ha inviato una gravità viene conteggiato al livello predefinito del SOC.",
+		"otherSources": "Altre sorgenti: {count} ({previous} nel periodo precedente)"
+	},
+	"range": "{count} giorni",
+	"panels": {
+		"sources": "Alert per sorgente",
+		"severities": "Alert per gravità",
+		"detections": "Rilevamenti più frequenti",
+		"assets": "Asset più coinvolti",
+		"tags": "Tag più frequenti",
+		"noAlertsEither": "Nessun alert in nessuno dei due periodi",
+		"noAlerts": "Nessun alert in questo periodo",
+		"noAssets": "Nessun alert ha indicato un asset in questo periodo",
+		"noTags": "Nessun alert con tag in questo periodo"
+	},
+	"cases": {
+		"title": "Casi",
+		"empty": "Nessun caso aperto in nessuno dei due periodi",
+		"byType": "Per tipo",
+		"byStatus": "Lo stato attuale dei casi aperti"
+	},
+	"verdicts": {
+		"title": "I verdetti del SOC",
+		"truePositives": "Veri positivi",
+		"falsePositives": "Falsi positivi",
+		"untriaged": "Non ancora esaminati",
+		"reasons": "Perché gli alert erano falsi positivi",
+		"noisy": "Rilevamenti con più falsi positivi",
+		"noFalsePositive": "Nessun falso positivo in questo periodo.",
+		"noisyCount": "{falsePositives} su {reviewed} esaminati · {rate}"
+	},
+	"kpi": {
+		"alerts": "Alert ricevuti",
+		"cases": "Casi aperti",
+		"falsePositives": "Falsi positivi",
+		"coverage": "Esaminati dal SOC",
+		"periodBefore": "{count} nel periodo precedente",
+		"changeTitle": "Variazione rispetto al periodo precedente",
+		"pointsTitle": "Punti percentuali rispetto al periodo precedente",
+		"ofReviewed": "su {count} esaminati",
+		"nothingReviewed": "ancora nulla esaminato",
+		"ofAlerts": "{reviewed} su {total} alert",
+		"noAlerts": "nessun alert in questo periodo"
+	},
+	"delta": {
+		"new": "nuovo",
+		"points": "{points} pt"
+	},
+	"rank": {
+		"previousTitle": "Il periodo precedente: {count}",
+		"countLabel": "{count} in questo periodo",
+		"previousLabel": "{count} nel periodo precedente",
+		"was": "prima {count}"
+	}
+}

@@ -13,3 +13,12 @@ export type RecursiveKeyOf<TObj extends object> = {
 		? `${TKey}` | `${TKey}.${RecursiveKeyOf<TObj[TKey]>}`
 		: `${TKey}`
 }[keyof TObj & (string | number)]
+
+/** Every key leading to a string, dotted (`alerts.list.title`): what a translation call may name. */
+export type StringKeys<T, Prefix extends string = ""> = {
+	[K in keyof T]: T[K] extends string
+		? `${Prefix}${Extract<K, string>}`
+		: T[K] extends object
+			? StringKeys<T[K], `${Prefix}${Extract<K, string>}.`>
+			: never
+}[keyof T]

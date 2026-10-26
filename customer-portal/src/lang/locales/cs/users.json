@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Uživatelé",
+		"intro": "Kdo se může za vaši organizaci přihlásit do tohoto portálu. Pozvěte kolegy, deaktivujte ty, kdo odešli, a pomozte těm, kdo ztratili ověřovací aplikaci nebo heslo.",
+		"invite": "Pozvat uživatele",
+		"forbiddenTitle": "Uživatele může spravovat pouze správce zákazníka",
+		"forbiddenText": "O tom, kdo spravuje uživatele vaší organizace, rozhoduje váš SOC. Pokud tuto roli potřebujete, obraťte se na svůj kontakt v SOC.",
+		"twoFaOn": "2FA zapnuto",
+		"twoFaOff": "2FA vypnuto",
+		"lastSignIn": "Poslední přihlášení {date}",
+		"neverSignedIn": "Nikdy se nepřihlásil",
+		"twoFaNotOn": "Dvoufázové ověření není zapnuto",
+		"resetTotp": "Resetovat 2FA",
+		"temporaryPassword": "Dočasné heslo",
+		"enable": "Aktivovat",
+		"disable": "Deaktivovat",
+		"loadFailed": "Uživatele se nepodařilo načíst.",
+		"done": "Hotovo",
+		"actionFailed": "Akce se nezdařila.",
+		"issueFailed": "Dočasné heslo se nepodařilo vydat."
+	},
+	"confirm": {
+		"disableTitle": "Deaktivovat uživatele {username}?",
+		"disableText": "Nebude se moci přihlásit a jeho otevřená relace skončí. Později ho můžete znovu aktivovat.",
+		"resetTotpTitle": "Resetovat 2FA uživatele {username}?",
+		"resetTotpText": "Bude se přihlašovat jen heslem a dvoufázové ověření si může znovu nastavit ve svém profilu.",
+		"temporaryPasswordTitle": "Dočasné heslo pro uživatele {username}?",
+		"temporaryPasswordText": "Jeho současné heslo přestane fungovat. Přihlásí se dočasným heslem a zvolí si vlastní.",
+		"issue": "Vydat"
+	},
+	"tags": {
+		"self": "Vy",
+		"selfTitle": "Váš vlastní účet",
+		"admin": "Správce",
+		"adminTitle": "Spravuje uživatele tohoto zákazníka. Jmenován vaším SOC.",
+		"disabled": "Deaktivován",
+		"disabledTitle": "Nemůže se přihlásit",
+		"password": "Čeká se na změnu hesla",
+		"passwordTitle": "Přihlašuje se dočasným heslem a musí si zvolit vlastní"
+	},
+	"invite": {
+		"title": "Pozvat uživatele",
+		"introEmail": "Obdrží dočasné heslo e-mailem a při prvním přihlášení si zvolí vlastní.",
+		"introShown": "Obdrží dočasné heslo od vás (po pozvání se zobrazí jen jednou) a při prvním přihlášení si zvolí vlastní.",
+		"username": "Uživatelské jméno",
+		"email": "E-mail",
+		"customers": "Viditelní zákazníci",
+		"willSee": "Uvidí zákazníka {customer}.",
+		"submit": "Pozvat",
+		"failed": "Uživatele se nepodařilo pozvat.",
+		"problems": {
+			"usernameRequired": "Zadejte uživatelské jméno",
+			"usernameInvalid": "Uživatelské jméno musí mít 3 až 64 znaků: písmena, číslice a . _ {'@'} -, a začínat písmenem nebo číslicí",
+			"emailRequired": "Zadejte e-mailovou adresu",
+			"emailInvalid": "Zadejte platnou e-mailovou adresu",
+			"customersRequired": "Zvolte alespoň jednoho zákazníka"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "Uživatel {username} byl pozván",
+		"title": "Dočasné heslo pro uživatele {username}",
+		"shownOnce": "Toto heslo se zobrazí jen jednou. Předejte ho uživateli {username} sami. Při prvním přihlášení si zvolí vlastní.",
+		"shownOnceProblem": "Toto heslo se zobrazí jen jednou. Předejte ho uživateli {username} sami: {problem} Při prvním přihlášení si zvolí vlastní.",
+		"emailed": "Dočasné heslo bylo odesláno e-mailem na adresu {email}. Uživatel {username} si při prvním přihlášení zvolí vlastní.",
+		"copy": "Kopírovat",
+		"copied": "Zkopírováno",
+		"done": "Hotovo"
+	}
+}

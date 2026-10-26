@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Rapporten",
+		"subtitle": "Genereer en download PDF-activiteitenrapporten voor je organisatie",
+		"generate": "Rapport genereren",
+		"empty": "Nog geen rapporten gegenereerd",
+		"loadFailed": "Kan de rapporten niet laden",
+		"noCustomer": "Geen klant beschikbaar om het rapport te genereren",
+		"queued": "Het genereren van het rapport kan even duren — je krijgt een melding zodra het klaar is.",
+		"queueFailed": "Kan het genereren van het rapport niet in de wachtrij zetten",
+		"generateFailed": "Kan het rapport niet genereren",
+		"downloaded": "Rapport gedownload",
+		"downloadFailed": "Kan het rapport niet downloaden",
+		"deleteFailed": "Kan het rapport niet verwijderen"
+	},
+	"form": {
+		"reportName": "Rapportnaam",
+		"reportNamePlaceholder": "Laat leeg voor een automatisch gegenereerde naam",
+		"timeRange": "Periode",
+		"customRange": "Aangepast datumbereik",
+		"template": "Rapportsjabloon",
+		"selectCustomer": "Selecteer een klant",
+		"selectRange": "Selecteer een datumbereik",
+		"ranges": {
+			"last30": "Afgelopen 30 dagen",
+			"last90": "Afgelopen 3 maanden",
+			"custom": "Aangepast bereik"
+		},
+		"templates": {
+			"full": {
+				"label": "Volledig rapport",
+				"description": "Alles: managementsamenvatting, grafieken en trends, en open/gesloten zaken met assets en IOC's."
+			},
+			"executive": {
+				"label": "Managementsamenvatting",
+				"description": "Overzicht in één oogopslag: belangrijkste KPI's, servicestatistieken en een statusgrafiek. Geen zaakdetails."
+			},
+			"operational": {
+				"label": "Operationeel — zaken",
+				"description": "Zaakgericht: elke open/gesloten zaak volledig uitgewerkt (assets, IOC's, oplossing). Geen grafieken."
+			},
+			"analytics": {
+				"label": "Analyse — trends",
+				"description": "Statistiekgericht: managementsamenvatting plus alle verdelingsgrafieken en de maandelijkse trendtabel. Geen zaakdetails."
+			}
+		}
+	},
+	"delete": {
+		"title": "Rapport verwijderen",
+		"confirm": "Weet je zeker dat je \"{name}\" wilt verwijderen?",
+		"irreversible": "Deze actie kan niet ongedaan worden gemaakt."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Volledig rapport",
+				"description": "Managementsamenvatting, grafieken en trends, en open/gesloten zaken met assets en IOC's"
+			},
+			"executive": {
+				"name": "Managementrapport",
+				"description": "Overzicht in één oogopslag: KPI's, servicestatistieken en een statusgrafiek"
+			},
+			"operational": {
+				"name": "Operationeel rapport",
+				"description": "Zaakgericht: open/gesloten zaken volledig uitgewerkt (assets, IOC's, oplossing)"
+			},
+			"analytics": {
+				"name": "Analyserapport",
+				"description": "Statistiekgericht: managementsamenvatting, alle grafieken en de maandelijkse trendtabel"
+			}
+		},
+		"alerts": "meldingen",
+		"cases": "zaken",
+		"open": "open",
+		"closed": "gesloten",
+		"status": {
+			"completed": "Voltooid",
+			"processing": "Wordt gegenereerd",
+			"failed": "Mislukt"
+		},
+		"roles": {
+			"admin": "Beheerder",
+			"analyst": "Analist",
+			"scheduler": "Planner",
+			"customer_user": "Klant"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Rapport klaar",
+		"readyDescription": "\"{name}\" is gegenereerd en klaar om te downloaden.",
+		"failedTitle": "Rapport mislukt",
+		"failedDescription": "\"{name}\" kon niet worden gegenereerd.",
+		"timeoutTitle": "Rapport loopt nog",
+		"timeoutDescription": "\"{name}\" duurt langer dan verwacht. Bekijk de status op de pagina Rapporten.",
+		"viewReports": "Rapporten bekijken"
+	}
+}

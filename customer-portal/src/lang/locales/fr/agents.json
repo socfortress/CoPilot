@@ -1,0 +1,130 @@
+{
+	"stats": {
+		"entity": "Agents",
+		"active": "actifs",
+		"offline": "hors ligne",
+		"critical": "critiques",
+		"other": "autres"
+	},
+	"exportCsv": "Exporter en CSV",
+	"list": {
+		"columns": {
+			"agent": "Agent",
+			"ipAddress": "Adresse IP",
+			"os": "Système d'exploitation",
+			"lastSeen": "Vu pour la dernière fois",
+			"criticalAsset": "Actif critique"
+		},
+		"items": "éléments",
+		"exported": "{count} actif exporté en CSV | {count} actifs exportés en CSV",
+		"empty": "Aucun agent trouvé",
+		"emptyHint": "essayez de modifier les filtres"
+	},
+	"filters": {
+		"os": "Système d'exploitation",
+		"search": "Rechercher (nom d'hôte, adresse IP, ID d'agent)",
+		"critical": "Actifs critiques",
+		"reset": "Réinitialiser les filtres"
+	},
+	"agentCriticalSelect": {
+		"critical": "Critique",
+		"notCritical": "Non critique",
+		"updated": "Criticité de l'agent mise à jour : {level}"
+	},
+	"agentDetailsButton": {
+		"title": "Détails de l'agent"
+	},
+	"agentDetails": {
+		"error": "Erreur",
+		"notFound": "Agent introuvable.",
+		"tabs": {
+			"overview": "Vue d'ensemble",
+			"vulnerabilities": "Vulnérabilités",
+			"cases": "Dossiers"
+		}
+	},
+	"agentCases": {
+		"heading": "Dossiers impliquant cet hôte",
+		"empty": "Aucun dossier n'implique cet hôte",
+		"unassigned": "non assigné",
+		"alerts": "{count} alerte | {count} alertes",
+		"loadFailed": "Impossible de charger les dossiers."
+	},
+	"agentVulnerabilities": {
+		"filterLabel": "Filtrer par gravité",
+		"search": "Rechercher un CVE, un titre ou un paquet",
+		"shown": "{count} affichées · les plus graves d'abord",
+		"head": {
+			"severity": "Gravité",
+			"vulnerability": "Vulnérabilité",
+			"package": "Paquet",
+			"detected": "Détectée"
+		},
+		"loading": "Récupération des vulnérabilités depuis Wazuh. Cela peut prendre jusqu'à une minute sur un agent comportant de nombreux paquets.",
+		"emptyFiltered": "Aucune vulnérabilité ne correspond aux filtres",
+		"empty": "Aucune vulnérabilité trouvée sur cet agent",
+		"facts": {
+			"package": "Paquet",
+			"architecture": "Architecture",
+			"type": "Type",
+			"published": "Publiée",
+			"detected": "Détectée"
+		},
+		"references": "Références · {count}",
+		"loadFailed": "Impossible de charger les vulnérabilités.",
+		"exportFailed": "Impossible d'exporter les vulnérabilités."
+	},
+	"agentSca": {
+		"head": {
+			"policy": "Politique",
+			"score": "Score",
+			"checks": "Contrôles",
+			"lastScan": "Dernière analyse"
+		},
+		"empty": "Aucune analyse SCA sur cet agent pour le moment",
+		"passed": "{count} réussis",
+		"failed": "{count} échoués",
+		"notApplicable": "{count} n/a",
+		"checks": "· {count} contrôles",
+		"scanned": "analysé {when}",
+		"back": "Toutes les politiques",
+		"policy": "Politique SCA",
+		"score": "Score",
+		"filterLabel": "Filtrer par résultat",
+		"search": "Rechercher par titre ou ID de contrôle",
+		"shown": "{count} affichés · échoués d'abord",
+		"emptyFiltered": "Aucun contrôle ne correspond aux filtres",
+		"noChecks": "Cette politique ne contient aucun contrôle",
+		"text": {
+			"rationale": "Justification",
+			"remediation": "Correction",
+			"reason": "Raison"
+		},
+		"compliance": "Conformité",
+		"filter": {
+			"all": "Tous",
+			"failed": "Échoués",
+			"passed": "Réussis",
+			"notApplicable": "N/A"
+		},
+		"loadFailed": "Impossible de charger les politiques SCA.",
+		"checksFailed": "Impossible de charger les contrôles de la politique.",
+		"exportFailed": "Impossible d'exporter les contrôles de la politique."
+	},
+	"findings": {
+		"severity": {
+			"All": "Toutes",
+			"Critical": "Critique",
+			"High": "Élevée",
+			"Medium": "Moyenne",
+			"Low": "Faible",
+			"unknown": "inconnue"
+		},
+		"results": {
+			"failed": "échoué",
+			"passed": "réussi",
+			"notApplicable": "non applicable"
+		},
+		"range": "{from}–{to} sur {total}"
+	}
+}

@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Annulla",
+		"save": "Salva",
+		"close": "Chiudi",
+		"delete": "Elimina",
+		"edit": "Modifica",
+		"reset": "Reimposta",
+		"search": "Cerca",
+		"refresh": "Aggiorna",
+		"tryAgain": "Riprova",
+		"retry": "Riprova",
+		"back": "Indietro",
+		"next": "Avanti",
+		"previous": "Indietro",
+		"download": "Scarica",
+		"export": "Esporta",
+		"apply": "Applica",
+		"clear": "Cancella",
+		"confirm": "Conferma",
+		"remove": "Rimuovi",
+		"add": "Aggiungi",
+		"view": "Visualizza",
+		"details": "Dettagli",
+		"loadMore": "Carica altri"
+	},
+	"fields": {
+		"status": "Stato",
+		"customer": "Cliente",
+		"severity": "Gravità",
+		"created": "Creato",
+		"actions": "Azioni",
+		"description": "Descrizione",
+		"source": "Origine",
+		"name": "Nome"
+	},
+	"states": {
+		"loading": "Caricamento...",
+		"noData": "Nessun dato"
+	},
+	"language": {
+		"label": "Lingua",
+		"saved": "Lingua salvata",
+		"failed": "Non è stato possibile salvare la lingua. Riprova.",
+		"englishOnly": "La tua organizzazione offre il portale solo in inglese.",
+		"hint": "La lingua del portale per il tuo account, su ogni dispositivo."
+	},
+	"status": {
+		"open": "Aperto",
+		"inProgress": "In corso",
+		"waitingOnYou": "In attesa di te",
+		"closed": "Chiuso"
+	},
+	"severity": {
+		"critical": "Critica",
+		"high": "Alta",
+		"medium": "Media",
+		"low": "Bassa",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "In attesa",
+		"running": "In esecuzione",
+		"completed": "Completato",
+		"failed": "Non riuscito"
+	},
+	"boolean": {
+		"yes": "Sì",
+		"no": "No"
+	},
+	"timeRange": {
+		"hour1": "1 ora",
+		"hour6": "6 ore",
+		"hour12": "12 ore",
+		"day1": "1 giorno",
+		"day2": "2 giorni",
+		"day3": "3 giorni",
+		"week1": "1 settimana",
+		"week2": "2 settimane",
+		"month1": "1 mese",
+		"month2": "2 mesi",
+		"month3": "3 mesi",
+		"month6": "6 mesi",
+		"year1": "1 anno"
+	},
+	"similarity": {
+		"high": "Similarità alta",
+		"highDescription": "corrispondenze esatte o quasi",
+		"good": "Buona similarità semantica",
+		"moderate": "Similarità moderata",
+		"low": "Similarità bassa"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} h {minutes} min"
+	},
+	"dates": {
+		"invalid": "Data non valida"
+	},
+	"codeSource": {
+		"empty": "Vuoto",
+		"toggle": "mostra/nascondi sorgente"
+	},
+	"copyableValue": {
+		"copy": "Copia",
+		"copied": "Copiato"
+	},
+	"keyValueFilter": {
+		"key": "Chiave del filtro",
+		"value": "Valore del filtro"
+	},
+	"notifications": {
+		"setRead": "Segna come letta",
+		"empty": "Nessuna notifica",
+		"markAllRead": "Segna tutte come lette",
+		"openAlert": "Apri alert",
+		"openCase": "Apri caso",
+		"viewReports": "Vedi report"
+	},
+	"pagination": {
+		"perPage": "{size} / pagina",
+		"desc": "Decrescente",
+		"asc": "Crescente"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Alert totali",
+			"cases": "Casi totali",
+			"agents": "Agent totali",
+			"other": "{entity} totali"
+		},
+		"byStatus": {
+			"alerts": "Alert per stato",
+			"cases": "Casi per stato",
+			"agents": "Agent per stato",
+			"other": "{entity} per stato"
+		}
+	},
+	"waitingOnYou": {
+		"title": "Il SOC è in attesa di una tua risposta",
+		"body": {
+			"alert": "Il loro tempo di risposta per questo alert è in pausa finché non rispondi. Rispondi nei commenti per restituirlo agli analisti.",
+			"case": "Il loro tempo di risposta per questo caso è in pausa finché non rispondi. Rispondi nei commenti per restituirlo agli analisti."
+		},
+		"reply": "Rispondi"
+	},
+	"charts": {
+		"total": "Totale"
+	},
+	"entityDetails": {
+		"viewDetails": "Vedi dettagli",
+		"openPage": {
+			"alert": "Apri la pagina dell'alert",
+			"case": "Apri la pagina del caso",
+			"agent": "Apri la pagina dell'agent",
+			"other": "Apri la pagina {entity}"
+		}
+	},
+	"timeline": {
+		"title": "Cronologia"
+	},
+	"passwordPolicy": {
+		"requirements": "Da 8 a 72 caratteri, con una lettera maiuscola, una minuscola, una cifra e un simbolo",
+		"problems": {
+			"controlCharacter": "La password non deve contenere caratteri di controllo o invisibili",
+			"tooShort": "La password deve contenere almeno 8 caratteri",
+			"tooLong": "La password può essere lunga al massimo 72 byte (una lettera accentata ne occupa 2, un'emoji 4)",
+			"noLowercase": "La password deve contenere una lettera minuscola",
+			"noUppercase": "La password deve contenere una lettera maiuscola",
+			"noDigit": "La password deve contenere una cifra",
+			"noSymbol": "La password deve contenere un simbolo, come ! {'@'} # $ % _ - . o +"
+		}
+	}
+}

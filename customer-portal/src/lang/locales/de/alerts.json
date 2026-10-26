@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "Einträge",
+		"empty": "Keine Alarme gefunden",
+		"clearFilters": "Filter zurücksetzen",
+		"columns": {
+			"alert": "Alarm",
+			"assets": "Assets",
+			"tags": "Tags"
+		}
+	},
+	"statusSelect": {
+		"updated": "Alarmstatus geändert in {status}"
+	},
+	"detailsButton": {
+		"title": "Alarmdetails"
+	},
+	"linkAlert": {
+		"linkAlert": "Alarm verknüpfen",
+		"link": "Verknüpfen",
+		"idsRequired": "Fall-ID und Alarm-ID sind erforderlich",
+		"linked": "Der Alarm wurde mit dem Fall verknüpft",
+		"genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+	},
+	"details": {
+		"error": "Fehler",
+		"notFound": "Alarm nicht gefunden.",
+		"tabs": {
+			"overview": "Übersicht",
+			"assets": "Assets",
+			"linkedCases": "Verknüpfte Fälle ({count})",
+			"iocs": "Kompromittierungsindikatoren (IoCs)",
+			"aiReport": "AI-Bericht",
+			"comments": "Kommentare ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Alarmname",
+		"escalated": "Eskaliert",
+		"assignedTo": "Zugewiesen an"
+	},
+	"assets": {
+		"agentId": "Agent-ID",
+		"velociraptorId": "Velociraptor-ID",
+		"assetName": "Asset-Name",
+		"empty": "Keine Assets gefunden"
+	},
+	"iocs": {
+		"empty": "Keine Kompromittierungsindikatoren gefunden"
+	},
+	"cases": {
+		"createCase": "Fall erstellen",
+		"linkCase": "Fall verknüpfen",
+		"assignedTo": "Zugewiesen an",
+		"created": "Erstellt: {date}",
+		"caseNumber": "Fall #{id}",
+		"empty": "Keine verknüpften Fälle gefunden",
+		"createdSuccess": "Der Fall wurde erstellt",
+		"genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+	},
+	"comments": {
+		"empty": "Keine Kommentare gefunden",
+		"add": "Kommentar hinzufügen",
+		"placeholder": "Geben Sie Ihren Kommentar ein...",
+		"added": "Der Kommentar wurde hinzugefügt",
+		"updated": "Der Kommentar wurde aktualisiert",
+		"deleted": "Der Kommentar wurde gelöscht",
+		"confirmDelete": "Möchten Sie diesen Kommentar wirklich löschen?"
+	},
+	"aiReport": {
+		"error": "Fehler",
+		"investigation": "Untersuchung",
+		"started": "Gestartet",
+		"completed": "Abgeschlossen",
+		"requestedTitle": "AI-Analyse angefordert",
+		"requestedText": "Der AI-Analyst übernimmt sie in Kürze. Diese Seite aktualisiert sich von selbst, und die neuen Ergebnisse ersetzen diese, sobald er fertig ist.",
+		"progressTitle": "Untersuchung läuft",
+		"progressFor": "Der AI-Analyst arbeitet seit {elapsed} an diesem Alarm. Die Ergebnisse erscheinen hier, sobald die Untersuchung abgeschlossen ist.",
+		"progress": "Der AI-Analyst arbeitet an diesem Alarm. Die Ergebnisse erscheinen hier, sobald die Untersuchung abgeschlossen ist.",
+		"stalledTitle": "Die Untersuchung wurde nicht abgeschlossen",
+		"stalledText": "Der AI-Analyst hat die Arbeit an diesem Alarm beendet, bevor er seine Ergebnisse geschrieben hat.",
+		"stalledCanRequest": "Sie können eine neue Analyse anfordern.",
+		"summary": "Zusammenfassung",
+		"recommendedActions": "Empfohlene Maßnahmen",
+		"fullReport": "Vollständiger Bericht",
+		"iocsTitle": "Vom AI-Analysten identifizierte Indikatoren",
+		"vtVerdict": "VT-Urteil",
+		"vtScore": "VT-Score",
+		"generated": "Bericht erstellt am {date}",
+		"notEnabled": "Ergebnisse des AI-Analysten sind für diesen Kunden nicht aktiviert",
+		"requestedEmpty": "AI-Analyse angefordert: Die Ergebnisse erscheinen hier, sobald der AI-Analyst fertig ist",
+		"noAnalysis": "Für diesen Alarm wurde noch keine AI-Analyse durchgeführt",
+		"requestFailed": "Die Analyse konnte nicht angefordert werden. Bitte versuchen Sie es später erneut."
+	},
+	"aiRequest": {
+		"runAgain": "Erneut ausführen",
+		"run": "Analyse starten",
+		"confirmAgain": "Den AI-Analysten bitten, diesen Alarm erneut zu analysieren? Die neuen Ergebnisse ersetzen diese, sobald er fertig ist.",
+		"confirm": "Den AI-Analysten bitten, diesen Alarm zu analysieren? Die Ergebnisse erscheinen hier, sobald er fertig ist.",
+		"inProgress": "Analyse läuft",
+		"rerun": "AI-Analyse erneut ausführen",
+		"runAi": "AI-Analyse starten"
+	},
+	"aiStatus": {
+		"queued": "In Warteschlange",
+		"analysing": "Wird analysiert",
+		"completed": "Abgeschlossen",
+		"failed": "Fehlgeschlagen",
+		"stalled": "Blockiert",
+		"unknown": "Unbekannt"
+	},
+	"filters": {
+		"labels": {
+			"status": "Status",
+			"source": "Quelle",
+			"asset": "Asset",
+			"tag": "Tag",
+			"date": "Erstellt",
+			"detection": "Erkennung",
+			"opened": "Beim SOC eingegangen"
+		},
+		"remove": {
+			"status": "Statusfilter entfernen",
+			"source": "Quellenfilter entfernen",
+			"asset": "Asset-Filter entfernen",
+			"tag": "Tag-Filter entfernen",
+			"date": "Filter „Erstellt“ entfernen",
+			"detection": "Erkennungsfilter entfernen",
+			"opened": "Filter „Beim SOC eingegangen“ entfernen"
+		},
+		"searchTitles": "Alarmtitel durchsuchen",
+		"anyStatus": "Beliebiger Status",
+		"anySource": "Beliebige Quelle",
+		"searchAssets": "Assets suchen",
+		"anyTags": "Einer dieser Tags",
+		"from": "Von",
+		"to": "Bis",
+		"add": "Filter hinzufügen",
+		"clear": "Filter zurücksetzen",
+		"openedSince": "seit {date}",
+		"openedBefore": "vor {date}"
+	}
+}

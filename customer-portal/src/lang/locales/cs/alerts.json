@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "položek",
+		"empty": "Nebyly nalezeny žádné výstrahy",
+		"clearFilters": "Vymazat filtry",
+		"columns": {
+			"alert": "Výstraha",
+			"assets": "Aktiva",
+			"tags": "Štítky"
+		}
+	},
+	"statusSelect": {
+		"updated": "Stav výstrahy změněn na {status}"
+	},
+	"detailsButton": {
+		"title": "Podrobnosti výstrahy"
+	},
+	"linkAlert": {
+		"linkAlert": "Propojit výstrahu",
+		"link": "Propojit",
+		"idsRequired": "ID případu a výstrahy jsou povinná",
+		"linked": "Výstraha byla propojena s případem",
+		"genericError": "Došlo k chybě. Zkuste to prosím později."
+	},
+	"details": {
+		"error": "Chyba",
+		"notFound": "Výstraha nebyla nalezena.",
+		"tabs": {
+			"overview": "Přehled",
+			"assets": "Aktiva",
+			"linkedCases": "Propojené případy ({count})",
+			"iocs": "Indikátory kompromitace (IoCs)",
+			"aiReport": "Zpráva AI",
+			"comments": "Komentáře ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Název výstrahy",
+		"escalated": "Eskalováno",
+		"assignedTo": "Přiřazeno"
+	},
+	"assets": {
+		"agentId": "ID agenta",
+		"velociraptorId": "ID Velociraptor",
+		"assetName": "Název aktiva",
+		"empty": "Nebyla nalezena žádná aktiva"
+	},
+	"iocs": {
+		"empty": "Nebyly nalezeny žádné indikátory kompromitace"
+	},
+	"cases": {
+		"createCase": "Vytvořit případ",
+		"linkCase": "Propojit případ",
+		"assignedTo": "Přiřazeno",
+		"created": "Vytvořeno: {date}",
+		"caseNumber": "Případ #{id}",
+		"empty": "Nebyly nalezeny žádné propojené případy",
+		"createdSuccess": "Případ byl vytvořen",
+		"genericError": "Došlo k chybě. Zkuste to prosím později."
+	},
+	"comments": {
+		"empty": "Žádné komentáře",
+		"add": "Přidat komentář",
+		"placeholder": "Napište svůj komentář...",
+		"added": "Komentář byl přidán",
+		"updated": "Komentář byl upraven",
+		"deleted": "Komentář byl smazán",
+		"confirmDelete": "Opravdu chcete tento komentář smazat?"
+	},
+	"aiReport": {
+		"error": "Chyba",
+		"investigation": "Šetření",
+		"started": "Zahájeno",
+		"completed": "Dokončeno",
+		"requestedTitle": "Analýza AI vyžádána",
+		"requestedText": "AI analytik se jí brzy ujme. Tato stránka se aktualizuje sama a nové výsledky nahradí tyto, jakmile skončí.",
+		"progressTitle": "Šetření probíhá",
+		"progressFor": "AI analytik na této výstraze pracuje již {elapsed}. Výsledky se zde zobrazí po dokončení šetření.",
+		"progress": "AI analytik na této výstraze pracuje. Výsledky se zde zobrazí po dokončení šetření.",
+		"stalledTitle": "Šetření nebylo dokončeno",
+		"stalledText": "AI analytik přestal na této výstraze pracovat dříve, než sepsal svá zjištění.",
+		"stalledCanRequest": "Můžete požádat o novou analýzu.",
+		"summary": "Shrnutí",
+		"recommendedActions": "Doporučené kroky",
+		"fullReport": "Celá zpráva",
+		"iocsTitle": "Indikátory zjištěné AI analytikem",
+		"vtVerdict": "Verdikt VT",
+		"vtScore": "Skóre VT",
+		"generated": "Zpráva vytvořena {date}",
+		"notEnabled": "Výsledky AI analytika nejsou pro tohoto zákazníka povoleny",
+		"requestedEmpty": "Analýza AI vyžádána: výsledky se zde zobrazí, jakmile AI analytik skončí",
+		"noAnalysis": "Pro tuto výstrahu nebyla provedena žádná analýza AI",
+		"requestFailed": "Analýzu se nepodařilo vyžádat. Zkuste to prosím později."
+	},
+	"aiRequest": {
+		"runAgain": "Spustit znovu",
+		"run": "Spustit analýzu",
+		"confirmAgain": "Požádat AI analytika o novou analýzu této výstrahy? Nové výsledky nahradí tyto, jakmile skončí.",
+		"confirm": "Požádat AI analytika o analýzu této výstrahy? Výsledky se zde zobrazí, jakmile skončí.",
+		"inProgress": "Analýza probíhá",
+		"rerun": "Znovu spustit analýzu AI",
+		"runAi": "Spustit analýzu AI"
+	},
+	"aiStatus": {
+		"queued": "Ve frontě",
+		"analysing": "Analyzuje se",
+		"completed": "Dokončeno",
+		"failed": "Selhalo",
+		"stalled": "Uvízlo",
+		"unknown": "Neznámý"
+	},
+	"filters": {
+		"labels": {
+			"status": "Stav",
+			"source": "Zdroj",
+			"asset": "Aktivum",
+			"tag": "Štítek",
+			"date": "Vytvořeno",
+			"detection": "Detekce",
+			"opened": "Doručeno do SOC"
+		},
+		"remove": {
+			"status": "Odebrat filtr stavu",
+			"source": "Odebrat filtr zdroje",
+			"asset": "Odebrat filtr aktiva",
+			"tag": "Odebrat filtr štítku",
+			"date": "Odebrat filtr data vytvoření",
+			"detection": "Odebrat filtr detekce",
+			"opened": "Odebrat filtr doručení do SOC"
+		},
+		"searchTitles": "Hledat v názvech výstrah",
+		"anyStatus": "Jakýkoli stav",
+		"anySource": "Jakýkoli zdroj",
+		"searchAssets": "Hledat aktiva",
+		"anyTags": "Kterýkoli z těchto štítků",
+		"from": "Od",
+		"to": "Do",
+		"add": "Přidat filtr",
+		"clear": "Vymazat filtry",
+		"openedSince": "od {date}",
+		"openedBefore": "před {date}"
+	}
+}

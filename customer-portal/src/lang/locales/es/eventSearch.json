@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "No hay fuentes de eventos configuradas",
+		"noSourcesText": "No hay fuentes de eventos configuradas para este cliente. Contacta con tu administrador para configurarlas.",
+		"queryLabel": "Consulta Lucene",
+		"autocompleteHint": "escribe # para autocompletar",
+		"selectCustomer": "Seleccionar cliente",
+		"selectSource": "Seleccionar fuente",
+		"queryPlaceholder": "p. ej. {example}",
+		"noFieldMappings": "No se encontraron asignaciones de campos",
+		"customerNeeded": "Selecciona un cliente para buscar",
+		"sourceNeeded": "Selecciona una fuente para buscar",
+		"time": "Tiempo",
+		"timeUnit": "Unidad de tiempo",
+		"units": {
+			"hours": "Horas",
+			"days": "Días",
+			"weeks": "Semanas"
+		},
+		"perPage": "{count} por página",
+		"loadSourcesFailed": "No se pudieron cargar las fuentes de eventos",
+		"queryUpdated": "“{name}” actualizada",
+		"querySaved": "“{name}” guardada",
+		"saveQueryFailed": "No se pudo guardar la consulta",
+		"deleteQueryFailed": "No se pudo eliminar la consulta",
+		"clearRecentFailed": "No se pudieron borrar las búsquedas recientes",
+		"sourceGone": "La fuente “{source}” ya no está disponible para este cliente"
+	},
+	"results": {
+		"count": "{loaded} de {total} eventos cargados",
+		"columns": "Columnas",
+		"ownColumns": "Tus propias columnas",
+		"exportCsv": "Exportar CSV",
+		"empty": "No se encontraron eventos",
+		"emptyHint": "Prueba a ajustar la consulta o a ampliar el intervalo de tiempo",
+		"loadMore": "{shown} de {total} eventos • Cargar más",
+		"columnsTitle": "Columnas · {source}",
+		"socLayout": "Diseño del SOC",
+		"defaultLayout": "Diseño predeterminado",
+		"viewDetails": "Ver detalles",
+		"switchColumnsFailed": "No se pudieron cambiar las columnas",
+		"templateUpdated": "Plantilla “{name}” actualizada",
+		"templateSaved": "Plantilla “{name}” guardada",
+		"saveTemplateFailed": "No se pudo guardar la plantilla",
+		"templateDeletedNamed": "Plantilla “{name}” eliminada",
+		"templateDeleted": "Plantilla eliminada",
+		"deleteTemplateFailed": "No se pudo eliminar la plantilla",
+		"saveColumnsFailed": "No se pudieron guardar las columnas",
+		"exportedPartial": "Exportados {exported} de {total} eventos: carga más para incluir el resto",
+		"exported": "Exportados {exported} eventos",
+		"searchFailed": "No se pudieron buscar los eventos",
+		"loadMoreFailed": "No se pudieron cargar más eventos"
+	},
+	"columns": {
+		"timestamp": "Marca de tiempo",
+		"level": "Nivel",
+		"source": "Fuente",
+		"rule": "Regla"
+	},
+	"details": {
+		"title": "Detalles del evento",
+		"filterFor": "Filtrar por este valor",
+		"exclude": "Excluir este valor"
+	},
+	"queries": {
+		"toggle": "Consultas",
+		"saved": "Guardadas",
+		"recent": "Recientes",
+		"loading": "Cargando…",
+		"noSaved": "Aún no hay consultas guardadas. Ejecuta una búsqueda y luego guárdala con un nombre.",
+		"noRecent": "Las búsquedas que ejecutes aparecerán aquí.",
+		"run": "Ejecutar “{name}”",
+		"delete": "Eliminar “{name}”",
+		"saveAs": "Guardar esta búsqueda como",
+		"namePlaceholder": "p. ej. Inicios de sesión fallidos en servidores web",
+		"willReplace": "Actualiza la consulta guardada con este nombre.",
+		"loadFailed": "No se pudieron cargar tus búsquedas guardadas",
+		"lastHours": "última {count} hora | últimas {count} horas",
+		"lastDays": "último {count} día | últimos {count} días",
+		"lastWeeks": "última {count} semana | últimas {count} semanas"
+	},
+	"layouts": {
+		"toggle": "Diseño",
+		"title": "Diseños",
+		"custom": "Personalizado",
+		"deleteTemplate": "Eliminar la plantilla “{name}”",
+		"noTemplates": "Aún no hay plantillas: ordena las columnas y luego guárdalas como plantilla.",
+		"manage": "Gestionar columnas y plantillas"
+	},
+	"deleteConfirm": {
+		"label": "¿Eliminar la plantilla “{name}”?",
+		"question": "¿Eliminar {name}?"
+	},
+	"preview": {
+		"columns": "{count} columna | {count} columnas",
+		"header": "Encabezado",
+		"field": "Campo"
+	},
+	"picker": {
+		"shown": "Columnas mostradas · de izquierda a derecha",
+		"noneSoc": "No hay columnas elegidas: la tabla muestra el diseño del SOC para esta fuente.",
+		"noneDefault": "No hay columnas elegidas: la tabla muestra el diseño predeterminado.",
+		"headerOf": "Encabezado de {field}",
+		"moveLeft": "Mover a la izquierda",
+		"moveRight": "Mover a la derecha",
+		"remove": "Quitar {field}",
+		"addField": "Añadir un campo",
+		"searchFields": "Buscar en los campos de la fuente",
+		"noFields": "No hay lista de campos para esta fuente",
+		"templates": "Plantillas para esta fuente",
+		"loadTitle": "Poner arriba las columnas de “{name}” para ajustarlas o aplicarlas",
+		"load": "Cargar",
+		"templateNamePlaceholder": "Guardar las columnas de arriba como…",
+		"saveTemplate": "Guardar como plantilla",
+		"willReplace": "Actualiza la plantilla guardada con este nombre.",
+		"backToSoc": "Volver al diseño del SOC",
+		"backToDefault": "Volver al predeterminado"
+	}
+}

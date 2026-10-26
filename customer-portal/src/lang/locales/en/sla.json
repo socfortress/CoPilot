@@ -1,0 +1,73 @@
+{
+	"page": {
+		"title": "Service levels",
+		"intro": "How fast the SOC answered and resolved your alerts and cases, against the targets agreed with you.",
+		"refreshError": "Could not refresh the figures: {error}",
+		"disabledTitle": "Service levels are not available yet",
+		"disabledText": "Your SOC has not published service level figures for this customer. Ask your SOC contact if you would like to see them here.",
+		"trendTitle": "Resolved within target",
+		"trendEmpty": "Nothing tracked was opened or resolved in this period",
+		"commitmentTitle": "Our commitment",
+		"commitmentEmpty": "No targets apply to your alerts and cases",
+		"periodMeta": "last {period}",
+		"measuredSince": "measured since {date}"
+	},
+	"period": "{count} days",
+	"kpi": {
+		"alertResponse": "Alert response",
+		"alertResolution": "Alert resolution",
+		"caseResponse": "Case response",
+		"caseResolution": "Case resolution",
+		"answeredWithinTarget": "answered within target",
+		"resolvedWithinTarget": "resolved within target",
+		"medianResponse": "median response",
+		"medianResolution": "median resolution",
+		"deltaTitle": "{delta} points vs the previous period",
+		"onTarget": "{met} of {decided} on target",
+		"noOutcome": "no outcome yet"
+	},
+	"units": {
+		"seconds": "{n}s",
+		"minutes": "{n}m",
+		"hours": "{n}h",
+		"hoursMinutes": "{hours}h {minutes}m",
+		"days": "{n}d",
+		"daysHours": "{days}d {hours}h",
+		"targetMinutes": "{n} min",
+		"targetHours": "{n} h",
+		"targetDays": "{n} d",
+		"noTarget": "No target"
+	},
+	"targets": {
+		"alerts": "Alerts",
+		"cases": "Cases",
+		"response": "Response",
+		"resolution": "Resolution",
+		"kept": "Kept",
+		"businessHours": "business hours",
+		"businessHoursHint": "These targets count working hours only: nights, weekends and holidays do not run the clock.",
+		"nothing": "Nothing of this severity in the period",
+		"keptNote": "Kept: the share resolved within target (or answered, when resolution has no outcome yet). Time spent waiting on you does not count against the SOC."
+	},
+	"openNow": {
+		"label": "Open right now",
+		"alerts": "Open alerts",
+		"cases": "Open cases",
+		"atRisk": "Due soon",
+		"breached": "Past target",
+		"viewAll": "View all",
+		"alertsLink": "Alerts",
+		"casesLink": "Cases"
+	},
+	"trend": {
+		"ariaLabel": "Resolution on target per period, from {from} to {to}",
+		"ariaEmpty": "No resolution outcome in this period",
+		"noOutcome": "No resolution outcome yet",
+		"onTarget": "On target",
+		"onTargetLine": "On target: {rate}",
+		"volumes": "Opened {opened} · resolved {resolved}"
+	},
+	"severity": {
+		"informational": "Informational"
+	}
+}

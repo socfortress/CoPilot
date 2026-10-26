@@ -15,6 +15,7 @@ import { useExposureAvailability } from "@/composables/common/useExposureAvailab
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
+import { useLocalesStore } from "@/stores/i18n"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { RouteRole } from "@/types/auth"
 import { getAvatar } from "@/utils"
@@ -73,6 +74,8 @@ export const useAuthStore = defineStore("auth", {
 			useActivityAvailability().reset()
 			useExposureAvailability().reset()
 			useAuditAvailability().reset()
+			// The next user starts in English, with English only, until their own profile answers (#1310).
+			useLocalesStore().reset()
 			// The bell's server notifications are the user's own (#1282).
 			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).
@@ -124,6 +127,8 @@ export const useAuthStore = defineStore("auth", {
 					this.customers = response.data.customers
 					// Read live, like the customers: an admin may have set a password since login.
 					this.setPasswordChangeRequired(!!response.data.must_change_password)
+					// The user's language and the ones their customers offer (#1310).
+					useLocalesStore().applyProfile(response.data)
 				}
 			} catch (err) {
 				console.error("Failed to load the portal profile:", err)

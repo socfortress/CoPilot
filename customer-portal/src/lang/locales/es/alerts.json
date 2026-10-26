@@ -1,0 +1,143 @@
+{
+	"list": {
+		"items": "elementos",
+		"empty": "No se encontraron alertas",
+		"clearFilters": "Borrar filtros",
+		"columns": {
+			"alert": "Alerta",
+			"assets": "Activos",
+			"tags": "Etiquetas"
+		}
+	},
+	"statusSelect": {
+		"updated": "Estado de la alerta actualizado a {status}"
+	},
+	"detailsButton": {
+		"title": "Detalles de la alerta"
+	},
+	"linkAlert": {
+		"linkAlert": "Vincular alerta",
+		"link": "Vincular",
+		"idsRequired": "Los ID del caso y de la alerta son obligatorios",
+		"linked": "Alerta vinculada al caso",
+		"genericError": "Se produjo un error. Inténtalo de nuevo más tarde."
+	},
+	"details": {
+		"error": "Error",
+		"notFound": "No se encontró la alerta.",
+		"tabs": {
+			"overview": "Resumen",
+			"assets": "Activos",
+			"linkedCases": "Casos vinculados ({count})",
+			"iocs": "Indicadores de compromiso (IoCs)",
+			"aiReport": "Informe AI",
+			"comments": "Comentarios ({count})"
+		}
+	},
+	"overview": {
+		"alertName": "Nombre de la alerta",
+		"escalated": "Escalada",
+		"assignedTo": "Asignada a"
+	},
+	"assets": {
+		"agentId": "ID del agente",
+		"velociraptorId": "ID de Velociraptor",
+		"assetName": "Nombre del activo",
+		"empty": "No se encontraron activos"
+	},
+	"iocs": {
+		"empty": "No se encontraron indicadores de compromiso"
+	},
+	"cases": {
+		"createCase": "Crear caso",
+		"linkCase": "Vincular caso",
+		"assignedTo": "Asignado a",
+		"created": "Creado: {date}",
+		"caseNumber": "Caso #{id}",
+		"empty": "No hay casos vinculados",
+		"createdSuccess": "Caso creado",
+		"genericError": "Se produjo un error. Inténtalo de nuevo más tarde."
+	},
+	"comments": {
+		"empty": "No hay comentarios",
+		"add": "Añadir comentario",
+		"placeholder": "Escribe tu comentario...",
+		"added": "Comentario añadido",
+		"updated": "Comentario actualizado",
+		"deleted": "Comentario eliminado",
+		"confirmDelete": "¿Seguro que quieres eliminar este comentario?"
+	},
+	"aiReport": {
+		"error": "Error",
+		"investigation": "Investigación",
+		"started": "Iniciada",
+		"completed": "Completada",
+		"requestedTitle": "Análisis AI solicitado",
+		"requestedText": "El analista AI se encargará en breve. Esta página se actualiza sola, y los nuevos resultados sustituirán a estos cuando termine.",
+		"progressTitle": "Investigación en curso",
+		"progressFor": "El analista AI lleva {elapsed} trabajando en esta alerta. Los resultados aparecerán aquí cuando termine la investigación.",
+		"progress": "El analista AI está trabajando en esta alerta. Los resultados aparecerán aquí cuando termine la investigación.",
+		"stalledTitle": "La investigación no terminó",
+		"stalledText": "El analista AI dejó de trabajar en esta alerta antes de redactar sus resultados.",
+		"stalledCanRequest": "Puedes solicitar un nuevo análisis.",
+		"summary": "Resumen",
+		"recommendedActions": "Acciones recomendadas",
+		"fullReport": "Informe completo",
+		"iocsTitle": "Indicadores identificados por el analista AI",
+		"vtVerdict": "Veredicto VT",
+		"vtScore": "Puntuación VT",
+		"generated": "Informe generado el {date}",
+		"notEnabled": "Los resultados del analista AI no están habilitados para este cliente",
+		"requestedEmpty": "Análisis AI solicitado: los resultados aparecerán aquí cuando el analista AI termine",
+		"noAnalysis": "No se ha realizado ningún análisis AI para esta alerta",
+		"requestFailed": "No se pudo solicitar el análisis. Inténtalo de nuevo más tarde."
+	},
+	"aiRequest": {
+		"runAgain": "Ejecutar de nuevo",
+		"run": "Ejecutar análisis",
+		"confirmAgain": "¿Pedir al analista AI que vuelva a analizar esta alerta? Los nuevos resultados sustituirán a estos cuando termine.",
+		"confirm": "¿Pedir al analista AI que analice esta alerta? Los resultados aparecerán aquí cuando termine.",
+		"inProgress": "Análisis en curso",
+		"rerun": "Volver a ejecutar el análisis AI",
+		"runAi": "Ejecutar análisis AI"
+	},
+	"aiStatus": {
+		"queued": "En cola",
+		"analysing": "Analizando",
+		"completed": "Completada",
+		"failed": "Fallida",
+		"stalled": "Estancada",
+		"unknown": "Desconocido"
+	},
+	"filters": {
+		"labels": {
+			"status": "Estado",
+			"source": "Origen",
+			"asset": "Activo",
+			"tag": "Etiqueta",
+			"date": "Creada",
+			"detection": "Detección",
+			"opened": "Llegada al SOC"
+		},
+		"remove": {
+			"status": "Quitar el filtro de estado",
+			"source": "Quitar el filtro de origen",
+			"asset": "Quitar el filtro de activo",
+			"tag": "Quitar el filtro de etiqueta",
+			"date": "Quitar el filtro de fecha de creación",
+			"detection": "Quitar el filtro de detección",
+			"opened": "Quitar el filtro de llegada al SOC"
+		},
+		"searchTitles": "Buscar en los títulos de las alertas",
+		"anyStatus": "Cualquier estado",
+		"anySource": "Cualquier origen",
+		"searchAssets": "Buscar activos",
+		"anyTags": "Cualquiera de estas etiquetas",
+		"from": "Desde",
+		"to": "Hasta",
+		"add": "Añadir filtro",
+		"clear": "Borrar filtros",
+		"openedSince": "desde el {date}",
+		"openedBefore": "antes del {date}"
+	}
+}

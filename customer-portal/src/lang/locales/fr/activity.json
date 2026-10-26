@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Activité",
+		"intro": "Ce qui est parvenu au SOC pour vous, d'où cela venait et comment cela a été jugé, à côté de la période précédente.",
+		"refreshError": "Impossible d'actualiser les chiffres : {error}",
+		"disabledTitle": "L'activité n'est pas encore disponible",
+		"disabledText": "Votre SOC n'a pas encore publié le détail de l'activité pour ce client. Demandez à votre contact SOC si vous souhaitez le voir ici.",
+		"note": "Compté à partir de l'arrivée de chaque alerte et dossier au SOC, {period}. Sélectionnez un nombre pour lister ces alertes.",
+		"periodText": "sur les {period} écoulés comparés aux {period} précédents",
+		"periodMeta": "sur {period}",
+		"severityNote": "Une alerte dont la source n'a envoyé aucune gravité est comptée au niveau par défaut du SOC.",
+		"otherSources": "Autres sources : {count} ({previous} sur la période précédente)"
+	},
+	"range": "{count} jours",
+	"panels": {
+		"sources": "Alertes par source",
+		"severities": "Alertes par gravité",
+		"detections": "Détections les plus fréquentes",
+		"assets": "Actifs les plus concernés",
+		"tags": "Tags les plus fréquents",
+		"noAlertsEither": "Aucune alerte sur l'une ou l'autre période",
+		"noAlerts": "Aucune alerte sur cette période",
+		"noAssets": "Aucune alerte n'a nommé d'actif sur cette période",
+		"noTags": "Aucune alerte taguée sur cette période"
+	},
+	"cases": {
+		"title": "Dossiers",
+		"empty": "Aucun dossier ouvert sur l'une ou l'autre période",
+		"byType": "Par type",
+		"byStatus": "Où en sont les dossiers ouverts"
+	},
+	"verdicts": {
+		"title": "Les verdicts du SOC",
+		"truePositives": "Vrais positifs",
+		"falsePositives": "Faux positifs",
+		"untriaged": "Pas encore examinées",
+		"reasons": "Pourquoi des alertes étaient des faux positifs",
+		"noisy": "Détections avec le plus de faux positifs",
+		"noFalsePositive": "Aucun faux positif sur cette période.",
+		"noisyCount": "{falsePositives} sur {reviewed} examinées · {rate}"
+	},
+	"kpi": {
+		"alerts": "Alertes reçues",
+		"cases": "Dossiers ouverts",
+		"falsePositives": "Faux positifs",
+		"coverage": "Examinées par le SOC",
+		"periodBefore": "{count} sur la période précédente",
+		"changeTitle": "Évolution par rapport à la période précédente",
+		"pointsTitle": "Points de pourcentage par rapport à la période précédente",
+		"ofReviewed": "sur {count} examinées",
+		"nothingReviewed": "rien d'examiné pour l'instant",
+		"ofAlerts": "{reviewed} sur {total} alertes",
+		"noAlerts": "aucune alerte sur cette période"
+	},
+	"delta": {
+		"new": "nouveau",
+		"points": "{points} pts"
+	},
+	"rank": {
+		"previousTitle": "La période précédente : {count}",
+		"countLabel": "{count} sur cette période",
+		"previousLabel": "{count} sur la période précédente",
+		"was": "avant {count}"
+	}
+}

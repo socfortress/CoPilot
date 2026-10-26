@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Kliknutím na segment přejdete na vyhledávání událostí.",
+		"fetchFailed": "Data panelů se nepodařilo načíst"
+	},
+	"list": {
+		"items": "položek",
+		"empty": "Nejsou povoleny žádné nástěnky",
+		"emptyHint": "Požádejte svého správce o povolení nástěnek pro váš účet",
+		"custom": "Vlastní",
+		"view": "Zobrazit nástěnku",
+		"columns": {
+			"dashboard": "Nástěnka",
+			"category": "Kategorie",
+			"template": "Šablona"
+		}
+	},
+	"panelTable": {
+		"empty": "Žádné události"
+	}
+}

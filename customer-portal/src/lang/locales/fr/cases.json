@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Dossiers"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Nom du dossier",
+			"assignedTo": "Assigné à"
+		},
+		"items": "éléments",
+		"empty": "Aucun dossier trouvé",
+		"emptyHint": "essayez de modifier les filtres"
+	},
+	"createCaseButton": {
+		"label": "Créer un dossier",
+		"title": "Créer un dossier"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Nom du dossier",
+			"caseStatus": "Statut du dossier",
+			"caseDescription": "Description du dossier",
+			"assignedTo": "Assigné à (facultatif)"
+		},
+		"placeholders": {
+			"customer": "Sélectionnez le client auquel ce dossier appartient",
+			"caseName": "Saisissez le nom du dossier",
+			"caseStatus": "Sélectionnez le statut du dossier",
+			"caseDescription": "Saisissez la description du dossier",
+			"assignedTo": "Sélectionnez la personne assignée"
+		},
+		"submit": "Créer le dossier",
+		"created": "Dossier créé avec succès"
+	},
+	"caseAssignedSelect": {
+		"updated": "Assignation mise à jour : {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Statut du dossier mis à jour : {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Détails du dossier"
+	},
+	"unlinkCase": {
+		"label": "Dissocier le dossier",
+		"confirm": "Voulez-vous vraiment dissocier ce dossier de l'alerte ?",
+		"unlinked": "Dossier dissocié de l'alerte",
+		"failed": "Une erreur s'est produite. Veuillez réessayer plus tard."
+	},
+	"caseDetails": {
+		"error": "Erreur",
+		"notFound": "Dossier introuvable.",
+		"tabs": {
+			"overview": "Vue d'ensemble",
+			"alerts": "Alertes ({count})",
+			"tasks": "Tâches",
+			"timeline": "Chronologie",
+			"files": "Fichiers",
+			"comments": "Commentaires ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Nom du dossier",
+		"escalated": "Escaladé",
+		"notificationInvokedNumber": "Nombre de notifications déclenchées",
+		"assignedTo": "Assigné à"
+	},
+	"caseAlerts": {
+		"linkAlert": "Associer une alerte",
+		"unlinkAlert": "Dissocier l'alerte",
+		"created": "Créée : {date}",
+		"assignedTo": "Assignée à",
+		"alertId": "Alerte #{id}",
+		"empty": "Aucune alerte trouvée"
+	},
+	"caseComment": {
+		"confirmDelete": "Voulez-vous vraiment supprimer ce commentaire ?",
+		"updated": "Commentaire mis à jour",
+		"deleted": "Commentaire supprimé"
+	},
+	"caseComments": {
+		"empty": "Aucun commentaire",
+		"add": "Ajouter un commentaire",
+		"placeholder": "Saisissez votre commentaire...",
+		"added": "Commentaire ajouté"
+	},
+	"caseFiles": {
+		"files": "fichiers",
+		"size": "taille",
+		"type": "type",
+		"empty": "Aucun fichier trouvé",
+		"dropHint": "Cliquez ou faites glisser un fichier dans cette zone pour le téléverser",
+		"upload": "Téléverser"
+	},
+	"caseTasks": {
+		"tasks": "tâches",
+		"done": "terminées",
+		"mandatoryIncomplete": "obligatoires non terminées",
+		"intro": "Vue en lecture seule des tâches d'investigation menées par l'équipe SOC sur ce dossier.",
+		"mandatory": "obligatoire",
+		"custom": "personnalisée",
+		"guidelines": "Consignes",
+		"notes": "Notes de l'analyste",
+		"completedBy": "Terminée par {user}",
+		"markedBy": "Marquée par {user}",
+		"createdBy": "Créée par {user}",
+		"empty": "Aucune tâche sur ce dossier pour le moment",
+		"status": {
+			"todo": "À faire",
+			"done": "Terminée",
+			"notNecessary": "Non nécessaire"
+		}
+	},
+	"caseTimeline": {
+		"events": "événements",
+		"intro": "Journal d'audit en lecture seule de l'activité d'investigation sur ce dossier.",
+		"empty": "Aucun événement pour le moment",
+		"caseCreatedFromAlert": "Dossier créé à partir de l'alerte #{id}",
+		"caseCreated": "Dossier créé",
+		"statusForced": "Statut forcé de {from} à {to} (tâches obligatoires ignorées)",
+		"statusChanged": "Statut modifié de {from} à {to}",
+		"reassigned": "Réassigné de {from} à {to}",
+		"assigned": "Assigné à {to}",
+		"unassigned": "non assigné",
+		"escalated": "Dossier escaladé",
+		"deescalated": "Escalade du dossier annulée",
+		"alertsLinked": "{count} alerte(s) associée(s) au dossier",
+		"alertLinked": "Alerte #{id} associée",
+		"alertUnlinked": "Alerte #{id} dissociée",
+		"commentAdded": "Commentaire ajouté",
+		"templateApplied": "Modèle appliqué : {name} ({count} tâche) | Modèle appliqué : {name} ({count} tâches)",
+		"taskAdded": "Tâche ajoutée : {title}",
+		"taskAddedMandatory": "Tâche ajoutée : {title} (obligatoire)",
+		"taskStatusChanged": "Tâche {title} : {from} → {to}",
+		"taskCommented": "Notes ajoutées à la tâche : {title}",
+		"alertsDetail": "Alertes : {list}"
+	}
+}

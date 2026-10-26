@@ -1,0 +1,65 @@
+{
+	"page": {
+		"title": "Activiteit",
+		"intro": "Wat er voor jou bij het SOC binnenkwam, waar het vandaan kwam en hoe het werd beoordeeld, naast de vorige periode.",
+		"refreshError": "De cijfers konden niet worden vernieuwd: {error}",
+		"disabledTitle": "Activiteit is nog niet beschikbaar",
+		"disabledText": "Je SOC heeft voor deze klant nog geen activiteitenoverzicht gepubliceerd. Vraag je SOC-contactpersoon als je het hier wilt zien.",
+		"note": "Geteld vanaf het moment dat elke melding en zaak het SOC bereikte, {period}. Selecteer een aantal om die meldingen te tonen.",
+		"periodText": "over de afgelopen {period} naast de {period} daarvoor",
+		"periodMeta": "afgelopen {period}",
+		"severityNote": "Een melding waarvan de bron geen ernst meestuurde, telt op het standaardniveau van het SOC.",
+		"otherSources": "Andere bronnen: {count} ({previous} in de vorige periode)"
+	},
+	"range": "{count} dagen",
+	"panels": {
+		"sources": "Meldingen per bron",
+		"severities": "Meldingen per ernst",
+		"detections": "Drukste detecties",
+		"assets": "Drukste assets",
+		"tags": "Drukste tags",
+		"noAlertsEither": "Geen meldingen in beide periodes",
+		"noAlerts": "Geen meldingen in deze periode",
+		"noAssets": "Geen melding noemde een asset in deze periode",
+		"noTags": "Geen getagde melding in deze periode"
+	},
+	"cases": {
+		"title": "Zaken",
+		"empty": "In geen van beide periodes is een zaak geopend",
+		"byType": "Per type",
+		"byStatus": "Waar de geopende zaken nu staan"
+	},
+	"verdicts": {
+		"title": "De oordelen van het SOC",
+		"truePositives": "Terechte meldingen",
+		"falsePositives": "Valse positieven",
+		"untriaged": "Nog niet beoordeeld",
+		"reasons": "Waarom meldingen valse positieven waren",
+		"noisy": "Detecties met de meeste valse positieven",
+		"noFalsePositive": "Geen valse positieven in deze periode.",
+		"noisyCount": "{falsePositives} van {reviewed} beoordeeld · {rate}"
+	},
+	"kpi": {
+		"alerts": "Ontvangen meldingen",
+		"cases": "Geopende zaken",
+		"falsePositives": "Valse positieven",
+		"coverage": "Beoordeeld door het SOC",
+		"periodBefore": "{count} in de vorige periode",
+		"changeTitle": "Verandering t.o.v. de vorige periode",
+		"pointsTitle": "Procentpunten t.o.v. de vorige periode",
+		"ofReviewed": "van {count} beoordeeld",
+		"nothingReviewed": "nog niets beoordeeld",
+		"ofAlerts": "{reviewed} van {total} meldingen",
+		"noAlerts": "geen meldingen in deze periode"
+	},
+	"delta": {
+		"new": "nieuw",
+		"points": "{points} ptn"
+	},
+	"rank": {
+		"previousTitle": "De vorige periode: {count}",
+		"countLabel": "{count} in deze periode",
+		"previousLabel": "{count} in de vorige periode",
+		"was": "was {count}"
+	}
+}

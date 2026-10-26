@@ -1,0 +1,175 @@
+{
+	"actions": {
+		"cancel": "Cancelar",
+		"save": "Guardar",
+		"close": "Cerrar",
+		"delete": "Eliminar",
+		"edit": "Editar",
+		"reset": "Restablecer",
+		"search": "Buscar",
+		"refresh": "Actualizar",
+		"tryAgain": "Reintentar",
+		"retry": "Reintentar",
+		"back": "Atrás",
+		"next": "Siguiente",
+		"previous": "Anterior",
+		"download": "Descargar",
+		"export": "Exportar",
+		"apply": "Aplicar",
+		"clear": "Limpiar",
+		"confirm": "Confirmar",
+		"remove": "Quitar",
+		"add": "Añadir",
+		"view": "Ver",
+		"details": "Detalles",
+		"loadMore": "Cargar más"
+	},
+	"fields": {
+		"status": "Estado",
+		"customer": "Cliente",
+		"severity": "Gravedad",
+		"created": "Creado",
+		"actions": "Acciones",
+		"description": "Descripción",
+		"source": "Origen",
+		"name": "Nombre"
+	},
+	"states": {
+		"loading": "Cargando...",
+		"noData": "Sin datos"
+	},
+	"language": {
+		"label": "Idioma",
+		"saved": "Idioma guardado",
+		"failed": "No se pudo guardar el idioma. Inténtalo de nuevo.",
+		"englishOnly": "Tu organización ofrece el portal solo en inglés.",
+		"hint": "El idioma del portal para tu cuenta, en todos tus dispositivos."
+	},
+	"status": {
+		"open": "Abierto",
+		"inProgress": "En curso",
+		"waitingOnYou": "Esperando tu respuesta",
+		"closed": "Cerrado"
+	},
+	"severity": {
+		"critical": "Crítica",
+		"high": "Alta",
+		"medium": "Media",
+		"low": "Baja",
+		"info": "Info"
+	},
+	"jobStatus": {
+		"pending": "Pendiente",
+		"running": "En ejecución",
+		"completed": "Completado",
+		"failed": "Fallido"
+	},
+	"boolean": {
+		"yes": "Sí",
+		"no": "No"
+	},
+	"timeRange": {
+		"hour1": "1 hora",
+		"hour6": "6 horas",
+		"hour12": "12 horas",
+		"day1": "1 día",
+		"day2": "2 días",
+		"day3": "3 días",
+		"week1": "1 semana",
+		"week2": "2 semanas",
+		"month1": "1 mes",
+		"month2": "2 meses",
+		"month3": "3 meses",
+		"month6": "6 meses",
+		"year1": "1 año"
+	},
+	"similarity": {
+		"high": "Similitud alta",
+		"highDescription": "coincidencias exactas o casi exactas",
+		"good": "Buena similitud semántica",
+		"moderate": "Similitud moderada",
+		"low": "Similitud baja"
+	},
+	"elapsed": {
+		"underMinute": "<1 min",
+		"minutes": "{minutes} min",
+		"hours": "{hours} h {minutes} min"
+	},
+	"dates": {
+		"invalid": "Fecha no válida"
+	},
+	"codeSource": {
+		"empty": "Vacío",
+		"toggle": "alternar vista del código fuente"
+	},
+	"copyableValue": {
+		"copy": "Copiar",
+		"copied": "Copiado"
+	},
+	"keyValueFilter": {
+		"key": "Clave del filtro",
+		"value": "Valor del filtro"
+	},
+	"notifications": {
+		"setRead": "Marcar como leída",
+		"empty": "No hay notificaciones",
+		"markAllRead": "Marcar todas como leídas",
+		"openAlert": "Abrir alerta",
+		"openCase": "Abrir caso",
+		"viewReports": "Ver informes"
+	},
+	"pagination": {
+		"perPage": "{size} / página",
+		"desc": "Descendente",
+		"asc": "Ascendente"
+	},
+	"statusStrip": {
+		"total": {
+			"alerts": "Total de alertas",
+			"cases": "Total de casos",
+			"agents": "Total de agentes",
+			"other": "Total de {entity}"
+		},
+		"byStatus": {
+			"alerts": "Alertas por estado",
+			"cases": "Casos por estado",
+			"agents": "Agentes por estado",
+			"other": "{entity} por estado"
+		}
+	},
+	"waitingOnYou": {
+		"title": "El SOC espera tu respuesta",
+		"body": {
+			"alert": "Su plazo de respuesta para esta alerta está en pausa hasta que respondas. Responde en los comentarios para devolvérsela a los analistas.",
+			"case": "Su plazo de respuesta para este caso está en pausa hasta que respondas. Responde en los comentarios para devolvérselo a los analistas."
+		},
+		"reply": "Responder"
+	},
+	"charts": {
+		"total": "Total"
+	},
+	"entityDetails": {
+		"viewDetails": "Ver detalles",
+		"openPage": {
+			"alert": "Abrir la página de la alerta",
+			"case": "Abrir la página del caso",
+			"agent": "Abrir la página del agente",
+			"other": "Abrir la página {entity}"
+		}
+	},
+	"timeline": {
+		"title": "Cronología"
+	},
+	"passwordPolicy": {
+		"requirements": "De 8 a 72 caracteres, con una mayúscula, una minúscula, un dígito y un símbolo",
+		"problems": {
+			"controlCharacter": "La contraseña no debe contener caracteres de control ni invisibles",
+			"tooShort": "La contraseña debe tener al menos 8 caracteres",
+			"tooLong": "La contraseña puede tener como máximo 72 bytes (una letra acentuada ocupa 2 y un emoji 4)",
+			"noLowercase": "La contraseña debe contener una letra minúscula",
+			"noUppercase": "La contraseña debe contener una letra mayúscula",
+			"noDigit": "La contraseña debe contener un dígito",
+			"noSymbol": "La contraseña debe contener un símbolo, como ! {'@'} # $ % _ - . o +"
+		}
+	}
+}

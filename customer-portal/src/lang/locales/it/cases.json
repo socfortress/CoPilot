@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Casi"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Nome del caso",
+			"assignedTo": "Assegnato a"
+		},
+		"items": "elementi",
+		"empty": "Nessun caso trovato",
+		"emptyHint": "prova a modificare i filtri"
+	},
+	"createCaseButton": {
+		"label": "Crea caso",
+		"title": "Crea caso"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Nome del caso",
+			"caseStatus": "Stato del caso",
+			"caseDescription": "Descrizione del caso",
+			"assignedTo": "Assegnato a (facoltativo)"
+		},
+		"placeholders": {
+			"customer": "Seleziona il cliente a cui appartiene questo caso",
+			"caseName": "Inserisci il nome del caso",
+			"caseStatus": "Seleziona lo stato del caso",
+			"caseDescription": "Inserisci la descrizione del caso",
+			"assignedTo": "Seleziona l'assegnatario"
+		},
+		"submit": "Crea caso",
+		"created": "Caso creato correttamente"
+	},
+	"caseAssignedSelect": {
+		"updated": "Assegnatario aggiornato a {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Stato del caso aggiornato a {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Dettagli del caso"
+	},
+	"unlinkCase": {
+		"label": "Scollega caso",
+		"confirm": "Vuoi davvero scollegare questo caso dall'alert?",
+		"unlinked": "Caso scollegato dall'alert",
+		"failed": "Si è verificato un errore. Riprova più tardi."
+	},
+	"caseDetails": {
+		"error": "Errore",
+		"notFound": "Caso non trovato.",
+		"tabs": {
+			"overview": "Panoramica",
+			"alerts": "Alert ({count})",
+			"tasks": "Attività",
+			"timeline": "Cronologia",
+			"files": "File",
+			"comments": "Commenti ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Nome del caso",
+		"escalated": "Escalato",
+		"notificationInvokedNumber": "Numero di notifiche inviate",
+		"assignedTo": "Assegnato a"
+	},
+	"caseAlerts": {
+		"linkAlert": "Collega alert",
+		"unlinkAlert": "Scollega alert",
+		"created": "Creato: {date}",
+		"assignedTo": "Assegnato a",
+		"alertId": "Alert #{id}",
+		"empty": "Nessun alert trovato"
+	},
+	"caseComment": {
+		"confirmDelete": "Vuoi davvero eliminare questo commento?",
+		"updated": "Commento aggiornato",
+		"deleted": "Commento eliminato"
+	},
+	"caseComments": {
+		"empty": "Nessun commento",
+		"add": "Aggiungi commento",
+		"placeholder": "Scrivi il tuo commento...",
+		"added": "Commento aggiunto"
+	},
+	"caseFiles": {
+		"files": "file",
+		"size": "dimensione",
+		"type": "tipo",
+		"empty": "Nessun file trovato",
+		"dropHint": "Fai clic o trascina un file in quest'area per caricarlo",
+		"upload": "Carica"
+	},
+	"caseTasks": {
+		"tasks": "attività",
+		"done": "completate",
+		"mandatoryIncomplete": "obbligatorie incomplete",
+		"intro": "Vista in sola lettura delle attività di indagine svolte dal team SOC su questo caso.",
+		"mandatory": "obbligatoria",
+		"custom": "personalizzata",
+		"guidelines": "Linee guida",
+		"notes": "Note dell'analista",
+		"completedBy": "Completata da {user}",
+		"markedBy": "Segnata da {user}",
+		"createdBy": "Creata da {user}",
+		"empty": "Nessuna attività su questo caso",
+		"status": {
+			"todo": "Da fare",
+			"done": "Completata",
+			"notNecessary": "Non necessaria"
+		}
+	},
+	"caseTimeline": {
+		"events": "eventi",
+		"intro": "Registro di controllo in sola lettura delle attività di indagine su questo caso.",
+		"empty": "Nessun evento nella cronologia",
+		"caseCreatedFromAlert": "Caso creato dall'alert #{id}",
+		"caseCreated": "Caso creato",
+		"statusForced": "Stato forzato da {from} a {to} (attività obbligatorie ignorate)",
+		"statusChanged": "Stato cambiato da {from} a {to}",
+		"reassigned": "Riassegnato da {from} a {to}",
+		"assigned": "Assegnato a {to}",
+		"unassigned": "non assegnato",
+		"escalated": "Caso escalato",
+		"deescalated": "Escalation del caso annullata",
+		"alertsLinked": "{count} alert collegati al caso",
+		"alertLinked": "Alert #{id} collegato",
+		"alertUnlinked": "Alert #{id} scollegato",
+		"commentAdded": "Commento aggiunto",
+		"templateApplied": "Modello applicato: {name} ({count} attività) | Modello applicato: {name} ({count} attività)",
+		"taskAdded": "Attività aggiunta: {title}",
+		"taskAddedMandatory": "Attività aggiunta: {title} (obbligatoria)",
+		"taskStatusChanged": "Attività {title}: {from} → {to}",
+		"taskCommented": "Note aggiunte all'attività: {title}",
+		"alertsDetail": "Alert: {list}"
+	}
+}

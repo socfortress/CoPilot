@@ -1,0 +1,45 @@
+{
+	"portalName": "Klantportaal",
+	"routes": {
+		"overview": "Overzicht",
+		"alerts": "Meldingen",
+		"alertDetails": "Meldingdetails",
+		"cases": "Zaken",
+		"caseDetails": "Zaakdetails",
+		"agents": "Agents",
+		"agentDetails": "Agentdetails",
+		"reports": "Rapporten",
+		"eventSearch": "Gebeurtenissen zoeken",
+		"dashboards": "Dashboards",
+		"dashboardDetails": "Dashboarddetails",
+		"exposure": "Blootstelling",
+		"users": "Gebruikers",
+		"auditLog": "Auditlog",
+		"activity": "Activiteit",
+		"sla": "Serviceniveaus",
+		"profile": "Profiel",
+		"login": "Inloggen",
+		"changePassword": "Kies een nieuw wachtwoord"
+	},
+	"sidebar": {
+		"documentation": "Documentatie"
+	},
+	"toolbar": {
+		"fullscreen": "Volledig scherm",
+		"theme": "Thema wisselen",
+		"shortcuts": "Snelkoppelingen",
+		"yourProfile": "Je profiel",
+		"logout": "Uitloggen"
+	},
+	"customerFilter": {
+		"placeholder": "Alle klanten"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Pagina niet gevonden",
+		"home": "Naar de startpagina"
+	}
+}

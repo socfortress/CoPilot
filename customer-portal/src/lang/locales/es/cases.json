@@ -1,0 +1,138 @@
+{
+	"stats": {
+		"entity": "Casos"
+	},
+	"list": {
+		"columns": {
+			"caseName": "Nombre del caso",
+			"assignedTo": "Asignado a"
+		},
+		"items": "elementos",
+		"empty": "No se encontraron casos",
+		"emptyHint": "prueba a cambiar los filtros"
+	},
+	"createCaseButton": {
+		"label": "Crear caso",
+		"title": "Crear caso"
+	},
+	"createCaseForm": {
+		"fields": {
+			"caseName": "Nombre del caso",
+			"caseStatus": "Estado del caso",
+			"caseDescription": "Descripción del caso",
+			"assignedTo": "Asignado a (opcional)"
+		},
+		"placeholders": {
+			"customer": "Selecciona el cliente al que pertenece este caso",
+			"caseName": "Introduce el nombre del caso",
+			"caseStatus": "Selecciona el estado del caso",
+			"caseDescription": "Introduce la descripción del caso",
+			"assignedTo": "Selecciona la persona asignada"
+		},
+		"submit": "Crear caso",
+		"created": "Caso creado correctamente"
+	},
+	"caseAssignedSelect": {
+		"updated": "Asignación actualizada a {name}"
+	},
+	"caseStatusSelect": {
+		"updated": "Estado del caso actualizado a {status}"
+	},
+	"caseDetailsButton": {
+		"title": "Detalles del caso"
+	},
+	"unlinkCase": {
+		"label": "Desvincular caso",
+		"confirm": "¿Seguro que quieres desvincular este caso de la alerta?",
+		"unlinked": "Caso desvinculado de la alerta",
+		"failed": "Se ha producido un error. Inténtalo de nuevo más tarde."
+	},
+	"caseDetails": {
+		"error": "Error",
+		"notFound": "Caso no encontrado.",
+		"tabs": {
+			"overview": "Resumen",
+			"alerts": "Alertas ({count})",
+			"tasks": "Tareas",
+			"timeline": "Cronología",
+			"files": "Archivos",
+			"comments": "Comentarios ({count})"
+		}
+	},
+	"caseOverview": {
+		"caseName": "Nombre del caso",
+		"escalated": "Escalado",
+		"notificationInvokedNumber": "Número de notificaciones enviadas",
+		"assignedTo": "Asignado a"
+	},
+	"caseAlerts": {
+		"linkAlert": "Vincular alerta",
+		"unlinkAlert": "Desvincular alerta",
+		"created": "Creada: {date}",
+		"assignedTo": "Asignada a",
+		"alertId": "Alerta #{id}",
+		"empty": "No se encontraron alertas"
+	},
+	"caseComment": {
+		"confirmDelete": "¿Seguro que quieres eliminar este comentario?",
+		"updated": "Comentario actualizado",
+		"deleted": "Comentario eliminado"
+	},
+	"caseComments": {
+		"empty": "No hay comentarios",
+		"add": "Añadir comentario",
+		"placeholder": "Escribe tu comentario...",
+		"added": "Comentario añadido"
+	},
+	"caseFiles": {
+		"files": "archivos",
+		"size": "tamaño",
+		"type": "tipo",
+		"empty": "No se encontraron archivos",
+		"dropHint": "Haz clic o arrastra un archivo a esta zona para subirlo",
+		"upload": "Subir"
+	},
+	"caseTasks": {
+		"tasks": "tareas",
+		"done": "completadas",
+		"mandatoryIncomplete": "obligatorias pendientes",
+		"intro": "Vista de solo lectura de las tareas de investigación realizadas por el equipo del SOC en este caso.",
+		"mandatory": "obligatoria",
+		"custom": "personalizada",
+		"guidelines": "Directrices",
+		"notes": "Notas del analista",
+		"completedBy": "Completada por {user}",
+		"markedBy": "Marcada por {user}",
+		"createdBy": "Creada por {user}",
+		"empty": "Este caso aún no tiene tareas",
+		"status": {
+			"todo": "Pendiente",
+			"done": "Completada",
+			"notNecessary": "No necesaria"
+		}
+	},
+	"caseTimeline": {
+		"events": "eventos",
+		"intro": "Registro de auditoría de solo lectura de la actividad de investigación en este caso.",
+		"empty": "Aún no hay eventos en la cronología",
+		"caseCreatedFromAlert": "Caso creado a partir de la alerta #{id}",
+		"caseCreated": "Caso creado",
+		"statusForced": "Estado forzado de {from} a {to} (tareas obligatorias omitidas)",
+		"statusChanged": "Estado cambiado de {from} a {to}",
+		"reassigned": "Reasignado de {from} a {to}",
+		"assigned": "Asignado a {to}",
+		"unassigned": "sin asignar",
+		"escalated": "Caso escalado",
+		"deescalated": "Escalado del caso retirado",
+		"alertsLinked": "{count} alerta(s) vinculada(s) al caso",
+		"alertLinked": "Alerta #{id} vinculada",
+		"alertUnlinked": "Alerta #{id} desvinculada",
+		"commentAdded": "Comentario añadido",
+		"templateApplied": "Plantilla aplicada: {name} ({count} tarea) | Plantilla aplicada: {name} ({count} tareas)",
+		"taskAdded": "Tarea añadida: {title}",
+		"taskAddedMandatory": "Tarea añadida: {title} (obligatoria)",
+		"taskStatusChanged": "Tarea {title}: {from} → {to}",
+		"taskCommented": "Notas añadidas a la tarea: {title}",
+		"alertsDetail": "Alertas: {list}"
+	}
+}

@@ -1,0 +1,73 @@
+{
+	"page": {
+		"title": "Serviceniveaus",
+		"intro": "Hoe snel het SOC je meldingen en zaken heeft beantwoord en opgelost, afgezet tegen de met jou afgesproken doelen.",
+		"refreshError": "De cijfers konden niet worden vernieuwd: {error}",
+		"disabledTitle": "Serviceniveaus zijn nog niet beschikbaar",
+		"disabledText": "Je SOC heeft voor deze klant nog geen serviceniveaucijfers gepubliceerd. Vraag je SOC-contactpersoon als je ze hier wilt zien.",
+		"trendTitle": "Binnen het doel opgelost",
+		"trendEmpty": "Er is in deze periode niets gevolgd geopend of opgelost",
+		"commitmentTitle": "Onze toezegging",
+		"commitmentEmpty": "Er gelden geen doelen voor je meldingen en zaken",
+		"periodMeta": "afgelopen {period}",
+		"measuredSince": "gemeten sinds {date}"
+	},
+	"period": "{count} dagen",
+	"kpi": {
+		"alertResponse": "Reactie op meldingen",
+		"alertResolution": "Oplossing van meldingen",
+		"caseResponse": "Reactie op zaken",
+		"caseResolution": "Oplossing van zaken",
+		"answeredWithinTarget": "binnen het doel beantwoord",
+		"resolvedWithinTarget": "binnen het doel opgelost",
+		"medianResponse": "mediane reactie",
+		"medianResolution": "mediane oplossing",
+		"deltaTitle": "{delta} punten t.o.v. de vorige periode",
+		"onTarget": "{met} van {decided} binnen het doel",
+		"noOutcome": "nog geen uitkomst"
+	},
+	"units": {
+		"seconds": "{n}s",
+		"minutes": "{n}m",
+		"hours": "{n}u",
+		"hoursMinutes": "{hours}u {minutes}m",
+		"days": "{n}d",
+		"daysHours": "{days}d {hours}u",
+		"targetMinutes": "{n} min",
+		"targetHours": "{n} u",
+		"targetDays": "{n} d",
+		"noTarget": "Geen doel"
+	},
+	"targets": {
+		"alerts": "Meldingen",
+		"cases": "Zaken",
+		"response": "Reactie",
+		"resolution": "Oplossing",
+		"kept": "Gehaald",
+		"businessHours": "kantooruren",
+		"businessHoursHint": "Deze doelen tellen alleen werkuren: nachten, weekenden en feestdagen laten de klok niet lopen.",
+		"nothing": "Niets met deze ernst in de periode",
+		"keptNote": "Gehaald: het aandeel dat binnen het doel is opgelost (of beantwoord, als de oplossing nog geen uitkomst heeft). Tijd waarin op jou wordt gewacht, telt niet mee tegen het SOC."
+	},
+	"openNow": {
+		"label": "Nu open",
+		"alerts": "Open meldingen",
+		"cases": "Open zaken",
+		"atRisk": "Binnenkort te laat",
+		"breached": "Doel overschreden",
+		"viewAll": "Alles bekijken",
+		"alertsLink": "Meldingen",
+		"casesLink": "Zaken"
+	},
+	"trend": {
+		"ariaLabel": "Oplossing binnen het doel per periode, van {from} tot {to}",
+		"ariaEmpty": "Geen oplossingsuitkomst in deze periode",
+		"noOutcome": "Nog geen oplossingsuitkomst",
+		"onTarget": "Binnen het doel",
+		"onTargetLine": "Binnen het doel: {rate}",
+		"volumes": "Geopend {opened} · opgelost {resolved}"
+	},
+	"severity": {
+		"informational": "Informatief"
+	}
+}

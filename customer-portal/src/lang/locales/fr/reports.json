@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Rapports",
+		"subtitle": "Générez et téléchargez des rapports d'activité PDF pour votre organisation",
+		"generate": "Générer un rapport",
+		"empty": "Aucun rapport généré pour l'instant",
+		"loadFailed": "Impossible de charger les rapports",
+		"noCustomer": "Aucun client disponible pour générer le rapport",
+		"queued": "La génération du rapport peut prendre un moment — vous serez averti dès qu'il sera prêt.",
+		"queueFailed": "Impossible de mettre en file la génération du rapport",
+		"generateFailed": "Impossible de générer le rapport",
+		"downloaded": "Rapport téléchargé",
+		"downloadFailed": "Impossible de télécharger le rapport",
+		"deleteFailed": "Impossible de supprimer le rapport"
+	},
+	"form": {
+		"reportName": "Nom du rapport",
+		"reportNamePlaceholder": "Laissez vide pour un nom généré automatiquement",
+		"timeRange": "Période",
+		"customRange": "Plage de dates personnalisée",
+		"template": "Modèle de rapport",
+		"selectCustomer": "Veuillez sélectionner un client",
+		"selectRange": "Veuillez sélectionner une plage de dates",
+		"ranges": {
+			"last30": "30 derniers jours",
+			"last90": "3 derniers mois",
+			"custom": "Période personnalisée"
+		},
+		"templates": {
+			"full": {
+				"label": "Rapport complet",
+				"description": "Tout : synthèse exécutive, graphiques et tendances, et dossiers ouverts/fermés avec actifs et IOC."
+			},
+			"executive": {
+				"label": "Synthèse exécutive",
+				"description": "Synthèse en un coup d'œil : KPI clés, indicateurs de service et graphique des statuts. Sans détail des dossiers."
+			},
+			"operational": {
+				"label": "Opérationnel — dossiers",
+				"description": "Centré sur les dossiers : chaque dossier ouvert/fermé en détail (actifs, IOC, résolution). Sans graphiques."
+			},
+			"analytics": {
+				"label": "Analyse — tendances",
+				"description": "Centré sur les indicateurs : synthèse exécutive, tous les graphiques de répartition et le tableau des tendances mensuelles. Sans détail des dossiers."
+			}
+		}
+	},
+	"delete": {
+		"title": "Supprimer le rapport",
+		"confirm": "Voulez-vous vraiment supprimer « {name} » ?",
+		"irreversible": "Cette action est irréversible."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Rapport complet",
+				"description": "Synthèse exécutive, graphiques et tendances, et dossiers ouverts/fermés avec actifs et IOC"
+			},
+			"executive": {
+				"name": "Rapport exécutif",
+				"description": "Synthèse en un coup d'œil : KPI, indicateurs de service et graphique des statuts"
+			},
+			"operational": {
+				"name": "Rapport opérationnel",
+				"description": "Centré sur les dossiers : dossiers ouverts/fermés en détail (actifs, IOC, résolution)"
+			},
+			"analytics": {
+				"name": "Rapport analytique",
+				"description": "Centré sur les indicateurs : synthèse exécutive, tous les graphiques et le tableau des tendances mensuelles"
+			}
+		},
+		"alerts": "alertes",
+		"cases": "dossiers",
+		"open": "ouverts",
+		"closed": "fermés",
+		"status": {
+			"completed": "Terminé",
+			"processing": "En cours de génération",
+			"failed": "Échec"
+		},
+		"roles": {
+			"admin": "Administrateur",
+			"analyst": "Analyste",
+			"scheduler": "Planificateur",
+			"customer_user": "Client"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Rapport prêt",
+		"readyDescription": "« {name} » a été généré et est prêt à être téléchargé.",
+		"failedTitle": "Échec du rapport",
+		"failedDescription": "« {name} » n'a pas pu être généré.",
+		"timeoutTitle": "Rapport toujours en cours",
+		"timeoutDescription": "« {name} » prend plus de temps que prévu. Consultez son statut sur la page Rapports.",
+		"viewReports": "Voir les rapports"
+	}
+}

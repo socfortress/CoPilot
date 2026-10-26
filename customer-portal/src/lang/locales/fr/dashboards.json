@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Cliquez sur un segment pour accéder à la recherche d'événements.",
+		"fetchFailed": "Impossible de récupérer les données des panneaux"
+	},
+	"list": {
+		"items": "éléments",
+		"empty": "Aucun tableau de bord activé",
+		"emptyHint": "Contactez votre administrateur pour activer des tableaux de bord pour votre compte",
+		"custom": "Personnalisé",
+		"view": "Voir le tableau de bord",
+		"columns": {
+			"dashboard": "Tableau de bord",
+			"category": "Catégorie",
+			"template": "Modèle"
+		}
+	},
+	"panelTable": {
+		"empty": "Aucun événement"
+	}
+}

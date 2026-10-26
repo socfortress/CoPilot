@@ -1,0 +1,119 @@
+{
+	"form": {
+		"noSourcesTitle": "Geen gebeurtenisbronnen geconfigureerd",
+		"noSourcesText": "Er zijn geen gebeurtenisbronnen geconfigureerd voor deze klant. Neem contact op met je beheerder om gebeurtenisbronnen in te stellen.",
+		"queryLabel": "Lucene-query",
+		"autocompleteHint": "typ # om automatisch aan te vullen",
+		"selectCustomer": "Klant selecteren",
+		"selectSource": "Bron selecteren",
+		"queryPlaceholder": "bijv. {example}",
+		"noFieldMappings": "Geen veldtoewijzingen gevonden",
+		"customerNeeded": "Selecteer een klant om te zoeken",
+		"sourceNeeded": "Selecteer een bron om te zoeken",
+		"time": "Tijd",
+		"timeUnit": "Tijdseenheid",
+		"units": {
+			"hours": "Uren",
+			"days": "Dagen",
+			"weeks": "Weken"
+		},
+		"perPage": "{count} per pagina",
+		"loadSourcesFailed": "Gebeurtenisbronnen konden niet worden geladen",
+		"queryUpdated": "“{name}” bijgewerkt",
+		"querySaved": "“{name}” opgeslagen",
+		"saveQueryFailed": "De query kon niet worden opgeslagen",
+		"deleteQueryFailed": "De query kon niet worden verwijderd",
+		"clearRecentFailed": "De recente zoekopdrachten konden niet worden gewist",
+		"sourceGone": "De bron “{source}” is niet meer beschikbaar voor deze klant"
+	},
+	"results": {
+		"count": "{loaded} van {total} gebeurtenissen geladen",
+		"columns": "Kolommen",
+		"ownColumns": "Je eigen kolommen",
+		"exportCsv": "CSV exporteren",
+		"empty": "Geen gebeurtenissen gevonden",
+		"emptyHint": "Pas je query aan of vergroot het tijdsbereik",
+		"loadMore": "{shown} van {total} gebeurtenissen • Meer laden",
+		"columnsTitle": "Kolommen · {source}",
+		"socLayout": "SOC-indeling",
+		"defaultLayout": "Standaardindeling",
+		"viewDetails": "Details bekijken",
+		"switchColumnsFailed": "De kolommen konden niet worden gewisseld",
+		"templateUpdated": "Sjabloon “{name}” bijgewerkt",
+		"templateSaved": "Sjabloon “{name}” opgeslagen",
+		"saveTemplateFailed": "Het sjabloon kon niet worden opgeslagen",
+		"templateDeletedNamed": "Sjabloon “{name}” verwijderd",
+		"templateDeleted": "Sjabloon verwijderd",
+		"deleteTemplateFailed": "Het sjabloon kon niet worden verwijderd",
+		"saveColumnsFailed": "De kolommen konden niet worden opgeslagen",
+		"exportedPartial": "{exported} van {total} gebeurtenissen geëxporteerd: laad er meer om de rest mee te nemen",
+		"exported": "{exported} gebeurtenissen geëxporteerd",
+		"searchFailed": "Gebeurtenissen konden niet worden gezocht",
+		"loadMoreFailed": "Meer gebeurtenissen konden niet worden geladen"
+	},
+	"columns": {
+		"timestamp": "Tijdstempel",
+		"level": "Niveau",
+		"source": "Bron",
+		"rule": "Regel"
+	},
+	"details": {
+		"title": "Gebeurtenisdetails",
+		"filterFor": "Filteren op deze waarde",
+		"exclude": "Deze waarde uitsluiten"
+	},
+	"queries": {
+		"toggle": "Query's",
+		"saved": "Opgeslagen",
+		"recent": "Recent",
+		"loading": "Laden…",
+		"noSaved": "Nog geen opgeslagen query. Voer een zoekopdracht uit en sla die op onder een naam.",
+		"noRecent": "De zoekopdrachten die je uitvoert, verschijnen hier.",
+		"run": "“{name}” uitvoeren",
+		"delete": "“{name}” verwijderen",
+		"saveAs": "Deze zoekopdracht opslaan als",
+		"namePlaceholder": "bijv. Mislukte aanmeldingen op webservers",
+		"willReplace": "Werkt de query bij die onder deze naam is opgeslagen.",
+		"loadFailed": "Je opgeslagen zoekopdrachten konden niet worden geladen",
+		"lastHours": "afgelopen {count} uur | afgelopen {count} uur",
+		"lastDays": "afgelopen {count} dag | afgelopen {count} dagen",
+		"lastWeeks": "afgelopen {count} week | afgelopen {count} weken"
+	},
+	"layouts": {
+		"toggle": "Indeling",
+		"title": "Indelingen",
+		"custom": "Aangepast",
+		"deleteTemplate": "Sjabloon “{name}” verwijderen",
+		"noTemplates": "Nog geen sjabloon: rangschik de kolommen en sla ze dan op als sjabloon.",
+		"manage": "Kolommen en sjablonen beheren"
+	},
+	"deleteConfirm": {
+		"label": "Sjabloon “{name}” verwijderen?",
+		"question": "{name} verwijderen?"
+	},
+	"preview": {
+		"columns": "{count} kolom | {count} kolommen",
+		"header": "Kop",
+		"field": "Veld"
+	},
+	"picker": {
+		"shown": "Getoonde kolommen · van links naar rechts",
+		"noneSoc": "Geen kolom gekozen: de tabel toont de SOC-indeling voor deze bron.",
+		"noneDefault": "Geen kolom gekozen: de tabel toont de standaardindeling.",
+		"headerOf": "Kop van {field}",
+		"moveLeft": "Naar links",
+		"moveRight": "Naar rechts",
+		"remove": "{field} verwijderen",
+		"addField": "Een veld toevoegen",
+		"searchFields": "Zoeken in de velden van de bron",
+		"noFields": "Geen veldenlijst voor deze bron",
+		"templates": "Sjablonen voor deze bron",
+		"loadTitle": "Zet de kolommen van “{name}” hierboven, om ze aan te passen of toe te passen",
+		"load": "Laden",
+		"templateNamePlaceholder": "Kolommen hierboven opslaan als…",
+		"saveTemplate": "Opslaan als sjabloon",
+		"willReplace": "Werkt het sjabloon bij dat onder deze naam is opgeslagen.",
+		"backToSoc": "Terug naar de SOC-indeling",
+		"backToDefault": "Terug naar de standaard"
+	}
+}

@@ -1,0 +1,69 @@
+{
+	"page": {
+		"title": "Utenti",
+		"intro": "Chi può accedere a questo portale per la tua organizzazione. Invita i colleghi, disattiva chi se n'è andato e aiuta chi ha perso l'app di autenticazione o la password.",
+		"invite": "Invita un utente",
+		"forbiddenTitle": "Solo un amministratore cliente può gestire gli utenti",
+		"forbiddenText": "È il tuo SOC a decidere chi amministra gli utenti della tua organizzazione. Chiedi al tuo referente SOC se ti serve questo ruolo.",
+		"twoFaOn": "2FA attiva",
+		"twoFaOff": "2FA non attiva",
+		"lastSignIn": "Ultimo accesso {date}",
+		"neverSignedIn": "Mai effettuato l'accesso",
+		"twoFaNotOn": "L'autenticazione a due fattori non è attiva",
+		"resetTotp": "Reimposta 2FA",
+		"temporaryPassword": "Password temporanea",
+		"enable": "Attiva",
+		"disable": "Disattiva",
+		"loadFailed": "Impossibile caricare gli utenti.",
+		"done": "Fatto",
+		"actionFailed": "L'azione non è riuscita.",
+		"issueFailed": "Impossibile emettere una password temporanea."
+	},
+	"confirm": {
+		"disableTitle": "Disattivare {username}?",
+		"disableText": "Non potrà più accedere e la sessione che ha aperta termina. Potrai riattivarlo in seguito.",
+		"resetTotpTitle": "Reimpostare la 2FA di {username}?",
+		"resetTotpText": "Accederà con la sola password e potrà configurare di nuovo l'autenticazione a due fattori dal suo Profilo.",
+		"temporaryPasswordTitle": "Una password temporanea per {username}?",
+		"temporaryPasswordText": "La sua password attuale smette di funzionare. Accederà con quella temporanea e ne sceglierà una sua.",
+		"issue": "Emetti"
+	},
+	"tags": {
+		"self": "Tu",
+		"selfTitle": "Il tuo account",
+		"admin": "Admin",
+		"adminTitle": "Gestisce gli utenti di questo cliente. Nominato dal tuo SOC.",
+		"disabled": "Disattivato",
+		"disabledTitle": "Non può accedere",
+		"password": "Cambio password in sospeso",
+		"passwordTitle": "Accede con una password temporanea e deve sceglierne una sua"
+	},
+	"invite": {
+		"title": "Invita un utente",
+		"introEmail": "Riceverà una password temporanea per email e ne sceglierà una sua al primo accesso.",
+		"introShown": "Riceverà una password temporanea da te (viene mostrata una sola volta dopo l'invito) e ne sceglierà una sua al primo accesso.",
+		"username": "Nome utente",
+		"email": "Email",
+		"customers": "Clienti che può vedere",
+		"willSee": "Vedrà {customer}.",
+		"submit": "Invita",
+		"failed": "Impossibile invitare l'utente.",
+		"problems": {
+			"usernameRequired": "Inserisci un nome utente",
+			"usernameInvalid": "Il nome utente deve avere da 3 a 64 caratteri: lettere, cifre e . _ {'@'} -, e iniziare con una lettera o una cifra",
+			"emailRequired": "Inserisci un indirizzo email",
+			"emailInvalid": "Inserisci un indirizzo email valido",
+			"customersRequired": "Scegli almeno un cliente"
+		}
+	},
+	"temporaryPassword": {
+		"invitedTitle": "{username} è stato invitato",
+		"title": "Una password temporanea per {username}",
+		"shownOnce": "Questa password viene mostrata una sola volta. Consegnala tu stesso a {username}. Al primo accesso ne sceglierà una sua.",
+		"shownOnceProblem": "Questa password viene mostrata una sola volta. Consegnala tu stesso a {username}: {problem} Al primo accesso ne sceglierà una sua.",
+		"emailed": "Una password temporanea è stata inviata per email a {email}. {username} ne sceglierà una sua al primo accesso.",
+		"copy": "Copia",
+		"copied": "Copiata",
+		"done": "Fatto"
+	}
+}

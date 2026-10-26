@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Customer admin",
+		"portalUser": "Portal user"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Invites and manages the portal users of {customers}. Appointed by your SOC.",
+		"adminBadge": "admin",
+		"noCustomer": "No customer"
+	},
+	"tabs": {
+		"settings": "Settings",
+		"notifications": "Notifications",
+		"security": "Security"
+	},
+	"settings": {
+		"general": "General",
+		"dateFormat": "Date Format",
+		"timeFormat": "Time Format",
+		"hours24": "24 Hours [ {time} ]",
+		"hours12": "12 Hours [ {time} ]",
+		"usernameRequired": "Please input username",
+		"emailRequired": "Please input email",
+		"saved": "Settings saved",
+		"error": "Something was wrong"
+	},
+	"notifications": {
+		"title": "Notifications",
+		"intro": "Choose what reaches you in the portal's bell and by email. You are never told about something you did yourself.",
+		"inPortal": "In the portal",
+		"email": "Email",
+		"from": "From",
+		"unsaved": "Unsaved changes",
+		"emailOff": "Off",
+		"emailImmediately": "Immediately",
+		"digest": "Daily summary ({hour}:00 UTC)",
+		"severityAndUp": "{severity} and up",
+		"severities": {
+			"critical": "Critical",
+			"high": "High",
+			"medium": "Medium",
+			"low": "Low",
+			"informational": "Informational"
+		},
+		"noEmailAddress": "Your account has no email address, so notifications reach the portal only. Ask your SOC to add one.",
+		"emailNotSetUp": "Email notifications are not set up on this portal yet, so notifications reach the portal only.",
+		"saved": "Notification settings saved",
+		"loadFailed": "Your notification settings could not be loaded.",
+		"saveFailed": "Your notification settings could not be saved.",
+		"events": {
+			"alertCreated": {
+				"label": "New alerts",
+				"description": "A new alert of your organization, from the severity you choose."
+			},
+			"waitingOnYou": {
+				"label": "Waiting on you",
+				"description": "The SOC needs your reply on an alert or a case."
+			},
+			"caseClosed": {
+				"label": "Closed cases",
+				"description": "A case of your organization was closed."
+			},
+			"reportReady": {
+				"label": "Reports ready",
+				"description": "A report you generated, or one the SOC shared with you, is ready."
+			}
+		}
+	}
+}

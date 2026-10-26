@@ -1,0 +1,78 @@
+{
+	"page": {
+		"title": "Exposition",
+		"intro": "Schwachstellen und Compliance über alle Ihre Agents, wie Wazuh sie derzeit sieht.",
+		"vulnerabilitiesTab": "Schwachstellen",
+		"complianceTab": "Compliance"
+	},
+	"disabled": {
+		"title": "Die Exposition ist noch nicht verfügbar",
+		"text": "Ihr SOC hat die Schwachstellen und die Compliance über Ihre Agents noch nicht veröffentlicht. Die Seite jedes Agents zeigt weiterhin seine eigenen. Wenden Sie sich an Ihren SOC-Ansprechpartner, wenn Sie sie hier sehen möchten."
+	},
+	"counts": {
+		"cves": "{count} CVE | {count} CVEs",
+		"agents": "{count} Agent | {count} Agents",
+		"findings": "{count} Befund | {count} Befunde",
+		"policies": "{count} Richtlinie | {count} Richtlinien"
+	},
+	"vulnerabilities": {
+		"severityFilter": "Nach Schweregrad filtern",
+		"all": "Alle",
+		"searchPlaceholder": "CVE-ID oder Paket suchen",
+		"totals": "{cves} auf {agents} · {findings}",
+		"exportCsv": "CSV exportieren",
+		"columns": {
+			"vulnerability": "Schwachstelle",
+			"agents": "Agents",
+			"firstSeen": "Zuerst gesehen"
+		},
+		"agentsShort": "Agents",
+		"cvssShort": "cvss",
+		"epssShort": "epss",
+		"unknownSeverity": "unbekannt",
+		"noAgent": "Noch kein Agent zu bewerten",
+		"noMatch": "Keine Schwachstelle entspricht den Filtern",
+		"none": "Auf Ihren Agents wurden keine Schwachstellen gefunden",
+		"range": "{start}–{end} von {total} CVEs",
+		"truncated": "Nur die 10.000 CVEs mit den höchsten Werten werden eingestuft: Grenzen Sie die Suche oder den Schweregrad ein, um den Rest zu sehen.",
+		"exportTruncated": "Die CSV-Datei enthält die ersten 100.000 Befunde: Grenzen Sie den Schweregrad oder die Suche für den Rest ein.",
+		"exportFailed": "Die Schwachstellen konnten nicht exportiert werden.",
+		"loadFailed": "Die Schwachstellen konnten nicht geladen werden."
+	},
+	"cve": {
+		"heading": "Schwachstelle",
+		"published": "Veröffentlicht",
+		"epssTitle": "Die Wahrscheinlichkeit einer Ausnutzung in den nächsten 30 Tagen",
+		"agentsHeading": "Ihre betroffenen Agents · {count}",
+		"none": "Keiner Ihrer Agents ist mehr betroffen.",
+		"truncated": "Nur die ersten 1.000 werden aufgeführt; der CSV-Export enthält alle.",
+		"references": "Referenzen · {count}",
+		"loadFailed": "Die Schwachstelle konnte nicht geladen werden."
+	},
+	"compliance": {
+		"averageScore": "Durchschnittliche Bewertung",
+		"averageScoreCaption": "über alle Agents und Richtlinien",
+		"agentsAssessed": "Bewertete Agents",
+		"agentsAssessedCaption": "mit mindestens einer Richtlinie",
+		"policies": "Richtlinien",
+		"policiesCaption": "{policies} mit Agents unter {score} %",
+		"failedChecks": "Fehlgeschlagene Prüfungen",
+		"passed": "{count} bestanden",
+		"unavailable": "Wazuh konnte für {agents} nicht antworten: deren Ergebnisse fehlen in diesen Zahlen.",
+		"columns": {
+			"policy": "Richtlinie",
+			"agents": "Agents",
+			"below": "Unter {score} %"
+		},
+		"agentsShort": "Agents",
+		"belowShort": "unter",
+		"failedShort": "fehlgeschlagen",
+		"asking": "Wazuh wird nach den Richtlinien jedes Agents gefragt. Bei einer großen Flotte kann das einen Moment dauern.",
+		"noResults": "Noch keine SCA-Ergebnisse auf Ihren Agents",
+		"noAgent": "Noch kein Agent zu bewerten",
+		"policyAgents": "Agents mit dieser Richtlinie · {count}, schwächste zuerst",
+		"readAt": "Um {time} aus Wazuh gelesen; wird alle paar Minuten aktualisiert.",
+		"loadFailed": "Die Compliance konnte nicht geladen werden.",
+		"agentsFailed": "Die Agents der Richtlinie konnten nicht geladen werden."
+	}
+}

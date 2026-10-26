@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Administrateur client",
+		"portalUser": "Utilisateur du portail"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Invite et gère les utilisateurs du portail de {customers}. Nommé par votre SOC.",
+		"adminBadge": "admin",
+		"noCustomer": "Aucun client"
+	},
+	"tabs": {
+		"settings": "Paramètres",
+		"notifications": "Notifications",
+		"security": "Sécurité"
+	},
+	"settings": {
+		"general": "Général",
+		"dateFormat": "Format de date",
+		"timeFormat": "Format de l'heure",
+		"hours24": "24 heures [ {time} ]",
+		"hours12": "12 heures [ {time} ]",
+		"usernameRequired": "Veuillez saisir le nom d'utilisateur",
+		"emailRequired": "Veuillez saisir l'e-mail",
+		"saved": "Paramètres enregistrés",
+		"error": "Une erreur s'est produite"
+	},
+	"notifications": {
+		"title": "Notifications",
+		"intro": "Choisissez ce qui vous parvient dans la cloche du portail et par e-mail. Vous n'êtes jamais averti de ce que vous avez fait vous-même.",
+		"inPortal": "Dans le portail",
+		"email": "E-mail",
+		"from": "À partir de",
+		"unsaved": "Modifications non enregistrées",
+		"emailOff": "Désactivé",
+		"emailImmediately": "Immédiatement",
+		"digest": "Résumé quotidien ({hour}:00 UTC)",
+		"severityAndUp": "{severity} et plus",
+		"severities": {
+			"critical": "Critique",
+			"high": "Élevée",
+			"medium": "Moyenne",
+			"low": "Faible",
+			"informational": "Informative"
+		},
+		"noEmailAddress": "Votre compte n'a pas d'adresse e-mail : les notifications n'arrivent donc que dans le portail. Demandez à votre SOC d'en ajouter une.",
+		"emailNotSetUp": "Les notifications par e-mail ne sont pas encore configurées sur ce portail : les notifications n'arrivent donc que dans le portail.",
+		"saved": "Paramètres de notification enregistrés",
+		"loadFailed": "Impossible de charger vos paramètres de notification.",
+		"saveFailed": "Impossible d'enregistrer vos paramètres de notification.",
+		"events": {
+			"alertCreated": {
+				"label": "Nouvelles alertes",
+				"description": "Une nouvelle alerte de votre organisation, à partir de la gravité choisie."
+			},
+			"waitingOnYou": {
+				"label": "En attente de vous",
+				"description": "Le SOC a besoin de votre réponse sur une alerte ou un dossier."
+			},
+			"caseClosed": {
+				"label": "Dossiers fermés",
+				"description": "Un dossier de votre organisation a été fermé."
+			},
+			"reportReady": {
+				"label": "Rapports prêts",
+				"description": "Un rapport que vous avez généré, ou que le SOC a partagé avec vous, est prêt."
+			}
+		}
+	}
+}

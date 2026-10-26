@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Administrador del cliente",
+		"portalUser": "Usuario del portal"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Invita y gestiona a los usuarios del portal de {customers}. Designado por tu SOC.",
+		"adminBadge": "admin",
+		"noCustomer": "Ningún cliente"
+	},
+	"tabs": {
+		"settings": "Ajustes",
+		"notifications": "Notificaciones",
+		"security": "Seguridad"
+	},
+	"settings": {
+		"general": "General",
+		"dateFormat": "Formato de fecha",
+		"timeFormat": "Formato de hora",
+		"hours24": "24 horas [ {time} ]",
+		"hours12": "12 horas [ {time} ]",
+		"usernameRequired": "Introduce el nombre de usuario",
+		"emailRequired": "Introduce el correo electrónico",
+		"saved": "Ajustes guardados",
+		"error": "Algo ha salido mal"
+	},
+	"notifications": {
+		"title": "Notificaciones",
+		"intro": "Elige qué te llega a la campana del portal y por correo electrónico. Nunca se te avisa de algo que hayas hecho tú.",
+		"inPortal": "En el portal",
+		"email": "Correo electrónico",
+		"from": "Desde",
+		"unsaved": "Cambios sin guardar",
+		"emailOff": "Desactivado",
+		"emailImmediately": "Al instante",
+		"digest": "Resumen diario ({hour}:00 UTC)",
+		"severityAndUp": "{severity} o superior",
+		"severities": {
+			"critical": "Crítica",
+			"high": "Alta",
+			"medium": "Media",
+			"low": "Baja",
+			"informational": "Informativa"
+		},
+		"noEmailAddress": "Tu cuenta no tiene dirección de correo electrónico, así que las notificaciones solo llegan al portal. Pide a tu SOC que añada una.",
+		"emailNotSetUp": "Las notificaciones por correo electrónico aún no están configuradas en este portal, así que las notificaciones solo llegan al portal.",
+		"saved": "Ajustes de notificaciones guardados",
+		"loadFailed": "No se han podido cargar tus ajustes de notificaciones.",
+		"saveFailed": "No se han podido guardar tus ajustes de notificaciones.",
+		"events": {
+			"alertCreated": {
+				"label": "Nuevas alertas",
+				"description": "Una nueva alerta de tu organización, a partir de la gravedad que elijas."
+			},
+			"waitingOnYou": {
+				"label": "Esperando tu respuesta",
+				"description": "El SOC necesita tu respuesta sobre una alerta o un caso."
+			},
+			"caseClosed": {
+				"label": "Casos cerrados",
+				"description": "Se ha cerrado un caso de tu organización."
+			},
+			"reportReady": {
+				"label": "Informes listos",
+				"description": "Un informe que has generado, o que el SOC ha compartido contigo, está listo."
+			}
+		}
+	}
+}

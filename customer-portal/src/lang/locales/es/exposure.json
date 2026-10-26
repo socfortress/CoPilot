@@ -1,0 +1,78 @@
+{
+	"page": {
+		"title": "Exposición",
+		"intro": "Vulnerabilidades y cumplimiento en todos tus agentes, tal como los ve Wazuh ahora.",
+		"vulnerabilitiesTab": "Vulnerabilidades",
+		"complianceTab": "Cumplimiento"
+	},
+	"disabled": {
+		"title": "La exposición aún no está disponible",
+		"text": "Tu SOC aún no ha publicado las vulnerabilidades y el cumplimiento de todos tus agentes. La página de cada agente sigue mostrando los suyos. Pregunta a tu contacto del SOC si quieres verlos aquí."
+	},
+	"counts": {
+		"cves": "{count} CVE | {count} CVE",
+		"agents": "{count} agente | {count} agentes",
+		"findings": "{count} hallazgo | {count} hallazgos",
+		"policies": "{count} política | {count} políticas"
+	},
+	"vulnerabilities": {
+		"severityFilter": "Filtrar por gravedad",
+		"all": "Todas",
+		"searchPlaceholder": "Busca un ID de CVE o un paquete",
+		"totals": "{cves} en {agents} · {findings}",
+		"exportCsv": "Exportar CSV",
+		"columns": {
+			"vulnerability": "Vulnerabilidad",
+			"agents": "Agentes",
+			"firstSeen": "Visto por primera vez"
+		},
+		"agentsShort": "agentes",
+		"cvssShort": "cvss",
+		"epssShort": "epss",
+		"unknownSeverity": "desconocida",
+		"noAgent": "Aún no hay ningún agente que evaluar",
+		"noMatch": "Ninguna vulnerabilidad coincide con los filtros",
+		"none": "No se encontraron vulnerabilidades en tus agentes",
+		"range": "{start}–{end} de {total} CVE",
+		"truncated": "Solo se clasifican las 10.000 CVE con mayor puntuación: acota la búsqueda o la gravedad para ver el resto.",
+		"exportTruncated": "El CSV contiene los primeros 100.000 hallazgos: acota la gravedad o la búsqueda para el resto.",
+		"exportFailed": "No se pudieron exportar las vulnerabilidades.",
+		"loadFailed": "No se pudieron cargar las vulnerabilidades."
+	},
+	"cve": {
+		"heading": "Vulnerabilidad",
+		"published": "Publicada",
+		"epssTitle": "La probabilidad de explotación en los próximos 30 días",
+		"agentsHeading": "Tus agentes afectados · {count}",
+		"none": "Ninguno de tus agentes la tiene ya.",
+		"truncated": "Solo se muestran los primeros 1.000; la exportación CSV los incluye todos.",
+		"references": "Referencias · {count}",
+		"loadFailed": "No se pudo cargar la vulnerabilidad."
+	},
+	"compliance": {
+		"averageScore": "Puntuación media",
+		"averageScoreCaption": "en todos los agentes y políticas",
+		"agentsAssessed": "Agentes evaluados",
+		"agentsAssessedCaption": "con al menos una política",
+		"policies": "Políticas",
+		"policiesCaption": "{policies} con agentes por debajo del {score} %",
+		"failedChecks": "Comprobaciones fallidas",
+		"passed": "{count} superadas",
+		"unavailable": "Wazuh no pudo responder por {agents}: sus resultados faltan en estas cifras.",
+		"columns": {
+			"policy": "Política",
+			"agents": "Agentes",
+			"below": "Por debajo del {score} %"
+		},
+		"agentsShort": "agentes",
+		"belowShort": "debajo",
+		"failedShort": "fallidas",
+		"asking": "Consultando a Wazuh las políticas de cada agente. Puede tardar un momento en un parque grande.",
+		"noResults": "Aún no hay resultados SCA en tus agentes",
+		"noAgent": "Aún no hay ningún agente que evaluar",
+		"policyAgents": "Agentes con esta política · {count}, del más débil al más fuerte",
+		"readAt": "Leído de Wazuh a las {time}; se actualiza cada pocos minutos.",
+		"loadFailed": "No se pudo cargar el cumplimiento.",
+		"agentsFailed": "No se pudieron cargar los agentes de la política."
+	}
+}

@@ -1,0 +1,45 @@
+{
+	"portalName": "Customer Portal",
+	"routes": {
+		"overview": "Overview",
+		"alerts": "Alerts",
+		"alertDetails": "Alert Details",
+		"cases": "Cases",
+		"caseDetails": "Case Details",
+		"agents": "Agents",
+		"agentDetails": "Agent Details",
+		"reports": "Reports",
+		"eventSearch": "Event Search",
+		"dashboards": "Dashboards",
+		"dashboardDetails": "Dashboard Details",
+		"exposure": "Exposure",
+		"users": "Users",
+		"auditLog": "Audit log",
+		"activity": "Activity",
+		"sla": "Service Levels",
+		"profile": "Profile",
+		"login": "Login",
+		"changePassword": "Choose a new password"
+	},
+	"sidebar": {
+		"documentation": "Documentation"
+	},
+	"toolbar": {
+		"fullscreen": "Toggle fullscreen",
+		"theme": "Switch theme",
+		"shortcuts": "Shortcuts",
+		"yourProfile": "Your profile",
+		"logout": "Logout"
+	},
+	"customerFilter": {
+		"placeholder": "All customers"
+	},
+	"footer": {
+		"copyright": "© Copyright {year} {title}",
+		"copyrightNoTitle": "© Copyright {year}"
+	},
+	"notFound": {
+		"title": "404 Not Found",
+		"home": "Go to home"
+	}
+}

@@ -1,0 +1,21 @@
+{
+	"viewer": {
+		"segmentHint": "Fai clic su un segmento per andare alla ricerca eventi.",
+		"fetchFailed": "Impossibile caricare i dati dei pannelli"
+	},
+	"list": {
+		"items": "elementi",
+		"empty": "Nessuna dashboard abilitata",
+		"emptyHint": "Contatta il tuo amministratore per abilitare le dashboard per il tuo account",
+		"custom": "Personalizzata",
+		"view": "Apri dashboard",
+		"columns": {
+			"dashboard": "Dashboard",
+			"category": "Categoria",
+			"template": "Modello"
+		}
+	},
+	"panelTable": {
+		"empty": "Nessun evento"
+	}
+}

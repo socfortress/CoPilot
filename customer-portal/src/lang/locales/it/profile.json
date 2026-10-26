@@ -1,0 +1,70 @@
+{
+	"roles": {
+		"customerAdmin": "Amministratore cliente",
+		"portalUser": "Utente del portale"
+	},
+	"header": {
+		"avatarAlt": "avatar",
+		"managesUsersOf": "Invita e gestisce gli utenti del portale di {customers}. Nominato dal tuo SOC.",
+		"adminBadge": "admin",
+		"noCustomer": "Nessun cliente"
+	},
+	"tabs": {
+		"settings": "Impostazioni",
+		"notifications": "Notifiche",
+		"security": "Sicurezza"
+	},
+	"settings": {
+		"general": "Generale",
+		"dateFormat": "Formato data",
+		"timeFormat": "Formato ora",
+		"hours24": "24 ore [ {time} ]",
+		"hours12": "12 ore [ {time} ]",
+		"usernameRequired": "Inserisci il nome utente",
+		"emailRequired": "Inserisci l'email",
+		"saved": "Impostazioni salvate",
+		"error": "Qualcosa è andato storto"
+	},
+	"notifications": {
+		"title": "Notifiche",
+		"intro": "Scegli cosa ti arriva nella campanella del portale e per email. Non ricevi mai notifiche per ciò che hai fatto tu.",
+		"inPortal": "Nel portale",
+		"email": "Email",
+		"from": "Da",
+		"unsaved": "Modifiche non salvate",
+		"emailOff": "Disattivata",
+		"emailImmediately": "Subito",
+		"digest": "Riepilogo giornaliero ({hour}:00 UTC)",
+		"severityAndUp": "{severity} e superiori",
+		"severities": {
+			"critical": "Critica",
+			"high": "Alta",
+			"medium": "Media",
+			"low": "Bassa",
+			"informational": "Informativa"
+		},
+		"noEmailAddress": "Il tuo account non ha un indirizzo email, quindi le notifiche arrivano solo nel portale. Chiedi al tuo SOC di aggiungerne uno.",
+		"emailNotSetUp": "Le notifiche email non sono ancora configurate su questo portale, quindi le notifiche arrivano solo nel portale.",
+		"saved": "Impostazioni delle notifiche salvate",
+		"loadFailed": "Impossibile caricare le tue impostazioni delle notifiche.",
+		"saveFailed": "Impossibile salvare le tue impostazioni delle notifiche.",
+		"events": {
+			"alertCreated": {
+				"label": "Nuovi alert",
+				"description": "Un nuovo alert della tua organizzazione, dalla gravità che scegli."
+			},
+			"waitingOnYou": {
+				"label": "In attesa di te",
+				"description": "Il SOC ha bisogno di una tua risposta su un alert o un caso."
+			},
+			"caseClosed": {
+				"label": "Casi chiusi",
+				"description": "Un caso della tua organizzazione è stato chiuso."
+			},
+			"reportReady": {
+				"label": "Report pronti",
+				"description": "Un report che hai generato, o che il SOC ha condiviso con te, è pronto."
+			}
+		}
+	}
+}

@@ -1,0 +1,44 @@
+{
+	"categories": {
+		"alerts": "Alarme",
+		"cases": "Fälle",
+		"reports": "Berichte",
+		"users": "Benutzer",
+		"account": "Anmeldungen und Konten"
+	},
+	"actors": {
+		"member": "Ein Portalbenutzer",
+		"soc": "SOC",
+		"other": "Ein anderer Portalbenutzer",
+		"unknown": "Unbekannt"
+	},
+	"targets": {
+		"alert": "Alarm #{id}",
+		"case": "Fall #{id}",
+		"report": "Bericht #{id}"
+	},
+	"retention": {
+		"forever": "Aufbewahrt, solange Ihr SOC sein Audit-Protokoll aufbewahrt.",
+		"days": "{count} Tag aufbewahrt: ältere Einträge werden entfernt. | {count} Tage aufbewahrt: ältere Einträge werden entfernt."
+	},
+	"page": {
+		"title": "Audit-Protokoll",
+		"intro": "Wer was im Portal Ihrer Organisation getan hat: verschobene und kommentierte Alarme und Fälle, Berichte sowie Anmeldungen und Konten Ihrer Benutzer. Aktionen Ihres SOC werden als SOC angezeigt.",
+		"export": "CSV exportieren",
+		"forbiddenTitle": "Das Audit-Protokoll ist den Administratoren Ihrer Organisation vorbehalten",
+		"forbiddenText": "Ihr SOC entscheidet, wer Ihre Organisation verwaltet und ob ihr Audit-Protokoll angezeigt wird. Wenden Sie sich an Ihren SOC-Ansprechpartner, wenn Sie es benötigen.",
+		"allActivity": "Alle Aktivitäten",
+		"everyone": "Alle",
+		"from": "Von",
+		"to": "Bis",
+		"allCustomers": "Alle Kunden",
+		"clearFilters": "Filter zurücksetzen",
+		"noMatches": "Keine Treffer für diese Filter",
+		"empty": "Noch nichts aufgezeichnet",
+		"failed": "Fehlgeschlagen",
+		"total": "{count} Eintrag | {count} Einträge",
+		"truncated": "Die CSV enthält die neuesten 10.000 Einträge: Grenzen Sie den Zeitraum ein, um die übrigen zu erhalten.",
+		"loadFailed": "Das Audit-Protokoll konnte nicht geladen werden.",
+		"exportFailed": "Das Audit-Protokoll konnte nicht exportiert werden."
+	}
+}

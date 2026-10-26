@@ -1,0 +1,97 @@
+{
+	"list": {
+		"title": "Informes",
+		"subtitle": "Genera y descarga informes de actividad en PDF de tu organización",
+		"generate": "Generar informe",
+		"empty": "Aún no se ha generado ningún informe",
+		"loadFailed": "No se pudieron cargar los informes",
+		"noCustomer": "No hay ningún cliente disponible para generar el informe",
+		"queued": "Generar el informe puede tardar un poco: te avisaremos cuando esté listo.",
+		"queueFailed": "No se pudo poner en cola la generación del informe",
+		"generateFailed": "No se pudo generar el informe",
+		"downloaded": "Informe descargado",
+		"downloadFailed": "No se pudo descargar el informe",
+		"deleteFailed": "No se pudo eliminar el informe"
+	},
+	"form": {
+		"reportName": "Nombre del informe",
+		"reportNamePlaceholder": "Déjalo vacío para usar un nombre automático",
+		"timeRange": "Periodo",
+		"customRange": "Rango de fechas personalizado",
+		"template": "Plantilla del informe",
+		"selectCustomer": "Selecciona un cliente",
+		"selectRange": "Selecciona un rango de fechas",
+		"ranges": {
+			"last30": "Últimos 30 días",
+			"last90": "Últimos 3 meses",
+			"custom": "Rango personalizado"
+		},
+		"templates": {
+			"full": {
+				"label": "Informe completo",
+				"description": "Todo: resumen ejecutivo, gráficos y tendencias, y casos abiertos/cerrados con activos e IOC."
+			},
+			"executive": {
+				"label": "Resumen ejecutivo",
+				"description": "Síntesis de un vistazo: KPI principales, métricas de servicio y un gráfico de estados. Sin detalle de casos."
+			},
+			"operational": {
+				"label": "Operativo — casos",
+				"description": "Centrado en casos: cada caso abierto/cerrado en detalle (activos, IOC, resolución). Sin gráficos."
+			},
+			"analytics": {
+				"label": "Análisis — tendencias",
+				"description": "Centrado en métricas: resumen ejecutivo más todos los gráficos de distribución y la tabla de tendencia mensual. Sin detalle de casos."
+			}
+		}
+	},
+	"delete": {
+		"title": "Eliminar informe",
+		"confirm": "¿Seguro que quieres eliminar \"{name}\"?",
+		"irreversible": "Esta acción no se puede deshacer."
+	},
+	"card": {
+		"templates": {
+			"full": {
+				"name": "Informe completo",
+				"description": "Resumen ejecutivo, gráficos y tendencias, y casos abiertos/cerrados con activos e IOC"
+			},
+			"executive": {
+				"name": "Informe ejecutivo",
+				"description": "Síntesis de un vistazo: KPI, métricas de servicio y un gráfico de estados"
+			},
+			"operational": {
+				"name": "Informe operativo",
+				"description": "Centrado en casos: casos abiertos/cerrados en detalle (activos, IOC, resolución)"
+			},
+			"analytics": {
+				"name": "Informe analítico",
+				"description": "Centrado en métricas: resumen ejecutivo, todos los gráficos y la tabla de tendencia mensual"
+			}
+		},
+		"alerts": "alertas",
+		"cases": "casos",
+		"open": "abiertos",
+		"closed": "cerrados",
+		"status": {
+			"completed": "Completado",
+			"processing": "Generando",
+			"failed": "Fallido"
+		},
+		"roles": {
+			"admin": "Administrador",
+			"analyst": "Analista",
+			"scheduler": "Programador",
+			"customer_user": "Cliente"
+		}
+	},
+	"notifications": {
+		"readyTitle": "Informe listo",
+		"readyDescription": "\"{name}\" se ha generado y está listo para descargar.",
+		"failedTitle": "Error en el informe",
+		"failedDescription": "No se pudo generar \"{name}\".",
+		"timeoutTitle": "El informe sigue en curso",
+		"timeoutDescription": "\"{name}\" está tardando más de lo previsto. Consulta su estado en la página Informes.",
+		"viewReports": "Ver informes"
+	}
+}
