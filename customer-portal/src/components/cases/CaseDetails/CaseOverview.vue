@@ -3,19 +3,19 @@
 		<div class="grid grid-cols-1 gap-4 @xl:grid-cols-2">
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Case Name</div>
+					<div class="text-secondary text-sm">{{ $t("cases.caseOverview.caseName") }}</div>
 				</template>
 				{{ caseData.case_name }}
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header-main>
-					<div class="text-secondary text-sm">Status</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.status") }}</div>
 				</template>
 				<template #header-extra>
 					<Chip
 						v-if="caseData.escalated"
 						type="error"
-						value="Escalated"
+						:value="$t('cases.caseOverview.escalated')"
 						size="tiny"
 						round
 						:bordered="false"
@@ -29,28 +29,28 @@
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Notification Invoked Number</div>
+					<div class="text-secondary text-sm">{{ $t("cases.caseOverview.notificationInvokedNumber") }}</div>
 				</template>
 				{{ caseData.notification_invoked_number }}
 			</CardEntity>
 
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Customer</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.customer") }}</div>
 				</template>
 				<CustomerName :code="caseData.customer_code" />
 			</CardEntity>
 
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Created</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.created") }}</div>
 				</template>
 				{{ formatDate(caseData.case_creation_time, dFormats.datetime) }}
 			</CardEntity>
 
 			<CardEntity size="small">
 				<template #header>
-					<div class="text-secondary text-sm">Assigned To</div>
+					<div class="text-secondary text-sm">{{ $t("cases.caseOverview.assignedTo") }}</div>
 				</template>
 				<CaseAssignedSelect
 					:case-id="caseData.id"
@@ -61,7 +61,7 @@
 
 			<CardEntity v-if="caseData.case_description" size="small" class="@xl:col-span-2">
 				<template #header>
-					<div class="text-secondary text-sm">Description</div>
+					<div class="text-secondary text-sm">{{ $t("common.fields.description") }}</div>
 				</template>
 				{{ caseData.case_description }}
 			</CardEntity>

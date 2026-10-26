@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading" class="min-h-50">
-		<n-alert v-if="error" title="Error" type="error">{{ error }}</n-alert>
+		<n-alert v-if="error" :title="$t('alerts.aiReport.error')" type="error">{{ error }}</n-alert>
 
 		<template v-else>
 			<n-alert
@@ -38,7 +38,7 @@
 						size="small"
 						round
 						:bordered="false"
-						label="Severity"
+						:label="$t('common.fields.severity')"
 						:value="report.severity_assessment"
 					/>
 					<Chip
@@ -47,7 +47,7 @@
 						size="small"
 						round
 						:bordered="false"
-						label="Investigation"
+						:label="$t('alerts.aiReport.investigation')"
 						:value="statusText"
 						data-testid="ai-investigation-status"
 					/>
@@ -55,14 +55,14 @@
 						v-if="investigation"
 						size="small"
 						round
-						label="Started"
+						:label="$t('alerts.aiReport.started')"
 						:value="utcDate(investigation.started_at ?? investigation.created_at)"
 					/>
 					<Chip
 						v-if="investigation?.completed_at"
 						size="small"
 						round
-						label="Completed"
+						:label="$t('alerts.aiReport.completed')"
 						:value="utcDate(investigation.completed_at)"
 					/>
 					<div v-if="analysis.can_request" class="ml-auto">
@@ -74,43 +74,43 @@
 					v-if="waitingForJob"
 					type="info"
 					:show-icon="false"
-					title="AI analysis requested"
+					:title="$t('alerts.aiReport.requestedTitle')"
 					data-testid="ai-request-pending"
 				>
-					The AI analyst will pick it up shortly. This page updates by itself, and the new findings replace
-					these once it has finished.
+					{{ $t("alerts.aiReport.requestedText") }}
 				</n-alert>
 				<n-alert
 					v-else-if="investigationPending"
 					type="info"
 					:show-icon="false"
-					title="Investigation in progress"
+					:title="$t('alerts.aiReport.progressTitle')"
 					data-testid="ai-investigation-progress"
 				>
-					The AI analyst
 					{{
-						elapsedText ? `has been working on this alert for ${elapsedText}` : "is working on this alert"
-					}}. Findings will appear here once the investigation completes.
+						elapsedText
+							? $t("alerts.aiReport.progressFor", { elapsed: elapsedText })
+							: $t("alerts.aiReport.progress")
+					}}
 				</n-alert>
 				<n-alert
 					v-else-if="investigationStalled"
 					type="warning"
 					:show-icon="false"
-					title="Investigation did not finish"
+					:title="$t('alerts.aiReport.stalledTitle')"
 					data-testid="ai-investigation-stalled"
 				>
-					The AI analyst stopped working on this alert before writing its findings.
-					<template v-if="analysis.can_request">You can ask for a new analysis.</template>
+					{{ $t("alerts.aiReport.stalledText") }}
+					<template v-if="analysis.can_request">{{ $t("alerts.aiReport.stalledCanRequest") }}</template>
 				</n-alert>
 
 				<template v-if="report">
 					<CardKV v-if="report.summary">
-						<template #key>Summary</template>
+						<template #key>{{ $t("alerts.aiReport.summary") }}</template>
 						<template #default>{{ report.summary }}</template>
 					</CardKV>
 
 					<CardKV v-if="report.recommended_actions">
-						<template #key>Recommended Actions</template>
+						<template #key>{{ $t("alerts.aiReport.recommendedActions") }}</template>
 						<template #default>{{ report.recommended_actions }}</template>
 					</CardKV>
 
@@ -123,7 +123,7 @@
 								@click="showFullReport = true"
 							>
 								<template #icon><Icon name="carbon:document-view" /></template>
-								Full Report
+								{{ $t("alerts.aiReport.fullReport") }}
 							</n-button>
 						</div>
 
@@ -138,7 +138,7 @@
 							:trap-focus="false"
 						>
 							<n-drawer-content
-								title="Full Report"
+								:title="$t('alerts.aiReport.fullReport')"
 								closable
 								:native-scrollbar="false"
 								data-testid="ai-full-report-drawer"
@@ -149,7 +149,7 @@
 					</template>
 
 					<div v-if="analysis.iocs.length" class="flex flex-col gap-2">
-						<div class="text-secondary text-sm">Indicators identified by the AI analyst</div>
+						<div class="text-secondary text-sm">{{ $t("alerts.aiReport.iocsTitle") }}</div>
 						<CardEntity v-for="ioc of analysis.iocs" :key="ioc.id" size="small" embedded>
 							<template #header-main>{{ ioc.ioc_value }}</template>
 							<template #header-extra>{{ ioc.ioc_type }}</template>
@@ -161,14 +161,14 @@
 										size="tiny"
 										round
 										:bordered="false"
-										label="VT Verdict"
+										:label="$t('alerts.aiReport.vtVerdict')"
 										:value="ioc.vt_verdict"
 									/>
 									<Chip
 										v-if="ioc.vt_score"
 										size="tiny"
 										round
-										label="VT Score"
+										:label="$t('alerts.aiReport.vtScore')"
 										:value="ioc.vt_score"
 									/>
 								</div>
@@ -176,7 +176,9 @@
 						</CardEntity>
 					</div>
 
-					<div class="text-secondary text-xs">Report generated {{ utcDate(report.created_at) }}</div>
+					<div class="text-secondary text-xs">
+						{{ $t("alerts.aiReport.generated", { date: utcDate(report.created_at) }) }}
+					</div>
 				</template>
 			</div>
 		</template>
@@ -191,6 +193,7 @@ import { useIntervalFn, useNow, useWindowSize } from "@vueuse/core"
 import axios from "axios"
 import { NAlert, NButton, NDrawer, NDrawerContent, NEmpty, NSpin } from "naive-ui"
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -222,6 +225,7 @@ const CLOCK_SKEW_MS = 60_000
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const dFormats = useSettingsStore().dateFormat
+const { t } = useI18n()
 
 const showFullReport = ref(false)
 const { width: windowWidth } = useWindowSize()
@@ -290,9 +294,9 @@ const inProgress = computed(() => {
 // `enabled: false` only reaches here if the switch was flipped off while this
 // alert was open — the tab itself is already gated on availability.
 const emptyDescription = computed(() => {
-	if (analysis.value && !analysis.value.enabled) return "AI analyst findings are not enabled for this customer"
-	if (waitingForJob.value) return "AI analysis requested: the findings appear here once the AI analyst has finished"
-	return "No AI analysis has been performed for this alert"
+	if (analysis.value && !analysis.value.enabled) return t("alerts.aiReport.notEnabled")
+	if (waitingForJob.value) return t("alerts.aiReport.requestedEmpty")
+	return t("alerts.aiReport.noAnalysis")
 })
 
 const severityType = computed<TagProps["type"]>(() => {
@@ -357,7 +361,7 @@ async function requestAnalysis() {
 		await loadAnalysis(true)
 	} catch (err) {
 		requestError.value =
-			getApiErrorMessage(err as ApiError) || "The analysis could not be requested. Please try again later."
+			getApiErrorMessage(err as ApiError) || t("alerts.aiReport.requestFailed")
 		// Refused because one is already running: show it.
 		if ((err as ApiError).response?.status === 409) await loadAnalysis(true)
 	} finally {

@@ -3,7 +3,7 @@
 		<n-input
 			v-model:value="titleInput"
 			data-testid="alerts-filter-title"
-			placeholder="Search alert titles"
+			:placeholder="$t('alerts.filters.searchTitles')"
 			clearable
 			size="small"
 			class="w-64!"
@@ -18,7 +18,7 @@
 		<!-- Set by a link (the Activity page's), never from the menu: shown as they are, removable. -->
 		<div v-for="type of linkTypes" :key="type" class="max-w-full">
 			<n-input-group :data-testid="`alerts-filter-${type}`">
-				<n-input-group-label size="small">{{ ALERTS_FILTER_LABELS[type] }}</n-input-group-label>
+				<n-input-group-label size="small">{{ alertsFilterLabel(type) }}</n-input-group-label>
 				<n-input-group-label
 					size="small"
 					class="max-w-80 truncate"
@@ -30,7 +30,7 @@
 				<n-button
 					size="small"
 					secondary
-					:aria-label="`Remove the ${ALERTS_FILTER_LABELS[type].toLowerCase()} filter`"
+					:aria-label="alertsFilterRemoveLabel(type)"
 					:data-testid="`alerts-filter-${type}-remove`"
 					@click="removeFilter(type)"
 				>
@@ -44,13 +44,13 @@
 		<!-- Each group in its own box: an input group alone stretches to the whole row. -->
 		<div v-for="type of shownTypes" :key="type" class="max-w-full">
 			<n-input-group :data-testid="`alerts-filter-${type}`">
-				<n-input-group-label size="small">{{ ALERTS_FILTER_LABELS[type] }}</n-input-group-label>
+				<n-input-group-label size="small">{{ alertsFilterLabel(type) }}</n-input-group-label>
 
 				<n-select
 					v-if="type === 'status'"
 					:value="filters.status"
 					:options="statusOptions"
-					placeholder="Any status"
+					:placeholder="$t('alerts.filters.anyStatus')"
 					size="small"
 					class="w-40!"
 					:consistent-menu-width="false"
@@ -62,7 +62,7 @@
 					:value="filters.source"
 					:options="toOptions(sources, filters.source)"
 					:loading="loadingOptions"
-					placeholder="Any source"
+					:placeholder="$t('alerts.filters.anySource')"
 					filterable
 					size="small"
 					class="w-44!"
@@ -75,7 +75,7 @@
 					:value="filters.asset"
 					:options="toOptions(assetResults, filters.asset)"
 					:loading="searchingAssets"
-					placeholder="Search assets"
+					:placeholder="$t('alerts.filters.searchAssets')"
 					filterable
 					remote
 					size="small"
@@ -91,7 +91,7 @@
 					:value="filters.tags"
 					:options="toOptions(tags, ...filters.tags)"
 					:loading="loadingOptions"
-					placeholder="Any of these tags"
+					:placeholder="$t('alerts.filters.anyTags')"
 					multiple
 					filterable
 					size="small"
@@ -106,7 +106,7 @@
 						:value="filters.from ? dayToTimestamp(filters.from) : null"
 						data-testid="alerts-filter-from"
 						type="date"
-						placeholder="From"
+						:placeholder="$t('alerts.filters.from')"
 						:format="pickerFormat"
 						:is-date-disabled="(ts: number) => !!filters.to && timestampToDay(ts) > filters.to"
 						clearable
@@ -120,7 +120,7 @@
 						:value="filters.to ? dayToTimestamp(filters.to) : null"
 						data-testid="alerts-filter-to"
 						type="date"
-						placeholder="To"
+						:placeholder="$t('alerts.filters.to')"
 						:format="pickerFormat"
 						:is-date-disabled="(ts: number) => !!filters.from && timestampToDay(ts) < filters.from"
 						clearable
@@ -135,7 +135,7 @@
 				<n-button
 					size="small"
 					secondary
-					:aria-label="`Remove the ${ALERTS_FILTER_LABELS[type].toLowerCase()} filter`"
+					:aria-label="alertsFilterRemoveLabel(type)"
 					:data-testid="`alerts-filter-${type}-remove`"
 					@click="removeFilter(type)"
 				>
@@ -157,7 +157,7 @@
 				<template #icon>
 					<Icon name="carbon:add" />
 				</template>
-				Add filter
+				{{ $t("alerts.filters.add") }}
 			</n-button>
 		</n-dropdown>
 
@@ -168,7 +168,7 @@
 			data-testid="alerts-filter-clear"
 			@click="clearAll"
 		>
-			Clear filters
+			{{ $t("alerts.filters.clear") }}
 		</n-button>
 	</div>
 </template>
@@ -186,11 +186,12 @@ import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
-import { WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
+import { WORKFLOW_STATUS_LABELS, workflowStatusLabel } from "@/utils/workflowStatus"
 import {
 	activeFilterTypes,
-	ALERTS_FILTER_LABELS,
 	ALERTS_FILTER_TYPES,
+	alertsFilterLabel,
+	alertsFilterRemoveLabel,
 	dayToTimestamp,
 	EMPTY_ALERTS_FILTERS,
 	hasFilters,
@@ -215,7 +216,10 @@ const emit = defineEmits<{
 
 const message = useMessage()
 
-const statusOptions = Object.entries(WORKFLOW_STATUS_LABELS).map(([value, label]) => ({ value, label }))
+// Every status, waiting included (a filter, not a change), worded by the shared helper.
+const statusOptions = computed(() =>
+	(Object.keys(WORKFLOW_STATUS_LABELS) as AlertStatus[]).map(value => ({ value, label: workflowStatusLabel(value) }))
+)
 
 // Date-fns tokens for the user's dayjs date format (MM/DD/YYYY → MM/dd/yyyy).
 const pickerFormat = computed(() => useSettingsStore().dateFormat.date.replace("DD", "dd").replace("YYYY", "yyyy"))
@@ -259,7 +263,7 @@ const shownTypes = computed(() => {
 const addableTypes = computed(() => ALERTS_FILTER_TYPES.filter(type => !shownTypes.value.includes(type)))
 // Built here rather than in the template: vue-tsc ≥ 3.3.12 reads an imported constant inside
 // a template arrow function as a ref (vuejs/language-tools#6237).
-const addOptions = computed(() => addableTypes.value.map(type => ({ key: type, label: ALERTS_FILTER_LABELS[type] })))
+const addOptions = computed(() => addableTypes.value.map(type => ({ key: type, label: alertsFilterLabel(type) })))
 const linkTypes = computed(() => activeFilterTypes(filters).filter(isLinkFilter))
 
 function linkText(type: AlertsLinkFilterType): string {

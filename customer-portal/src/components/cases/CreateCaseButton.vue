@@ -4,7 +4,7 @@
 			<template #icon>
 				<Icon name="carbon:add" />
 			</template>
-			Create case
+			{{ $t("cases.createCaseButton.label") }}
 		</n-button>
 
 		<!--
@@ -15,7 +15,7 @@
 		-->
 		<n-modal
 			v-model:show="showModal"
-			title="Create Case"
+			:title="$t('cases.createCaseButton.title')"
 			preset="card"
 			display-directive="show"
 			class="w-[90vw]! max-w-160!"

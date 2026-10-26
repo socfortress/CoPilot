@@ -1,7 +1,13 @@
 <template>
 	<div class="flex flex-col gap-2">
 		<div v-if="caseData.alerts?.length" class="flex items-center justify-end gap-2">
-			<LinkAlert :case-id="caseData.id" size="small" secondary label="Link Alert" @linked="handleAlertLinked" />
+			<LinkAlert
+				:case-id="caseData.id"
+				size="small"
+				secondary
+				:label="$t('cases.caseAlerts.linkAlert')"
+				@linked="handleAlertLinked"
+			/>
 		</div>
 		<div v-if="caseData.alerts?.length" class="flex flex-col gap-2">
 			<CardEntity v-for="alert in caseData.alerts" :key="alert.id" size="small" embedded>
@@ -15,16 +21,20 @@
 					{{ alert.alert_name }}
 				</template>
 				<template #footer-main>
-					Created: {{ formatDate(alert.alert_creation_time, dFormats.datetime) }}
+					{{ $t("cases.caseAlerts.created", { date: formatDate(alert.alert_creation_time, dFormats.datetime) }) }}
 				</template>
 				<template #footer-extra>
 					<div class="flex flex-wrap items-center justify-end gap-2">
-						<Chip v-if="alert.assigned_to" :value="alert.assigned_to" label="Assigned to" />
+						<Chip
+							v-if="alert.assigned_to"
+							:value="alert.assigned_to"
+							:label="$t('cases.caseAlerts.assignedTo')"
+						/>
 						<UnlinkCase
 							:alert-id="alert.id"
 							:case-id="caseData.id"
 							size="small"
-							label="Unlink Alert"
+							:label="$t('cases.caseAlerts.unlinkAlert')"
 							@unlinked="handleAlertUnlinked"
 						/>
 						<AlertDetailsButton :alert-id="alert.id" size="small" @status-updated="handleStatusUpdated" />
@@ -34,17 +44,19 @@
 		</div>
 
 		<div v-else-if="caseData.alert_ids?.length" class="flex flex-wrap gap-2">
-			<code v-for="alertId in caseData.alert_ids" :key="alertId">Alert #{{ alertId }}</code>
+			<code v-for="alertId in caseData.alert_ids" :key="alertId">
+				{{ $t("cases.caseAlerts.alertId", { id: alertId }) }}
+			</code>
 		</div>
 
-		<n-empty v-else description="No alerts found" class="min-h-50 justify-center">
+		<n-empty v-else :description="$t('cases.caseAlerts.empty')" class="min-h-50 justify-center">
 			<template #extra>
 				<div class="flex items-center justify-center gap-2">
 					<LinkAlert
 						:case-id="caseData.id"
 						size="small"
 						secondary
-						label="Link Alert"
+						:label="$t('cases.caseAlerts.linkAlert')"
 						@linked="handleAlertLinked"
 					/>
 				</div>

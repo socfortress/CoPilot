@@ -1,8 +1,16 @@
 <template>
 	<div class="flex flex-col gap-2">
 		<div v-if="alert.linked_cases?.length" class="flex items-center justify-end gap-2">
-			<n-button size="small" :loading="creatingCase" @click="createCase">Create Case</n-button>
-			<LinkAlert :alert-id="alert.id" size="small" secondary label="Link Case" @linked="handleCaseLinked" />
+			<n-button size="small" :loading="creatingCase" @click="createCase">
+				{{ $t("alerts.cases.createCase") }}
+			</n-button>
+			<LinkAlert
+				:alert-id="alert.id"
+				size="small"
+				secondary
+				:label="$t('alerts.cases.linkCase')"
+				@linked="handleCaseLinked"
+			/>
 		</div>
 
 		<div v-if="alert.linked_cases?.length" class="flex flex-col gap-2">
@@ -10,7 +18,11 @@
 				<template #header-main>#{{ linkedCase.id }}</template>
 				<template #header-extra>
 					<div class="flex flex-wrap items-center justify-end gap-2">
-						<Chip v-if="linkedCase.assigned_to" :value="linkedCase.assigned_to" label="Assigned to" />
+						<Chip
+							v-if="linkedCase.assigned_to"
+							:value="linkedCase.assigned_to"
+							:label="$t('alerts.cases.assignedTo')"
+						/>
 						<Chip v-bind="statusTagProps(linkedCase.case_status)">
 							{{ workflowStatusLabel(linkedCase.case_status).toUpperCase() }}
 						</Chip>
@@ -20,7 +32,7 @@
 					{{ linkedCase.case_name }}
 				</template>
 				<template #footer-main>
-					Created: {{ formatDate(linkedCase.case_creation_time, dFormats.datetime) }}
+					{{ $t("alerts.cases.created", { date: formatDate(linkedCase.case_creation_time, dFormats.datetime) }) }}
 				</template>
 				<template #footer-extra>
 					<div class="flex flex-wrap items-center justify-end gap-2">
@@ -42,20 +54,20 @@
 		</div>
 
 		<div v-else-if="alert.case_ids?.length" class="flex flex-wrap gap-2">
-			<code v-for="caseId in alert.case_ids" :key="caseId">Case #{{ caseId }}</code>
+			<code v-for="caseId in alert.case_ids" :key="caseId">{{ $t("alerts.cases.caseNumber", { id: caseId }) }}</code>
 		</div>
 
-		<n-empty v-else description="No linked cases found" class="min-h-50 justify-center">
+		<n-empty v-else :description="$t('alerts.cases.empty')" class="min-h-50 justify-center">
 			<template #extra>
 				<div class="flex items-center justify-center gap-2">
 					<n-button type="primary" size="small" :loading="creatingCase" @click="createCase">
-						Create Case
+						{{ $t("alerts.cases.createCase") }}
 					</n-button>
 					<LinkAlert
 						:alert-id="alert.id"
 						size="small"
 						secondary
-						label="Link Case"
+						:label="$t('alerts.cases.linkCase')"
 						@linked="handleCaseLinked"
 					/>
 				</div>
@@ -71,6 +83,7 @@ import type { Alert } from "@/types/alerts"
 import type { ApiError } from "@/types/common"
 import { NButton, NEmpty, useMessage } from "naive-ui"
 import { ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import LinkAlert from "@/components/alerts/LinkAlert.vue"
 import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
@@ -96,6 +109,7 @@ const emit = defineEmits<{
 const dFormats = useSettingsStore().dateFormat
 const creatingCase = ref(false)
 const message = useMessage()
+const { t } = useI18n()
 
 async function createCase() {
 	creatingCase.value = true
@@ -104,9 +118,9 @@ async function createCase() {
 		const res = await Api.cases.createCaseFromAlert(alert.id)
 		if (res.data.success) {
 			emit("created", res.data.case_alert_link.case_id)
-			message.success(res.data?.message || "Case created successfully")
+			message.success(res.data?.message || t("alerts.cases.createdSuccess"))
 		} else {
-			message.error(res.data?.message || "An error occurred. Please try again later.")
+			message.error(res.data?.message || t("alerts.cases.genericError"))
 		}
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))

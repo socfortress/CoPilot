@@ -1,7 +1,11 @@
 <template>
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center justify-between gap-4">
-			<Chip v-if="caseFiles.length" :value="loadingFiles ? 'Loading...' : caseFiles.length" label="files" />
+			<Chip
+				v-if="caseFiles.length"
+				:value="loadingFiles ? $t('common.states.loading') : caseFiles.length"
+				:label="$t('cases.caseFiles.files')"
+			/>
 		</div>
 
 		<n-spin :show="loadingFiles">
@@ -12,8 +16,8 @@
 					<template #header-extra>{{ formatDate(file.upload_time, dFormats.datetime) }}</template>
 					<template #default>
 						<div class="flex flex-wrap gap-2">
-							<Chip :value="formatBytes(file.file_size ?? 0)" label="size" />
-							<Chip :value="file.content_type" label="type" />
+							<Chip :value="formatBytes(file.file_size ?? 0)" :label="$t('cases.caseFiles.size')" />
+							<Chip :value="file.content_type" :label="$t('cases.caseFiles.type')" />
 						</div>
 					</template>
 					<template #footer-extra>
@@ -28,14 +32,14 @@
 								<template #icon>
 									<Icon name="carbon:download" />
 								</template>
-								Download
+								{{ $t("common.actions.download") }}
 							</n-button>
 						</div>
 					</template>
 				</CardEntity>
 			</div>
 
-			<n-empty v-else description="No files found" class="min-h-50 justify-center" />
+			<n-empty v-else :description="$t('cases.caseFiles.empty')" class="min-h-50 justify-center" />
 		</n-spin>
 
 		<div class="flex flex-col gap-2">
@@ -44,7 +48,7 @@
 					<div>
 						<Icon name="carbon:document-add" :size="28" :depth="3" />
 					</div>
-					<div class="font-semibold">Click or drag a file to this area to upload</div>
+					<div class="font-semibold">{{ $t("cases.caseFiles.dropHint") }}</div>
 				</n-upload-dragger>
 			</n-upload>
 			<div class="flex justify-end">
@@ -58,7 +62,7 @@
 					<template #icon>
 						<Icon name="carbon:cloud-upload" />
 					</template>
-					Upload
+					{{ $t("cases.caseFiles.upload") }}
 				</n-button>
 			</div>
 		</div>

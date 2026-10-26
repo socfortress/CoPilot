@@ -15,7 +15,8 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import { NSelect, useMessage } from "naive-ui"
-import { ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
@@ -41,11 +42,12 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 
-const criticalOptions = [
-	{ label: "Critical", value: "CRITICAL" },
-	{ label: "Not Critical", value: "NOT_CRITICAL" }
-]
+const criticalOptions = computed(() => [
+	{ label: t("agents.agentCriticalSelect.critical"), value: "CRITICAL" },
+	{ label: t("agents.agentCriticalSelect.notCritical"), value: "NOT_CRITICAL" }
+])
 
 const selectedCritical = ref<string>(props.critical ? "CRITICAL" : "NOT_CRITICAL")
 const loading = ref(false)
@@ -71,7 +73,13 @@ async function handleCriticalChange(value: string) {
 			await Api.agents.markAgentAsNotCritical(props.agentId.toString())
 		}
 		message.success(
-			`Agent criticality updated to ${selectedCritical.value === "CRITICAL" ? "Critical" : "Not Critical"}`
+			t("agents.agentCriticalSelect.updated", {
+				level: t(
+					selectedCritical.value === "CRITICAL"
+						? "agents.agentCriticalSelect.critical"
+						: "agents.agentCriticalSelect.notCritical"
+				)
+			})
 		)
 		emit("success", {
 			agentId: props.agentId,

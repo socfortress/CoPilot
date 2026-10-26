@@ -5,7 +5,7 @@
 				v-model:value="filters.status"
 				data-testid="agents-status"
 				:options="statusOptions"
-				placeholder="Status"
+				:placeholder="$t('common.fields.status')"
 				:consistent-menu-width="false"
 				clearable
 			/>
@@ -14,7 +14,7 @@
 			<n-select
 				v-model:value="filters.os"
 				:options="osOptions"
-				placeholder="Operating System"
+				:placeholder="$t('agents.filters.os')"
 				:consistent-menu-width="false"
 				clearable
 			/>
@@ -22,14 +22,14 @@
 		<div>
 			<n-input
 				v-model:value="filters.search"
-				placeholder="Search (hostname, ip address, agent id)"
+				:placeholder="$t('agents.filters.search')"
 				clearable
 				data-testid="agents-search"
 			/>
 		</div>
 		<div class="flex items-center justify-between gap-2">
-			<n-checkbox v-model:checked="filters.critical">Critical Assets</n-checkbox>
-			<n-button size="small" secondary @click="resetFilters">Reset filters</n-button>
+			<n-checkbox v-model:checked="filters.critical">{{ $t("agents.filters.critical") }}</n-checkbox>
+			<n-button size="small" secondary @click="resetFilters">{{ $t("agents.filters.reset") }}</n-button>
 		</div>
 	</div>
 </template>

@@ -8,7 +8,7 @@
 			v-model="severity"
 			:options="severityStrip"
 			:loading
-			label="Filter by severity"
+			:label="$t('agents.agentVulnerabilities.filterLabel')"
 			testid="severity"
 			data-testid="vulnerabilities-severity"
 		/>
@@ -18,7 +18,7 @@
 				v-model:value="search"
 				size="small"
 				clearable
-				placeholder="Search CVE, title or package"
+				:placeholder="$t('agents.agentVulnerabilities.search')"
 				class="min-w-0 flex-1 @2xl:max-w-80!"
 				data-testid="vulnerabilities-search"
 			>
@@ -28,7 +28,7 @@
 				v-if="!loading && vulnerabilities.length"
 				class="text-tertiary hidden font-mono text-xs whitespace-nowrap tabular-nums @2xl:inline"
 			>
-				{{ shown.length.toLocaleString() }} shown · worst first
+				{{ $t("agents.agentVulnerabilities.shown", { count: shown.length.toLocaleString() }) }}
 			</span>
 			<n-button
 				size="small"
@@ -40,7 +40,7 @@
 				@click="exportCsv()"
 			>
 				<template #icon><Icon name="carbon:download" /></template>
-				Export CSV
+				{{ $t("agents.exportCsv") }}
 			</n-button>
 		</div>
 
@@ -55,11 +55,11 @@
 				class="bg-secondary border-default text-tertiary hidden items-center gap-4 border-b px-4 py-2 @3xl:grid"
 				:class="COLUMNS"
 			>
-				<span :class="HEAD">Severity</span>
-				<span :class="HEAD">Vulnerability</span>
-				<span :class="HEAD">Package</span>
+				<span :class="HEAD">{{ $t("agents.agentVulnerabilities.head.severity") }}</span>
+				<span :class="HEAD">{{ $t("agents.agentVulnerabilities.head.vulnerability") }}</span>
+				<span :class="HEAD">{{ $t("agents.agentVulnerabilities.head.package") }}</span>
 				<span :class="HEAD" class="text-right">CVSS</span>
-				<span :class="HEAD">Detected</span>
+				<span :class="HEAD">{{ $t("agents.agentVulnerabilities.head.detected") }}</span>
 				<span />
 			</div>
 
@@ -67,10 +67,7 @@
 				<!-- Wazuh builds the list per request: on an agent with many packages that takes a while. -->
 				<p class="text-secondary m-0 flex items-start gap-2 text-sm" role="status">
 					<Icon name="carbon:renew" :size="16" class="text-primary mt-0.5 shrink-0 animate-spin" />
-					<span>
-						Fetching the vulnerabilities from Wazuh. This can take up to a minute on an agent with many
-						packages.
-					</span>
+					<span>{{ $t("agents.agentVulnerabilities.loading") }}</span>
 				</p>
 				<n-skeleton v-for="n of 5" :key="n" :height="44" :sharp="false" class="rounded-md" />
 			</div>
@@ -78,8 +75,8 @@
 				v-else-if="!shown.length"
 				:description="
 					vulnerabilities.length
-						? 'No vulnerability matches the filters'
-						: 'No vulnerabilities found on this agent'
+						? $t('agents.agentVulnerabilities.emptyFiltered')
+						: $t('agents.agentVulnerabilities.empty')
 				"
 				class="min-h-40 justify-center"
 				data-testid="vulnerabilities-empty"
@@ -99,7 +96,7 @@
 						@click="toggle(key(v))"
 					>
 						<span class="[grid-area:sev]">
-							<span :class="[CHIP, severityClasses(v.severity)]">{{ v.severity ?? "unknown" }}</span>
+							<span :class="[CHIP, severityClasses(v.severity)]">{{ severityLabel(v.severity) }}</span>
 						</span>
 						<span class="flex min-w-0 flex-col gap-0.5 leading-tight [grid-area:vuln]">
 							<span class="text-default truncate font-mono text-sm">{{ v.cve ?? "—" }}</span>
@@ -149,7 +146,7 @@
 						</dl>
 						<div v-if="v.external_references?.length" class="flex min-w-0 flex-col gap-1.5">
 							<span :class="HEAD" class="text-tertiary">
-								References · {{ v.external_references.length }}
+								{{ $t("agents.agentVulnerabilities.references", { count: v.external_references.length }) }}
 							</span>
 							<a
 								v-for="url of v.external_references"
@@ -194,6 +191,7 @@ import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
 import { NAlert, NButton, NEmpty, NInput, NPagination, NSkeleton, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
@@ -205,10 +203,12 @@ import {
 	exportFilename,
 	filterVulnerabilities,
 	formatCvss,
+	pageRangeLabel,
 	SEVERITIES,
 	severityClasses,
 	severityCounts,
-	severityDot
+	severityDot,
+	severityLabel
 } from "./agentFindings"
 import FilterStrip from "./FilterStrip.vue"
 
@@ -242,6 +242,7 @@ const COLUMNS_ROW = [
 ].join(" ")
 
 const message = useMessage()
+const { t } = useI18n()
 const dFormats = useSettingsStore().dateFormat
 const { loading, run } = useLatestRequest()
 const vulnerabilities = ref<AgentVulnerability[]>([])
@@ -257,7 +258,7 @@ const counts = computed(() => severityCounts(vulnerabilities.value))
 const severityStrip = computed<FilterStripOption<VulnerabilitySeverity | "All">[]>(() =>
 	(["All", ...SEVERITIES] as const).map(value => ({
 		value,
-		label: value,
+		label: severityLabel(value),
 		count: counts.value[value],
 		dot: value === "All" ? "bg-primary" : severityDot(value)
 	}))
@@ -268,8 +269,7 @@ const shown = computed(() =>
 const offset = computed(() => (pageNumber.value - 1) * pageSize.value)
 const page = computed(() => shown.value.slice(offset.value, offset.value + pageSize.value))
 const rangeLabel = computed(
-	() =>
-		`${(offset.value + 1).toLocaleString()}–${Math.min(offset.value + pageSize.value, shown.value.length).toLocaleString()} of ${shown.value.length.toLocaleString()}`
+	() => pageRangeLabel(offset.value + 1, Math.min(offset.value + pageSize.value, shown.value.length), shown.value.length)
 )
 
 const key = (v: AgentVulnerability) => `${v.cve}-${v.name}-${v.version}`
@@ -285,13 +285,17 @@ function cvssClass(score: number | null) {
 function facts(v: AgentVulnerability) {
 	const date = (value: string | null) => (value ? String(formatDate(value, dFormats.datetime)) : "—")
 	return [
-		{ label: "Package", value: [v.name, v.version].filter(Boolean).join(" ") || "—", mono: true },
-		{ label: "Architecture", value: v.architecture ?? "—", mono: true },
-		{ label: "Type", value: v.type ?? "—", mono: false },
-		{ label: "Status", value: v.status ?? "—", mono: false },
+		{
+			label: t("agents.agentVulnerabilities.facts.package"),
+			value: [v.name, v.version].filter(Boolean).join(" ") || "—",
+			mono: true
+		},
+		{ label: t("agents.agentVulnerabilities.facts.architecture"), value: v.architecture ?? "—", mono: true },
+		{ label: t("agents.agentVulnerabilities.facts.type"), value: v.type ?? "—", mono: false },
+		{ label: t("common.fields.status"), value: v.status ?? "—", mono: false },
 		{ label: "CVSS 3", value: formatCvss(v.cvss3_score), mono: true },
-		{ label: "Published", value: date(v.published), mono: true },
-		{ label: "Detected", value: date(v.detection_time), mono: true }
+		{ label: t("agents.agentVulnerabilities.facts.published"), value: date(v.published), mono: true },
+		{ label: t("agents.agentVulnerabilities.facts.detected"), value: date(v.detection_time), mono: true }
 	]
 }
 
@@ -309,7 +313,7 @@ function load() {
 			vulnerabilities.value = (await Api.agents.getVulnerabilities(agentId, signal)).data.vulnerabilities ?? []
 		},
 		err => {
-			error.value = getApiErrorMessage(err as ApiError) || "Could not load the vulnerabilities."
+			error.value = getApiErrorMessage(err as ApiError) || t("agents.agentVulnerabilities.loadFailed")
 		}
 	)
 }
@@ -320,7 +324,7 @@ async function exportCsv() {
 		const response = await Api.agents.exportVulnerabilities(agentId, severity.value)
 		saveAs(response.data, exportFilename(`vulnerabilities-${severity.value.toLowerCase()}`, agentLabel))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Could not export the vulnerabilities.")
+		message.error(getApiErrorMessage(err as ApiError) || t("agents.agentVulnerabilities.exportFailed"))
 	} finally {
 		exporting.value = false
 	}

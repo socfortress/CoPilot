@@ -4,7 +4,11 @@
 
 		<div class="flex flex-col gap-2">
 			<div ref="headerRef" class="flex items-center justify-between">
-				<Chip size="small" :value="loading ? 'Loading...' : paginatedTotal" label="items" />
+				<Chip
+					size="small"
+					:value="loading ? $t('common.states.loading') : paginatedTotal"
+					:label="$t('agents.list.items')"
+				/>
 
 				<div class="flex items-center gap-2 whitespace-nowrap">
 					<n-button
@@ -18,7 +22,7 @@
 						<template #icon>
 							<Icon name="carbon:download" />
 						</template>
-						Export CSV
+						{{ $t("agents.exportCsv") }}
 					</n-button>
 
 					<n-pagination
@@ -46,8 +50,8 @@
 					class="[&_.n-data-table-th\_\_title]:whitespace-nowrap"
 				>
 					<template #empty>
-						<n-empty description="No agents found">
-							<template #extra>try changing the filters</template>
+						<n-empty :description="$t('agents.list.empty')">
+							<template #extra>{{ $t("agents.list.emptyHint") }}</template>
 						</n-empty>
 					</template>
 				</n-data-table>
@@ -78,6 +82,7 @@ import { refDebounced, useElementSize } from "@vueuse/core"
 import { saveAs } from "file-saver"
 import { NButton, NDataTable, NEmpty, NPagination, NTag, useMessage } from "naive-ui"
 import { computed, ref, toRef, useTemplateRef, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Filters from "@/components/agents/Filters.vue"
 import Chip from "@/components/common/Chip.vue"
@@ -97,6 +102,7 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const exporting = ref(false)
 const dFormats = useSettingsStore().dateFormat
@@ -144,7 +150,7 @@ function query() {
 
 const columns = computed<DataTableColumns<Agent>>(() => [
 	{
-		title: "Agent",
+		title: t("agents.list.columns.agent"),
 		key: "agent_id",
 		fixed: simpleMode.value ? undefined : "left",
 		width: 280,
@@ -169,24 +175,24 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		)
 	},
 	{
-		title: "IP Address",
+		title: t("agents.list.columns.ipAddress"),
 		key: "ip_address",
 		width: 160,
 		render: row => <div class="font-mono">{row.ip_address}</div>
 	},
 	{
-		title: "Operating System",
+		title: t("agents.list.columns.os"),
 		key: "os",
 		render: row => <div>{row.os}</div>
 	},
 	{
-		title: "Last Seen",
+		title: t("agents.list.columns.lastSeen"),
 		key: "wazuh_last_seen",
 		width: 180,
 		render: row => <div class="font-mono">{formatDate(row.wazuh_last_seen, dFormats.datetime)}</div>
 	},
 	{
-		title: "Status",
+		title: t("common.fields.status"),
 		key: "wazuh_agent_status",
 		width: 180,
 		render: row => {
@@ -198,7 +204,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		}
 	},
 	{
-		title: "Critical Asset",
+		title: t("agents.list.columns.criticalAsset"),
 		key: "critical_asset",
 		width: 200,
 		render: row => {
@@ -212,7 +218,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 		}
 	},
 	{
-		title: "Actions",
+		title: t("common.fields.actions"),
 		key: "actions",
 		width: 194,
 		render: row => {
@@ -246,7 +252,7 @@ async function exportCsv() {
 		const response = await Api.agents.exportAgents(query())
 		const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")
 		saveAs(response.data, `assets-export-${stamp}.csv`)
-		message.success(`Exported ${paginatedTotal.value} asset${paginatedTotal.value === 1 ? "" : "s"} to CSV`)
+		message.success(t("agents.list.exported", paginatedTotal.value))
 	} catch (err) {
 		message.error(getApiErrorMessage(err as ApiError))
 	} finally {

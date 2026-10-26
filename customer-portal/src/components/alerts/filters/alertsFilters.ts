@@ -1,5 +1,6 @@
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from "vue-router"
 import type { AlertStatus } from "@/types/alerts"
+import { i18nGlobal } from "@/lang"
 import { WORKFLOW_STATUS_LABELS } from "@/utils/workflowStatus"
 
 /**
@@ -41,14 +42,14 @@ export type AlertsFilterType = AlertsMenuFilterType | AlertsLinkFilterType
 export const ALERTS_FILTER_TYPES: AlertsMenuFilterType[] = ["status", "source", "asset", "tag", "date"]
 export const ALERTS_LINK_FILTER_TYPES: AlertsLinkFilterType[] = ["detection", "opened"]
 
-export const ALERTS_FILTER_LABELS: Record<AlertsFilterType, string> = {
-	status: "Status",
-	source: "Source",
-	asset: "Asset",
-	tag: "Tag",
-	date: "Created",
-	detection: "Detection",
-	opened: "Reached the SOC"
+/** A filter's name, in the user's language (#1310): asked for at render, never kept. */
+export function alertsFilterLabel(type: AlertsFilterType): string {
+	return i18nGlobal.t(`alerts.filters.labels.${type}` as const)
+}
+
+/** What a filter's remove button says to a screen reader. */
+export function alertsFilterRemoveLabel(type: AlertsFilterType): string {
+	return i18nGlobal.t(`alerts.filters.remove.${type}` as const)
 }
 
 const QUERY_KEYS = [
@@ -208,8 +209,8 @@ export function withoutFilter(filters: AlertsFilters, type: AlertsFilterType): A
 export function openedLabel(filters: AlertsFilters, format: (iso: string) => string): string {
 	const { openedFrom: from, openedBefore: before } = filters
 	if (from && before) return `${format(from)} – ${format(before)}`
-	if (from) return `since ${format(from)}`
-	return before ? `before ${format(before)}` : ""
+	if (from) return i18nGlobal.t("alerts.filters.openedSince", { date: format(from) })
+	return before ? i18nGlobal.t("alerts.filters.openedBefore", { date: format(before) }) : ""
 }
 
 /** Local midnight of a `YYYY-MM-DD`, as epoch milliseconds (what the date picker holds). */
