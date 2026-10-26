@@ -5,6 +5,7 @@
 				v-for="comment of commentsList"
 				:key="comment.id"
 				:comment
+				:author-role="roleOf(comment.user_name)"
 				embedded
 				@deleted="removeComment(comment)"
 				@updated="updateComment($event)"
@@ -63,6 +64,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
+import { useCommentAuthors } from "../common/commentAuthors"
 import AlertCommentItem from "./AlertComment.vue"
 
 const props = defineProps<{ comments: AlertComment[]; alertId: number }>()
@@ -71,6 +73,7 @@ const emit = defineEmits<{
 }>()
 
 const { comments, alertId } = toRefs(props)
+const { roleOf, load: loadAuthors } = useCommentAuthors("alert", alertId)
 
 const CommentsIcon = "carbon:chat"
 const ReloadIcon = "carbon:renew"
@@ -118,6 +121,8 @@ function reload() {
 			if (res.data.success) {
 				commentsList.value = res.data.alerts?.[0]?.comments || []
 				emit("updated", commentsList.value)
+				// New comments may come from other people: read their roles again.
+				loadAuthors()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

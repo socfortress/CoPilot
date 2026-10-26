@@ -849,6 +849,22 @@ def _format_default_body_core(event: NotificationEvent) -> str:
             parts.extend(["", f"Open in CoPilot: {event.link_url}"])
         return "\n".join(parts)
 
+    if trig == NotificationTrigger.CUSTOMER_QUESTION.value:
+        what = "Case" if event.entity_type == EntityType.CASE else "Alert"
+        label = ctx.get("title")
+        parts = [
+            f"*Customer question* — urgency *{ctx.get('urgency', 'normal')}*",
+            "",
+            f"{what}: #{event.entity_id}" + (f" — {label}" if label else ""),
+        ]
+        if event.customer_code:
+            parts.append(f"Customer: `{event.customer_code}`")
+        parts.append(f"Asked by: {ctx.get('asked_by') or event.actor_username or 'a portal user'}")
+        if ctx.get("question"):
+            parts.extend(["", f"> {ctx['question']}"])
+        if event.link_url:
+            parts.extend(["", f"Open in CoPilot: {event.link_url}"])
+        return "\n".join(parts)
     if trig == NotificationTrigger.TALON_OPS_FINDING.value:
         return _ops_finding_body(event)
 

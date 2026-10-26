@@ -55,6 +55,9 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("DELETE", "/api/incidents/customer_reports/{report_id}"),
         # Ask the AI analyst to analyse one of their alerts, where the customer allows it (#1215).
         ("POST", "/api/customer_portal/ai_reports/alert/{alert_id}/investigate"),
+        # Ask the SOC about one of their alerts or cases, where the customer allows it (#1305).
+        ("POST", "/api/customer_portal/soc_requests/alert/{alert_id}"),
+        ("POST", "/api/customer_portal/soc_requests/case/{case_id}"),
         # Asset criticality of the customer's own agents.
         ("POST", "/api/agents/{agent_id}/critical"),
         ("POST", "/api/agents/{agent_id}/noncritical"),

@@ -40,6 +40,7 @@
 			<template v-if="alert" #mainExtra>
 				<div v-if="compact" class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex flex-wrap items-center gap-3">
+						<CustomerQuestionBadge entity="alert" :entity-id="alert.id" size="small" />
 						<Badge type="splitted" size="small" bright :color="statusColor(alert.status)">
 							<template #iconLeft>
 								<StatusIcon :status="alert.status" />
@@ -72,6 +73,7 @@
 					/>
 				</div>
 				<div v-else class="flex flex-wrap items-center gap-3">
+					<CustomerQuestionBadge entity="alert" :entity-id="alert.id" />
 					<AlertStatusSwitch v-slot="{ loading: loadingStatus }" :alert @updated="updateAlert($event)">
 						<Badge type="splitted" class="cursor-pointer" bright :color="statusColor(alert.status)">
 							<template #iconLeft>
@@ -301,6 +303,7 @@ import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 import AssigneeIcon from "../common/AssigneeIcon.vue"
 import StatusIcon from "../common/StatusIcon.vue"
+import CustomerQuestionBadge from "../customerQuestions/CustomerQuestionBadge.vue"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertDetails from "./AlertDetails.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"

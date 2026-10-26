@@ -34,6 +34,7 @@ const ENTITY_OVERLAYS = [
 	"components/incidentManagement/alerts/AlertAssetInfo.vue",
 	"components/incidentManagement/alerts/AlertItem.vue",
 	"components/incidentManagement/cases/CaseItem.vue",
+	"components/incidentManagement/customerQuestions/CustomerQuestionsList.vue",
 	"components/incidentManagement/exclusionRules/ExclusionRuleItem.vue",
 	"components/incidentManagement/sources/ConfiguredSourceItem.vue",
 	"components/mitre/AtomicTests/TechniqueCard.vue",

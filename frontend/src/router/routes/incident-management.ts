@@ -139,6 +139,13 @@ export const incidentManagementRoutes: RouteRecordRaw[] = [
 				meta: { title: "Incident Cases" }
 			},
 			{
+				// What Customer Portal users asked the SOC about their alerts and cases (#1305).
+				path: "customer-questions",
+				name: "IncidentManagement-CustomerQuestions",
+				component: () => import("@/views/incidentManagement/CustomerQuestions.vue"),
+				meta: { title: "Customer Questions", roles: [AuthUserRole.Admin, AuthUserRole.Analyst] }
+			},
+			{
 				path: "case-templates",
 				name: "IncidentManagement-CaseTemplates",
 				component: () => import("@/views/incidentManagement/CaseTemplates.vue"),

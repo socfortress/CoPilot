@@ -19,6 +19,8 @@ export interface PortalSeed {
 	fresh_alert_id: number
 	/** An open alert of A with no AI analysis, for an investigation a test runs itself (#1273). */
 	ai_idle_alert_id: number
+	/** An alert of A in A's first case (`agent_a0.case_id`), which is open (#1305). */
+	cased_alert_id: number
 	ai_a: { total_reports: number; severity_counts: Record<string, number> }
 	/** Completed customer reports per customer. */
 	reports: { a: number; b: number }

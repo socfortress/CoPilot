@@ -196,7 +196,7 @@ async def main():
             column = bool((await s.execute(text("SHOW COLUMNS FROM `user` LIKE 'locale'"))).first())
         return table, column
 
-    await asyncio.to_thread(command.downgrade, config, "d0b7e1a2c3f4")
+    await asyncio.to_thread(command.downgrade, config, "d1305a0b1c2d")
     check("downgrade drops the table and the column", await schema() == (False, False))
     await asyncio.to_thread(command.upgrade, config, "head")
     check("upgrade brings both back", await schema() == (True, True))

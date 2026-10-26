@@ -31,6 +31,7 @@ export type NotificationTrigger =
 	| "case_task_assigned"
 	| "sla_at_risk"
 	| "sla_breached"
+	| "customer_question"
 	| "talon_ops_finding"
 	| "temp_password_issued"
 	| PortalTrigger
@@ -69,6 +70,9 @@ export const INTERNAL_TRIGGERS: NotificationTrigger[] = [
 	"case_assigned",
 	"case_task_assigned",
 	...SLA_TRIGGERS,
+	// A portal user's question for the SOC (#1305): the customer asked it, so it never
+	// goes back out on their own channel.
+	"customer_question",
 	OPS_TRIGGER
 ]
 
@@ -82,6 +86,7 @@ export const NOTIFICATION_TRIGGER_LABELS: Record<NotificationTrigger, string> = 
 	case_task_assigned: "Case task assigned",
 	sla_at_risk: "SLA at risk",
 	sla_breached: "SLA breached",
+	customer_question: "Customer question",
 	talon_ops_finding: "Talon ops finding",
 	// Never reachable on a route — the backend rejects it as a route trigger —
 	// but the map is exhaustive over NotificationTrigger, so it needs a label.

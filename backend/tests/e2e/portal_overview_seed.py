@@ -45,6 +45,8 @@ from app.db.universal_models import CustomerPortalBranding  # noqa: E402
 from app.db.universal_models import CustomerPortalExposureSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalLanguageSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalSlaSettings  # noqa: E402
+from app.db.universal_models import CustomerPortalSocRequest  # noqa: E402
+from app.db.universal_models import CustomerPortalSocRequestSettings  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
 from app.db.universal_models import EventSources  # noqa: E402
 from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E402
@@ -199,6 +201,9 @@ async def cleanup(s):
     await s.execute(delete(CustomerPortalAuditSettings).where(CustomerPortalAuditSettings.customer_code.in_(codes)))
     # The customers' portal languages (#1310): a foreign key to the customer.
     await s.execute(delete(CustomerPortalLanguageSettings).where(CustomerPortalLanguageSettings.customer_code.in_(codes)))
+    # Questions to the SOC (#1305) and their switch: foreign keys to the customer, its alerts and cases.
+    await s.execute(delete(CustomerPortalSocRequest).where(CustomerPortalSocRequest.customer_code.in_(codes)))
+    await s.execute(delete(CustomerPortalSocRequestSettings).where(CustomerPortalSocRequestSettings.customer_code.in_(codes)))
     await s.execute(delete(AlertSlaTracking).where(AlertSlaTracking.alert_id.in_(alert_ids)))
     await s.execute(delete(CaseSlaTracking).where(CaseSlaTracking.case_id.in_(case_ids)))
     await s.execute(delete(CustomerPortalBranding).where(CustomerPortalBranding.customer_code.in_(codes)))
@@ -454,6 +459,8 @@ async def seed(quiet: bool = False) -> dict:
             "fresh_alert_id": alerts[(CUST_A, 2)].id,
             # Another open alert of A with no AI analysis, for an investigation a test runs itself (#1273).
             "ai_idle_alert_id": alerts[(CUST_A, 3)].id,
+            # An alert of A in A's first case, which is open: "Ask the SOC" offers that case (#1305).
+            "cased_alert_id": alerts[(CUST_A, 1)].id,
             # A's first agent (#1256): its case is A's first, never B's on the same host name.
             "agent_a0": {"agent_id": f"e2e-ov-{CUST_A}-0", "hostname": AGENT_HOST_A0, "case_id": cases[(CUST_A, 0)].id},
             "agent_b0_id": f"e2e-ov-{CUST_B}-0",

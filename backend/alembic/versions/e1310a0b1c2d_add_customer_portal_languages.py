@@ -1,7 +1,7 @@
 """add the customer portal's per-customer languages and the user's language
 
 Revision ID: e1310a0b1c2d
-Revises: d0b7e1a2c3f4
+Revises: d1305a0b1c2d
 Create Date: 2026-10-26 09:00:00.000000
 
 Customer Portal localization (#1310): ``customer_portal_language_settings`` holds the languages a
@@ -17,7 +17,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "e1310a0b1c2d"
-down_revision: Union[str, None] = "d0b7e1a2c3f4"
+down_revision: Union[str, None] = "d1305a0b1c2d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

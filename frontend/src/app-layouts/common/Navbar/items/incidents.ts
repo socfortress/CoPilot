@@ -11,6 +11,8 @@ export const incidentsItem: MenuMixedOption = parentMenuItem("Incidents", "Incid
 	routerLinkItem("Alert Sources & Exclusions", "IncidentManagement-Sources"),
 	routerLinkItem("Alerts", "IncidentManagement-Alerts"),
 	routerLinkItem("Cases", "IncidentManagement-Cases"),
+	// What portal users asked the SOC (#1305): answered from the case or alert it is on.
+	routerLinkItem("Customer Questions", "IncidentManagement-CustomerQuestions"),
 	routerLinkItem("Case Templates", "IncidentManagement-CaseTemplates")
 	/*
 	routerLinkItem("SIGMA", "IncidentManagement-Sigma"),

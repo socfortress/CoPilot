@@ -729,6 +729,75 @@ class CustomerPortalAuditSettings(SQLModel, table=True):
     updated_by: Optional[int] = Field(default=None)  # User ID who last updated
 
 
+class CustomerPortalSocRequestSettings(SQLModel, table=True):
+    """Per-customer switch for "Ask the SOC" in the Customer Portal (#1305).
+
+    **Opt-in** like the other portal switches: a customer with no row cannot ask. The
+    daily limit counts the customer's questions over any 24 hours (NULL = unlimited);
+    it is never shown to the customer. Read through ``customer_portal/services/soc_requests.py``.
+    """
+
+    __tablename__ = "customer_portal_soc_request_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    daily_request_limit: Optional[int] = Field(default=None)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
+class CustomerPortalSocRequest(SQLModel, table=True):
+    """One question a portal user asked the SOC about an alert or a case (#1305).
+
+    Exactly one of ``case_id`` / ``alert_id`` is the question's target: a question on a
+    case, or on an alert the customer chose to keep it on. A question asked from an alert
+    but filed on a case (new or already open) has ``case_id`` set and the alert in
+    ``origin_alert_id``, informational only. Both targets cascade: a deleted alert or case
+    takes its questions with it. The question's text is also left as a comment on the
+    target, signed by the user, so the SOC answers where it already works.
+
+    ``status`` is ``open`` until the SOC answers: its first comment on the target after
+    the question, or an analyst marking it answered (a reply by phone).
+    """
+
+    __tablename__ = "customer_portal_soc_request"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: str = Field(
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=False, index=True),
+    )
+    case_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("incident_management_case.id", ondelete="CASCADE"), nullable=True, index=True),
+    )
+    alert_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(ForeignKey("incident_management_alert.id", ondelete="CASCADE"), nullable=True, index=True),
+    )
+    origin_alert_id: Optional[int] = Field(default=None, nullable=True)
+    question: str = Field(sa_column=Column(Text, nullable=False))
+    urgency: str = Field(max_length=16, nullable=False, default="normal")
+    status: str = Field(max_length=16, nullable=False, default="open", index=True)
+    comment_id: Optional[int] = Field(default=None, nullable=True)
+    requested_by_user_id: Optional[int] = Field(default=None)
+    requested_by: str = Field(max_length=256, nullable=False)
+    requested_at: datetime = Field(default_factory=now_utc, index=True)
+    answered_at: Optional[datetime] = Field(default=None, nullable=True)
+    # Who answered, for the SOC; never sent to the portal.
+    answered_by: Optional[str] = Field(default=None, max_length=256, nullable=True)
+    answered_via: Optional[str] = Field(default=None, max_length=16, nullable=True)  # comment | manual
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 

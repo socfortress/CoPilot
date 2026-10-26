@@ -109,6 +109,11 @@ class AuditAction(str, Enum):
     PORTAL_LANGUAGES_SETTINGS_UPDATE = "portal_languages.settings_update"
     # The Customer Portal's Audit Log page switch, per customer (#1298).
     AUDIT_SETTINGS_UPDATE = "audit.settings_update"
+    # "Ask the SOC" from the Customer Portal (#1305): a portal user's question (refusals as
+    # failures), the SOC marking one answered by hand, and the per-customer switch.
+    SOC_REQUEST_CREATE = "soc_request.create"
+    SOC_REQUEST_ANSWER = "soc_request.answer"
+    SOC_REQUEST_SETTINGS_UPDATE = "soc_request.settings_update"
 
     # Talon v2 chat action proposals, decided and run in CoPilot (talon-analyst M5-11). A
     # quarantine run this way also records RESPONSE_QUARANTINE, from its own route.
