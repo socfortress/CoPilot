@@ -1,8 +1,8 @@
 <template>
 	<button
 		class="hidden cursor-pointer items-center justify-center lg:flex"
-		alt="fullscreen-switch"
-		aria-label="fullscreen-switch"
+		:alt="$t('navigation.toolbar.fullscreen')"
+		:aria-label="$t('navigation.toolbar.fullscreen')"
 		@click="toggle()"
 	>
 		<Icon v-if="isFullscreen" :size="20" :name="CloseIcon" />

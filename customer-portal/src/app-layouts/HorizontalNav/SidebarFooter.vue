@@ -7,6 +7,7 @@
 <script lang="ts" setup>
 import { NMenu } from "naive-ui"
 import { computed, h, ref } from "vue"
+import { i18nGlobal } from "@/lang"
 import { useThemeStore } from "@/stores/theme"
 import { renderIcon } from "@/utils"
 
@@ -25,7 +26,7 @@ const menuOptions = ref([
 					target: "_blank",
 					rel: "noopener noreferrer"
 				},
-				"Documentation"
+				i18nGlobal.t("navigation.sidebar.documentation")
 			),
 		key: "documentation",
 		icon: renderIcon(DocsIcon)

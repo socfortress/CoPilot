@@ -9,8 +9,8 @@
 				:closable="false"
 				@close="removeLatestPage(page.name)"
 			>
-				<span class="page-name" :title="page.title" @click="gotoPage(page.name)">
-					{{ page.title }}
+				<span class="page-name" :title="pageTitle(page)" @click="gotoPage(page.name)">
+					{{ pageTitle(page) }}
 				</span>
 				<template #icon>
 					<div class="icon-box" @click="pinPage(page)">
@@ -25,7 +25,7 @@
 				<n-popover :show-arrow="false" placement="bottom" trigger="hover" class="p-1!">
 					<template #trigger>
 						<button class="shortcuts-btn flex items-center gap-2 text-sm">
-							<span>Shortcuts</span>
+							<span>{{ $t("navigation.toolbar.shortcuts") }}</span>
 							<n-badge :value="pinned.length" />
 						</button>
 					</template>
@@ -46,7 +46,7 @@
 									@click.stop="removePinnedPage(page.name)"
 								/>
 								<span class="px-2">
-									{{ page.title }}
+									{{ pageTitle(page) }}
 								</span>
 							</span>
 						</n-button>
@@ -67,6 +67,7 @@ import _takeRight from "lodash/takeRight"
 import _uniqBy from "lodash/uniqBy"
 import { NBadge, NButton, NPopover, NTag } from "naive-ui"
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRouter } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
@@ -79,6 +80,7 @@ interface Page {
 const PinnedIcon = "carbon:pin"
 const CloseIcon = "carbon:close"
 const router = useRouter()
+const { t } = useI18n()
 const latest: RemovableRef<Page[]> = useStorage<Page[]>("latest-pages", [], sessionStorage)
 const pinned: RemovableRef<Page[]> = useStorage<Page[]>("pinned-pages", [], localStorage)
 const latestSanitized: ComputedRef<Page[]> = computed(() => {
@@ -87,6 +89,16 @@ const latestSanitized: ComputedRef<Page[]> = computed(() => {
 		3
 	) as Page[]
 })
+
+/**
+ * A page's title in the user's language (#1310), by its route's `meta.titleKey`; the stored English
+ * title for a page that has none (or is no longer a route). Looked up here, so a page pinned before
+ * a language change, or before titles were translated, follows the language too.
+ */
+function pageTitle(page: Page): string {
+	const titleKey = router.getRoutes().find(route => route.name === page.name)?.meta.titleKey
+	return titleKey ? t(titleKey) : page.title
+}
 
 function removeLatestPage(pageName: RouteRecordName | string) {
 	latest.value = latest.value.filter(page => page.name !== pageName)

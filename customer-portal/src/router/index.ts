@@ -6,6 +6,8 @@ import { Layout } from "@/types/theme"
 import { authCheck } from "@/utils/auth"
 import AuthPage from "@/views/Auth.vue"
 
+// `meta.title` is each page's English title (read by other code and specs); `meta.titleKey` is how
+// the breadcrumb and the pinned pages show it, in the user's language (#1310).
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
@@ -17,7 +19,7 @@ const router = createRouter({
 			path: "/overview",
 			name: "Overview",
 			component: () => import("@/views/Overview.vue"),
-			meta: { title: "Overview", auth: true, roles: RouteRole.All }
+			meta: { title: "Overview", titleKey: "navigation.routes.overview", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/alerts",
@@ -30,13 +32,13 @@ const router = createRouter({
 					path: "",
 					name: "AlertsList",
 					component: () => import("@/views/Alerts/List.vue"),
-					meta: { title: "Alerts" }
+					meta: { title: "Alerts", titleKey: "navigation.routes.alerts" }
 				},
 				{
 					path: ":id",
 					name: "AlertDetails",
 					component: () => import("@/views/Alerts/Details.vue"),
-					meta: { title: "Alert Details", skipPin: true }
+					meta: { title: "Alert Details", titleKey: "navigation.routes.alertDetails", skipPin: true }
 				}
 			]
 		},
@@ -51,13 +53,13 @@ const router = createRouter({
 					path: "",
 					name: "CasesList",
 					component: () => import("@/views/Cases/List.vue"),
-					meta: { title: "Cases" }
+					meta: { title: "Cases", titleKey: "navigation.routes.cases" }
 				},
 				{
 					path: ":id",
 					name: "CaseDetails",
 					component: () => import("@/views/Cases/Details.vue"),
-					meta: { title: "Case Details", skipPin: true }
+					meta: { title: "Case Details", titleKey: "navigation.routes.caseDetails", skipPin: true }
 				}
 			]
 		},
@@ -72,13 +74,13 @@ const router = createRouter({
 					path: "",
 					name: "AgentsList",
 					component: () => import("@/views/Agents/List.vue"),
-					meta: { title: "Agents" }
+					meta: { title: "Agents", titleKey: "navigation.routes.agents" }
 				},
 				{
 					path: ":id",
 					name: "AgentDetails",
 					component: () => import("@/views/Agents/Details.vue"),
-					meta: { title: "Agent Details", skipPin: true }
+					meta: { title: "Agent Details", titleKey: "navigation.routes.agentDetails", skipPin: true }
 				}
 			]
 		},
@@ -93,7 +95,7 @@ const router = createRouter({
 					path: "",
 					name: "ReportsList",
 					component: () => import("@/views/Reports/List.vue"),
-					meta: { title: "Reports" }
+					meta: { title: "Reports", titleKey: "navigation.routes.reports" }
 				}
 			]
 		},
@@ -101,7 +103,7 @@ const router = createRouter({
 			path: "/event-search",
 			name: "EventSearch",
 			component: () => import("@/views/EventSearch.vue"),
-			meta: { title: "Event Search", auth: true, roles: RouteRole.All }
+			meta: { title: "Event Search", titleKey: "navigation.routes.eventSearch", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/dashboards",
@@ -114,13 +116,13 @@ const router = createRouter({
 					path: "",
 					name: "DashboardsList",
 					component: () => import("@/views/Dashboards/List.vue"),
-					meta: { title: "Dashboards" }
+					meta: { title: "Dashboards", titleKey: "navigation.routes.dashboards" }
 				},
 				{
 					path: ":id",
 					name: "DashboardView",
 					component: () => import("@/views/Dashboards/Overview.vue"),
-					meta: { title: "Dashboard Details", skipPin: true }
+					meta: { title: "Dashboard Details", titleKey: "navigation.routes.dashboardDetails", skipPin: true }
 				}
 			]
 		},
@@ -129,14 +131,14 @@ const router = createRouter({
 			path: "/exposure",
 			name: "Exposure",
 			component: () => import("@/views/Exposure.vue"),
-			meta: { title: "Exposure", auth: true, roles: RouteRole.All }
+			meta: { title: "Exposure", titleKey: "navigation.routes.exposure", auth: true, roles: RouteRole.All }
 		},
 		{
 			// A customer admin's own customers' portal users (#1296); anyone else is told it isn't theirs.
 			path: "/users",
 			name: "Users",
 			component: () => import("@/views/Users.vue"),
-			meta: { title: "Users", auth: true, roles: RouteRole.All }
+			meta: { title: "Users", titleKey: "navigation.routes.users", auth: true, roles: RouteRole.All }
 		},
 		{
 			// A customer admin's audit log of their customers (#1298), once the SOC turned it on;
@@ -144,25 +146,25 @@ const router = createRouter({
 			path: "/audit",
 			name: "AuditLog",
 			component: () => import("@/views/AuditLog.vue"),
-			meta: { title: "Audit log", auth: true, roles: RouteRole.All }
+			meta: { title: "Audit log", titleKey: "navigation.routes.auditLog", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/activity",
 			name: "Activity",
 			component: () => import("@/views/Activity.vue"),
-			meta: { title: "Activity", auth: true, roles: RouteRole.All }
+			meta: { title: "Activity", titleKey: "navigation.routes.activity", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/sla",
 			name: "Sla",
 			component: () => import("@/views/Sla.vue"),
-			meta: { title: "Service Levels", auth: true, roles: RouteRole.All }
+			meta: { title: "Service Levels", titleKey: "navigation.routes.sla", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/profile",
 			name: "Profile",
 			component: () => import("@/views/Profile.vue"),
-			meta: { title: "Profile", auth: true, roles: RouteRole.All }
+			meta: { title: "Profile", titleKey: "navigation.routes.profile", auth: true, roles: RouteRole.All }
 		},
 		{
 			path: "/login",
@@ -171,6 +173,7 @@ const router = createRouter({
 			props: { formType: "signin" as FormType },
 			meta: {
 				title: "Login",
+				titleKey: "navigation.routes.login",
 				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },
 				checkAuth: true,
 				skipPin: true
@@ -184,6 +187,7 @@ const router = createRouter({
 			component: () => import("@/views/ChangePassword.vue"),
 			meta: {
 				title: "Choose a new password",
+				titleKey: "navigation.routes.changePassword",
 				auth: true,
 				roles: RouteRole.All,
 				theme: { layout: Layout.Blank, boxed: { enabled: false }, padded: { enabled: false } },

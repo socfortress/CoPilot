@@ -2,10 +2,9 @@
 	<n-spin :show="loading">
 		<n-card data-testid="notification-preferences">
 			<div class="flex flex-col gap-1 pb-4">
-				<div class="font-display text-lg font-semibold">Notifications</div>
+				<div class="font-display text-lg font-semibold">{{ $t("profile.notifications.title") }}</div>
 				<p class="text-secondary max-w-prose text-sm">
-					Choose what reaches you in the portal's bell and by email. You are never told about something you
-					did yourself.
+					{{ $t("profile.notifications.intro") }}
 				</p>
 			</div>
 
@@ -43,11 +42,11 @@
 								size="small"
 								:data-testid="`notification-pref-${row.event}-in-app`"
 							/>
-							In the portal
+							{{ $t("profile.notifications.inPortal") }}
 						</label>
 
 						<label class="flex items-center gap-2 text-sm">
-							<span class="text-secondary shrink-0">Email</span>
+							<span class="text-secondary shrink-0">{{ $t("profile.notifications.email") }}</span>
 							<n-select
 								v-model:value="draft[row.event].email"
 								size="small"
@@ -59,7 +58,7 @@
 						</label>
 
 						<label v-if="row.event === 'alert_created'" class="flex items-center gap-2 text-sm">
-							<span class="text-secondary shrink-0">From</span>
+							<span class="text-secondary shrink-0">{{ $t("profile.notifications.from") }}</span>
 							<n-select
 								v-model:value="draft.alert_created.min_severity"
 								size="small"
@@ -74,7 +73,7 @@
 			</div>
 
 			<div class="flex items-center justify-end gap-3 pt-4">
-				<span v-if="dirty" class="text-secondary text-xs">Unsaved changes</span>
+				<span v-if="dirty" class="text-secondary text-xs">{{ $t("profile.notifications.unsaved") }}</span>
 				<n-button
 					type="primary"
 					:disabled="!dirty"
@@ -82,7 +81,7 @@
 					data-testid="notification-preferences-save"
 					@click="save()"
 				>
-					Save
+					{{ $t("common.actions.save") }}
 				</n-button>
 			</div>
 		</n-card>
@@ -94,14 +93,16 @@ import type { ApiError } from "@/types/common"
 import type { NotificationEventName, NotificationPreference } from "@/types/notifications"
 import { NAlert, NButton, NCard, NSelect, NSpin, NSwitch, useMessage } from "naive-ui"
 import { computed, onBeforeMount, reactive, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { NOTIFICATION_EVENTS, SEVERITIES } from "@/types/notifications"
 import { getApiErrorMessage } from "@/utils"
-import { digestLabel, emailUnavailableText, EVENT_COPY, samePreferences } from "./notificationPreferences"
+import { digestLabel, emailUnavailableText, EVENT_COPY, samePreferences, severityLabel } from "./notificationPreferences"
 
 const message = useMessage()
+const { t } = useI18n()
 const server = useServerNotifications()
 
 const loading = ref(false)
@@ -115,11 +116,22 @@ const draft = reactive(
 	) as Record<NotificationEventName, NotificationPreference>
 )
 
-const rows = NOTIFICATION_EVENTS.map(event => ({ event, ...EVENT_COPY[event] }))
-const severityOptions = SEVERITIES.map(severity => ({ label: `${severity} and up`, value: severity }))
+// Computed, so the labels follow a language change (#1310).
+const rows = computed(() =>
+	NOTIFICATION_EVENTS.map(event => {
+		const copy = EVENT_COPY[event]
+		return { event, label: copy.label, description: copy.description, icon: copy.icon }
+	})
+)
+const severityOptions = computed(() =>
+	SEVERITIES.map(severity => ({
+		label: t("profile.notifications.severityAndUp", { severity: severityLabel(severity) }),
+		value: severity
+	}))
+)
 const emailOptions = computed(() => [
-	{ label: "Off", value: "off" },
-	{ label: "Immediately", value: "immediate" },
+	{ label: t("profile.notifications.emailOff"), value: "off" },
+	{ label: t("profile.notifications.emailImmediately"), value: "immediate" },
 	{ label: digestLabel(server.availability.value?.digest_hour_utc ?? 7), value: "digest" }
 ])
 const emailUnavailable = computed(() => emailUnavailableText(server.availability.value))
@@ -138,7 +150,7 @@ async function load() {
 		apply((await Api.notifications.getPreferences()).data.preferences)
 		loaded.value = true
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Your notification settings could not be loaded.")
+		message.error(getApiErrorMessage(err as ApiError) || t("profile.notifications.loadFailed"))
 	} finally {
 		loading.value = false
 	}
@@ -148,9 +160,9 @@ async function save() {
 	saving.value = true
 	try {
 		apply((await Api.notifications.setPreferences(current.value)).data.preferences)
-		message.success("Notification settings saved")
+		message.success(t("profile.notifications.saved"))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Your notification settings could not be saved.")
+		message.error(getApiErrorMessage(err as ApiError) || t("profile.notifications.saveFailed"))
 	} finally {
 		saving.value = false
 	}

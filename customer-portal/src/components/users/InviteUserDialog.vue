@@ -1,14 +1,12 @@
 <template>
-	<n-modal v-model:show="show" preset="card" title="Invite a user" class="max-w-120!" data-testid="invite-dialog">
+	<n-modal v-model:show="show" preset="card" :title="$t('users.invite.title')" class="max-w-120!" data-testid="invite-dialog">
 		<form class="flex flex-col gap-4" novalidate @submit.prevent="submit()">
 			<p class="text-secondary m-0 text-sm">
-				They receive a temporary password
-				<span>{{ smtpConfigured ? "by email" : "from you: it is shown once after the invitation" }}</span>
-				and choose their own at their first sign-in.
+				{{ smtpConfigured ? $t("users.invite.introEmail") : $t("users.invite.introShown") }}
 			</p>
 
 			<label class="flex flex-col gap-1">
-				<span class="text-secondary text-xs">Username</span>
+				<span class="text-secondary text-xs">{{ $t("users.invite.username") }}</span>
 				<n-input
 					v-model:value="form.username"
 					:status="shownProblems.username ? 'error' : undefined"
@@ -23,7 +21,7 @@
 			</label>
 
 			<label class="flex flex-col gap-1">
-				<span class="text-secondary text-xs">Email</span>
+				<span class="text-secondary text-xs">{{ $t("users.invite.email") }}</span>
 				<n-input
 					v-model:value="form.email"
 					:status="shownProblems.email ? 'error' : undefined"
@@ -38,7 +36,7 @@
 
 			<!-- Only a choice when there is one: a single administered customer is the invitation's. -->
 			<label v-if="customers.length > 1" class="flex flex-col gap-1">
-				<span class="text-secondary text-xs">Customers they can see</span>
+				<span class="text-secondary text-xs">{{ $t("users.invite.customers") }}</span>
 				<n-select
 					v-model:value="form.customerCodes"
 					multiple
@@ -50,18 +48,24 @@
 					{{ shownProblems.customerCodes }}
 				</span>
 			</label>
-			<p v-else-if="customers.length === 1" class="text-secondary m-0 text-sm">
-				They will see
-				<b>{{ customers[0]?.customer_name }}</b>
-				<span>.</span>
-			</p>
+			<i18n-t
+				v-else-if="customers.length === 1"
+				keypath="users.invite.willSee"
+				tag="p"
+				scope="global"
+				class="text-secondary m-0 text-sm"
+			>
+				<template #customer>
+					<b>{{ customers[0]?.customer_name }}</b>
+				</template>
+			</i18n-t>
 
 			<n-alert v-if="error" type="error" :bordered="false" data-testid="invite-error">{{ error }}</n-alert>
 
 			<div class="flex justify-end gap-2">
-				<n-button :disabled="sending" @click="show = false">Cancel</n-button>
+				<n-button :disabled="sending" @click="show = false">{{ $t("common.actions.cancel") }}</n-button>
 				<n-button type="primary" attr-type="submit" :loading="sending" data-testid="invite-submit">
-					Invite
+					{{ $t("users.invite.submit") }}
 				</n-button>
 			</div>
 		</form>
@@ -75,6 +79,7 @@ import type { ApiError } from "@/types/common"
 import type { TemporaryPasswordDelivery, TenantUser } from "@/types/users"
 import { NAlert, NButton, NInput, NModal, NSelect } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import { inviteProblems } from "./users"
@@ -92,6 +97,7 @@ const emit = defineEmits<{
 	(e: "invited", value: { user: TenantUser; delivery: TemporaryPasswordDelivery }): void
 }>()
 const show = defineModel<boolean>("show", { required: true })
+const { t } = useI18n()
 const form = ref<InviteForm>({ username: "", email: "", customerCodes: [] })
 const submitted = ref(false)
 const sending = ref(false)
@@ -124,7 +130,7 @@ async function submit() {
 		emit("invited", { user, delivery: { delivery, temporary_password, email_problem } })
 		show.value = false
 	} catch (err) {
-		error.value = getApiErrorMessage(err as ApiError) || "Could not invite the user."
+		error.value = getApiErrorMessage(err as ApiError) || t("users.invite.failed")
 	} finally {
 		sending.value = false
 	}

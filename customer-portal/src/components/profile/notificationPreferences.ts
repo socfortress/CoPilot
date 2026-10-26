@@ -1,41 +1,70 @@
-import type { NotificationAvailability, NotificationEventName, NotificationPreference } from "@/types/notifications"
+import type {
+	NotificationAvailability,
+	NotificationEventName,
+	NotificationPreference,
+	NotificationSeverity
+} from "@/types/notifications"
+import { i18nGlobal } from "@/lang"
 
-/** What each event is called in the profile, and when it fires (#1282). */
-export const EVENT_COPY: Record<NotificationEventName, { label: string; description: string; icon: string }> = {
+/** What each event is called in the profile, and when it fires (#1282), in the user's language (#1310). */
+export const EVENT_COPY: Record<NotificationEventName, { readonly label: string; readonly description: string; icon: string }> = {
 	alert_created: {
-		label: "New alerts",
-		description: "A new alert of your organization, from the severity you choose.",
+		get label() {
+			return i18nGlobal.t("profile.notifications.events.alertCreated.label")
+		},
+		get description() {
+			return i18nGlobal.t("profile.notifications.events.alertCreated.description")
+		},
 		icon: "carbon:warning-alt"
 	},
 	waiting_on_you: {
-		label: "Waiting on you",
-		description: "The SOC needs your reply on an alert or a case.",
+		get label() {
+			return i18nGlobal.t("profile.notifications.events.waitingOnYou.label")
+		},
+		get description() {
+			return i18nGlobal.t("profile.notifications.events.waitingOnYou.description")
+		},
 		icon: "carbon:user-follow"
 	},
 	case_closed: {
-		label: "Closed cases",
-		description: "A case of your organization was closed.",
+		get label() {
+			return i18nGlobal.t("profile.notifications.events.caseClosed.label")
+		},
+		get description() {
+			return i18nGlobal.t("profile.notifications.events.caseClosed.description")
+		},
 		icon: "carbon:checkmark-outline"
 	},
 	report_ready: {
-		label: "Reports ready",
-		description: "A report you generated, or one the SOC shared with you, is ready.",
+		get label() {
+			return i18nGlobal.t("profile.notifications.events.reportReady.label")
+		},
+		get description() {
+			return i18nGlobal.t("profile.notifications.events.reportReady.description")
+		},
 		icon: "carbon:document"
 	}
 }
 
+/** A severity's name as the profile shows it ("Critical"); the value sent to the API stays as it is. */
+export function severityLabel(severity: NotificationSeverity): string {
+	const key = severity.toLowerCase() as Lowercase<NotificationSeverity>
+	return i18nGlobal.t(`profile.notifications.severities.${key}`)
+}
+
 /** The digest's option, with its hour: the time is in UTC, and says so. */
 export function digestLabel(hourUtc: number): string {
-	return `Daily summary (${String(hourUtc).padStart(2, "0")}:00 UTC)`
+	return i18nGlobal.t("profile.notifications.digest", { hour: String(hourUtc).padStart(2, "0") })
 }
 
 /** Why email cannot be chosen, in the user's words, or null when it can. */
 export function emailUnavailableText(availability: NotificationAvailability | null): string | null {
 	if (!availability || availability.email_available) return null
+	// The API's reason is matched, never shown: it is in English.
 	if (availability.email_unavailable_reason === "The user has no email address") {
-		return "Your account has no email address, so notifications reach the portal only. Ask your SOC to add one."
+		return i18nGlobal.t("profile.notifications.noEmailAddress")
 	}
-	return "Email notifications are not set up on this portal yet, so notifications reach the portal only."
+	return i18nGlobal.t("profile.notifications.emailNotSetUp")
 }
 
 /** Whether two sets of choices are the same, event by event. */

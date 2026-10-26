@@ -2,6 +2,7 @@ import type { MenuMixedOption } from "naive-ui/es/menu/src/interface"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { ICONS } from "@/const"
+import { i18nGlobal } from "@/lang"
 import { renderIcon } from "@/utils"
 
 export interface NavbarFeatures {
@@ -13,6 +14,7 @@ export interface NavbarFeatures {
 	exposure?: boolean
 }
 
+// Labels are translated as the menu renders them (#1310), so they follow a language change.
 export default function getItems({
 	sla = false,
 	activity = false,
@@ -28,7 +30,7 @@ export default function getItems({
 							name: "Overview"
 						}
 					},
-					{ default: () => "Overview" }
+					{ default: () => i18nGlobal.t("navigation.routes.overview") }
 				),
 			key: "Overview",
 			icon: renderIcon(ICONS.dashboard)
@@ -42,7 +44,7 @@ export default function getItems({
 							name: "AlertsList"
 						}
 					},
-					{ default: () => "Alerts" }
+					{ default: () => i18nGlobal.t("navigation.routes.alerts") }
 				),
 			key: "AlertsList",
 			icon: renderIcon(ICONS.alerts)
@@ -56,7 +58,7 @@ export default function getItems({
 							name: "CasesList"
 						}
 					},
-					{ default: () => "Cases" }
+					{ default: () => i18nGlobal.t("navigation.routes.cases") }
 				),
 			key: "CasesList",
 			icon: renderIcon(ICONS.cases)
@@ -70,7 +72,7 @@ export default function getItems({
 							name: "AgentsList"
 						}
 					},
-					{ default: () => "Agents" }
+					{ default: () => i18nGlobal.t("navigation.routes.agents") }
 				),
 			key: "AgentsList",
 			icon: renderIcon(ICONS.agents)
@@ -84,7 +86,7 @@ export default function getItems({
 							name: "EventSearch"
 						}
 					},
-					{ default: () => "Event Search" }
+					{ default: () => i18nGlobal.t("navigation.routes.eventSearch") }
 				),
 			key: "EventSearch",
 			icon: renderIcon(ICONS.eventSearch)
@@ -98,7 +100,7 @@ export default function getItems({
 							name: "ReportsList"
 						}
 					},
-					{ default: () => "Reports" }
+					{ default: () => i18nGlobal.t("navigation.routes.reports") }
 				),
 			key: "ReportsList",
 			icon: renderIcon(ICONS.reports)
@@ -112,7 +114,7 @@ export default function getItems({
 							name: "DashboardsList"
 						}
 					},
-					{ default: () => "Dashboards" }
+					{ default: () => i18nGlobal.t("navigation.routes.dashboards") }
 				),
 			key: "DashboardsList",
 			icon: renderIcon(ICONS.processes)
@@ -125,7 +127,7 @@ export default function getItems({
 				h(
 					RouterLink,
 					{ to: { name: "Exposure" }, "data-testid": "nav-exposure" },
-					{ default: () => "Exposure" }
+					{ default: () => i18nGlobal.t("navigation.routes.exposure") }
 				),
 			key: "Exposure",
 			icon: renderIcon(ICONS.exposure)
@@ -138,7 +140,7 @@ export default function getItems({
 				h(
 					RouterLink,
 					{ to: { name: "Activity" }, "data-testid": "nav-activity" },
-					{ default: () => "Activity" }
+					{ default: () => i18nGlobal.t("navigation.routes.activity") }
 				),
 			key: "Activity",
 			icon: renderIcon(ICONS.activity)
@@ -148,7 +150,7 @@ export default function getItems({
 	if (sla) {
 		items.push({
 			label: () =>
-				h(RouterLink, { to: { name: "Sla" }, "data-testid": "nav-sla" }, { default: () => "Service Levels" }),
+				h(RouterLink, { to: { name: "Sla" }, "data-testid": "nav-sla" }, { default: () => i18nGlobal.t("navigation.routes.sla") }),
 			key: "Sla",
 			icon: renderIcon(ICONS.sla)
 		})

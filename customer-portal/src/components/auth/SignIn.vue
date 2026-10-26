@@ -8,25 +8,25 @@
 			class="mb-4"
 			data-testid="login-account-disabled"
 		>
-			Your session ended because your account was disabled.
+			{{ $t("auth.signIn.accountDisabled") }}
 		</n-alert>
 		<n-form v-if="!show2faForm" ref="formRef" :model :rules :disabled="loading">
-			<n-form-item path="username" label="Username">
+			<n-form-item path="username" :label="$t('auth.signIn.username')">
 				<n-input
 					v-model:value="model.username"
-					placeholder="Insert your Username"
+					:placeholder="$t('auth.signIn.usernamePlaceholder')"
 					:input-props="{ autocomplete: 'username' }"
 					data-testid="login-username"
 					size="large"
 					@keydown.enter="signIn"
 				/>
 			</n-form-item>
-			<n-form-item path="password" label="Password">
+			<n-form-item path="password" :label="$t('auth.signIn.password')">
 				<n-input
 					v-model:value="model.password"
 					type="password"
 					show-password-on="click"
-					placeholder="Insert your password"
+					:placeholder="$t('auth.signIn.passwordPlaceholder')"
 					:input-props="{ autocomplete: 'password' }"
 					data-testid="login-password"
 					size="large"
@@ -44,7 +44,7 @@
 						data-testid="login-submit"
 						@click="signIn"
 					>
-						Sign in
+						{{ $t("auth.signIn.submit") }}
 					</n-button>
 				</div>
 			</div>
@@ -59,6 +59,7 @@ import type { FormInst, FormRules, FormValidationError } from "naive-ui"
 import type { LoginPayload } from "@/api/endpoints/auth"
 import { NAlert, NButton, NForm, NFormItem, NInput, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
 import TotpForm from "@/components/auth/TotpForm.vue"
 import { useAuthStore } from "@/stores/auth"
@@ -79,28 +80,29 @@ const model = ref<ModelType>({
 	password: null
 })
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 // 2FA challenge state — when login returns `requires_2fa`, we swap the credentials
 // form for the TOTP challenge and hand it the short-lived temp token.
 const show2faForm = ref(false)
 const twoFaTempToken = ref("")
 
-const rules: FormRules = {
+const rules = computed<FormRules>(() => ({
 	username: [
 		{
 			required: true,
 			trigger: ["blur"],
-			message: "Username is required"
+			message: t("auth.signIn.usernameRequired")
 		}
 	],
 	password: [
 		{
 			required: true,
 			trigger: ["blur"],
-			message: "Password is required"
+			message: t("auth.signIn.passwordRequired")
 		}
 	]
-}
+}))
 
 const isValid = computed(() => {
 	return model.value.username && model.value.password
@@ -118,7 +120,7 @@ async function login(payload: LoginPayload) {
 		}
 		router.replace(getSafeRedirect(route.query.redirect))
 	} catch (err) {
-		message.error((err as Error)?.message || "An error occurred. Please try again later.")
+		message.error((err as Error)?.message || t("auth.signIn.genericError"))
 	} finally {
 		loading.value = false
 	}
@@ -137,7 +139,7 @@ function signIn(e: Event) {
 
 			login(payload)
 		} else {
-			message.error("Invalid credentials")
+			message.error(t("auth.signIn.invalidCredentials"))
 		}
 	})
 }

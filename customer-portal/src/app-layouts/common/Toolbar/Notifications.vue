@@ -13,9 +13,9 @@
 		</template>
 		<template #header>
 			<div class="flex items-center justify-between gap-3">
-				<div class="font-semibold">Notifications</div>
+				<div class="font-semibold">{{ $t("notifications.bell.title") }}</div>
 				<div v-if="isGenerating" class="text-secondary text-xs">
-					{{ pendingCount }} report{{ pendingCount > 1 ? "s" : "" }} generating
+					{{ $t("notifications.bell.generating", pendingCount) }}
 				</div>
 			</div>
 		</template>
@@ -23,7 +23,7 @@
 			<NotificationsList :max-items="MAX_ITEMS" class="max-h-[50vh]">
 				<template #last>
 					<div v-if="list.length > MAX_ITEMS || hasMore" class="flex justify-center p-4">
-						<n-button text @click="showDrawer = true">View all</n-button>
+						<n-button text @click="showDrawer = true">{{ $t("notifications.bell.viewAll") }}</n-button>
 					</div>
 				</template>
 			</NotificationsList>
@@ -34,12 +34,12 @@
 	</n-popover>
 
 	<n-drawer v-model:show="showDrawer" :width="400" class="max-w-[90vw]" :trap-focus="false">
-		<n-drawer-content title="Notifications" closable body-content-class="p-0!">
+		<n-drawer-content :title="$t('notifications.bell.title')" closable body-content-class="p-0!">
 			<NotificationsList>
 				<template #last>
 					<div v-if="hasMore" class="flex justify-center p-4">
 						<n-button text data-testid="notifications-load-more" @click="bell.loadMore()">
-							Load older notifications
+							{{ $t("notifications.bell.loadOlder") }}
 						</n-button>
 					</div>
 				</template>

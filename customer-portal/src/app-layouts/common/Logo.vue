@@ -6,6 +6,7 @@
 
 <script lang="ts" setup>
 import { computed } from "vue"
+import { useI18n } from "vue-i18n"
 import { usePortalSettingsStore } from "@/stores/portalSettings"
 
 interface Props {
@@ -17,8 +18,9 @@ withDefaults(defineProps<Props>(), {
 })
 
 const portalSettingsStore = usePortalSettingsStore()
+const { t } = useI18n()
 
-const portalTitle = computed(() => portalSettingsStore.portalTitle || "Customer Portal")
+const portalTitle = computed(() => portalSettingsStore.portalTitle || t("navigation.portalName"))
 const portalLogo = computed(() => portalSettingsStore.portalLogo)
 const portalLogoInitials = computed(() => portalSettingsStore.portalLogoInitials)
 </script>

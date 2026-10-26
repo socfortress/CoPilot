@@ -2,10 +2,11 @@
 	<div class="flex flex-col gap-6" data-testid="audit-page">
 		<header class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex min-w-0 flex-col gap-1.5">
-				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">Audit log</h1>
+				<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight text-balance">
+					{{ $t("audit.page.title") }}
+				</h1>
 				<p class="text-secondary max-w-prose text-sm">
-					Who did what in your organization's portal: alerts and cases moved and commented on, reports, and
-					your users' sign-ins and accounts. Your SOC's actions are shown as SOC.
+					{{ $t("audit.page.intro") }}
 				</p>
 			</div>
 			<n-button
@@ -17,7 +18,7 @@
 				@click="exportCsv()"
 			>
 				<template #icon><Icon name="carbon:download" :size="16" /></template>
-				Export CSV
+				{{ $t("audit.page.export") }}
 			</n-button>
 		</header>
 
@@ -27,10 +28,9 @@
 			data-testid="audit-forbidden"
 		>
 			<Icon name="carbon:locked" :size="28" class="text-tertiary" />
-			<p class="text-default font-semibold">The audit log is for your organization's administrators</p>
+			<p class="text-default font-semibold">{{ $t("audit.page.forbiddenTitle") }}</p>
 			<p class="text-secondary max-w-md text-sm">
-				Your SOC decides who administers your organization and whether its audit log is shown. Ask your SOC
-				contact if you need it.
+				{{ $t("audit.page.forbiddenText") }}
 			</p>
 		</div>
 
@@ -39,7 +39,7 @@
 				<n-select
 					:value="state.category"
 					:options="categoryOptions"
-					placeholder="All activity"
+					:placeholder="$t('audit.page.allActivity')"
 					clearable
 					size="small"
 					class="w-52!"
@@ -49,7 +49,7 @@
 				<n-select
 					:value="state.userId"
 					:options="userOptions"
-					placeholder="Everyone"
+					:placeholder="$t('audit.page.everyone')"
 					clearable
 					filterable
 					size="small"
@@ -60,7 +60,7 @@
 				<n-date-picker
 					:value="state.from ? dayToTimestamp(state.from) : null"
 					type="date"
-					placeholder="From"
+					:placeholder="$t('audit.page.from')"
 					:format="pickerFormat"
 					:is-date-disabled="(ts: number) => !!state.to && timestampToDay(ts) > state.to"
 					clearable
@@ -72,7 +72,7 @@
 				<n-date-picker
 					:value="state.to ? dayToTimestamp(state.to) : null"
 					type="date"
-					placeholder="To"
+					:placeholder="$t('audit.page.to')"
 					:format="pickerFormat"
 					:is-date-disabled="(ts: number) => !!state.from && timestampToDay(ts) < state.from"
 					clearable
@@ -85,7 +85,7 @@
 					v-if="customers.length > 1"
 					:value="state.customer"
 					:options="customerOptions"
-					placeholder="All customers"
+					:placeholder="$t('audit.page.allCustomers')"
 					clearable
 					size="small"
 					class="w-52!"
@@ -93,7 +93,7 @@
 					@update:value="(customer: string | null) => update({ customer })"
 				/>
 				<n-button v-if="hasFilters(state)" size="small" quaternary data-testid="audit-clear" @click="clear()">
-					Clear filters
+					{{ $t("audit.page.clearFilters") }}
 				</n-button>
 			</div>
 
@@ -120,7 +120,7 @@
 				>
 					<Icon name="carbon:catalog" :size="28" class="text-tertiary" />
 					<p class="text-default font-semibold">
-						{{ hasFilters(state) ? "Nothing matches these filters" : "Nothing recorded yet" }}
+						{{ hasFilters(state) ? $t("audit.page.noMatches") : $t("audit.page.empty") }}
 					</p>
 					<p class="text-secondary max-w-md text-sm">{{ retentionText(data.retention_days) }}</p>
 				</div>
@@ -183,7 +183,7 @@
 									:bordered="false"
 									data-testid="audit-failure"
 								>
-									Failed
+									{{ $t("audit.page.failed") }}
 								</n-tag>
 							</div>
 							<div class="text-tertiary flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -212,7 +212,7 @@
 					class="border-default flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3"
 				>
 					<span class="text-tertiary text-xs" data-testid="audit-total">
-						{{ data.total }} {{ data.total === 1 ? "entry" : "entries" }} ·
+						{{ $t("audit.page.total", data.total) }} ·
 						{{ retentionText(data.retention_days) }}
 					</span>
 					<n-pagination
@@ -232,7 +232,7 @@
 		<EntityDetailsModal
 			v-if="opened"
 			v-model:show="entityShown"
-			:title="opened.type === 'alert' ? 'Alert Details' : 'Case Details'"
+			:title="opened.type === 'alert' ? $t('navigation.routes.alertDetails') : $t('navigation.routes.caseDetails')"
 			:entity="opened.type"
 			:route="opened.type === 'alert' ? routeAlertDetails(opened.id) : routeCaseDetails(opened.id)"
 		>
@@ -250,6 +250,7 @@ import type { ApiError } from "@/types/common"
 import { saveAs } from "file-saver"
 import { NButton, NDatePicker, NPagination, NSelect, NSkeleton, NTag, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
+import { useI18n } from "vue-i18n"
 import { RouterLink, useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import AlertDetails from "@/components/alerts/AlertDetails"
@@ -293,6 +294,7 @@ import {
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const { t } = useI18n()
 const settings = useSettingsStore()
 const dFormats = settings.dateFormat
 const pickerFormat = computed(() => dFormats.date.replace("DD", "dd").replace("YYYY", "yyyy"))
@@ -308,7 +310,9 @@ const state = computed(() => stateFromQuery(route.query))
 const pageCount = computed(() => (data.value ? Math.max(1, Math.ceil(data.value.total / PAGE_SIZE)) : 1))
 const customerCodes = computed(() => (state.value.customer ? [state.value.customer] : undefined))
 
-const categoryOptions = CATEGORIES.map(category => ({ label: CATEGORY_LABELS[category], value: category }))
+const categoryOptions = computed(() =>
+	CATEGORIES.map(category => ({ label: CATEGORY_LABELS[category], value: category }))
+)
 const userOptions = computed(() => (data.value?.members ?? []).map(member => ({ label: member.username, value: member.id })))
 const customerOptions = computed(() =>
 	customers.value.map(customer => ({ label: customer.customer_name, value: customer.customer_code }))
@@ -354,7 +358,7 @@ function load() {
 			const status = (err as ApiError).response?.status
 			if (status === 403) forbidden.value = true
 			else if (status === 404 && state.value.userId) update({ userId: null })
-			else error.value = getApiErrorMessage(err as ApiError) || "Could not load the audit log."
+			else error.value = getApiErrorMessage(err as ApiError) || t("audit.page.loadFailed")
 		}
 	)
 }
@@ -365,10 +369,10 @@ async function exportCsv() {
 		const response = await Api.audit.exportLog(stateToQuery(state.value), customerCodes.value)
 		saveAs(response.data, exportFilename())
 		if (response.headers?.["x-export-truncated"] === "true") {
-			message.warning("The CSV holds the newest 10,000 entries: narrow the period for the rest.")
+			message.warning(t("audit.page.truncated"))
 		}
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Could not export the audit log.")
+		message.error(getApiErrorMessage(err as ApiError) || t("audit.page.exportFailed"))
 	} finally {
 		exporting.value = false
 	}

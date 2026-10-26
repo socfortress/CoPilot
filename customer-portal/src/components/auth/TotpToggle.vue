@@ -1,10 +1,10 @@
 <template>
 	<div>
 		<!-- 2FA Section -->
-		<n-card title="Two-Factor Authentication (TOTP)">
+		<n-card :title="$t('auth.totp.title')">
 			<template #header-extra>
 				<n-tag :type="twoFaEnabled ? 'success' : 'default'" size="small">
-					{{ twoFaEnabled ? "Enabled" : "Disabled" }}
+					{{ twoFaEnabled ? $t("auth.totp.enabled") : $t("auth.totp.disabled") }}
 				</n-tag>
 			</template>
 
@@ -12,33 +12,32 @@
 				<!-- ── 2FA disabled — show enable button ── -->
 				<div v-if="!twoFaEnabled && !setupData">
 					<p class="text-secondary mb-4">
-						Add an extra layer of security to your account. You will need an authenticator app like Google
-						Authenticator, Authy, or Microsoft Authenticator.
+						{{ $t("auth.totp.intro") }}
 					</p>
 					<n-button type="primary" @click="startSetup">
 						<template #icon>
 							<Icon name="carbon:locked" />
 						</template>
-						Enable Two-Factor Authentication
+						{{ $t("auth.totp.enable") }}
 					</n-button>
 				</div>
 
 				<!-- ── Setup flow: QR + verify ── -->
 				<div v-if="setupData && (!twoFaEnabled || setupStep === 3)" class="flex flex-col gap-6">
 					<n-steps :current="setupStep" size="small">
-						<n-step title="Scan QR code" />
-						<n-step title="Verify code" />
-						<n-step title="Save backup codes" />
+						<n-step :title="$t('auth.totp.steps.scan')" />
+						<n-step :title="$t('auth.totp.steps.verify')" />
+						<n-step :title="$t('auth.totp.steps.backup')" />
 					</n-steps>
 
 					<!-- Step 1: QR -->
 					<div v-if="setupStep === 1" class="flex flex-col gap-4">
-						<p>Scan this QR code with your authenticator app:</p>
+						<p>{{ $t("auth.totp.scanPrompt") }}</p>
 
-						<img :src="setupData.qr_data_uri" alt="TOTP QR Code" class="rounded border" width="200" />
+						<img :src="setupData.qr_data_uri" :alt="$t('auth.totp.qrAlt')" class="rounded border" width="200" />
 
 						<div>
-							<strong>Manual entry key:</strong>
+							<strong>{{ $t("auth.totp.manualKey") }}</strong>
 							<n-code class="ml-2">{{ setupData.secret }}</n-code>
 						</div>
 
@@ -46,20 +45,19 @@
 							<template #icon>
 								<Icon name="carbon:time" />
 							</template>
-							<strong>Important:</strong>
-							Make sure your device clock is accurate. TOTP codes are time-sensitive and allow only a
-							&plusmn;30 second tolerance window.
+							<strong>{{ $t("auth.totp.important") }}</strong>
+							{{ $t("auth.totp.clockWarning") }}
 						</n-alert>
 
 						<div class="flex justify-between">
-							<n-button @click="finishSetup()">Cancel</n-button>
-							<n-button type="primary" @click="setupStep = 2">Next</n-button>
+							<n-button @click="finishSetup()">{{ $t("common.actions.cancel") }}</n-button>
+							<n-button type="primary" @click="setupStep = 2">{{ $t("common.actions.next") }}</n-button>
 						</div>
 					</div>
 
 					<!-- Step 2: Verify -->
 					<div v-if="setupStep === 2" class="flex flex-col gap-4">
-						<p>Enter the 6-digit code from your authenticator app to confirm:</p>
+						<p>{{ $t("auth.totp.verifyPrompt") }}</p>
 
 						<n-input-otp
 							v-model:value="verifyCode"
@@ -86,14 +84,14 @@
 						</n-input-otp>
 
 						<div class="flex justify-between gap-2">
-							<n-button @click="setupStep = 1">Back</n-button>
+							<n-button @click="setupStep = 1">{{ $t("common.actions.back") }}</n-button>
 							<n-button
 								type="primary"
 								:loading="verifying"
 								:disabled="verifyCode.length < 6"
 								@click="confirmSetup"
 							>
-								Verify &amp; Enable
+								{{ $t("auth.totp.verifyAndEnable") }}
 							</n-button>
 						</div>
 					</div>
@@ -104,20 +102,19 @@
 							<template #icon>
 								<Icon name="carbon:checkmark-filled" />
 							</template>
-							Two-factor authentication is now enabled!
+							{{ $t("auth.totp.nowEnabled") }}
 						</n-alert>
 
 						<BackupCodesPanel :codes="setupData?.backup_codes || []" />
 
-						<n-button type="primary" class="ml-auto!" @click="finishSetup">Done</n-button>
+						<n-button type="primary" class="ml-auto!" @click="finishSetup">{{ $t("auth.totp.done") }}</n-button>
 					</div>
 				</div>
 
 				<!-- ── 2FA enabled — show disable + regenerate ── -->
 				<div v-if="twoFaEnabled && !setupStep" class="flex flex-col gap-4">
 					<p class="text-secondary">
-						Two-factor authentication is active. You will be asked for a code from your authenticator app
-						every time you log in.
+						{{ $t("auth.totp.active") }}
 					</p>
 					<div class="flex flex-wrap gap-3">
 						<n-popconfirm @positive-click="showDisableModal = true">
@@ -126,16 +123,16 @@
 									<template #icon>
 										<Icon name="carbon:unlocked" />
 									</template>
-									Disable 2FA
+									{{ $t("auth.totp.disable2fa") }}
 								</n-button>
 							</template>
-							Are you sure you want to disable two-factor authentication?
+							{{ $t("auth.totp.disableConfirm") }}
 						</n-popconfirm>
 						<n-button @click="showRegenModal = true">
 							<template #icon>
 								<Icon name="carbon:renew" />
 							</template>
-							Regenerate backup codes
+							{{ $t("auth.totp.regenerateCodes") }}
 						</n-button>
 					</div>
 				</div>
@@ -143,18 +140,18 @@
 		</n-card>
 
 		<!-- Disable 2FA Modal -->
-		<n-modal v-model:show="showDisableModal" preset="card" title="Disable 2FA" :style="{ maxWidth: '400px' }">
-			<p class="mb-4">Enter your TOTP code or a backup code to disable 2FA:</p>
+		<n-modal v-model:show="showDisableModal" preset="card" :title="$t('auth.totp.disable2fa')" :style="{ maxWidth: '400px' }">
+			<p class="mb-4">{{ $t("auth.totp.disablePrompt") }}</p>
 			<n-input
 				v-model:value="disableCode"
-				placeholder="6-digit code or backup code"
+				:placeholder="$t('auth.totp.disablePlaceholder')"
 				class="mb-4"
 				@keydown.enter="disableTwoFa"
 			/>
 			<div class="flex justify-end gap-2">
-				<n-button @click="showDisableModal = false">Cancel</n-button>
+				<n-button @click="showDisableModal = false">{{ $t("common.actions.cancel") }}</n-button>
 				<n-button type="error" :loading="disabling" :disabled="!disableCode" @click="disableTwoFa">
-					Disable
+					{{ $t("auth.totp.disable") }}
 				</n-button>
 			</div>
 		</n-modal>
@@ -163,11 +160,11 @@
 		<n-modal
 			v-model:show="showRegenModal"
 			preset="card"
-			title="Regenerate Backup Codes"
+			:title="$t('auth.totp.regenerateTitle')"
 			:style="{ maxWidth: '500px' }"
 		>
 			<div v-if="!regenCodes" class="flex flex-col gap-4">
-				<p>Enter your TOTP code to generate new backup codes. Old codes will be invalidated.</p>
+				<p>{{ $t("auth.totp.regeneratePrompt") }}</p>
 				<n-input-otp
 					v-model:value="regenCode"
 					block
@@ -191,20 +188,20 @@
 					</template>
 				</n-input-otp>
 				<div class="flex justify-end gap-2">
-					<n-button @click="showRegenModal = false">Cancel</n-button>
+					<n-button @click="showRegenModal = false">{{ $t("common.actions.cancel") }}</n-button>
 					<n-button
 						type="primary"
 						:loading="regenerating"
 						:disabled="regenCode.length < 6"
 						@click="regenBackupCodes"
 					>
-						Regenerate
+						{{ $t("auth.totp.regenerate") }}
 					</n-button>
 				</div>
 			</div>
 			<div v-else class="flex flex-col gap-4">
 				<BackupCodesPanel :codes="regenCodes || []" />
-				<n-button type="primary" class="ml-auto!" @click="closeRegenModal">Done</n-button>
+				<n-button type="primary" class="ml-auto!" @click="closeRegenModal">{{ $t("auth.totp.done") }}</n-button>
 			</div>
 		</n-modal>
 	</div>
@@ -230,6 +227,7 @@ import {
 	useMessage
 } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import BackupCodesPanel from "@/components/auth/BackupCodesPanel.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -247,6 +245,7 @@ function allowDigitsOnly(char: string) {
 }
 
 const message = useMessage()
+const { t } = useI18n()
 
 // ── 2FA state ────────────────────────────────────────────────────────────────
 const twoFaLoading = ref(false)
@@ -284,7 +283,7 @@ async function startSetup() {
 		setupData.value = res.data
 		setupStep.value = 1
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to start 2FA setup")
+		message.error(getApiErrorMessage(err as ApiError) || t("auth.totp.setupFailed"))
 	} finally {
 		twoFaLoading.value = false
 	}
@@ -297,9 +296,9 @@ async function confirmSetup() {
 		await Api.totp.verifySetup(verifyCode.value.join(""))
 		twoFaEnabled.value = true
 		setupStep.value = 3
-		message.success("Two-factor authentication enabled!")
+		message.success(t("auth.totp.enabledToast"))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Invalid code. Try again.")
+		message.error(getApiErrorMessage(err as ApiError) || t("auth.totp.invalidCode"))
 	} finally {
 		verifying.value = false
 	}
@@ -320,9 +319,9 @@ async function disableTwoFa() {
 		twoFaEnabled.value = false
 		showDisableModal.value = false
 		disableCode.value = ""
-		message.success("Two-factor authentication disabled")
+		message.success(t("auth.totp.disabledToast"))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to disable 2FA")
+		message.error(getApiErrorMessage(err as ApiError) || t("auth.totp.disableFailed"))
 	} finally {
 		disabling.value = false
 	}
@@ -335,9 +334,9 @@ async function regenBackupCodes() {
 		const res = await Api.totp.regenerateBackupCodes(regenCode.value.join(""))
 		regenCodes.value = res.data.backup_codes
 		regenCode.value = []
-		message.success("Backup codes regenerated")
+		message.success(t("auth.totp.regeneratedToast"))
 	} catch (err) {
-		message.error(getApiErrorMessage(err as ApiError) || "Failed to regenerate codes")
+		message.error(getApiErrorMessage(err as ApiError) || t("auth.totp.regenerateFailed"))
 	} finally {
 		regenerating.value = false
 	}
