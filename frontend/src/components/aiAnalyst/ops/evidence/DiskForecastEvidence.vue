@@ -175,7 +175,8 @@ async function load() {
 	}
 }
 
-// A stable key: an action on the finding replaces its object, which must not read the runs again.
-watch(() => `${isAdmin}|${view.value?.node ?? ""}`, load, { immediate: true })
+// A stable key: an action on the finding replaces its object, which must not read the runs again
+// unless its `last_seen` moved on (a newer run wrote the evidence: its sample must be in the series).
+watch(() => `${isAdmin}|${view.value?.node ?? ""}|${lastSeen ?? ""}`, load, { immediate: true })
 onBeforeUnmount(() => controller?.abort())
 </script>

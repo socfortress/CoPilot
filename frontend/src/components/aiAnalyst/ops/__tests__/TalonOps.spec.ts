@@ -1704,6 +1704,20 @@ describe("history (OP-3)", () => {
 		expect(diskReads()).toBe(1)
 	})
 
+	it("reads a disk_forecast finding's runs again when an action returns a later last_seen", async () => {
+		const evidence = { node: "node-1", used_gb: 700, total_gb: 1000, slope_gb_per_day: 2, thresholds_used_pct: { low: 85 } }
+		const disk = { job: "disk_forecast", kind: "disk_forecast", customer_code: null, evidence }
+		api.acknowledge.mockImplementation((id: number) =>
+			ok({ success: true, message: "", finding: finding(id, { ...disk, status: "acknowledged", last_seen: "2026-10-25T06:00:00Z" }) })
+		)
+		const wrapper = await opened(AuthUserRole.Admin, disk)
+		const diskReads = () => api.listRuns.mock.calls.filter(([q]) => (q as { limit?: number }).limit === 200).length
+		expect(diskReads()).toBe(1)
+		await byId(wrapper, "talon-ops-acknowledge").trigger("click")
+		await settle()
+		expect(diskReads()).toBe(2)
+	})
+
 	it("marks the runs that started after the finding resolved", async () => {
 		api.listRuns.mockImplementation(() =>
 			ok({
