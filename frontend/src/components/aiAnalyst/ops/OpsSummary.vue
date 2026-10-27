@@ -33,9 +33,9 @@
 					@keydown.enter.prevent="emit('severity', chip.value)"
 					@keydown.space.prevent="emit('severity', chip.value)"
 				>
-					{{ chip.label }} {{ chip.count }}
+					{{ chip.label }} {{ partial ? `≥${chip.count}` : chip.count }}
 				</n-tag>
-				<n-tooltip v-if="summary.open.stale">
+				<n-tooltip v-if="summary.open.stale || partial">
 					<template #trigger>
 						<n-tag
 							type="warning"
@@ -52,7 +52,7 @@
 							@keydown.space.prevent="emit('stale')"
 						>
 							<template #icon><Icon name="carbon:warning-alt" :size="12" /></template>
-							{{ summary.open.stale }} not measured
+							{{ partial ? `≥${summary.open.stale}` : summary.open.stale }} not measured
 						</n-tag>
 					</template>
 					{{ STALE_FILTER_TEXT }}
@@ -93,7 +93,10 @@
 			>
 				{{ summary.acknowledged ?? "?" }} acknowledged · {{ summary.muted ?? "?" }} muted
 			</span>
-			<span v-if="summary.withheld" class="text-tertiary text-xs" data-testid="talon-ops-summary-withheld">
+			<span v-if="partial" class="text-warning text-xs" data-testid="talon-ops-summary-partial">
+				At least {{ summary.open.total }} open · top 50 customers only: the counts are a lower bound.
+			</span>
+			<span v-else-if="summary.withheld" class="text-tertiary text-xs" data-testid="talon-ops-summary-withheld">
 				Counted from your customers' rows only; some of Talon's counts couldn't be shown.
 			</span>
 		</template>
@@ -105,7 +108,8 @@
 // many their job couldn't measure lately, the customers with the most, and how many are acknowledged or
 // muted. A severity chip filters the table by that severity (open findings); the stale chip filters the
 // rows already loaded (Talon has no stale filter: the tooltip says so); a customer chip filters by that
-// customer (the platform one, by platform findings). Every value is text.
+// customer (the platform one, by platform findings). When the counts are only the top 50 customers'
+// (`partial`), every count reads "≥N" and a line says they are a lower bound. Every value is text.
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsSeverity, TalonOpsSummary } from "@/types/talonOps"
 import { NTag, NTooltip } from "naive-ui"
@@ -137,6 +141,8 @@ const emit = defineEmits<{
 }>()
 
 const customers = computed(() => topCustomers(summary?.by_customer))
+// Counted from Talon's top 50 customers only: every count is "at least", a 0 included.
+const partial = computed(() => summary?.partial === true)
 // A Talon before the summary answers 404 for it: the strip says so quietly; the table still works.
 const unsupported = computed(() => failure?.code === "unsupported")
 

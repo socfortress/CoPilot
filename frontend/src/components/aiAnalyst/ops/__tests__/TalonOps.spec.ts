@@ -20,7 +20,7 @@ import { defineComponent, h } from "vue"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
-import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, QUIET_POLLS, RUN_POLL_MS, RUN_WATCH_MS, V2_OFF_TEXT } from "../ops"
+import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, QUIET_POLLS, RUN_POLL_MS, RUN_WATCH_MS, SEVERITY_ORDER_UNAVAILABLE, V2_OFF_TEXT } from "../ops"
 import TalonOps from "../TalonOps.vue"
 
 const api = {
@@ -1197,6 +1197,29 @@ describe("the summary strip", () => {
 		expect(byId(wrapper, "talon-ops-summary-acted").exists()).toBe(false)
 	})
 
+	it("at Talon's row cap with counts that don't add up, says they are a lower bound", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.summary.mockImplementation(() =>
+			ok(
+				summaryOf({
+					open: counts(50, { low: 50 }),
+					acknowledged: null,
+					muted: null,
+					by_job: [],
+					withheld: true,
+					partial: true
+				})
+			)
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-summary-severity-high").text()).toBe("High ≥0")
+		expect(byId(wrapper, "talon-ops-summary-severity-low").text()).toBe("Low ≥50")
+		expect(byId(wrapper, "talon-ops-summary-stale").text()).toBe("≥0 not measured")
+		expect(byId(wrapper, "talon-ops-summary-partial").text()).toContain("At least 50 open · top 50 customers only")
+		expect(byId(wrapper, "talon-ops-summary-withheld").exists()).toBe(false)
+	})
+
 	it("a Talon without the summary: a quiet note, and the table still works", async () => {
 		signInAs(AuthUserRole.Analyst)
 		api.summary.mockImplementation(() => refusal(404, { detail: OLD_TALON_OPS_TEXT, code: "unsupported" }))
@@ -1208,17 +1231,67 @@ describe("the summary strip", () => {
 })
 
 describe("the order", () => {
+	/** A first page in each order, with Talon's own cursors: `s<rank>.<micros>.<id>` for severity. */
+	function pagedByOrder() {
+		api.listFindings.mockImplementation((query: { order: string; cursor: string | null }) =>
+			ok({
+				success: true,
+				message: "",
+				items: query.cursor ? [finding(3)] : [finding(1), finding(2, { severity: "high" })],
+				next_cursor: query.cursor ? null : query.order === "severity" ? "s3.1729740000000000.2" : "1729740000000000.2",
+				dropped: 0
+			})
+		)
+	}
+
 	it("is severity by default, and the toggle asks again from the first page in the other order", async () => {
 		signInAs(AuthUserRole.Analyst)
+		pagedByOrder()
 		const wrapper = render()
 		await settle()
 		expect(api.listFindings.mock.calls[0][0]).toMatchObject({ order: "severity", cursor: null })
+		await byId(wrapper, "talon-ops-more").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "severity", cursor: "s3.1729740000000000.2" })
 		wrapper.findComponent(NRadioGroup).vm.$emit("update:value", "recent")
 		await settle()
 		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: null })
 		await byId(wrapper, "talon-ops-more").trigger("click")
 		await settle()
-		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: "100.2" })
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: "1729740000000000.2" })
+	})
+
+	it("never sends the old order's cursor while the new order's first page loads", async () => {
+		signInAs(AuthUserRole.Analyst)
+		pagedByOrder()
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-more").exists()).toBe(true)
+		let answer: (value: unknown) => void = () => {}
+		api.listFindings.mockImplementationOnce(() => new Promise(resolve => (answer = resolve)))
+		wrapper.findComponent(NRadioGroup).vm.$emit("update:value", "recent")
+		await settle()
+		// Still loading the first page in the new order: there is no cursor to send yet.
+		expect(byId(wrapper, "talon-ops-more").exists()).toBe(false)
+		const calls = api.listFindings.mock.calls.length
+		answer({ data: { success: true, message: "", items: [finding(1)], next_cursor: "1729740000000000.1", dropped: 0 } })
+		await settle()
+		expect(api.listFindings.mock.calls.length).toBe(calls)
+		await byId(wrapper, "talon-ops-more").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: "1729740000000000.1" })
+	})
+
+	it("a Talon without the summary has no severity order: recently changed, and Severity disabled", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.summary.mockImplementation(() => refusal(404, { detail: OLD_TALON_OPS_TEXT, code: "unsupported" }))
+		const wrapper = render()
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: null })
+		expect(wrapper.findComponent(NRadioGroup).props("value")).toBe("recent")
+		const severity = byId(wrapper, "talon-ops-order-severity")
+		expect(severity.attributes("title")).toBe(SEVERITY_ORDER_UNAVAILABLE)
+		expect(severity.find("input").attributes("disabled")).toBeDefined()
 	})
 })
 
@@ -1356,6 +1429,37 @@ describe("bulk actions", () => {
 		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
 		await settle()
 		expect(api.acknowledge).toHaveBeenCalledTimes(50)
+	})
+
+	it("clears the selection when the stale filter hides rows, and acts only on the rows shown", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1), finding(2, { stale_since: T }))
+		const wrapper = render()
+		await settle()
+		await select(wrapper, [1, 2])
+		expect(byId(wrapper, "talon-ops-bulk-count").text()).toBe("2 selected")
+		await byId(wrapper, "talon-ops-summary-stale").trigger("click")
+		await settle()
+		expect(byId(wrapper, "talon-ops-bulk-count").exists()).toBe(false)
+		// A hidden row's key can't come back with the shown table's selection either.
+		await select(wrapper, [1, 2])
+		expect(byId(wrapper, "talon-ops-bulk-count").text()).toBe("1 selected")
+		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
+		await settle()
+		expect(api.acknowledge.mock.calls).toEqual([[2, "ACME"]])
+	})
+
+	it("keeps its report when the refresh afterwards fails", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1))
+		const wrapper = render()
+		await settle()
+		await select(wrapper, [1])
+		api.listFindings.mockImplementation(() => refusal(502, { detail: "Talon could not be reached", code: "unavailable" }))
+		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
+		await settle()
+		expect(wrapper.text()).toContain("Talon could not be reached")
+		expect(byId(wrapper, "talon-ops-bulk-summary").text()).toBe("1 acknowledged, 0 failed")
 	})
 
 	it("keeps each group's selection when grouped", async () => {

@@ -759,11 +759,46 @@ def test_the_summary_at_talons_row_cap_is_trusted_for_an_admin_only():
     async def scenario(client, ctx):
         admin = body_of(await client.get("/talon/ops/summary", headers=as_user("admin")))
         assert admin["open"]["total"] == 60 and admin["withheld"] is False and len(admin["by_job"]) == 1
+        assert admin["partial"] is False
         # ana has none of these customers: every row is dropped and nothing is counted.
         ana = body_of(await client.get("/talon/ops/summary", headers=as_user("ana")))
         assert ana["open"]["total"] == 0 and ana["by_customer"] == [] and ana["withheld"] is True
+        assert ana["partial"] is True
 
     scenario_with(fake, scenario)
+
+
+def capped_summary(total):
+    return {
+        "open": counts(total, low=total),
+        "acknowledged": 2,
+        "muted": 1,
+        "by_job": [counts(total, low=total, job="quiet_endpoints")],
+        "by_customer": [counts(1, low=1, customer_code=f"c{i:02d}") for i in range(talon_ops.SUMMARY_ROWS)],
+    }
+
+
+OWNS_ALL_50 = talon_ops.Caller({}, False, frozenset(f"c{i:02d}" for i in range(talon_ops.SUMMARY_ROWS)))
+
+
+def test_an_analyst_at_the_row_cap_whose_rows_add_up_gets_talons_counts():
+    body = talon_ops.check_summary(capped_summary(50), OWNS_ALL_50, customer_code=None, platform=False)
+    assert body.open.total == 50 and body.withheld is False and body.partial is False
+    assert body.acknowledged == 2 and body.muted == 1 and len(body.by_job) == 1 and len(body.by_customer) == 50
+
+
+def test_an_analyst_at_the_row_cap_whose_rows_dont_add_up_gets_a_lower_bound_said_so():
+    body = talon_ops.check_summary(capped_summary(60), OWNS_ALL_50, customer_code=None, platform=False)
+    assert body.open.total == 50 and body.open.low == 50  # the 50 rows' counts, never Talon's 60
+    assert body.partial is True and body.withheld is True and body.dropped == 0
+    assert body.by_job == [] and body.acknowledged is None and body.muted is None
+
+
+def test_a_summary_below_the_cap_is_never_partial():
+    answer = leaky_summary()
+    answer["by_customer"] = [row for row in answer["by_customer"] if row["customer_code"] == ACME]
+    body = talon_ops.check_summary(answer, talon_ops.Caller({}, False, frozenset({ACME})), customer_code=None, platform=False)
+    assert body.withheld is True and body.partial is False and body.open.total == 3
 
 
 def test_a_summary_in_the_wrong_shape_is_a_502():
@@ -788,14 +823,33 @@ def test_the_order_is_passed_through_and_checked():
         assert "order" not in fake.upstream.requests[-1].url.params  # recent: Talon's default
         await client.get("/talon/ops/findings?order=recent", headers=as_user("ana"))
         assert "order" not in fake.upstream.requests[-1].url.params
-        await client.get("/talon/ops/findings?order=severity&cursor=3.1729740000000000.12", headers=as_user("ana"))
+        await client.get("/talon/ops/findings?order=severity&cursor=s3.1729740000000000.12", headers=as_user("ana"))
         sent = fake.upstream.requests[-1].url.params
-        assert sent["order"] == "severity" and sent["cursor"] == "3.1729740000000000.12"
+        assert sent["order"] == "severity" and sent["cursor"] == "s3.1729740000000000.12"
         count = len(fake.upstream.requests)
         bad = await client.get("/talon/ops/findings?order=oldest", headers=as_user("ana"))
         assert bad.status_code == 422
         odd = await client.get("/talon/ops/findings?cursor=a%20b", headers=as_user("ana"))
         assert odd.status_code == 400 and body_of(odd)["detail"] == talon_ops.INVALID_CURSOR
         assert len(fake.upstream.requests) == count
+
+    scenario_with(fake, scenario)
+
+
+def test_talons_severity_cursor_comes_back_to_the_browser():
+    fake = FakeTalon()
+    respond = fake.upstream.respond
+
+    def paged(request):
+        answer = respond(request)
+        if request.url.path == "/v2/ops/findings":
+            return httpx.Response(200, json={**json.loads(answer.content), "next_cursor": "s4.1729740000000000.7"})
+        return answer
+
+    fake.upstream.respond = paged
+
+    async def scenario(client, ctx):
+        body = body_of(await client.get("/talon/ops/findings?order=severity", headers=as_user("ana")))
+        assert body["next_cursor"] == "s4.1729740000000000.7"
 
     scenario_with(fake, scenario)

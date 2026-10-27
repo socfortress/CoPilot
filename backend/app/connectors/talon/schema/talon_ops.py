@@ -178,6 +178,9 @@ class TalonOpsSummary(BaseModel):
     dropped: int = 0
     #: True when the counts were recomputed and the per-job, acknowledged and muted counts withheld.
     withheld: bool = False
+    #: True when, at talon-analyst's 50-row cap, the rows didn't add up to its totals for a caller
+    #: without every customer: the counts are the top 50 customers' only, a lower bound.
+    partial: bool = False
 
 
 class TalonOpsMuteRequest(BaseModel):

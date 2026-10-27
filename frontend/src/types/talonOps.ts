@@ -176,6 +176,11 @@ export interface TalonOpsSummary {
 	by_customer: TalonOpsCustomerCounts[]
 	dropped: number
 	withheld: boolean
+	/**
+	 * At Talon's 50-row cap, the rows didn't add up to its totals for a caller without every customer:
+	 * the counts are the top 50 customers' only, a lower bound. Missing from a CoPilot before it.
+	 */
+	partial?: boolean
 }
 
 export interface TalonOpsSummaryQuery {

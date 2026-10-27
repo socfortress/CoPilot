@@ -658,9 +658,10 @@ def check_summary(raw: Any, caller: Caller, *, customer_code: Optional[str], pla
     A ``by_customer`` row is kept only for a customer the caller sees (``Caller.sees``: the platform
     row, ``customer_code`` null, only for a caller with every customer), and only for the customer or
     the platform asked for; a malformed or repeated row is dropped too. When a row is dropped, or the
-    rows (fewer than talon-analyst's cap, so all of them) don't add up to its ``open`` counts, or the
-    rows are at the cap for a caller without every customer (so they can't be checked), ``open`` is
-    recomputed from the rows kept and every count that can't be split by customer is withheld:
+    rows don't add up to its ``open`` counts (at talon-analyst's 50-row cap too, unless the caller has
+    every customer: the rows are then only the top 50), ``open`` is recomputed from the rows kept and
+    every count that can't be split by customer is withheld (and, at the cap, ``partial``: the counts
+    are a lower bound):
     ``by_job`` (a job's counts may include the dropped customer's findings), ``acknowledged`` and
     ``muted``. The totals then never include another customer's findings."""
     if not isinstance(raw, Mapping) or not isinstance(raw.get("by_customer"), list) or not isinstance(raw.get("by_job"), list):
@@ -690,20 +691,19 @@ def check_summary(raw: Any, caller: Caller, *, customer_code: Optional[str], pla
         seen.add(code)
         rows.append(counts)  # type: ignore[arg-type]
         kept.append(TalonOpsCustomerCounts(customer_code=code, **counts))  # type: ignore[arg-type]
-    if len(sent) < SUMMARY_ROWS:
-        # Every row is here: they must add up to the totals.
-        unchecked = not dropped and _added(rows).model_dump() != totals
-    else:
-        # At the cap the rows can't be checked against the totals: trusted for a caller with every
-        # customer (nothing to leak), recomputed for anyone else.
-        unchecked = not caller.all_customers
-    if dropped or unchecked:
-        if dropped or len(sent) < SUMMARY_ROWS:
-            logger.warning(
-                f"Talon ops: the summary had {dropped} customer row(s) the caller may not see or that were malformed, "
-                "or rows that don't add up to its totals; counts recomputed from the rows kept",
-            )
-        return TalonOpsSummary(open=_added(rows), by_customer=kept, dropped=dropped, withheld=True)
+    capped = len(sent) >= SUMMARY_ROWS
+    adds_up = _added(rows).model_dump() == totals
+    # At the cap the rows are only the top 50; a caller with every customer has nothing to leak, so
+    # Talon's totals stand when nothing was dropped.
+    trusted = not dropped and (adds_up or (capped and caller.all_customers))
+    if not trusted:
+        # Count the rows kept only and withhold what can't be split by customer. At the cap the rows
+        # kept may not be all of the caller's: the counts are then a lower bound (``partial``).
+        logger.warning(
+            f"Talon ops: the summary had {dropped} customer row(s) the caller may not see or that were malformed, "
+            f"or rows that don't add up to its totals{' (at the row cap)' if capped else ''}; counts recomputed from the rows kept",
+        )
+        return TalonOpsSummary(open=_added(rows), by_customer=kept, dropped=dropped, withheld=True, partial=capped)
     by_job: List[TalonOpsJobCounts] = []
     for item in raw["by_job"][:SUMMARY_ROWS]:
         counts = parse_counts(item)

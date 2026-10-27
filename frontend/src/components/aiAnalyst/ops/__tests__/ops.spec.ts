@@ -8,6 +8,7 @@
 import type { TalonOpsFinding, TalonOpsRun } from "@/types/talonOps"
 import { describe, expect, it } from "vitest"
 import {
+	alertTitle,
 	allowsBulk,
 	BULK_MAX,
 	bulkSummary,
@@ -38,6 +39,7 @@ import {
 	KIND_LABELS,
 	kindLabel,
 	lastFinished,
+	MAX_ALERT_TITLE,
 	MUTE_PRESETS,
 	muteUntilIn,
 	OLD_TALON_OPS_TEXT,
@@ -728,7 +730,8 @@ describe("bulk actions", () => {
 describe("links out", () => {
 	it("accepts only short ids of letters, digits, dots, underscores and dashes", () => {
 		for (const ok of ["001", "ACME", "host-1.lab", "a_b"]) expect(isLinkId(ok)).toBe(true)
-		for (const bad of ["", "../x", "a/b", "a b", "x".repeat(65), "<img>", "%2e%2e", 1, null, undefined]) {
+		expect(isLinkId("x".repeat(64))).toBe(true)
+		for (const bad of [".", "..", ".hidden", "-x", "_x", "", "../x", "a/b", "a b", "x".repeat(65), "<img>", "%2e%2e", 1, null, undefined]) {
 			expect(isLinkId(bad)).toBe(false)
 		}
 	})
@@ -786,6 +789,20 @@ describe("links out", () => {
 		})
 		const odd = findingLinks(f(1, { job: "exclusion_candidates", evidence: { asset_name: "WS 01 <b>" } }))
 		expect(odd[0].to).toEqual({ name: "IncidentManagement-Alerts", query: { customerCode: "ACME" } })
+	})
+
+	it("filters an exclusion candidate's alerts by its alert name, bounded and without control characters", () => {
+		const link = (alert_name: unknown) =>
+			findingLinks(f(1, { job: "exclusion_candidates", evidence: { asset_name: "WS-01", alert_name } as never }))[0].to
+		expect(link("  Windows logon failure  ")).toEqual({
+			name: "IncidentManagement-Alerts",
+			query: { customerCode: "ACME", assetName: "WS-01", title: "Windows logon failure" }
+		})
+		expect(alertTitle("x".repeat(MAX_ALERT_TITLE))).toBe("x".repeat(MAX_ALERT_TITLE))
+		for (const bad of ["x".repeat(MAX_ALERT_TITLE + 1), "a\u0000b", "line\nbreak", "   ", 42, null]) {
+			expect(alertTitle(bad)).toBeNull()
+			expect(link(bad)).toEqual({ name: "IncidentManagement-Alerts", query: { customerCode: "ACME", assetName: "WS-01" } })
+		}
 	})
 
 	it("builds nothing from the model's text or the title, and nothing from a bad id", () => {

@@ -544,6 +544,10 @@ export function topCustomers(rows: TalonOpsCustomerCounts[] | null | undefined, 
 }
 
 /** The stale chip's tooltip: Talon has no stale filter, so the table filters the rows it has loaded. */
+/** The order toggle's tooltip when Talon has no summary (and so no severity order): an old Talon. */
+export const SEVERITY_ORDER_UNAVAILABLE =
+	"This Talon can't sort its findings by severity: upgrade talon-analyst. They're shown most recently changed first."
+
 export const STALE_FILTER_TEXT =
 	"Shows only the loaded findings their job couldn't measure lately. Talon can't filter on this, so the table filters the rows already loaded: load more to see others."
 
@@ -646,8 +650,12 @@ export function bulkSummary(action: BulkAction, outcome: BulkOutcome): string {
 
 // ── links out ─────────────────────────────────────────────────────────────────
 
-/** An id a link may carry: an agent id, a customer code, an asset name (ASCII letters, digits, `_`, `.`, `-`: `\w` is ASCII without the `u` flag). Anything else gets no link. */
-export const LINK_ID = /^[\w.-]{1,64}$/
+/**
+ * An id a link may carry: an agent id, a customer code, an asset name. It starts with an ASCII letter or
+ * digit (so never `.` or `..`), then up to 63 of letters, digits, `_`, `.`, `-` (`\w` is ASCII without
+ * the `u` flag). Anything else gets no link.
+ */
+export const LINK_ID = /^[A-Z0-9][\w.-]{0,63}$/i
 
 export function isLinkId(value: unknown): value is string {
 	return typeof value === "string" && LINK_ID.test(value)
@@ -658,6 +666,26 @@ export interface OpsLink {
 	label: string
 	to: RouteLocationRaw
 	icon: string
+}
+
+/** The longest alert name a link filters by (the alerts page's `title` filter, `alert_title`). */
+export const MAX_ALERT_TITLE = 200
+
+/**
+ * An exclusion candidate's alert name as the alerts page's title filter: a string from the evidence
+ * (indexer data CoPilot already cleaned, never the model's text), trimmed, at most `MAX_ALERT_TITLE`
+ * characters, without control characters; otherwise none. It is passed as a router query value, which
+ * the router encodes.
+ */
+export function alertTitle(value: unknown): string | null {
+	if (typeof value !== "string") return null
+	const title = value.trim()
+	if (!title || title.length > MAX_ALERT_TITLE) return null
+	for (const ch of title) {
+		const code = ch.codePointAt(0) as number
+		if (code < 0x20 || code === 0x7F) return null
+	}
+	return title
 }
 
 /** The jobs whose findings are about the indices: storage, noise and mappings. */
@@ -701,8 +729,8 @@ function agentLinks(finding: Pick<TalonOpsFinding, "job" | "evidence">): OpsLink
  * named and its ids passed as params or query, never concatenated into a path.
  * - `quiet_endpoints`: its agent; `agent_hygiene`: each agent of the group.
  * - `storage_usage`, `noisy_events`, `mapping_drift`: index management.
- * - `exclusion_candidates`: the incident alerts, filtered to the customer and the asset (the alerts page
- *   has no rule filter).
+ * - `exclusion_candidates`: the incident alerts, filtered to the customer, the asset and the alert's title
+ *   (the alerts page has no rule filter).
  * - Every customer finding: its customer.
  */
 export function findingLinks(finding: Pick<TalonOpsFinding, "job" | "customer_code" | "evidence">): OpsLink[] {
@@ -716,6 +744,8 @@ export function findingLinks(finding: Pick<TalonOpsFinding, "job" | "customer_co
 		if (code) query.customerCode = code
 		const asset = finding.evidence?.asset_name
 		if (isLinkId(asset)) query.assetName = asset
+		const title = alertTitle(finding.evidence?.alert_name)
+		if (title) query.title = title
 		links.push({
 			key: "alerts",
 			label: query.assetName ? `Alerts on ${query.assetName}` : "Alerts",

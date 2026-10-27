@@ -71,7 +71,14 @@
 			<label class="flex flex-col gap-1">
 				<span class="text-secondary text-xs">Sort by</span>
 				<n-radio-group v-model:value="order" size="small" data-testid="talon-ops-order">
-					<n-radio-button value="severity" data-testid="talon-ops-order-severity">Severity</n-radio-button>
+					<n-radio-button
+						value="severity"
+						:disabled="!severityOrder"
+						:title="severityOrder ? undefined : SEVERITY_ORDER_UNAVAILABLE"
+						data-testid="talon-ops-order-severity"
+					>
+						Severity
+					</n-radio-button>
 					<n-radio-button value="recent" data-testid="talon-ops-order-recent">
 						Recently changed
 					</n-radio-button>
@@ -97,6 +104,8 @@
 
 		<!-- The stale marker's tooltip, for keyboard and screen-reader users (`aria-describedby`). -->
 		<span :id="STALE_HELP_ID" class="sr-only" data-testid="talon-ops-stale-help">{{ STALE_TEXT }}</span>
+		<!-- Outside the problem branch: a refresh failing mid-run never drops the report or its guard. -->
+		<OpsBulk :selected="selectedFindings" @done="afterBulk()" @clear="checked = []" />
 		<OpsProblem v-if="problem" :state="problem" @retry="reload()" />
 		<template v-else>
 			<div
@@ -111,7 +120,6 @@
 					Show all
 				</n-button>
 			</div>
-			<OpsBulk :selected="selectedFindings" @done="afterBulk()" @clear="checked = []" />
 			<n-data-table
 				v-if="!grouped || !shown.length"
 				:columns
@@ -172,7 +180,7 @@
 					size="small"
 					secondary
 					:loading="loadingMore"
-					:disabled="loadingMore"
+					:disabled="loadingMore || loading"
 					data-testid="talon-ops-more"
 					@click="loadMore()"
 				>
@@ -226,6 +234,7 @@ import {
 	problemState,
 	rowLink,
 	SEVERITIES,
+	SEVERITY_ORDER_UNAVAILABLE,
 	severityInfo,
 	STALE_TEXT,
 	STATUSES,
@@ -251,6 +260,8 @@ const order = ref<TalonOpsOrder>("severity")
 const grouped = ref(false)
 /** The stale chip: only the loaded rows a job couldn't measure (Talon has no such filter). */
 const staleOnly = ref(false)
+/** False for a Talon without the summary (an old one): it has no severity order either. */
+const severityOrder = ref(true)
 const checked = ref<DataTableRowKey[]>([])
 
 const summary = ref<TalonOpsSummary | null>(null)
@@ -275,9 +286,10 @@ const severityOptions = SEVERITIES.map(s => ({ label: s.label, value: s.value })
 
 const shown = computed(() => (staleOnly.value ? items.value.filter(isStale) : items.value))
 const groups = computed(() => groupByCustomer(shown.value))
+// From the rows shown only: a row the stale filter hides is never acted on.
 const selectedFindings = computed(() => {
 	const keys = new Set(checked.value)
-	return items.value.filter(f => keys.has(f.id))
+	return shown.value.filter(f => keys.has(f.id))
 })
 
 function rowKey(row: TalonOpsFinding) {
@@ -335,6 +347,9 @@ function reload() {
 
 async function loadFindings() {
 	checked.value = []
+	// The old cursor belongs to the old order and filters: never sent with the new ones.
+	nextCursor.value = null
+	moreFailure.value = null
 	controller?.abort()
 	const own = new AbortController()
 	controller = own
@@ -358,7 +373,7 @@ async function loadFindings() {
 }
 
 async function loadMore() {
-	if (!nextCursor.value || loadingMore.value) return
+	if (!nextCursor.value || loadingMore.value || loading.value) return
 	const own = controller
 	loadingMore.value = true
 	moreFailure.value = null
@@ -499,6 +514,15 @@ const columns: DataTableColumns<TalonOpsFinding> = [
 ]
 
 watch([job, customer, status, severity, platform, order], () => reload())
+// The stale filter hides rows: a selection made before it would act on rows no longer in view.
+watch(staleOnly, () => (checked.value = []))
+// A Talon without the summary has no severity order either (OP-2a brought both): it would answer in
+// its default order, so the table says "Recently changed" rather than claim a severity order.
+watch(summaryFailure, failure => {
+	if (failure?.code !== "unsupported") return
+	severityOrder.value = false
+	if (order.value === "severity") order.value = "recent"
+})
 loadCustomers()
 reload()
 onBeforeUnmount(() => {
