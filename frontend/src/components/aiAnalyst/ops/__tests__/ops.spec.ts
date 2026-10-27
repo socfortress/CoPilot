@@ -23,6 +23,7 @@ import {
 	jobLabel,
 	jobRuns,
 	jobsSummary,
+	jobState,
 	KIND_LABELS,
 	kindLabel,
 	lastFinished,
@@ -289,12 +290,74 @@ describe("last runs", () => {
 		expect(jobsSummary([job("quiet_endpoints", runs)])).toEqual({ tone: "ok", text: "1 enabled · last runs ok" })
 	})
 
-	it("counts a customer added since: it is in the newest tick", () => {
-		const added = run("NEW", "partial", { tick: "2026-10-25T05:00:00Z" })
-		const acme = run("ACME", "ok", { tick: "2026-10-25T05:00:00Z" })
-		const before = run("ACME", "ok", { id: "acme-old" })
-		expect(currentRuns({ last_run: added, last_runs: [added, acme, before] })).toEqual([added, acme])
-		expect(expectedRuns({ scope: "customer", last_run: added, last_runs: [added, acme] })).toBe(2)
+	describe("a tick still in progress", () => {
+		// Units queue behind TALON_OPS_CONCURRENCY: 4 of 10 customers have run at 07:50 so far.
+		const NOW_TICK = "2026-10-24T07:50:00+00:00"
+		const PREV_TICK = "2026-10-23T07:50:00+00:00"
+		const now = Date.parse("2026-10-24T08:00:00Z")
+		const customers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+		const lastRuns = (failedE = true) =>
+			customers.map((c, i) =>
+				i < 4
+					? run(c, "ok", { id: `now-${c}`, tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+					: run(c, c === "E" && failedE ? "failed" : "ok", {
+							id: `prev-${c}`,
+							tick: PREV_TICK,
+							finished_at: PREV_TICK
+						})
+			)
+		const storage = (runs: TalonOpsRun[]) => ({ ...job("storage_usage", runs), scope: "customer" as const })
+
+		it("counts every customer of both ticks, a customer not run yet with its previous run", () => {
+			const state = jobState(storage(lastRuns()), now)
+			expect(state.running).toEqual({ done: 4, total: 10 })
+			expect(state.runs).toHaveLength(10)
+			expect(worstStatus(state.runs)).toBe("failed")
+			expect(expectedRuns(storage(lastRuns()), now)).toBe(10)
+		})
+
+		it("hides nothing in the summary: running, never ok, and yesterday's failure stays", () => {
+			expect(jobsSummary([storage(lastRuns())], true, now)).toEqual({
+				tone: "error",
+				text: "1 failed (storage_usage) · 1 running (storage_usage 4 of 10)"
+			})
+			expect(jobsSummary([storage(lastRuns(false))], true, now)).toEqual({
+				tone: "ok",
+				text: "1 enabled · 1 running (storage_usage 4 of 10)"
+			})
+		})
+
+		it("is settled once its runs are older than the unit timeout: the missing customers left scope", () => {
+			const later = Date.parse("2026-10-24T08:26:00Z")
+			const state = jobState(storage(lastRuns()), later)
+			expect(state.running).toBeNull()
+			expect(state.runs.map(r => r.customer_code)).toEqual(["A", "B", "C", "D"])
+			expect(jobsSummary([storage(lastRuns())], true, later).text).toBe("1 enabled · last runs ok")
+		})
+
+		it("counts a customer missing from the last tick", () => {
+			// NEW was added since the previous tick: it is in the newest one only. BETA hasn't run yet.
+			const acme = run("ACME", "ok", { tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+			const added = run("NEW", "partial", { tick: NOW_TICK, finished_at: "2026-10-24T07:56:00Z" })
+			const beta = run("BETA", "ok", { tick: PREV_TICK, finished_at: PREV_TICK })
+			const inProgress = jobState({ last_run: added, last_runs: [added, acme, beta] }, now)
+			expect(inProgress.running).toEqual({ done: 2, total: 3 })
+			expect(expectedRuns({ scope: "customer", last_run: added, last_runs: [added, acme, beta] }, now)).toBe(3)
+			// Settled: BETA ran too, NEW counts though the previous tick never had it.
+			const betaNow = run("BETA", "ok", { tick: NOW_TICK, finished_at: "2026-10-24T07:57:00Z" })
+			const settled = jobState({ last_run: added, last_runs: [added, acme, betaNow] }, now)
+			expect(settled.running).toBeNull()
+			expect(settled.runs.map(r => r.customer_code)).toEqual(["NEW", "ACME", "BETA"])
+			expect(expectedRuns({ scope: "customer", last_run: added, last_runs: [added, acme, betaNow] }, now)).toBe(3)
+		})
+
+		it("isn't started by an old skipped run without a customer", () => {
+			const acme = run("ACME", "ok", { tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+			const skip = run(null, "skipped", { tick: PREV_TICK, finished_at: PREV_TICK })
+			const state = jobState({ last_run: acme, last_runs: [acme, skip] }, now)
+			expect(state.running).toBeNull()
+			expect(state.runs).toEqual([acme])
+		})
 	})
 
 	it("a tick in another notation is the same tick", () => {
@@ -434,6 +497,26 @@ describe("what run now found", () => {
 	it("is this click's manual runs of its tick: never a scheduled run or another click", () => {
 		expect(freshRuns([scheduled, otherClick, fresh, old, unfinished], tick, null)).toEqual([fresh])
 		expect(freshRuns([{ ...fresh, triggered_by: "schedule" }], tick, null)).toEqual([])
+		// Another admin's click in the same second.
+		const sameSecond = { ...fresh, id: "same-second", tick: "2026-10-24T06:00:00.623456+00:00" }
+		expect(freshRuns([sameSecond, fresh], tick, null)).toEqual([fresh])
+	})
+
+	it("tells apart two clicks 400 ms apart, and matches a tick to the millisecond", () => {
+		const first = run("A", "ok", { id: "first", tick: "2026-10-24T06:00:02.100000+00:00", triggered_by: "manual" })
+		const second = run("A", "ok", {
+			id: "second",
+			tick: "2026-10-24T06:00:02.500000+00:00",
+			triggered_by: "manual"
+		})
+		const firstTick = triggerTick("sched-talon-ops:storage_usage-trigger-2026-10-24T06:00:02.100000+00:00")
+		const secondTick = triggerTick("sched-talon-ops:storage_usage-trigger-2026-10-24T06:00:02.500000+00:00")
+		expect(freshRuns([second, first], firstTick, null)).toEqual([first])
+		expect(freshRuns([second, first], secondTick, null)).toEqual([second])
+		// Microseconds are cut, never rounded, on both sides.
+		const edge = run("A", "ok", { id: "edge", tick: "2026-10-24T06:00:02.100999+00:00", triggered_by: "manual" })
+		expect(freshRuns([edge], triggerTick("x-trigger-2026-10-24T06:00:02.100999+00:00"), null)).toEqual([edge])
+		expect(freshRuns([edge], triggerTick("x-trigger-2026-10-24T06:00:02.104000+00:00"), null)).toEqual([])
 	})
 
 	it("without a workflow id: the manual runs Talon didn't have before the click, of the newest tick", () => {

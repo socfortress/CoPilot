@@ -17,7 +17,7 @@ import { defineComponent, h } from "vue"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
-import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, RUN_POLL_MS, RUN_WATCH_MS, V2_OFF_TEXT } from "../ops"
+import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, QUIET_POLLS, RUN_POLL_MS, RUN_WATCH_MS, V2_OFF_TEXT } from "../ops"
 import TalonOps from "../TalonOps.vue"
 
 const api = {
@@ -677,6 +677,49 @@ describe("the jobs panel", () => {
 		expect(lines.map(l => l.text().split(" ")[0])).toEqual(["ACME", "BETA"])
 	})
 
+	it("shows a tick still in progress as running, hiding no customer's previous failure", async () => {
+		const NOW = Date.parse("2026-10-24T08:00:00Z")
+		vi.useFakeTimers({ toFake: ["Date"], now: NOW })
+		try {
+			signInAs(AuthUserRole.Analyst)
+			const NOW_TICK = "2026-10-24T07:50:00+00:00"
+			const YESTERDAY = "2026-10-23T07:50:00+00:00"
+			const customers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+			jobsWith([
+				job("storage_usage", {
+					last_runs: customers.map((c, i) =>
+						i < 4
+							? opsRun(c, { id: `now-${c}`, tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+							: opsRun(c, {
+									id: `old-${c}`,
+									tick: YESTERDAY,
+									finished_at: YESTERDAY,
+									status: c === "E" ? "failed" : "ok",
+									error: c === "E" ? "the indexer timed out" : null
+								})
+					)
+				})
+			])
+			const wrapper = render()
+			await settle()
+			expect(byId(wrapper, "talon-ops-jobs-summary").text()).toBe(
+				"1 failed (storage_usage) · 1 running (storage_usage 4 of 10)"
+			)
+			expect(byId(wrapper, "talon-ops-jobs-summary").attributes("data-tone")).toBe("error")
+			expect(byId(wrapper, "talon-ops-job-status-storage_usage").text()).toBe("failed")
+			expect(byId(wrapper, "talon-ops-job-running-storage_usage").text()).toBe("· running (4 of 10)")
+			const toggle = byId(wrapper, "talon-ops-job-runs-toggle-storage_usage")
+			expect(toggle.text()).toContain("10 customers")
+			await toggle.trigger("click")
+			const lines = byId(wrapper, "talon-ops-job-runs-storage_usage").findAll('[data-testid="talon-ops-job-run"]')
+			expect(lines).toHaveLength(10)
+			expect(lines[0].text()).toContain("E")
+			expect(lines[0].text()).toContain("the indexer timed out")
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
 	it("tells a non-admin a platform job's runs are an admin's, and leaves it out of the summary", async () => {
 		signInAs(AuthUserRole.Analyst)
 		jobsWith([
@@ -746,6 +789,11 @@ describe("run now, then its runs", () => {
 		await settle()
 	}
 
+	/** The polls in a row without a new run that end the watch once every run expected is in. */
+	async function quietPolls() {
+		for (let i = 0; i < QUIET_POLLS; i++) await tick()
+	}
+
 	const message = (wrapper: Wrapper) => byId(wrapper, "talon-ops-run-message").text()
 
 	const fresh = (customer: string | null, overrides: Record<string, unknown> = {}) =>
@@ -774,7 +822,8 @@ describe("run now, then its runs", () => {
 
 		runs = [fresh("ACME"), ...runs]
 		await tick()
-		// In; one more poll makes sure no other customer's run follows.
+		// In; a few more polls make sure no other customer's run follows.
+		for (let i = 1; i < QUIET_POLLS; i++) await tick()
 		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
 		await tick()
 		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
@@ -810,7 +859,7 @@ describe("run now, then its runs", () => {
 		expect(message(wrapper)).toContain("queued")
 		runs = [fresh("ACME"), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 2 new, 1 updated, 3 resolved.")
 	})
 
@@ -827,21 +876,53 @@ describe("run now, then its runs", () => {
 		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
 		runs = [fresh("BETA", { status: "partial", new: 0, updated: 0, resolved: 1 }), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toBe("Endpoints gone quiet finished (partial): 2 new, 1 updated, 4 resolved.")
 		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
 	})
 
-	it("counts a customer added since the last tick", async () => {
+	it("counts a customer missing from the last tick that comes in a few polls late", async () => {
+		// The last tick ran for ACME and BETA; NEW was added since, and its unit is queued behind them.
 		const wrapper = await clicked([
 			job("quiet_endpoints", { last_runs: [opsRun("ACME"), opsRun("BETA", { id: "beta-old" })] })
 		])
 		runs = [fresh("ACME"), fresh("BETA"), ...runs]
 		await tick()
+		// Two polls go by with nothing new: more than one poll interval, fewer than the quiet polls.
+		await tick()
+		await tick()
+		expect(message(wrapper)).toContain("queued")
 		runs = [fresh("NEW", { new: 5, updated: 0, resolved: 0 }), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 9 new, 2 updated, 6 resolved.")
+	})
+
+	it("isn't done at 4 of 10 while the last tick is still in progress", async () => {
+		// The scheduled tick at 07:50 has run for 4 of its 10 customers; 6 still show yesterday's run.
+		const NOW_TICK = "2026-10-24T07:50:00+00:00"
+		const YESTERDAY = "2026-10-23T07:50:00+00:00"
+		const customers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+		const lastRuns = customers.map((c, i) =>
+			i < 4
+				? opsRun(c, { id: `now-${c}`, tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+				: opsRun(c, { id: `old-${c}`, tick: YESTERDAY, finished_at: YESTERDAY })
+		)
+		const wrapper = await clicked([job("quiet_endpoints", { last_runs: lastRuns })])
+		const jobsCalls = api.listJobs.mock.calls.length
+		runs = [...customers.slice(0, 4).map(c => fresh(c)), ...runs]
+		await tick()
+		await quietPolls()
+		await quietPolls()
+		expect(message(wrapper)).toBe(
+			"Endpoints gone quiet: 8 new, 4 updated, 12 resolved so far (4 of 10 customers); still running."
+		)
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+		runs = [...customers.slice(4).map(c => fresh(c)), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 20 new, 10 updated, 30 resolved.")
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
 	})
 
 	it("ends at a skipped run without a customer", async () => {
@@ -850,7 +931,7 @@ describe("run now, then its runs", () => {
 		])
 		runs = [fresh(null, { status: "skipped", new: 0, updated: 0, resolved: 0 }), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toBe("Endpoints gone quiet finished (skipped): 0 new, 0 updated, 0 resolved.")
 	})
 
@@ -890,7 +971,7 @@ describe("run now, then its runs", () => {
 		await tick()
 		runs = [fresh("ACME"), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toContain("finished")
 	})
 
@@ -919,7 +1000,7 @@ describe("run now, then its runs", () => {
 		expect(message(wrapper)).toContain("queued")
 		runs = [fresh("ACME"), ...runs]
 		await tick()
-		await tick()
+		await quietPolls()
 		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 2 new, 1 updated, 3 resolved.")
 	})
 

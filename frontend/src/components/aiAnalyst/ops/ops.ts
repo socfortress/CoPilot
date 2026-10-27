@@ -204,9 +204,10 @@ function statusRank(status: string): number {
 	return STATUS_RANK[status] ?? 1
 }
 
+/** An ISO time in ms, the fraction cut (never rounded) to the millisecond, as Talon's ticks are microseconds. */
 function parsedMs(iso: string | null | undefined): number | null {
 	if (!iso) return null
-	const ms = Date.parse(iso)
+	const ms = Date.parse(iso.replace(/(\.\d{3})\d+/, "$1"))
 	return Number.isFinite(ms) ? ms : null
 }
 
@@ -216,19 +217,48 @@ export function jobRuns(job: Pick<TalonOpsJob, "last_run" | "last_runs">): Talon
 	return job.last_run ? [job.last_run] : []
 }
 
+/** Talon's unit timeout (`runner.UNIT_TIMEOUT`): a tick whose runs finished within this may have more to come. */
+export const UNIT_TIMEOUT_MS = 30 * 60 * 1000
+
+export interface JobState {
+	/** One run per customer: the newest tick's, or, while that tick is in progress, the previous tick's. */
+	runs: TalonOpsRun[]
+	/** The newest tick, still in progress: its customers in so far, of both ticks' customers. */
+	running: { done: number; total: number } | null
+}
+
 /**
- * The runs of a job's newest tick. `last_runs` is the newest run per customer over Talon's 30-day run
- * retention, so it also holds an old skipped run without a customer and the last run of a customer
- * that has left scope; the runs of one tick (scheduled or run now) share it, and are the job's current
- * state. Runs without a readable tick are kept only when no run has one.
+ * A job's state from `last_runs`, the newest run per customer over Talon's 30-day run retention.
+ * The runs of one tick (scheduled or run now) share it.
+ * - Settled: the newest tick's runs only. An old skipped run without a customer and the last run of a
+ *   customer that has left scope drop out.
+ * - In progress: the newest tick lacks customers the previous tick had (their newest run is still
+ *   the previous tick's) and its runs finished within the unit timeout, so units may still be queued.
+ *   Every customer of both ticks counts, each with its newest run, so yesterday's failure of a
+ *   customer not yet run stays visible.
+ * Runs without a readable tick are kept only when no run has one.
  */
-export function currentRuns(job: Pick<TalonOpsJob, "last_run" | "last_runs">): TalonOpsRun[] {
+export function jobState(job: Pick<TalonOpsJob, "last_run" | "last_runs">, now = Date.now()): JobState {
 	const runs = jobRuns(job)
 	const ticks = runs.map(run => parsedMs(run.tick))
-	const known = ticks.filter((t): t is number => t !== null)
-	if (!known.length) return runs
-	const newest = Math.max(...known)
-	return runs.filter((_, i) => ticks[i] === newest)
+	const known = [...new Set(ticks.filter((t): t is number => t !== null))].sort((a, b) => b - a)
+	if (!known.length) return { runs, running: null }
+	const current = runs.filter((_, i) => ticks[i] === known[0])
+	const previous =
+		known.length > 1 ? runs.filter((run, i) => ticks[i] === known[1] && run.customer_code !== null) : []
+	const finished = parsedMs(lastFinished(current))
+	const recent = finished !== null && now - finished < UNIT_TIMEOUT_MS
+	const perCustomer = current.some(run => run.customer_code !== null)
+	if (!previous.length || !recent || !perCustomer) return { runs: current, running: null }
+	return {
+		runs: [...current, ...previous],
+		running: { done: current.length, total: current.length + previous.length }
+	}
+}
+
+/** The runs a job is judged by (`jobState`): one per customer. */
+export function currentRuns(job: Pick<TalonOpsJob, "last_run" | "last_runs">, now = Date.now()): TalonOpsRun[] {
+	return jobState(job, now).runs
 }
 
 /** Runs worst status first (then as Talon listed them). */
@@ -286,15 +316,18 @@ export interface JobsSummary {
 }
 
 /**
- * The jobs' one-line summary, over the enabled jobs' newest tick (`currentRuns`): "9 enabled · last
- * runs ok", or what isn't, worst first and naming the jobs ("1 partial (mapping_drift) · 1 skipped
- * (disk_forecast)"), amber, red with a failed one. An enabled job whose schedule isn't ACTIVE is a
- * warning ("1 schedule paused (…)"); "N not run yet" is always said. A platform job is left out for a
- * caller who can't see its runs (`isAdmin` false).
+ * The jobs' one-line summary, over the enabled jobs' state (`jobState`): "9 enabled · last runs ok",
+ * or what isn't, worst first and naming the jobs ("1 partial (mapping_drift) · 1 skipped
+ * (disk_forecast)"), amber, red with a failed one. A job whose tick is still in progress is "running"
+ * ("1 running (storage_usage 4 of 10)"), never "ok", and its customers not yet run count with their
+ * previous run. An enabled job whose schedule isn't ACTIVE is a warning ("1 schedule paused (…)");
+ * "N not run yet" is always said. A platform job is left out for a caller who can't see its runs
+ * (`isAdmin` false).
  */
 export function jobsSummary(
 	jobs: Pick<TalonOpsJob, "name" | "enabled" | "scope" | "schedule_status" | "last_run" | "last_runs">[],
-	isAdmin = true
+	isAdmin = true,
+	now = Date.now()
 ): JobsSummary {
 	const visible = jobs.filter(j => !hiddenPlatformJob(j, isAdmin))
 	if (!visible.length) return { tone: "ok", text: "No ops jobs" }
@@ -304,19 +337,26 @@ export function jobsSummary(
 	}
 	const byStatus = new Map<string, string[]>()
 	const bySchedule = new Map<string, string[]>()
+	const running: string[] = []
 	const add = (map: Map<string, string[]>, key: string, name: string) => map.set(key, [...(map.get(key) ?? []), name])
 	let notRun = 0
 	for (const job of enabled) {
-		const worst = worstStatus(currentRuns(job))
+		const state = jobState(job, now)
+		const worst = worstStatus(state.runs)
 		if (worst === null) notRun++
 		else if (worst !== "ok") add(byStatus, worst, job.name)
+		if (state.running) running.push(`${job.name} ${state.running.done} of ${state.running.total}`)
 		if (job.schedule_status && job.schedule_status !== "ACTIVE") {
 			add(bySchedule, `schedule ${job.schedule_status.toLowerCase()}`, job.name)
 		}
 	}
-	const later = notRun ? [`${notRun} not run yet`] : []
+	const later = [
+		...(running.length ? [`${running.length} running (${running.join(", ")})`] : []),
+		...(notRun ? [`${notRun} not run yet`] : [])
+	]
 	if (!byStatus.size && !bySchedule.size) {
-		return { tone: "ok", text: [`${enabled.length} enabled · last runs ok`, ...later].join(" · ") }
+		const head = running.length ? `${enabled.length} enabled` : `${enabled.length} enabled · last runs ok`
+		return { tone: "ok", text: [head, ...later].join(" · ") }
 	}
 	const groups = [
 		...[...byStatus.entries()].sort((a, b) => statusRank(b[0]) - statusRank(a[0])),
@@ -389,8 +429,11 @@ export const RUN_WATCH_MS = 2 * 60 * 1000
 /** Talon's and CoPilot's largest page of runs (`RUNS_MAX`, `MAX_LIMIT`). */
 export const RUNS_LIMIT = 200
 
-/** Two ticks within this are one: Talon stores the tick it was given, at most truncated. */
-const TICK_SLACK_MS = 1000
+/**
+ * Two ticks this close are one. Talon stores the tick to the microsecond, and both it and the workflow
+ * id are cut to the millisecond here, so the same tick compares equal; two clicks are further apart.
+ */
+const TICK_SLACK_MS = 2
 
 /**
  * The tick of a Run now, from the workflow id Talon returns: DBOS's `trigger_schedule` names it
@@ -399,7 +442,7 @@ const TICK_SLACK_MS = 1000
  */
 export function triggerTick(workflowId: string | null | undefined): number | null {
 	const iso = workflowId?.match(/-trigger-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))$/)?.[1]
-	return iso ? parsedMs(iso.replace(/(\.\d{3})\d+/, "$1")) : null
+	return iso ? parsedMs(iso) : null
 }
 
 /**
@@ -423,11 +466,17 @@ export function freshRuns(runs: TalonOpsRun[], tick: number | null, before: Read
 	return unseen.filter(run => parsedMs(run.tick) === newest)
 }
 
-/** How many runs Run now should produce: one for a platform job, else one per customer of the newest tick. */
-export function expectedRuns(job: Pick<TalonOpsJob, "scope" | "last_run" | "last_runs">): number {
+/**
+ * How many runs Run now should produce: one for a platform job, else one per customer the job is
+ * judged by (`jobState`: both ticks' customers while the newest is in progress).
+ */
+export function expectedRuns(job: Pick<TalonOpsJob, "scope" | "last_run" | "last_runs">, now = Date.now()): number {
 	if (job.scope === "platform") return 1
-	return Math.max(1, currentRuns(job).length)
+	return Math.max(1, currentRuns(job, now).length)
 }
+
+/** Polls without a new run, once every run expected is in, before Run now is done (late customers). */
+export const QUIET_POLLS = 3
 
 /** Whether every run is in: as many as expected, or one without a customer (a skipped job records one). */
 export function runsDone(fresh: Pick<TalonOpsRun, "customer_code">[], expected: number): boolean {

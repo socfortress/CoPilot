@@ -121,6 +121,15 @@
 									>
 										{{ worstStatus(current[job.name]) }}
 									</span>
+									<span
+										v-if="states[job.name].running"
+										class="text-secondary"
+										title="This tick's runs are still coming in: a customer not run yet shows its previous run"
+										:data-testid="`talon-ops-job-running-${job.name}`"
+									>
+										· running ({{ states[job.name].running?.done }} of
+										{{ states[job.name].running?.total }})
+									</span>
 									<span class="text-secondary">
 										· {{ formatTime(lastFinished(current[job.name])) }}
 									</span>
@@ -209,18 +218,20 @@
 // The ops jobs (`GET /talon/ops/jobs`), collapsed by default under a one-line summary that stays
 // visible ("9 enabled · last runs ok", or what isn't: amber, red with a failed run). Expanded, a
 // compact table: each job's title, its schedule in words (the cron in a tooltip), the worst status of
-// its newest tick's runs (`currentRuns`: `last_runs` also holds older ones; a click lists them, worst
-// first: customer, status, when, counts, Talon's fixed error text), its next run, and "Run now" for an
-// admin on an enabled job. A platform job's runs are an admin's: anyone else sees "admins only".
+// its newest tick's runs, its next run, and "Run now" for an admin on an enabled job. `last_runs` also
+// holds older runs (`jobState`): while the newest tick is still in progress the job is "running (k of
+// n)", and each customer not run yet counts with its previous run. A click on the status lists the
+// runs, worst first: customer, status, when, counts, Talon's fixed error text. A platform job's runs
+// are an admin's: anyone else sees "admins only".
 //
 // Run now reads the job's runs, queues a run in Talon, then polls `GET /talon/ops/runs?job=` every few
 // seconds for up to two minutes for this click's runs: `manual` ones of the tick in the workflow id
-// Talon returns (`freshRuns`; never this browser's clock). Once every customer's run is in and a poll
-// finds no more, or at the timeout with some in, it reloads the jobs and the findings once (`ran`) and
-// says what they found ("N new, N updated, N resolved"); with none, "still running; refresh later". A
-// refusal (403, 404, v2 off) stops the polling and is shown; anything transient is tried again.
-// Unmounting stops it too.
-import type { RunResult, Tone } from "./ops"
+// Talon returns (`freshRuns`; never this browser's clock). Once every customer's run is in and
+// `QUIET_POLLS` polls in a row find no more, or at the timeout with some in, it reloads the jobs and
+// the findings once (`ran`) and says what they found ("N new, N updated, N resolved"); with none,
+// "still running; refresh later". A refusal (403, 404, v2 off) stops the polling and is shown;
+// anything transient is tried again. Unmounting stops it too.
+import type { JobState, RunResult, Tone } from "./ops"
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsJob, TalonOpsRun } from "@/types/talonOps"
 import { NAlert, NButton, NTag, NTooltip } from "naive-ui"
@@ -231,7 +242,6 @@ import Icon from "@/components/common/Icon.vue"
 import { formatTime } from "../health/health"
 import {
 	byWorst,
-	currentRuns,
 	customerText,
 	expectedRuns,
 	freshRuns,
@@ -240,7 +250,9 @@ import {
 	isTransient,
 	jobLabel,
 	jobsSummary,
+	jobState,
 	lastFinished,
+	QUIET_POLLS,
 	RUN_POLL_MS,
 	RUN_WATCH_MS,
 	runCounts,
@@ -274,10 +286,19 @@ const messages = ref<Record<string, RunResult>>({})
 /** One per job being queued or watched: aborting it stops that job's polling and requests. */
 const watches = new Map<string, AbortController>()
 
-const summary = computed(() => jobsSummary(jobs, isAdmin))
-/** Each job's newest tick's runs, worst first. */
+const summary = computed(() => jobsSummary(jobs, isAdmin, Date.now()))
+/** Each job's state (`jobState`), its runs worst first; read again with the jobs. */
+const states = computed<Record<string, JobState>>(() => {
+	const now = Date.now()
+	return Object.fromEntries(
+		jobs.map(job => {
+			const state = jobState(job, now)
+			return [job.name, { ...state, runs: byWorst(state.runs) }]
+		})
+	)
+})
 const current = computed<Record<string, TalonOpsRun[]>>(() =>
-	Object.fromEntries(jobs.map(job => [job.name, byWorst(currentRuns(job))]))
+	Object.fromEntries(Object.entries(states.value).map(([name, state]) => [name, state.runs]))
 )
 
 function toneClass(tone: Tone): string {
@@ -393,6 +414,7 @@ async function watch(
 	const expected = expectedRuns(job)
 	const deadline = Date.now() + RUN_WATCH_MS
 	let fresh: TalonOpsRun[] = []
+	let quiet = 0
 	watching.value.add(name)
 	try {
 		while (!own.signal.aborted) {
@@ -411,9 +433,11 @@ async function watch(
 			const found = "runs" in read ? freshRuns(read.runs, tick, before) : fresh
 			const grew = found.length > fresh.length
 			if ("runs" in read) fresh = found
+			const ready = fresh.length > 0 && runsDone(fresh, expected)
+			quiet = ready && !grew ? quiet + 1 : 0
 			const timedOut = Date.now() >= deadline
-			// Every run expected is in and a poll found no more (a customer added since the last tick).
-			const done = fresh.length > 0 && runsDone(fresh, expected) && (!grew || timedOut)
+			// Every run expected is in, and polls in a row found no more (a customer added since the last tick).
+			const done = ready && (quiet >= QUIET_POLLS || timedOut)
 			if (done || timedOut) {
 				if (fresh.length) emit("ran")
 				messages.value[name] = runResult(label, fresh, expected, done, timedOut)
