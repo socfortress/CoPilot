@@ -70,6 +70,8 @@
 			</n-button>
 		</div>
 
+		<!-- The stale marker's tooltip, for keyboard and screen-reader users (`aria-describedby`). -->
+		<span :id="STALE_HELP_ID" class="sr-only" data-testid="talon-ops-stale-help">{{ STALE_TEXT }}</span>
 		<OpsProblem v-if="problem" :state="problem" @retry="reload()" />
 		<template v-else>
 			<n-data-table
@@ -118,24 +120,37 @@
 <script setup lang="ts">
 // The findings table (`GET /talon/ops/findings`): filters for job, customer, status (open by default),
 // severity and, for an admin, platform findings; columns for severity, title, customer, job, first
-// and last seen and status; cursor paging ("Load more"). Every value is shown as text. A row opens
-// the detail drawer (`open`). A filter change starts again from the first page; an answer for an
-// older filter is dropped.
+// and last seen and status, with "Not measured since <time>" on a stale finding (its job couldn't check
+// it, so it can't clear); cursor paging ("Load more"). Every value is shown as text. A row opens the
+// detail drawer (`open`). A filter change starts again from the first page; an answer for an older
+// filter is dropped.
 import type { DataTableColumns } from "naive-ui"
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsFinding, TalonOpsJob, TalonOpsQuery, TalonOpsSeverity, TalonOpsStatus } from "@/types/talonOps"
-import { NAlert, NButton, NDataTable, NSelect, NSwitch, NTag } from "naive-ui"
+import { NAlert, NButton, NDataTable, NSelect, NSwitch, NTag, NTooltip } from "naive-ui"
 import { computed, h, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import { opsFailure } from "@/api/endpoints/talonOps"
 import Icon from "@/components/common/Icon.vue"
 import { useCustomerOptions } from "@/composables/useCustomerOptions"
 import { formatTime } from "../health/health"
-import { customerText, jobLabel, PAGE_SIZE, problemState, SEVERITIES, severityInfo, STATUSES, statusInfo } from "./ops"
+import {
+	customerText,
+	jobLabel,
+	PAGE_SIZE,
+	problemState,
+	SEVERITIES,
+	severityInfo,
+	STALE_TEXT,
+	STATUSES,
+	statusInfo
+} from "./ops"
 import OpsProblem from "./OpsProblem.vue"
 
 const { jobs = [], isAdmin = false } = defineProps<{ jobs?: TalonOpsJob[]; isAdmin?: boolean }>()
 const emit = defineEmits<{ (e: "open", finding: TalonOpsFinding): void }>()
+
+const STALE_HELP_ID = "talon-ops-stale-help"
 
 const { options: customerOptions, loading: customersLoading, load: loadCustomers } = useCustomerOptions()
 
@@ -247,13 +262,34 @@ const columns: DataTableColumns<TalonOpsFinding> = [
 	{
 		title: "Status",
 		key: "status",
-		width: 140,
+		width: 190,
 		render: row => {
 			const info = statusInfo(row.status)
-			return h("span", { class: "inline-flex items-center gap-1" }, [
+			const status = h("span", { class: "inline-flex items-center gap-1" }, [
 				h(Icon, { name: info.icon, size: 14 }),
 				info.label
 			])
+			// The job couldn't measure it: it stays as it was, and can't clear until a run measures it again.
+			// Talon keeps `stale_since` on a resolved finding, where it no longer matters.
+			if (!row.stale_since || row.status === "resolved") return status
+			const stale = h(NTooltip, null, {
+				trigger: () =>
+					h(
+						"span",
+						{
+							class: "text-warning inline-flex items-center gap-1 text-xs",
+							tabindex: 0,
+							"aria-describedby": STALE_HELP_ID,
+							"data-testid": `talon-ops-stale-${row.id}`
+						},
+						[
+							h(Icon, { name: "carbon:warning-alt", size: 12 }),
+							`Not measured since ${formatTime(row.stale_since)}`
+						]
+					),
+				default: () => STALE_TEXT
+			})
+			return h("div", { class: "flex flex-col gap-0.5" }, [status, stale])
 		}
 	}
 ]

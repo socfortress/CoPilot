@@ -5,8 +5,9 @@
 	<div v-else class="flex flex-col gap-4" data-testid="talon-ops">
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<p class="text-secondary max-w-3xl text-sm">
-				Talon's ops jobs check the stack on a schedule: endpoints that stopped checking in, log sources that
-				went silent. Their findings are for the SOC only.
+				Talon's ops jobs check the stack on a schedule: endpoints that stopped checking in, log sources gone
+				silent, storage and noisy events, the indexer cluster and its disks, index mappings, agent versions, and
+				alerts worth a reviewed exclusion. Their findings are for the SOC only.
 			</p>
 			<a
 				:href="OPS_DOCS"
@@ -42,7 +43,14 @@
 					How to turn them on
 				</a>
 			</n-alert>
-			<OpsJobs v-if="jobs.length || jobsLoading" :jobs :loading="jobsLoading" :is-admin @refresh="loadJobs()" />
+			<OpsJobs
+				v-if="jobs.length || jobsLoading"
+				:jobs
+				:loading="jobsLoading"
+				:is-admin
+				@refresh="loadJobs()"
+				@ran="reloadAll()"
+			/>
 			<OpsFindings ref="findingsList" :jobs :is-admin @open="open" />
 		</template>
 
@@ -124,6 +132,12 @@ async function loadJobs() {
 	} finally {
 		if (controller === own) jobsLoading.value = false
 	}
+}
+
+/** A run-now's runs finished: the jobs' last runs and the findings both changed. */
+function reloadAll() {
+	loadJobs()
+	findingsList.value?.reload()
 }
 
 function open(finding: TalonOpsFinding) {

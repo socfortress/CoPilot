@@ -3,8 +3,10 @@ import type { VNodeChild } from "vue"
  * The Ops tab (`TalonOps.vue` and its sections) against a mocked API: the findings table (open by
  * default, filters, cursor paging, every value as text), the detail drawer (the evidence as a list or
  * JSON, the artifact copyable, `why` and `recommendation` as plain text, never HTML), the actions with
- * the finding's stored customer, the mute window, the jobs panel (run now for an admin only), and the
- * states: Ops jobs off in Talon, Talon v2 off, an old Talon, a role without access.
+ * the finding's stored customer, the mute window and its presets, the stale marker, the jobs panel
+ * (collapsed under a summary line, schedules in words, per-customer last runs, run now for an admin
+ * only, polling its runs afterwards), and the states: Ops jobs off in Talon, Talon v2 off, an old
+ * Talon, a role without access.
  */
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { AxiosError, AxiosHeaders } from "axios"
@@ -15,7 +17,7 @@ import { defineComponent, h } from "vue"
 import { resetCustomerOptions } from "@/composables/useCustomerOptions"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
-import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, V2_OFF_TEXT } from "../ops"
+import { OLD_TALON_OPS_TEXT, OPS_OFF_TITLE, QUIET_POLLS, RUN_POLL_MS, RUN_WATCH_MS, V2_OFF_TEXT } from "../ops"
 import TalonOps from "../TalonOps.vue"
 
 const api = {
@@ -25,6 +27,7 @@ const api = {
 	mute: vi.fn(),
 	reopen: vi.fn(),
 	listJobs: vi.fn(),
+	listRuns: vi.fn(),
 	runNow: vi.fn()
 }
 const getCustomers = vi.fn()
@@ -75,6 +78,30 @@ function finding(id: number, overrides: Record<string, unknown> = {}) {
 		acted_at: null,
 		notified_at: null,
 		updated_at: T,
+		...overrides
+	}
+}
+
+function opsRun(customer: string | null, overrides: Record<string, unknown> = {}) {
+	return {
+		id: `quiet_endpoints:${customer ?? "-"}:${T}`,
+		job: "quiet_endpoints",
+		job_version: 1,
+		customer_code: customer,
+		tick: T,
+		triggered_by: "schedule",
+		status: "ok",
+		collected: true,
+		explained: "explained",
+		candidates: 2,
+		new: 1,
+		updated: 1,
+		resolved: 0,
+		error: null,
+		cost_usd: "0.001",
+		duration_ms: 100,
+		started_at: T,
+		finished_at: T,
 		...overrides
 	}
 }
@@ -173,6 +200,13 @@ const DataTable = defineComponent({
 					)
 				: h("div", slots.empty?.())
 })
+// naive's tooltip shows its content on hover only: here both the trigger and the content render.
+const Tooltip = defineComponent({
+	setup:
+		(_, { slots }) =>
+		() =>
+			h("span", [slots.trigger?.(), h("span", { "data-testid": "tooltip-content" }, slots.default?.())])
+})
 const DatePicker = defineComponent({
 	props: { value: { type: Number, default: null }, size: { type: String, default: "" } },
 	emits: ["update:value"],
@@ -190,7 +224,7 @@ function render(props: Record<string, unknown> = {}) {
 	return mount(TalonOps, {
 		props,
 		global: {
-			stubs: { Drawer, DrawerContent: Passthrough, DataTable, DatePicker, Icon: true }
+			stubs: { Drawer, DrawerContent: Passthrough, DataTable, DatePicker, Tooltip, Icon: true }
 		}
 	})
 }
@@ -249,6 +283,7 @@ beforeEach(() => {
 	api.mute.mockImplementation((id: number, until: string) =>
 		ok({ success: true, message: "", finding: finding(id, { status: "muted", muted_until: until }) })
 	)
+	api.listRuns.mockImplementation(() => ok({ success: true, message: "", items: [opsRun("ACME")], dropped: 0 }))
 	api.runNow.mockImplementation(() =>
 		ok({ success: true, message: "", job: "quiet_endpoints", workflow_id: "w", status: "queued" })
 	)
@@ -319,6 +354,52 @@ describe("the findings table", () => {
 		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ cursor: "100.2" })
 		expect(byId(wrapper, "talon-ops-row-3").exists()).toBe(true)
 		expect(byId(wrapper, "talon-ops-more").exists()).toBe(false)
+	})
+
+	it("marks a finding its job couldn't measure", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.listFindings.mockImplementation(() =>
+			ok({
+				success: true,
+				message: "",
+				items: [finding(1), finding(2, { stale_since: "2026-10-23T06:00:00Z" })],
+				next_cursor: null,
+				dropped: 0
+			})
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-stale-1").exists()).toBe(false)
+		const status = byId(wrapper, "talon-ops-row-2").find('[data-col="status"]')
+		expect(status.text()).toContain("Open")
+		const stale = byId(wrapper, "talon-ops-stale-2")
+		expect(stale.text()).toMatch(/^Not measured since \w{3} \d{1,2}, \d{2}:\d{2}$/)
+		const tooltip = status.find('[data-testid="tooltip-content"]').text()
+		expect(tooltip).toContain("couldn't check this finding")
+		expect(tooltip).toContain("can't clear")
+		// Reachable by keyboard, and described for a screen reader by the same text.
+		expect(stale.attributes("tabindex")).toBe("0")
+		const help = byId(wrapper, "talon-ops-stale-help")
+		expect(stale.attributes("aria-describedby")).toBe(help.attributes("id"))
+		expect(help.text()).toBe(tooltip)
+		expect(help.classes()).toContain("sr-only")
+	})
+
+	it("shows no stale marker on a resolved finding", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.listFindings.mockImplementation(() =>
+			ok({
+				success: true,
+				message: "",
+				items: [finding(3, { status: "resolved", stale_since: "2026-10-23T06:00:00Z" })],
+				next_cursor: null,
+				dropped: 0
+			})
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-row-3").find('[data-col="status"]').text()).toContain("Resolved")
+		expect(byId(wrapper, "talon-ops-stale-3").exists()).toBe(false)
 	})
 
 	it("says so when there are no open findings", async () => {
@@ -408,6 +489,36 @@ describe("the detail drawer", () => {
 		expect(byId(wrapper, "talon-ops-detail-status").text()).toContain("Muted")
 	})
 
+	it("offers 1, 7 and 30 day mute presets beside the picker", async () => {
+		const now = Date.UTC(2026, 9, 24, 12)
+		vi.useFakeTimers({ toFake: ["Date"], now })
+		try {
+			const wrapper = await opened()
+			const picker = byId(wrapper, "talon-ops-mute-until")
+			// Calendar days: the same local time of day.
+			const inDays = (days: number) => {
+				const at = new Date(now)
+				at.setDate(at.getDate() + days)
+				return at.getTime()
+			}
+			await byId(wrapper, "talon-ops-mute-preset-1").trigger("click")
+			expect((picker.element as HTMLInputElement).value).toBe(String(inDays(1)))
+			await byId(wrapper, "talon-ops-mute-preset-7").trigger("click")
+			expect((picker.element as HTMLInputElement).value).toBe(String(inDays(7)))
+			await byId(wrapper, "talon-ops-mute-preset-30").trigger("click")
+			expect((picker.element as HTMLInputElement).value).toBe(String(inDays(30)))
+			await settle()
+			// A preset only sets the picker: muting is still the Mute button's.
+			expect(api.mute).not.toHaveBeenCalled()
+			expect(byId(wrapper, "talon-ops-mute").attributes("disabled")).toBeUndefined()
+			await byId(wrapper, "talon-ops-mute").trigger("click")
+			await settle()
+			expect(api.mute).toHaveBeenCalledWith(1, new Date(inDays(30)).toISOString(), "ACME")
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
 	it("reopens an acknowledged finding, and offers nothing on a resolved one", async () => {
 		const wrapper = await opened(AuthUserRole.Analyst, { status: "acknowledged" })
 		await byId(wrapper, "talon-ops-reopen").trigger("click")
@@ -442,15 +553,185 @@ describe("the detail drawer", () => {
 })
 
 describe("the jobs panel", () => {
-	it("shows each job's schedule, last and next run", async () => {
+	function jobsWith(items: ReturnType<typeof job>[]) {
+		api.listJobs.mockImplementation(() => ok({ success: true, message: "", any_enabled: true, items }))
+	}
+
+	it("is collapsed by default under a summary line, and expands", async () => {
 		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		const summary = byId(wrapper, "talon-ops-jobs-summary")
+		expect(summary.text()).toBe("2 enabled · last runs ok")
+		expect(summary.attributes("data-tone")).toBe("ok")
+		const toggle = byId(wrapper, "talon-ops-jobs-toggle")
+		expect(toggle.attributes("aria-expanded")).toBe("false")
+		// v-show: the table is in the page, hidden (`isVisible` needs a mounted document).
+		const table = () => (byId(wrapper, "talon-ops-jobs-table").element as HTMLElement).style.display
+		expect(table()).toBe("none")
+		await toggle.trigger("click")
+		expect(toggle.attributes("aria-expanded")).toBe("true")
+		expect(table()).toBe("")
+		expect(byId(wrapper, "talon-ops-jobs-summary").text()).toBe("2 enabled · last runs ok")
+	})
+
+	it("summary: amber naming the partial and skipped jobs", async () => {
+		signInAs(AuthUserRole.Analyst)
+		jobsWith([
+			job("quiet_endpoints"),
+			job("mapping_drift", { last_runs: [opsRun("ACME"), opsRun("BETA", { status: "partial" })] }),
+			job("disk_forecast", { last_run: opsRun(null, { status: "skipped" }), last_runs: [] })
+		])
+		const wrapper = render()
+		await settle()
+		const summary = byId(wrapper, "talon-ops-jobs-summary")
+		expect(summary.text()).toBe("1 partial (mapping_drift) · 1 skipped (disk_forecast)")
+		expect(summary.attributes("data-tone")).toBe("warning")
+		expect(summary.classes()).toContain("text-warning")
+	})
+
+	it("summary: red with a failed run", async () => {
+		signInAs(AuthUserRole.Analyst)
+		jobsWith([
+			job("quiet_endpoints"),
+			job("cluster_health", { last_runs: [opsRun(null, { status: "failed", error: "the indexer is down" })] })
+		])
+		const wrapper = render()
+		await settle()
+		const summary = byId(wrapper, "talon-ops-jobs-summary")
+		expect(summary.text()).toBe("1 failed (cluster_health)")
+		expect(summary.attributes("data-tone")).toBe("error")
+		expect(summary.classes()).toContain("text-error")
+		expect(byId(wrapper, "talon-ops-job-status-cluster_health").classes()).toContain("text-error")
+	})
+
+	it("shows each job's schedule in words (the cron in a tooltip), last and next run", async () => {
+		signInAs(AuthUserRole.Analyst)
+		jobsWith([job("quiet_endpoints"), job("silent_log_sources", { schedule: "*/10 * * * *" })])
 		const wrapper = render()
 		await settle()
 		const quiet = byId(wrapper, "talon-ops-job-quiet_endpoints")
 		expect(quiet.text()).toContain("Endpoints gone quiet")
-		expect(quiet.text()).toContain("0 6 * * *")
-		expect(quiet.find('[data-testid="talon-ops-job-last-run"]').text()).toContain("1 new, 1 updated, 0 resolved")
+		expect(byId(wrapper, "talon-ops-job-schedule-quiet_endpoints").text()).toBe("Daily 06:00 UTC")
+		expect(byId(wrapper, "talon-ops-job-cron-quiet_endpoints").text()).toContain("0 6 * * *")
+		expect(byId(wrapper, "talon-ops-job-schedule-silent_log_sources").text()).toBe("*/10 * * * *")
+		expect(quiet.find('[data-testid="talon-ops-job-last-run"]').text()).toContain("ok")
 		expect(quiet.find('[data-testid="talon-ops-job-next-run"]').text()).not.toBe("—")
+		await byId(wrapper, "talon-ops-job-runs-toggle-quiet_endpoints").trigger("click")
+		expect(byId(wrapper, "talon-ops-job-runs-quiet_endpoints").text()).toContain("1 new, 1 updated, 0 resolved")
+	})
+
+	it("lists the newest run per customer, the worst status first", async () => {
+		signInAs(AuthUserRole.Analyst)
+		jobsWith([
+			job("quiet_endpoints", {
+				last_runs: [
+					opsRun("ACME", { new: 2, updated: 0, resolved: 1 }),
+					opsRun("BETA", { status: "partial", error: "the indexer timed out", new: null })
+				]
+			})
+		])
+		const wrapper = render()
+		await settle()
+		const toggle = byId(wrapper, "talon-ops-job-runs-toggle-quiet_endpoints")
+		expect(byId(wrapper, "talon-ops-job-status-quiet_endpoints").text()).toBe("partial")
+		expect(toggle.text()).toContain("2 customers")
+		expect(byId(wrapper, "talon-ops-job-runs-quiet_endpoints").exists()).toBe(false)
+		await toggle.trigger("click")
+		expect(toggle.attributes("aria-expanded")).toBe("true")
+		const lines = byId(wrapper, "talon-ops-job-runs-quiet_endpoints").findAll('[data-testid="talon-ops-job-run"]')
+		expect(lines).toHaveLength(2)
+		// Talon lists ACME first; the partial run comes first here.
+		expect(lines[0].text()).toContain("BETA")
+		expect(lines[0].text()).toContain("partial")
+		expect(lines[0].text()).toContain("? new, 1 updated, 0 resolved")
+		expect(lines[0].text()).toContain("the indexer timed out")
+		expect(lines[1].text()).toContain("ACME")
+		expect(lines[1].text()).toContain("ok")
+		expect(lines[1].text()).toContain("2 new, 0 updated, 1 resolved")
+		await toggle.trigger("click")
+		expect(byId(wrapper, "talon-ops-job-runs-quiet_endpoints").exists()).toBe(false)
+	})
+
+	it("judges a job by its newest tick: an old skipped row and a customer gone from scope don't count", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const OLD = "2026-09-30T06:00:00+00:00"
+		jobsWith([
+			job("quiet_endpoints", {
+				last_runs: [
+					opsRun("ACME"),
+					opsRun("BETA", { id: "beta" }),
+					opsRun(null, { id: "old-skip", status: "skipped", tick: OLD, finished_at: OLD }),
+					opsRun("GONE", { id: "gone", status: "failed", tick: OLD, finished_at: OLD })
+				]
+			})
+		])
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-jobs-summary").text()).toBe("1 enabled · last runs ok")
+		expect(byId(wrapper, "talon-ops-job-status-quiet_endpoints").text()).toBe("ok")
+		const toggle = byId(wrapper, "talon-ops-job-runs-toggle-quiet_endpoints")
+		expect(toggle.text()).toContain("2 customers")
+		await toggle.trigger("click")
+		const lines = byId(wrapper, "talon-ops-job-runs-quiet_endpoints").findAll('[data-testid="talon-ops-job-run"]')
+		expect(lines.map(l => l.text().split(" ")[0])).toEqual(["ACME", "BETA"])
+	})
+
+	it("shows a tick still in progress as running, hiding no customer's previous failure", async () => {
+		const NOW = Date.parse("2026-10-24T08:00:00Z")
+		vi.useFakeTimers({ toFake: ["Date"], now: NOW })
+		try {
+			signInAs(AuthUserRole.Analyst)
+			const NOW_TICK = "2026-10-24T07:50:00+00:00"
+			const YESTERDAY = "2026-10-23T07:50:00+00:00"
+			const customers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+			jobsWith([
+				job("storage_usage", {
+					last_runs: customers.map((c, i) =>
+						i < 4
+							? opsRun(c, { id: `now-${c}`, tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+							: opsRun(c, {
+									id: `old-${c}`,
+									tick: YESTERDAY,
+									finished_at: YESTERDAY,
+									status: c === "E" ? "failed" : "ok",
+									error: c === "E" ? "the indexer timed out" : null
+								})
+					)
+				})
+			])
+			const wrapper = render()
+			await settle()
+			expect(byId(wrapper, "talon-ops-jobs-summary").text()).toBe(
+				"1 failed (storage_usage) · 1 running (storage_usage 4 of 10)"
+			)
+			expect(byId(wrapper, "talon-ops-jobs-summary").attributes("data-tone")).toBe("error")
+			expect(byId(wrapper, "talon-ops-job-status-storage_usage").text()).toBe("failed")
+			expect(byId(wrapper, "talon-ops-job-running-storage_usage").text()).toBe("· running (4 of 10)")
+			const toggle = byId(wrapper, "talon-ops-job-runs-toggle-storage_usage")
+			expect(toggle.text()).toContain("10 customers")
+			await toggle.trigger("click")
+			const lines = byId(wrapper, "talon-ops-job-runs-storage_usage").findAll('[data-testid="talon-ops-job-run"]')
+			expect(lines).toHaveLength(10)
+			expect(lines[0].text()).toContain("E")
+			expect(lines[0].text()).toContain("the indexer timed out")
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	it("tells a non-admin a platform job's runs are an admin's, and leaves it out of the summary", async () => {
+		signInAs(AuthUserRole.Analyst)
+		jobsWith([
+			job("quiet_endpoints"),
+			job("cluster_health", { scope: "platform", last_run: null, last_runs: [], schedule: "5 * * * *" })
+		])
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-job-platform-cluster_health").text()).toBe("Platform job (admins only)")
+		expect(byId(wrapper, "talon-ops-job-cluster_health").text()).not.toContain("No run yet")
+		expect(byId(wrapper, "talon-ops-jobs-summary").text()).toBe("1 enabled · last runs ok")
+		expect(byId(wrapper, "talon-ops-job-schedule-cluster_health").text()).toBe("Hourly at :05 UTC")
 	})
 
 	it("offers run now to an admin only, for an enabled job", async () => {
@@ -461,14 +742,7 @@ describe("the jobs panel", () => {
 		analyst.unmount()
 
 		signInAs(AuthUserRole.Admin)
-		api.listJobs.mockImplementation(() =>
-			ok({
-				success: true,
-				message: "",
-				any_enabled: true,
-				items: [job("quiet_endpoints"), job("silent_log_sources", { enabled: false, next_run: null })]
-			})
-		)
+		jobsWith([job("quiet_endpoints"), job("silent_log_sources", { enabled: false, next_run: null })])
 		const admin = render()
 		await settle()
 		expect(byId(admin, "talon-ops-run-silent_log_sources").attributes("disabled")).toBeDefined()
@@ -476,6 +750,303 @@ describe("the jobs panel", () => {
 		await settle()
 		expect(api.runNow).toHaveBeenCalledWith("quiet_endpoints")
 		expect(byId(admin, "talon-ops-run-message").text()).toContain("queued")
+	})
+})
+
+describe("run now, then its runs", () => {
+	const CLICK = Date.parse("2026-10-24T08:00:00Z")
+	// Talon's tick for this click (DBOS's `trigger_schedule` time), in its workflow id and its runs.
+	const TICK = "2026-10-24T07:59:58.123456+00:00"
+	const WORKFLOW = `sched-talon-ops:quiet_endpoints-trigger-${TICK}`
+	let runs: ReturnType<typeof opsRun>[]
+
+	beforeEach(() => {
+		// Only the clocks: flushPromises still uses the real setImmediate.
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"], now: CLICK })
+		runs = [opsRun("ACME")]
+		api.listRuns.mockImplementation(() => ok({ success: true, message: "", items: runs, dropped: 0 }))
+		api.runNow.mockImplementation(() =>
+			ok({ success: true, message: "", job: "quiet_endpoints", workflow_id: WORKFLOW, status: "queued" })
+		)
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
+	async function clicked(items = [job("quiet_endpoints")]) {
+		signInAs(AuthUserRole.Admin)
+		api.listJobs.mockImplementation(() => ok({ success: true, message: "", any_enabled: true, items }))
+		const wrapper = render()
+		await settle()
+		await byId(wrapper, "talon-ops-run-quiet_endpoints").trigger("click")
+		await settle()
+		return wrapper
+	}
+
+	async function tick(ms = RUN_POLL_MS) {
+		await vi.advanceTimersByTimeAsync(ms)
+		await settle()
+	}
+
+	/** The polls in a row without a new run that end the watch once every run expected is in. */
+	async function quietPolls() {
+		for (let i = 0; i < QUIET_POLLS; i++) await tick()
+	}
+
+	const message = (wrapper: Wrapper) => byId(wrapper, "talon-ops-run-message").text()
+
+	const fresh = (customer: string | null, overrides: Record<string, unknown> = {}) =>
+		opsRun(customer, {
+			id: `quiet_endpoints:${customer ?? "-"}:${TICK}`,
+			tick: TICK,
+			triggered_by: "manual",
+			finished_at: "2026-10-24T08:00:20Z",
+			new: 2,
+			updated: 1,
+			resolved: 3,
+			...overrides
+		})
+
+	it("reloads the jobs and the findings once the run is in, and says what it found", async () => {
+		const wrapper = await clicked()
+		expect(api.listRuns).toHaveBeenCalledWith({ job: "quiet_endpoints", limit: 200 }, expect.anything())
+		expect(message(wrapper)).toContain("queued")
+		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeDefined()
+		const jobsCalls = api.listJobs.mock.calls.length
+		const findingsCalls = api.listFindings.mock.calls.length
+
+		await tick()
+		expect(api.listRuns).toHaveBeenCalledTimes(2)
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+
+		runs = [fresh("ACME"), ...runs]
+		await tick()
+		// In; a few more polls make sure no other customer's run follows.
+		for (let i = 1; i < QUIET_POLLS; i++) await tick()
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+		await tick()
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
+		expect(api.listFindings).toHaveBeenCalledTimes(findingsCalls + 1)
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 2 new, 1 updated, 3 resolved.")
+		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeUndefined()
+
+		const polls = api.listRuns.mock.calls.length
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(polls)
+	})
+
+	it("ignores a scheduled run and another click's run finishing meanwhile", async () => {
+		const wrapper = await clicked()
+		runs = [
+			opsRun("ACME", {
+				id: "sched",
+				tick: "2026-10-24T08:00:15+00:00",
+				finished_at: "2026-10-24T08:00:16Z",
+				new: 9
+			}),
+			opsRun("ACME", {
+				id: "other",
+				tick: "2026-10-24T07:58:00+00:00",
+				triggered_by: "manual",
+				finished_at: "2026-10-24T08:00:10Z",
+				new: 7
+			}),
+			...runs
+		]
+		await tick()
+		await tick()
+		expect(message(wrapper)).toContain("queued")
+		runs = [fresh("ACME"), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 2 new, 1 updated, 3 resolved.")
+	})
+
+	it("waits for every customer's run, reloading once at the end", async () => {
+		const wrapper = await clicked([
+			job("quiet_endpoints", { last_runs: [opsRun("ACME"), opsRun("BETA", { id: "beta-old" })] })
+		])
+		const jobsCalls = api.listJobs.mock.calls.length
+		runs = [fresh("ACME"), ...runs]
+		await tick()
+		expect(message(wrapper)).toBe(
+			"Endpoints gone quiet: 2 new, 1 updated, 3 resolved so far (1 of 2 customers); still running."
+		)
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+		runs = [fresh("BETA", { status: "partial", new: 0, updated: 0, resolved: 1 }), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished (partial): 2 new, 1 updated, 4 resolved.")
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
+	})
+
+	it("counts a customer missing from the last tick that comes in a few polls late", async () => {
+		// The last tick ran for ACME and BETA; NEW was added since, and its unit is queued behind them.
+		const wrapper = await clicked([
+			job("quiet_endpoints", { last_runs: [opsRun("ACME"), opsRun("BETA", { id: "beta-old" })] })
+		])
+		runs = [fresh("ACME"), fresh("BETA"), ...runs]
+		await tick()
+		// Two polls go by with nothing new: more than one poll interval, fewer than the quiet polls.
+		await tick()
+		await tick()
+		expect(message(wrapper)).toContain("queued")
+		runs = [fresh("NEW", { new: 5, updated: 0, resolved: 0 }), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 9 new, 2 updated, 6 resolved.")
+	})
+
+	it("isn't done at 4 of 10 while the last tick is still in progress", async () => {
+		// The scheduled tick at 07:50 has run for 4 of its 10 customers; 6 still show yesterday's run.
+		const NOW_TICK = "2026-10-24T07:50:00+00:00"
+		const YESTERDAY = "2026-10-23T07:50:00+00:00"
+		const customers = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+		const lastRuns = customers.map((c, i) =>
+			i < 4
+				? opsRun(c, { id: `now-${c}`, tick: NOW_TICK, finished_at: "2026-10-24T07:55:00Z" })
+				: opsRun(c, { id: `old-${c}`, tick: YESTERDAY, finished_at: YESTERDAY })
+		)
+		const wrapper = await clicked([job("quiet_endpoints", { last_runs: lastRuns })])
+		const jobsCalls = api.listJobs.mock.calls.length
+		runs = [...customers.slice(0, 4).map(c => fresh(c)), ...runs]
+		await tick()
+		await quietPolls()
+		await quietPolls()
+		expect(message(wrapper)).toBe(
+			"Endpoints gone quiet: 8 new, 4 updated, 12 resolved so far (4 of 10 customers); still running."
+		)
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+		runs = [...customers.slice(4).map(c => fresh(c)), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 20 new, 10 updated, 30 resolved.")
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
+	})
+
+	it("ends at a skipped run without a customer", async () => {
+		const wrapper = await clicked([
+			job("quiet_endpoints", { last_runs: [opsRun("ACME"), opsRun("BETA", { id: "beta-old" })] })
+		])
+		runs = [fresh(null, { status: "skipped", new: 0, updated: 0, resolved: 0 }), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished (skipped): 0 new, 0 updated, 0 resolved.")
+	})
+
+	it("gives up after two minutes: still running, refresh later, nothing reloaded", async () => {
+		const wrapper = await clicked()
+		const jobsCalls = api.listJobs.mock.calls.length
+		await tick(RUN_WATCH_MS - RUN_POLL_MS)
+		expect(message(wrapper)).toContain("queued")
+		await tick()
+		expect(message(wrapper)).toBe("Endpoints gone quiet is still running; refresh later.")
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls)
+		const polls = api.listRuns.mock.calls.length
+		expect(polls).toBe(1 + RUN_WATCH_MS / RUN_POLL_MS)
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(polls)
+		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeUndefined()
+	})
+
+	it("at the timeout with some runs in, says so and reloads once", async () => {
+		const wrapper = await clicked([
+			job("quiet_endpoints", { last_runs: [opsRun("ACME"), opsRun("BETA", { id: "beta-old" })] })
+		])
+		const jobsCalls = api.listJobs.mock.calls.length
+		runs = [fresh("ACME"), ...runs]
+		await tick(RUN_WATCH_MS)
+		expect(message(wrapper)).toBe(
+			"Endpoints gone quiet: 2 new, 1 updated, 3 resolved so far (1 of 2 customers); the rest are still running; refresh later."
+		)
+		expect(api.listJobs).toHaveBeenCalledTimes(jobsCalls + 1)
+	})
+
+	it("keeps polling past a transient failure", async () => {
+		const wrapper = await clicked()
+		api.listRuns.mockImplementationOnce(() =>
+			refusal(502, { detail: "Talon could not be reached", code: "unavailable" })
+		)
+		await tick()
+		runs = [fresh("ACME"), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toContain("finished")
+	})
+
+	it.each([
+		[403, { detail: "not one of your customers", code: "forbidden" }, "not one of your customers"],
+		[404, { detail: "Not Found" }, "Talon v2 is off in CoPilot"]
+	])("stops polling on a %s and says why", async (status, body, detail) => {
+		const wrapper = await clicked()
+		api.listRuns.mockImplementation(() => refusal(status, body))
+		await tick()
+		expect(message(wrapper)).toBe(`Endpoints gone quiet: its runs can't be read (${detail}).`)
+		const polls = api.listRuns.mock.calls.length
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(polls)
+		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeUndefined()
+	})
+
+	it("without a workflow id, matches the manual runs Talon didn't have before the click", async () => {
+		api.runNow.mockImplementation(() =>
+			ok({ success: true, message: "", job: "quiet_endpoints", workflow_id: null, status: "queued" })
+		)
+		const wrapper = await clicked()
+		runs = [opsRun("ACME", { id: "sched", tick: "2026-10-24T08:00:15+00:00", new: 9 }), ...runs]
+		await tick()
+		await tick()
+		expect(message(wrapper)).toContain("queued")
+		runs = [fresh("ACME"), ...runs]
+		await tick()
+		await quietPolls()
+		expect(message(wrapper)).toBe("Endpoints gone quiet finished: 2 new, 1 updated, 3 resolved.")
+	})
+
+	it("without a workflow id or the runs before the click, doesn't guess from the browser's clock", async () => {
+		api.runNow.mockImplementation(() =>
+			ok({ success: true, message: "", job: "quiet_endpoints", workflow_id: null, status: "queued" })
+		)
+		api.listRuns.mockImplementation(() =>
+			refusal(503, { detail: "Talon could not be reached", code: "unavailable" })
+		)
+		signInAs(AuthUserRole.Admin)
+		const wrapper = render()
+		await settle()
+		await byId(wrapper, "talon-ops-run-quiet_endpoints").trigger("click")
+		await settle()
+		// The read before queueing is tried three times, a second apart.
+		await tick(1000)
+		await tick(1000)
+		expect(api.listRuns).toHaveBeenCalledTimes(3)
+		expect(api.runNow).toHaveBeenCalledTimes(1)
+		expect(message(wrapper)).toBe(
+			"Endpoints gone quiet is queued to run now. Its runs can't be followed here: refresh later."
+		)
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(3)
+	})
+
+	it("stops polling when the page goes away", async () => {
+		const wrapper = await clicked()
+		await tick()
+		const polls = api.listRuns.mock.calls.length
+		wrapper.unmount()
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(polls)
+	})
+
+	it("shows a refused run now, and polls nothing", async () => {
+		api.runNow.mockImplementation(() =>
+			refusal(409, { detail: "the job is not enabled (TALON_OPS_JOBS)", code: "conflict" })
+		)
+		const wrapper = await clicked()
+		expect(message(wrapper)).toBe("the job is not enabled (TALON_OPS_JOBS)")
+		const polls = api.listRuns.mock.calls.length
+		await tick(RUN_WATCH_MS)
+		expect(api.listRuns).toHaveBeenCalledTimes(polls)
+		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeUndefined()
 	})
 })
 
