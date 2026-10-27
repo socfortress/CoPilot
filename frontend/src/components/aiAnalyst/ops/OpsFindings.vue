@@ -70,6 +70,8 @@
 			</n-button>
 		</div>
 
+		<!-- The stale marker's tooltip, for keyboard and screen-reader users (`aria-describedby`). -->
+		<span :id="STALE_HELP_ID" class="sr-only" data-testid="talon-ops-stale-help">{{ STALE_TEXT }}</span>
 		<OpsProblem v-if="problem" :state="problem" @retry="reload()" />
 		<template v-else>
 			<n-data-table
@@ -147,6 +149,8 @@ import OpsProblem from "./OpsProblem.vue"
 
 const { jobs = [], isAdmin = false } = defineProps<{ jobs?: TalonOpsJob[]; isAdmin?: boolean }>()
 const emit = defineEmits<{ (e: "open", finding: TalonOpsFinding): void }>()
+
+const STALE_HELP_ID = "talon-ops-stale-help"
 
 const { options: customerOptions, loading: customersLoading, load: loadCustomers } = useCustomerOptions()
 
@@ -265,14 +269,17 @@ const columns: DataTableColumns<TalonOpsFinding> = [
 				h(Icon, { name: info.icon, size: 14 }),
 				info.label
 			])
-			if (!row.stale_since) return status
 			// The job couldn't measure it: it stays as it was, and can't clear until a run measures it again.
+			// Talon keeps `stale_since` on a resolved finding, where it no longer matters.
+			if (!row.stale_since || row.status === "resolved") return status
 			const stale = h(NTooltip, null, {
 				trigger: () =>
 					h(
 						"span",
 						{
 							class: "text-warning inline-flex items-center gap-1 text-xs",
+							tabindex: 0,
+							"aria-describedby": STALE_HELP_ID,
 							"data-testid": `talon-ops-stale-${row.id}`
 						},
 						[

@@ -157,9 +157,11 @@ export function defaultMuteUntil(now = Date.now()): number {
 /** The mute presets beside the picker, in days (each inside the 90-day window). */
 export const MUTE_PRESETS = [1, 7, 30] as const
 
-/** A mute end `days` from now (ms). */
+/** A mute end `days` calendar days from now (ms): the same local time of day, across a DST change too. */
 export function muteUntilIn(days: number, now = Date.now()): number {
-	return now + days * DAY_MS
+	const at = new Date(now)
+	at.setDate(at.getDate() + days)
+	return at.getTime()
 }
 
 // ── the jobs ──────────────────────────────────────────────────────────────────
@@ -176,7 +178,7 @@ const pad = (n: number) => String(n).padStart(2, "0")
 
 /**
  * A job's cron (UTC) in plain words, for the patterns the jobs use: `M H * * *` ("Daily 05:30 UTC"),
- * `M * * * *` ("Hourly at :05") and `M H * * D` ("Mondays 05:00 UTC"). Any other cron comes back as
+ * `M * * * *` ("Hourly at :05 UTC") and `M H * * D` ("Mondays 05:00 UTC"). Any other cron comes back as
  * it is: never a guess.
  */
 export function humanSchedule(cron: string | null | undefined): string {
@@ -186,7 +188,7 @@ export function humanSchedule(cron: string | null | undefined): string {
 	const [m, h, dom, month, dow] = fields
 	const minute = cronNumber(m, 59)
 	if (minute === null || dom !== "*" || month !== "*") return cron
-	if (h === "*") return dow === "*" ? `Hourly at :${pad(minute)}` : cron
+	if (h === "*") return dow === "*" ? `Hourly at :${pad(minute)} UTC` : cron
 	const hour = cronNumber(h, 23)
 	if (hour === null) return cron
 	const at = `${pad(hour)}:${pad(minute)} UTC`
@@ -202,10 +204,51 @@ function statusRank(status: string): number {
 	return STATUS_RANK[status] ?? 1
 }
 
+function parsedMs(iso: string | null | undefined): number | null {
+	if (!iso) return null
+	const ms = Date.parse(iso)
+	return Number.isFinite(ms) ? ms : null
+}
+
 /** A job's newest run per customer (`last_runs`), else its newest run, else none. */
 export function jobRuns(job: Pick<TalonOpsJob, "last_run" | "last_runs">): TalonOpsRun[] {
 	if (job.last_runs?.length) return job.last_runs
 	return job.last_run ? [job.last_run] : []
+}
+
+/**
+ * The runs of a job's newest tick. `last_runs` is the newest run per customer over Talon's 30-day run
+ * retention, so it also holds an old skipped run without a customer and the last run of a customer
+ * that has left scope; the runs of one tick (scheduled or run now) share it, and are the job's current
+ * state. Runs without a readable tick are kept only when no run has one.
+ */
+export function currentRuns(job: Pick<TalonOpsJob, "last_run" | "last_runs">): TalonOpsRun[] {
+	const runs = jobRuns(job)
+	const ticks = runs.map(run => parsedMs(run.tick))
+	const known = ticks.filter((t): t is number => t !== null)
+	if (!known.length) return runs
+	const newest = Math.max(...known)
+	return runs.filter((_, i) => ticks[i] === newest)
+}
+
+/** Runs worst status first (then as Talon listed them). */
+export function byWorst<T extends Pick<TalonOpsRun, "status">>(runs: T[]): T[] {
+	return [...runs].sort((a, b) => statusRank(b.status) - statusRank(a.status))
+}
+
+/** When the newest of these runs finished (ISO), or null. */
+export function lastFinished(runs: Pick<TalonOpsRun, "finished_at">[]): string | null {
+	let best: string | null = null
+	for (const run of runs) {
+		const at = parsedMs(run.finished_at)
+		if (at !== null && (best === null || at > (parsedMs(best) as number))) best = run.finished_at
+	}
+	return best
+}
+
+/** A platform job's runs are for admins only: anyone else sees none of them (talon-analyst `_visible`). */
+export function hiddenPlatformJob(job: Pick<TalonOpsJob, "scope">, isAdmin: boolean): boolean {
+	return job.scope === "platform" && !isAdmin
 }
 
 /** The worst status across a job's newest run per customer; null before its first run. */
@@ -243,29 +286,45 @@ export interface JobsSummary {
 }
 
 /**
- * The jobs' one-line summary, over the enabled jobs' worst last-run status: "9 enabled · last runs
- * ok", or the jobs that weren't ok by status, worst first ("1 partial (mapping_drift) · 1 skipped
- * (disk_forecast)"), amber, red with a failed one.
+ * The jobs' one-line summary, over the enabled jobs' newest tick (`currentRuns`): "9 enabled · last
+ * runs ok", or what isn't, worst first and naming the jobs ("1 partial (mapping_drift) · 1 skipped
+ * (disk_forecast)"), amber, red with a failed one. An enabled job whose schedule isn't ACTIVE is a
+ * warning ("1 schedule paused (…)"); "N not run yet" is always said. A platform job is left out for a
+ * caller who can't see its runs (`isAdmin` false).
  */
-export function jobsSummary(jobs: Pick<TalonOpsJob, "name" | "enabled" | "last_run" | "last_runs">[]): JobsSummary {
-	if (!jobs.length) return { tone: "ok", text: "No ops jobs" }
-	const enabled = jobs.filter(j => j.enabled)
-	if (!enabled.length) return { tone: "ok", text: `${jobs.length} job${jobs.length === 1 ? "" : "s"}, none enabled` }
+export function jobsSummary(
+	jobs: Pick<TalonOpsJob, "name" | "enabled" | "scope" | "schedule_status" | "last_run" | "last_runs">[],
+	isAdmin = true
+): JobsSummary {
+	const visible = jobs.filter(j => !hiddenPlatformJob(j, isAdmin))
+	if (!visible.length) return { tone: "ok", text: "No ops jobs" }
+	const enabled = visible.filter(j => j.enabled)
+	if (!enabled.length) {
+		return { tone: "ok", text: `${visible.length} job${visible.length === 1 ? "" : "s"}, none enabled` }
+	}
 	const byStatus = new Map<string, string[]>()
+	const bySchedule = new Map<string, string[]>()
+	const add = (map: Map<string, string[]>, key: string, name: string) => map.set(key, [...(map.get(key) ?? []), name])
 	let notRun = 0
 	for (const job of enabled) {
-		const worst = worstStatus(jobRuns(job))
+		const worst = worstStatus(currentRuns(job))
 		if (worst === null) notRun++
-		else if (worst !== "ok") byStatus.set(worst, [...(byStatus.get(worst) ?? []), job.name])
+		else if (worst !== "ok") add(byStatus, worst, job.name)
+		if (job.schedule_status && job.schedule_status !== "ACTIVE") {
+			add(bySchedule, `schedule ${job.schedule_status.toLowerCase()}`, job.name)
+		}
 	}
-	if (!byStatus.size) {
-		const text = `${enabled.length} enabled · last runs ok`
-		return { tone: "ok", text: notRun ? `${text} · ${notRun} not run yet` : text }
+	const later = notRun ? [`${notRun} not run yet`] : []
+	if (!byStatus.size && !bySchedule.size) {
+		return { tone: "ok", text: [`${enabled.length} enabled · last runs ok`, ...later].join(" · ") }
 	}
-	const groups = [...byStatus.entries()].sort((a, b) => statusRank(b[0]) - statusRank(a[0]))
+	const groups = [
+		...[...byStatus.entries()].sort((a, b) => statusRank(b[0]) - statusRank(a[0])),
+		...bySchedule.entries()
+	]
 	return {
 		tone: byStatus.has("failed") ? "error" : "warning",
-		text: groups.map(([status, names]) => `${names.length} ${status} (${names.join(", ")})`).join(" · ")
+		text: [...groups.map(([what, names]) => `${names.length} ${what} (${names.join(", ")})`), ...later].join(" · ")
 	}
 }
 
@@ -330,29 +389,44 @@ export const RUN_WATCH_MS = 2 * 60 * 1000
 /** Talon's and CoPilot's largest page of runs (`RUNS_MAX`, `MAX_LIMIT`). */
 export const RUNS_LIMIT = 200
 
-function parsedMs(iso: string | null | undefined): number | null {
-	if (!iso) return null
-	const ms = Date.parse(iso)
-	return Number.isFinite(ms) ? ms : null
+/** Two ticks within this are one: Talon stores the tick it was given, at most truncated. */
+const TICK_SLACK_MS = 1000
+
+/**
+ * The tick of a Run now, from the workflow id Talon returns: DBOS's `trigger_schedule` names it
+ * `sched-<schedule>-trigger-<UTC ISO time>`, and that time is the tick of every run it records. Null
+ * when the id isn't one.
+ */
+export function triggerTick(workflowId: string | null | undefined): number | null {
+	const iso = workflowId?.match(/-trigger-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))$/)?.[1]
+	return iso ? parsedMs(iso.replace(/(\.\d{3})\d+/, "$1")) : null
 }
 
 /**
- * The finished runs that Run now produced: the ones Talon didn't have when it was clicked (`before`,
- * the run ids read then), or, when that list couldn't be read, the ones that finished after the click.
- * The ids don't depend on this browser's clock.
+ * The finished runs this Run now produced. Only `manual` runs count (a scheduled run, never). With the
+ * run's tick (`triggerTick`), the runs of that tick; without it, the ones Talon didn't have before the
+ * click (`before`, run ids read then) of the newest such tick. Neither: none. This browser's clock is
+ * never used.
  */
-export function freshRuns(runs: TalonOpsRun[], before: ReadonlySet<string> | null, clickedAt: number): TalonOpsRun[] {
-	return runs.filter(run => {
-		const finished = parsedMs(run.finished_at)
-		if (finished === null) return false
-		return before ? !before.has(run.id) : finished > clickedAt
-	})
+export function freshRuns(runs: TalonOpsRun[], tick: number | null, before: ReadonlySet<string> | null): TalonOpsRun[] {
+	const manual = runs.filter(run => run.triggered_by === "manual" && parsedMs(run.finished_at) !== null)
+	if (tick !== null) {
+		return manual.filter(run => {
+			const at = parsedMs(run.tick)
+			return at !== null && Math.abs(at - tick) < TICK_SLACK_MS
+		})
+	}
+	if (!before) return []
+	const unseen = manual.filter(run => !before.has(run.id) && parsedMs(run.tick) !== null)
+	if (!unseen.length) return []
+	const newest = Math.max(...unseen.map(run => parsedMs(run.tick) as number))
+	return unseen.filter(run => parsedMs(run.tick) === newest)
 }
 
-/** How many runs Run now should produce: one for a platform job, else one per customer last time. */
+/** How many runs Run now should produce: one for a platform job, else one per customer of the newest tick. */
 export function expectedRuns(job: Pick<TalonOpsJob, "scope" | "last_run" | "last_runs">): number {
 	if (job.scope === "platform") return 1
-	return Math.max(1, jobRuns(job).length)
+	return Math.max(1, currentRuns(job).length)
 }
 
 /** Whether every run is in: as many as expected, or one without a customer (a skipped job records one). */
@@ -384,7 +458,15 @@ export function runResult(
 	const type = tone === "error" ? "error" : tone === "warning" ? "warning" : done ? "success" : "info"
 	const status = worst && worst !== "ok" ? ` (${worst})` : ""
 	if (done) return { type, text: `${label} finished${status}: ${counts}.` }
-	const progress = `${fresh.length} of ${expected} customers`
+	const progress =
+		fresh.length < expected
+			? `${fresh.length} of ${expected} customers`
+			: `${fresh.length} customer${fresh.length === 1 ? "" : "s"}`
 	const rest = timedOut ? "the rest are still running; refresh later" : "still running"
 	return { type, text: `${label}${status}: ${counts} so far (${progress}); ${rest}.` }
+}
+
+/** A failure worth another try: no answer, a 5xx (Talon unreachable, a bad answer) or a 429. */
+export function isTransient(failure: Pick<TalonOpsFailure, "status">): boolean {
+	return failure.status === null || failure.status >= 500 || failure.status === 429
 }

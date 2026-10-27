@@ -104,7 +104,7 @@
 							</td>
 							<td class="py-1.5 pr-3" data-testid="talon-ops-job-last-run">
 								<button
-									v-if="jobRuns(job).length"
+									v-if="current[job.name].length"
 									type="button"
 									class="inline-flex flex-wrap items-center gap-1 text-left hover:underline"
 									:aria-expanded="openRuns.has(job.name)"
@@ -116,20 +116,29 @@
 									@click="toggleRuns(job.name)"
 								>
 									<span
-										:class="toneClass(statusTone(worstStatus(jobRuns(job))))"
+										:class="toneClass(statusTone(worstStatus(current[job.name])))"
 										:data-testid="`talon-ops-job-status-${job.name}`"
 									>
-										{{ worstStatus(jobRuns(job)) }}
+										{{ worstStatus(current[job.name]) }}
 									</span>
-									<span class="text-secondary">· {{ formatTime(jobRuns(job)[0].finished_at) }}</span>
-									<span v-if="jobRuns(job).length > 1" class="text-tertiary">
-										· {{ jobRuns(job).length }} customers
+									<span class="text-secondary">
+										· {{ formatTime(lastFinished(current[job.name])) }}
+									</span>
+									<span v-if="current[job.name].length > 1" class="text-tertiary">
+										· {{ current[job.name].length }} customers
 									</span>
 									<Icon
 										:name="openRuns.has(job.name) ? 'carbon:chevron-up' : 'carbon:chevron-down'"
 										:size="12"
 									/>
 								</button>
+								<span
+									v-else-if="hiddenPlatformJob(job, isAdmin)"
+									class="text-tertiary"
+									:data-testid="`talon-ops-job-platform-${job.name}`"
+								>
+									Platform job (admins only)
+								</span>
 								<span v-else class="text-tertiary">No run yet</span>
 							</td>
 							<td class="py-1.5 pr-3 whitespace-nowrap" data-testid="talon-ops-job-next-run">
@@ -158,7 +167,7 @@
 							<td :colspan="isAdmin ? 5 : 4" class="pb-2 pl-3">
 								<ul class="flex flex-col gap-0.5">
 									<li
-										v-for="run of jobRuns(job)"
+										v-for="run of current[job.name]"
 										:key="run.id"
 										class="text-secondary"
 										data-testid="talon-ops-job-run"
@@ -198,16 +207,21 @@
 
 <script setup lang="ts">
 // The ops jobs (`GET /talon/ops/jobs`), collapsed by default under a one-line summary that stays
-// visible ("9 enabled · last runs ok", or the jobs whose last runs weren't ok, amber, red with a failed
-// one). Expanded, a compact table: each job's title, its schedule in words (the cron in a tooltip), the
-// worst status of its newest run per customer (`last_runs`; a click lists them: customer, status, when,
-// counts, Talon's fixed error text), its next run, and "Run now" for an admin on an enabled job.
+// visible ("9 enabled · last runs ok", or what isn't: amber, red with a failed run). Expanded, a
+// compact table: each job's title, its schedule in words (the cron in a tooltip), the worst status of
+// its newest tick's runs (`currentRuns`: `last_runs` also holds older ones; a click lists them, worst
+// first: customer, status, when, counts, Talon's fixed error text), its next run, and "Run now" for an
+// admin on an enabled job. A platform job's runs are an admin's: anyone else sees "admins only".
 //
-// Run now queues a run in Talon, then polls the job's runs (`GET /talon/ops/runs?job=`) every few
-// seconds for up to two minutes. When runs Talon didn't have at the click have finished, the page
-// reloads the jobs and the findings (`ran`) and says what they found ("N new, N updated, N resolved");
-// with none by then, "still running; refresh later". Unmounting stops the polling.
+// Run now reads the job's runs, queues a run in Talon, then polls `GET /talon/ops/runs?job=` every few
+// seconds for up to two minutes for this click's runs: `manual` ones of the tick in the workflow id
+// Talon returns (`freshRuns`; never this browser's clock). Once every customer's run is in and a poll
+// finds no more, or at the timeout with some in, it reloads the jobs and the findings once (`ran`) and
+// says what they found ("N new, N updated, N resolved"); with none, "still running; refresh later". A
+// refusal (403, 404, v2 off) stops the polling and is shown; anything transient is tried again.
+// Unmounting stops it too.
 import type { RunResult, Tone } from "./ops"
+import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsJob, TalonOpsRun } from "@/types/talonOps"
 import { NAlert, NButton, NTag, NTooltip } from "naive-ui"
 import { computed, onBeforeUnmount, ref } from "vue"
@@ -216,13 +230,17 @@ import { opsFailure } from "@/api/endpoints/talonOps"
 import Icon from "@/components/common/Icon.vue"
 import { formatTime } from "../health/health"
 import {
+	byWorst,
+	currentRuns,
 	customerText,
 	expectedRuns,
 	freshRuns,
+	hiddenPlatformJob,
 	humanSchedule,
+	isTransient,
 	jobLabel,
-	jobRuns,
 	jobsSummary,
+	lastFinished,
 	RUN_POLL_MS,
 	RUN_WATCH_MS,
 	runCounts,
@@ -230,6 +248,7 @@ import {
 	RUNS_LIMIT,
 	runsDone,
 	statusTone,
+	triggerTick,
 	worstStatus
 } from "./ops"
 
@@ -244,6 +263,9 @@ const emit = defineEmits<{
 	(e: "ran"): void
 }>()
 
+/** Tries of the runs read before queueing, a second apart, while it fails transiently. */
+const PRE_READ_TRIES = 3
+
 const expanded = ref(false)
 const openRuns = ref(new Set<string>())
 const queueing = ref<string | null>(null)
@@ -252,7 +274,11 @@ const messages = ref<Record<string, RunResult>>({})
 /** One per job being queued or watched: aborting it stops that job's polling and requests. */
 const watches = new Map<string, AbortController>()
 
-const summary = computed(() => jobsSummary(jobs))
+const summary = computed(() => jobsSummary(jobs, isAdmin))
+/** Each job's newest tick's runs, worst first. */
+const current = computed<Record<string, TalonOpsRun[]>>(() =>
+	Object.fromEntries(jobs.map(job => [job.name, byWorst(currentRuns(job))]))
+)
 
 function toneClass(tone: Tone): string {
 	if (tone === "error") return "text-error"
@@ -296,14 +322,27 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 	})
 }
 
-/** The job's recent runs, or null when they couldn't be read (the next poll tries again). */
-async function readRuns(name: string, signal: AbortSignal): Promise<TalonOpsRun[] | null> {
+type RunsRead = { runs: TalonOpsRun[] } | { failure: TalonOpsFailure }
+
+/** The job's recent runs, or why they couldn't be read. */
+async function readRuns(name: string, signal: AbortSignal): Promise<RunsRead> {
 	try {
 		const { data } = await Api.talonOps.listRuns({ job: name, limit: RUNS_LIMIT }, signal)
-		return data.items
-	} catch {
-		return null
+		return { runs: data.items }
+	} catch (err) {
+		return { failure: opsFailure(err) }
 	}
+}
+
+/** The run ids Talon has before the click (the fallback when Talon returns no workflow id), or null. */
+async function knownRuns(name: string, signal: AbortSignal): Promise<Set<string> | null> {
+	for (let attempt = 1; attempt <= PRE_READ_TRIES; attempt++) {
+		const read = await readRuns(name, signal)
+		if ("runs" in read) return new Set(read.runs.map(run => run.id))
+		if (signal.aborted || !isTransient(read.failure) || attempt === PRE_READ_TRIES) return null
+		await sleep(1000, signal)
+	}
+	return null
 }
 
 async function runNow(job: TalonOpsJob) {
@@ -315,19 +354,26 @@ async function runNow(job: TalonOpsJob) {
 	queueing.value = name
 	delete messages.value[name]
 	const label = jobLabel(name)
-	const clickedAt = Date.now()
 	try {
-		// The runs Talon has now: any other finished run from here on is this one's.
-		const known = await readRuns(name, own.signal)
+		const before = await knownRuns(name, own.signal)
 		if (own.signal.aborted) return
-		await Api.talonOps.runNow(name)
+		const { data } = await Api.talonOps.runNow(name)
 		if (own.signal.aborted) return
+		const tick = triggerTick(data.workflow_id)
+		queueing.value = null
+		if (tick === null && before === null) {
+			messages.value[name] = {
+				type: "info",
+				text: `${label} is queued to run now. Its runs can't be followed here: refresh later.`
+			}
+			watches.delete(name)
+			return
+		}
 		messages.value[name] = {
 			type: "info",
 			text: `${label} is queued to run now. Its results show here when it finishes.`
 		}
-		queueing.value = null
-		await watch(job, label, known ? new Set(known.map(run => run.id)) : null, clickedAt, own)
+		await watch(job, label, tick, before, own)
 	} catch (err) {
 		if (!own.signal.aborted) messages.value[name] = { type: "error", text: opsFailure(err).detail }
 		if (watches.get(name) === own) watches.delete(name)
@@ -339,8 +385,8 @@ async function runNow(job: TalonOpsJob) {
 async function watch(
 	job: TalonOpsJob,
 	label: string,
+	tick: number | null,
 	before: Set<string> | null,
-	clickedAt: number,
 	own: AbortController
 ) {
 	const name = job.name
@@ -352,16 +398,30 @@ async function watch(
 		while (!own.signal.aborted) {
 			await sleep(RUN_POLL_MS, own.signal)
 			if (own.signal.aborted) return
-			const runs = await readRuns(name, own.signal)
+			const read = await readRuns(name, own.signal)
 			if (own.signal.aborted) return
-			const found = runs ? freshRuns(runs, before, clickedAt) : fresh
+			if ("failure" in read && !isTransient(read.failure)) {
+				if (fresh.length) emit("ran")
+				messages.value[name] = {
+					type: "error",
+					text: `${label}: its runs can't be read (${read.failure.detail}).`
+				}
+				return
+			}
+			const found = "runs" in read ? freshRuns(read.runs, tick, before) : fresh
 			const grew = found.length > fresh.length
-			if (grew) fresh = found
-			const done = fresh.length > 0 && runsDone(fresh, expected)
-			const timedOut = !done && Date.now() >= deadline
-			if (grew) emit("ran")
-			if (grew || done || timedOut) messages.value[name] = runResult(label, fresh, expected, done, timedOut)
-			if (done || timedOut) return
+			if ("runs" in read) fresh = found
+			const timedOut = Date.now() >= deadline
+			// Every run expected is in and a poll found no more (a customer added since the last tick).
+			const done = fresh.length > 0 && runsDone(fresh, expected) && (!grew || timedOut)
+			if (done || timedOut) {
+				if (fresh.length) emit("ran")
+				messages.value[name] = runResult(label, fresh, expected, done, timedOut)
+				return
+			}
+			if (grew && fresh.length < expected) {
+				messages.value[name] = runResult(label, fresh, expected, false, false)
+			}
 		}
 	} finally {
 		if (watches.get(name) === own) {
