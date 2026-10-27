@@ -5,7 +5,9 @@ import type {
 	TalonOpsQuery,
 	TalonOpsRunNow,
 	TalonOpsRuns,
-	TalonOpsRunsQuery
+	TalonOpsRunsQuery,
+	TalonOpsSummary,
+	TalonOpsSummaryQuery
 } from "@/types/talonOps"
 import axios from "axios"
 import { HttpClient } from "../http-client"
@@ -62,7 +64,7 @@ export function opsFailure(err: unknown): TalonOpsFailure {
 	return { status: null, code: "unknown", detail: refusalDetail(null) }
 }
 
-function params(query: TalonOpsQuery | TalonOpsRunsQuery): Record<string, string | number> {
+function params(query: TalonOpsQuery | TalonOpsRunsQuery | TalonOpsSummaryQuery): Record<string, string | number> {
 	const out: Record<string, string | number> = {}
 	for (const [key, value] of Object.entries(query)) {
 		if (value === null || value === undefined || value === "" || value === false) continue
@@ -79,6 +81,10 @@ function customerParam(customerCode: string | null | undefined) {
 export default {
 	listFindings(query: TalonOpsQuery, signal?: AbortSignal) {
 		return HttpClient.get<TalonOpsFindingPage>(`/talon/ops/findings`, { params: params(query), signal })
+	},
+	/** Open finding counts by severity, job and customer: the caller's customers only (CoPilot checks). */
+	summary(query: TalonOpsSummaryQuery, signal?: AbortSignal) {
+		return HttpClient.get<TalonOpsSummary>(`/talon/ops/summary`, { params: params(query), signal })
 	},
 	getFinding(id: number, customerCode?: string | null, signal?: AbortSignal) {
 		return HttpClient.get<TalonOpsFindingResponse>(`/talon/ops/findings/${Number(id)}`, {

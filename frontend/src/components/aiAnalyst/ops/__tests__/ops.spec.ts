@@ -1,11 +1,16 @@
 /**
  * The Ops tab's pure helpers: which action a status allows (talon-analyst's transitions), the mute
  * window (future, at most 90 days) and its presets, the evidence as rows, labels, the jobs' schedules in
- * words and their summary, what Run now found, and what a failure shows.
+ * words and their summary, what Run now found, and what a failure shows; and OP-2's: the summary
+ * strip's chips, grouping by customer, bulk actions (eligibility, at most three at a time, partial
+ * failures) and the links out (built from finding fields and evidence ids only, each id checked).
  */
-import type { TalonOpsRun } from "@/types/talonOps"
+import type { TalonOpsFinding, TalonOpsRun } from "@/types/talonOps"
 import { describe, expect, it } from "vitest"
 import {
+	allowsBulk,
+	BULK_MAX,
+	bulkSummary,
 	byWorst,
 	canAcknowledge,
 	canMute,
@@ -14,9 +19,15 @@ import {
 	customerText,
 	evidenceRows,
 	expectedRuns,
+	findingLinks,
 	freshRuns,
+	groupByCustomer,
 	hiddenPlatformJob,
 	humanSchedule,
+	isLinkId,
+	isMuteDay,
+	isSelectable,
+	isStale,
 	isTransient,
 	isValidMuteUntil,
 	JOB_LABELS,
@@ -31,10 +42,14 @@ import {
 	muteUntilIn,
 	OLD_TALON_OPS_TEXT,
 	problemState,
+	rowLink,
+	runBulk,
 	runResult,
 	runsDone,
+	severityChips,
 	severityInfo,
 	statusTone,
+	topCustomers,
 	triggerTick,
 	V2_OFF_TEXT,
 	worstStatus
@@ -583,5 +598,206 @@ describe("problems", () => {
 			text: "Talon could not be reached"
 		})
 		expect(problemState(null)).toBeNull()
+	})
+})
+
+// ── OP-2: the strip, grouping, bulk actions, links out ───────────────────────
+
+function f(id: number, over: Partial<TalonOpsFinding> = {}): TalonOpsFinding {
+	return {
+		id,
+		fingerprint: null,
+		job: "quiet_endpoints",
+		job_version: 1,
+		customer_code: "ACME",
+		kind: "wazuh_quiet",
+		severity: "medium",
+		title: `finding ${id}`,
+		evidence: { agent_id: "001", agent_name: "host-1" },
+		evidence_truncated: false,
+		artifact: null,
+		why: null,
+		recommendation: null,
+		priority: null,
+		explained: null,
+		status: "open",
+		first_seen: null,
+		last_seen: null,
+		resolved_at: null,
+		resolved_reason: null,
+		stale_since: null,
+		muted_until: null,
+		acted_by: null,
+		acted_at: null,
+		notified_at: null,
+		updated_at: null,
+		...over
+	}
+}
+
+describe("the summary strip", () => {
+	it("has a chip per severity, high first, with the open counts", () => {
+		const open = { total: 7, high: 1, medium: 2, low: 3, info: 1, stale: 2 }
+		expect(severityChips(open).map(c => [c.value, c.count])).toEqual([
+			["high", 1],
+			["medium", 2],
+			["low", 3],
+			["info", 1]
+		])
+		expect(severityChips(null).every(c => c.count === 0)).toBe(true)
+	})
+
+	it("shows at most five customers, platform included, none without open findings", () => {
+		const row = (code: string | null, total: number) => ({
+			customer_code: code,
+			total,
+			high: 0,
+			medium: 0,
+			low: 0,
+			info: 0,
+			stale: 0
+		})
+		const rows = [row("a", 9), row(null, 5), row("b", 4), row("c", 3), row("d", 2), row("e", 1), row("z", 0)]
+		expect(topCustomers(rows).map(r => r.customer_code)).toEqual(["a", null, "b", "c", "d"])
+		expect(topCustomers([row("z", 0)])).toEqual([])
+		expect(topCustomers(undefined)).toEqual([])
+	})
+
+	it("counts a finding as stale unless it is resolved", () => {
+		expect(isStale(f(1, { stale_since: "2026-10-23T06:00:00Z" }))).toBe(true)
+		expect(isStale(f(1, { stale_since: "2026-10-23T06:00:00Z", status: "resolved" }))).toBe(false)
+		expect(isStale(f(1))).toBe(false)
+	})
+})
+
+describe("grouping by customer", () => {
+	it("groups the rows in the order first seen, platform findings under Platform", () => {
+		const groups = groupByCustomer([f(1), f(2, { customer_code: null }), f(3, { customer_code: "GLOBEX" }), f(4)])
+		expect(groups.map(g => [g.key, g.label, g.items.map(i => i.id)])).toEqual([
+			["ACME", "ACME", [1, 4]],
+			["", "Platform", [2]],
+			["GLOBEX", "GLOBEX", [3]]
+		])
+	})
+})
+
+describe("bulk actions", () => {
+	it("allows each action from the statuses the drawer allows it from", () => {
+		expect(allowsBulk("acknowledge", "open")).toBe(true)
+		expect(allowsBulk("acknowledge", "acknowledged")).toBe(false)
+		expect(allowsBulk("mute", "acknowledged")).toBe(true)
+		expect(allowsBulk("mute", "resolved")).toBe(false)
+		expect(isSelectable(f(1, { status: "resolved" }))).toBe(false)
+		expect(isSelectable(f(1, { status: "muted" }))).toBe(true)
+		expect(BULK_MAX).toBe(50)
+	})
+
+	it("runs at most three at a time, tries every one, and keeps each failure in the table's order", async () => {
+		let inFlight = 0
+		let most = 0
+		const findings = Array.from({ length: 8 }, (_, i) => f(i + 1))
+		const outcome = await runBulk(
+			findings,
+			async finding => {
+				inFlight++
+				most = Math.max(most, inFlight)
+				await new Promise(resolve => setTimeout(resolve, (9 - finding.id) % 3))
+				inFlight--
+				if (finding.id % 3 === 0) throw new Error(`no ${finding.id}`)
+			},
+			err => (err as Error).message
+		)
+		expect(most).toBe(3)
+		expect(outcome.done.map(d => d.id)).toEqual([1, 2, 4, 5, 7, 8])
+		expect(outcome.failed.map(x => [x.finding.id, x.detail])).toEqual([
+			[3, "no 3"],
+			[6, "no 6"]
+		])
+		expect(bulkSummary("acknowledge", outcome)).toBe("6 acknowledged, 2 failed")
+		expect(bulkSummary("mute", { done: [], failed: [] })).toBe("0 muted, 0 failed")
+	})
+
+	it("offers the mute days of the next 90 only", () => {
+		const now = Date.UTC(2026, 9, 27, 12)
+		expect(isMuteDay(now, now)).toBe(true)
+		expect(isMuteDay(now + 91 * 24 * 3600 * 1000, now)).toBe(false)
+		expect(isMuteDay(now - 2 * 24 * 3600 * 1000, now)).toBe(false)
+	})
+})
+
+describe("links out", () => {
+	it("accepts only short ids of letters, digits, dots, underscores and dashes", () => {
+		for (const ok of ["001", "ACME", "host-1.lab", "a_b"]) expect(isLinkId(ok)).toBe(true)
+		for (const bad of ["", "../x", "a/b", "a b", "x".repeat(65), "<img>", "%2e%2e", 1, null, undefined]) {
+			expect(isLinkId(bad)).toBe(false)
+		}
+	})
+
+	it("links a quiet endpoint to its agent and every customer finding to its customer", () => {
+		const links = findingLinks(f(1))
+		expect(links.map(l => l.to)).toEqual([
+			{ name: "Agent", params: { id: "001" } },
+			{ name: "Customer", params: { code: "ACME" } }
+		])
+		expect(links[0].label).toBe("Agent 001 (host-1)")
+		expect(rowLink(f(1))?.to).toEqual({ name: "Agent", params: { id: "001" } })
+	})
+
+	it("links each agent of an agent hygiene group, skipping a bad or repeated id", () => {
+		const finding = f(1, {
+			job: "agent_hygiene",
+			kind: "wazuh_version",
+			evidence: {
+				agents: 4,
+				sample_agents: [
+					{ agent_id: "002", agent_name: "a", critical_asset: true },
+					{ agent_id: "../../admin", agent_name: "x", critical_asset: false },
+					{ agent_id: "003", agent_name: null, critical_asset: false },
+					{ agent_id: "002", agent_name: "a", critical_asset: true }
+				]
+			}
+		})
+		const links = findingLinks(finding)
+		expect(links.map(l => l.to)).toEqual([
+			{ name: "Agent", params: { id: "002" } },
+			{ name: "Agent", params: { id: "003" } },
+			{ name: "Customer", params: { code: "ACME" } }
+		])
+		// Several agents: the title cell's one link is the customer.
+		expect(rowLink(finding)?.to).toEqual({ name: "Customer", params: { code: "ACME" } })
+	})
+
+	it("links storage, noise and mapping findings to index management", () => {
+		for (const job of ["storage_usage", "noisy_events", "mapping_drift"]) {
+			const links = findingLinks(f(1, { job, evidence: { agent_id: "001" } }))
+			expect(links.map(l => l.to)).toEqual([{ name: "Indices" }, { name: "Customer", params: { code: "ACME" } }])
+		}
+		// A platform finding: no customer link.
+		expect(findingLinks(f(1, { job: "mapping_drift", customer_code: null })).map(l => l.key)).toEqual(["indices"])
+	})
+
+	it("links an exclusion candidate to the alerts, filtered to its customer and a valid asset", () => {
+		const links = findingLinks(
+			f(1, { job: "exclusion_candidates", evidence: { rule_id: "60106", asset_name: "WS-01" } })
+		)
+		expect(links[0].to).toEqual({
+			name: "IncidentManagement-Alerts",
+			query: { customerCode: "ACME", assetName: "WS-01" }
+		})
+		const odd = findingLinks(f(1, { job: "exclusion_candidates", evidence: { asset_name: "WS 01 <b>" } }))
+		expect(odd[0].to).toEqual({ name: "IncidentManagement-Alerts", query: { customerCode: "ACME" } })
+	})
+
+	it("builds nothing from the model's text or the title, and nothing from a bad id", () => {
+		const finding = f(1, {
+			title: "see /agents/999",
+			why: "Open /agents/999 or /customers/EVIL",
+			recommendation: "[here](/indices/management)",
+			customer_code: "../EVIL",
+			evidence: { agent_id: "1/../../x" }
+		})
+		expect(findingLinks(finding)).toEqual([])
+		expect(rowLink(finding)).toBeNull()
+		expect(findingLinks(f(1, { job: "silent_log_sources", customer_code: null, evidence: null }))).toEqual([])
 	})
 })

@@ -72,6 +72,25 @@
 					</template>
 				</dl>
 
+				<nav
+					v-if="links.length"
+					aria-label="Open in CoPilot"
+					class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+					data-testid="talon-ops-detail-links"
+				>
+					<span class="text-secondary text-xs">Open in CoPilot</span>
+					<router-link
+						v-for="link of links"
+						:key="link.key"
+						:to="link.to"
+						class="text-primary inline-flex items-center gap-1 no-underline hover:underline"
+						:data-testid="`talon-ops-detail-link-${link.key}`"
+					>
+						<Icon :name="link.icon" :size="12" />
+						<bdi>{{ link.label }}</bdi>
+					</router-link>
+				</nav>
+
 				<section aria-label="Why it matters" class="flex flex-col gap-2">
 					<h4 class="text-secondary text-xs font-semibold uppercase">Why it matters</h4>
 					<!-- A model's text: bound as text only (never v-html or Markdown), newlines kept. -->
@@ -244,7 +263,8 @@
 <script setup lang="ts">
 // One ops finding, in a side drawer: severity, status, the customer and job, the times; Talon's
 // explanation and recommendation as plain text (a model wrote them: never v-html, never Markdown);
-// the evidence as a key-value list or JSON; any artifact in a copyable code block; and the actions
+// links out to the agent(s), the customer, index management or the alerts (`findingLinks`: from the
+// finding's fields and evidence ids only); the evidence as a key-value list or JSON; any artifact in a copyable code block; and the actions
 // its status allows (acknowledge, mute until a picked time or for 1, 7 or 30 days, reopen). The actor
 // is the signed-in user, which CoPilot adds; the finding's stored customer is sent back so a finding
 // that moved is refused.
@@ -253,6 +273,7 @@ import type { TalonOpsFinding } from "@/types/talonOps"
 import { useWindowSize } from "@vueuse/core"
 import { NAlert, NButton, NDatePicker, NDrawer, NDrawerContent, NSpin, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
+import { RouterLink } from "vue-router"
 import Api from "@/api"
 import { opsFailure } from "@/api/endpoints/talonOps"
 import Icon from "@/components/common/Icon.vue"
@@ -265,10 +286,11 @@ import {
 	defaultMuteUntil,
 	evidenceJson,
 	evidenceRows,
+	findingLinks,
+	isMuteDay,
 	isValidMuteUntil,
 	jobLabel,
 	kindLabel,
-	MUTE_MAX_DAYS,
 	MUTE_PRESETS,
 	muteUntilIn,
 	problemState,
@@ -302,12 +324,8 @@ let controller: AbortController | null = null
 
 const problem = computed(() => problemState(failure.value))
 
-/** A day the mute picker offers: today up to 90 days ahead (the time is checked on its own). */
-function isMuteDay(ts: number): boolean {
-	const now = Date.now()
-	const startOfToday = new Date(now).setHours(0, 0, 0, 0)
-	return ts >= startOfToday && ts <= now + MUTE_MAX_DAYS * 24 * 60 * 60 * 1000
-}
+/** Where the finding leads: built by code from its fields and evidence ids, never from the model's text. */
+const links = computed(() => (finding.value ? findingLinks(finding.value) : []))
 
 async function load() {
 	controller?.abort()

@@ -1,3 +1,4 @@
+import type { VueWrapper } from "@vue/test-utils"
 import type { VNodeChild } from "vue"
 /**
  * The Ops tab (`TalonOps.vue` and its sections) against a mocked API: the findings table (open by
@@ -6,11 +7,13 @@ import type { VNodeChild } from "vue"
  * the finding's stored customer, the mute window and its presets, the stale marker, the jobs panel
  * (collapsed under a summary line, schedules in words, per-customer last runs, run now for an admin
  * only, polling its runs afterwards), and the states: Ops jobs off in Talon, Talon v2 off, an old
- * Talon, a role without access.
+ * Talon, a role without access. OP-2: the summary strip and its chips (severity, stale, customers),
+ * the order toggle, grouping by customer, bulk acknowledge and mute (eligibility, the cap, partial
+ * failures, one refresh at the end) and the links out (from finding fields and evidence ids only).
  */
-import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
+import { enableAutoUnmount, flushPromises, mount, RouterLinkStub } from "@vue/test-utils"
 import { AxiosError, AxiosHeaders } from "axios"
-import { NSelect, NSwitch } from "naive-ui"
+import { NRadioGroup, NSelect, NSwitch } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
@@ -22,6 +25,7 @@ import TalonOps from "../TalonOps.vue"
 
 const api = {
 	listFindings: vi.fn(),
+	summary: vi.fn(),
 	getFinding: vi.fn(),
 	acknowledge: vi.fn(),
 	mute: vi.fn(),
@@ -144,8 +148,35 @@ function job(name: string, overrides: Record<string, unknown> = {}) {
 	}
 }
 
+function counts(total = 0, over: Record<string, number> = {}) {
+	return { total, high: 0, medium: 0, low: 0, info: 0, stale: 0, ...over }
+}
+
+function summaryOf(overrides: Record<string, unknown> = {}) {
+	return {
+		success: true,
+		message: "",
+		open: counts(7, { high: 1, medium: 2, low: 3, info: 1, stale: 2 }),
+		acknowledged: 3,
+		muted: 1,
+		by_job: [{ job: "quiet_endpoints", ...counts(4, { high: 1, medium: 2, low: 1 }) }],
+		by_customer: [
+			{ customer_code: "ACME", ...counts(6, { high: 1, medium: 2, low: 2, info: 1, stale: 2 }) },
+			{ customer_code: null, ...counts(1, { low: 1 }) }
+		],
+		dropped: 0,
+		withheld: false,
+		...overrides
+	}
+}
+
 function ok<T>(data: T) {
 	return Promise.resolve({ data })
+}
+
+/** The table's one page: these findings. */
+function rows(...items: ReturnType<typeof finding>[]) {
+	api.listFindings.mockImplementation(() => ok({ success: true, message: "", items, next_cursor: null, dropped: 0 }))
 }
 
 function refusal(status: number, data: unknown) {
@@ -224,7 +255,15 @@ function render(props: Record<string, unknown> = {}) {
 	return mount(TalonOps, {
 		props,
 		global: {
-			stubs: { Drawer, DrawerContent: Passthrough, DataTable, DatePicker, Tooltip, Icon: true }
+			stubs: {
+				Drawer,
+				DrawerContent: Passthrough,
+				DataTable,
+				DatePicker,
+				Tooltip,
+				Icon: true,
+				RouterLink: RouterLinkStub
+			}
 		}
 	})
 }
@@ -248,6 +287,12 @@ function selectWith(wrapper: Wrapper, testId: string) {
 	const select = wrapper.findAllComponents(NSelect).find(s => s.attributes("data-testid") === testId)
 	if (!select) throw new Error(`no select ${testId}`)
 	return select
+}
+
+function switchWith(wrapper: Wrapper, testId: string) {
+	const control = wrapper.findAllComponents(NSwitch).find(s => s.attributes("data-testid") === testId)
+	if (!control) throw new Error(`no switch ${testId}`)
+	return control
 }
 
 enableAutoUnmount(afterEach)
@@ -275,6 +320,7 @@ beforeEach(() => {
 			dropped: 0
 		})
 	)
+	api.summary.mockImplementation(() => ok(summaryOf()))
 	api.getFinding.mockImplementation((id: number) => ok({ success: true, message: "", finding: finding(id) }))
 	api.acknowledge.mockImplementation((id: number) =>
 		ok({ success: true, message: "", finding: finding(id, { status: "acknowledged", acted_by: "ana" }) })
@@ -331,13 +377,13 @@ describe("the findings table", () => {
 		signInAs(AuthUserRole.Analyst)
 		const analyst = render()
 		await settle()
-		expect(analyst.findAllComponents(NSwitch)).toHaveLength(0)
+		expect(byId(analyst, "talon-ops-filter-platform").exists()).toBe(false)
 		analyst.unmount()
 
 		signInAs(AuthUserRole.Admin)
 		const admin = render()
 		await settle()
-		admin.findComponent(NSwitch).vm.$emit("update:value", true)
+		switchWith(admin, "talon-ops-filter-platform").vm.$emit("update:value", true)
 		await settle()
 		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ platform: true, customer_code: null })
 	})
@@ -1047,6 +1093,341 @@ describe("run now, then its runs", () => {
 		await tick(RUN_WATCH_MS)
 		expect(api.listRuns).toHaveBeenCalledTimes(polls)
 		expect(byId(wrapper, "talon-ops-run-quiet_endpoints").attributes("disabled")).toBeUndefined()
+	})
+})
+
+describe("the summary strip", () => {
+	it("shows the open counts by severity, the stale count, the top customers and the acted counts", async () => {
+		signInAs(AuthUserRole.Admin)
+		const wrapper = render()
+		await settle()
+		expect(api.summary).toHaveBeenCalledTimes(1)
+		expect(api.summary.mock.calls[0][0]).toEqual({ job: null, customer_code: null, platform: false })
+		expect(byId(wrapper, "talon-ops-summary-severity-high").text()).toBe("High 1")
+		expect(byId(wrapper, "talon-ops-summary-severity-medium").text()).toBe("Medium 2")
+		expect(byId(wrapper, "talon-ops-summary-severity-low").text()).toBe("Low 3")
+		expect(byId(wrapper, "talon-ops-summary-severity-info").text()).toBe("Info 1")
+		expect(byId(wrapper, "talon-ops-summary-stale").text()).toBe("2 not measured")
+		expect(byId(wrapper, "talon-ops-summary-customer-ACME").text()).toBe("ACME 6")
+		expect(byId(wrapper, "talon-ops-summary-customer-platform").text()).toBe("Platform 1")
+		expect(byId(wrapper, "talon-ops-summary-acted").text()).toBe("3 acknowledged · 1 muted")
+		expect(byId(wrapper, "talon-ops-summary-withheld").exists()).toBe(false)
+	})
+
+	it("a severity chip filters the table to the open findings of that severity; again clears it", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		selectWith(wrapper, "talon-ops-filter-status").vm.$emit("update:value", "muted")
+		await settle()
+		await byId(wrapper, "talon-ops-summary-severity-high").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({
+			severity: "high",
+			status: "open",
+			cursor: null
+		})
+		await byId(wrapper, "talon-ops-summary-severity-high").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ severity: null, status: "open" })
+	})
+
+	it("a customer chip filters by that customer, the platform chip by platform findings", async () => {
+		signInAs(AuthUserRole.Admin)
+		const wrapper = render()
+		await settle()
+		await byId(wrapper, "talon-ops-summary-customer-ACME").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ customer_code: "ACME", platform: false })
+		expect(api.summary.mock.calls.at(-1)?.[0]).toEqual({ job: null, customer_code: "ACME", platform: false })
+		await byId(wrapper, "talon-ops-summary-customer-platform").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ customer_code: null, platform: true })
+		expect(api.summary.mock.calls.at(-1)?.[0]).toEqual({ job: null, customer_code: null, platform: true })
+	})
+
+	it("the stale chip filters the loaded rows (Talon has no such filter) and says so", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.listFindings.mockImplementation(() =>
+			ok({
+				success: true,
+				message: "",
+				items: [finding(1), finding(2, { stale_since: T }), finding(3, { stale_since: T, status: "resolved" })],
+				next_cursor: "100.3",
+				dropped: 0
+			})
+		)
+		const wrapper = render()
+		await settle()
+		const calls = api.listFindings.mock.calls.length
+		const chip = byId(wrapper, "talon-ops-summary-stale")
+		expect(chip.attributes("aria-describedby")).toBe("talon-ops-stale-filter-help")
+		expect(wrapper.find("#talon-ops-stale-filter-help").text()).toContain("filters the rows already loaded")
+		await chip.trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.length).toBe(calls) // nothing new asked of Talon: status was open already
+		expect(byId(wrapper, "talon-ops-row-1").exists()).toBe(false)
+		expect(byId(wrapper, "talon-ops-row-2").exists()).toBe(true)
+		expect(byId(wrapper, "talon-ops-row-3").exists()).toBe(false)
+		expect(byId(wrapper, "talon-ops-stale-only").text()).toContain("1 of 3 loaded")
+		expect(byId(wrapper, "talon-ops-more").exists()).toBe(true) // paging still works
+		await byId(wrapper, "talon-ops-stale-only-clear").trigger("click")
+		await settle()
+		expect(byId(wrapper, "talon-ops-row-1").exists()).toBe(true)
+	})
+
+	it("refreshes along with the table", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		await byId(wrapper, "talon-ops-refresh").trigger("click")
+		await settle()
+		expect(api.listFindings).toHaveBeenCalledTimes(2)
+		expect(api.summary).toHaveBeenCalledTimes(2)
+	})
+
+	it("says when counts were withheld, and leaves out what Talon's answer couldn't split", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.summary.mockImplementation(() =>
+			ok(summaryOf({ acknowledged: null, muted: null, by_job: [], withheld: true, dropped: 1 }))
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-summary-withheld").exists()).toBe(true)
+		expect(byId(wrapper, "talon-ops-summary-acted").exists()).toBe(false)
+	})
+
+	it("a Talon without the summary: a quiet note, and the table still works", async () => {
+		signInAs(AuthUserRole.Analyst)
+		api.summary.mockImplementation(() => refusal(404, { detail: OLD_TALON_OPS_TEXT, code: "unsupported" }))
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-summary-unsupported").exists()).toBe(true)
+		expect(byId(wrapper, "talon-ops-row-1").exists()).toBe(true)
+	})
+})
+
+describe("the order", () => {
+	it("is severity by default, and the toggle asks again from the first page in the other order", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		expect(api.listFindings.mock.calls[0][0]).toMatchObject({ order: "severity", cursor: null })
+		wrapper.findComponent(NRadioGroup).vm.$emit("update:value", "recent")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: null })
+		await byId(wrapper, "talon-ops-more").trigger("click")
+		await settle()
+		expect(api.listFindings.mock.calls.at(-1)?.[0]).toMatchObject({ order: "recent", cursor: "100.2" })
+	})
+})
+
+describe("grouping by customer", () => {
+	it("puts the rows under their customer, platform findings under Platform, and keeps paging", async () => {
+		signInAs(AuthUserRole.Admin)
+		api.listFindings.mockImplementationOnce(() =>
+			ok({
+				success: true,
+				message: "",
+				items: [finding(1), finding(2, { customer_code: null }), finding(3, { customer_code: "GLOBEX" })],
+				next_cursor: "100.3",
+				dropped: 0
+			})
+		)
+		const wrapper = render()
+		await settle()
+		expect(byId(wrapper, "talon-ops-group-ACME").exists()).toBe(false)
+		switchWith(wrapper, "talon-ops-group").vm.$emit("update:value", true)
+		await settle()
+		const groups = wrapper.findAll('[data-testid^="talon-ops-group-"]').filter(g => g.element.tagName === "SECTION")
+		expect(groups.map(g => g.find('[data-testid="talon-ops-group-label"]').text())).toEqual([
+			"ACME",
+			"Platform",
+			"GLOBEX"
+		])
+		expect(byId(wrapper, "talon-ops-group-platform").find('[data-testid="talon-ops-row-2"]').exists()).toBe(true)
+		api.listFindings.mockImplementationOnce(() =>
+			ok({ success: true, message: "", items: [finding(4)], next_cursor: null, dropped: 0 })
+		)
+		await byId(wrapper, "talon-ops-more").trigger("click")
+		await settle()
+		expect(byId(wrapper, "talon-ops-group-ACME").find('[data-testid="talon-ops-row-4"]').exists()).toBe(true)
+	})
+})
+
+describe("bulk actions", () => {
+	function tableOf(wrapper: Wrapper, index = 0) {
+		return wrapper.findAllComponents(DataTable)[index]
+	}
+
+	async function select(wrapper: Wrapper, keys: number[]) {
+		tableOf(wrapper).vm.$emit("update:checkedRowKeys", keys)
+		await settle()
+	}
+
+	it("lets only rows an action applies to be selected", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1), finding(2, { status: "resolved" }))
+		const wrapper = render()
+		await settle()
+		const [selection] = tableOf(wrapper).props("columns") as {
+			type?: string
+			disabled: (row: unknown) => boolean
+		}[]
+		expect(selection.type).toBe("selection")
+		expect(selection.disabled(finding(1))).toBe(false)
+		expect(selection.disabled(finding(2, { status: "resolved" }))).toBe(true)
+	})
+
+	it("acknowledges the eligible selected rows one request each, lists the failures, and refreshes once", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1), finding(2), finding(3, { status: "acknowledged" }))
+		api.acknowledge.mockImplementation((id: number) =>
+			id === 2
+				? refusal(409, { detail: "Talon refused the request in the finding's current state", code: "conflict" })
+				: ok({ success: true, message: "", finding: finding(id, { status: "acknowledged" }) })
+		)
+		const wrapper = render()
+		await settle()
+		await select(wrapper, [1, 2, 3])
+		expect(byId(wrapper, "talon-ops-bulk-count").text()).toBe("3 selected")
+		// The acknowledged one can be muted, not acknowledged again.
+		expect(byId(wrapper, "talon-ops-bulk-acknowledge").text()).toBe("Acknowledge 2")
+		expect(byId(wrapper, "talon-ops-bulk-mute").text()).toBe("Mute 3")
+		const [listed, counted] = [api.listFindings.mock.calls.length, api.summary.mock.calls.length]
+		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
+		await settle()
+		expect(api.acknowledge.mock.calls).toEqual([
+			[1, "ACME"],
+			[2, "ACME"]
+		])
+		expect(byId(wrapper, "talon-ops-bulk-summary").text()).toBe("1 acknowledged, 1 failed")
+		const failures = byId(wrapper, "talon-ops-bulk-failures").findAll("li")
+		expect(failures).toHaveLength(1)
+		expect(failures[0].text()).toContain("host-2: not seen by Wazuh for 5 days")
+		expect(failures[0].text()).toContain("current state")
+		expect(api.listFindings.mock.calls.length).toBe(listed + 1)
+		expect(api.summary.mock.calls.length).toBe(counted + 1)
+		// The refresh cleared the selection; the report stays.
+		expect(byId(wrapper, "talon-ops-bulk-count").exists()).toBe(false)
+		expect(byId(wrapper, "talon-ops-bulk-report").exists()).toBe(true)
+	})
+
+	it("mutes the selected rows until a preset, with each finding's stored customer", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1), finding(2, { customer_code: "DOTTED.CO" }))
+		const wrapper = render()
+		await settle()
+		await select(wrapper, [1, 2])
+		await byId(wrapper, "talon-ops-bulk-mute-preset-30").trigger("click")
+		await byId(wrapper, "talon-ops-bulk-mute").trigger("click")
+		await settle()
+		expect(api.mute).toHaveBeenCalledTimes(2)
+		const [[id1, until, code1], [id2, , code2]] = api.mute.mock.calls
+		expect([id1, code1, id2, code2]).toEqual([1, "ACME", 2, "DOTTED.CO"])
+		const days = (Date.parse(until) - Date.now()) / (24 * 3600 * 1000)
+		expect(days).toBeGreaterThan(29)
+		expect(days).toBeLessThanOrEqual(31)
+		expect(byId(wrapper, "talon-ops-bulk-summary").text()).toBe("2 muted, 0 failed")
+		expect(byId(wrapper, "talon-ops-bulk-failures").exists()).toBe(false)
+	})
+
+	it("takes at most 50 findings", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const many = Array.from({ length: 51 }, (_, i) => finding(i + 1))
+		rows(...many)
+		const wrapper = render()
+		await settle()
+		await select(
+			wrapper,
+			many.map(f => f.id)
+		)
+		expect(byId(wrapper, "talon-ops-bulk-cap").text()).toContain("at most 50")
+		expect(byId(wrapper, "talon-ops-bulk-acknowledge").attributes("disabled")).toBeDefined()
+		expect(byId(wrapper, "talon-ops-bulk-mute").attributes("disabled")).toBeDefined()
+		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
+		await settle()
+		expect(api.acknowledge).not.toHaveBeenCalled()
+		await select(
+			wrapper,
+			many.slice(0, 50).map(f => f.id)
+		)
+		expect(byId(wrapper, "talon-ops-bulk-cap").exists()).toBe(false)
+		await byId(wrapper, "talon-ops-bulk-acknowledge").trigger("click")
+		await settle()
+		expect(api.acknowledge).toHaveBeenCalledTimes(50)
+	})
+
+	it("keeps each group's selection when grouped", async () => {
+		signInAs(AuthUserRole.Analyst)
+		rows(finding(1), finding(2, { customer_code: "DOTTED.CO" }))
+		const wrapper = render()
+		await settle()
+		switchWith(wrapper, "talon-ops-group").vm.$emit("update:value", true)
+		await settle()
+		tableOf(wrapper, 0).vm.$emit("update:checkedRowKeys", [1])
+		await settle()
+		tableOf(wrapper, 1).vm.$emit("update:checkedRowKeys", [2])
+		await settle()
+		expect(byId(wrapper, "talon-ops-bulk-count").text()).toBe("2 selected")
+	})
+})
+
+describe("links out", () => {
+	function linksIn(wrapper: Wrapper, testId: string) {
+		return byId(wrapper, testId)
+			.findAllComponents(RouterLinkStub)
+			.map((link: VueWrapper) => (link.props() as { to: unknown }).to)
+	}
+
+	it("puts the finding's link in the title cell, without opening the drawer", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		const link = byId(wrapper, "talon-ops-row-1").findComponent(RouterLinkStub)
+		expect(link.props("to")).toEqual({ name: "Agent", params: { id: "001" } })
+		await link.trigger("click")
+		await settle()
+		expect(api.getFinding).not.toHaveBeenCalled()
+	})
+
+	it("lists the agent and the customer in the drawer, from the evidence ids", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const wrapper = render()
+		await settle()
+		await byId(wrapper, "talon-ops-row-1").trigger("click")
+		await settle()
+		expect(linksIn(wrapper, "talon-ops-detail-links")).toEqual([
+			{ name: "Agent", params: { id: "001" } },
+			{ name: "Customer", params: { code: "ACME" } }
+		])
+	})
+
+	it("links nothing from a rejected id or the model's text", async () => {
+		signInAs(AuthUserRole.Analyst)
+		const tricky = {
+			title: "host: see /agents/999",
+			why: "Open /agents/999 and /customers/EVIL",
+			recommendation: "[fix](/indices/management) or /alerts",
+			evidence: { agent_id: "../../users", agent_name: "x" }
+		}
+		rows(finding(1, tricky))
+		api.getFinding.mockImplementation((id: number) =>
+			ok({ success: true, message: "", finding: finding(id, tricky) })
+		)
+		const wrapper = render()
+		await settle()
+		// No agent link: the title cell falls back to the customer.
+		expect(byId(wrapper, "talon-ops-row-1").findComponent(RouterLinkStub).props("to")).toEqual({
+			name: "Customer",
+			params: { code: "ACME" }
+		})
+		await byId(wrapper, "talon-ops-row-1").trigger("click")
+		await settle()
+		expect(linksIn(wrapper, "talon-ops-detail-links")).toEqual([{ name: "Customer", params: { code: "ACME" } }])
+		expect(JSON.stringify(wrapper.findAllComponents(RouterLinkStub).map(l => l.props("to")))).not.toMatch(
+			/999|EVIL|users/
+		)
 	})
 })
 

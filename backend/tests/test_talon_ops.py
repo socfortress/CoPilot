@@ -81,6 +81,7 @@ class FakeTalon:
         self.leaky = leaky
         self.findings = {f["id"]: f for f in (findings or [finding(1, ACME), finding(2, GLOBEX), finding(3, None), finding(4, DOTTED)])}
         self.post_override = None  # a dict merged into an action's answer
+        self.summary_answer = None  # a summary to send as it is (``leaky``'s), else one by the rules
         self.upstream = Upstream(self.respond)
 
     def _customers(self, request):
@@ -125,6 +126,10 @@ class FakeTalon:
                     row.update(self.post_override)
                 self.findings[fid] = row
             return httpx.Response(200, json=row)
+        if path == "/v2/ops/summary":
+            if self.summary_answer is not None:
+                return httpx.Response(200, json=self.summary_answer)
+            return httpx.Response(200, json=fake_summary([f for f in self.findings.values() if self._visible(request, f["customer_code"])]))
         if path == "/v2/ops/jobs":
             return httpx.Response(
                 200,
@@ -159,6 +164,32 @@ class FakeTalon:
                 json={"job": path.split("/")[4], "workflow_id": "sched-talon-ops:quiet_endpoints-trigger-1", "status": "queued"},
             )
         return httpx.Response(404, json={"detail": "Not Found"})
+
+
+def counts(total=0, high=0, medium=0, low=0, info=0, stale=0, **extra):
+    return {"total": total, "high": high, "medium": medium, "low": low, "info": info, "stale": stale, **extra}
+
+
+def fake_summary(findings):
+    """talon-analyst's ``/v2/ops/summary`` over these findings (the open ones counted)."""
+    open_ = [f for f in findings if f["status"] == "open"]
+
+    def tally(rows, **key):
+        out = counts(len(rows), **key)
+        for f in rows:
+            out[f["severity"]] += 1
+            out["stale"] += 1 if f["stale_since"] else 0
+        return out
+
+    customers = sorted({f["customer_code"] for f in open_}, key=lambda c: c or "")
+    jobs = sorted({f["job"] for f in open_})
+    return {
+        "open": {k: v for k, v in tally(open_).items()},
+        "acknowledged": sum(1 for f in findings if f["status"] == "acknowledged"),
+        "muted": sum(1 for f in findings if f["status"] == "muted"),
+        "by_job": [tally([f for f in open_ if f["job"] == j], job=j) for j in jobs],
+        "by_customer": [tally([f for f in open_ if f["customer_code"] == c], customer_code=c) for c in customers],
+    }
 
 
 def run(customer):
@@ -208,6 +239,7 @@ def ids(response):
 
 ROUTES = [
     ("GET", "/talon/ops/findings", None),
+    ("GET", "/talon/ops/summary", None),
     ("GET", "/talon/ops/findings/1", None),
     ("POST", "/talon/ops/findings/1/acknowledge", None),
     ("POST", "/talon/ops/findings/1/mute", {"until": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()}),
@@ -578,3 +610,192 @@ def test_answers_are_copied_field_by_field_and_the_models_text_stays_plain_text(
 
 def ids_of(body):
     return [item["id"] for item in body["items"]]
+
+
+# ── the summary ───────────────────────────────────────────────────────────────
+
+
+def leaky_summary():
+    """A summary as a talon-analyst ignoring ``X-Talon-Customers`` would send it to anyone."""
+    return {
+        "open": counts(10, high=2, medium=3, low=4, info=1, stale=3),
+        "acknowledged": 5,
+        "muted": 2,
+        "by_job": [counts(10, high=2, medium=3, low=4, info=1, stale=3, job="quiet_endpoints")],
+        "by_customer": [
+            counts(4, high=2, medium=1, low=1, stale=2, customer_code=GLOBEX),
+            counts(3, medium=1, low=2, stale=1, customer_code=ACME),
+            counts(1, info=1, customer_code=None),
+            counts(2, medium=1, low=1, customer_code=DOTTED),
+        ],
+    }
+
+
+def test_the_summary_is_relayed_for_an_admin_with_the_platform_row():
+    fake = FakeTalon(
+        findings=[
+            finding(1, ACME, severity="high"),
+            finding(2, GLOBEX, stale_since=T),
+            finding(3, None, severity="low"),
+            finding(4, ACME, status="muted"),
+        ],
+    )
+
+    async def scenario(client, ctx):
+        response = await client.get("/talon/ops/summary", headers=as_user("admin"))
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        body = body_of(response)
+        assert body["open"] == counts(3, high=1, medium=1, low=1, stale=1)
+        assert body["acknowledged"] == 0 and body["muted"] == 1
+        assert body["by_job"] == [counts(3, high=1, medium=1, low=1, stale=1, job="quiet_endpoints")]
+        assert [row["customer_code"] for row in body["by_customer"]] == [None, ACME, GLOBEX]
+        assert body["dropped"] == 0 and body["withheld"] is False
+        sent = fake.upstream.requests[0]
+        assert sent.url.path == "/v2/ops/summary" and sent.headers["X-Talon-Customers"] == "*"
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_fails_closed_on_another_customers_rows_and_withholds_what_cant_be_split():
+    fake = FakeTalon(leaky=True)
+    fake.summary_answer = leaky_summary()
+
+    async def scenario(client, ctx):
+        body = body_of(await client.get("/talon/ops/summary", headers=as_user("ana")))
+        # GLOBEX's row and the platform row are dropped; the totals are ACME's and DOTTED's only.
+        assert [row["customer_code"] for row in body["by_customer"]] == [ACME, DOTTED]
+        assert body["open"] == counts(5, medium=2, low=3, stale=1)
+        assert body["dropped"] == 2 and body["withheld"] is True
+        # A job's counts and the acknowledged and muted counts can't be split by customer: withheld.
+        assert body["by_job"] == [] and body["acknowledged"] is None and body["muted"] is None
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_withholds_when_the_rows_dont_add_up_to_the_totals():
+    fake = FakeTalon(leaky=True)
+    answer = leaky_summary()
+    answer["by_customer"] = [row for row in answer["by_customer"] if row["customer_code"] in (ACME, DOTTED)]
+    fake.summary_answer = answer  # GLOBEX's findings in the totals, without its row
+
+    async def scenario(client, ctx):
+        body = body_of(await client.get("/talon/ops/summary", headers=as_user("ana")))
+        assert body["open"] == counts(5, medium=2, low=3, stale=1)
+        assert body["dropped"] == 0 and body["withheld"] is True
+        assert body["by_job"] == [] and body["acknowledged"] is None
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_keeps_only_the_customer_or_the_platform_asked_for():
+    fake = FakeTalon(leaky=True)
+    fake.summary_answer = leaky_summary()
+
+    async def scenario(client, ctx):
+        body = body_of(await client.get(f"/talon/ops/summary?customer_code={ACME}", headers=as_user("ana")))
+        assert fake.upstream.requests[-1].url.params["customer_code"] == ACME
+        assert [row["customer_code"] for row in body["by_customer"]] == [ACME]
+        assert body["open"]["total"] == 3 and body["withheld"] is True
+        body = body_of(await client.get("/talon/ops/summary?platform=true", headers=as_user("admin")))
+        assert fake.upstream.requests[-1].url.params["platform"] == "true"
+        assert [row["customer_code"] for row in body["by_customer"]] == [None]
+        assert body["open"] == counts(1, info=1) and body["dropped"] == 3
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_refuses_a_customer_or_the_platform_the_caller_lacks_before_talon_is_asked():
+    fake = FakeTalon()
+
+    async def scenario(client, ctx):
+        other = await client.get(f"/talon/ops/summary?customer_code={GLOBEX}", headers=as_user("ana"))
+        assert other.status_code == 403 and body_of(other)["detail"] == talon_ops.NOT_ACCESSIBLE
+        platform = await client.get("/talon/ops/summary?platform=true", headers=as_user("ana"))
+        assert platform.status_code == 403 and body_of(platform)["detail"] == talon_ops.PLATFORM_ONLY
+        both = await client.get(f"/talon/ops/summary?platform=true&customer_code={ACME}", headers=as_user("admin"))
+        assert both.status_code == 400
+        bad = await client.get("/talon/ops/summary?job=../x", headers=as_user("ana"))
+        assert bad.status_code == 400
+        assert fake.upstream.requests == []
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_drops_malformed_and_repeated_rows():
+    fake = FakeTalon(leaky=True)
+    fake.summary_answer = {
+        "open": counts(6, medium=3, low=3),
+        "acknowledged": 0,
+        "muted": 0,
+        "by_job": [counts(6, medium=3, low=3, job="quiet_endpoints")],
+        "by_customer": [
+            counts(3, medium=2, low=1, customer_code=ACME),
+            counts(3, medium=1, low=2, customer_code=ACME),  # repeated: may hide another customer's
+            {"customer_code": DOTTED, "total": -1},
+            counts(1, low=1, customer_code="../x"),
+        ],
+    }
+
+    async def scenario(client, ctx):
+        body = body_of(await client.get("/talon/ops/summary", headers=as_user("ana")))
+        assert body["by_customer"] == [counts(3, medium=2, low=1, customer_code=ACME)]
+        assert body["open"] == counts(3, medium=2, low=1)
+        assert body["dropped"] == 3 and body["withheld"] is True and body["by_job"] == []
+
+    scenario_with(fake, scenario)
+
+
+def test_the_summary_at_talons_row_cap_is_trusted_for_an_admin_only():
+    fake = FakeTalon(leaky=True)
+    rows = [counts(1, low=1, customer_code=f"c{i:02d}") for i in range(talon_ops.SUMMARY_ROWS)]
+    fake.summary_answer = {
+        "open": counts(60, low=60),
+        "acknowledged": 1,
+        "muted": 1,
+        "by_job": [counts(60, low=60, job="quiet_endpoints")],
+        "by_customer": rows,
+    }
+
+    async def scenario(client, ctx):
+        admin = body_of(await client.get("/talon/ops/summary", headers=as_user("admin")))
+        assert admin["open"]["total"] == 60 and admin["withheld"] is False and len(admin["by_job"]) == 1
+        # ana has none of these customers: every row is dropped and nothing is counted.
+        ana = body_of(await client.get("/talon/ops/summary", headers=as_user("ana")))
+        assert ana["open"]["total"] == 0 and ana["by_customer"] == [] and ana["withheld"] is True
+
+    scenario_with(fake, scenario)
+
+
+def test_a_summary_in_the_wrong_shape_is_a_502():
+    fake = FakeTalon(leaky=True)
+    fake.summary_answer = {"open": {"total": "7"}, "by_job": [], "by_customer": []}
+
+    async def scenario(client, ctx):
+        response = await client.get("/talon/ops/summary", headers=as_user("admin"))
+        assert response.status_code == 502 and body_of(response)["detail"] == talon_ops.WRONG_SHAPE
+
+    scenario_with(fake, scenario)
+
+
+# ── the findings' order ───────────────────────────────────────────────────────
+
+
+def test_the_order_is_passed_through_and_checked():
+    fake = FakeTalon()
+
+    async def scenario(client, ctx):
+        await client.get("/talon/ops/findings", headers=as_user("ana"))
+        assert "order" not in fake.upstream.requests[-1].url.params  # recent: Talon's default
+        await client.get("/talon/ops/findings?order=recent", headers=as_user("ana"))
+        assert "order" not in fake.upstream.requests[-1].url.params
+        await client.get("/talon/ops/findings?order=severity&cursor=3.1729740000000000.12", headers=as_user("ana"))
+        sent = fake.upstream.requests[-1].url.params
+        assert sent["order"] == "severity" and sent["cursor"] == "3.1729740000000000.12"
+        count = len(fake.upstream.requests)
+        bad = await client.get("/talon/ops/findings?order=oldest", headers=as_user("ana"))
+        assert bad.status_code == 422
+        odd = await client.get("/talon/ops/findings?cursor=a%20b", headers=as_user("ana"))
+        assert odd.status_code == 400 and body_of(odd)["detail"] == talon_ops.INVALID_CURSOR
+        assert len(fake.upstream.requests) == count
+
+    scenario_with(fake, scenario)
