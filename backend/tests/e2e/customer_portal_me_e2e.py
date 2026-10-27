@@ -69,7 +69,8 @@ async def main():
         check(
             "the assigned customer, named",
             # Not an administrator of its users unless the SOC says so (#1296).
-            body.get("customers") == [{"customer_code": CUST_A, "customer_name": CUSTOMER_NAMES[CUST_A], "is_customer_admin": False}],
+            body.get("customers")
+            == [{"customer_code": CUST_A, "customer_name": CUSTOMER_NAMES[CUST_A], "is_customer_admin": False, "read_only": False}],
             str(body.get("customers")),
         )
 

@@ -213,6 +213,7 @@ def test_every_route_is_for_portal_users_by_token():
         ("POST", "/users"),
         ("POST", "/users/{user_id}/disable"),
         ("POST", "/users/{user_id}/enable"),
+        ("PUT", "/users/{user_id}/read-only"),
         ("DELETE", "/users/{user_id}/totp"),
         ("POST", "/users/{user_id}/temporary-password"),
     }

@@ -36,6 +36,8 @@ from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
+from app.auth.services.read_only import READ_ONLY
+from app.auth.services.read_only import is_read_only_for
 from app.connectors.talon.schema.talon import TalonInvestigateRequest
 from app.connectors.talon.services.talon import investigate_alert
 from app.connectors.talon.services.talon_triggers import PORTAL as PORTAL_TRIGGER
@@ -125,6 +127,10 @@ async def request_alert_analysis(alert_id: int, user: User, session: AsyncSessio
     """Ask Talon to analyse ``alert_id`` for a portal user, or raise why not."""
     alert = await ensure_alert_visible(alert_id, user, session)
     customer_code = alert.customer_code
+    if await is_read_only_for(user, customer_code, session):
+        # Asking for an analysis changes the alert's record (a comment, a job): not for a reader (#1312).
+        await _audit(user, customer_code, alert_id, AuditResult.FAILURE, READ_ONLY)
+        raise HTTPException(status_code=403, detail=READ_ONLY)
     now = now_utc().replace(tzinfo=None)
 
     settings = await _locked_settings(customer_code, session)

@@ -107,6 +107,7 @@ ACTIONS: Dict[str, ActionSpec] = {
     AuditAction.CUSTOMER_USER_INVITE.value: ActionSpec("users", "User invited", about_user=True),
     AuditAction.CUSTOMER_USER_TOTP_RESET.value: ActionSpec("users", "Two-factor authentication reset", about_user=True),
     AuditAction.CUSTOMER_USER_PASSWORD_RESET.value: ActionSpec("users", "Temporary password issued", about_user=True),
+    AuditAction.CUSTOMER_USER_READ_ONLY_UPDATE.value: ActionSpec("users", "Read-only access changed", about_user=True),
 }
 
 DATA_ACTIONS = tuple(action for action, spec in ACTIONS.items() if not spec.about_user)
@@ -265,6 +266,12 @@ def label_for(row: AuditLog) -> str:
             return "Made a customer administrator"
         if now_admin is False:
             return "No longer a customer administrator"
+    if row.action == AuditAction.CUSTOMER_USER_READ_ONLY_UPDATE.value:
+        now_read_only = (row.new_value or {}).get("read_only")
+        if now_read_only is True:
+            return "Made read-only"
+        if now_read_only is False:
+            return "Can change data again"
     return spec.label
 
 

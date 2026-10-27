@@ -56,6 +56,9 @@ class AuditAction(str, Enum):
     CUSTOMER_USER_INVITE = "customer_user.invite"
     CUSTOMER_USER_TOTP_RESET = "customer_user.totp_reset"
     CUSTOMER_USER_PASSWORD_RESET = "customer_user.password_reset"
+    # A portal user made read-only on one of their customers, or allowed to change data again,
+    # by a SOC admin or a customer admin (#1312)
+    CUSTOMER_USER_READ_ONLY_UPDATE = "customer_user.read_only_update"
     # A user's own two-factor authentication, set up or turned off from their profile (#1298)
     USER_TOTP_ENABLE = "user.totp_enable"
     USER_TOTP_DISABLE = "user.totp_disable"

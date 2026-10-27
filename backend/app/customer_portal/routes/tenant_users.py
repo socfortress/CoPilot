@@ -19,6 +19,7 @@ from app.customer_portal.routes.errors import internal_errors
 from app.customer_portal.schema.me import PortalCustomer
 from app.customer_portal.schema.tenant_users import InviteRequest
 from app.customer_portal.schema.tenant_users import InviteResponse
+from app.customer_portal.schema.tenant_users import ReadOnlyRequest
 from app.customer_portal.schema.tenant_users import TemporaryPasswordResponse
 from app.customer_portal.schema.tenant_users import TenantUserActionResponse
 from app.customer_portal.schema.tenant_users import TenantUsersResponse
@@ -110,6 +111,25 @@ async def enable_tenant_user(
     async with internal_errors("enable the user", session):
         user = await tenant_users.set_disabled(current_user, user_id, False, session, request)
         return TenantUserActionResponse(message=f"{user.username} was enabled.", user=user)
+
+
+@customer_portal_tenant_users_router.put(
+    "/users/{user_id}/read-only",
+    response_model=TenantUserActionResponse,
+    description="Let a portal user only read their customers' data, or change it again (#1312).",
+    dependencies=PORTAL_USER,
+)
+async def set_tenant_user_read_only(
+    user_id: int,
+    body: ReadOnlyRequest,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> TenantUserActionResponse:
+    async with internal_errors("change the user's access", session):
+        user = await tenant_users.set_read_only(current_user, user_id, body.read_only, session, request)
+        message = f"{user.username} can now only read your data." if body.read_only else f"{user.username} can change your data again."
+        return TenantUserActionResponse(message=message, user=user)
 
 
 @customer_portal_tenant_users_router.delete(

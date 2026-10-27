@@ -10,6 +10,8 @@ class PortalCustomer(BaseModel):
     customer_name: str
     # The user administers this customer's portal users (#1296): set by the SOC only.
     is_customer_admin: bool = False
+    # The user may only read this customer's data (#1312): set by the SOC or a customer admin.
+    read_only: bool = False
 
 
 class PortalMeResponse(BaseModel):

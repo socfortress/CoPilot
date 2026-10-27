@@ -20,6 +20,7 @@ from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
+from app.auth.services.read_only import ensure_may_write
 from app.customer_portal.services.notification_events import notify_report_ready
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
@@ -107,6 +108,8 @@ async def generate_report_background(
     then downloads via ``GET /{report_id}/download``.
     """
     await _ensure_customer_access(current_user, db, request.customer_code)
+    # A report is filed under the customer: a portal user who may only read it is refused (#1312).
+    await ensure_may_write(current_user, request.customer_code, db)
 
     # Verify the customer exists up front so the caller gets a clean 404.
     customer_result = await db.execute(select(Customers).where(Customers.customer_code == request.customer_code))
@@ -271,6 +274,7 @@ async def delete_report(
 ) -> dict:
     report = await _require_report(db, report_id)
     await _ensure_customer_access(current_user, db, report.customer_code)
+    await ensure_may_write(current_user, report.customer_code, db)
 
     is_admin = current_user.role_id == RoleEnum.admin
     is_creator = report.generated_by == current_user.id

@@ -40,6 +40,8 @@ from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import User
+from app.auth.services.read_only import READ_ONLY
+from app.auth.services.read_only import is_read_only_for
 from app.customer_portal.schema.soc_requests import AskOnAlertRequest
 from app.customer_portal.schema.soc_requests import AskOnCaseRequest
 from app.customer_portal.schema.soc_requests import PortalSocRequest
@@ -327,6 +329,17 @@ async def _reserve(
     waited for the lock would otherwise count the questions as they were before it waited, and
     two users could both take the last slot of the day.
     """
+    if await is_read_only_for(user, customer_code, session):
+        # A question is a comment on the alert or case: not for a user who may only read (#1312).
+        await _audit(
+            user,
+            customer_code,
+            "case" if cooldown_case else "alert",
+            cooldown_case or cooldown_alert,
+            AuditResult.FAILURE,
+            READ_ONLY,
+        )
+        raise HTTPException(status_code=403, detail=READ_ONLY)
     await session.commit()
     now = _now()
     settings = await get_settings(customer_code, session, lock=True)

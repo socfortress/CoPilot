@@ -132,7 +132,11 @@ def test_analysis_offers_a_request_only_where_the_customer_allows_it():
             svc,
             "get_ai_report_settings",
             AsyncMock(return_value=settings),
-        ), patch.object(svc, "get_alert_analysis", AsyncMock(return_value=(None, None, []))):
+        ), patch.object(svc, "get_alert_analysis", AsyncMock(return_value=(None, None, []))), patch.object(
+            svc,
+            "is_read_only_for",
+            AsyncMock(return_value=False),
+        ):
             assert asyncio.run(svc.get_portal_alert_analysis(3, _user(), AsyncMock())).can_request is expected
 
 

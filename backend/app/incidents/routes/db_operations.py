@@ -22,6 +22,7 @@ from app.audit.models.audit import AuditAction
 from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
+from app.auth.services.read_only import ensure_may_write
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import (
@@ -634,7 +635,7 @@ async def update_alert_status_endpoint(
     ensure_customer_may_set_status(current_user, alert_status.status)
     # Enforce per-object ownership: resolve the alert's customer and reject a
     # caller who is not entitled to it (GHSA-wjpw-xrg8-vmf9).
-    alert = await _ensure_alert_access(alert_status.alert_id, current_user, db)
+    alert = await _ensure_alert_access(alert_status.alert_id, current_user, db, write=True)
     old_status = alert.status
     updated = await update_alert_status(alert_status, db)
     await record_status_changes(
@@ -683,7 +684,7 @@ async def bulk_update_alert_status_endpoint(
     for alert_id in bulk_status.alert_ids:
         try:
             ensure_customer_may_set_status(current_user, bulk_status.status)
-            alert = await _ensure_alert_access(alert_id, current_user, db)
+            alert = await _ensure_alert_access(alert_id, current_user, db, write=True)
             old_status, customer_code = alert.status, alert.customer_code
             await update_alert_status(UpdateAlertStatus(alert_id=alert_id, status=bulk_status.status), db)
             updated_alert_ids.append(alert_id)
@@ -844,6 +845,7 @@ async def create_comment_endpoint(
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, alert.customer_code, db)
 
     comment.user_name = current_user.username
     created = await create_comment(comment, db)
@@ -888,6 +890,7 @@ async def edit_comment_endpoint(
     # Check if user has access to this alert's customer
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to alert {comment.alert_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, alert.customer_code, db)
 
     _ensure_can_modify_comment(current_user, existing.user_name)
     comment.user_name = current_user.username
@@ -927,6 +930,7 @@ async def delete_comment_endpoint(
             status_code=403,
             detail=f"Access denied to comment on alert {comment.alert_id} - insufficient customer permissions",
         )
+    await ensure_may_write(current_user, alert.customer_code, db)
 
     _ensure_can_modify_comment(current_user, comment.user_name)
     alert_id, customer_code = comment.alert_id, alert.customer_code
@@ -958,6 +962,7 @@ async def create_case_comment_endpoint(
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, case.customer_code, db)
 
     comment.user_name = current_user.username
     created = await create_case_comment(comment, db)
@@ -1012,6 +1017,7 @@ async def edit_case_comment_endpoint(
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {comment.case_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, case.customer_code, db)
 
     _ensure_can_modify_comment(current_user, existing.user_name)
     comment.user_name = current_user.username
@@ -1051,6 +1057,7 @@ async def delete_case_comment_endpoint(
             status_code=403,
             detail=f"Access denied to comment on case {comment.case_id} - insufficient customer permissions",
         )
+    await ensure_may_write(current_user, case.customer_code, db)
 
     _ensure_can_modify_comment(current_user, comment.user_name)
     case_id, customer_code = comment.case_id, case.customer_code
@@ -1459,7 +1466,7 @@ async def create_case_endpoint(
     # Enforce ownership: a caller may only create a case under a customer they
     # are entitled to (GHSA-wjpw-xrg8-vmf9). Scoped callers cannot pass a blank
     # customer_code; admin/analyst keep wildcard access.
-    await _ensure_customer_access(case.customer_code, current_user, db)
+    await _ensure_customer_access(case.customer_code, current_user, db, write=True)
 
     created = await create_case(case, db, actor=current_user.username, template_id=template_id)
 
@@ -1503,8 +1510,8 @@ async def create_case_alert_link_endpoint(
 ):
     # Enforce ownership on BOTH ends of the link (GHSA-wjpw-xrg8-vmf9): the
     # caller must be entitled to the case and to the alert being attached.
-    await _ensure_case_access(case_alert_link.case_id, current_user, db)
-    await _ensure_alert_access(case_alert_link.alert_id, current_user, db)
+    await _ensure_case_access(case_alert_link.case_id, current_user, db, write=True)
+    await _ensure_alert_access(case_alert_link.alert_id, current_user, db, write=True)
 
     link = await create_case_alert_link(case_alert_link, db, actor=current_user.username)
 
@@ -1591,7 +1598,7 @@ async def case_alert_unlink_endpoint(
 ):
     # Enforce ownership: the caller must be entitled to the case being modified
     # (GHSA-wjpw-xrg8-vmf9).
-    await _ensure_case_access(case_alert_link.case_id, current_user, db)
+    await _ensure_case_access(case_alert_link.case_id, current_user, db, write=True)
 
     response = await case_alert_unlink(case_alert_link, db)
 
@@ -1637,7 +1644,7 @@ async def create_case_from_alert_endpoint(
 ):
     # Enforce ownership: the new case inherits the alert's customer_code, so the
     # caller must be entitled to that alert (GHSA-wjpw-xrg8-vmf9).
-    await _ensure_alert_access(alert_id.alert_id, current_user, db)
+    await _ensure_alert_access(alert_id.alert_id, current_user, db, write=True)
 
     case = await create_case_from_alert(
         alert_id.alert_id,
@@ -2557,6 +2564,7 @@ async def update_case_status_endpoint(
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {case_status.case_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, case.customer_code, db)
 
     # Store the old status BEFORE updating - this is the actual current status from the database
     old_status = case.case_status
@@ -2773,6 +2781,7 @@ async def update_case_assigned_to_endpoint(
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {assigned_to.case_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, case.customer_code, db)
 
     all_users = await select_all_users()
     user_names = [user.username for user in all_users]
@@ -3144,6 +3153,7 @@ async def upload_case_data_store_endpoint(
     # Check if user has access to this case's customer
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(status_code=403, detail=f"Access denied to case {case_id} - insufficient customer permissions")
+    await ensure_may_write(current_user, case.customer_code, db)
 
     if await file_exists(case_id, file.filename, db):
         raise HTTPException(status_code=400, detail="File name already exists for this case")
@@ -3461,24 +3471,37 @@ _admin_analyst_dep = Security(AuthHandler().require_any_scope("admin", "analyst"
 _all_scopes_dep = Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))
 
 
-async def _ensure_case_access(case_id: int, current_user: User, db: AsyncSession) -> None:
-    """Shared helper: 404 if case missing, 403 if user lacks customer access."""
+async def _ensure_case_access(case_id: int, current_user: User, db: AsyncSession, *, write: bool = False):
+    """Shared helper: 404 if case missing, 403 if user lacks customer access. Returns the case.
+
+    ``write``: the caller is about to change the case, so a portal user who may only read its
+    customer's data is refused too (#1312).
+    """
     case = await get_case_by_id(case_id, db)
     if not await customer_access_handler.check_customer_access(current_user, case.customer_code, db):
         raise HTTPException(
             status_code=403,
             detail=f"Access denied to case {case_id} - insufficient customer permissions",
         )
+    if write:
+        await ensure_may_write(current_user, case.customer_code, db)
+    return case
 
 
-async def _ensure_alert_access(alert_id: int, current_user: User, db: AsyncSession):
-    """Shared helper: 404 if alert missing, 403 if user lacks customer access. Returns the alert."""
+async def _ensure_alert_access(alert_id: int, current_user: User, db: AsyncSession, *, write: bool = False):
+    """Shared helper: 404 if alert missing, 403 if user lacks customer access. Returns the alert.
+
+    ``write``: the caller is about to change the alert, so a portal user who may only read its
+    customer's data is refused too (#1312).
+    """
     alert = await get_alert_by_id(alert_id, db, user=current_user)
     if not await customer_access_handler.check_customer_access(current_user, alert.customer_code, db):
         raise HTTPException(
             status_code=403,
             detail=f"Access denied to alert {alert_id} - insufficient customer permissions",
         )
+    if write:
+        await ensure_may_write(current_user, alert.customer_code, db)
     return alert
 
 
@@ -3495,7 +3518,7 @@ async def _ensure_settings_customer(body_customer_code: str, checked: Customers,
         raise HTTPException(status_code=400, detail="customer_code in the body does not match the customer_code query parameter")
 
 
-async def _ensure_customer_access(customer_code: str, current_user: User, db: AsyncSession) -> None:
+async def _ensure_customer_access(customer_code: str, current_user: User, db: AsyncSession, *, write: bool = False) -> None:
     """Shared helper: 403 if the user lacks access to ``customer_code``.
 
     ``customer_code`` is taken from request input; this asserts the caller is
@@ -3509,6 +3532,9 @@ async def _ensure_customer_access(customer_code: str, current_user: User, db: As
             status_code=403,
             detail=f"Access denied to customer {customer_code} - insufficient customer permissions",
         )
+    if write:
+        # Something is about to be written under this customer (#1312).
+        await ensure_may_write(current_user, customer_code, db)
 
 
 @incidents_db_operations_router.get(
