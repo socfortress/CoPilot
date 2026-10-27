@@ -51,8 +51,13 @@ const message = useMessage()
 const { t } = useI18n()
 
 const userPic = authStore.userPic
+// A user who may only read every one of their customers' data is a read-only user (#1312).
 const roleText = computed(() =>
-	authStore.isCustomerAdmin ? t("profile.roles.customerAdmin") : t("profile.roles.portalUser")
+	authStore.isCustomerAdmin
+		? t("profile.roles.customerAdmin")
+		: authStore.accessibleCustomers.length && !authStore.writableCustomers.length
+			? t("profile.roles.readOnlyUser")
+			: t("profile.roles.portalUser")
 )
 
 const open = ref(false)

@@ -177,7 +177,12 @@ const columns = computed<DataTableColumns<Alert>>(() => [
 							icon: () => <Icon name="carbon:circle-solid" />
 						}}
 					/>
-					<AlertStatusSelect alertId={row.id} status={row.status} onSuccess={handleStatusUpdateSuccess} />
+					<AlertStatusSelect
+						alertId={row.id}
+						status={row.status}
+						customerCode={row.customer_code}
+						onSuccess={handleStatusUpdateSuccess}
+					/>
 				</div>
 			)
 		}

@@ -10,8 +10,18 @@
 			<div class="text-secondary text-sm">
 				{{ entity === "case" ? $t("common.waitingOnYou.body.case") : $t("common.waitingOnYou.body.alert") }}
 			</div>
+			<div v-if="readOnly" class="text-secondary mt-1 text-sm" data-testid="waiting-on-you-read-only">
+				{{ $t("common.waitingOnYou.readOnly") }}
+			</div>
 		</div>
-		<n-button size="small" type="primary" secondary data-testid="waiting-on-you-reply" @click="emit('reply')">
+		<n-button
+			v-if="!readOnly"
+			size="small"
+			type="primary"
+			secondary
+			data-testid="waiting-on-you-reply"
+			@click="emit('reply')"
+		>
 			<template #icon>
 				<Icon name="carbon:reply" />
 			</template>
@@ -26,6 +36,8 @@ import Icon from "@/components/common/Icon.vue"
 
 defineProps<{
 	entity: "alert" | "case"
+	/** The user may only read this customer's data: someone else has to reply (#1312). */
+	readOnly?: boolean
 }>()
 
 const emit = defineEmits<{

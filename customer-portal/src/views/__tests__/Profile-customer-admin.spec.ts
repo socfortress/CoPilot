@@ -59,4 +59,29 @@ describe("profile: customer admin", () => {
 		expect(chips.map(chip => chip.find("[data-testid=profile-customer-admin-of]").exists())).toEqual([true, false, true])
 		expect(wrapper.get("[data-testid=profile-avatar]").attributes("style")).toContain("var(--info-color)")
 	})
+
+	it("tags a user who may only read every customer, and says so (#1312)", async () => {
+		store.accessibleCustomers = [{ ...customer("ACME", "Acme Rome", false), read_only: true }]
+		const wrapper = mount(Profile)
+		await flushPromises()
+		expect(wrapper.get("[data-testid=profile-read-only]").text()).toBe("Read-only")
+		expect(wrapper.get("[data-testid=profile-role-description]").text()).toBe(
+			"Can view your organization's data but not change it."
+		)
+		expect(wrapper.find("[data-testid=profile-customer-read-only]").text()).toBe("read-only")
+	})
+
+	it("names the customers a user may only read when they work on others (#1312)", async () => {
+		store.accessibleCustomers = [
+			{ ...customer("ACME", "Acme Rome", false), read_only: true },
+			customer("BETA", "Beta Milan", false)
+		]
+		const wrapper = mount(Profile)
+		await flushPromises()
+		expect(wrapper.get("[data-testid=profile-role-description]").text()).toBe(
+			"Can view the data of Acme Rome but not change it."
+		)
+		const chips = wrapper.findAll("[data-testid=profile-customer]")
+		expect(chips.map(chip => chip.find("[data-testid=profile-customer-read-only]").exists())).toEqual([true, false])
+	})
 })

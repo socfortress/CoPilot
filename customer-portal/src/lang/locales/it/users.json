@@ -17,7 +17,9 @@
 		"loadFailed": "Impossibile caricare gli utenti.",
 		"done": "Fatto",
 		"actionFailed": "L'azione non è riuscita.",
-		"issueFailed": "Impossibile emettere una password temporanea."
+		"issueFailed": "Impossibile emettere una password temporanea.",
+		"makeReadOnly": "Imposta sola lettura",
+		"allowChanges": "Consenti modifiche"
 	},
 	"confirm": {
 		"disableTitle": "Disattivare {username}?",
@@ -36,7 +38,9 @@
 		"disabled": "Disattivato",
 		"disabledTitle": "Non può accedere",
 		"password": "Cambio password in sospeso",
-		"passwordTitle": "Accede con una password temporanea e deve sceglierne una sua"
+		"passwordTitle": "Accede con una password temporanea e deve sceglierne una sua",
+		"readOnly": "Sola lettura",
+		"readOnlyTitle": "Può vedere i tuoi dati ma non modificarli"
 	},
 	"invite": {
 		"title": "Invita un utente",
@@ -54,7 +58,9 @@
 			"emailRequired": "Inserisci un indirizzo email",
 			"emailInvalid": "Inserisci un indirizzo email valido",
 			"customersRequired": "Scegli almeno un cliente"
-		}
+		},
+		"readOnly": "Sola lettura",
+		"readOnlyHint": "Può vedere tutto ma non modificare nulla: niente commenti, casi, cambi di stato o report."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} è stato invitato",

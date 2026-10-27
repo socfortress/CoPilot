@@ -212,6 +212,7 @@ const columns = computed<DataTableColumns<Agent>>(() => [
 			return (
 				<AgentCriticalSelect
 					agentId={row.agent_id}
+					customerCode={row.customer_code}
 					critical={row.critical_asset}
 					onSuccess={handleCriticalAssetUpdated}
 				/>

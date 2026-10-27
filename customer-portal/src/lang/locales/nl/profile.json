@@ -1,13 +1,18 @@
 {
 	"roles": {
 		"customerAdmin": "Klantbeheerder",
-		"portalUser": "Portaalgebruiker"
+		"portalUser": "Portaalgebruiker",
+		"readOnly": "Alleen-lezen",
+		"readOnlyUser": "Alleen-lezengebruiker"
 	},
 	"header": {
 		"avatarAlt": "avatar",
 		"managesUsersOf": "Nodigt de portaalgebruikers van {customers} uit en beheert ze. Aangesteld door je SOC.",
 		"adminBadge": "beheerder",
-		"noCustomer": "Geen klant"
+		"noCustomer": "Geen klant",
+		"readOnlyAll": "Kan de gegevens van je organisatie bekijken maar niet wijzigen.",
+		"readOnlyOn": "Kan de gegevens van {customers} bekijken maar niet wijzigen.",
+		"readOnlyBadge": "alleen-lezen"
 	},
 	"tabs": {
 		"settings": "Instellingen",

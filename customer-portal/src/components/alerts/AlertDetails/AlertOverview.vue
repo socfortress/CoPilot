@@ -21,7 +21,12 @@
 						:bordered="false"
 					/>
 				</template>
-				<AlertStatusSelect :alert-id="alert.id" :status="alert.status" @success="handleStatusUpdateSuccess" />
+				<AlertStatusSelect
+					:alert-id="alert.id"
+					:status="alert.status"
+					:customer-code="alert.customer_code"
+					@success="handleStatusUpdateSuccess"
+				/>
 			</CardEntity>
 			<CardEntity size="small">
 				<template #header>

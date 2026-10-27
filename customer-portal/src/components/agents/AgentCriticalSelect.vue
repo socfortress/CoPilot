@@ -6,6 +6,8 @@
 		:loading
 		size="small"
 		class="min-w-36"
+		:disabled="readOnly"
+		:title="readOnly ? $t('common.readOnly.hint') : undefined"
 		:status="selectedCritical === 'CRITICAL' ? 'error' : undefined"
 		:consistent-menu-width="false"
 		@update:value="handleCriticalChange"
@@ -18,6 +20,7 @@ import { NSelect, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Api from "@/api"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { getApiErrorMessage } from "@/utils"
 
 export interface AgentCriticalUpdateSuccessPayload {
@@ -34,12 +37,16 @@ export interface AgentCriticalUpdateErrorPayload {
 const props = defineProps<{
 	agentId: string | number
 	critical: boolean
+	/** Its customer: read-only there, the select is disabled (#1312). */
+	customerCode?: string | null
 }>()
 
 const emit = defineEmits<{
 	success: [AgentCriticalUpdateSuccessPayload]
 	error: [AgentCriticalUpdateErrorPayload]
 }>()
+
+const readOnly = useReadOnly(() => props.customerCode)
 
 const message = useMessage()
 const { t } = useI18n()

@@ -24,6 +24,13 @@ export default {
 		return HttpClient.post<CommonResponse<TenantUserAction>>(`/customer_portal/users/${userId}/enable`)
 	},
 
+	/** Let a user only read the data of the customers they share with the caller, or change it again (#1312). */
+	setReadOnly(userId: number, readOnly: boolean) {
+		return HttpClient.put<CommonResponse<TenantUserAction>>(`/customer_portal/users/${userId}/read-only`, {
+			read_only: readOnly
+		})
+	},
+
 	resetTotp(userId: number) {
 		return HttpClient.delete<CommonResponse<TenantUserAction>>(`/customer_portal/users/${userId}/totp`)
 	},

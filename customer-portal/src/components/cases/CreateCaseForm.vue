@@ -63,7 +63,7 @@ const emit = defineEmits<{
 const message = useMessage()
 const { t } = useI18n()
 const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
-	useCustomerPrefill()
+	useCustomerPrefill({ writable: true })
 const loading = ref(false)
 const optionsLoading = ref(false)
 const assignedToOptions = ref<{ label: string; value: string }[]>([])

@@ -5,7 +5,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent } from "vue"
 import Avatar from "../Avatar.vue"
 
-const store = vi.hoisted(() => ({ isCustomerAdmin: false, userPic: "", userName: "giulia.bianchi" }))
+const store = vi.hoisted(() => ({
+	isCustomerAdmin: false,
+	userPic: "",
+	userName: "giulia.bianchi",
+	accessibleCustomers: [{ customer_code: "ACME", customer_name: "Acme" }] as {
+		customer_code: string
+		customer_name: string
+		read_only?: boolean
+	}[],
+	get writableCustomers() {
+		return this.accessibleCustomers.filter(customer => !customer.read_only)
+	}
+}))
 const push = vi.hoisted(() => vi.fn())
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => store }))
 const audit = vi.hoisted(() => ({ available: { value: false }, check: vi.fn() }))
@@ -77,6 +89,14 @@ describe("avatar", () => {
 		expect(wrapper.get("[data-testid=toolbar-avatar]").attributes("title")).toBe("giulia.bianchi · Portal user")
 		expect(keys()).toEqual(["signed-in-user", "route-Logout"])
 		expect(userCard().get("[data-testid=toolbar-role]").text()).toBe("Portal user")
+	})
+
+	it("shows a user who may only read every customer as a read-only user (#1312)", () => {
+		store.isCustomerAdmin = false
+		store.accessibleCustomers = [{ customer_code: "ACME", customer_name: "Acme", read_only: true }]
+		const wrapper = mount(Avatar)
+		expect(wrapper.get("[data-testid=toolbar-avatar-role]").text()).toBe("Read-only user")
+		store.accessibleCustomers = [{ customer_code: "ACME", customer_name: "Acme" }]
 	})
 
 	it("shows a customer admin as such, in the toolbar and on the menu's user card", () => {

@@ -17,7 +17,9 @@
 		"loadFailed": "No se han podido cargar los usuarios.",
 		"done": "Hecho",
 		"actionFailed": "La acción ha fallado.",
-		"issueFailed": "No se ha podido emitir una contraseña temporal."
+		"issueFailed": "No se ha podido emitir una contraseña temporal.",
+		"makeReadOnly": "Poner en solo lectura",
+		"allowChanges": "Permitir cambios"
 	},
 	"confirm": {
 		"disableTitle": "¿Desactivar a {username}?",
@@ -36,7 +38,9 @@
 		"disabled": "Desactivado",
 		"disabledTitle": "No puede iniciar sesión",
 		"password": "Cambio de contraseña pendiente",
-		"passwordTitle": "Inicia sesión con una contraseña temporal y debe elegir una propia"
+		"passwordTitle": "Inicia sesión con una contraseña temporal y debe elegir una propia",
+		"readOnly": "Solo lectura",
+		"readOnlyTitle": "Puede ver tus datos pero no modificarlos"
 	},
 	"invite": {
 		"title": "Invitar a un usuario",
@@ -54,7 +58,9 @@
 			"emailRequired": "Introduce una dirección de correo electrónico",
 			"emailInvalid": "Introduce una dirección de correo electrónico válida",
 			"customersRequired": "Elige al menos un cliente"
-		}
+		},
+		"readOnly": "Solo lectura",
+		"readOnlyHint": "Podrá verlo todo pero no cambiar nada: ni comentarios, ni casos, ni cambios de estado, ni informes."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} ha sido invitado",

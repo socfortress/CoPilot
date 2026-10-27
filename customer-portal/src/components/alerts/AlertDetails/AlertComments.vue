@@ -6,6 +6,7 @@
 				:key="comment.id"
 				:comment
 				:alert-id="alert.id"
+				:read-only
 				@updated="handleCommentUpdated"
 				@deleted="handleCommentDeleted"
 			/>
@@ -13,7 +14,8 @@
 
 		<n-empty v-else :description="$t('alerts.comments.empty')" class="min-h-50 justify-center" />
 
-		<div class="mt-10 flex flex-col gap-2">
+		<ReadOnlyNotice v-if="readOnly" class="mt-10" />
+		<div v-else class="mt-10 flex flex-col gap-2">
 			<n-form-item :label="$t('alerts.comments.add')" :show-feedback="false">
 				<n-input
 					v-model:value.trim="newComment"
@@ -48,6 +50,8 @@ import { NButton, NEmpty, NFormItem, NInput, useMessage } from "naive-ui"
 import { ref } from "vue"
 import { useI18n } from "vue-i18n"
 import Api from "@/api"
+import ReadOnlyNotice from "@/components/common/ReadOnlyNotice.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 import AlertComment from "./AlertComment.vue"
@@ -61,6 +65,9 @@ const emit = defineEmits<{
 	(e: "updated", comment: CommentItem): void
 	(e: "deleted", commentId: number): void
 }>()
+
+// May only read this customer's data: no composer, no edits (#1312).
+const readOnly = useReadOnly(() => alert.customer_code)
 
 const message = useMessage()
 const { t } = useI18n()

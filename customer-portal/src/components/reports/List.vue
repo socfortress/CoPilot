@@ -5,7 +5,12 @@
 				<h2 class="text-xl font-bold">{{ $t("reports.list.title") }}</h2>
 				<p class="text-secondary text-sm">{{ $t("reports.list.subtitle") }}</p>
 			</div>
-			<n-button type="primary" data-testid="generate-report-button" @click="openGenerateModal()">
+			<n-button
+				v-if="authStore.writableCustomers.length"
+				type="primary"
+				data-testid="generate-report-button"
+				@click="openGenerateModal()"
+			>
 				<template #icon>
 					<Icon :name="AddIcon" />
 				</template>
@@ -128,6 +133,7 @@ import Icon from "@/components/common/Icon.vue"
 import ReportCard from "@/components/reports/ReportCard.vue"
 import { useCustomerPrefill } from "@/composables/common/useCustomerPrefill"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
+import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
 import { getApiErrorMessage } from "@/utils"
@@ -139,7 +145,7 @@ const message = useMessage()
 const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const { customerOptions, filterCustomer, renderCustomerLabel, hasMultipleCustomers, initialCustomerCode } =
-	useCustomerPrefill()
+	useCustomerPrefill({ writable: true })
 const reportGenerationStore = useReportGenerationStore()
 const customerFilterStore = useCustomerFilterStore()
 const route = useRoute()
@@ -147,6 +153,8 @@ const router = useRouter()
 
 const generating = ref(false)
 const reports = ref<IncidentCustomerReport[]>([])
+// Only for customers whose data the user may change: a read-only user generates nothing (#1312).
+const authStore = useAuthStore()
 const showGenerateModal = ref(false)
 const showDeleteModal = ref(false)
 const reportToDelete = ref<IncidentCustomerReport | null>(null)

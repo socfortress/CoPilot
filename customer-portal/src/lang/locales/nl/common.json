@@ -143,7 +143,8 @@
 			"alert": "Hun reactietijd voor deze melding staat stil tot je antwoordt. Reageer in de opmerkingen om die terug te geven aan de analisten.",
 			"case": "Hun reactietijd voor deze zaak staat stil tot je antwoordt. Reageer in de opmerkingen om die terug te geven aan de analisten."
 		},
-		"reply": "Reageren"
+		"reply": "Reageren",
+		"readOnly": "Je account is hier alleen-lezen: een collega die gegevens mag wijzigen moet antwoorden."
 	},
 	"charts": {
 		"total": "Totaal"
@@ -171,5 +172,9 @@
 			"noDigit": "Het wachtwoord moet een cijfer bevatten",
 			"noSymbol": "Het wachtwoord moet een symbool bevatten, zoals ! {'@'} # $ % _ - . of +"
 		}
+	},
+	"readOnly": {
+		"notice": "Je kunt deze gegevens bekijken maar niet wijzigen.",
+		"hint": "Alleen-lezen: je kunt deze gegevens bekijken maar niet wijzigen."
 	}
 }

@@ -7,11 +7,12 @@ import { useAuthStore } from "@/stores/auth"
  * every API call sends. One place for the picker options, the label rendering and the
  * lookup, so a customer reads the same in the filter, the forms and the pages.
  */
-export function useCustomers() {
+export function useCustomers(options: { writable?: boolean } = {}) {
 	const authStore = useAuthStore()
 
+	// A form that files something offers only the customers whose data the user may change (#1312).
 	const customerOptions = computed<SelectOption[]>(() =>
-		authStore.accessibleCustomers.map(customer => ({
+		(options.writable ? authStore.writableCustomers : authStore.accessibleCustomers).map(customer => ({
 			label: customer.customer_name,
 			value: customer.customer_code
 		}))

@@ -17,7 +17,9 @@
 		"loadFailed": "Impossible de charger les utilisateurs.",
 		"done": "Terminé",
 		"actionFailed": "L'action a échoué.",
-		"issueFailed": "Impossible d'émettre un mot de passe temporaire."
+		"issueFailed": "Impossible d'émettre un mot de passe temporaire.",
+		"makeReadOnly": "Passer en lecture seule",
+		"allowChanges": "Autoriser les modifications"
 	},
 	"confirm": {
 		"disableTitle": "Désactiver {username} ?",
@@ -36,7 +38,9 @@
 		"disabled": "Désactivé",
 		"disabledTitle": "Ne peut pas se connecter",
 		"password": "Changement de mot de passe en attente",
-		"passwordTitle": "Se connecte avec un mot de passe temporaire et doit choisir le sien"
+		"passwordTitle": "Se connecte avec un mot de passe temporaire et doit choisir le sien",
+		"readOnly": "Lecture seule",
+		"readOnlyTitle": "Peut consulter vos données sans les modifier"
 	},
 	"invite": {
 		"title": "Inviter un utilisateur",
@@ -54,7 +58,9 @@
 			"emailRequired": "Saisissez une adresse e-mail",
 			"emailInvalid": "Saisissez une adresse e-mail valide",
 			"customersRequired": "Choisissez au moins un client"
-		}
+		},
+		"readOnly": "Lecture seule",
+		"readOnlyHint": "Peut tout consulter sans rien modifier : ni commentaires, ni dossiers, ni changements de statut, ni rapports."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} a été invité",

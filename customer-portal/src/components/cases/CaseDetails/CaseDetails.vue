@@ -7,6 +7,7 @@
 				<WaitingOnYouNotice
 					v-if="isWaitingOnCustomer(caseData.case_status)"
 					entity="case"
+					:read-only
 					@reply="activeTab = 'comments'"
 				/>
 
@@ -40,10 +41,10 @@
 						<CaseTimeline :case-id="caseData.id" />
 					</n-tab-pane>
 					<n-tab-pane name="files" :tab="$t('cases.caseDetails.tabs.files')">
-						<CaseFiles :case-id="caseData.id" />
+						<CaseFiles :case-id="caseData.id" :customer-code="caseData.customer_code" />
 					</n-tab-pane>
 					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
-					<n-tab-pane v-if="askSocEnabled" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
+					<n-tab-pane v-if="askSocEnabled && !readOnly" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
 						<AskSoc entity="case" :entity-id="caseData.id" @asked="handleAsked" />
 					</n-tab-pane>
 					<n-tab-pane name="comments" :tab="$t('cases.caseDetails.tabs.comments', { count: caseData.comments?.length || 0 })">
@@ -72,6 +73,7 @@ import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import AskSoc from "@/components/socRequests/AskSoc.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
 import { getApiErrorMessage } from "@/utils"
 import { isWaitingOnCustomer } from "@/utils/workflowStatus"
@@ -93,6 +95,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const caseData = ref<Case | null>(null)
+// May only read this case's customer: no question to the SOC, no reply (#1312).
+const readOnly = useReadOnly(() => caseData.value?.customer_code)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const activeTab = ref("overview")

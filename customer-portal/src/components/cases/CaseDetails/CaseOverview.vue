@@ -23,6 +23,7 @@
 				</template>
 				<CaseStatusSelect
 					:case-id="caseData.id"
+					:customer-code="caseData.customer_code"
 					:status="caseData.case_status"
 					@success="handleStatusUpdateSuccess"
 				/>
@@ -54,6 +55,7 @@
 				</template>
 				<CaseAssignedSelect
 					:case-id="caseData.id"
+					:customer-code="caseData.customer_code"
 					:assigned-to="caseData.assigned_to"
 					@success="handleAssignedToUpdateSuccess"
 				/>

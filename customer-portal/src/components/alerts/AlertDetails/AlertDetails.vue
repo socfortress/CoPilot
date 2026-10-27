@@ -7,6 +7,7 @@
 				<WaitingOnYouNotice
 					v-if="isWaitingOnCustomer(alert.status)"
 					entity="alert"
+					:read-only
 					@reply="activeTab = 'comments'"
 				/>
 
@@ -51,7 +52,7 @@
 					</n-tab-pane>
 
 					<!-- Gated by the customer's Ask the SOC switch, managed by the SOC in CoPilot (#1305). -->
-					<n-tab-pane v-if="askSocEnabled" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
+					<n-tab-pane v-if="askSocEnabled && !readOnly" name="ask-soc" :tab="$t('socRequests.tab')" display-directive="show:lazy">
 						<AskSoc entity="alert" :entity-id="alert.id" @asked="handleAsked" />
 					</n-tab-pane>
 
@@ -81,6 +82,7 @@ import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import AskSoc from "@/components/socRequests/AskSoc.vue"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
 import { getApiErrorMessage } from "@/utils"
 import { isWaitingOnCustomer } from "@/utils/workflowStatus"
@@ -100,6 +102,8 @@ const emit = defineEmits<{
 }>()
 
 const alert = ref<Alert | null>(null)
+// May only read this alert's customer: no question to the SOC, no reply (#1312).
+const readOnly = useReadOnly(() => alert.value?.customer_code)
 const detailsError = ref<string | null>(null)
 const loadingDetails = ref(false)
 const aiReportEnabled = ref(false)

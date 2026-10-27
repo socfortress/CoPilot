@@ -26,7 +26,7 @@
 								type="primary"
 								size="tiny"
 								:loading="linkingCaseId === item.id"
-								:disabled="item.alerts.some(alert => alert.id === props.alertId)"
+								:disabled="item.alerts.some(alert => alert.id === props.alertId) || authStore.isReadOnlyFor(item.customer_code)"
 								@click="linkAlert(item.id, props.alertId || 0)"
 							>
 								<template #icon>
@@ -54,7 +54,7 @@
 								type="primary"
 								size="tiny"
 								:loading="linkingAlertId === item.id"
-								:disabled="item.linked_cases.some(caseData => caseData.id === props.caseId)"
+								:disabled="item.linked_cases.some(caseData => caseData.id === props.caseId) || authStore.isReadOnlyFor(item.customer_code)"
 								@click="linkAlert(props.caseId || 0, item.id)"
 							>
 								<template #icon>
@@ -91,6 +91,7 @@ import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -115,6 +116,8 @@ const pagination = ref({
 	pageSize: 5,
 	total: 0
 })
+// An item of a customer the user may only read can't be linked (#1312).
+const authStore = useAuthStore()
 const cases = ref<Case[]>([])
 const alerts = ref<Alert[]>([])
 

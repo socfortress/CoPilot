@@ -143,7 +143,8 @@
 			"alert": "Jejich lhůta pro odpověď na tuto výstrahu je pozastavena, dokud neodpovíte. Odpovězte v komentářích a vraťte ji tak analytikům.",
 			"case": "Jejich lhůta pro odpověď na tento případ je pozastavena, dokud neodpovíte. Odpovězte v komentářích a vraťte jej tak analytikům."
 		},
-		"reply": "Odpovědět"
+		"reply": "Odpovědět",
+		"readOnly": "Váš účet je zde jen pro čtení: odpovědět musí kolega, který může data měnit."
 	},
 	"charts": {
 		"total": "Celkem"
@@ -171,5 +172,9 @@
 			"noDigit": "Heslo musí obsahovat číslici",
 			"noSymbol": "Heslo musí obsahovat symbol, například ! {'@'} # $ % _ - . nebo +"
 		}
+	},
+	"readOnly": {
+		"notice": "Tato data můžete zobrazit, ale ne měnit.",
+		"hint": "Jen pro čtení: tato data můžete zobrazit, ale ne měnit."
 	}
 }

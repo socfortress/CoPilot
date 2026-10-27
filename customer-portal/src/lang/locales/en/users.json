@@ -17,7 +17,9 @@
 		"loadFailed": "Could not load the users.",
 		"done": "Done",
 		"actionFailed": "The action failed.",
-		"issueFailed": "Could not issue a temporary password."
+		"issueFailed": "Could not issue a temporary password.",
+		"makeReadOnly": "Make read-only",
+		"allowChanges": "Allow changes"
 	},
 	"confirm": {
 		"disableTitle": "Disable {username}?",
@@ -36,7 +38,9 @@
 		"disabled": "Disabled",
 		"disabledTitle": "Cannot sign in",
 		"password": "Password change pending",
-		"passwordTitle": "Signs in with a temporary password and must choose their own"
+		"passwordTitle": "Signs in with a temporary password and must choose their own",
+		"readOnly": "Read-only",
+		"readOnlyTitle": "Can view your data but not change it"
 	},
 	"invite": {
 		"title": "Invite a user",
@@ -54,7 +58,9 @@
 			"emailRequired": "Enter an email address",
 			"emailInvalid": "Enter a valid email address",
 			"customersRequired": "Choose at least one customer"
-		}
+		},
+		"readOnly": "Read-only",
+		"readOnlyHint": "They can view everything but change nothing: no comments, cases, status changes or reports."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} was invited",

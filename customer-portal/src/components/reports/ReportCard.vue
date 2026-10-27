@@ -45,7 +45,7 @@
 						<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
 						{{ $t("common.actions.download") }}
 					</n-button>
-					<n-button v-if="isCustomerGenerated" size="small" type="error" secondary @click="emit('delete')">
+					<n-button v-if="isCustomerGenerated && !readOnly" size="small" type="error" secondary @click="emit('delete')">
 						<template #icon><Icon :name="DeleteIcon" :size="14" /></template>
 						{{ $t("common.actions.delete") }}
 					</n-button>
@@ -63,6 +63,7 @@ import { computed } from "vue"
 import { useI18n } from "vue-i18n"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSettingsStore } from "@/stores/settings"
 import { elapsedLabel, secondsSince } from "@/utils/elapsed"
 import { formatBytes, formatDate } from "@/utils/format"
@@ -99,6 +100,8 @@ const templateDescription = computed(() => t(`reports.card.templates.${template.
 // Customers may only delete reports they generated themselves; analyst/admin
 // reports shared into the portal are read-only here (download still allowed).
 const isCustomerGenerated = computed(() => report.generated_by_role === "customer_user")
+// Nor by a user who may only read the report's customer (#1312).
+const readOnly = useReadOnly(() => report.customer_code)
 
 const ROLE_KEYS = {
 	admin: "reports.card.roles.admin",
