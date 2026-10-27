@@ -1675,6 +1675,59 @@ describe("history (OP-3)", () => {
 		expect(byId(wrapper, "talon-ops-detail-title").exists()).toBe(true)
 	})
 
+	it("doesn't read the runs again when an action replaces the finding", async () => {
+		const wrapper = await opened(AuthUserRole.Analyst, { first_seen: FIRST })
+		const historyReads = () => api.listRuns.mock.calls.filter(([q]) => (q as { limit?: number }).limit === 30).length
+		expect(historyReads()).toBe(1)
+		await byId(wrapper, "talon-ops-acknowledge").trigger("click")
+		await settle()
+		expect(byId(wrapper, "talon-ops-detail-status").text()).toContain("Acknowledged")
+		expect(historyReads()).toBe(1)
+		expect(byId(wrapper, "talon-ops-history-loading").exists()).toBe(false)
+		expect(wrapper.findAll('[data-testid="talon-ops-history-run"]')).toHaveLength(1)
+	})
+
+	it("doesn't read a disk_forecast finding's runs again after an action either", async () => {
+		const evidence = { node: "node-1", used_gb: 700, total_gb: 1000, slope_gb_per_day: 2, thresholds_used_pct: { low: 85 } }
+		api.acknowledge.mockImplementation((id: number) =>
+			ok({
+				success: true,
+				message: "",
+				finding: finding(id, { job: "disk_forecast", kind: "disk_forecast", customer_code: null, evidence: { ...evidence }, status: "acknowledged" })
+			})
+		)
+		const wrapper = await opened(AuthUserRole.Admin, { job: "disk_forecast", kind: "disk_forecast", customer_code: null, evidence })
+		const diskReads = () => api.listRuns.mock.calls.filter(([q]) => (q as { job?: string; limit?: number }).limit === 200).length
+		expect(diskReads()).toBe(1)
+		await byId(wrapper, "talon-ops-acknowledge").trigger("click")
+		await settle()
+		expect(diskReads()).toBe(1)
+	})
+
+	it("marks the runs that started after the finding resolved", async () => {
+		api.listRuns.mockImplementation(() =>
+			ok({
+				success: true,
+				message: "",
+				dropped: 0,
+				items: [
+					runAt(1, "2026-10-23T06:00:30Z"),
+					runAt(2, "2026-10-22T06:00:30Z", { started_at: "2026-10-22T06:00:00Z", tick: "2026-10-22T06:00:00Z" }), // resolved it
+					runAt(3, "2026-10-21T06:00:30Z")
+				]
+			})
+		)
+		const wrapper = await opened(AuthUserRole.Analyst, {
+			first_seen: FIRST,
+			status: "resolved",
+			resolved_at: "2026-10-22T06:00:20Z",
+			resolved_reason: "cleared"
+		})
+		const runs = wrapper.findAll('[data-testid="talon-ops-history-run"]')
+		expect(runs.map(r => r.find('[data-testid="talon-ops-history-after-resolved"]').exists())).toEqual([true, false, false])
+		expect(byId(wrapper, "talon-ops-history-resolved").text()).toContain("(cleared)")
+	})
+
 	it("reads a platform finding's runs without a customer, for an admin only", async () => {
 		const platform = { customer_code: null, job: "cluster_health", kind: "cluster_status", evidence: { status: "yellow" } }
 		const analyst = await opened(AuthUserRole.Analyst, platform)
@@ -1722,6 +1775,25 @@ describe("the jobs table's recent runs (OP-3)", () => {
 		await settle()
 		expect(recentCalls()).toHaveLength(2)
 		expect(wrapper.findAll('[data-testid="talon-ops-job-recent-run"]')).toHaveLength(1)
+	})
+
+	it("doesn't cache a failed read: the next expand tries again", async () => {
+		api.listRuns.mockImplementationOnce(() => refusal(502, { detail: "Talon didn't answer", code: "unavailable" }))
+		const wrapper = await expanded()
+		const toggle = () => byId(wrapper, "talon-ops-job-runs-toggle-quiet_endpoints").trigger("click")
+		await toggle()
+		await settle()
+		expect(byId(wrapper, "talon-ops-job-recent-error-quiet_endpoints").exists()).toBe(true)
+		await toggle()
+		await toggle()
+		await settle()
+		expect(recentCalls()).toHaveLength(2)
+		expect(byId(wrapper, "talon-ops-job-recent-error-quiet_endpoints").exists()).toBe(false)
+		expect(wrapper.findAll('[data-testid="talon-ops-job-recent-run"]')).toHaveLength(1)
+		await toggle()
+		await toggle()
+		await settle()
+		expect(recentCalls()).toHaveLength(2)
 	})
 
 	it("shows at most 10 runs and says when they can't be read", async () => {

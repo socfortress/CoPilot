@@ -132,7 +132,12 @@
 						data-testid="talon-ops-detail-evidence-json"
 					>{{ evidenceJson(finding) }}</pre>
 					<div v-else-if="evidenceMode === 'view' && hasView" data-testid="talon-ops-detail-evidence-view">
-						<OpsEvidence :finding :is-admin :settings="settings[finding.job] ?? null" />
+						<OpsEvidence
+							:finding
+							:is-admin
+							:settings="settings[finding.job] ?? null"
+							:schedule="schedules[finding.job] ?? null"
+						/>
 					</div>
 					<dl
 						v-else
@@ -308,7 +313,8 @@ const {
 	customerCode = null,
 	titles = {},
 	isAdmin = false,
-	settings = {}
+	settings = {},
+	schedules = {}
 } = defineProps<{
 	findingId: number | null
 	customerCode?: string | null
@@ -316,6 +322,8 @@ const {
 	isAdmin?: boolean
 	/** Each job's thresholds (`TalonOpsJob.settings`): `disk_forecast`'s projection reads `horizon_days`. */
 	settings?: Record<string, Record<string, unknown>>
+	/** Each job's cron (`TalonOpsJob.schedule`): `disk_forecast`'s chart picks each day's sample by it. */
+	schedules?: Record<string, string | null>
 }>()
 const emit = defineEmits<{
 	(e: "close"): void

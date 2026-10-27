@@ -278,7 +278,7 @@ describe("disk_forecast", () => {
 		runs(run("2026-10-26T04:45:00Z", 700), run("2026-10-25T04:45:00Z", 680), run("2026-10-25T01:00:00Z", 679))
 		const wrapper = render("disk_forecast", "disk_forecast", evidence, { isAdmin: true, settings: { horizon_days: 30 } })
 		await flushPromises()
-		expect(listRuns).toHaveBeenCalledWith({ job: "disk_forecast", limit: 30 }, expect.anything())
+		expect(listRuns).toHaveBeenCalledWith({ job: "disk_forecast", limit: 200 }, expect.anything())
 		const chart = byId(wrapper, "talon-ops-disk-chart")
 		expect(chart.attributes("role")).toBe("img")
 		expect(chart.attributes("aria-label")).toContain(`Used disk on ${XSS}`)
@@ -288,6 +288,27 @@ describe("disk_forecast", () => {
 		const html = formatter({ seriesName: "Used", value: [Date.parse("2026-10-26T04:45:00Z"), 700] })
 		expect(html).not.toContain("<img")
 		expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;")
+	})
+
+	it("says the high watermark is already reached when the node is over it", async () => {
+		const wrapper = render("disk_forecast", "disk_forecast", { ...evidence, days_to_high: null, over_high_watermark: true })
+		await flushPromises()
+		expect(byId(wrapper, "talon-ops-disk-high").text()).toContain("already there")
+		expect(byId(wrapper, "talon-ops-disk-high").text()).not.toContain("not forecast")
+	})
+
+	it("starts the projection at the evidence's used GB when the finding was last seen", async () => {
+		runs(run("2026-10-26T04:45:00Z", 698), run("2026-10-25T04:45:00Z", 680))
+		render("disk_forecast", "disk_forecast", evidence, {
+			isAdmin: true,
+			settings: { horizon_days: 10 },
+			schedule: "45 4 * * *",
+			finding: { job: "disk_forecast", kind: "disk_forecast", evidence, last_seen: "2026-10-26T04:46:00+00:00" }
+		})
+		await flushPromises()
+		const projected = (lastOption?.series as { name: string; data: number[][] }[]).find(s => s.name === "Projected")
+		expect(projected?.data[0]).toEqual([Date.parse("2026-10-26T04:46:00Z"), 700, 1000])
+		expect(projected?.data[1][1]).toBe(700 + 20 * 10)
 	})
 
 	it("shows the numbers only with fewer than two days of samples", async () => {

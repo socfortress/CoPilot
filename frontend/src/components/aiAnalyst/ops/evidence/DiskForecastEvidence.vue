@@ -88,6 +88,8 @@ import {
 	diskPoints,
 	gbPerDayText,
 	gbText,
+	isoMs,
+	num,
 	pctText,
 	projectionDays
 } from "./evidence"
@@ -96,8 +98,18 @@ import EvidenceFigures from "./EvidenceFigures.vue"
 const {
 	evidence,
 	isAdmin = false,
-	settings = null
-} = defineProps<{ evidence: Evidence | null; isAdmin?: boolean; settings?: Record<string, unknown> | null }>()
+	settings = null,
+	schedule = null,
+	lastSeen = null
+} = defineProps<{
+	evidence: Evidence | null
+	isAdmin?: boolean
+	settings?: Record<string, unknown> | null
+	/** The job's cron: each earlier day's sample is the run nearest its time of day, as Talon picks it. */
+	schedule?: string | null
+	/** The finding's `last_seen`: the evidence's sample, where the projection starts. */
+	lastSeen?: string | null
+}>()
 
 use([CanvasRenderer, LineChart, GridComponent, MarkLineComponent, TooltipComponent])
 
@@ -111,7 +123,21 @@ const loading = ref(false)
 const failure = ref<string | null>(null)
 let controller: AbortController | null = null
 
-const points = computed<DiskPoint[]>(() => (view.value ? diskPoints(runs.value, view.value.node) : []))
+const lastSeenMs = computed(() => isoMs(lastSeen))
+const points = computed<DiskPoint[]>(() =>
+	view.value
+		? diskPoints(runs.value, view.value.node, {
+				lastSeen: lastSeenMs.value,
+				schedule,
+				windowDays: num(settings?.window_days),
+				seriesSince: isoMs(evidence?.series_since)
+			})
+		: []
+)
+/** The projection starts at the evidence's used GB, when the finding was last seen. */
+const anchor = computed(() =>
+	view.value?.usedGb != null && lastSeenMs.value !== null ? { t: lastSeenMs.value, usedGb: view.value.usedGb } : null
+)
 const chart = computed(() =>
 	view.value
 		? buildDiskChart(
@@ -123,7 +149,8 @@ const chart = computed(() =>
 					warning: theme.style["warning-color"] ?? "#FFB600",
 					error: theme.style["error-color"] ?? "#FF0156"
 				},
-				theme.style
+				theme.style,
+				anchor.value
 			)
 		: null
 )
@@ -148,6 +175,7 @@ async function load() {
 	}
 }
 
-watch(() => [isAdmin, view.value?.node], load, { immediate: true })
+// A stable key: an action on the finding replaces its object, which must not read the runs again.
+watch(() => `${isAdmin}|${view.value?.node ?? ""}`, load, { immediate: true })
 onBeforeUnmount(() => controller?.abort())
 </script>

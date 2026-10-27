@@ -98,8 +98,8 @@ class TalonOpsRun(BaseModel):
     duration_ms: Optional[int] = None
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
-    #: The run's own record (``store.run_json``'s ``detail``), a bounded copy cleaned as the evidence is;
-    #: on ``/runs`` only (the jobs list leaves it out), None when Talon sent none or it was too large.
+    #: ``disk_forecast``'s run record, allowlisted (``disk_detail``: ``{tick, nodes: {node: {used, total}}}``,
+    #: bytes); on ``/runs`` only (the jobs list leaves it out). None for every other job.
     detail: Optional[Dict[str, Any]] = None
 
 

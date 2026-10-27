@@ -55,13 +55,23 @@ export function diskTooltip(node: string, kind: "sample" | "projection", ms: num
 	)
 }
 
-/** The chart, or null with fewer than two points (the view shows the numbers only). */
+/** Where the projection starts: the evidence's used GB at the finding's `last_seen`. */
+export interface DiskAnchor {
+	t: number
+	usedGb: number
+}
+
+/**
+ * The chart, or null with fewer than two points (the view shows the numbers only). The projection
+ * starts at `anchor` (the evidence's `used_gb` at the finding's `last_seen`), else at the newest sample.
+ */
 export function buildDiskChart(
 	view: DiskForecastView,
 	points: DiskPoint[],
 	horizonDays: number | null,
 	colors: DiskChartColors,
-	style: Record<string, string>
+	style: Record<string, string>,
+	anchor: DiskAnchor | null = null
 ): DiskChart | null {
 	if (points.length < 2) return null
 	const muted = style["fg-secondary-color"]
@@ -71,12 +81,14 @@ export function buildDiskChart(
 	const axisText = { color: muted, fontFamily: font, fontSize: 11 }
 	const last = points[points.length - 1]
 	const totalGb = view.totalGb ?? last.total / GIB
-	const used = points.map(p => [p.t, p.used / GIB] as [number, number])
+	// Each sample carries its own disk total, for its own %.
+	const used = points.map(p => [p.t, p.used / GIB, p.total / GIB] as [number, number, number])
 
-	const projection: [number, number][] = []
+	const projection: [number, number, number][] = []
 	if (view.slope !== null && horizonDays !== null && horizonDays > 0) {
-		const end = last.t + horizonDays * DAY_MS
-		projection.push([last.t, last.used / GIB], [end, last.used / GIB + view.slope * horizonDays])
+		const from = anchor ?? { t: last.t, usedGb: last.used / GIB }
+		const end = from.t + horizonDays * DAY_MS
+		projection.push([from.t, from.usedGb, totalGb], [end, from.usedGb + view.slope * horizonDays, totalGb])
 	}
 
 	const lineColor = (key: keyof typeof WATERMARK_COLOR) => {
@@ -145,7 +157,8 @@ export function buildDiskChart(
 				const p = (Array.isArray(params) ? params[0] : params) as { seriesName?: string; value?: unknown } | undefined
 				const value = p?.value
 				if (!Array.isArray(value) || typeof value[0] !== "number" || typeof value[1] !== "number") return ""
-				return diskTooltip(view.node, p?.seriesName === "Projected" ? "projection" : "sample", value[0], value[1], totalGb)
+				const total = typeof value[2] === "number" ? value[2] : null
+				return diskTooltip(view.node, p?.seriesName === "Projected" ? "projection" : "sample", value[0], value[1], total)
 			}
 		},
 		xAxis: {

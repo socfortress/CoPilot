@@ -91,6 +91,13 @@ export function pctText(pct: number | null | undefined): string {
 	return `${fixed(value, Number.isInteger(value) ? 0 : 1)}%`
 }
 
+/** A growth ratio against a baseline (1.3) as the change ("+30%", "−10%"). */
+export function growthText(ratio: number | null | undefined): string {
+	if (num(ratio) === null) return NONE
+	const change = Math.round(((ratio as number) - 1) * 1000) / 10
+	return `${change > 0 ? "+" : change < 0 ? "−" : ""}${pctText(Math.abs(change))}`
+}
+
 /** Days, to one decimal ("4.5 days", "1 day"). */
 export function daysText(days: number | null | undefined): string {
 	if (num(days) === null) return NONE
@@ -473,10 +480,14 @@ export function mappingDriftView(evidence: Evidence | null | undefined, kind: st
 			after,
 			figures: figures(evidence, [
 				...PATTERN_FIGURES,
-				["growth", "Growth", "ratio"],
+				["growth", "Growth on the baseline", "ratio"],
 				["baseline_age_days", "Baseline from", "days"],
 				["baseline_tick", "Baseline run", "time"]
-			]).map(f => (f.key === "baseline_age_days" ? { ...f, text: `${f.text} ago` } : f))
+			]).map(f => {
+				if (f.key === "baseline_age_days") return { ...f, text: `${f.text} ago` }
+				if (f.key === "growth") return { ...f, text: growthText(num(evidence.growth)) }
+				return f
+			})
 		}
 	}
 	if (kind === "talon_fields") {
@@ -738,6 +749,19 @@ export interface DiskForecastView {
 	figures: Figure[]
 }
 
+/**
+ * Days until a watermark: 0 when the node is already there (`days_to_high` is null over the high
+ * watermark, with `over_high_watermark` true; `days_to_flood_stage` is 0 at the flood stage), null when
+ * it isn't forecast.
+ */
+function watermarkDays(evidence: Evidence, key: DiskWatermark["key"]): number | null {
+	const days = num(evidence[`days_to_${key}`])
+	if (days !== null) return days
+	if (key === "high" && evidence.over_high_watermark === true) return 0
+	if (key === "flood_stage" && evidence.at_flood_stage === true) return 0
+	return null
+}
+
 /** `disk_forecast`'s evidence: the node, its disk, the slope and the watermarks (as used % of this disk). */
 export function diskForecastView(evidence: Evidence | null | undefined): DiskForecastView | null {
 	if (!evidence) return null
@@ -757,7 +781,7 @@ export function diskForecastView(evidence: Evidence | null | undefined): DiskFor
 			label,
 			pct,
 			bytes: totalGb !== null && totalGb > 0 ? (pct / 100) * totalGb * GIB : null,
-			days: num(evidence[`days_to_${key}`])
+			days: watermarkDays(evidence, key)
 		})
 	}
 	return {
@@ -778,30 +802,99 @@ export function diskForecastView(evidence: Evidence | null | undefined): DiskFor
 	}
 }
 
-/** The runs read for the chart: the job's newest 30 (its daily runs over the series' window). */
-export const DISK_RUNS_LIMIT = 30
+/** The runs read for the chart: as many as CoPilot gives (200), so run-now runs between the daily ones don't push the window out. */
+export const DISK_RUNS_LIMIT = 200
+/** `disk_forecast.TOTAL_TOLERANCE`: totals within 0.5% are the same disk. */
+export const TOTAL_TOLERANCE = 0.005
+
+/** `disk_forecast.same_disk`. */
+export function sameDisk(a: number, b: number): boolean {
+	return Math.abs(a - b) <= TOTAL_TOLERANCE * Math.max(a, b)
+}
 
 /**
- * The node's used disk from `disk_forecast`'s runs (`detail.nodes[node]`, bytes): one point per UTC day,
- * the latest of each day, oldest first. A run is placed at its `detail.tick`, else its own tick, else
- * when it finished; a run without the node, or with sizes that don't parse, is left out.
+ * The time of day (ms after 00:00 UTC) of the schedule's last fire at or before `at`, for the crons the
+ * jobs use: `M H * * *` (or with a weekday) and `M * * * *`; null for any other (the caller then uses
+ * the run's own time of day, as `disk_forecast` does when it can't read its cron).
  */
-export function diskPoints(runs: TalonOpsRun[] | null | undefined, node: string): DiskPoint[] {
-	const byDay = new Map<string, DiskPoint>()
+export function scheduledTimeOfDay(cron: string | null | undefined, at: number): number | null {
+	const fields = cron?.trim().split(/\s+/)
+	if (!fields || fields.length !== 5) return null
+	const [m, h, dom, month] = fields
+	if (!/^\d{1,2}$/.test(m) || Number(m) > 59 || dom !== "*" || month !== "*") return null
+	const minute = Number(m)
+	if (/^\d{1,2}$/.test(h) && Number(h) <= 23) return (Number(h) * 60 + minute) * 60_000
+	if (h !== "*") return null
+	const now = new Date(at)
+	const sinceHour = (now.getUTCMinutes() * 60 + now.getUTCSeconds()) * 1000 + now.getUTCMilliseconds()
+	const hour = sinceHour >= minute * 60_000 ? now.getUTCHours() : (now.getUTCHours() + 23) % 24
+	return (hour * 60 + minute) * 60_000
+}
+
+export interface DiskSeriesOptions {
+	/** The finding's `last_seen` (ms): the run that wrote the evidence is the newest at or before it. */
+	lastSeen?: number | null
+	/** The job's cron (`TalonOpsJob.schedule`): each earlier day's sample is the run nearest its time of day. */
+	schedule?: string | null
+	/** The job's `window_days` setting: samples older than this before the newest are left out. */
+	windowDays?: number | null
+	/** The evidence's `series_since`: the series' first sample, after a disk change; earlier ones are left out. */
+	seriesSince?: number | null
+}
+
+/**
+ * The node's daily samples as `disk_forecast` builds its series (`series`), from the job's runs
+ * (`detail.nodes[node]`, bytes), oldest first:
+ * - the newest run at or before the finding's `last_seen` is "now", for its UTC day;
+ * - each earlier UTC day within `windowDays` of it: the run nearest the schedule's time of day (an
+ *   equal distance: the earlier run);
+ * - walking back from the newest day, the series stops at the first day whose disk total differs from
+ *   now's by more than 0.5% (a resized or replaced disk);
+ * - nothing before the evidence's `series_since`.
+ * A run is placed at its `detail.tick`, else its own tick; one without the node, or whose sizes don't
+ * read, is left out.
+ */
+export function diskPoints(runs: TalonOpsRun[] | null | undefined, node: string, options: DiskSeriesOptions = {}): DiskPoint[] {
+	const samples: DiskPoint[] = []
 	for (const run of runs ?? []) {
 		if (run.job !== "disk_forecast") continue
 		const detail = obj(run.detail)
 		const row = obj(obj(detail?.nodes)?.[node])
 		const used = num(row?.used)
 		const total = num(row?.total)
-		if (used === null || total === null || used < 0 || total <= 0 || used > total) continue
-		const t = isoMs(detail?.tick) ?? isoMs(run.tick) ?? isoMs(run.finished_at)
-		if (t === null) continue
-		const day = new Date(t).toISOString().slice(0, 10)
-		const kept = byDay.get(day)
-		if (!kept || t > kept.t) byDay.set(day, { t, used, total })
+		if (used === null || total === null || used < 0 || total <= 0) continue
+		const t = isoMs(detail?.tick) ?? isoMs(run.tick)
+		if (t !== null) samples.push({ t, used, total })
 	}
-	return [...byDay.values()].sort((a, b) => a.t - b.t)
+	const lastSeen = options.lastSeen ?? null
+	const eligible = lastSeen === null ? samples : samples.filter(p => p.t <= lastSeen)
+	if (!eligible.length) return []
+	const now = eligible.reduce((a, b) => (b.t > a.t ? b : a))
+	const dayOf = (t: number) => Math.floor(t / DAY_MS)
+	const windowDays = num(options.windowDays)
+	const start = windowDays !== null && windowDays > 0 ? now.t - windowDays * DAY_MS : Number.NEGATIVE_INFINITY
+	const offset = scheduledTimeOfDay(options.schedule, now.t) ?? now.t - dayOf(now.t) * DAY_MS
+	const byDay = new Map<number, DiskPoint>()
+	for (const p of eligible) {
+		const day = dayOf(p.t)
+		if (p.t >= now.t || p.t < start || day === dayOf(now.t)) continue
+		const target = day * DAY_MS + offset
+		const kept = byDay.get(day)
+		const closer = (a: DiskPoint, b: DiskPoint) => {
+			const da = Math.abs(a.t - target)
+			const db = Math.abs(b.t - target)
+			return da < db || (da === db && a.t < b.t)
+		}
+		if (!kept || closer(p, kept)) byDay.set(day, p)
+	}
+	const out = [now]
+	for (const day of [...byDay.keys()].sort((a, b) => b - a)) {
+		const p = byDay.get(day) as DiskPoint
+		if (!sameDisk(p.total, now.total)) break
+		out.push(p)
+	}
+	const since = options.seriesSince ?? null
+	return out.filter(p => since === null || p.t >= since - 1).sort((a, b) => a.t - b.t)
 }
 
 /**

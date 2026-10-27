@@ -43,6 +43,13 @@
 					·
 					<TimeText :iso="run.finished_at ?? run.started_at ?? run.tick" :relative="false" />
 					· {{ runCounts(run) }}
+					<span
+						v-if="afterResolved(run, finding)"
+						class="text-tertiary"
+						data-testid="talon-ops-history-after-resolved"
+					>
+						· after it resolved
+					</span>
 					<template v-if="run.error">
 						·
 						<bdi :class="toneClass(statusTone(run.status))">{{ run.error }}</bdi>
@@ -60,7 +67,7 @@
 <script setup lang="ts">
 // A finding's history: when it was first and last seen, since when its job couldn't measure it, when
 // it resolved, and its job's runs for its customer since it was first seen (status, time, counts,
-// Talon's fixed error text). A platform finding's runs are an admin's: anyone else is told so and
+// Talon's fixed error text; a run that started after it resolved is marked so). A platform finding's runs are an admin's: anyone else is told so and
 // nothing is read. Talon keeps no severity trail, so none is shown or implied.
 import type { Tone } from "./ops"
 import type { TalonOpsFinding, TalonOpsRun } from "@/types/talonOps"
@@ -69,14 +76,16 @@ import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import { opsFailure } from "@/api/endpoints/talonOps"
 import TimeText from "./evidence/TimeText.vue"
-import { canReadFindingRuns, findingRuns, HISTORY_RUNS, runCounts, statusTone } from "./ops"
+import { afterResolved, canReadFindingRuns, findingRuns, HISTORY_RUNS, runCounts, statusTone } from "./ops"
 
 const { finding, isAdmin = false } = defineProps<{
 	finding: Pick<TalonOpsFinding, "id" | "job" | "customer_code" | "first_seen" | "last_seen" | "stale_since" | "resolved_at" | "resolved_reason">
 	isAdmin?: boolean
 }>()
 
-const runs = ref<TalonOpsRun[]>([])
+/** The job's runs as read; the ones shown follow the finding (`findingRuns`) without reading again. */
+const read = ref<TalonOpsRun[]>([])
+const runs = computed(() => findingRuns(read.value, finding))
 const loading = ref(false)
 const failure = ref<string | null>(null)
 let controller: AbortController | null = null
@@ -91,7 +100,7 @@ function toneClass(tone: Tone): string {
 
 async function load() {
 	controller?.abort()
-	runs.value = []
+	read.value = []
 	failure.value = null
 	if (!allowed.value) return
 	const own = new AbortController()
@@ -104,7 +113,7 @@ async function load() {
 				: { job: finding.job, customer_code: finding.customer_code, limit: HISTORY_RUNS }
 		const { data } = await Api.talonOps.listRuns(query, own.signal)
 		if (controller !== own) return
-		runs.value = findingRuns(Array.isArray(data?.items) ? data.items : [], finding)
+		read.value = Array.isArray(data?.items) ? data.items : []
 	} catch (err) {
 		if (controller !== own || own.signal.aborted) return
 		failure.value = opsFailure(err).detail
@@ -113,6 +122,8 @@ async function load() {
 	}
 }
 
-watch(() => [finding.id, finding.job, finding.customer_code, finding.first_seen, isAdmin], load, { immediate: true })
+// A stable key: acknowledging, muting or reopening replaces the finding's object, and must not read the
+// runs again (nor flash the list).
+watch(() => `${finding.id}|${finding.job}|${finding.customer_code ?? ""}|${isAdmin}`, load, { immediate: true })
 onBeforeUnmount(() => controller?.abort())
 </script>

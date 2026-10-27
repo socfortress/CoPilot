@@ -1,5 +1,12 @@
 <template>
-	<DiskForecastEvidence v-if="kind === 'disk_forecast'" :evidence :is-admin :settings />
+	<DiskForecastEvidence
+		v-if="kind === 'disk_forecast'"
+		:evidence
+		:is-admin
+		:settings
+		:schedule
+		:last-seen="finding.last_seen ?? null"
+	/>
 	<AgentHygieneEvidence v-else-if="kind === 'agent_hygiene'" :evidence :kind="finding.kind" />
 	<QuietEndpointsEvidence v-else-if="kind === 'quiet_endpoints'" :evidence />
 	<MappingDriftEvidence v-else-if="kind === 'mapping_drift'" :evidence :kind="finding.kind" />
@@ -27,11 +34,14 @@ import StorageUsageEvidence from "./StorageUsageEvidence.vue"
 const {
 	finding,
 	isAdmin = false,
-	settings = null
+	settings = null,
+	schedule = null
 } = defineProps<{
-	finding: Pick<TalonOpsFinding, "job" | "kind" | "evidence">
+	finding: Pick<TalonOpsFinding, "job" | "kind" | "evidence"> & Partial<Pick<TalonOpsFinding, "last_seen">>
 	isAdmin?: boolean
 	settings?: Record<string, unknown> | null
+	/** The job's cron (`TalonOpsJob.schedule`). */
+	schedule?: string | null
 }>()
 
 const evidence = computed(() => finding.evidence)

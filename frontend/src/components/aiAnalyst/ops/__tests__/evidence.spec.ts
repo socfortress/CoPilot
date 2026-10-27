@@ -19,6 +19,7 @@ import {
 	gbPerDayText,
 	gbText,
 	GIB,
+	growthText,
 	hoursText,
 	mappingDriftView,
 	minutesText,
@@ -28,6 +29,7 @@ import {
 	quietEndpointsView,
 	ratioText,
 	relativeText,
+	scheduledTimeOfDay,
 	SILENT_LOG_SOURCES_FIGURES,
 	storageUsageView,
 	timeParts,
@@ -36,7 +38,7 @@ import {
 	viewKind,
 	yesNo
 } from "../evidence/evidence"
-import { findingRuns } from "../ops"
+import { afterResolved, findingRuns } from "../ops"
 
 const XSS = "<img src=x onerror=alert(1)>"
 
@@ -199,6 +201,10 @@ describe("mapping_drift", () => {
 		expect(
 			mappingDriftView({ family_field_count: 1500, baseline_family_field_count: 1000, growth: 1.5 }, "field_growth")
 		).toMatchObject({ before: 1000, after: 1500 })
+		const growth = mappingDriftView({ family_field_count: 1300, baseline_family_field_count: 1000, growth: 1.3 }, "field_growth")
+		expect(growth?.figures.find(f => f.key === "growth")?.text).toBe("+30%")
+		expect(growthText(0.9)).toBe("−10%")
+		expect(growthText(null)).toBe("—")
 		expect(mappingDriftView({ family_field_count: 1500 }, "field_growth")).toBeNull()
 	})
 
@@ -343,25 +349,82 @@ describe("disk_forecast", () => {
 		expect(diskForecastView({ node: "n", thresholds_used_pct: {} })).toBeNull()
 	})
 
-	it("keeps one point per UTC day, the latest, oldest first", () => {
+	const DAILY = "45 4 * * *"
+	const at = (iso: string) => Date.parse(iso)
+	const disk = (used: number, total = 1000) => ({ "node-1": { used: used * GIB, total: total * GIB } })
+	const shown = (points: { t: number; used: number }[]) => points.map(p => [new Date(p.t).toISOString(), p.used / GIB])
+
+	it("builds Talon's series: per earlier UTC day the run nearest the scheduled time, today's the evidence's run", () => {
 		const points = diskPoints(
 			[
-				run("2026-10-26T04:45:00Z", { "node-1": { used: 690 * GIB, total: 1000 * GIB } }),
-				run("2026-10-26T15:00:00Z", { "node-1": { used: 695 * GIB, total: 1000 * GIB } }),
-				run("2026-10-25T04:45:00Z", { "node-1": { used: 670 * GIB, total: 1000 * GIB } }),
-				run("2026-10-24T04:45:00Z", { "node-2": { used: 1, total: 2 } }),
-				run("2026-10-23T04:45:00Z", { "node-1": { used: "650", total: 1000 * GIB } }),
-				run("2026-10-22T04:45:00Z", { "node-1": { used: 2000, total: 1000 } }),
-				run("2026-10-21T04:45:00Z", { "node-1": { used: 600 * GIB, total: 1000 * GIB } }, { job: "cluster_health" }),
+				run("2026-10-26T04:45:00Z", disk(700)), // now: the newest at or before last_seen
+				run("2026-10-26T15:00:00Z", disk(705)), // after last_seen: not this finding's series
+				run("2026-10-25T04:46:00Z", disk(680)), // the scheduled run (04:45) that day...
+				run("2026-10-25T23:00:00Z", disk(685)), // ...not the latest
+				run("2026-10-24T04:00:00Z", disk(660)), // 45 min early
+				run("2026-10-24T05:30:00Z", disk(661)), // 45 min late: a tie goes to the earlier run
+				run("2026-10-23T04:45:00Z", { "node-2": { used: 1, total: 2 } }), // not this node
+				run("2026-10-22T04:45:00Z", { "node-1": { used: "650", total: 1000 * GIB } }), // malformed
+				run("2026-10-21T04:45:00Z", disk(600), { job: "cluster_health" }), // another job
 				run("2026-10-20T04:45:00Z", "not an object")
 			],
-			"node-1"
+			"node-1",
+			{ lastSeen: at("2026-10-26T04:46:10Z"), schedule: DAILY }
 		)
-		expect(points.map(p => [new Date(p.t).toISOString(), p.used / GIB])).toEqual([
-			["2026-10-25T04:45:00.000Z", 670],
-			["2026-10-26T15:00:00.000Z", 695]
+		expect(shown(points)).toEqual([
+			["2026-10-24T04:00:00.000Z", 660],
+			["2026-10-25T04:46:00.000Z", 680],
+			["2026-10-26T04:45:00.000Z", 700]
 		])
 		expect(diskPoints(null, "node-1")).toEqual([])
+	})
+
+	it("uses the run's own time of day when the cron can't be read", () => {
+		const runs = [run("2026-10-26T10:00:00Z", disk(700)), run("2026-10-25T04:45:00Z", disk(680)), run("2026-10-25T09:00:00Z", disk(690))]
+		expect(shown(diskPoints(runs, "node-1", { schedule: "*/5 * * * *" }))).toEqual([
+			["2026-10-25T09:00:00.000Z", 690],
+			["2026-10-26T10:00:00.000Z", 700]
+		])
+		expect(shown(diskPoints(runs, "node-1", { schedule: DAILY }))[0]).toEqual(["2026-10-25T04:45:00.000Z", 680])
+	})
+
+	it("stops at a disk whose total differs by more than 0.5% (a resized or replaced disk)", () => {
+		const runs = [
+			run("2026-10-26T04:45:00Z", disk(700, 1000)),
+			run("2026-10-25T04:45:00Z", disk(690, 1004)), // within 0.5%: the same disk
+			run("2026-10-24T04:45:00Z", disk(400, 500)), // a smaller disk: the series stops here
+			run("2026-10-23T04:45:00Z", disk(680, 1000)) // before it: never used again
+		]
+		expect(shown(diskPoints(runs, "node-1", { schedule: DAILY }))).toEqual([
+			["2026-10-25T04:45:00.000Z", 690],
+			["2026-10-26T04:45:00.000Z", 700]
+		])
+	})
+
+	it("keeps the job's window and nothing before the evidence's series_since", () => {
+		const runs = Array.from({ length: 20 }, (_, i) => run(new Date(at("2026-10-26T04:45:00Z") - i * 86400_000).toISOString(), disk(700 - i)))
+		expect(diskPoints(runs, "node-1", { schedule: DAILY, windowDays: 14 })).toHaveLength(15)
+		const since = diskPoints(runs, "node-1", { schedule: DAILY, seriesSince: at("2026-10-20T04:45:00.000Z") })
+		expect(shown(since)[0]).toEqual(["2026-10-20T04:45:00.000Z", 694])
+		expect(since).toHaveLength(7)
+	})
+
+	it("reads the schedule's time of day", () => {
+		expect(scheduledTimeOfDay("45 4 * * *", 0)).toBe((4 * 60 + 45) * 60_000)
+		expect(scheduledTimeOfDay("0 5 * * 1", 0)).toBe(5 * 3600_000)
+		expect(scheduledTimeOfDay("5 * * * *", at("2026-10-26T10:30:00Z"))).toBe((10 * 60 + 5) * 60_000)
+		expect(scheduledTimeOfDay("50 * * * *", at("2026-10-26T10:30:00Z"))).toBe((9 * 60 + 50) * 60_000)
+		expect(scheduledTimeOfDay("*/5 * * * *", 0)).toBeNull()
+		expect(scheduledTimeOfDay(null, 0)).toBeNull()
+	})
+
+	it("treats the high watermark as reached when the node is over it (days_to_high null)", () => {
+		const over = must(diskForecastView({ ...evidence, days_to_high: null, over_high_watermark: true }))
+		expect(over.watermarks.find(w => w.key === "high")?.days).toBe(0)
+		const notForecast = must(diskForecastView({ ...evidence, days_to_high: null, over_high_watermark: false }))
+		expect(notForecast.watermarks.find(w => w.key === "high")?.days).toBeNull()
+		const flood = must(diskForecastView({ ...evidence, days_to_flood_stage: null, at_flood_stage: true }))
+		expect(flood.watermarks.find(w => w.key === "flood_stage")?.days).toBe(0)
 	})
 
 	it("draws no chart with fewer than two points", () => {
@@ -370,19 +433,41 @@ describe("disk_forecast", () => {
 		expect(buildDiskChart(view, one, 30, { primary: "#A87400", warning: "#f90", error: "#f00" }, {})).toBeNull()
 	})
 
-	it("projects the slope to the horizon and draws the watermarks", () => {
+	it("projects the slope to the horizon from the evidence at last_seen, and draws the watermarks", () => {
 		const view = must(diskForecastView(evidence))
 		const points = [
 			{ t: Date.parse("2026-10-25T04:45:00Z"), used: 680 * GIB, total: 1000 * GIB },
-			{ t: Date.parse("2026-10-26T04:45:00Z"), used: 700 * GIB, total: 1000 * GIB }
+			{ t: Date.parse("2026-10-26T04:45:00Z"), used: 698 * GIB, total: 1000 * GIB }
 		]
-		const chart = must(buildDiskChart(view, points, 30, { primary: "#A87400", warning: "#f90", error: "#f00" }, {}))
-		const series = chart.option.series as { name: string; data: [number, number][]; markLine?: { data: { yAxis: number }[] } }[]
+		const lastSeen = Date.parse("2026-10-26T04:46:10Z")
+		const colors = { primary: "#A87400", warning: "#f90", error: "#f00" }
+		const chart = must(buildDiskChart(view, points, 30, colors, {}, { t: lastSeen, usedGb: 700 }))
+		const series = chart.option.series as { name: string; data: number[][]; markLine?: { data: { yAxis: number }[] } }[]
 		expect(series.map(s => s.name)).toEqual(["Used", "Projected"])
-		expect(series[1].data[1]).toEqual([points[1].t + 30 * 86400_000, 700 + 20 * 30])
+		expect(series[1].data).toEqual([
+			[lastSeen, 700, 1000],
+			[lastSeen + 30 * 86400_000, 700 + 20 * 30, 1000]
+		])
 		expect(series[0].markLine?.data.map(d => d.yAxis)).toEqual([850, 900, 950])
 		expect(chart.summary).toContain("Low watermark at 85% (850.0 GB)")
 		expect(chart.summary).toContain("20.00 GB/day")
+		// Without an anchor, from the newest sample.
+		const plain = must(buildDiskChart(view, points, 30, colors, {}))
+		expect((plain.option.series as { data: number[][] }[])[1].data[0]).toEqual([points[1].t, 698, 1000])
+	})
+
+	it("gives each point its % of its own disk total", () => {
+		const view = must(diskForecastView(evidence))
+		const points = [
+			{ t: Date.parse("2026-10-25T04:45:00Z"), used: 500 * GIB, total: 1002 * GIB },
+			{ t: Date.parse("2026-10-26T04:45:00Z"), used: 700 * GIB, total: 1000 * GIB }
+		]
+		const chart = must(buildDiskChart(view, points, 30, { primary: "#A87400", warning: "#f90", error: "#f00" }, {}))
+		const used = (chart.option.series as { data: number[][] }[])[0].data
+		expect(used[0][2]).toBe(1002)
+		const formatter = (chart.option.tooltip as { formatter: (p: unknown) => string }).formatter
+		expect(formatter({ seriesName: "Used", value: used[0] })).toContain("(49.9%)")
+		expect(formatter({ seriesName: "Used", value: used[1] })).toContain("(70%)")
 	})
 
 	it("projects to the job's horizon_days, else the furthest forecast watermark", () => {
@@ -444,5 +529,15 @@ describe("a finding's runs", () => {
 		const many = Array.from({ length: 40 }, (_, i) => r(`r${i}`, `2026-10-2${i % 7}T06:00:00Z`))
 		expect(findingRuns(many, base)).toHaveLength(30)
 		expect(findingRuns(runs, { ...base, customer_code: null })).toEqual([])
+	})
+})
+
+describe("runs after a finding resolved", () => {
+	it("marks a run that started after resolved_at, not the run that resolved it", () => {
+		const finding = { resolved_at: "2026-10-24T06:00:30.123456+00:00" }
+		expect(afterResolved({ started_at: "2026-10-24T06:00:00Z", tick: null }, finding)).toBe(false)
+		expect(afterResolved({ started_at: "2026-10-25T06:00:00Z", tick: null }, finding)).toBe(true)
+		expect(afterResolved({ started_at: null, tick: "2026-10-25T06:00:00Z" }, finding)).toBe(true)
+		expect(afterResolved({ started_at: "2026-10-25T06:00:00Z", tick: null }, { resolved_at: null })).toBe(false)
 	})
 })

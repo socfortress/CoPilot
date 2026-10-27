@@ -821,3 +821,16 @@ export function findingRuns(
 export function canReadFindingRuns(finding: Pick<TalonOpsFinding, "customer_code">, isAdmin: boolean): boolean {
 	return finding.customer_code !== null || isAdmin
 }
+
+/**
+ * Whether a run started after the finding resolved (`resolved_at`), so it didn't measure the finding
+ * as it was: the history marks it. The run that resolved it started before and isn't marked.
+ */
+export function afterResolved(
+	run: Pick<TalonOpsRun, "started_at" | "tick">,
+	finding: Pick<TalonOpsFinding, "resolved_at">
+): boolean {
+	const resolved = parsedMs(finding.resolved_at)
+	const started = parsedMs(run.started_at) ?? parsedMs(run.tick)
+	return resolved !== null && started !== null && started > resolved
+}

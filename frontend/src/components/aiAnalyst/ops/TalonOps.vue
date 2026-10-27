@@ -60,6 +60,7 @@
 			:titles
 			:is-admin
 			:settings
+			:schedules
 			@close="openId = null"
 			@changed="changed"
 		/>
@@ -117,6 +118,7 @@ const blocked = computed(() => jobsProblem.value !== null && jobsProblem.value.k
 const titles = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.title])))
 /** Each job's thresholds, for the drawer's evidence views (`disk_forecast`'s horizon). */
 const settings = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.settings ?? {}])))
+const schedules = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.schedule])))
 
 async function loadJobs() {
 	controller?.abort()

@@ -537,10 +537,20 @@ def test_jobs_show_only_the_callers_runs_and_whether_any_job_is_on():
     scenario_with(fake, scenario)
 
 
-def test_runs_carry_their_detail_bounded_and_the_jobs_list_leaves_it_out():
+def test_runs_carry_only_disk_forecasts_allowlisted_detail():
     fake = FakeTalon()
-    nodes = {"node-1": {"used": 600 * 2**30, "total": 1000 * 2**30}, "<img src=x onerror=alert(1)>": {"used": 1, "total": 2}}
-    big = {"blob": ["x" * 400] * 64, "more": ["y" * 400] * 64}
+    long_name = "n" * 128
+    nodes = {
+        "node-1": {"used": 600 * 2**30, "total": 1000 * 2**30},
+        "<img src=x onerror=alert(1)>": {"used": 1, "total": 2},
+        long_name: {"used": 3, "total": 4},
+        "n" * 129: {"used": 3, "total": 4},  # longer than talon-analyst writes: left out
+        "bad-size": {"used": "600", "total": 1000},
+        "negative": {"used": -1, "total": 1000},
+        "not-a-row": [1, 2],
+    }
+    many = {f"node-{i:03d}": {"used": i, "total": 1000} for i in range(250)}
+    disk = {**run(None), "job": "disk_forecast", "id": "d1"}
 
     def runs(request):
         if request.url.path == "/v2/ops/runs":
@@ -548,9 +558,11 @@ def test_runs_carry_their_detail_bounded_and_the_jobs_list_leaves_it_out():
                 200,
                 json={
                     "items": [
-                        {**run(ACME), "detail": {"tick": T, "nodes": nodes}},
-                        {**run(ACME), "id": "r2", "detail": big},
-                        {**run(ACME), "id": "r3", "detail": "x"},
+                        {**disk, "detail": {"tick": T, "nodes": nodes, "insufficient_history": ["x"], "history_runs": 9}},
+                        {**disk, "id": "d2", "detail": {"tick": T, "nodes": many}},
+                        {**disk, "id": "d3", "detail": "x"},
+                        {**run(ACME), "job": "agent_hygiene", "id": "a1", "detail": {"groups": {"v4.7.0": ["001"] * 5000}}},
+                        {**run(ACME), "id": "q1", "detail": {"nodes": nodes}},
                     ]
                 },
             )
@@ -560,10 +572,20 @@ def test_runs_carry_their_detail_bounded_and_the_jobs_list_leaves_it_out():
     fake.upstream.respond = runs
 
     async def scenario(client, ctx):
-        items = body_of(await client.get("/talon/ops/runs", headers=as_user("ana")))["items"]
-        assert items[0]["detail"] == {"tick": T, "nodes": nodes}  # kept as data: the page binds it as text
-        assert items[1]["detail"] is None  # too large: dropped, never cut mid-way
-        assert items[2]["detail"] is None  # not an object
+        items = body_of(await client.get("/talon/ops/runs", headers=as_user("admin")))["items"]
+        by_id = {item["id"]: item for item in items}
+        first = by_id["d1"]["detail"]
+        assert set(first) == {"tick", "nodes"}  # only the allowlisted keys
+        assert first["tick"] == T
+        assert first["nodes"] == {
+            "node-1": {"used": 600 * 2**30, "total": 1000 * 2**30},
+            "<img src=x onerror=alert(1)>": {"used": 1, "total": 2},  # data: the page binds it as text
+            long_name: {"used": 3, "total": 4},
+        }
+        assert len(by_id["d2"]["detail"]["nodes"]) == 200  # talon-analyst's MAX_NODES
+        assert by_id["d3"]["detail"] is None
+        assert by_id["a1"]["detail"] is None  # every other job: none (run-now polls stay small)
+        assert by_id["q1"]["detail"] is None
         jobs = body_of(await client.get("/talon/ops/jobs", headers=as_user("ana")))["items"]
         assert jobs[0]["last_runs"][0]["detail"] is None
 

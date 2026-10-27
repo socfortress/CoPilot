@@ -364,12 +364,14 @@ interface RecentRuns {
 	failure: string | null
 }
 
-/** Each expanded job's last runs, read on its first expand and kept until Refresh (or a Run now's end). */
+/** Each expanded job's last runs, read on its first expand and kept until Refresh (or a Run now's end); a failed read is tried again on the next expand. */
 const recent = ref<Record<string, RecentRuns>>({})
 const recentControllers = new Map<string, AbortController>()
 
+/** Read on the first expand, and again on an expand after a failed read (a failure isn't cached). */
 async function loadRecent(name: string) {
-	if (recent.value[name]) return
+	const known = recent.value[name]
+	if (known && (known.loading || !known.failure)) return
 	const own = new AbortController()
 	recentControllers.set(name, own)
 	recent.value[name] = { loading: true, runs: [], failure: null }
