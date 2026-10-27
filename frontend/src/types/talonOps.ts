@@ -103,6 +103,21 @@ export interface TalonOpsJobs {
 	any_enabled: boolean
 }
 
+export interface TalonOpsRuns {
+	success: boolean
+	message: string
+	/** Newest first (by `finished_at`). */
+	items: TalonOpsRun[]
+	dropped: number
+}
+
+export interface TalonOpsRunsQuery {
+	job?: string | null
+	customer_code?: string | null
+	/** 1 to 200; CoPilot's default is 50. */
+	limit?: number
+}
+
 export interface TalonOpsRunNow {
 	success: boolean
 	message: string

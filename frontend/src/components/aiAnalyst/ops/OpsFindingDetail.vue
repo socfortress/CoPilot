@@ -203,6 +203,20 @@
 								data-testid="talon-ops-mute-until"
 							/>
 						</label>
+						<div class="flex gap-1" role="group" aria-label="Mute for">
+							<n-button
+								v-for="days of MUTE_PRESETS"
+								:key="days"
+								size="small"
+								tertiary
+								:disabled="acting !== null"
+								:title="`Mute until ${days === 1 ? 'this time tomorrow' : `${days} days from now`}`"
+								:data-testid="`talon-ops-mute-preset-${days}`"
+								@click="muteUntil = muteUntilIn(days)"
+							>
+								{{ days === 1 ? "1 day" : `${days} days` }}
+							</n-button>
+						</div>
 						<n-button
 							size="small"
 							secondary
@@ -231,8 +245,9 @@
 // One ops finding, in a side drawer: severity, status, the customer and job, the times; Talon's
 // explanation and recommendation as plain text (a model wrote them: never v-html, never Markdown);
 // the evidence as a key-value list or JSON; any artifact in a copyable code block; and the actions
-// its status allows (acknowledge, mute until a time, reopen). The actor is the signed-in user, which
-// CoPilot adds; the finding's stored customer is sent back so a finding that moved is refused.
+// its status allows (acknowledge, mute until a picked time or for 1, 7 or 30 days, reopen). The actor
+// is the signed-in user, which CoPilot adds; the finding's stored customer is sent back so a finding
+// that moved is refused.
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsFinding } from "@/types/talonOps"
 import { useWindowSize } from "@vueuse/core"
@@ -254,6 +269,8 @@ import {
 	jobLabel,
 	kindLabel,
 	MUTE_MAX_DAYS,
+	MUTE_PRESETS,
+	muteUntilIn,
 	problemState,
 	severityInfo,
 	statusInfo
