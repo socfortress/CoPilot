@@ -36,7 +36,7 @@
 				:loading
 				:disabled="loading"
 				data-testid="talon-ops-jobs-refresh"
-				@click="emit('refresh')"
+				@click="refresh()"
 			>
 				<template #icon><Icon name="carbon:renew" :size="12" /></template>
 				Refresh
@@ -174,6 +174,7 @@
 							:data-testid="`talon-ops-job-runs-${job.name}`"
 						>
 							<td :colspan="isAdmin ? 5 : 4" class="pb-2 pl-3">
+								<p class="text-tertiary mb-0.5">Newest run per customer</p>
 								<ul class="flex flex-col gap-0.5">
 									<li
 										v-for="run of current[job.name]"
@@ -185,6 +186,45 @@
 										·
 										<span :class="toneClass(statusTone(run.status))">{{ run.status }}</span>
 										· {{ formatTime(run.finished_at) }} · {{ runCounts(run) }}
+										<template v-if="run.error">
+											·
+											<bdi :class="toneClass(statusTone(run.status))">{{ run.error }}</bdi>
+										</template>
+									</li>
+								</ul>
+								<p class="text-tertiary mt-1.5 mb-0.5">Last {{ JOB_ROW_RUNS }} runs</p>
+								<div
+									v-if="recent[job.name]?.loading"
+									class="text-tertiary"
+									:data-testid="`talon-ops-job-recent-loading-${job.name}`"
+								>
+									Loading…
+								</div>
+								<p
+									v-else-if="recent[job.name]?.failure"
+									class="text-error"
+									:data-testid="`talon-ops-job-recent-error-${job.name}`"
+								>
+									The runs couldn't be read: <bdi>{{ recent[job.name]?.failure }}</bdi>
+								</p>
+								<p
+									v-else-if="recent[job.name] && !recent[job.name]?.runs.length"
+									class="text-tertiary"
+									:data-testid="`talon-ops-job-recent-empty-${job.name}`"
+								>
+									No runs in Talon's recent runs.
+								</p>
+								<ul v-else-if="recent[job.name]" class="flex flex-col gap-0.5" :data-testid="`talon-ops-job-recent-${job.name}`">
+									<li
+										v-for="run of recent[job.name]?.runs"
+										:key="run.id"
+										class="text-secondary"
+										data-testid="talon-ops-job-recent-run"
+									>
+										<bdi class="font-medium">{{ customerText(run.customer_code) }}</bdi>
+										·
+										<span :class="toneClass(statusTone(run.status))">{{ run.status }}</span>
+										· {{ formatTime(run.finished_at ?? run.started_at) }} · {{ runCounts(run) }}
 										<template v-if="run.error">
 											·
 											<bdi :class="toneClass(statusTone(run.status))">{{ run.error }}</bdi>
@@ -221,8 +261,9 @@
 // its newest tick's runs, its next run, and "Run now" for an admin on an enabled job. `last_runs` also
 // holds older runs (`jobState`): while the newest tick is still in progress the job is "running (k of
 // n)", and each customer not run yet counts with its previous run. A click on the status lists the
-// runs, worst first: customer, status, when, counts, Talon's fixed error text. A platform job's runs
-// are an admin's: anyone else sees "admins only".
+// runs, worst first: customer, status, when, counts, Talon's fixed error text; and below them the job's
+// last 10 runs (`/runs?job=&limit=10`), read on the first expand and kept until Refresh or a Run now's
+// end. A platform job's runs are an admin's: anyone else sees "admins only".
 //
 // Run now reads the job's runs, queues a run in Talon, then polls `GET /talon/ops/runs?job=` every few
 // seconds for up to two minutes for this click's runs: `manual` ones of the tick in the workflow id
@@ -248,6 +289,7 @@ import {
 	hiddenPlatformJob,
 	humanSchedule,
 	isTransient,
+	JOB_ROW_RUNS,
 	jobLabel,
 	jobsSummary,
 	jobState,
@@ -308,8 +350,58 @@ function toneClass(tone: Tone): string {
 }
 
 function toggleRuns(name: string) {
-	if (openRuns.value.has(name)) openRuns.value.delete(name)
-	else openRuns.value.add(name)
+	if (openRuns.value.has(name)) {
+		openRuns.value.delete(name)
+		return
+	}
+	openRuns.value.add(name)
+	loadRecent(name)
+}
+
+interface RecentRuns {
+	loading: boolean
+	runs: TalonOpsRun[]
+	failure: string | null
+}
+
+/** Each expanded job's last runs, read on its first expand and kept until Refresh (or a Run now's end). */
+const recent = ref<Record<string, RecentRuns>>({})
+const recentControllers = new Map<string, AbortController>()
+
+async function loadRecent(name: string) {
+	if (recent.value[name]) return
+	const own = new AbortController()
+	recentControllers.set(name, own)
+	recent.value[name] = { loading: true, runs: [], failure: null }
+	try {
+		const { data } = await Api.talonOps.listRuns({ job: name, limit: JOB_ROW_RUNS }, own.signal)
+		if (recentControllers.get(name) !== own) return
+		const runs = Array.isArray(data?.items) ? data.items.filter(run => run.job === name) : []
+		recent.value[name] = { loading: false, runs: runs.slice(0, JOB_ROW_RUNS), failure: null }
+	} catch (err) {
+		if (recentControllers.get(name) !== own || own.signal.aborted) return
+		recent.value[name] = { loading: false, runs: [], failure: opsFailure(err).detail }
+	} finally {
+		if (recentControllers.get(name) === own) recentControllers.delete(name)
+	}
+}
+
+/** Forget the cached runs; the rows still open read theirs again. */
+function clearRecent() {
+	for (const own of recentControllers.values()) own.abort()
+	recentControllers.clear()
+	recent.value = {}
+	for (const name of openRuns.value) loadRecent(name)
+}
+
+function refresh() {
+	clearRecent()
+	emit("refresh")
+}
+
+function ran() {
+	clearRecent()
+	emit("ran")
 }
 
 function runTitle(job: TalonOpsJob): string {
@@ -423,7 +515,7 @@ async function watch(
 			const read = await readRuns(name, own.signal)
 			if (own.signal.aborted) return
 			if ("failure" in read && !isTransient(read.failure)) {
-				if (fresh.length) emit("ran")
+				if (fresh.length) ran()
 				messages.value[name] = {
 					type: "error",
 					text: `${label}: its runs can't be read (${read.failure.detail}).`
@@ -439,7 +531,7 @@ async function watch(
 			// Every run expected is in, and polls in a row found no more (a customer added since the last tick).
 			const done = ready && (quiet >= QUIET_POLLS || timedOut)
 			if (done || timedOut) {
-				if (fresh.length) emit("ran")
+				if (fresh.length) ran()
 				messages.value[name] = runResult(label, fresh, expected, done, timedOut)
 				return
 			}
@@ -456,6 +548,7 @@ async function watch(
 }
 
 onBeforeUnmount(() => {
+	for (const own of recentControllers.values()) own.abort()
 	for (const own of watches.values()) own.abort()
 	watches.clear()
 })

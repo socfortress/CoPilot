@@ -58,6 +58,8 @@
 			:finding-id="openId"
 			:customer-code="openCustomer"
 			:titles
+			:is-admin
+			:settings
 			@close="openId = null"
 			@changed="changed"
 		/>
@@ -113,6 +115,8 @@ const jobsProblem = computed(() => problemState(jobsFailure.value))
 // v2 off or an old Talon: nothing else can answer either, so only the notice shows.
 const blocked = computed(() => jobsProblem.value !== null && jobsProblem.value.kind !== "error")
 const titles = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.title])))
+/** Each job's thresholds, for the drawer's evidence views (`disk_forecast`'s horizon). */
+const settings = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.settings ?? {}])))
 
 async function loadJobs() {
 	controller?.abort()

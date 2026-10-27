@@ -537,6 +537,39 @@ def test_jobs_show_only_the_callers_runs_and_whether_any_job_is_on():
     scenario_with(fake, scenario)
 
 
+def test_runs_carry_their_detail_bounded_and_the_jobs_list_leaves_it_out():
+    fake = FakeTalon()
+    nodes = {"node-1": {"used": 600 * 2**30, "total": 1000 * 2**30}, "<img src=x onerror=alert(1)>": {"used": 1, "total": 2}}
+    big = {"blob": ["x" * 400] * 64, "more": ["y" * 400] * 64}
+
+    def runs(request):
+        if request.url.path == "/v2/ops/runs":
+            return httpx.Response(
+                200,
+                json={
+                    "items": [
+                        {**run(ACME), "detail": {"tick": T, "nodes": nodes}},
+                        {**run(ACME), "id": "r2", "detail": big},
+                        {**run(ACME), "id": "r3", "detail": "x"},
+                    ]
+                },
+            )
+        return original(request)
+
+    original = fake.upstream.respond
+    fake.upstream.respond = runs
+
+    async def scenario(client, ctx):
+        items = body_of(await client.get("/talon/ops/runs", headers=as_user("ana")))["items"]
+        assert items[0]["detail"] == {"tick": T, "nodes": nodes}  # kept as data: the page binds it as text
+        assert items[1]["detail"] is None  # too large: dropped, never cut mid-way
+        assert items[2]["detail"] is None  # not an object
+        jobs = body_of(await client.get("/talon/ops/jobs", headers=as_user("ana")))["items"]
+        assert jobs[0]["last_runs"][0]["detail"] is None
+
+    scenario_with(fake, scenario)
+
+
 def test_no_job_enabled_reads_as_off():
     fake = FakeTalon()
     fake.upstream.respond = lambda request: httpx.Response(200, json={"items": [{"name": "quiet_endpoints", "enabled": False}]})

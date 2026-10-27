@@ -46,23 +46,6 @@
 						{{ jobLabel(finding.job, titles) }}
 						<span class="text-tertiary">· {{ kindLabel(finding.kind) }}</span>
 					</dd>
-					<dt class="text-secondary">First seen</dt>
-					<dd>{{ formatTime(finding.first_seen) }}</dd>
-					<dt class="text-secondary">Last seen</dt>
-					<dd>{{ formatTime(finding.last_seen) }}</dd>
-					<template v-if="finding.stale_since">
-						<dt class="text-secondary">Not measured since</dt>
-						<dd class="text-warning">{{ formatTime(finding.stale_since) }}</dd>
-					</template>
-					<template v-if="finding.resolved_at">
-						<dt class="text-secondary">Resolved</dt>
-						<dd>
-							{{ formatTime(finding.resolved_at) }}
-							<template v-if="finding.resolved_reason">
-								({{ finding.resolved_reason.replace(/_/g, " ") }})
-							</template>
-						</dd>
-					</template>
 					<template v-if="finding.acted_by">
 						<dt class="text-secondary">Last action by</dt>
 						<dd>
@@ -119,24 +102,38 @@
 				<section aria-label="Evidence" class="flex flex-col gap-2">
 					<div class="flex items-center justify-between gap-2">
 						<h4 class="text-secondary text-xs font-semibold uppercase">Evidence</h4>
-						<n-button
-							v-if="finding.evidence"
-							text
-							size="tiny"
-							data-testid="talon-ops-detail-evidence-toggle"
-							@click="showJson = !showJson"
-						>
-							{{ showJson ? "Show as a list" : "Show JSON" }}
-						</n-button>
+						<div class="flex items-center gap-3">
+							<n-button
+								v-if="finding.evidence && hasView && evidenceMode !== 'json'"
+								text
+								size="tiny"
+								data-testid="talon-ops-detail-evidence-view-toggle"
+								@click="evidenceMode = evidenceMode === 'view' ? 'list' : 'view'"
+							>
+								{{ evidenceMode === "view" ? "Show as a list" : "Show the summary" }}
+							</n-button>
+							<n-button
+								v-if="finding.evidence"
+								text
+								size="tiny"
+								data-testid="talon-ops-detail-evidence-toggle"
+								@click="toggleJson()"
+							>
+								{{ evidenceMode === "json" ? (hasView ? "Hide JSON" : "Show as a list") : "Show JSON" }}
+							</n-button>
+						</div>
 					</div>
 					<p v-if="!finding.evidence" class="text-tertiary text-sm">
 						{{ finding.evidence_truncated ? "The evidence was too large to show here." : "No evidence." }}
 					</p>
 					<pre
-						v-else-if="showJson"
+						v-else-if="evidenceMode === 'json'"
 						class="bg-secondary max-h-80 overflow-auto rounded-md p-2 text-xs"
 						data-testid="talon-ops-detail-evidence-json"
 					>{{ evidenceJson(finding) }}</pre>
+					<div v-else-if="evidenceMode === 'view' && hasView" data-testid="talon-ops-detail-evidence-view">
+						<OpsEvidence :finding :is-admin :settings="settings[finding.job] ?? null" />
+					</div>
 					<dl
 						v-else
 						class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm"
@@ -147,7 +144,7 @@
 								<bdi>{{ row.key }}</bdi>
 							</dt>
 							<dd class="break-all">
-								<bdi v-if="row.text !== null">{{ row.text }}</bdi>
+								<bdi v-if="row.text !== null" :title="row.title">{{ row.text }}</bdi>
 								<pre v-else class="bg-secondary overflow-auto rounded p-1 text-xs">{{ row.json }}</pre>
 							</dd>
 						</template>
@@ -178,6 +175,8 @@
 						Built by Talon's job from a template. Review it before you use it.
 					</p>
 				</section>
+
+				<OpsFindingHistory :finding :is-admin />
 
 				<n-alert v-if="actionFailure" type="error" :bordered="false" data-testid="talon-ops-action-error">
 					<bdi>{{ actionFailure }}</bdi>
@@ -264,7 +263,9 @@
 // One ops finding, in a side drawer: severity, status, the customer and job, the times; Talon's
 // explanation and recommendation as plain text (a model wrote them: never v-html, never Markdown);
 // links out to the agent(s), the customer, index management or the alerts (`findingLinks`: from the
-// finding's fields and evidence ids only); the evidence as a key-value list or JSON; any artifact in a copyable code block; and the actions
+// finding's fields and evidence ids only); the evidence as its job's view (`evidence/`: units, tables, bars,
+// `disk_forecast`'s chart), with the key-value list and JSON as fallbacks; any artifact in a copyable
+// code block; its history (`OpsFindingHistory`: its times and its job's runs since first seen); and the actions
 // its status allows (acknowledge, mute until a picked time or for 1, 7 or 30 days, reopen). The actor
 // is the signed-in user, which CoPilot adds; the finding's stored customer is sent back so a finding
 // that moved is refused.
@@ -278,6 +279,8 @@ import Api from "@/api"
 import { opsFailure } from "@/api/endpoints/talonOps"
 import Icon from "@/components/common/Icon.vue"
 import { formatTime } from "../health/health"
+import { viewKind } from "./evidence/evidence"
+import OpsEvidence from "./evidence/OpsEvidence.vue"
 import {
 	canAcknowledge,
 	canMute,
@@ -297,13 +300,23 @@ import {
 	severityInfo,
 	statusInfo
 } from "./ops"
+import OpsFindingHistory from "./OpsFindingHistory.vue"
 import OpsProblem from "./OpsProblem.vue"
 
 const {
 	findingId,
 	customerCode = null,
-	titles = {}
-} = defineProps<{ findingId: number | null; customerCode?: string | null; titles?: Record<string, string | null> }>()
+	titles = {},
+	isAdmin = false,
+	settings = {}
+} = defineProps<{
+	findingId: number | null
+	customerCode?: string | null
+	titles?: Record<string, string | null>
+	isAdmin?: boolean
+	/** Each job's thresholds (`TalonOpsJob.settings`): `disk_forecast`'s projection reads `horizon_days`. */
+	settings?: Record<string, Record<string, unknown>>
+}>()
 const emit = defineEmits<{
 	(e: "close"): void
 	(e: "changed", finding: TalonOpsFinding): void
@@ -315,7 +328,8 @@ const drawerWidth = computed(() => Math.min(720, Math.round(width.value * 0.94))
 const finding = ref<TalonOpsFinding | null>(null)
 const failure = ref<TalonOpsFailure | null>(null)
 const loading = ref(false)
-const showJson = ref(false)
+/** The evidence as its job's view (when it parses), the generic list, or JSON. */
+const evidenceMode = ref<"view" | "list" | "json">("view")
 const copied = ref(false)
 const acting = ref<"acknowledge" | "mute" | "reopen" | null>(null)
 const actionFailure = ref<string | null>(null)
@@ -323,6 +337,13 @@ const muteUntil = ref<number | null>(defaultMuteUntil())
 let controller: AbortController | null = null
 
 const problem = computed(() => problemState(failure.value))
+
+/** Whether the finding's evidence has a view of its job's (`viewKind`); otherwise the list. */
+const hasView = computed(() => (finding.value ? viewKind(finding.value) !== null : false))
+/** Where JSON goes back to: the view when there is one. */
+function toggleJson() {
+	evidenceMode.value = evidenceMode.value === "json" ? (hasView.value ? "view" : "list") : "json"
+}
 
 /** Where the finding leads: built by code from its fields and evidence ids, never from the model's text. */
 const links = computed(() => (finding.value ? findingLinks(finding.value) : []))
@@ -332,7 +353,7 @@ async function load() {
 	finding.value = null
 	failure.value = null
 	actionFailure.value = null
-	showJson.value = false
+	evidenceMode.value = "view"
 	copied.value = false
 	muteUntil.value = defaultMuteUntil()
 	if (findingId === null) return

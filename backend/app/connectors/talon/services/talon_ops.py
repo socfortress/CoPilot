@@ -462,7 +462,10 @@ def parse_finding(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsFinding]:
     )
 
 
-def parse_run(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsRun]:
+def parse_run(raw: Any, cleaners: Cleaners, *, with_detail: bool = False) -> Optional[TalonOpsRun]:
+    """One run, field by field; None when a field the page needs is missing or malformed. With
+    ``with_detail`` (``/runs``), its ``detail`` too, bounded and cleaned as the evidence is
+    (``parse_evidence``: the Ops tab's ``disk_forecast`` chart reads ``detail.nodes``)."""
     if not isinstance(raw, Mapping):
         return None
     run_id = cleaners.scrub(raw.get("id"), MAX_ID_TEXT)
@@ -493,6 +496,7 @@ def parse_run(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsRun]:
         duration_ms=_int(raw.get("duration_ms")),
         started_at=_time(raw.get("started_at")),
         finished_at=_time(raw.get("finished_at")),
+        detail=parse_evidence(raw.get("detail"), cleaners)[0] if with_detail else None,
     )
 
 
@@ -904,7 +908,7 @@ async def list_runs(
     runs: List[TalonOpsRun] = []
     dropped = 0
     for item in raw["items"][:MAX_LIMIT]:
-        run = parse_run(item, cleaners)
+        run = parse_run(item, cleaners, with_detail=True)
         if run is not None and caller.sees(run.customer_code):
             runs.append(run)
         else:

@@ -98,6 +98,9 @@ class TalonOpsRun(BaseModel):
     duration_ms: Optional[int] = None
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
+    #: The run's own record (``store.run_json``'s ``detail``), a bounded copy cleaned as the evidence is;
+    #: on ``/runs`` only (the jobs list leaves it out), None when Talon sent none or it was too large.
+    detail: Optional[Dict[str, Any]] = None
 
 
 class TalonOpsJob(BaseModel):

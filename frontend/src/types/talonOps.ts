@@ -78,6 +78,12 @@ export interface TalonOpsRun {
 	duration_ms: number | null
 	started_at: string | null
 	finished_at: string | null
+	/**
+	 * The run's own record (e.g. `disk_forecast`'s `{tick, nodes: {node: {used, total}}}` in bytes), a
+	 * bounded copy CoPilot cleaned as it cleans evidence. On `/runs` only (the jobs list leaves it out),
+	 * and missing from a CoPilot before OP-3.
+	 */
+	detail?: Record<string, TalonOpsEvidenceValue> | null
 }
 
 export interface TalonOpsJob {
