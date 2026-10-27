@@ -563,7 +563,7 @@ def test_runs_carry_only_disk_forecasts_allowlisted_detail():
                         {**disk, "id": "d3", "detail": "x"},
                         {**run(ACME), "job": "agent_hygiene", "id": "a1", "detail": {"groups": {"v4.7.0": ["001"] * 5000}}},
                         {**run(ACME), "id": "q1", "detail": {"nodes": nodes}},
-                    ]
+                    ],
                 },
             )
         return original(request)
