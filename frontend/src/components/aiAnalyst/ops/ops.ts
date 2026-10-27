@@ -5,8 +5,11 @@
 // `why` and `recommendation` are a model's text (talon-analyst SPEC §5.7: "CoPilot must show them as
 // text, never render them as Markdown or HTML"): the components bind them as text only, never with
 // `v-html` or `Markdown`; nothing here turns them into markup either.
+import type { RouteLocationRaw } from "vue-router"
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type {
+	TalonOpsCounts,
+	TalonOpsCustomerCounts,
 	TalonOpsEvidenceValue,
 	TalonOpsFinding,
 	TalonOpsJob,
@@ -152,6 +155,12 @@ export function isValidMuteUntil(until: number | null | undefined, now = Date.no
 /** The mute picker's default: a week from now. */
 export function defaultMuteUntil(now = Date.now()): number {
 	return muteUntilIn(7, now)
+}
+
+/** A day the mute picker offers: today up to 90 days ahead (the time is checked on its own). */
+export function isMuteDay(ts: number, now = Date.now()): boolean {
+	const startOfToday = new Date(now).setHours(0, 0, 0, 0)
+	return ts >= startOfToday && ts <= now + MUTE_MAX_DAYS * DAY_MS
 }
 
 /** The mute presets beside the picker, in days (each inside the 90-day window). */
@@ -518,4 +527,249 @@ export function runResult(
 /** A failure worth another try: no answer, a 5xx (Talon unreachable, a bad answer) or a 429. */
 export function isTransient(failure: Pick<TalonOpsFailure, "status">): boolean {
 	return failure.status === null || failure.status >= 500 || failure.status === 429
+}
+
+// ── the summary strip ─────────────────────────────────────────────────────────
+
+/** The severity chips, high first: label and count of the open findings. */
+export function severityChips(open: TalonOpsCounts | null | undefined) {
+	return SEVERITIES.map(s => ({ ...s, count: open ? open[s.value] : 0 }))
+}
+
+/** The strip's customers: the first `n` rows (Talon sorts them by severity counts), platform included. */
+export const TOP_CUSTOMERS = 5
+
+export function topCustomers(rows: TalonOpsCustomerCounts[] | null | undefined, n = TOP_CUSTOMERS) {
+	return (rows ?? []).filter(row => row.total > 0).slice(0, n)
+}
+
+/** The order toggle's tooltip when Talon has no summary (and so no severity order): an old Talon. */
+export const SEVERITY_ORDER_UNAVAILABLE =
+	"This Talon can't sort its findings by severity: upgrade talon-analyst. They're shown most recently changed first."
+
+/** The stale chip's tooltip: Talon has no stale filter, so the table filters the rows it has loaded. */
+export const STALE_FILTER_TEXT =
+	"Shows only the loaded findings their job couldn't measure lately. Talon can't filter on this, so the table filters the rows already loaded: load more to see others."
+
+/** Whether a row shows the stale marker (Talon keeps `stale_since` on a resolved finding, where it doesn't matter). */
+export function isStale(finding: Pick<TalonOpsFinding, "stale_since" | "status">): boolean {
+	return !!finding.stale_since && finding.status !== "resolved"
+}
+
+// ── grouping ──────────────────────────────────────────────────────────────────
+
+export interface FindingGroup {
+	/** A stable key: the customer code, or "" for the platform. */
+	key: string
+	label: string
+	items: TalonOpsFinding[]
+}
+
+/** The loaded rows under their customer (platform findings under "Platform"), in the order first seen. */
+export function groupByCustomer(findings: TalonOpsFinding[]): FindingGroup[] {
+	const groups = new Map<string, FindingGroup>()
+	for (const finding of findings) {
+		const key = finding.customer_code ?? ""
+		let group = groups.get(key)
+		if (!group) {
+			group = { key, label: customerText(finding.customer_code), items: [] }
+			groups.set(key, group)
+		}
+		group.items.push(finding)
+	}
+	return [...groups.values()]
+}
+
+// ── bulk actions ──────────────────────────────────────────────────────────────
+
+/** The most findings one bulk action takes: one request each, through CoPilot. */
+export const BULK_MAX = 50
+/** Requests in flight at once. */
+export const BULK_CONCURRENCY = 3
+
+export type BulkAction = "acknowledge" | "mute"
+
+/** Whether a finding's status allows the bulk action (talon-analyst's transitions, as the drawer's). */
+export function allowsBulk(action: BulkAction, status: TalonOpsStatus | null | undefined): boolean {
+	return action === "acknowledge" ? canAcknowledge(status) : canMute(status)
+}
+
+/** A row the table lets you select: one at least one bulk action applies to. */
+export function isSelectable(finding: Pick<TalonOpsFinding, "status">): boolean {
+	return canAcknowledge(finding.status) || canMute(finding.status)
+}
+
+export interface BulkFailure {
+	finding: TalonOpsFinding
+	detail: string
+}
+
+export interface BulkOutcome {
+	done: TalonOpsFinding[]
+	failed: BulkFailure[]
+}
+
+/**
+ * `act` on each finding, at most `limit` at once, every one tried whatever the others did. A failure
+ * is kept with its text (`describe`), never thrown.
+ */
+export async function runBulk(
+	findings: TalonOpsFinding[],
+	act: (finding: TalonOpsFinding) => Promise<unknown>,
+	describe: (err: unknown) => string,
+	limit = BULK_CONCURRENCY
+): Promise<BulkOutcome> {
+	const done: TalonOpsFinding[] = []
+	const failed: BulkFailure[] = []
+	let next = 0
+	async function worker() {
+		while (next < findings.length) {
+			const finding = findings[next++]
+			try {
+				await act(finding)
+				done.push(finding)
+			} catch (err) {
+				failed.push({ finding, detail: describe(err) })
+			}
+		}
+	}
+	await Promise.all(Array.from({ length: Math.min(limit, findings.length) }, worker))
+	// In the table's order, whatever order they finished in.
+	const order = new Map(findings.map((f, i) => [f.id, i]))
+	const byOrder = (a: TalonOpsFinding, b: TalonOpsFinding) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)
+	done.sort(byOrder)
+	failed.sort((a, b) => byOrder(a.finding, b.finding))
+	return { done, failed }
+}
+
+/** "3 acknowledged, 1 failed". */
+export function bulkSummary(action: BulkAction, outcome: BulkOutcome): string {
+	const past = action === "acknowledge" ? "acknowledged" : "muted"
+	return `${outcome.done.length} ${past}, ${outcome.failed.length} failed`
+}
+
+// ── links out ─────────────────────────────────────────────────────────────────
+
+/**
+ * An id a link may carry: an agent id, a customer code, an asset name. It starts with an ASCII letter or
+ * digit (so never `.` or `..`), then up to 63 of letters, digits, `_`, `.`, `-` (`\w` is ASCII without
+ * the `u` flag). Anything else gets no link.
+ */
+export const LINK_ID = /^[A-Z0-9][\w.-]{0,63}$/i
+
+export function isLinkId(value: unknown): value is string {
+	return typeof value === "string" && LINK_ID.test(value)
+}
+
+export interface OpsLink {
+	key: string
+	label: string
+	to: RouteLocationRaw
+	icon: string
+}
+
+/** The longest alert name a link filters by (the alerts page's `title` filter, `alert_title`). */
+export const MAX_ALERT_TITLE = 200
+/** Talon's placeholder for an alert without a name (`exclusion_candidates`): no title to filter by. */
+export const NO_ALERT_NAME = "(no alert name)"
+
+/**
+ * An exclusion candidate's alert name as the alerts page's title filter: a string from the evidence
+ * (indexer data CoPilot already cleaned, never the model's text), trimmed with runs of whitespace
+ * collapsed, at most `MAX_ALERT_TITLE` characters, without control characters, and not Talon's
+ * `(no alert name)` placeholder; otherwise none. It is passed as a router query value, which
+ * the router encodes.
+ */
+export function alertTitle(value: unknown): string | null {
+	if (typeof value !== "string") return null
+	const title = value.trim().replace(/\s+/g, " ")
+	if (!title || title === NO_ALERT_NAME || title.length > MAX_ALERT_TITLE) return null
+	for (const ch of title) {
+		const code = ch.codePointAt(0) as number
+		if (code < 0x20 || code === 0x7F) return null
+	}
+	return title
+}
+
+/** The jobs whose findings are about the indices: storage, noise and mappings. */
+const INDEX_JOBS = new Set(["storage_usage", "noisy_events", "mapping_drift"])
+/** The jobs whose findings name agents: one (`agent_id`) or a group (`sample_agents`). */
+const AGENT_JOBS = new Set(["quiet_endpoints", "agent_hygiene"])
+/** At most this many agent links for a group (the evidence lists at most 25). */
+const MAX_AGENT_LINKS = 25
+
+function agentLinks(finding: Pick<TalonOpsFinding, "job" | "evidence">): OpsLink[] {
+	const evidence = finding.evidence
+	if (!evidence || !AGENT_JOBS.has(finding.job)) return []
+	const candidates: { id: unknown; name: unknown }[] = []
+	if (finding.job === "quiet_endpoints") {
+		candidates.push({ id: evidence.agent_id, name: evidence.agent_name })
+	} else if (Array.isArray(evidence.sample_agents)) {
+		for (const agent of evidence.sample_agents) {
+			if (agent && typeof agent === "object" && !Array.isArray(agent)) {
+				candidates.push({ id: agent.agent_id, name: agent.agent_name })
+			}
+		}
+	}
+	const links: OpsLink[] = []
+	const seen = new Set<string>()
+	for (const { id, name } of candidates) {
+		if (!isLinkId(id) || seen.has(id) || links.length >= MAX_AGENT_LINKS) continue
+		seen.add(id)
+		links.push({
+			key: `agent:${id}`,
+			label: typeof name === "string" && name ? `Agent ${id} (${name})` : `Agent ${id}`,
+			to: { name: "Agent", params: { id } },
+			icon: "carbon:screen"
+		})
+	}
+	return links
+}
+
+/**
+ * Where a finding leads in CoPilot, built by code from its own fields and its evidence ids, never from
+ * a model's text (`why`, `recommendation`) or the title. Each id must match `LINK_ID`; a route is
+ * named and its ids passed as params or query, never concatenated into a path.
+ * - `quiet_endpoints`: its agent; `agent_hygiene`: each agent of the group.
+ * - `storage_usage`, `noisy_events`, `mapping_drift`: index management.
+ * - `exclusion_candidates`: the incident alerts, filtered to the customer, the asset and the alert's title.
+ * - Every customer finding: its customer.
+ */
+export function findingLinks(finding: Pick<TalonOpsFinding, "job" | "customer_code" | "evidence">): OpsLink[] {
+	const links = agentLinks(finding)
+	const code = isLinkId(finding.customer_code) ? finding.customer_code : null
+	if (INDEX_JOBS.has(finding.job)) {
+		links.push({ key: "indices", label: "Index management", to: { name: "Indices" }, icon: "carbon:data-base" })
+	}
+	if (finding.job === "exclusion_candidates") {
+		const query: Record<string, string> = {}
+		if (code) query.customerCode = code
+		const asset = finding.evidence?.asset_name
+		if (isLinkId(asset)) query.assetName = asset
+		const title = alertTitle(finding.evidence?.alert_name)
+		if (title) query.title = title
+		links.push({
+			key: "alerts",
+			label: query.assetName ? `Alerts on ${query.assetName}` : "Alerts",
+			to: { name: "IncidentManagement-Alerts", query },
+			icon: "carbon:warning-alt"
+		})
+	}
+	if (code) {
+		links.push({
+			key: "customer",
+			label: `Customer ${code}`,
+			to: { name: "Customer", params: { code } },
+			icon: "carbon:user-multiple"
+		})
+	}
+	return links
+}
+
+/** The title cell's one link: a lone agent, else the job's page, else the customer. */
+export function rowLink(finding: Pick<TalonOpsFinding, "job" | "customer_code" | "evidence">): OpsLink | null {
+	const links = findingLinks(finding)
+	const agents = links.filter(link => link.key.startsWith("agent:"))
+	if (agents.length === 1) return agents[0]
+	return links.find(link => !link.key.startsWith("agent:")) ?? null
 }

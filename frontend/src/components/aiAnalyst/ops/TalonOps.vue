@@ -59,7 +59,7 @@
 			:customer-code="openCustomer"
 			:titles
 			@close="openId = null"
-			@changed="finding => findingsList?.replace(finding)"
+			@changed="changed"
 		/>
 	</div>
 </template>
@@ -138,6 +138,12 @@ async function loadJobs() {
 function reloadAll() {
 	loadJobs()
 	findingsList.value?.reload()
+}
+
+/** The drawer acted on a finding: its row shows the new state, and the strip recounts. */
+function changed(finding: TalonOpsFinding) {
+	findingsList.value?.replace(finding)
+	findingsList.value?.reloadSummary()
 }
 
 function open(finding: TalonOpsFinding) {

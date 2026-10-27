@@ -59,14 +59,18 @@ from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.connectors.talon.schema.talon_ops import TalonOpsArtifact
+from app.connectors.talon.schema.talon_ops import TalonOpsCounts
+from app.connectors.talon.schema.talon_ops import TalonOpsCustomerCounts
 from app.connectors.talon.schema.talon_ops import TalonOpsFinding
 from app.connectors.talon.schema.talon_ops import TalonOpsFindingPage
 from app.connectors.talon.schema.talon_ops import TalonOpsFindingResponse
 from app.connectors.talon.schema.talon_ops import TalonOpsJob
+from app.connectors.talon.schema.talon_ops import TalonOpsJobCounts
 from app.connectors.talon.schema.talon_ops import TalonOpsJobs
 from app.connectors.talon.schema.talon_ops import TalonOpsRun
 from app.connectors.talon.schema.talon_ops import TalonOpsRunNow
 from app.connectors.talon.schema.talon_ops import TalonOpsRuns
+from app.connectors.talon.schema.talon_ops import TalonOpsSummary
 from app.connectors.talon.services.identity import ALL
 from app.connectors.talon.services.identity import CUSTOMERS_HEADER
 from app.connectors.talon.services.identity import is_talon_customer_code
@@ -85,8 +89,14 @@ SEVERITIES = ("info", "low", "medium", "high")
 STATUSES = ("open", "acknowledged", "muted", "resolved")
 #: An ops job's name (talon-analyst ``OpsJob.name``: ``quiet_endpoints``); never more than a path segment.
 JOB_NAME = re.compile(r"[a-z][a-z0-9_]{0,63}")
-#: talon-analyst's keyset cursor (``api/ops.py:_cursor``): microseconds, a dot, the id.
-CURSOR = re.compile(r"-?\d{1,20}\.\d{1,20}")
+#: talon-analyst's keyset cursors, opaque: ``order=recent``'s is microseconds, a dot, the id
+#: (``api/ops.py:_cursor``); ``order=severity`` has its own. URL-safe characters only, bounded.
+CURSOR = re.compile(r"[A-Za-z0-9._~:=-]{1,128}")
+#: The findings' orders talon-analyst offers: ``recent`` (newest change first, its default) and
+#: ``severity`` (high first, then ``last_seen``).
+ORDERS = ("recent", "severity")
+#: talon-analyst's cap on each of the summary's ``by_job`` and ``by_customer`` lists.
+SUMMARY_ROWS = 50
 FINDING_ID_MAX = 2**63 - 1
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 200
@@ -128,6 +138,7 @@ INVALID_JOB = "job is not an ops job name"
 INVALID_STATUS = "status must be open, acknowledged, muted or resolved"
 INVALID_SEVERITY = "severity must be info, low, medium or high"
 INVALID_CURSOR = "cursor is not a page cursor CoPilot can send"
+INVALID_ORDER = "order must be recent or severity"
 INVALID_LIMIT = f"limit must be between 1 and {MAX_LIMIT}"
 INVALID_UNTIL = "until must be in the future and at most 90 days away"
 ADMIN_ONLY = "Only an admin may run an ops job now"
@@ -565,8 +576,11 @@ async def list_findings(
     platform: bool = False,
     limit: Optional[int] = None,
     cursor: Optional[str] = None,
+    order: str = "recent",
 ):
     try:
+        if order not in ORDERS:
+            raise Refused(problem(400, INVALID_ORDER, "invalid"))
         params: Dict[str, Any] = {
             "job": check_job(job),
             "customer_code": check_customer_code(customer_code),
@@ -587,6 +601,8 @@ async def list_findings(
         return problem(403, NOT_ACCESSIBLE, "forbidden")
     if platform:
         params["platform"] = "true"
+    if order != "recent":  # talon-analyst's default; a Talon before ``order`` ignores it
+        params["order"] = order
     answer = await _ask("GET", "/v2/ops/findings", caller, params={k: v for k, v in params.items() if v is not None})
     refused = answer_problem(answer, cleaners)
     if refused is not None:
@@ -617,6 +633,128 @@ async def list_findings(
         next_cursor=next_cursor if isinstance(next_cursor, str) and CURSOR.fullmatch(next_cursor) else None,
         dropped=dropped,
     )
+
+
+COUNT_KEYS = ("total", "high", "medium", "low", "info", "stale")
+
+
+def parse_counts(raw: Any) -> Optional[Dict[str, int]]:
+    """A row's six counts, each a non-negative int; None when any is missing or malformed."""
+    if not isinstance(raw, Mapping):
+        return None
+    counts = {key: _int(raw.get(key)) for key in COUNT_KEYS}
+    if any(value is None for value in counts.values()):
+        return None
+    return counts  # type: ignore[return-value]
+
+
+def _added(rows: List[Dict[str, int]]) -> TalonOpsCounts:
+    return TalonOpsCounts(**{key: sum(row[key] for row in rows) for key in COUNT_KEYS})
+
+
+def check_summary(raw: Any, caller: Caller, *, customer_code: Optional[str], platform: bool):
+    """talon-analyst's summary, failing closed on customers, or the refusal.
+
+    A ``by_customer`` row is kept only for a customer the caller sees (``Caller.sees``: the platform
+    row, ``customer_code`` null, only for a caller with every customer), and only for the customer or
+    the platform asked for; a malformed or repeated row is dropped too. When a row is dropped, or the
+    rows don't add up to its ``open`` counts (at talon-analyst's 50-row cap too, unless the caller has
+    every customer: the rows are then only the top 50), ``open`` is recomputed from the rows kept and
+    every count that can't be split by customer is withheld (and, at the cap, ``partial``: the counts
+    are a lower bound):
+    ``by_job`` (a job's counts may include the dropped customer's findings), ``acknowledged`` and
+    ``muted``. The totals then never include another customer's findings."""
+    if not isinstance(raw, Mapping) or not isinstance(raw.get("by_customer"), list) or not isinstance(raw.get("by_job"), list):
+        return problem(502, WRONG_SHAPE, "bad_answer")
+    totals = parse_counts(raw.get("open"))
+    if totals is None:
+        return problem(502, WRONG_SHAPE, "bad_answer")
+    sent = raw["by_customer"]
+    kept: List[TalonOpsCustomerCounts] = []
+    rows: List[Dict[str, int]] = []
+    seen: set = set()
+    dropped = max(len(sent) - SUMMARY_ROWS, 0)
+    for item in sent[:SUMMARY_ROWS]:
+        counts = parse_counts(item)
+        code = item.get("customer_code") if isinstance(item, Mapping) else None
+        wanted = (
+            counts is not None
+            and (code is None or is_talon_customer_code(code))
+            and code not in seen
+            and caller.sees(code)
+            and (customer_code is None or code == customer_code)
+            and (not platform or code is None)
+        )
+        if not wanted:
+            dropped += 1
+            continue
+        seen.add(code)
+        rows.append(counts)  # type: ignore[arg-type]
+        kept.append(TalonOpsCustomerCounts(customer_code=code, **counts))  # type: ignore[arg-type]
+    capped = len(sent) >= SUMMARY_ROWS
+    adds_up = _added(rows).model_dump() == totals
+    # At the cap the rows are only the top 50; a caller with every customer has nothing to leak, so
+    # Talon's totals stand when nothing was dropped.
+    trusted = not dropped and (adds_up or (capped and caller.all_customers))
+    if not trusted:
+        # Count the rows kept only and withhold what can't be split by customer. At the cap the rows
+        # kept may not be all of the caller's: the counts are then a lower bound (``partial``).
+        if capped and not dropped:
+            # Expected for a caller with more customers than the cap: the rows are the top 50 only.
+            logger.debug("Talon ops: the summary's rows are at the row cap and don't add up to its totals; counts are a lower bound")
+        else:
+            logger.warning(
+                f"Talon ops: the summary had {dropped} customer row(s) the caller may not see or that were malformed, "
+                "or rows that don't add up to its totals; counts recomputed from the rows kept",
+            )
+        return TalonOpsSummary(open=_added(rows), by_customer=kept, dropped=dropped, withheld=True, partial=capped)
+    by_job: List[TalonOpsJobCounts] = []
+    for item in raw["by_job"][:SUMMARY_ROWS]:
+        counts = parse_counts(item)
+        job = item.get("job") if isinstance(item, Mapping) else None
+        if counts is not None and isinstance(job, str) and JOB_NAME.fullmatch(job):
+            by_job.append(TalonOpsJobCounts(job=job, **counts))
+    return TalonOpsSummary(
+        open=TalonOpsCounts(**totals),
+        acknowledged=_int(raw.get("acknowledged")),
+        muted=_int(raw.get("muted")),
+        by_job=by_job,
+        by_customer=kept,
+    )
+
+
+async def summary(
+    user: User,
+    session: AsyncSession,
+    *,
+    job: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    platform: bool = False,
+):
+    """Open finding counts by severity, job and customer (``GET /v2/ops/summary``), the same filters and
+    visibility as the list; see ``check_summary`` for how CoPilot fails closed on customers."""
+    try:
+        params: Dict[str, Any] = {"job": check_job(job), "customer_code": check_customer_code(customer_code)}
+        if platform and params["customer_code"]:
+            raise Refused(problem(400, PLATFORM_AND_CUSTOMER, "invalid"))
+    except Refused as e:
+        await session.close()
+        return e.response
+    caller, cleaners = await _caller_then_release(user, session)
+    if platform and not caller.all_customers:
+        return problem(403, PLATFORM_ONLY, "forbidden")
+    if params["customer_code"] and not caller.sees(params["customer_code"]):
+        return problem(403, NOT_ACCESSIBLE, "forbidden")
+    if platform:
+        params["platform"] = "true"
+    answer = await _ask("GET", "/v2/ops/summary", caller, params={k: v for k, v in params.items() if v is not None})
+    refused = answer_problem(answer, cleaners)
+    if refused is not None:
+        return refused
+    raw = _json(answer)
+    if isinstance(raw, JSONResponse):
+        return raw
+    return check_summary(raw, caller, customer_code=params["customer_code"], platform=platform)
 
 
 async def get_finding(user: User, session: AsyncSession, finding_id: int, customer_code: Optional[str] = None):

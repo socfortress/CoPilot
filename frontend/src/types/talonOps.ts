@@ -126,6 +126,9 @@ export interface TalonOpsRunNow {
 	status: string
 }
 
+/** `recent`: newest change first (Talon's default); `severity`: high first, then `last_seen`. Each has its own cursor. */
+export type TalonOpsOrder = "recent" | "severity"
+
 export interface TalonOpsQuery {
 	job?: string | null
 	customer_code?: string | null
@@ -134,4 +137,54 @@ export interface TalonOpsQuery {
 	platform?: boolean
 	limit?: number
 	cursor?: string | null
+	order?: TalonOpsOrder
+}
+
+/** Open findings by severity, and how many of them their job couldn't measure lately (`stale`). */
+export interface TalonOpsCounts {
+	total: number
+	high: number
+	medium: number
+	low: number
+	info: number
+	stale: number
+}
+
+export interface TalonOpsJobCounts extends TalonOpsCounts {
+	job: string
+}
+
+export interface TalonOpsCustomerCounts extends TalonOpsCounts {
+	/** null: platform findings (admins only). */
+	customer_code: string | null
+}
+
+/**
+ * `GET /talon/ops/summary`: open finding counts of the caller's customers. When CoPilot dropped a
+ * customer row Talon sent (`dropped`), or the rows didn't add up, `withheld` is true: `open` is
+ * recomputed from the rows shown, and `by_job`, `acknowledged` and `muted` are withheld (empty, null).
+ */
+export interface TalonOpsSummary {
+	success: boolean
+	message: string
+	open: TalonOpsCounts
+	acknowledged: number | null
+	muted: number | null
+	/** Sorted by severity counts, at most 50. */
+	by_job: TalonOpsJobCounts[]
+	/** Sorted by severity counts, at most 50. */
+	by_customer: TalonOpsCustomerCounts[]
+	dropped: number
+	withheld: boolean
+	/**
+	 * At Talon's 50-row cap, the rows didn't add up to its totals for a caller without every customer:
+	 * the counts are the top 50 customers' only, a lower bound. Missing from a CoPilot before it.
+	 */
+	partial?: boolean
+}
+
+export interface TalonOpsSummaryQuery {
+	job?: string | null
+	customer_code?: string | null
+	platform?: boolean
 }
