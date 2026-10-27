@@ -843,13 +843,13 @@ def test_talons_severity_cursor_comes_back_to_the_browser():
     def paged(request):
         answer = respond(request)
         if request.url.path == "/v2/ops/findings":
-            return httpx.Response(200, json={**json.loads(answer.content), "next_cursor": "s4.1729740000000000.7"})
+            return httpx.Response(200, json={**json.loads(answer.content), "next_cursor": "s3.1729740000000000.7"})
         return answer
 
     fake.upstream.respond = paged
 
     async def scenario(client, ctx):
         body = body_of(await client.get("/talon/ops/findings?order=severity", headers=as_user("ana")))
-        assert body["next_cursor"] == "s4.1729740000000000.7"
+        assert body["next_cursor"] == "s3.1729740000000000.7"
 
     scenario_with(fake, scenario)

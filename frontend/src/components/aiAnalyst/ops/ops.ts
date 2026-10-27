@@ -543,11 +543,11 @@ export function topCustomers(rows: TalonOpsCustomerCounts[] | null | undefined, 
 	return (rows ?? []).filter(row => row.total > 0).slice(0, n)
 }
 
-/** The stale chip's tooltip: Talon has no stale filter, so the table filters the rows it has loaded. */
 /** The order toggle's tooltip when Talon has no summary (and so no severity order): an old Talon. */
 export const SEVERITY_ORDER_UNAVAILABLE =
 	"This Talon can't sort its findings by severity: upgrade talon-analyst. They're shown most recently changed first."
 
+/** The stale chip's tooltip: Talon has no stale filter, so the table filters the rows it has loaded. */
 export const STALE_FILTER_TEXT =
 	"Shows only the loaded findings their job couldn't measure lately. Talon can't filter on this, so the table filters the rows already loaded: load more to see others."
 
@@ -670,17 +670,20 @@ export interface OpsLink {
 
 /** The longest alert name a link filters by (the alerts page's `title` filter, `alert_title`). */
 export const MAX_ALERT_TITLE = 200
+/** Talon's placeholder for an alert without a name (`exclusion_candidates`): no title to filter by. */
+export const NO_ALERT_NAME = "(no alert name)"
 
 /**
  * An exclusion candidate's alert name as the alerts page's title filter: a string from the evidence
- * (indexer data CoPilot already cleaned, never the model's text), trimmed, at most `MAX_ALERT_TITLE`
- * characters, without control characters; otherwise none. It is passed as a router query value, which
+ * (indexer data CoPilot already cleaned, never the model's text), trimmed with runs of whitespace
+ * collapsed, at most `MAX_ALERT_TITLE` characters, without control characters, and not Talon's
+ * `(no alert name)` placeholder; otherwise none. It is passed as a router query value, which
  * the router encodes.
  */
 export function alertTitle(value: unknown): string | null {
 	if (typeof value !== "string") return null
-	const title = value.trim()
-	if (!title || title.length > MAX_ALERT_TITLE) return null
+	const title = value.trim().replace(/\s+/g, " ")
+	if (!title || title === NO_ALERT_NAME || title.length > MAX_ALERT_TITLE) return null
 	for (const ch of title) {
 		const code = ch.codePointAt(0) as number
 		if (code < 0x20 || code === 0x7F) return null
@@ -729,8 +732,7 @@ function agentLinks(finding: Pick<TalonOpsFinding, "job" | "evidence">): OpsLink
  * named and its ids passed as params or query, never concatenated into a path.
  * - `quiet_endpoints`: its agent; `agent_hygiene`: each agent of the group.
  * - `storage_usage`, `noisy_events`, `mapping_drift`: index management.
- * - `exclusion_candidates`: the incident alerts, filtered to the customer, the asset and the alert's title
- *   (the alerts page has no rule filter).
+ * - `exclusion_candidates`: the incident alerts, filtered to the customer, the asset and the alert's title.
  * - Every customer finding: its customer.
  */
 export function findingLinks(finding: Pick<TalonOpsFinding, "job" | "customer_code" | "evidence">): OpsLink[] {

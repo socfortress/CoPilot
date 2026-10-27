@@ -699,10 +699,14 @@ def check_summary(raw: Any, caller: Caller, *, customer_code: Optional[str], pla
     if not trusted:
         # Count the rows kept only and withhold what can't be split by customer. At the cap the rows
         # kept may not be all of the caller's: the counts are then a lower bound (``partial``).
-        logger.warning(
-            f"Talon ops: the summary had {dropped} customer row(s) the caller may not see or that were malformed, "
-            f"or rows that don't add up to its totals{' (at the row cap)' if capped else ''}; counts recomputed from the rows kept",
-        )
+        if capped and not dropped:
+            # Expected for a caller with more customers than the cap: the rows are the top 50 only.
+            logger.debug("Talon ops: the summary's rows are at the row cap and don't add up to its totals; counts are a lower bound")
+        else:
+            logger.warning(
+                f"Talon ops: the summary had {dropped} customer row(s) the caller may not see or that were malformed, "
+                "or rows that don't add up to its totals; counts recomputed from the rows kept",
+            )
         return TalonOpsSummary(open=_added(rows), by_customer=kept, dropped=dropped, withheld=True, partial=capped)
     by_job: List[TalonOpsJobCounts] = []
     for item in raw["by_job"][:SUMMARY_ROWS]:

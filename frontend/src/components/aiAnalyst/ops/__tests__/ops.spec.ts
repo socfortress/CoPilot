@@ -42,6 +42,7 @@ import {
 	MAX_ALERT_TITLE,
 	MUTE_PRESETS,
 	muteUntilIn,
+	NO_ALERT_NAME,
 	OLD_TALON_OPS_TEXT,
 	problemState,
 	rowLink,
@@ -799,7 +800,10 @@ describe("links out", () => {
 			query: { customerCode: "ACME", assetName: "WS-01", title: "Windows logon failure" }
 		})
 		expect(alertTitle("x".repeat(MAX_ALERT_TITLE))).toBe("x".repeat(MAX_ALERT_TITLE))
-		for (const bad of ["x".repeat(MAX_ALERT_TITLE + 1), "a\u0000b", "line\nbreak", "   ", 42, null]) {
+		// Runs of whitespace (newlines and tabs too) collapse to one space.
+		expect(alertTitle("  Windows \n\t logon   failure ")).toBe("Windows logon failure")
+		expect(alertTitle(` ${"x".repeat(MAX_ALERT_TITLE - 1)}   y`)).toBeNull() // over the bound once collapsed
+		for (const bad of ["x".repeat(MAX_ALERT_TITLE + 1), "a\u0000b", "a\u007Fb", "   ", NO_ALERT_NAME, ` ${NO_ALERT_NAME} `, 42, null]) {
 			expect(alertTitle(bad)).toBeNull()
 			expect(link(bad)).toEqual({ name: "IncidentManagement-Alerts", query: { customerCode: "ACME", assetName: "WS-01" } })
 		}
