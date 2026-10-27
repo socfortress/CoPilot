@@ -462,7 +462,10 @@ def parse_finding(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsFinding]:
     )
 
 
-def parse_run(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsRun]:
+def parse_run(raw: Any, cleaners: Cleaners, *, with_detail: bool = False) -> Optional[TalonOpsRun]:
+    """One run, field by field; None when a field the page needs is missing or malformed. With
+    ``with_detail`` (``/runs``), a ``disk_forecast`` run's ``detail`` too, allowlisted (``disk_detail``:
+    the Ops tab's chart reads ``detail.nodes``); no other job's."""
     if not isinstance(raw, Mapping):
         return None
     run_id = cleaners.scrub(raw.get("id"), MAX_ID_TEXT)
@@ -493,7 +496,41 @@ def parse_run(raw: Any, cleaners: Cleaners) -> Optional[TalonOpsRun]:
         duration_ms=_int(raw.get("duration_ms")),
         started_at=_time(raw.get("started_at")),
         finished_at=_time(raw.get("finished_at")),
+        detail=disk_detail(raw.get("detail"), cleaners) if with_detail and job == DISK_FORECAST else None,
     )
+
+
+#: The one job whose run ``detail`` the Ops tab reads (its chart), and talon-analyst's own limits for it
+#: (``disk_forecast.MAX_NODES``, node names cleaned to 128 characters).
+DISK_FORECAST = "disk_forecast"
+MAX_DISK_NODES = 200
+MAX_NODE_NAME = 128
+#: A byte count talon-analyst can write (``disk_forecast._bytes``: below 2**62).
+MAX_DISK_BYTES = 2**62 - 1
+
+
+def disk_detail(raw: Any, cleaners: Cleaners) -> Optional[Dict[str, Any]]:
+    """``disk_forecast``'s run ``detail``, allowlisted: ``tick`` (an ISO time) and
+    ``nodes: {node: {used, total}}`` (bytes), at most ``MAX_DISK_NODES`` nodes, each name a short label
+    of at most ``MAX_NODE_NAME`` characters the scrubber leaves as it is, each size a non-negative
+    integer. A node whose name or sizes don't read is left out. Nothing else of the detail is passed
+    on, so every other job's runs, and run-now's polls, carry none. None when it isn't an object."""
+    if not isinstance(raw, Mapping):
+        return None
+    tick = _time(raw.get("tick"))
+    nodes: Dict[str, Dict[str, int]] = {}
+    found = raw.get("nodes")
+    if isinstance(found, Mapping):
+        for name, row in list(found.items())[:MAX_DISK_NODES]:
+            label = _label(name, cleaners, MAX_NODE_NAME)
+            if label is None or not isinstance(row, Mapping):
+                continue
+            used = _int(row.get("used"), maximum=MAX_DISK_BYTES)
+            total = _int(row.get("total"), maximum=MAX_DISK_BYTES)
+            if used is None or total is None:
+                continue
+            nodes[label] = {"used": used, "total": total}
+    return {"tick": tick.isoformat() if tick else None, "nodes": nodes}
 
 
 def _settings(raw: Any, cleaners: Cleaners) -> Dict[str, Any]:
@@ -904,7 +941,7 @@ async def list_runs(
     runs: List[TalonOpsRun] = []
     dropped = 0
     for item in raw["items"][:MAX_LIMIT]:
-        run = parse_run(item, cleaners)
+        run = parse_run(item, cleaners, with_detail=True)
         if run is not None and caller.sees(run.customer_code):
             runs.append(run)
         else:

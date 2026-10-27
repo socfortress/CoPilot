@@ -17,6 +17,7 @@ import type {
 	TalonOpsSeverity,
 	TalonOpsStatus
 } from "@/types/talonOps"
+import { formatTime } from "../health/health"
 
 export const OPS_DOCS = "https://docs.socfortress.co/power-features/talon-ops"
 /** The backend's text for a Talon without the ops API (`services/talon_ops.py:OLD_TALON`). */
@@ -381,8 +382,10 @@ export function jobsSummary(
 
 export interface EvidenceRow {
 	key: string
-	/** A scalar or a list of scalars, as text. */
+	/** A scalar or a list of scalars, as text (an ISO time as local time). */
 	text: string | null
+	/** An ISO time's UTC form, for the tooltip. */
+	title?: string
 	/** A nested object or a list of objects, as indented JSON (still text). */
 	json: string | null
 }
@@ -397,10 +400,22 @@ function scalarText(value: TalonOpsEvidenceValue): string {
 	return String(value)
 }
 
-/** The evidence as rows for a key-value list, in the job's order. */
+const ISO_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/
+
+/** An ISO time (with its zone) as local time, and its UTC form; null for anything else. */
+export function isoTimeText(value: unknown): { text: string; title: string } | null {
+	if (typeof value !== "string" || !ISO_TIME.test(value)) return null
+	const ms = parsedMs(value)
+	if (ms === null) return null
+	return { text: formatTime(value), title: `${new Date(ms).toISOString().slice(0, 16).replace("T", " ")} UTC` }
+}
+
+/** The evidence as rows for a key-value list, in the job's order. An ISO time shows as local time, UTC in its tooltip. */
 export function evidenceRows(evidence: Record<string, TalonOpsEvidenceValue> | null | undefined): EvidenceRow[] {
 	if (!evidence) return []
 	return Object.entries(evidence).map(([key, value]) => {
+		const time = isoTimeText(value)
+		if (time) return { key, text: time.text, title: time.title, json: null }
 		if (isScalar(value)) return { key, text: scalarText(value), json: null }
 		if (Array.isArray(value) && value.every(isScalar)) {
 			return { key, text: value.length ? value.map(scalarText).join(", ") : "none", json: null }
@@ -772,4 +787,50 @@ export function rowLink(finding: Pick<TalonOpsFinding, "job" | "customer_code" |
 	const agents = links.filter(link => link.key.startsWith("agent:"))
 	if (agents.length === 1) return agents[0]
 	return links.find(link => !link.key.startsWith("agent:")) ?? null
+}
+
+// ── history ───────────────────────────────────────────────────────────────────
+
+/** The most runs a finding's history shows, and a job row's. */
+export const HISTORY_RUNS = 30
+export const JOB_ROW_RUNS = 10
+
+/**
+ * The runs a finding's history shows: its job's, of its customer (null: the platform), that finished
+ * (or started, or ticked) at or after its `first_seen`, newest first, at most `HISTORY_RUNS`. Talon's
+ * `/runs` has no time filter, so the newest `HISTORY_RUNS` are read and the older ones dropped here.
+ */
+export function findingRuns(
+	runs: TalonOpsRun[] | null | undefined,
+	finding: Pick<TalonOpsFinding, "job" | "customer_code" | "first_seen">
+): TalonOpsRun[] {
+	const since = parsedMs(finding.first_seen)
+	const at = (run: TalonOpsRun) => parsedMs(run.finished_at) ?? parsedMs(run.started_at) ?? parsedMs(run.tick)
+	return (runs ?? [])
+		.filter(run => run.job === finding.job && run.customer_code === finding.customer_code)
+		.filter(run => {
+			if (since === null) return true
+			const t = at(run)
+			return t !== null && t >= since
+		})
+		.sort((a, b) => (at(b) ?? 0) - (at(a) ?? 0))
+		.slice(0, HISTORY_RUNS)
+}
+
+/** Whether the caller may read a finding's runs: a platform finding's are an admin's. */
+export function canReadFindingRuns(finding: Pick<TalonOpsFinding, "customer_code">, isAdmin: boolean): boolean {
+	return finding.customer_code !== null || isAdmin
+}
+
+/**
+ * Whether a run started after the finding resolved (`resolved_at`), so it didn't measure the finding
+ * as it was: the history marks it. The run that resolved it started before and isn't marked.
+ */
+export function afterResolved(
+	run: Pick<TalonOpsRun, "started_at" | "tick">,
+	finding: Pick<TalonOpsFinding, "resolved_at">
+): boolean {
+	const resolved = parsedMs(finding.resolved_at)
+	const started = parsedMs(run.started_at) ?? parsedMs(run.tick)
+	return resolved !== null && started !== null && started > resolved
 }
