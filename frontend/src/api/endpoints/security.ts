@@ -66,6 +66,13 @@ export default {
 		)
 	},
 
+	/** Let a portal user only read this customer's data from the portal, or change it again (admin, #1312) */
+	setReadOnly(customerCode: string, userId: number, readOnly: boolean) {
+		return HttpClient.put<FlaskBaseResponse>(`/auth/security/customers/${customerCode}/users/${userId}/read-only`, {
+			read_only: readOnly
+		})
+	},
+
 	/** Disable a portal user: no sign-in, and a session they hold ends (admin, #1296) */
 	disableUser(userId: number) {
 		return HttpClient.post<FlaskBaseResponse>(`/auth/security/users/${userId}/disable`)

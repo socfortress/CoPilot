@@ -17,6 +17,7 @@ interface SecurityUser {
 	totp_enabled: boolean
 	must_change_password: boolean
 	is_customer_admin: boolean
+	read_only: boolean
 	disabled_at: string | null
 }
 
@@ -30,6 +31,7 @@ function portalUser(id: number, username: string): SecurityUser {
 		totp_enabled: false,
 		must_change_password: false,
 		is_customer_admin: false,
+		read_only: false,
 		disabled_at: null
 	}
 }
@@ -70,6 +72,14 @@ async function installSecurityMock(context: BrowserContext) {
 				writes.push(`admin ${appoint[1]} ${body.is_customer_admin}`)
 				const target = users.find(u => u.id === Number(appoint[1]))
 				if (target) target.is_customer_admin = body.is_customer_admin
+				return json(route, { success: true, message: "Updated" })
+			}
+			const readOnly = path.match(/^\/auth\/security\/customers\/ACME\/users\/(\d+)\/read-only$/)
+			if (readOnly && method === "PUT") {
+				const body = route.request().postDataJSON() as { read_only: boolean }
+				writes.push(`read-only ${readOnly[1]} ${body.read_only}`)
+				const target = users.find(u => u.id === Number(readOnly[1]))
+				if (target) target.read_only = body.read_only
 				return json(route, { success: true, message: "Updated" })
 			}
 			const toggle = path.match(/^\/auth\/security\/users\/(\d+)\/(disable|enable)$/)
@@ -129,5 +139,28 @@ test.describe("customer admins and disabled accounts", () => {
 		await act(page, portalUser, "Enable account")
 		await expect.poll(() => writes).toEqual(["disable 1", "enable 1"])
 		await expect(page.getByTestId("security-disabled")).toHaveCount(0)
+	})
+
+	test("an admin makes a portal user read-only once confirmed, and lets them change data again (#1312)", async ({ page }) => {
+		const portalUser = (await page.getByTestId("security-row").first().getAttribute("data-user")) ?? ""
+		await act(page, portalUser, "Make read-only")
+		await page.locator(".n-dialog").getByRole("button", { name: "Cancel" }).click()
+		expect(writes).toEqual([])
+
+		await act(page, portalUser, "Make read-only")
+		await page.locator(".n-dialog").getByRole("button", { name: "Make read-only" }).click()
+		await expect.poll(() => writes).toEqual(["read-only 1 true"])
+		await expect(page.getByTestId("security-read-only")).toHaveText("Read-only")
+
+		// One role or the other: a reader can't be appointed a customer admin.
+		await page.locator(`[data-testid=security-row][data-user="${portalUser}"]`).getByTestId("security-actions").click()
+		await expect(page.locator(".n-dropdown-option-body", { hasText: "Make customer admin" })).toHaveClass(
+			/n-dropdown-option-body--disabled/
+		)
+
+		// …and the same open menu lets them change data again.
+		await page.locator(".n-dropdown-option", { hasText: "Allow changes" }).click()
+		await expect.poll(() => writes).toEqual(["read-only 1 true", "read-only 1 false"])
+		await expect(page.getByTestId("security-read-only")).toHaveCount(0)
 	})
 })

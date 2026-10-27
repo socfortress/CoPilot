@@ -11,6 +11,7 @@ const security = vi.hoisted(() => ({
 	listCustomerUsers: vi.fn(),
 	getSmtpStatus: vi.fn(),
 	setCustomerAdmin: vi.fn(),
+	setReadOnly: vi.fn(),
 	disableUser: vi.fn(),
 	enableUser: vi.fn()
 }))
@@ -138,6 +139,7 @@ describe("customer security: customer admins and disabled accounts", () => {
 		for (const fn of Object.values(security)) fn.mockReset()
 		security.getSmtpStatus.mockResolvedValue({ data: { success: true, configured: true } })
 		security.setCustomerAdmin.mockResolvedValue({ data: { success: true, message: "ok" } })
+		security.setReadOnly.mockResolvedValue({ data: { success: true, message: "ok" } })
 		security.disableUser.mockResolvedValue({ data: { success: true, message: "ok" } })
 		security.enableUser.mockResolvedValue({ data: { success: true, message: "ok" } })
 		security.listCustomerUsers.mockResolvedValue({
@@ -166,6 +168,7 @@ describe("customer security: customer admins and disabled accounts", () => {
 			"email-temp-password",
 			"set-password",
 			"customer-admin",
+			"read-only",
 			"toggle-disabled"
 		])
 		wrapper.unmount()
@@ -198,6 +201,50 @@ describe("customer security: customer admins and disabled accounts", () => {
 		await select(wrapper, 0, "customer-admin")
 		await confirm("Remove")
 		expect(security.setCustomerAdmin).toHaveBeenLastCalledWith("ACME", 1, false)
+		wrapper.unmount()
+	})
+
+	it("makes a portal user read-only once confirmed, lifts it straight away, and tags them (#1312)", async () => {
+		security.listCustomerUsers.mockResolvedValue({
+			data: {
+				success: true,
+				users: [
+					user(1, "boss", false, { is_customer_admin: true }),
+					user(2, "reader", false, { read_only: true }),
+					user(4, "jane", false)
+				]
+			}
+		})
+		const wrapper = render()
+		await flushPromises()
+		const rows = wrapper.findAll("[data-testid=security-row]")
+		expect(rows[1]?.find("[data-testid=security-read-only]").text()).toBe("Read-only")
+		expect(rows[2]?.find("[data-testid=security-read-only]").exists()).toBe(false)
+
+		await select(wrapper, 2, "read-only")
+		expect(security.setReadOnly).not.toHaveBeenCalled()
+		await confirm("Make read-only")
+		expect(security.setReadOnly).toHaveBeenCalledWith("ACME", 4, true)
+
+		expect(actions(wrapper, 1).find(o => o.key === "read-only")?.label).toBe("Allow changes")
+		await select(wrapper, 1, "read-only")
+		expect(security.setReadOnly).toHaveBeenLastCalledWith("ACME", 2, false)
+		wrapper.unmount()
+	})
+
+	it("never offers both roles: an admin can't be made read-only, nor a reader an admin (#1312)", async () => {
+		security.listCustomerUsers.mockResolvedValue({
+			data: {
+				success: true,
+				users: [user(1, "boss", false, { is_customer_admin: true }), user(2, "reader", false, { read_only: true })]
+			}
+		})
+		const wrapper = render()
+		await flushPromises()
+		expect(actions(wrapper, 0).find(o => o.key === "read-only")?.disabled).toBe(true)
+		expect(actions(wrapper, 0).find(o => o.key === "customer-admin")?.disabled).toBe(false)
+		expect(actions(wrapper, 1).find(o => o.key === "customer-admin")?.disabled).toBe(true)
+		expect(actions(wrapper, 1).find(o => o.key === "read-only")?.disabled).toBe(false)
 		wrapper.unmount()
 	})
 

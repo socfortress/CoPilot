@@ -10,6 +10,8 @@ export interface CustomerSecurityUser {
 	must_change_password?: boolean
 	/** Administers this customer's portal users from the Customer Portal; set here only (#1296). */
 	is_customer_admin?: boolean
+	/** May only read this customer's data from the Customer Portal (#1312). */
+	read_only?: boolean
 	/** Set while the account is disabled: it cannot sign in (#1296). Naive UTC. */
 	disabled_at?: string | null
 }
