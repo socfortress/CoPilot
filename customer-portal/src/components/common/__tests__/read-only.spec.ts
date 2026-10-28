@@ -142,6 +142,9 @@ describe("read-only portal users", () => {
 		const wrapper = mount(WaitingOnYouNotice, { props: { entity: "alert", readOnly: true } })
 		expect(wrapper.find("[data-testid=waiting-on-you-reply]").exists()).toBe(false)
 		expect(wrapper.find("[data-testid=waiting-on-you-read-only]").text()).toContain("a colleague who can change data")
+		// No "reply in the comments" for someone who can't (#1312).
+		expect(wrapper.text()).toContain("paused until your organization answers.")
+		expect(wrapper.text()).not.toContain("Reply in the comments")
 		expect(mount(WaitingOnYouNotice, { props: { entity: "alert" } }).find("[data-testid=waiting-on-you-reply]").exists()).toBe(true)
 
 		i18n.global.locale.value = "it"

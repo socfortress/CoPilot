@@ -144,7 +144,11 @@
 			"case": "Hun reactietijd voor deze zaak staat stil tot je antwoordt. Reageer in de opmerkingen om die terug te geven aan de analisten."
 		},
 		"reply": "Reageren",
-		"readOnly": "Je account is hier alleen-lezen: een collega die gegevens mag wijzigen moet antwoorden."
+		"readOnly": "Je account is hier alleen-lezen: een collega die gegevens mag wijzigen moet antwoorden.",
+		"bodyReadOnly": {
+			"alert": "Hun reactietijd voor deze melding staat stil tot je organisatie antwoordt.",
+			"case": "Hun reactietijd voor deze zaak staat stil tot je organisatie antwoordt."
+		}
 	},
 	"charts": {
 		"total": "Totaal"

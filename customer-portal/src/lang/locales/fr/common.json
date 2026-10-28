@@ -144,7 +144,11 @@
 			"case": "Leur délai de réponse pour ce dossier est suspendu jusqu'à votre réponse. Répondez dans les commentaires pour le renvoyer aux analystes."
 		},
 		"reply": "Répondre",
-		"readOnly": "Votre compte est en lecture seule ici : un collègue autorisé à modifier les données doit répondre."
+		"readOnly": "Votre compte est en lecture seule ici : un collègue autorisé à modifier les données doit répondre.",
+		"bodyReadOnly": {
+			"alert": "Leur délai de réponse pour cette alerte est suspendu jusqu'à la réponse de votre organisation.",
+			"case": "Leur délai de réponse pour ce dossier est suspendu jusqu'à la réponse de votre organisation."
+		}
 	},
 	"charts": {
 		"total": "Total"

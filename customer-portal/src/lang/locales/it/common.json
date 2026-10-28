@@ -144,7 +144,11 @@
 			"case": "Il loro tempo di risposta per questo caso è in pausa finché non rispondi. Rispondi nei commenti per restituirlo agli analisti."
 		},
 		"reply": "Rispondi",
-		"readOnly": "Qui il tuo account è in sola lettura: deve rispondere un collega che può modificare i dati."
+		"readOnly": "Qui il tuo account è in sola lettura: deve rispondere un collega che può modificare i dati.",
+		"bodyReadOnly": {
+			"alert": "Il loro tempo di risposta per questo alert è in pausa finché la tua organizzazione non risponde.",
+			"case": "Il loro tempo di risposta per questo caso è in pausa finché la tua organizzazione non risponde."
+		}
 	},
 	"charts": {
 		"total": "Totale"

@@ -144,7 +144,11 @@
 			"case": "Ihre Reaktionszeit für diesen Fall ist angehalten, bis Sie antworten. Antworten Sie in den Kommentaren, um ihn an die Analysten zurückzugeben."
 		},
 		"reply": "Antworten",
-		"readOnly": "Ihr Konto ist hier schreibgeschützt: Antworten muss jemand aus Ihrem Team, der Daten ändern darf."
+		"readOnly": "Ihr Konto ist hier schreibgeschützt: Antworten muss jemand aus Ihrem Team, der Daten ändern darf.",
+		"bodyReadOnly": {
+			"alert": "Ihre Reaktionszeit für diesen Alarm ist angehalten, bis Ihre Organisation antwortet.",
+			"case": "Ihre Reaktionszeit für diesen Fall ist angehalten, bis Ihre Organisation antwortet."
+		}
 	},
 	"charts": {
 		"total": "Gesamt"

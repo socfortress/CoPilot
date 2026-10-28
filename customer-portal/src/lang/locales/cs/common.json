@@ -144,7 +144,11 @@
 			"case": "Jejich lhůta pro odpověď na tento případ je pozastavena, dokud neodpovíte. Odpovězte v komentářích a vraťte jej tak analytikům."
 		},
 		"reply": "Odpovědět",
-		"readOnly": "Váš účet je zde jen pro čtení: odpovědět musí kolega, který může data měnit."
+		"readOnly": "Váš účet je zde jen pro čtení: odpovědět musí kolega, který může data měnit.",
+		"bodyReadOnly": {
+			"alert": "Jejich lhůta pro odpověď na tuto výstrahu je pozastavena, dokud vaše organizace neodpoví.",
+			"case": "Jejich lhůta pro odpověď na tento případ je pozastavena, dokud vaše organizace neodpoví."
+		}
 	},
 	"charts": {
 		"total": "Celkem"

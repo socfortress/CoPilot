@@ -8,7 +8,17 @@
 		<div class="min-w-0 grow basis-64">
 			<div class="font-semibold">{{ $t("common.waitingOnYou.title") }}</div>
 			<div class="text-secondary text-sm">
-				{{ entity === "case" ? $t("common.waitingOnYou.body.case") : $t("common.waitingOnYou.body.alert") }}
+				<!-- A reader can't reply: no "reply in the comments" (#1312). -->
+				<template v-if="readOnly">
+					{{
+						entity === "case"
+							? $t("common.waitingOnYou.bodyReadOnly.case")
+							: $t("common.waitingOnYou.bodyReadOnly.alert")
+					}}
+				</template>
+				<template v-else>
+					{{ entity === "case" ? $t("common.waitingOnYou.body.case") : $t("common.waitingOnYou.body.alert") }}
+				</template>
 			</div>
 			<div v-if="readOnly" class="text-secondary mt-1 text-sm" data-testid="waiting-on-you-read-only">
 				{{ $t("common.waitingOnYou.readOnly") }}

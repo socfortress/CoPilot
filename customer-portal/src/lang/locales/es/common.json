@@ -144,7 +144,11 @@
 			"case": "Su plazo de respuesta para este caso está en pausa hasta que respondas. Responde en los comentarios para devolvérselo a los analistas."
 		},
 		"reply": "Responder",
-		"readOnly": "Aquí tu cuenta es de solo lectura: debe responder un compañero que pueda modificar los datos."
+		"readOnly": "Aquí tu cuenta es de solo lectura: debe responder un compañero que pueda modificar los datos.",
+		"bodyReadOnly": {
+			"alert": "Su plazo de respuesta para esta alerta está en pausa hasta que tu organización responda.",
+			"case": "Su plazo de respuesta para este caso está en pausa hasta que tu organización responda."
+		}
 	},
 	"charts": {
 		"total": "Total"
