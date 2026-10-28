@@ -13,7 +13,8 @@ const users = vi.hoisted(() => ({
 	disable: vi.fn(),
 	enable: vi.fn(),
 	resetTotp: vi.fn(),
-	issueTemporaryPassword: vi.fn()
+	issueTemporaryPassword: vi.fn(),
+	setReadOnly: vi.fn()
 }))
 vi.mock("@/api", () => ({ default: { users } }))
 
@@ -142,6 +143,28 @@ describe("what a customer admin does", () => {
 		wrapper.unmount()
 	})
 
+	it("makes a user read-only and lets them change data again, without a confirmation (#1312)", async () => {
+		users.setReadOnly
+			.mockResolvedValueOnce({ data: { user: tenantUser(2, "jane", { read_only: true }), message: "jane can now only read your data." } })
+			.mockResolvedValueOnce({ data: { user: tenantUser(2, "jane"), message: "jane can change your data again." } })
+		const wrapper = render()
+		await flushPromises()
+		const toggle = () => row(wrapper, "jane").get("[data-testid=users-toggle-read-only]")
+		expect(toggle().text()).toBe("Make read-only")
+		await toggle().trigger("click")
+		await flushPromises()
+		expect(users.setReadOnly).toHaveBeenLastCalledWith(2, true)
+		expect(row(wrapper, "jane").find("[data-testid=users-tag-readOnly]").text()).toBe("Read-only")
+		expect(toggle().text()).toBe("Allow changes")
+		await toggle().trigger("click")
+		await flushPromises()
+		expect(users.setReadOnly).toHaveBeenLastCalledWith(2, false)
+		expect(row(wrapper, "jane").find("[data-testid=users-tag-readOnly]").exists()).toBe(false)
+		// Nobody the SOC manages gets the action.
+		expect(row(wrapper, "shared").find("[data-testid=users-toggle-read-only]").exists()).toBe(false)
+		wrapper.unmount()
+	})
+
 	it("resets 2FA once confirmed, and only for someone who has it", async () => {
 		users.resetTotp.mockResolvedValue({
 			data: { user: tenantUser(2, "jane"), message: "Two-factor authentication was reset." }
@@ -238,12 +261,36 @@ describe("an invitation", () => {
 		expect(users.invite).toHaveBeenCalledWith({
 			username: "newbie",
 			email: "newbie@acme.example",
-			customer_codes: ["ACME"]
+			customer_codes: ["ACME"],
+			read_only: false
 		})
 		expect(row(wrapper, "newbie").find("[data-testid=users-tag-password]").exists()).toBe(true)
 		expect(document.querySelector("[data-testid=temporary-password-value]")?.textContent?.trim()).toBe(
 			"First-Pass-2026!"
 		)
+		wrapper.unmount()
+	})
+
+	it("invites a user who may only read, when the box is ticked (#1312)", async () => {
+		users.invite.mockResolvedValue({
+			data: { user: tenantUser(9, "auditor", { read_only: true }), delivery: "email", temporary_password: null, email_problem: null }
+		})
+		const wrapper = render()
+		await flushPromises()
+		const dialog = await openInvite(wrapper)
+		type(dialog.input("invite-username"), "auditor")
+		type(dialog.input("invite-email"), "auditor@acme.example")
+		document.querySelector<HTMLElement>("[data-testid=invite-read-only]")!.click()
+		await flushPromises()
+		dialog.submit()
+		await flushPromises()
+		expect(users.invite).toHaveBeenCalledWith({
+			username: "auditor",
+			email: "auditor@acme.example",
+			customer_codes: ["ACME"],
+			read_only: true
+		})
+		expect(row(wrapper, "auditor").find("[data-testid=users-tag-readOnly]").exists()).toBe(true)
 		wrapper.unmount()
 	})
 

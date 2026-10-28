@@ -83,6 +83,7 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("POST", "/api/customer_portal/users/{user_id}/enable"),
         ("DELETE", "/api/customer_portal/users/{user_id}/totp"),
         ("POST", "/api/customer_portal/users/{user_id}/temporary-password"),
+        ("PUT", "/api/customer_portal/users/{user_id}/read-only"),  # #1312
         # Reads that take a body, so they are POSTs. They change nothing.
         ("POST", "/api/siem/dashboards/panel-data"),
         ("POST", "/api/copilot_searches/by-ids"),

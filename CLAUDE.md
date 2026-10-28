@@ -662,6 +662,33 @@ A **customer admin** is a `customer_user` whose `user_customer_access` row for a
 
 Tests: `tests/test_customer_portal_tenant_users.py` (no DB), `tests/e2e/customer_portal_tenant_users_e2e.py` (13306, SMTP replaced by a recorder: the appointment, the list, invitations by email and on screen, disabling mid-session and between the password and the second factor, every refusal, 2FA reset and temporary passwords, the SOC side, notifications, the migration round trip). Frontend: `components/customers/security/__tests__/CustomerSecurity.spec.ts`, `e2e-mocked/customer-admins.spec.ts`. Portal: `components/users/__tests__/`, `api/__tests__/account-disabled.spec.ts`, `components/auth/__tests__/SignIn-disabled.spec.ts`, `router/__tests__/logout-reason.spec.ts`, `app-layouts/common/Toolbar/__tests__/Avatar.spec.ts`, `cypress/e2e/users.cy.ts`.
 
+### Read-only portal users (#1312)
+
+A portal user can be made **read-only on a customer**: they see everything the portal shows for it and change nothing of it. `user_customer_access.read_only` (per customer, like `is_customer_admin`; migration `f1312a0b1c2d`). The check is `app/auth/services/read_only.py`.
+
+- **Who sets it, and the one rule.**
+  - The SOC sets it from the customer's Security tab (`PUT /auth/security/customers/{code}/users/{id}/read-only`, admin only, a `customer_user` with access to that customer).
+  - A customer admin sets it from the portal's Users page (`PUT /customer_portal/users/{id}/read-only`, on the users they may manage), or ticks it when inviting (`InviteRequest.read_only`).
+  - **Never together with the customer admin role**: either way is a 409 (`security_admin.READ_ONLY_ADMIN`).
+  - Audited `customer_user.read_only_update` with old and new, only when it changes. The customer's Audit Log reads it "Made read-only" / "Can change data again".
+- **Refused (403 `READ_ONLY`, a fixed text):** every write the portal makes on that customer's data. That is alert and case status (the bulk route skips the alert), comments (create, edit, delete), cases (create, from an alert, assignee, link, unlink, file upload), reports (generate, delete), asset criticality, an AI analysis and a question to the SOC (both audited as failures).
+- **Where the check sits.** It runs after the tenant check that resolved the object's customer, never on the route alone: `ensure_may_write(user, customer_code, session)`, or `write=True` on `db_operations._ensure_alert_access` / `_ensure_case_access` / `_ensure_customer_access`. The AI request and Ask the SOC check in their services (`request_alert_analysis`, `_reserve`).
+- **Kept:** what is the user's own (password, 2FA, language, notification choices, saved searches) and a customer admin's user management (an admin is never read-only).
+- **Pinned.** `tests/test_customer_portal_read_only.py` splits `ALLOWED_CUSTOMER_USER_WRITES` into refused and kept, and checks every refused route carries the check. **A new portal write route must be classified there.**
+- **What the portal and `/me` see.**
+  - `GET /customer_portal/me` answers `read_only` per customer.
+  - The portal's AI report answer never offers a request to a reader (`can_request` false).
+- **Portal UI.**
+  - `authStore.isReadOnlyFor(code)` / `writableCustomers` / `isReadOnlySomewhere`, and `composables/common/useReadOnly.ts`.
+  - The status, assignee and criticality selects take a `customerCode` and are disabled.
+  - Comment boxes, case actions and uploads are replaced by `ReadOnlyNotice`; there is no Ask the SOC tab, no Reply on "Waiting on you" (it says a colleague must answer), and no report Delete.
+  - Forms that file something (`useCustomerPrefill({ writable: true })`: a case, a report) offer only writable customers, and Create case / Generate report hide when there are none.
+  - The Profile tags "Read-only" and names the customers. The avatar reads "Read-only user" when every customer is read-only.
+  - The Users page has a tag, a Make read-only / Allow changes action and an invite checkbox.
+- **CoPilot UI**: the Security tab tags "Read-only" and offers Make read-only (confirmed) / Allow changes. The customer admin action is disabled for a reader, and the reverse.
+
+Tests: `tests/test_customer_portal_read_only.py` (in-memory SQLite, real routers), `tests/e2e/customer_portal_read_only_e2e.py` (13306: every refused write and nothing written, what is kept, another customer, turning it off, the 409s, a customer admin's invitation and change, the audit log, the migration round trip). Portal: `components/common/__tests__/read-only.spec.ts`, `components/users/__tests__/UsersPage.spec.ts`, `views/__tests__/Profile-customer-admin.spec.ts`, `app-layouts/common/Toolbar/__tests__/Avatar.spec.ts`, `cypress/e2e/read-only.cy.ts`. Frontend: `components/customers/security/__tests__/CustomerSecurity.spec.ts`, `e2e-mocked/customer-admins.spec.ts`.
+
 ### Customer Portal Audit Log: who did what in the customer's tenant (#1298)
 
 A customer admin (#1296) reads their customers' audit trail in the portal (avatar menu → **Audit log**, `/audit`, `components/audit/`). It is a narrow projection of the SOC's `audit_log`, not a store of its own: `app/customer_portal/services/audit.py`, routes `/customer_portal/audit…`.

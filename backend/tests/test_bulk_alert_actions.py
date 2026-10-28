@@ -72,7 +72,7 @@ def _session(rows=None):
 def _patch_access(monkeypatch, forbidden=(FORBIDDEN_ID,), missing=(MISSING_ID,)):
     """Per-alert access check: 403 for a foreign customer, 404 for a deleted alert."""
 
-    async def ensure(alert_id, current_user, db):
+    async def ensure(alert_id, current_user, db, *, write=False):
         if alert_id in forbidden:
             raise HTTPException(status_code=403, detail=f"Access denied to alert {alert_id}")
         if alert_id in missing:

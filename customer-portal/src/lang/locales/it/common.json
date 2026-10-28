@@ -143,7 +143,12 @@
 			"alert": "Il loro tempo di risposta per questo alert è in pausa finché non rispondi. Rispondi nei commenti per restituirlo agli analisti.",
 			"case": "Il loro tempo di risposta per questo caso è in pausa finché non rispondi. Rispondi nei commenti per restituirlo agli analisti."
 		},
-		"reply": "Rispondi"
+		"reply": "Rispondi",
+		"readOnly": "Qui il tuo account è in sola lettura: deve rispondere un collega che può modificare i dati.",
+		"bodyReadOnly": {
+			"alert": "Il loro tempo di risposta per questo alert è in pausa finché la tua organizzazione non risponde.",
+			"case": "Il loro tempo di risposta per questo caso è in pausa finché la tua organizzazione non risponde."
+		}
 	},
 	"charts": {
 		"total": "Totale"
@@ -171,5 +176,9 @@
 			"noDigit": "La password deve contenere una cifra",
 			"noSymbol": "La password deve contenere un simbolo, come ! {'@'} # $ % _ - . o +"
 		}
+	},
+	"readOnly": {
+		"notice": "Puoi vedere questi dati ma non modificarli.",
+		"hint": "Sola lettura: puoi vedere questi dati ma non modificarli."
 	}
 }

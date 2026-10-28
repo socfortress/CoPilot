@@ -172,6 +172,19 @@ export const useAuthStore = defineStore("auth", {
 		isCustomerAdmin(): boolean {
 			return this.accessibleCustomers.some(customer => customer.is_customer_admin)
 		},
+		/** The user may only read this customer's data (#1312); an unknown code is the server's to judge. */
+		isReadOnlyFor() {
+			return (code: string | null | undefined): boolean =>
+				!!code && !!this.accessibleCustomers.find(customer => customer.customer_code === code)?.read_only
+		},
+		/** The customers whose data the user may change: what a form filing something offers (#1312). */
+		writableCustomers(): PortalCustomer[] {
+			return this.accessibleCustomers.filter(customer => !customer.read_only)
+		},
+		/** The user may only read some of their customers' data: the Profile says so (#1312). */
+		isReadOnlySomewhere(): boolean {
+			return this.accessibleCustomers.some(customer => customer.read_only)
+		},
 		accessibleCustomerCodes(): string[] {
 			return this.accessibleCustomers.map(customer => customer.customer_code)
 		},

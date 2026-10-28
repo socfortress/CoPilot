@@ -143,7 +143,12 @@
 			"alert": "Their response clock for this alert is paused until you answer. Reply in the comments to hand it back to the analysts.",
 			"case": "Their response clock for this case is paused until you answer. Reply in the comments to hand it back to the analysts."
 		},
-		"reply": "Reply"
+		"reply": "Reply",
+		"readOnly": "Your account is read-only here: a colleague who can change data needs to reply.",
+		"bodyReadOnly": {
+			"alert": "Their response clock for this alert is paused until your organization answers.",
+			"case": "Their response clock for this case is paused until your organization answers."
+		}
 	},
 	"charts": {
 		"total": "Total"
@@ -171,5 +176,9 @@
 			"noDigit": "Password must contain a digit",
 			"noSymbol": "Password must contain a symbol, such as ! {'@'} # $ % _ - . or +"
 		}
+	},
+	"readOnly": {
+		"notice": "You can view this data but not change it.",
+		"hint": "Read-only: you can view this data but not change it."
 	}
 }

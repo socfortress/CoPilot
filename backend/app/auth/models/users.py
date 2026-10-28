@@ -37,6 +37,10 @@ class UserCustomerAccess(SQLModel, table=True):
     # (#1296). Set by the SOC only, per customer: a user may administer one of their customers
     # and not another.
     is_customer_admin: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": sa.false()})
+    # A customer_user who may only read this customer's data from the portal (#1312): every write
+    # on it is refused (``app/auth/services/read_only.py``). Per customer, set by the SOC or by a
+    # customer admin; never together with ``is_customer_admin``.
+    read_only: bool = Field(default=False, nullable=False, sa_column_kwargs={"server_default": sa.false()})
 
     # Relationships
     user: "User" = Relationship(back_populates="customer_access")

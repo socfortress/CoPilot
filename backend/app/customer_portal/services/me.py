@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
+from app.auth.services.read_only import read_only_customer_codes
 from app.customer_portal.schema.me import PortalCustomer
 from app.customer_portal.schema.me import PortalMeResponse
 from app.customer_portal.services.languages import portal_locale
@@ -25,6 +26,7 @@ async def portal_customers(user: User, session: AsyncSession) -> List[PortalCust
         return []
 
     administered = set(await administered_customer_codes(user, session))
+    read_only = await read_only_customer_codes(user, session)
     result = await session.execute(select(Customers.customer_code, Customers.customer_name).where(Customers.customer_code.in_(codes)))
     names = {code: name for code, name in result.all()}
     customers = [
@@ -32,6 +34,7 @@ async def portal_customers(user: User, session: AsyncSession) -> List[PortalCust
             customer_code=code,
             customer_name=(names.get(code) or "").strip() or code,
             is_customer_admin=code in administered,
+            read_only=code in read_only,
         )
         for code in codes
     ]

@@ -1,13 +1,18 @@
 {
 	"roles": {
 		"customerAdmin": "Kundenadministrator",
-		"portalUser": "Portalbenutzer"
+		"portalUser": "Portalbenutzer",
+		"readOnly": "Nur Lesen",
+		"readOnlyUser": "Nur-Lese-Benutzer"
 	},
 	"header": {
 		"avatarAlt": "Avatar",
 		"managesUsersOf": "Lädt die Portalbenutzer von {customers} ein und verwaltet sie. Von Ihrem SOC ernannt.",
 		"adminBadge": "Admin",
-		"noCustomer": "Kein Kunde"
+		"noCustomer": "Kein Kunde",
+		"readOnlyAll": "Kann die Daten Ihrer Organisation ansehen, aber nicht ändern.",
+		"readOnlyOn": "Kann die Daten von {customers} ansehen, aber nicht ändern.",
+		"readOnlyBadge": "nur lesen"
 	},
 	"tabs": {
 		"settings": "Einstellungen",

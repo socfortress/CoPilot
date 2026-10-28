@@ -6,6 +6,8 @@
 		:loading
 		size="small"
 		class="min-w-36"
+		:disabled="readOnly"
+		:title="readOnly ? $t('common.readOnly.hint') : undefined"
 		:consistent-menu-width="false"
 		@update:value="handleStatusChange"
 	/>
@@ -18,6 +20,7 @@ import { NSelect, useMessage } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Api from "@/api"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { getApiErrorMessage } from "@/utils"
 import { statusSelectOptions, workflowStatusLabel } from "@/utils/workflowStatus"
 
@@ -35,12 +38,16 @@ export interface CaseStatusUpdateErrorPayload {
 const props = defineProps<{
 	caseId: number
 	status: CaseStatus
+	/** Its customer: read-only there, the select is disabled (#1312). */
+	customerCode?: string | null
 }>()
 
 const emit = defineEmits<{
 	success: [payload: CaseStatusUpdateSuccessPayload]
 	error: [payload: CaseStatusUpdateErrorPayload]
 }>()
+
+const readOnly = useReadOnly(() => props.customerCode)
 
 const message = useMessage()
 const { t } = useI18n()

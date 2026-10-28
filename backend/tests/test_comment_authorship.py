@@ -17,6 +17,7 @@ Run with: cd backend && python -m pytest tests/test_comment_authorship.py
 
 import asyncio
 import os
+from contextlib import contextmanager
 from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -47,8 +48,15 @@ def _session_returning(row):
     return session
 
 
+@contextmanager
 def _access(allowed=True):
-    return patch.object(dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=allowed))
+    # The caller may see the alert or case, and is not read-only on it (#1312).
+    with patch.object(dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=allowed)), patch.object(
+        dbo,
+        "ensure_may_write",
+        AsyncMock(),
+    ):
+        yield
 
 
 def _alert_edit(**overrides):

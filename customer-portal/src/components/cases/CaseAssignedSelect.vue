@@ -6,6 +6,8 @@
 		:loading
 		size="small"
 		class="min-w-36"
+		:disabled="readOnly"
+		:title="readOnly ? $t('common.readOnly.hint') : undefined"
 		:consistent-menu-width="false"
 		@update:value="handleAssignedToChange"
 	/>
@@ -17,6 +19,7 @@ import { NSelect, useMessage } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Api from "@/api"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { getApiErrorMessage } from "@/utils"
 
 export interface CaseAssignedUpdateSuccessPayload {
@@ -34,12 +37,16 @@ const props = defineProps<{
 	caseId: number
 	assignedTo: string | null
 	assignedAvailable?: string[]
+	/** Its customer: read-only there, the select is disabled (#1312). */
+	customerCode?: string | null
 }>()
 
 const emit = defineEmits<{
 	success: [payload: CaseAssignedUpdateSuccessPayload]
 	error: [payload: CaseAssignedUpdateErrorPayload]
 }>()
+
+const readOnly = useReadOnly(() => props.customerCode)
 
 const message = useMessage()
 const { t } = useI18n()

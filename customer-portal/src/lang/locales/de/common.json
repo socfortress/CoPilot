@@ -143,7 +143,12 @@
 			"alert": "Ihre Reaktionszeit für diesen Alarm ist angehalten, bis Sie antworten. Antworten Sie in den Kommentaren, um ihn an die Analysten zurückzugeben.",
 			"case": "Ihre Reaktionszeit für diesen Fall ist angehalten, bis Sie antworten. Antworten Sie in den Kommentaren, um ihn an die Analysten zurückzugeben."
 		},
-		"reply": "Antworten"
+		"reply": "Antworten",
+		"readOnly": "Ihr Konto ist hier schreibgeschützt: Antworten muss jemand aus Ihrem Team, der Daten ändern darf.",
+		"bodyReadOnly": {
+			"alert": "Ihre Reaktionszeit für diesen Alarm ist angehalten, bis Ihre Organisation antwortet.",
+			"case": "Ihre Reaktionszeit für diesen Fall ist angehalten, bis Ihre Organisation antwortet."
+		}
 	},
 	"charts": {
 		"total": "Gesamt"
@@ -171,5 +176,9 @@
 			"noDigit": "Das Passwort muss eine Ziffer enthalten",
 			"noSymbol": "Das Passwort muss ein Sonderzeichen enthalten, z. B. ! {'@'} # $ % _ - . oder +"
 		}
+	},
+	"readOnly": {
+		"notice": "Sie können diese Daten ansehen, aber nicht ändern.",
+		"hint": "Nur Lesen: Sie können diese Daten ansehen, aber nicht ändern."
 	}
 }

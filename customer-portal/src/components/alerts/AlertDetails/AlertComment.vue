@@ -12,7 +12,7 @@
 			<div v-else class="whitespace-pre-wrap">{{ comment.comment }}</div>
 		</template>
 		<!-- The backend lets a portal user change only their own comments. -->
-		<template v-if="isOwn" #footer-extra>
+		<template v-if="isOwn && !readOnly" #footer-extra>
 			<div v-if="editMode" class="flex items-center gap-2">
 				<n-button
 					size="tiny"
@@ -73,9 +73,11 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
 
-const { comment, alertId } = defineProps<{
+const { comment, alertId, readOnly } = defineProps<{
 	comment: CommentItem
 	alertId: number
+	/** The user may only read this customer's data: no edit or delete (#1312). */
+	readOnly?: boolean
 }>()
 
 const emit = defineEmits<{

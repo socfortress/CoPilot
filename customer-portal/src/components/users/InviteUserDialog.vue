@@ -60,6 +60,14 @@
 				</template>
 			</i18n-t>
 
+			<!-- An auditor or a manager who only consults (#1312). -->
+			<n-checkbox v-model:checked="form.readOnly" data-testid="invite-read-only">
+				<span class="flex flex-col">
+					<span>{{ $t("users.invite.readOnly") }}</span>
+					<span class="text-secondary text-xs">{{ $t("users.invite.readOnlyHint") }}</span>
+				</span>
+			</n-checkbox>
+
 			<n-alert v-if="error" type="error" :bordered="false" data-testid="invite-error">{{ error }}</n-alert>
 
 			<div class="flex justify-end gap-2">
@@ -77,7 +85,7 @@ import type { InviteForm } from "./users"
 import type { PortalCustomer } from "@/types/auth"
 import type { ApiError } from "@/types/common"
 import type { TemporaryPasswordDelivery, TenantUser } from "@/types/users"
-import { NAlert, NButton, NInput, NModal, NSelect } from "naive-ui"
+import { NAlert, NButton, NCheckbox, NInput, NModal, NSelect } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import Api from "@/api"
@@ -98,7 +106,7 @@ const emit = defineEmits<{
 }>()
 const show = defineModel<boolean>("show", { required: true })
 const { t } = useI18n()
-const form = ref<InviteForm>({ username: "", email: "", customerCodes: [] })
+const form = ref<InviteForm>({ username: "", email: "", customerCodes: [], readOnly: false })
 const submitted = ref(false)
 const sending = ref(false)
 const error = ref<string | null>(null)
@@ -110,7 +118,12 @@ const shownProblems = computed(() => (submitted.value ? problems.value : {}))
 
 watch(show, open => {
 	if (!open) return
-	form.value = { username: "", email: "", customerCodes: customers.length === 1 ? [customers[0]!.customer_code] : [] }
+	form.value = {
+		username: "",
+		email: "",
+		customerCodes: customers.length === 1 ? [customers[0]!.customer_code] : [],
+		readOnly: false
+	}
 	submitted.value = false
 	error.value = null
 })
@@ -124,7 +137,8 @@ async function submit() {
 		const response = await Api.users.invite({
 			username: form.value.username.trim(),
 			email: form.value.email.trim(),
-			customer_codes: form.value.customerCodes
+			customer_codes: form.value.customerCodes,
+			read_only: !!form.value.readOnly
 		})
 		const { user, delivery, temporary_password, email_problem } = response.data
 		emit("invited", { user, delivery: { delivery, temporary_password, email_problem } })

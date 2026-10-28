@@ -29,12 +29,24 @@
 							<template #icon><Icon name="carbon:user-multiple" :size="14" /></template>
 							{{ $t("profile.roles.customerAdmin") }}
 						</n-tag>
+						<n-tag v-if="readOnly.length" :bordered="false" data-testid="profile-read-only">
+							<template #icon><Icon name="carbon:view" :size="14" /></template>
+							{{ $t("profile.roles.readOnly") }}
+						</n-tag>
 					</div>
 					<!-- What the account is for, in one line: the SOC appointed a customer admin (#1296). -->
 					<p class="text-secondary m-0 text-sm" data-testid="profile-role-description">
 						<i18n-t v-if="administered.length" keypath="profile.header.managesUsersOf" scope="global">
 							<template #customers>
 								<bdi>{{ administered.map(customer => customer.customer_name).join(", ") }}</bdi>
+							</template>
+						</i18n-t>
+						<template v-else-if="readOnly.length && readOnly.length === customers.length">
+							{{ $t("profile.header.readOnlyAll") }}
+						</template>
+						<i18n-t v-else-if="readOnly.length" keypath="profile.header.readOnlyOn" scope="global">
+							<template #customers>
+								<bdi>{{ readOnly.map(customer => customer.customer_name).join(", ") }}</bdi>
 							</template>
 						</i18n-t>
 						<template v-else>{{ $t("profile.roles.portalUser") }}</template>
@@ -53,6 +65,13 @@
 								data-testid="profile-customer-admin-of"
 							>
 								{{ $t("profile.header.adminBadge") }}
+							</span>
+							<span
+								v-if="customer.read_only"
+								class="text-secondary mt-0.5 font-mono text-[10px] leading-none font-semibold tracking-wider uppercase"
+								data-testid="profile-customer-read-only"
+							>
+								{{ $t("profile.header.readOnlyBadge") }}
 							</span>
 						</span>
 						<span v-if="!customers.length" class="text-secondary text-sm">
@@ -122,6 +141,8 @@ const authStore = useAuthStore()
 const userName = authStore.userName
 const customers = computed(() => authStore.accessibleCustomers)
 const administered = computed(() => customers.value.filter(customer => customer.is_customer_admin))
+// The customers whose data the user may only read (#1312).
+const readOnly = computed(() => customers.value.filter(customer => customer.read_only))
 const userPic = authStore.userPic
 </script>
 

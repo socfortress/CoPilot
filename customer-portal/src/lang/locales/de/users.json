@@ -17,7 +17,9 @@
 		"loadFailed": "Die Benutzer konnten nicht geladen werden.",
 		"done": "Erledigt",
 		"actionFailed": "Die Aktion ist fehlgeschlagen.",
-		"issueFailed": "Es konnte kein temporäres Passwort ausgestellt werden."
+		"issueFailed": "Es konnte kein temporäres Passwort ausgestellt werden.",
+		"makeReadOnly": "Auf Nur Lesen setzen",
+		"allowChanges": "Änderungen erlauben"
 	},
 	"confirm": {
 		"disableTitle": "{username} deaktivieren?",
@@ -36,7 +38,9 @@
 		"disabled": "Deaktiviert",
 		"disabledTitle": "Kann sich nicht anmelden",
 		"password": "Passwortänderung ausstehend",
-		"passwordTitle": "Meldet sich mit einem temporären Passwort an und muss ein eigenes wählen"
+		"passwordTitle": "Meldet sich mit einem temporären Passwort an und muss ein eigenes wählen",
+		"readOnly": "Nur Lesen",
+		"readOnlyTitle": "Kann Ihre Daten ansehen, aber nicht ändern"
 	},
 	"invite": {
 		"title": "Benutzer einladen",
@@ -54,7 +58,9 @@
 			"emailRequired": "Geben Sie eine E-Mail-Adresse ein",
 			"emailInvalid": "Geben Sie eine gültige E-Mail-Adresse ein",
 			"customersRequired": "Wählen Sie mindestens einen Kunden"
-		}
+		},
+		"readOnly": "Nur Lesen",
+		"readOnlyHint": "Sieht alles, ändert nichts: keine Kommentare, Fälle, Statusänderungen oder Berichte."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} wurde eingeladen",

@@ -1,6 +1,7 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<div v-if="caseData.alerts?.length" class="flex items-center justify-end gap-2">
+		<ReadOnlyNotice v-if="readOnly" />
+		<div v-if="caseData.alerts?.length && !readOnly" class="flex items-center justify-end gap-2">
 			<LinkAlert
 				:case-id="caseData.id"
 				size="small"
@@ -31,6 +32,7 @@
 							:label="$t('cases.caseAlerts.assignedTo')"
 						/>
 						<UnlinkCase
+							v-if="!readOnly"
 							:alert-id="alert.id"
 							:case-id="caseData.id"
 							size="small"
@@ -50,7 +52,7 @@
 		</div>
 
 		<n-empty v-else :description="$t('cases.caseAlerts.empty')" class="min-h-50 justify-center">
-			<template #extra>
+			<template v-if="!readOnly" #extra>
 				<div class="flex items-center justify-center gap-2">
 					<LinkAlert
 						:case-id="caseData.id"
@@ -74,12 +76,14 @@ import LinkAlert from "@/components/alerts/LinkAlert.vue"
 import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
+import ReadOnlyNotice from "@/components/common/ReadOnlyNotice.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSettingsStore } from "@/stores/settings"
 import { statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
 import { workflowStatusLabel } from "@/utils/workflowStatus"
 
-defineProps<{
+const { caseData } = defineProps<{
 	caseData: Case
 }>()
 
@@ -88,6 +92,9 @@ const emit = defineEmits<{
 	(e: "unlinked", value: number): void
 	(e: "linked", value: number): void
 }>()
+
+// May only read this customer's data: no alert linked or unlinked (#1312).
+const readOnly = useReadOnly(() => caseData.customer_code)
 
 const dFormats = useSettingsStore().dateFormat
 

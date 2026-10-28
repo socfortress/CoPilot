@@ -52,7 +52,7 @@
 							</span>
 							<span class="text-secondary truncate text-xs" :title="user.email">{{ user.email }}</span>
 							<div
-								v-if="user.must_change_password || user.is_customer_admin || user.disabled_at"
+								v-if="user.must_change_password || user.is_customer_admin || user.read_only || user.disabled_at"
 								class="flex flex-wrap gap-1"
 							>
 								<!-- Manages this customer's other portal users from the portal (#1296). -->
@@ -65,6 +65,16 @@
 									data-testid="security-customer-admin"
 								>
 									Customer admin
+								</n-tag>
+								<!-- May only read this customer's data from the portal (#1312). -->
+								<n-tag
+									v-if="user.read_only"
+									size="tiny"
+									:bordered="false"
+									title="Can view this customer's data in the Customer Portal but not change it."
+									data-testid="security-read-only"
+								>
+									Read-only
 								</n-tag>
 								<n-tag
 									v-if="user.disabled_at"
@@ -336,6 +346,7 @@ const MailIcon = "carbon:email"
 const RefreshIcon = "carbon:renew"
 const KeyIcon = "carbon:password"
 const AdminIcon = "carbon:user-admin"
+const ReadOnlyIcon = "carbon:view"
 const DisableIcon = "carbon:locked"
 const EnableIcon = "carbon:checkmark-outline"
 const MoreIcon = "carbon:overflow-menu-vertical"
@@ -485,7 +496,15 @@ function actionOptions(user: CustomerSecurityUser): DropdownOption[] {
 				{
 					key: "customer-admin",
 					label: user.is_customer_admin ? "Remove customer admin" : "Make customer admin",
-					icon: renderOptionIcon(AdminIcon)
+					icon: renderOptionIcon(AdminIcon),
+					// One role or the other: a customer admin who may change nothing explains nothing (#1312).
+					disabled: !user.is_customer_admin && !!user.read_only
+				},
+				{
+					key: "read-only",
+					label: user.read_only ? "Allow changes" : "Make read-only",
+					icon: renderOptionIcon(ReadOnlyIcon),
+					disabled: !user.read_only && !!user.is_customer_admin
 				},
 				{
 					key: "toggle-disabled",
@@ -508,6 +527,7 @@ function runAction(key: string, user: CustomerSecurityUser) {
 	else if (key === "email-temp-password") openTempPasswordModal(user)
 	else if (key === "set-password") openPasswordModal(user)
 	else if (key === "customer-admin") confirmCustomerAdmin(user)
+	else if (key === "read-only") confirmReadOnly(user)
 	else if (key === "toggle-disabled") confirmDisabled(user)
 }
 
@@ -537,6 +557,23 @@ function confirmCustomerAdmin(user: CustomerSecurityUser) {
 		negativeText: "Cancel",
 		onPositiveClick: () => {
 			act(user, () => Api.security.setCustomerAdmin(customerCode, user.id, appoint))
+		}
+	})
+}
+
+/** View only (#1312): confirmed, since it takes every change away; lifted straight away. */
+function confirmReadOnly(user: CustomerSecurityUser) {
+	if (user.read_only) {
+		act(user, () => Api.security.setReadOnly(customerCode, user.id, false))
+		return
+	}
+	dialog.warning({
+		title: "Make read-only",
+		content: `Let "${user.username}" only view this customer's data in the Customer Portal? They will no longer change statuses, comment, open cases, upload files, generate or delete reports, or ask the SOC.`,
+		positiveText: "Make read-only",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			act(user, () => Api.security.setReadOnly(customerCode, user.id, true))
 		}
 	})
 }

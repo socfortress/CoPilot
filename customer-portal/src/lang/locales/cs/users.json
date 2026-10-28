@@ -17,7 +17,9 @@
 		"loadFailed": "Uživatele se nepodařilo načíst.",
 		"done": "Hotovo",
 		"actionFailed": "Akce se nezdařila.",
-		"issueFailed": "Dočasné heslo se nepodařilo vydat."
+		"issueFailed": "Dočasné heslo se nepodařilo vydat.",
+		"makeReadOnly": "Nastavit jen pro čtení",
+		"allowChanges": "Povolit změny"
 	},
 	"confirm": {
 		"disableTitle": "Deaktivovat uživatele {username}?",
@@ -36,7 +38,9 @@
 		"disabled": "Deaktivován",
 		"disabledTitle": "Nemůže se přihlásit",
 		"password": "Čeká se na změnu hesla",
-		"passwordTitle": "Přihlašuje se dočasným heslem a musí si zvolit vlastní"
+		"passwordTitle": "Přihlašuje se dočasným heslem a musí si zvolit vlastní",
+		"readOnly": "Jen pro čtení",
+		"readOnlyTitle": "Může zobrazit vaše data, ale ne je měnit"
 	},
 	"invite": {
 		"title": "Pozvat uživatele",
@@ -54,7 +58,9 @@
 			"emailRequired": "Zadejte e-mailovou adresu",
 			"emailInvalid": "Zadejte platnou e-mailovou adresu",
 			"customersRequired": "Zvolte alespoň jednoho zákazníka"
-		}
+		},
+		"readOnly": "Jen pro čtení",
+		"readOnlyHint": "Uvidí vše, ale nic nezmění: žádné komentáře, případy, změny stavu ani zprávy."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "Uživatel {username} byl pozván",

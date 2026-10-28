@@ -23,6 +23,7 @@ missing one, so ids cannot be probed. Every action is audited.
 """
 
 from dataclasses import dataclass
+from dataclasses import field
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -99,6 +100,8 @@ class Member:
 
     user: User
     access: Dict[str, bool]  # customer code -> is_customer_admin
+    # customer code -> may only read that customer's data (#1312)
+    read_only: Dict[str, bool] = field(default_factory=dict)
 
 
 async def members_of(codes: List[str], session: AsyncSession, user_id: Optional[int] = None) -> List[Member]:
@@ -119,16 +122,24 @@ async def members_of(codes: List[str], session: AsyncSession, user_id: Optional[
     users = (await session.execute(select(User).where(User.id.in_(ids)).order_by(User.id))).scalars().all()
     rows = (
         await session.execute(
-            select(UserCustomerAccess.user_id, UserCustomerAccess.customer_code, UserCustomerAccess.is_customer_admin).where(
+            select(
+                UserCustomerAccess.user_id,
+                UserCustomerAccess.customer_code,
+                UserCustomerAccess.is_customer_admin,
+                UserCustomerAccess.read_only,
+            ).where(
                 UserCustomerAccess.user_id.in_(ids),
             ),
         )
     ).all()
     access: Dict[int, Dict[str, bool]] = {}
-    for uid, code, is_admin in rows:
+    read_only: Dict[int, Dict[str, bool]] = {}
+    for uid, code, is_admin, only_reads in rows:
         held = access.setdefault(uid, {})
         held[code] = held.get(code, False) or bool(is_admin)
-    return [Member(user=user, access=access.get(user.id, {})) for user in users]
+        reads = read_only.setdefault(uid, {})
+        reads[code] = reads.get(code, False) or bool(only_reads)
+    return [Member(user=user, access=access.get(user.id, {}), read_only=read_only.get(user.id, {})) for user in users]
 
 
 def manage_refusal(caller: User, member: Member, administered: Set[str]) -> Optional[str]:
@@ -157,11 +168,17 @@ def to_tenant_user(caller: User, member: Member, administered: List[str], names:
         username=user.username,
         email=user.email,
         customers=[
-            PortalCustomer(customer_code=code, customer_name=names.get(code, code), is_customer_admin=member.access[code])
+            PortalCustomer(
+                customer_code=code,
+                customer_name=names.get(code, code),
+                is_customer_admin=member.access[code],
+                read_only=member.read_only.get(code, False),
+            )
             for code in administered
             if code in member.access
         ],
         is_customer_admin=any(member.access.get(code) for code in administered),
+        read_only=any(member.read_only.get(code) for code in administered if code in member.access),
         disabled=user.disabled_at is not None,
         disabled_at=user.disabled_at,
         must_change_password=bool(user.must_change_password),
@@ -308,11 +325,15 @@ async def invite(
     session.add(user)
     await session.flush()
     for code in body.customer_codes:
-        session.add(UserCustomerAccess(user_id=user.id, customer_code=code, is_customer_admin=False))
+        session.add(UserCustomerAccess(user_id=user.id, customer_code=code, is_customer_admin=False, read_only=body.read_only))
     await session.commit()
     await session.refresh(user)
 
-    member = Member(user=user, access={code: False for code in body.customer_codes})
+    member = Member(
+        user=user,
+        access={code: False for code in body.customer_codes},
+        read_only={code: body.read_only for code in body.customer_codes},
+    )
     customer_code = audit_customer(member, administered)
     await audit(
         AuditAction.CUSTOMER_USER_INVITE,
@@ -321,7 +342,7 @@ async def invite(
         customer_code,
         "Portal user invited by a customer admin",
         request,
-        new_value={"username": user.username, "email": user.email, "customer_codes": body.customer_codes},
+        new_value={"username": user.username, "email": user.email, "customer_codes": body.customer_codes, "read_only": body.read_only},
     )
     await password_change.record_change_required(user, caller, "invitation", request)
     delivered = await deliver_temporary_password(session, user, body.customer_codes[0] if len(body.customer_codes) == 1 else None, password)
@@ -342,6 +363,30 @@ async def set_disabled(caller: User, user_id: int, disabled: bool, session: Asyn
             audit_customer(member, administered),
             f"Portal user {'disabled' if disabled else 'enabled'} by a customer admin",
             request,
+        )
+    return await view(caller, user_id, administered, session)
+
+
+async def set_read_only(caller: User, user_id: int, read_only: bool, session: AsyncSession, request: Optional[Request]) -> TenantUser:
+    """Let a portal user only read the caller's customers' data, or change it again (#1312).
+
+    On every customer of theirs the caller administers, which is every customer they hold
+    (``manage_refusal`` refuses an account that also belongs elsewhere).
+    """
+    administered, member = await manageable(caller, user_id, session)
+    codes = [code for code in administered if code in member.access]
+    if await security_admin.set_read_only(session, codes, member.user, read_only):
+        await record_audit_event(
+            action=AuditAction.CUSTOMER_USER_READ_ONLY_UPDATE,
+            actor_user_id=caller.id,
+            actor_username=caller.username,
+            customer_code=audit_customer(member, administered),
+            entity_type="user",
+            entity_id=member.user.username,
+            old_value={"read_only": not read_only},
+            new_value={"read_only": read_only},
+            details="Read-only access changed by a customer admin",
+            request=request,
         )
     return await view(caller, user_id, administered, session)
 

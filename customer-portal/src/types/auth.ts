@@ -26,6 +26,8 @@ export interface PortalCustomer {
 	customer_name: string
 	/** The user administers this customer's portal users (#1296): set by the SOC only. */
 	is_customer_admin?: boolean
+	/** The user may only read this customer's data (#1312): set by the SOC or a customer admin. */
+	read_only?: boolean
 }
 
 /** `GET /customer_portal/me`: read live, unlike the token's `customer_codes` claim. */

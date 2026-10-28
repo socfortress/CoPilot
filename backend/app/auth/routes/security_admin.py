@@ -45,6 +45,8 @@ class CustomerSecurityUser(BaseModel):
     must_change_password: bool = False
     # Administers this customer's portal users from the portal (#1296).
     is_customer_admin: bool = False
+    # May only read this customer's data from the portal (#1312).
+    read_only: bool = False
     # Set while the account is disabled (#1296): it cannot sign in.
     disabled_at: Optional[datetime.datetime] = None
 
@@ -57,6 +59,10 @@ class CustomerSecurityUsersResponse(BaseModel):
 
 class CustomerAdminRequest(BaseModel):
     is_customer_admin: bool
+
+
+class ReadOnlyRequest(BaseModel):
+    read_only: bool
 
 
 class SmtpStatusResponse(BaseModel):
@@ -184,6 +190,43 @@ async def set_customer_admin(
         )
     verb = "now administers" if payload.is_customer_admin else "no longer administers"
     return ActionResponse(success=True, message=f"{user.username} {verb} this customer's portal users.")
+
+
+@security_admin_router.put(
+    "/security/customers/{customer_code}/users/{user_id}/read-only",
+    response_model=ActionResponse,
+    description="Let a portal user only read this customer's data from the portal, or change it again (#1312).",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def set_read_only(
+    customer_code: str,
+    user_id: int,
+    payload: ReadOnlyRequest,
+    http_request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ActionResponse:
+    user = await _get_user_or_404(db, user_id)
+    changed = await security_admin.set_read_only(db, [customer_code], user, payload.read_only)
+    if changed:
+        await record_audit_event(
+            action=AuditAction.CUSTOMER_USER_READ_ONLY_UPDATE,
+            actor_user_id=current_user.id,
+            actor_username=current_user.username,
+            customer_code=customer_code,
+            entity_type="user",
+            entity_id=user.username,
+            old_value={"read_only": not payload.read_only},
+            new_value={"read_only": payload.read_only},
+            details="Read-only access changed by the SOC",
+            request=http_request,
+        )
+    message = (
+        f"{user.username} can now only read this customer's data."
+        if payload.read_only
+        else f"{user.username} can change this customer's data again."
+    )
+    return ActionResponse(success=True, message=message)
 
 
 async def _set_disabled(user_id: int, disabled: bool, http_request: Request, current_user: User, db: AsyncSession) -> ActionResponse:

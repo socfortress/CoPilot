@@ -17,7 +17,9 @@
 		"loadFailed": "Kan de gebruikers niet laden.",
 		"done": "Klaar",
 		"actionFailed": "De actie is mislukt.",
-		"issueFailed": "Kan geen tijdelijk wachtwoord uitgeven."
+		"issueFailed": "Kan geen tijdelijk wachtwoord uitgeven.",
+		"makeReadOnly": "Alleen-lezen maken",
+		"allowChanges": "Wijzigingen toestaan"
 	},
 	"confirm": {
 		"disableTitle": "{username} uitschakelen?",
@@ -36,7 +38,9 @@
 		"disabled": "Uitgeschakeld",
 		"disabledTitle": "Kan niet inloggen",
 		"password": "Wachtwoordwijziging in behandeling",
-		"passwordTitle": "Logt in met een tijdelijk wachtwoord en moet een eigen wachtwoord kiezen"
+		"passwordTitle": "Logt in met een tijdelijk wachtwoord en moet een eigen wachtwoord kiezen",
+		"readOnly": "Alleen-lezen",
+		"readOnlyTitle": "Kan je gegevens bekijken maar niet wijzigen"
 	},
 	"invite": {
 		"title": "Gebruiker uitnodigen",
@@ -54,7 +58,9 @@
 			"emailRequired": "Voer een e-mailadres in",
 			"emailInvalid": "Voer een geldig e-mailadres in",
 			"customersRequired": "Kies minstens één klant"
-		}
+		},
+		"readOnly": "Alleen-lezen",
+		"readOnlyHint": "Ziet alles maar wijzigt niets: geen opmerkingen, zaken, statuswijzigingen of rapporten."
 	},
 	"temporaryPassword": {
 		"invitedTitle": "{username} is uitgenodigd",

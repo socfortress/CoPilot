@@ -76,6 +76,8 @@ def _patches(**services):
     for name in ("_ensure_alert_access", "_ensure_case_access", "_ensure_customer_access"):
         stack.enter_context(patch.object(dbo, name, AsyncMock()))
     stack.enter_context(patch.object(dbo.customer_access_handler, "check_customer_access", AsyncMock(return_value=True)))
+    # Not read-only on anything (#1312).
+    stack.enter_context(patch.object(dbo, "ensure_may_write", AsyncMock()))
     stack.enter_context(patch.object(dbo, "emit", MagicMock()))
     stack.enter_context(patch.object(dbo, "record_audit_event", AsyncMock()))
     stack.enter_context(patch.object(case_events, "emit_case_event", AsyncMock()))
@@ -114,7 +116,7 @@ def test_a_portal_status_change_is_recorded_with_a_non_soc_actor():
 
 
 def test_bulk_status_records_only_the_alerts_that_changed():
-    async def access(alert_id, user, db):
+    async def access(alert_id, user, db, *, write=False):
         if alert_id == 2:
             raise dbo.HTTPException(status_code=403, detail="no")
         return SimpleNamespace(id=alert_id, status="OPEN", customer_code="ACME")

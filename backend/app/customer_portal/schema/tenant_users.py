@@ -31,6 +31,8 @@ class TenantUser(BaseModel):
     email: str
     customers: List[PortalCustomer]
     is_customer_admin: bool
+    # May only read their (administered) customers' data (#1312).
+    read_only: bool = False
     disabled: bool
     disabled_at: Optional[datetime.datetime] = None
     must_change_password: bool
@@ -58,6 +60,8 @@ class InviteRequest(BaseModel):
     username: str = Field(description=f"Username: {USERNAME_RULE}")
     email: EmailStr
     customer_codes: List[str] = Field(min_length=1, description="Customers the user may see: at least one the caller administers")
+    # The new user may only read those customers' data (#1312).
+    read_only: bool = False
 
     @field_validator("username")
     @classmethod
@@ -71,6 +75,12 @@ class InviteRequest(BaseModel):
     @classmethod
     def unique_codes(cls, value: List[str]) -> List[str]:
         return list(dict.fromkeys(code.strip() for code in value if code.strip()))
+
+
+class ReadOnlyRequest(BaseModel):
+    """Let a portal user only read their customers' data, or change it again (#1312)."""
+
+    read_only: bool
 
 
 Delivery = Literal["email", "shown"]

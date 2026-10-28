@@ -60,6 +60,7 @@ from app.auth.models.users import User
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.auth.services.read_only import ensure_may_write
 from app.connectors.talon.services.talon_service_account import (
     refuse_talon_service_account_dependency,
 )
@@ -663,6 +664,8 @@ async def mark_agent_as_critical(
                 detail=f"Agent with agent_id {agent_id} not found or access denied",
             )
 
+        # Criticality is the customer's data: a portal user who may only read it is refused (#1312).
+        await ensure_may_write(current_user, agent.customer_code, session)
         agent.critical_asset = True
         await session.commit()
 
@@ -670,8 +673,12 @@ async def mark_agent_as_critical(
             success=True,
             message=f"Agent {agent_id} marked as critical: {True}",
         )
+    except HTTPException:
+        # Not found, or read-only (#1312): its own status, not a 500.
+        await session.rollback()
+        raise
     except Exception as e:
-        session.rollback()  # Roll back the session in case of error
+        await session.rollback()  # Roll back the session in case of error
         raise HTTPException(
             status_code=500,
             detail=f"Failed to mark agent as critical: {str(e)}",
@@ -724,6 +731,8 @@ async def mark_agent_as_not_critical(
                 detail=f"Agent with agent_id {agent_id} not found or access denied",
             )
 
+        # Criticality is the customer's data: a portal user who may only read it is refused (#1312).
+        await ensure_may_write(current_user, agent.customer_code, session)
         agent.critical_asset = False
         await session.commit()
 
@@ -731,6 +740,10 @@ async def mark_agent_as_not_critical(
             success=True,
             message=f"Agent {agent_id} marked as not critical",
         )
+    except HTTPException:
+        # Not found, or read-only (#1312): its own status, not a 500.
+        await session.rollback()
+        raise
     except Exception as e:
         await session.rollback()  # Roll back the session in case of error
         raise HTTPException(

@@ -143,7 +143,12 @@
 			"alert": "Leur délai de réponse pour cette alerte est suspendu jusqu'à votre réponse. Répondez dans les commentaires pour la renvoyer aux analystes.",
 			"case": "Leur délai de réponse pour ce dossier est suspendu jusqu'à votre réponse. Répondez dans les commentaires pour le renvoyer aux analystes."
 		},
-		"reply": "Répondre"
+		"reply": "Répondre",
+		"readOnly": "Votre compte est en lecture seule ici : un collègue autorisé à modifier les données doit répondre.",
+		"bodyReadOnly": {
+			"alert": "Leur délai de réponse pour cette alerte est suspendu jusqu'à la réponse de votre organisation.",
+			"case": "Leur délai de réponse pour ce dossier est suspendu jusqu'à la réponse de votre organisation."
+		}
 	},
 	"charts": {
 		"total": "Total"
@@ -171,5 +176,9 @@
 			"noDigit": "Le mot de passe doit contenir un chiffre",
 			"noSymbol": "Le mot de passe doit contenir un symbole, comme ! {'@'} # $ % _ - . ou +"
 		}
+	},
+	"readOnly": {
+		"notice": "Vous pouvez consulter ces données mais pas les modifier.",
+		"hint": "Lecture seule : vous pouvez consulter ces données mais pas les modifier."
 	}
 }

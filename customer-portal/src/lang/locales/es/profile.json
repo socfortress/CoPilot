@@ -1,13 +1,18 @@
 {
 	"roles": {
 		"customerAdmin": "Administrador del cliente",
-		"portalUser": "Usuario del portal"
+		"portalUser": "Usuario del portal",
+		"readOnly": "Solo lectura",
+		"readOnlyUser": "Usuario de solo lectura"
 	},
 	"header": {
 		"avatarAlt": "avatar",
 		"managesUsersOf": "Invita y gestiona a los usuarios del portal de {customers}. Designado por tu SOC.",
 		"adminBadge": "admin",
-		"noCustomer": "Ningún cliente"
+		"noCustomer": "Ningún cliente",
+		"readOnlyAll": "Puede ver los datos de tu organización pero no modificarlos.",
+		"readOnlyOn": "Puede ver los datos de {customers} pero no modificarlos.",
+		"readOnlyBadge": "solo lectura"
 	},
 	"tabs": {
 		"settings": "Ajustes",

@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai_analyst.services.ai_analyst import get_alert_analysis
 from app.auth.models.users import User
+from app.auth.services.read_only import is_read_only_for
 from app.customer_portal.schema.ai_reports import PortalAiInsightAlert
 from app.customer_portal.schema.ai_reports import PortalAiInvestigation
 from app.customer_portal.schema.ai_reports import PortalAiIoc
@@ -221,7 +222,8 @@ async def get_portal_alert_analysis(
     settings = await get_ai_report_settings(alert.customer_code, session)
     if not (settings and settings.enabled):
         return PortalAlertAnalysis(False, False, None, None, [])
-    can_request = requests_allowed(settings)
+    # Never offered to a user who may only read the alert's customer (#1312): the request is refused.
+    can_request = requests_allowed(settings) and not await is_read_only_for(user, alert.customer_code, session)
 
     job, report, iocs = await get_alert_analysis(alert_id, session)
     if not job:

@@ -11,6 +11,7 @@
 			<CardKV label="critical_asset">
 				<AgentCriticalSelect
 					:agent-id="agent.agent_id"
+					:customer-code="agent.customer_code"
 					:critical="agent.critical_asset"
 					@success="handleCriticalAssetUpdateSuccess"
 				/>

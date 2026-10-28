@@ -42,7 +42,8 @@
 			<n-empty v-else :description="$t('cases.caseFiles.empty')" class="min-h-50 justify-center" />
 		</n-spin>
 
-		<div class="flex flex-col gap-2">
+		<ReadOnlyNotice v-if="readOnly" />
+		<div v-else class="flex flex-col gap-2">
 			<n-upload v-model:file-list="fileList" :max="1" :disabled="uploadingFile">
 				<n-upload-dragger>
 					<div>
@@ -80,13 +81,19 @@ import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
 import Icon from "@/components/common/Icon.vue"
+import ReadOnlyNotice from "@/components/common/ReadOnlyNotice.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatBytes, formatDate } from "@/utils/format"
 
-const { caseId } = defineProps<{
+const { caseId, customerCode } = defineProps<{
 	caseId: number
+	/** The case's customer: read-only there, no upload (#1312). */
+	customerCode?: string | null
 }>()
+
+const readOnly = useReadOnly(() => customerCode)
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

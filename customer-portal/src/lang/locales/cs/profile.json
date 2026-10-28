@@ -1,13 +1,18 @@
 {
 	"roles": {
 		"customerAdmin": "Správce zákazníka",
-		"portalUser": "Uživatel portálu"
+		"portalUser": "Uživatel portálu",
+		"readOnly": "Jen pro čtení",
+		"readOnlyUser": "Uživatel jen pro čtení"
 	},
 	"header": {
 		"avatarAlt": "avatar",
 		"managesUsersOf": "Zve a spravuje uživatele portálu zákazníků {customers}. Jmenován vaším SOC.",
 		"adminBadge": "správce",
-		"noCustomer": "Žádný zákazník"
+		"noCustomer": "Žádný zákazník",
+		"readOnlyAll": "Může zobrazit data vaší organizace, ale ne je měnit.",
+		"readOnlyOn": "Může zobrazit data zákazníků {customers}, ale ne je měnit.",
+		"readOnlyBadge": "jen čtení"
 	},
 	"tabs": {
 		"settings": "Nastavení",

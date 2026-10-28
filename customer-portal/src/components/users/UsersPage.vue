@@ -123,6 +123,15 @@
 						</n-button>
 						<n-button
 							size="small"
+							secondary
+							:disabled="busy === user.id"
+							data-testid="users-toggle-read-only"
+							@click="toggleReadOnly(user)"
+						>
+							{{ user.read_only ? $t("users.page.allowChanges") : $t("users.page.makeReadOnly") }}
+						</n-button>
+						<n-button
+							size="small"
 							:type="user.disabled ? 'success' : 'error'"
 							secondary
 							:loading="busy === user.id"
@@ -262,6 +271,11 @@ function toggleDisabled(user: TenantUser) {
 			act(user, () => Api.users.disable(user.id))
 		}
 	})
+}
+
+/** View only, or change again (#1312): nothing is lost either way, so no confirmation. */
+function toggleReadOnly(user: TenantUser) {
+	act(user, () => Api.users.setReadOnly(user.id, !user.read_only))
 }
 
 function confirmResetTotp(user: TenantUser) {

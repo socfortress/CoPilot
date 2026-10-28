@@ -1,6 +1,7 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<div v-if="alert.linked_cases?.length" class="flex items-center justify-end gap-2">
+		<ReadOnlyNotice v-if="readOnly" />
+		<div v-if="alert.linked_cases?.length && !readOnly" class="flex items-center justify-end gap-2">
 			<n-button size="small" :loading="creatingCase" @click="createCase">
 				{{ $t("alerts.cases.createCase") }}
 			</n-button>
@@ -37,6 +38,7 @@
 				<template #footer-extra>
 					<div class="flex flex-wrap items-center justify-end gap-2">
 						<UnlinkCase
+							v-if="!readOnly"
 							:alert-id="alert.id"
 							:case-id="linkedCase.id"
 							size="small"
@@ -58,7 +60,7 @@
 		</div>
 
 		<n-empty v-else :description="$t('alerts.cases.empty')" class="min-h-50 justify-center">
-			<template #extra>
+			<template v-if="!readOnly" #extra>
 				<div class="flex items-center justify-center gap-2">
 					<n-button type="primary" size="small" :loading="creatingCase" @click="createCase">
 						{{ $t("alerts.cases.createCase") }}
@@ -90,6 +92,8 @@ import CaseDetailsButton from "@/components/cases/CaseDetailsButton.vue"
 import UnlinkCase from "@/components/cases/UnlinkCase.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Chip from "@/components/common/Chip.vue"
+import ReadOnlyNotice from "@/components/common/ReadOnlyNotice.vue"
+import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, statusTagProps } from "@/utils"
 import { formatDate } from "@/utils/format"
@@ -105,6 +109,9 @@ const emit = defineEmits<{
 	(e: "unlinked", value: number): void
 	(e: "linked", value: number): void
 }>()
+
+// May only read this customer's data: no case opened, linked or unlinked (#1312).
+const readOnly = useReadOnly(() => alert.customer_code)
 
 const dFormats = useSettingsStore().dateFormat
 const creatingCase = ref(false)

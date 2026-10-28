@@ -29,6 +29,7 @@ from app.auth.models.users import Password
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.models.users import UserCustomerAccess
+from app.auth.services.read_only import forget_read_only
 from app.time_utils import now_utc
 
 TEMP_PASSWORD_LENGTH = 16
@@ -49,16 +50,18 @@ async def list_customer_users(session: AsyncSession, customer_code: str) -> List
     accounts actually bound to this customer (the "customers").
     """
     result = await session.execute(
-        select(User, UserCustomerAccess.is_customer_admin)
+        select(User, UserCustomerAccess.is_customer_admin, UserCustomerAccess.read_only)
         .join(UserCustomerAccess, UserCustomerAccess.user_id == User.id)
         .where(UserCustomerAccess.customer_code == customer_code),
     )
     admin_of_this_customer: Dict[int, bool] = {}
+    read_only_on_this_customer: Dict[int, bool] = {}
     users: List[User] = []
-    for user, is_admin in result.all():
+    for user, is_admin, read_only in result.all():
         if user.id not in admin_of_this_customer:
             users.append(user)
         admin_of_this_customer[user.id] = admin_of_this_customer.get(user.id, False) or bool(is_admin)
+        read_only_on_this_customer[user.id] = read_only_on_this_customer.get(user.id, False) or bool(read_only)
     if not users:
         return []
 
@@ -78,6 +81,8 @@ async def list_customer_users(session: AsyncSession, customer_code: str) -> List
             "must_change_password": bool(u.must_change_password),
             # Administers this customer's portal users from the portal (#1296).
             "is_customer_admin": admin_of_this_customer.get(u.id, False),
+            # May only read this customer's data from the portal (#1312).
+            "read_only": read_only_on_this_customer.get(u.id, False),
             "disabled_at": u.disabled_at,
         }
         for u in users
@@ -103,11 +108,51 @@ async def set_customer_admin(session: AsyncSession, customer_code: str, user: Us
     )
     if not rows:
         raise HTTPException(status_code=400, detail=f"User {user.username!r} does not have access to customer {customer_code!r}.")
+    if is_customer_admin and any(row.read_only for row in rows):
+        raise HTTPException(status_code=409, detail=READ_ONLY_ADMIN)
     changed = any(bool(row.is_customer_admin) != is_customer_admin for row in rows)
     for row in rows:
         row.is_customer_admin = is_customer_admin
         session.add(row)
     await session.commit()
+    return changed
+
+
+READ_ONLY_ADMIN = "A customer administrator can't be read-only: remove one role before giving the other."
+
+
+async def access_rows(session: AsyncSession, user: User, customer_codes: List[str]) -> List[UserCustomerAccess]:
+    """``user``'s access rows for ``customer_codes``."""
+    result = await session.execute(
+        select(UserCustomerAccess).where(UserCustomerAccess.user_id == user.id, UserCustomerAccess.customer_code.in_(customer_codes)),
+    )
+    return list(result.scalars().all())
+
+
+async def set_read_only(session: AsyncSession, customer_codes: List[str], user: User, read_only: bool) -> bool:
+    """Let a portal user only read ``customer_codes``' data, or change it again (#1312).
+
+    Returns whether anything changed. Only a ``customer_user`` with access to every one of those
+    customers, and never one who administers any of them: an administrator who may change
+    nothing is a state nobody could explain.
+    """
+    if user.role_id != RoleEnum.customer_user.value:
+        raise HTTPException(status_code=400, detail="Only a Customer Portal user can be read-only.")
+    rows = await access_rows(session, user, customer_codes)
+    missing = sorted(set(customer_codes) - {row.customer_code for row in rows})
+    if missing or not rows:
+        raise HTTPException(
+            status_code=400,
+            detail=f"User {user.username!r} does not have access to customer {(missing or customer_codes)[0]!r}.",
+        )
+    if read_only and any(row.is_customer_admin for row in rows):
+        raise HTTPException(status_code=409, detail=READ_ONLY_ADMIN)
+    changed = any(bool(row.read_only) != read_only for row in rows)
+    for row in rows:
+        row.read_only = read_only
+        session.add(row)
+    await session.commit()
+    forget_read_only(session, user.id)
     return changed
 
 

@@ -9,7 +9,7 @@
 				class="w-auto!"
 				@loaded="handleFiltersLoaded"
 			/>
-			<CreateCaseButton secondary @success="handleCreated" />
+			<CreateCaseButton v-if="authStore.writableCustomers.length" secondary @success="handleCreated" />
 		</div>
 
 		<div class="flex flex-col gap-2">
@@ -87,6 +87,7 @@ import Icon from "@/components/common/Icon.vue"
 import KeyValueFilter from "@/components/common/KeyValueFilter.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { usePaginatedLoad } from "@/composables/common/usePaginatedLoad"
+import { useAuthStore } from "@/stores/auth"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage, statusTagProps } from "@/utils"
@@ -94,6 +95,8 @@ import { formatDate } from "@/utils/format"
 import { filterValueLabel, statusFilterFromQuery } from "@/utils/workflowStatus"
 
 const message = useMessage()
+// Only for customers whose data the user may change (#1312).
+const authStore = useAuthStore()
 const { t } = useI18n()
 const { loading, run } = useLatestRequest()
 const data = ref<Case[]>([])
@@ -144,6 +147,7 @@ const columns = computed<DataTableColumns<Case>>(() => [
 			return (
 				<CaseAssignedSelect
 					caseId={row.id}
+					customerCode={row.customer_code}
 					assignedTo={row.assigned_to}
 					assignedAvailable={assignedAvailable.value}
 					onSuccess={handleAssignedToUpdateSuccess}
@@ -166,7 +170,12 @@ const columns = computed<DataTableColumns<Case>>(() => [
 							icon: () => <Icon name="carbon:circle-solid" />
 						}}
 					/>
-					<CaseStatusSelect caseId={row.id} status={row.case_status} onSuccess={handleStatusUpdateSuccess} />
+					<CaseStatusSelect
+						caseId={row.id}
+						status={row.case_status}
+						customerCode={row.customer_code}
+						onSuccess={handleStatusUpdateSuccess}
+					/>
 				</div>
 			)
 		}

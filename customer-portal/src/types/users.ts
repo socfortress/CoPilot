@@ -12,6 +12,8 @@ export interface TenantUser {
 	/** Only the customers the caller administers: another customer is never named. */
 	customers: PortalCustomer[]
 	is_customer_admin: boolean
+	/** May only read their (administered) customers' data (#1312). */
+	read_only?: boolean
 	disabled: boolean
 	disabled_at: string | null
 	must_change_password: boolean
@@ -35,6 +37,8 @@ export interface InvitePayload {
 	username: string
 	email: string
 	customer_codes: string[]
+	/** The new user may only read those customers' data (#1312). */
+	read_only?: boolean
 }
 
 /**

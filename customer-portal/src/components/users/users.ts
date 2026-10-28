@@ -15,6 +15,8 @@ export interface InviteForm {
 	username: string
 	email: string
 	customerCodes: string[]
+	/** The new user may only read those customers' data (#1312). */
+	readOnly?: boolean
 }
 
 /** What is wrong with an invitation, field by field; empty when it can be sent. */
@@ -49,6 +51,9 @@ export function statusTags(user: TenantUser): StatusTag[] {
 	}
 	if (user.is_customer_admin) {
 		tags.push({ key: "admin", label: t("users.tags.admin"), type: "info", title: t("users.tags.adminTitle") })
+	}
+	if (user.read_only) {
+		tags.push({ key: "readOnly", label: t("users.tags.readOnly"), type: "default", title: t("users.tags.readOnlyTitle") })
 	}
 	if (user.disabled) {
 		tags.push({
