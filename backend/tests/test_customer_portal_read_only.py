@@ -514,6 +514,8 @@ def test_an_admin_makes_a_portal_user_read_only_on_one_customer_audited_once():
 
     on, again, listed, refused_now, off, allowed_again, audits = call(scenario)
     assert on.status_code == 200 and again.status_code == 200 and off.status_code == 200
+    assert on.json()["message"] == "writer can now only read this customer's data."
+    assert off.json()["message"] == "writer can change this customer's data again."
     assert {u["username"]: u["read_only"] for u in listed} == {"ana": False, "reader": True, "writer": True, "boss": False, "solo": False}
     assert refused(refused_now) and allowed_again.status_code == 200
     assert [(a["old_value"], a["new_value"], a["customer_code"], a["entity_id"]) for a in audits] == [

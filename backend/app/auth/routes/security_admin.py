@@ -221,8 +221,12 @@ async def set_read_only(
             details="Read-only access changed by the SOC",
             request=http_request,
         )
-    verb = "can now only read" if payload.read_only else "can change again"
-    return ActionResponse(success=True, message=f"{user.username} {verb} this customer's data.")
+    message = (
+        f"{user.username} can now only read this customer's data."
+        if payload.read_only
+        else f"{user.username} can change this customer's data again."
+    )
+    return ActionResponse(success=True, message=message)
 
 
 async def _set_disabled(user_id: int, disabled: bool, http_request: Request, current_user: User, db: AsyncSession) -> ActionResponse:
