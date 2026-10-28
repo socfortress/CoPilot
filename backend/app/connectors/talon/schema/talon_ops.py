@@ -98,6 +98,9 @@ class TalonOpsRun(BaseModel):
     duration_ms: Optional[int] = None
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
+    #: ``disk_forecast``'s run record, allowlisted (``disk_detail``: ``{tick, nodes: {node: {used, total}}}``,
+    #: bytes); on ``/runs`` only (the jobs list leaves it out). None for every other job.
+    detail: Optional[Dict[str, Any]] = None
 
 
 class TalonOpsJob(BaseModel):
@@ -138,6 +141,49 @@ class TalonOpsRunNow(BaseModel):
     job: str
     workflow_id: Optional[str] = None
     status: str
+
+
+class TalonOpsCounts(BaseModel):
+    """Open findings by severity, and how many of them a job couldn't measure lately (``stale``)."""
+
+    total: int = 0
+    high: int = 0
+    medium: int = 0
+    low: int = 0
+    info: int = 0
+    stale: int = 0
+
+
+class TalonOpsJobCounts(TalonOpsCounts):
+    job: str
+
+
+class TalonOpsCustomerCounts(TalonOpsCounts):
+    #: None: platform findings (only for a caller who may see every customer).
+    customer_code: Optional[str] = None
+
+
+class TalonOpsSummary(BaseModel):
+    """Open finding counts (talon-analyst ``GET /v2/ops/summary``), as ``services/talon_ops.py`` checked them.
+
+    When CoPilot dropped a ``by_customer`` row (not one of the caller's customers, or malformed), or the
+    rows didn't add up to the totals, ``open`` is recomputed from the rows kept, and ``by_job``,
+    ``acknowledged`` and ``muted`` (which can't be split by customer) are withheld: empty and None."""
+
+    success: bool = True
+    message: str = "Ops summary retrieved"
+    open: TalonOpsCounts
+    acknowledged: Optional[int] = None
+    muted: Optional[int] = None
+    by_job: List[TalonOpsJobCounts] = []
+    by_customer: List[TalonOpsCustomerCounts] = []
+    #: ``by_customer`` rows talon-analyst sent that CoPilot didn't show. Logged; never expected.
+    dropped: int = 0
+    #: True when the counts were recomputed and the per-job, acknowledged and muted counts withheld.
+    withheld: bool = False
+    #: True when, at talon-analyst's 50-row cap, the rows didn't add up to its totals for a caller
+    #: without every customer: the counts are the top 50 customers' only, a lower bound.
+    partial: bool = False
 
 
 class TalonOpsMuteRequest(BaseModel):

@@ -46,23 +46,6 @@
 						{{ jobLabel(finding.job, titles) }}
 						<span class="text-tertiary">· {{ kindLabel(finding.kind) }}</span>
 					</dd>
-					<dt class="text-secondary">First seen</dt>
-					<dd>{{ formatTime(finding.first_seen) }}</dd>
-					<dt class="text-secondary">Last seen</dt>
-					<dd>{{ formatTime(finding.last_seen) }}</dd>
-					<template v-if="finding.stale_since">
-						<dt class="text-secondary">Not measured since</dt>
-						<dd class="text-warning">{{ formatTime(finding.stale_since) }}</dd>
-					</template>
-					<template v-if="finding.resolved_at">
-						<dt class="text-secondary">Resolved</dt>
-						<dd>
-							{{ formatTime(finding.resolved_at) }}
-							<template v-if="finding.resolved_reason">
-								({{ finding.resolved_reason.replace(/_/g, " ") }})
-							</template>
-						</dd>
-					</template>
 					<template v-if="finding.acted_by">
 						<dt class="text-secondary">Last action by</dt>
 						<dd>
@@ -71,6 +54,25 @@
 						</dd>
 					</template>
 				</dl>
+
+				<nav
+					v-if="links.length"
+					aria-label="Open in CoPilot"
+					class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
+					data-testid="talon-ops-detail-links"
+				>
+					<span class="text-secondary text-xs">Open in CoPilot</span>
+					<router-link
+						v-for="link of links"
+						:key="link.key"
+						:to="link.to"
+						class="text-primary inline-flex items-center gap-1 no-underline hover:underline"
+						:data-testid="`talon-ops-detail-link-${link.key}`"
+					>
+						<Icon :name="link.icon" :size="12" />
+						<bdi>{{ link.label }}</bdi>
+					</router-link>
+				</nav>
 
 				<section aria-label="Why it matters" class="flex flex-col gap-2">
 					<h4 class="text-secondary text-xs font-semibold uppercase">Why it matters</h4>
@@ -100,24 +102,43 @@
 				<section aria-label="Evidence" class="flex flex-col gap-2">
 					<div class="flex items-center justify-between gap-2">
 						<h4 class="text-secondary text-xs font-semibold uppercase">Evidence</h4>
-						<n-button
-							v-if="finding.evidence"
-							text
-							size="tiny"
-							data-testid="talon-ops-detail-evidence-toggle"
-							@click="showJson = !showJson"
-						>
-							{{ showJson ? "Show as a list" : "Show JSON" }}
-						</n-button>
+						<div class="flex items-center gap-3">
+							<n-button
+								v-if="finding.evidence && hasView && evidenceMode !== 'json'"
+								text
+								size="tiny"
+								data-testid="talon-ops-detail-evidence-view-toggle"
+								@click="evidenceMode = evidenceMode === 'view' ? 'list' : 'view'"
+							>
+								{{ evidenceMode === "view" ? "Show as a list" : "Show the summary" }}
+							</n-button>
+							<n-button
+								v-if="finding.evidence"
+								text
+								size="tiny"
+								data-testid="talon-ops-detail-evidence-toggle"
+								@click="toggleJson()"
+							>
+								{{ evidenceMode === "json" ? (hasView ? "Hide JSON" : "Show as a list") : "Show JSON" }}
+							</n-button>
+						</div>
 					</div>
 					<p v-if="!finding.evidence" class="text-tertiary text-sm">
 						{{ finding.evidence_truncated ? "The evidence was too large to show here." : "No evidence." }}
 					</p>
 					<pre
-						v-else-if="showJson"
+						v-else-if="evidenceMode === 'json'"
 						class="bg-secondary max-h-80 overflow-auto rounded-md p-2 text-xs"
 						data-testid="talon-ops-detail-evidence-json"
 					>{{ evidenceJson(finding) }}</pre>
+					<div v-else-if="evidenceMode === 'view' && hasView" data-testid="talon-ops-detail-evidence-view">
+						<OpsEvidence
+							:finding
+							:is-admin
+							:settings="settings[finding.job] ?? null"
+							:schedule="schedules[finding.job] ?? null"
+						/>
+					</div>
 					<dl
 						v-else
 						class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm"
@@ -128,7 +149,7 @@
 								<bdi>{{ row.key }}</bdi>
 							</dt>
 							<dd class="break-all">
-								<bdi v-if="row.text !== null">{{ row.text }}</bdi>
+								<bdi v-if="row.text !== null" :title="row.title">{{ row.text }}</bdi>
 								<pre v-else class="bg-secondary overflow-auto rounded p-1 text-xs">{{ row.json }}</pre>
 							</dd>
 						</template>
@@ -159,6 +180,8 @@
 						Built by Talon's job from a template. Review it before you use it.
 					</p>
 				</section>
+
+				<OpsFindingHistory :finding :is-admin />
 
 				<n-alert v-if="actionFailure" type="error" :bordered="false" data-testid="talon-ops-action-error">
 					<bdi>{{ actionFailure }}</bdi>
@@ -203,6 +226,20 @@
 								data-testid="talon-ops-mute-until"
 							/>
 						</label>
+						<div class="flex gap-1" role="group" aria-label="Mute for">
+							<n-button
+								v-for="days of MUTE_PRESETS"
+								:key="days"
+								size="small"
+								tertiary
+								:disabled="acting !== null"
+								:title="`Mute until ${days === 1 ? 'this time tomorrow' : `${days} days from now`}`"
+								:data-testid="`talon-ops-mute-preset-${days}`"
+								@click="muteUntil = muteUntilIn(days)"
+							>
+								{{ days === 1 ? "1 day" : `${days} days` }}
+							</n-button>
+						</div>
 						<n-button
 							size="small"
 							secondary
@@ -230,18 +267,25 @@
 <script setup lang="ts">
 // One ops finding, in a side drawer: severity, status, the customer and job, the times; Talon's
 // explanation and recommendation as plain text (a model wrote them: never v-html, never Markdown);
-// the evidence as a key-value list or JSON; any artifact in a copyable code block; and the actions
-// its status allows (acknowledge, mute until a time, reopen). The actor is the signed-in user, which
-// CoPilot adds; the finding's stored customer is sent back so a finding that moved is refused.
+// links out to the agent(s), the customer, index management or the alerts (`findingLinks`: from the
+// finding's fields and evidence ids only); the evidence as its job's view (`evidence/`: units, tables, bars,
+// `disk_forecast`'s chart), with the key-value list and JSON as fallbacks; any artifact in a copyable
+// code block; its history (`OpsFindingHistory`: its times and its job's runs since first seen); and the actions
+// its status allows (acknowledge, mute until a picked time or for 1, 7 or 30 days, reopen). The actor
+// is the signed-in user, which CoPilot adds; the finding's stored customer is sent back so a finding
+// that moved is refused.
 import type { TalonOpsFailure } from "@/api/endpoints/talonOps"
 import type { TalonOpsFinding } from "@/types/talonOps"
 import { useWindowSize } from "@vueuse/core"
 import { NAlert, NButton, NDatePicker, NDrawer, NDrawerContent, NSpin, NTag } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
+import { RouterLink } from "vue-router"
 import Api from "@/api"
 import { opsFailure } from "@/api/endpoints/talonOps"
 import Icon from "@/components/common/Icon.vue"
 import { formatTime } from "../health/health"
+import { viewKind } from "./evidence/evidence"
+import OpsEvidence from "./evidence/OpsEvidence.vue"
 import {
 	canAcknowledge,
 	canMute,
@@ -250,21 +294,37 @@ import {
 	defaultMuteUntil,
 	evidenceJson,
 	evidenceRows,
+	findingLinks,
+	isMuteDay,
 	isValidMuteUntil,
 	jobLabel,
 	kindLabel,
-	MUTE_MAX_DAYS,
+	MUTE_PRESETS,
+	muteUntilIn,
 	problemState,
 	severityInfo,
 	statusInfo
 } from "./ops"
+import OpsFindingHistory from "./OpsFindingHistory.vue"
 import OpsProblem from "./OpsProblem.vue"
 
 const {
 	findingId,
 	customerCode = null,
-	titles = {}
-} = defineProps<{ findingId: number | null; customerCode?: string | null; titles?: Record<string, string | null> }>()
+	titles = {},
+	isAdmin = false,
+	settings = {},
+	schedules = {}
+} = defineProps<{
+	findingId: number | null
+	customerCode?: string | null
+	titles?: Record<string, string | null>
+	isAdmin?: boolean
+	/** Each job's thresholds (`TalonOpsJob.settings`): `disk_forecast`'s projection reads `horizon_days`. */
+	settings?: Record<string, Record<string, unknown>>
+	/** Each job's cron (`TalonOpsJob.schedule`): `disk_forecast`'s chart picks each day's sample by it. */
+	schedules?: Record<string, string | null>
+}>()
 const emit = defineEmits<{
 	(e: "close"): void
 	(e: "changed", finding: TalonOpsFinding): void
@@ -276,7 +336,8 @@ const drawerWidth = computed(() => Math.min(720, Math.round(width.value * 0.94))
 const finding = ref<TalonOpsFinding | null>(null)
 const failure = ref<TalonOpsFailure | null>(null)
 const loading = ref(false)
-const showJson = ref(false)
+/** The evidence as its job's view (when it parses), the generic list, or JSON. */
+const evidenceMode = ref<"view" | "list" | "json">("view")
 const copied = ref(false)
 const acting = ref<"acknowledge" | "mute" | "reopen" | null>(null)
 const actionFailure = ref<string | null>(null)
@@ -285,19 +346,22 @@ let controller: AbortController | null = null
 
 const problem = computed(() => problemState(failure.value))
 
-/** A day the mute picker offers: today up to 90 days ahead (the time is checked on its own). */
-function isMuteDay(ts: number): boolean {
-	const now = Date.now()
-	const startOfToday = new Date(now).setHours(0, 0, 0, 0)
-	return ts >= startOfToday && ts <= now + MUTE_MAX_DAYS * 24 * 60 * 60 * 1000
+/** Whether the finding's evidence has a view of its job's (`viewKind`); otherwise the list. */
+const hasView = computed(() => (finding.value ? viewKind(finding.value) !== null : false))
+/** Where JSON goes back to: the view when there is one. */
+function toggleJson() {
+	evidenceMode.value = evidenceMode.value === "json" ? (hasView.value ? "view" : "list") : "json"
 }
+
+/** Where the finding leads: built by code from its fields and evidence ids, never from the model's text. */
+const links = computed(() => (finding.value ? findingLinks(finding.value) : []))
 
 async function load() {
 	controller?.abort()
 	finding.value = null
 	failure.value = null
 	actionFailure.value = null
-	showJson.value = false
+	evidenceMode.value = "view"
 	copied.value = false
 	muteUntil.value = defaultMuteUntil()
 	if (findingId === null) return

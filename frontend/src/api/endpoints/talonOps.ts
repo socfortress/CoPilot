@@ -3,15 +3,20 @@ import type {
 	TalonOpsFindingResponse,
 	TalonOpsJobs,
 	TalonOpsQuery,
-	TalonOpsRunNow
+	TalonOpsRunNow,
+	TalonOpsRuns,
+	TalonOpsRunsQuery,
+	TalonOpsSummary,
+	TalonOpsSummaryQuery
 } from "@/types/talonOps"
 import axios from "axios"
 import { HttpClient } from "../http-client"
 import { refusalDetail } from "./talonV2"
 
 /**
- * The Talon Ops tab (`/api/talon/ops/...`): talon-analyst's ops findings (endpoints gone quiet, log
- * sources gone silent) and its ops jobs. Every route answers 404 `{"detail": "Not Found"}` while the
+ * The Talon Ops tab (`/api/talon/ops/...`): talon-analyst's ops findings (endpoints, log sources,
+ * storage and noise, the indexer cluster and its disks, mappings, agent versions, exclusion candidates),
+ * its ops jobs and their runs. Every route answers 404 `{"detail": "Not Found"}` while the
  * "Talon v2" setting is off, so nothing here is called unless `useTalonV2Availability` said it is on.
  * CoPilot sends talon-analyst the signed-in user's identity and checks every finding's customer; the
  * actor of an action is the signed-in user (no field here names one). Run now is an admin's. A refusal
@@ -59,7 +64,7 @@ export function opsFailure(err: unknown): TalonOpsFailure {
 	return { status: null, code: "unknown", detail: refusalDetail(null) }
 }
 
-function params(query: TalonOpsQuery): Record<string, string | number> {
+function params(query: TalonOpsQuery | TalonOpsRunsQuery | TalonOpsSummaryQuery): Record<string, string | number> {
 	const out: Record<string, string | number> = {}
 	for (const [key, value] of Object.entries(query)) {
 		if (value === null || value === undefined || value === "" || value === false) continue
@@ -76,6 +81,10 @@ function customerParam(customerCode: string | null | undefined) {
 export default {
 	listFindings(query: TalonOpsQuery, signal?: AbortSignal) {
 		return HttpClient.get<TalonOpsFindingPage>(`/talon/ops/findings`, { params: params(query), signal })
+	},
+	/** Open finding counts by severity, job and customer: the caller's customers only (CoPilot checks). */
+	summary(query: TalonOpsSummaryQuery, signal?: AbortSignal) {
+		return HttpClient.get<TalonOpsSummary>(`/talon/ops/summary`, { params: params(query), signal })
 	},
 	getFinding(id: number, customerCode?: string | null, signal?: AbortSignal) {
 		return HttpClient.get<TalonOpsFindingResponse>(`/talon/ops/findings/${Number(id)}`, {
@@ -105,6 +114,10 @@ export default {
 	},
 	listJobs(signal?: AbortSignal) {
 		return HttpClient.get<TalonOpsJobs>(`/talon/ops/jobs`, { signal })
+	},
+	/** Recent runs of the caller's customers (platform runs for an admin), newest first. */
+	listRuns(query: TalonOpsRunsQuery, signal?: AbortSignal) {
+		return HttpClient.get<TalonOpsRuns>(`/talon/ops/runs`, { params: params(query), signal })
 	},
 	/** Admin only (the backend checks the database role). Audited. */
 	runNow(name: string) {

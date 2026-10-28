@@ -5,8 +5,9 @@
 	<div v-else class="flex flex-col gap-4" data-testid="talon-ops">
 		<div class="flex flex-wrap items-start justify-between gap-3">
 			<p class="text-secondary max-w-3xl text-sm">
-				Talon's ops jobs check the stack on a schedule: endpoints that stopped checking in, log sources that
-				went silent. Their findings are for the SOC only.
+				Talon's ops jobs check the stack on a schedule: endpoints that stopped checking in, log sources gone
+				silent, storage and noisy events, the indexer cluster and its disks, index mappings, agent versions, and
+				alerts worth a reviewed exclusion. Their findings are for the SOC only.
 			</p>
 			<a
 				:href="OPS_DOCS"
@@ -42,7 +43,14 @@
 					How to turn them on
 				</a>
 			</n-alert>
-			<OpsJobs v-if="jobs.length || jobsLoading" :jobs :loading="jobsLoading" :is-admin @refresh="loadJobs()" />
+			<OpsJobs
+				v-if="jobs.length || jobsLoading"
+				:jobs
+				:loading="jobsLoading"
+				:is-admin
+				@refresh="loadJobs()"
+				@ran="reloadAll()"
+			/>
 			<OpsFindings ref="findingsList" :jobs :is-admin @open="open" />
 		</template>
 
@@ -50,8 +58,11 @@
 			:finding-id="openId"
 			:customer-code="openCustomer"
 			:titles
+			:is-admin
+			:settings
+			:schedules
 			@close="openId = null"
-			@changed="finding => findingsList?.replace(finding)"
+			@changed="changed"
 		/>
 	</div>
 </template>
@@ -105,6 +116,9 @@ const jobsProblem = computed(() => problemState(jobsFailure.value))
 // v2 off or an old Talon: nothing else can answer either, so only the notice shows.
 const blocked = computed(() => jobsProblem.value !== null && jobsProblem.value.kind !== "error")
 const titles = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.title])))
+/** Each job's thresholds, for the drawer's evidence views (`disk_forecast`'s horizon). */
+const settings = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.settings ?? {}])))
+const schedules = computed(() => Object.fromEntries(jobs.value.map(j => [j.name, j.schedule])))
 
 async function loadJobs() {
 	controller?.abort()
@@ -124,6 +138,18 @@ async function loadJobs() {
 	} finally {
 		if (controller === own) jobsLoading.value = false
 	}
+}
+
+/** A run-now's runs finished: the jobs' last runs and the findings both changed. */
+function reloadAll() {
+	loadJobs()
+	findingsList.value?.reload()
+}
+
+/** The drawer acted on a finding: its row shows the new state, and the strip recounts. */
+function changed(finding: TalonOpsFinding) {
+	findingsList.value?.replace(finding)
+	findingsList.value?.reloadSummary()
 }
 
 function open(finding: TalonOpsFinding) {
