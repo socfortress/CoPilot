@@ -117,6 +117,10 @@ class AuditAction(str, Enum):
     SOC_REQUEST_CREATE = "soc_request.create"
     SOC_REQUEST_ANSWER = "soc_request.answer"
     SOC_REQUEST_SETTINGS_UPDATE = "soc_request.settings_update"
+    # Threat Intel enrichment of IOCs in the Customer Portal (#1318): a lookup that reached
+    # VirusTotal or OpenCTI (failure when no source answered), and the per-customer switch.
+    IOC_ENRICHMENT_LOOKUP = "ioc_enrichment.lookup"
+    IOC_ENRICHMENT_SETTINGS_UPDATE = "ioc_enrichment.settings_update"
 
     # Talon v2 chat action proposals, decided and run in CoPilot (talon-analyst M5-11). A
     # quarantine run this way also records RESPONSE_QUARANTINE, from its own route.

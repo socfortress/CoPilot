@@ -7,6 +7,9 @@ from app.customer_portal.routes.audit import customer_portal_audit_router
 from app.customer_portal.routes.branding import customer_portal_branding_router
 from app.customer_portal.routes.dashboard import customer_portal_dashboard_router
 from app.customer_portal.routes.exposure import customer_portal_exposure_router
+from app.customer_portal.routes.ioc_enrichment import (
+    customer_portal_ioc_enrichment_router,
+)
 from app.customer_portal.routes.languages import customer_portal_languages_router
 from app.customer_portal.routes.me import customer_portal_me_router
 from app.customer_portal.routes.notifications import (
@@ -102,4 +105,10 @@ router.include_router(
     customer_portal_soc_requests_router,
     prefix="/customer_portal",
     tags=["Customer Portal Ask the SOC"],
+)
+# Threat Intel enrichment of the caller's alerts' IOCs (#1318) — opt-in per customer, cached per customer
+router.include_router(
+    customer_portal_ioc_enrichment_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal IOC Enrichment"],
 )

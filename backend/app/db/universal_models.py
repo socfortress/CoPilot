@@ -798,6 +798,84 @@ class CustomerPortalSocRequest(SQLModel, table=True):
     answered_via: Optional[str] = Field(default=None, max_length=16, nullable=True)  # comment | manual
 
 
+class CustomerPortalIocEnrichmentSettings(SQLModel, table=True):
+    """Per-customer switch for Threat Intel enrichment of IOCs in the Customer Portal (#1318).
+
+    **Opt-in** like the other portal switches: a customer with no row gets no enrichment. The
+    daily limit counts the customer's lookups that reached VirusTotal or OpenCTI over any 24
+    hours (NULL = unlimited); a result served from the cache never counts. Read through
+    ``customer_portal/services/ioc_enrichment.py``.
+    """
+
+    __tablename__ = "customer_portal_ioc_enrichment_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    enabled: bool = Field(default=False, nullable=False)
+    daily_lookup_limit: Optional[int] = Field(default=None)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
+class CustomerPortalIocEnrichment(SQLModel, table=True):
+    """What one Threat Intel source said about one IOC value, for one customer (#1318).
+
+    The portal's cache: a lookup writes one row per source that answered (``found`` or
+    ``not_found``; a failure is never stored), and the portal reads it back for every IOC with
+    that value. Keyed per customer on purpose: a shared row would let one tenant read, from
+    its date, that another tenant met the same IOC. ``value_sha256`` is the normalized value's
+    digest (the value itself can be longer than an index allows); ``details`` is the bounded
+    projection the portal shows, never a source's raw answer.
+    """
+
+    __tablename__ = "customer_portal_ioc_enrichment"
+    __table_args__ = (
+        UniqueConstraint("customer_code", "value_sha256", "source", name="uq_customer_portal_ioc_enrichment_customer_value_source"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: str = Field(
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=False),
+    )
+    value_sha256: str = Field(max_length=64, nullable=False)
+    value: str = Field(sa_column=Column(Text, nullable=False))
+    source: str = Field(max_length=16, nullable=False)  # virustotal | opencti
+    status: str = Field(max_length=16, nullable=False)  # found | not_found
+    verdict: Optional[str] = Field(default=None, max_length=16, nullable=True)
+    details: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    checked_at: datetime = Field(default_factory=now_utc)
+
+
+class CustomerPortalIocLookup(SQLModel, table=True):
+    """One lookup a portal user sent to the Threat Intel sources (#1318).
+
+    Written under the customer's settings lock before the sources are asked, so the daily
+    limit and "already being checked" hold across two clicks; removed again when no source
+    answered, so a failure costs the customer nothing. ``completed_at`` is NULL while the
+    lookup runs. Rows older than a week are pruned.
+    """
+
+    __tablename__ = "customer_portal_ioc_lookup"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_code: str = Field(
+        sa_column=Column(String(50), ForeignKey("customers.customer_code", ondelete="CASCADE"), nullable=False, index=True),
+    )
+    value_sha256: str = Field(max_length=64, nullable=False, index=True)
+    requested_by_user_id: Optional[int] = Field(default=None)
+    requested_at: datetime = Field(default_factory=now_utc, index=True)
+    completed_at: Optional[datetime] = Field(default=None, nullable=True)
+
+
 class CustomerWafInstance(SQLModel, table=True):
     """A SOCFortress WAF deployment that CoPilot talks to on a customer's behalf (#1165).
 

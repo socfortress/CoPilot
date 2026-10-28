@@ -250,7 +250,8 @@ def refused(response) -> bool:
 def test_every_portal_write_is_either_refused_to_a_reader_or_their_own():
     assert REFUSED <= ALLOWED_CUSTOMER_USER_WRITES, sorted(REFUSED - ALLOWED_CUSTOMER_USER_WRITES)
     own = {path for _, path in KEPT}
-    # What a reader keeps is theirs: account, preferences, searches, user management, and reads.
+    # What a reader keeps is theirs: account, preferences, searches, user management, and reads
+    # (a Threat Intel lookup of an IOC changes nothing of the customer's, #1318).
     for path in own:
         assert any(
             part in path
@@ -262,6 +263,7 @@ def test_every_portal_write_is_either_refused_to_a_reader_or_their_own():
                 "/customer_portal/users",
                 "/panel-data",
                 "/copilot_searches/",
+                "/ioc_enrichment/",
             )
         ), path
 
