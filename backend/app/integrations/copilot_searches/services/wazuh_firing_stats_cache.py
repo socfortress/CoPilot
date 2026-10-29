@@ -8,44 +8,60 @@ request, per user) would crush the indexer. Instead we do **one** terms
 aggregation over the alerts indices, cache the result, and serve every
 per-rule lookup from the dict.
 
-Cost: one ``_cat/indices`` call + one ``search`` request to the Wazuh
-indexer every ``CACHE_TTL_MINUTES`` minutes (15 by default). The
-aggregation is a date-filtered ``terms`` over rule.id with a
-sub-aggregation for the 7d sub-window. Even across hundreds of millions of
-docs, this returns in well under a second.
+Cost: one ``_cat/indices`` call, one ``_field_caps`` call and one ``search``
+request to the Wazuh indexer every ``CACHE_TTL_MINUTES`` minutes (15 by
+default). The aggregation is a date-filtered ``terms`` over the rule ID with
+a sub-aggregation for the 7d sub-window. On a small cluster it returns in
+well under a second; on one with a few hundred alert indices it was measured
+at ~29s (#1319), which is why it has its own time budget.
 
-Index auto-discovery (why we don't hardcode ``wazuh-alerts-*``):
+Time budget (#1319):
+The shared indexer client gives up after 15s, which a 30-day aggregation
+over hundreds of indices does not fit in. Every firing-stats search passes
+its own ``request_timeout`` (``FIRING_STATS_TIMEOUT_SECONDS``, default 120)
+and the same budget, a few seconds shorter, as the search body's ``timeout``
+so the indexer stops collecting before the client gives up. A search the
+client abandons anyway is cancelled through the task API by its
+``X-Opaque-Id``: an abandoned aggregation otherwise keeps running on the
+cluster, and one was left behind on every refresh until other dashboards on
+the same indexer started timing out. A search that times out on either side
+is a failure, never a partial answer: undercounted hits would put live rules
+under "Dead". Nothing tries another field after a timeout, since it would
+cost the same. Every search runs one at a time across the global refresh
+and the per-customer slices.
+
+Index target (why not just ``wazuh-alerts-*``):
 In a default Wazuh install, all alerts live in ``wazuh-alerts-*``. In
 real SOCFortress deployments they don't — different integrations write to
 different indices (``office365-<customer>``, ``crowdstrike-<customer>``,
 ``carbonblack-<customer>``, ``huntress_<customer>``, ad-hoc ``newest-*``
-test indices, …). Hardcoding ``wazuh-alerts-*`` misses all of them.
-Maintaining a comma-separated env list is fragile — every new customer
-integration would need a config bump.
+test indices, …). Hardcoding ``wazuh-alerts-*`` misses all of them. The
+default is therefore every index minus the ones that are definitely *not*
+alert indices (``ALERT_INDEX_PATTERN``), which ES resolves server-side.
+``FIRING_STATS_INDEX_PATTERN`` replaces it for a deployment that knows where
+its alerts are and doesn't want firewall indices scanned.
 
-Instead we list every index in the cluster on each refresh, filter out
-indices that are definitely *not* alert indices (Wazuh's internal
-``monitoring/statistics/states`` plus Kibana/OpenSearch system indices),
-and aggregate across whatever's left. The aggregation's
-``exists`` filter on the rule-ID field naturally drops indices that don't
-carry one, and ``_coerce_rule_id`` drops bucket keys that aren't
-integer-parseable — so vendor indices with their own non-Wazuh rule IDs
-(e.g. ``"Office365_FailedLogin"``) don't pollute the cache.
+Field-name choice:
+The rule ID lives under ``rule.id`` (Wazuh's own template) or ``rule_id``
+(Graylog's flat mapping). One ``_field_caps`` call says which of them are
+mapped and aggregatable before any aggregation runs, so a field that isn't
+there costs nothing. The winning field is tried first on the next refresh.
+``id`` used to be a third fallback; on Graylog-fed clusters it is a
+high-cardinality document id in non-Wazuh indices, so a 30-day ``terms``
+on it was the most expensive query of all and never useful (#1319).
 
-Field-name fallback:
-Wazuh's indexer schema varies across versions and shipping configurations.
-The rule ID may live under ``rule.id`` (object mapping), ``rule_id`` (flat
-mapping), or just ``id`` (older schemas). We try them in that order, taking
-the first one that returns non-empty buckets — same fallback pattern used
-in ``app/connectors/wazuh_manager/services/mitre.py``.
-
-No DB writes, no schema changes, no Alembic migrations, no env var —
-pure read-only aggregation against the live indices plus an in-memory
-dict on the CoPilot side.
+No DB writes, no schema changes, no Alembic migrations — pure read-only
+aggregation against the live indices plus an in-memory dict on the CoPilot
+side.
 """
 
 import asyncio
+import os
 import re
+import uuid
+from collections import OrderedDict
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
@@ -53,6 +69,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from elasticsearch7.exceptions import ConnectionTimeout
 from elasticsearch7.exceptions import RequestError
 from loguru import logger
 
@@ -61,8 +78,22 @@ from app.integrations.copilot_searches.services.cache_support import (
 )
 
 # 15-min TTL strikes a balance: fresh enough that the dashboard reflects
-# real-time tuning, cheap enough that the indexer barely notices.
+# real-time tuning, cheap enough that the indexer barely notices. A failed
+# refresh waits the same TTL before it is tried again.
 CACHE_TTL_MINUTES = 15
+
+# ``FIRING_STATS_TIMEOUT_SECONDS``: how long one aggregation may take.
+DEFAULT_TIMEOUT_SECONDS = 120
+MIN_TIMEOUT_SECONDS = 10
+MAX_TIMEOUT_SECONDS = 600
+# The search body's ``timeout`` is this much shorter than the client's, so the
+# indexer answers ``timed_out`` before the client stops waiting.
+SERVER_TIMEOUT_MARGIN_SECONDS = 5
+# Metadata calls (field caps, finding and cancelling a task) are cheap.
+METADATA_TIMEOUT_SECONDS = 30
+
+# Per-customer slices kept in memory (least recently asked for dropped first).
+CUSTOMER_CACHE_SIZE = 16
 
 # ES-native index pattern with exclusions. We pass this as a single short
 # string (~150 bytes) to ``client.search(index=...)``, which lets ES resolve
@@ -88,6 +119,10 @@ ALERT_INDEX_PATTERN = (
     "*" ",-.*" ",-_*" ",-wazuh-monitoring-*" ",-wazuh-statistics-*" ",-wazuh-states-*" ",-wazuh-vulnerabilities-*" ",-security-auditlog-*"
 )
 
+# Longest ``FIRING_STATS_INDEX_PATTERN`` accepted: it travels in the URL path,
+# and the indexer refuses a request line over 4096 bytes.
+MAX_INDEX_PATTERN_LENGTH = 1000
+
 # Equivalent regex list — used only by the introspection helper
 # ``_discover_alert_indices`` to populate ``resolved_indices`` for
 # logging/debugging. The search itself never uses these; ES handles the
@@ -102,10 +137,85 @@ EXCLUDE_PATTERNS = [
     re.compile(r"security-auditlog"),
 ]
 
-# Try these field paths in order. First one that yields non-empty buckets
-# wins and is cached for subsequent refreshes (avoids retrying the misses
-# on every refresh).
-RULE_ID_FIELD_OPTIONS = ["rule.id", "rule_id", "id"]
+# Where the rule ID may live, in order of preference. ``_field_caps`` narrows
+# this to the ones actually mapped before anything is aggregated.
+RULE_ID_FIELD_OPTIONS = ["rule.id", "rule_id"]
+
+# Where the customer code may live: Graylog's flat convention, which
+# SOCFortress pipelines produce, and the nested Wazuh-vanilla shape. One
+# query matches either, so a slice costs one aggregation, not one per shape.
+CUSTOMER_FIELD_OPTIONS = ["agent_labels_customer", "agent.labels.customer"]
+
+
+def firing_stats_timeout_seconds() -> int:
+    """``FIRING_STATS_TIMEOUT_SECONDS``, clamped; the default when unset or unreadable."""
+    raw = os.getenv("FIRING_STATS_TIMEOUT_SECONDS", "").strip()
+    if not raw:
+        return DEFAULT_TIMEOUT_SECONDS
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning(f"FIRING_STATS_TIMEOUT_SECONDS={raw!r} is not a whole number of seconds; using {DEFAULT_TIMEOUT_SECONDS}")
+        return DEFAULT_TIMEOUT_SECONDS
+    return max(MIN_TIMEOUT_SECONDS, min(MAX_TIMEOUT_SECONDS, value))
+
+
+def firing_stats_index_pattern() -> str:
+    """``FIRING_STATS_INDEX_PATTERN``, or ``ALERT_INDEX_PATTERN`` when unset or unusable."""
+    raw = os.getenv("FIRING_STATS_INDEX_PATTERN", "").strip()
+    if not raw:
+        return ALERT_INDEX_PATTERN
+    if len(raw) > MAX_INDEX_PATTERN_LENGTH or any(ch.isspace() or ord(ch) < 32 for ch in raw) or not raw.strip(","):
+        logger.warning("FIRING_STATS_INDEX_PATTERN is not a usable index pattern; using the default")
+        return ALERT_INDEX_PATTERN
+    return raw
+
+
+def _timeout_reason(timeout: int) -> str:
+    return (
+        f"Counting rule hits did not finish within {timeout}s. "
+        "Raise FIRING_STATS_TIMEOUT_SECONDS, or set FIRING_STATS_INDEX_PATTERN to the indices that hold alerts."
+    )
+
+
+NO_RULE_FIELD_REASON = "No rule ID field (rule.id or rule_id) is mapped in the alert indices."
+
+
+class AggregationTimedOut(Exception):
+    """The indexer, or the client waiting for it, ran out of time."""
+
+
+@dataclass
+class _Outcome:
+    stats: Dict[int, Dict[str, Any]] = dataclass_field(default_factory=dict)
+    field: Optional[str] = None
+    error: Optional[str] = None
+
+
+@dataclass
+class CustomerFiringStats:
+    """One customer's slice: ``ready`` (``stats`` may be empty: no hits), ``loading`` or ``error``."""
+
+    status: str
+    stats: Dict[int, Dict[str, Any]] = dataclass_field(default_factory=dict)
+    error: Optional[str] = None
+    fetched_at: Optional[datetime] = None
+
+
+# One heavy search at a time, across the global refresh and every customer
+# slice: the cluster serves other dashboards too (#1319). Bound to the running
+# loop, so a new loop (tests, a restart of the app's loop) gets a fresh one.
+_heavy_slot: Optional[asyncio.Semaphore] = None
+_heavy_slot_loop: Optional[asyncio.AbstractEventLoop] = None
+
+
+def _heavy_query_slot() -> asyncio.Semaphore:
+    global _heavy_slot, _heavy_slot_loop
+    loop = asyncio.get_running_loop()
+    if _heavy_slot is None or _heavy_slot_loop is not loop:
+        _heavy_slot = asyncio.Semaphore(1)
+        _heavy_slot_loop = loop
+    return _heavy_slot
 
 
 class WazuhFiringStatsCache(BackgroundRefreshMixin):
@@ -115,8 +225,8 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
     Returns a small dict per rule: ``{"hits_30d": int, "hits_7d": int}``.
     Rules with zero hits over the 30d window are deliberately omitted from
     the dict — callers should treat "missing" as "0 hits" rather than
-    "data unavailable". The cache's ``is_available`` flag distinguishes
-    those two states explicitly.
+    "data unavailable". ``has_stats`` distinguishes those two states
+    explicitly.
     """
 
     def __init__(self) -> None:
@@ -131,6 +241,10 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
         # without having to spelunk through logs.
         self._resolved_indices: List[str] = []
         self._lock = asyncio.Lock()
+        # Per-customer slices, least recently asked for first, and the
+        # refresh in flight for each.
+        self._customer_slices: "OrderedDict[str, CustomerFiringStats]" = OrderedDict()
+        self._customer_tasks: Dict[str, asyncio.Task] = {}
 
     # ---- introspection ----------------------------------------------------
 
@@ -147,6 +261,20 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
     @property
     def is_available(self) -> bool:
         return self._unavailable_reason is None
+
+    @property
+    def is_loaded(self) -> bool:
+        """True once a refresh has finished, whatever its outcome."""
+        return self._last_refresh is not None
+
+    @property
+    def has_stats(self) -> bool:
+        """True when the counts can be shown: loaded, and the last refresh worked.
+
+        Before the first refresh finishes the dict is empty, and showing it
+        would read as "nothing has ever fired".
+        """
+        return self.is_loaded and self.is_available
 
     @property
     def unavailable_reason(self) -> Optional[str]:
@@ -166,13 +294,12 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
 
     async def refresh(self) -> int:
         """
-        Fire one terms-aggregation against the alerts index and rebuild the
+        Fire one terms-aggregation against the alerts indices and rebuild the
         per-rule stats dict. Returns the number of rules with at least one
         hit in the 30d window.
 
         Never raises — failures are captured in ``unavailable_reason`` and
-        the existing cached snapshot is left in place. A transient indexer
-        outage shouldn't blank the firing-count column.
+        the existing cached snapshot is left in place.
         """
         # Local import to avoid pulling the indexer client at module-import
         # time on deployments where the indexer connector isn't usable.
@@ -182,123 +309,99 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
 
         async with self._lock:
             logger.info("Refreshing Wazuh firing-stats cache from the indexer…")
+            timeout = firing_stats_timeout_seconds()
+            index = firing_stats_index_pattern()
 
             try:
                 client = await create_wazuh_indexer_client_async()
             except Exception as exc:  # noqa: BLE001
-                self._unavailable_reason = _short_reason(exc)
-                logger.warning(f"Wazuh indexer client unavailable: {self._unavailable_reason}")
-                self._last_refresh = datetime.utcnow()
-                return len(self._stats)
-
-            # Always search via the single ES wildcard+exclusion pattern —
-            # ES resolves it server-side, sub-millisecond, no HTTP line
-            # limits to worry about. The cat-indices discovery call below is
-            # only for the introspection / debug log so operators can see
-            # WHICH concrete indices the pattern expanded to without having
-            # to run the cat call themselves. Discovery failure is non-fatal
-            # — the search still runs on the pattern.
-            self._resolved_indices = await _discover_alert_indices(client)
-            logger.debug(
-                f"Firing-stats aggregating across {len(self._resolved_indices)} concrete index target(s); "
-                f"first few: {self._resolved_indices[:5]}",
-            )
-            search_target = ALERT_INDEX_PATTERN
-
-            # Try the winning field first (if we have one from a prior load),
-            # then fall back through the canonical list. First field that
-            # returns non-empty buckets wins.
-            fields_to_try: List[str] = []
-            if self._winning_field:
-                fields_to_try.append(self._winning_field)
-            for f in RULE_ID_FIELD_OPTIONS:
-                if f not in fields_to_try:
-                    fields_to_try.append(f)
-
-            new_stats: Dict[int, Dict[str, int]] = {}
-            winner: Optional[str] = None
-            last_error: Optional[str] = None
-
-            for field in fields_to_try:
-                try:
-                    body = _build_firing_stats_query(field)
-                    # ``ignore_unavailable`` swallows per-index permission /
-                    # missing-index errors so one bad index doesn't fail the
-                    # whole aggregation. ``allow_no_indices`` likewise stops
-                    # the request from 4xx-ing when the pattern matches
-                    # zero indices (fresh deployment, etc.).
-                    response = await client.search(
-                        index=search_target,
-                        body=body,
-                        ignore_unavailable=True,
-                        allow_no_indices=True,
-                    )
-                    buckets = response.get("aggregations", {}).get("by_rule", {}).get("buckets", [])
-                    if not buckets:
-                        # Empty buckets = field exists but no docs, OR field
-                        # doesn't exist. Either way, try the next one.
-                        continue
-
-                    for bucket in buckets:
-                        rule_id = _coerce_rule_id(bucket.get("key"))
-                        if rule_id is None:
-                            continue
-                        hits_30d = int(bucket.get("doc_count") or 0)
-                        hits_7d = int(
-                            bucket.get("last_7d", {}).get("doc_count") or 0,
-                        )
-                        # ``max(timestamp)`` bucket comes back as
-                        # ``{"value": 1700000000000.0, "value_as_string": "..."}``
-                        # (epoch millis + ISO string). Prefer the ISO string
-                        # for direct UI rendering; fall back to None if the
-                        # bucket is missing (shouldn't happen but defensive).
-                        last_seen_bucket = bucket.get("last_seen") or {}
-                        last_seen = last_seen_bucket.get("value_as_string")
-                        new_stats[rule_id] = {
-                            "hits_30d": hits_30d,
-                            "hits_7d": hits_7d,
-                            "last_seen": last_seen,
-                        }
-                    winner = field
-                    break
-                except RequestError as re:
-                    # Most common: field doesn't exist on the index — Wazuh
-                    # versions differ. The .info payload has the human
-                    # message (see CLAUDE.md "Things that bite").
-                    last_error = f"{field}: {str(re.info)[:120]}"
-                    logger.debug(f"Firing-stats field '{field}' rejected: {last_error}")
-                    continue
-                except Exception as exc:  # noqa: BLE001
-                    last_error = f"{field}: {str(exc)[:120]}"
-                    logger.debug(f"Firing-stats field '{field}' errored: {last_error}")
-                    continue
-                finally:
-                    pass
+                return self._fail(_short_reason(exc))
 
             try:
-                await client.close()
-            except Exception:
-                pass
+                # Debug aid only: which concrete indices the pattern expands
+                # to. Failure is non-fatal — the search still runs on the
+                # pattern.
+                self._resolved_indices = await _discover_alert_indices(client, index)
+                logger.debug(
+                    f"Firing-stats aggregating across {len(self._resolved_indices)} concrete index target(s); "
+                    f"first few: {self._resolved_indices[:5]}",
+                )
+                fields = await _rule_field_candidates(client, index, self._winning_field)
+                if not fields:
+                    return self._fail(NO_RULE_FIELD_REASON)
+                async with _heavy_query_slot():
+                    outcome = await _aggregate_first_field(client, index, fields, timeout)
+            finally:
+                await _close(client)
 
-            if winner is None:
+            if outcome.field is None:
                 # No field worked, or all returned empty. Treat as
                 # "unavailable" so the UI doesn't render a useless "0 hits"
                 # column for every rule when really we just can't tell.
-                self._unavailable_reason = last_error or "No rule-ID field returned hits in the alerts index."
-                self._last_refresh = datetime.utcnow()
-                logger.warning(
-                    f"Could not resolve a rule-ID field for firing stats. {self._unavailable_reason}",
-                )
-                return len(self._stats)
+                return self._fail(outcome.error or "No rule ID field returned hits in the alert indices.")
 
-            self._stats = new_stats
-            self._winning_field = winner
+            self._stats = outcome.stats
+            self._winning_field = outcome.field
             self._unavailable_reason = None
             self._last_refresh = datetime.utcnow()
             logger.info(
-                f"Loaded firing stats for {len(self._stats)} rule(s) using field '{winner}'",
+                f"Loaded firing stats for {len(self._stats)} rule(s) using field '{outcome.field}'",
             )
             return len(self._stats)
+
+    def _fail(self, reason: str) -> int:
+        self._unavailable_reason = reason
+        self._last_refresh = datetime.utcnow()
+        logger.warning(f"Wazuh firing stats unavailable: {reason}")
+        return len(self._stats)
+
+    # ---- per-customer slices ------------------------------------------------
+
+    def customer_stats(self, customer_code: str) -> CustomerFiringStats:
+        """
+        One customer's slice, without waiting for the indexer.
+
+        A slice is one more aggregation as heavy as the global one, so a
+        request never runs it: the first ask starts it in the background and
+        answers ``loading``, and the UI asks again until it lands. A slice is
+        kept ``CACHE_TTL_MINUTES``; an older one is still served while its
+        refresh runs. A failed slice waits the same TTL before it is retried.
+        """
+        entry = self._customer_slices.get(customer_code)
+        if entry is not None:
+            self._customer_slices.move_to_end(customer_code)
+        fresh = (
+            entry is not None
+            and entry.fetched_at is not None
+            and datetime.utcnow() - entry.fetched_at <= timedelta(minutes=CACHE_TTL_MINUTES)
+        )
+        if not fresh:
+            self._schedule_customer_refresh(customer_code)
+        if entry is None:
+            return CustomerFiringStats(status="loading")
+        return entry
+
+    def _schedule_customer_refresh(self, customer_code: str) -> None:
+        task = self._customer_tasks.get(customer_code)
+        if task is not None and not task.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._customer_tasks[customer_code] = loop.create_task(self._refresh_customer(customer_code))
+
+    async def _refresh_customer(self, customer_code: str) -> None:
+        try:
+            result = await fetch_firing_stats_for_customer(customer_code)
+            self._customer_slices[customer_code] = result
+            self._customer_slices.move_to_end(customer_code)
+            while len(self._customer_slices) > CUSTOMER_CACHE_SIZE:
+                self._customer_slices.popitem(last=False)
+        except Exception as exc:  # noqa: BLE001 — a background task must never escape
+            logger.warning(f"Per-customer firing stats failed: {exc}")
+        finally:
+            self._customer_tasks.pop(customer_code, None)
 
     # ---- accessors --------------------------------------------------------
 
@@ -310,7 +413,7 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
         Missing rule IDs return zero counts + None last_seen — the rule
         exists in the cache but simply hasn't fired in the 30d window.
         Callers that need to distinguish "0 hits" from "stats unavailable"
-        should check ``is_available`` separately.
+        should check ``has_stats`` separately.
         """
         return self._stats.get(
             rule_id,
@@ -319,101 +422,217 @@ class WazuhFiringStatsCache(BackgroundRefreshMixin):
 
 
 # ---------------------------------------------------------------------------
-# Per-customer firing stats — on-demand, not cached
+# Per-customer firing stats
 # ---------------------------------------------------------------------------
 
 
-async def fetch_firing_stats_for_customer(customer_code: str) -> Dict[int, Dict[str, Any]]:
+async def fetch_firing_stats_for_customer(customer_code: str) -> CustomerFiringStats:
     """
     Run the firing-stats aggregation filtered to a single customer code.
 
-    Why this isn't cached:
-    The catalog has potentially dozens of customer codes; pre-caching all of
-    them would balloon memory and waste indexer cycles on customers nobody
-    is looking at. Instead we run the query on demand when an analyst picks
-    a customer from the dropdown. The query is the same shape as the global
-    refresh (one terms agg + sub-aggs), just with an extra term filter on
-    ``agent_labels_customer`` — sub-second on any realistic deployment.
+    Called in the background by ``WazuhFiringStatsCache.customer_stats``,
+    never from a request. Kept per customer for ``CACHE_TTL_MINUTES``, at
+    most ``CUSTOMER_CACHE_SIZE`` customers, so a deployment with dozens of
+    customers holds only the slices someone is looking at.
 
-    Returns ``{rule_id: {hits_30d, hits_7d, last_seen}}`` — same shape as
-    ``WazuhRulesFiringStatsCache.get()`` so callers can use it
-    interchangeably. Empty dict when:
-    - The customer code doesn't match any alerts in the 30d window.
-    - The winning_field couldn't be determined (indexer error / no field).
-    - The indexer is unreachable.
-
-    All failures are silent / non-raising — the catalog falls back to "0
-    hits for this customer" rather than erroring.
-
-    Field naming note: the customer code is conventionally indexed under
-    ``agent_labels_customer`` (Graylog convention, flat) in SOCFortress
-    deployments — confirmed in the Suricata alert sample we tested. Wazuh
-    vanilla uses ``agent.labels.customer`` (nested). We try both.
+    Never raises. Answers ``ready`` with an empty dict when the customer has
+    no alerts in the window, and ``error`` with a reason when the indexer
+    could not answer — which the UI shows instead of a column of zeros.
     """
     from app.connectors.wazuh_indexer.utils.universal import (
         create_wazuh_indexer_client_async,
     )
 
     if not customer_code or not customer_code.strip():
-        return {}
+        return CustomerFiringStats(status="ready", fetched_at=datetime.utcnow())
 
-    # Use whatever rule-ID field the global cache discovered — saves us from
-    # re-running the field-fallback dance per customer query.
-    field = wazuh_firing_stats_cache._winning_field or RULE_ID_FIELD_OPTIONS[0]
+    timeout = firing_stats_timeout_seconds()
+    index = firing_stats_index_pattern()
 
     try:
         client = await create_wazuh_indexer_client_async()
     except Exception as exc:  # noqa: BLE001
-        logger.warning(f"Per-customer firing stats: indexer unavailable ({_short_reason(exc)})")
-        return {}
+        reason = _short_reason(exc)
+        logger.warning(f"Per-customer firing stats: indexer unavailable ({reason})")
+        return CustomerFiringStats(status="error", error=reason, fetched_at=datetime.utcnow())
 
     try:
-        # Try each customer-code field shape until one returns buckets.
-        # Same fallback philosophy as the rule-ID field discovery.
-        for customer_field in ("agent_labels_customer", "agent.labels.customer"):
-            try:
-                body = _build_firing_stats_query(field)
-                # Splice the customer filter into the existing query — keeps
-                # the agg shape identical so the bucket-unpacking code below
-                # matches the cached path exactly.
-                body["query"]["bool"]["filter"].append(
-                    {"term": {customer_field: customer_code}},
-                )
-                response = await client.search(
-                    index=ALERT_INDEX_PATTERN,
-                    body=body,
-                    ignore_unavailable=True,
-                    allow_no_indices=True,
-                )
-                buckets = response.get("aggregations", {}).get("by_rule", {}).get("buckets", [])
-                if not buckets:
-                    continue
-
-                out: Dict[int, Dict[str, Any]] = {}
-                for bucket in buckets:
-                    rule_id = _coerce_rule_id(bucket.get("key"))
-                    if rule_id is None:
-                        continue
-                    out[rule_id] = {
-                        "hits_30d": int(bucket.get("doc_count") or 0),
-                        "hits_7d": int(bucket.get("last_7d", {}).get("doc_count") or 0),
-                        "last_seen": (bucket.get("last_seen") or {}).get("value_as_string"),
-                    }
-                logger.debug(
-                    f"Per-customer firing stats: {len(out)} rules for customer " f"{customer_code!r} via field {customer_field!r}",
-                )
-                return out
-            except Exception as exc:  # noqa: BLE001
-                logger.debug(
-                    f"Per-customer firing stats: customer field {customer_field!r} failed: {exc}",
-                )
-                continue
-        return {}
+        # The global refresh's field when it has one, saving a field_caps call.
+        winner = wazuh_firing_stats_cache._winning_field
+        fields = [winner] if winner else await _rule_field_candidates(client, index, None)
+        if not fields:
+            return CustomerFiringStats(status="error", error=NO_RULE_FIELD_REASON, fetched_at=datetime.utcnow())
+        customer_filter = {
+            "bool": {
+                "should": [{"term": {f: customer_code}} for f in CUSTOMER_FIELD_OPTIONS],
+                "minimum_should_match": 1,
+            },
+        }
+        async with _heavy_query_slot():
+            outcome = await _aggregate_first_field(client, index, fields, timeout, extra_filter=customer_filter)
     finally:
+        await _close(client)
+
+    if outcome.field is None and outcome.error:
+        logger.warning(f"Per-customer firing stats failed: {outcome.error}")
+        return CustomerFiringStats(status="error", error=outcome.error, fetched_at=datetime.utcnow())
+
+    logger.debug(f"Per-customer firing stats: {len(outcome.stats)} rules for customer {customer_code!r}")
+    return CustomerFiringStats(status="ready", stats=outcome.stats, fetched_at=datetime.utcnow())
+
+
+# ---------------------------------------------------------------------------
+# Indexer calls
+# ---------------------------------------------------------------------------
+
+
+async def _aggregate_first_field(
+    client: Any,
+    index: str,
+    fields: List[str],
+    timeout: int,
+    extra_filter: Optional[Dict[str, Any]] = None,
+) -> _Outcome:
+    """
+    Aggregate on each field in turn until one returns buckets.
+
+    A 4xx (the field can't be aggregated in some index) moves on to the next
+    field. A timeout or any other failure stops: the next field would cost as
+    much, or the indexer is in trouble.
+    """
+    last_error: Optional[str] = None
+    for field in fields:
+        body = _build_firing_stats_query(field)
+        if extra_filter is not None:
+            body["query"]["bool"]["filter"].append(extra_filter)
         try:
-            await client.close()
-        except Exception:
-            pass
+            response = await _aggregate(client, index, body, timeout)
+        except AggregationTimedOut:
+            return _Outcome(error=_timeout_reason(timeout))
+        except RequestError as exc:
+            # The .info payload has the human message (see CLAUDE.md "Things that bite").
+            last_error = f"{field}: {str(exc.info)[:120]}"
+            logger.debug(f"Firing-stats field '{field}' rejected: {last_error}")
+            continue
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Firing-stats field '{field}' errored: {exc}")
+            return _Outcome(error=_short_reason(exc))
+
+        stats = _parse_buckets(response)
+        if stats:
+            return _Outcome(stats=stats, field=field)
+    return _Outcome(error=last_error)
+
+
+async def _aggregate(client: Any, index: str, body: Dict[str, Any], timeout: int) -> Dict[str, Any]:
+    """
+    One firing-stats search within ``timeout`` seconds, on both sides.
+
+    Raises ``AggregationTimedOut`` when the indexer reports ``timed_out``
+    (its per-shard budget ran out, so the counts would be partial) or the
+    client stops waiting; in the second case the search is cancelled first.
+    """
+    opaque_id = f"copilot-firing-stats-{uuid.uuid4().hex}"
+    body = {**body, "timeout": f"{max(1, timeout - SERVER_TIMEOUT_MARGIN_SECONDS)}s"}
+    try:
+        # ``ignore_unavailable`` swallows per-index permission / missing-index
+        # errors so one bad index doesn't fail the whole aggregation.
+        # ``allow_no_indices`` likewise stops the request from 4xx-ing when
+        # the pattern matches zero indices (fresh deployment, etc.).
+        response = await client.search(
+            index=index,
+            body=body,
+            ignore_unavailable=True,
+            allow_no_indices=True,
+            request_timeout=timeout,
+            opaque_id=opaque_id,
+        )
+    except ConnectionTimeout:
+        await _cancel_search(client, opaque_id)
+        raise AggregationTimedOut()
+    if response.get("timed_out"):
+        raise AggregationTimedOut()
+    shards = response.get("_shards") or {}
+    if shards.get("failed"):
+        logger.warning(f"Firing-stats aggregation: {shards.get('failed')} of {shards.get('total')} shard(s) failed")
+    return response
+
+
+async def _cancel_search(client: Any, opaque_id: str) -> None:
+    """
+    Cancel the search the client gave up on, found by its ``X-Opaque-Id``.
+
+    Best effort: without it the indexer keeps aggregating for nobody, and
+    each refresh used to leave one or two of those behind (#1319).
+    """
+    try:
+        listing = await client.tasks.list(
+            actions="indices:data/read/search",
+            detailed=True,
+            request_timeout=METADATA_TIMEOUT_SECONDS,
+        )
+        for node in ((listing or {}).get("nodes") or {}).values():
+            for task_id, task in ((node or {}).get("tasks") or {}).items():
+                headers = (task or {}).get("headers") or {}
+                if any(str(k).lower() == "x-opaque-id" and v == opaque_id for k, v in headers.items()):
+                    await client.tasks.cancel(task_id=task_id, request_timeout=METADATA_TIMEOUT_SECONDS)
+                    logger.info(f"Cancelled abandoned firing-stats search {task_id}")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Could not cancel an abandoned firing-stats search: {exc}")
+
+
+async def _rule_field_candidates(client: Any, index: str, preferred: Optional[str]) -> List[str]:
+    """
+    The rule-ID fields worth aggregating on, ``preferred`` first.
+
+    Only fields ``_field_caps`` reports as mapped and aggregatable somewhere
+    in ``index``. When field caps can't be read, every option, so a cluster
+    that refuses the call still gets counts.
+    """
+    try:
+        response = await client.field_caps(
+            index=index,
+            fields=",".join(RULE_ID_FIELD_OPTIONS),
+            ignore_unavailable=True,
+            allow_no_indices=True,
+            request_timeout=METADATA_TIMEOUT_SECONDS,
+        )
+        caps = (response or {}).get("fields") or {}
+        fields = [
+            f
+            for f in RULE_ID_FIELD_OPTIONS
+            if any(isinstance(spec, dict) and spec.get("aggregatable") for spec in (caps.get(f) or {}).values())
+        ]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Firing-stats field discovery failed, trying every rule ID field: {exc}")
+        fields = list(RULE_ID_FIELD_OPTIONS)
+    if preferred in fields:
+        fields.remove(preferred)
+        fields.insert(0, preferred)
+    return fields
+
+
+async def _close(client: Any) -> None:
+    try:
+        await client.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _parse_buckets(response: Dict[str, Any]) -> Dict[int, Dict[str, Any]]:
+    stats: Dict[int, Dict[str, Any]] = {}
+    for bucket in response.get("aggregations", {}).get("by_rule", {}).get("buckets", []):
+        rule_id = _coerce_rule_id(bucket.get("key"))
+        if rule_id is None:
+            continue
+        # ``max(timestamp)`` comes back as ``{"value": <epoch millis>,
+        # "value_as_string": "<ISO>"}``; the ISO string goes straight to the UI.
+        stats[rule_id] = {
+            "hits_30d": int(bucket.get("doc_count") or 0),
+            "hits_7d": int((bucket.get("last_7d") or {}).get("doc_count") or 0),
+            "last_seen": (bucket.get("last_seen") or {}).get("value_as_string"),
+        }
+    return stats
 
 
 def _build_firing_stats_query(field: str) -> Dict[str, Any]:
@@ -459,35 +678,24 @@ def _build_firing_stats_query(field: str) -> Dict[str, Any]:
     }
 
 
-async def _discover_alert_indices(client: Any) -> List[str]:
+async def _discover_alert_indices(client: Any, index: str = ALERT_INDEX_PATTERN) -> List[str]:
     """
-    List every index in the cluster and return the ones that look like
-    alert indices (i.e. not a system / Wazuh-internal / audit-log index).
+    The concrete indices ``index`` expands to, minus anything that is
+    definitely not an alert index. For the debug log only — the search
+    itself runs on the pattern. ``[]`` on any failure.
 
-    Returns a list of concrete index names — pass directly to
-    ``client.search(index=<list>)``. Returns ``[]`` on any failure or if
-    the cluster is empty; callers should fall back to a sensible default
-    pattern in that case.
-
-    Why this is safe even with vendor indices that aren't Wazuh-alert
-    shaped:
+    Why including a vendor index that isn't Wazuh-alert shaped is safe:
 
     - The aggregation's ``exists`` filter on the rule-ID field drops
       documents that don't carry one.
     - ``_coerce_rule_id`` drops bucket keys that aren't integer-parseable —
       vendor-native rule identifiers like ``"Office365_FailedLogin"``
       don't pollute the Wazuh rule cache.
-
-    So the worst case of including a "wrong" index is zero contribution,
-    not garbage data. Erring on the side of inclusion is correct.
     """
     try:
-        # ``cat.indices`` returns a list of dicts with at least an ``index``
-        # field when ``format="json"``. We only need the name; ``h="index"``
-        # restricts the columns to keep the response small.
-        cat_response = await client.cat.indices(format="json", h="index")
+        # ``h="index"`` restricts the columns to keep the response small.
+        cat_response = await client.cat.indices(index=index, format="json", h="index", request_timeout=METADATA_TIMEOUT_SECONDS)
     except Exception as exc:  # noqa: BLE001
-        # Permission errors, network blips, etc. Caller falls back.
         logger.warning(f"Firing-stats index discovery failed: {exc}")
         return []
 

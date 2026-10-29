@@ -26,7 +26,7 @@
 			</n-input>
 
 			<n-select
-				v-if="firingStatsAvailable"
+				v-if="showCustomerSelect"
 				v-model:value="customerScope"
 				clearable
 				:options="customerOptions"
@@ -44,7 +44,7 @@
 		</div>
 
 		<!-- QUICK FILTER CHIPS - segmented style with hit-count summaries -->
-		<div v-if="firingStatsAvailable" class="flex flex-wrap gap-2">
+		<div v-if="showActivity" class="flex flex-wrap gap-2">
 			<n-tag
 				:type="activeChip === 'all' ? 'primary' : 'default'"
 				round
@@ -101,6 +101,20 @@
 			</n-tag>
 		</div>
 
+		<!-- Why the Activity column is missing: hit counts still loading, or the indexer could not count them. -->
+		<n-alert
+			v-if="!loading && available && activityNotice"
+			:type="activityNotice.type"
+			show-icon
+			data-testid="activity-notice"
+		>
+			<template v-if="activityNotice.type === 'info'" #icon>
+				<n-spin :size="16" />
+			</template>
+			<template #header>{{ activityNotice.title }}</template>
+			<span class="whitespace-pre-wrap">{{ activityNotice.body }}</span>
+		</n-alert>
+
 		<!-- Unavailable state: Wazuh Manager not reachable / not configured. -->
 		<n-alert v-if="!loading && !available" type="warning" show-icon>
 			<template #header>Wazuh Manager not available</template>
@@ -155,7 +169,8 @@
 <script setup lang="tsx">
 import type { DataTableColumns, SelectOption, TagProps } from "naive-ui"
 import type { ApiError } from "@/types/common"
-import type { CatalogWazuhRuleRow } from "@/types/detection-catalog"
+import type { CatalogWazuhRuleRow, CatalogWazuhRulesResponse } from "@/types/detection-catalog"
+import axios from "axios"
 import {
 	NAlert,
 	NButton,
@@ -165,10 +180,11 @@ import {
 	NInput,
 	NModal,
 	NSelect,
+	NSpin,
 	NTag,
 	useMessage
 } from "naive-ui"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import Dot, { hitsToDotVariant } from "@/components/common/Dot.vue"
@@ -185,12 +201,20 @@ const message = useMessage()
 const { routeDetectionCatalogWazuhRule } = useNavigation()
 const { globalCustomerCode, onGlobalCustomerFilterChange } = useGlobalCustomerFilter()
 const rules = ref<CatalogWazuhRuleRow[]>([])
-const loading = ref(false)
+// True until the first answer: the customer list is read first, and the notices
+// below would otherwise judge the hit counts before anything was asked.
+const loading = ref(true)
 const filter = ref("")
 
 const available = ref(true)
 const unavailableReason = ref<string | null>(null)
-const firingStatsAvailable = ref(true)
+// Unknown until the first answer: starting at `true` showed the Activity
+// column for a moment and then took it away (#1319).
+const firingStatsAvailable = ref(false)
+const firingStatsLoading = ref(false)
+const firingStatsUnavailableReason = ref<string | null>(null)
+const customerStatsStatus = ref<CatalogWazuhRulesResponse["customer_firing_stats_status"]>(null)
+const customerStatsError = ref<string | null>(null)
 
 type ChipKey = "all" | "noisy" | "dead"
 const activeChip = ref<ChipKey>("all")
@@ -199,6 +223,18 @@ const customerScope = ref<string>("")
 const customerOptions = ref<SelectOption[]>([{ label: "All customers", value: "" }])
 const loadingCustomers = ref(false)
 const refetchingForCustomer = ref(false)
+
+// Hit counts are computed in the background: until they land the answer says
+// so (`firing_stats_loading`, or a customer slice `loading`), and the tab asks
+// again with `limit: 1` — the full ruleset is several MB — then reloads once.
+// The ceiling covers FIRING_STATS_TIMEOUT_SECONDS at its 600s maximum plus a
+// search queued behind another one.
+const STATS_POLL_MS = 5000
+const STATS_MAX_POLLS = 300
+
+let abortController: AbortController | null = null
+let pollTimer: ReturnType<typeof setTimeout> | null = null
+let pollsLeft = STATS_MAX_POLLS
 
 const showTestLogLineDrawer = ref(false)
 const modalRuleId = ref<number | null>(null)
@@ -226,6 +262,52 @@ const pagination = {
 // how many candidates the filter would surface before clicking.
 const deadCount = computed(() => rules.value.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7).length)
 
+// Hit counts mean something only when the global counts are loaded and, with a
+// customer picked, that customer's slice has landed. Anything else would show
+// "No hits 30d" for every rule.
+const showActivity = computed(
+	() => firingStatsAvailable.value && (!customerScope.value || customerStatsStatus.value === "ready")
+)
+// Kept while a customer is picked, so the scope can always be set back to all customers.
+const showCustomerSelect = computed(() => firingStatsAvailable.value || !!customerScope.value)
+
+const customerLabel = computed(() => {
+	const option = customerOptions.value.find(o => o.value === customerScope.value)
+	return (option?.label as string | undefined) || customerScope.value
+})
+
+const activityNotice = computed<{ type: "info" | "warning"; title: string; body: string } | null>(() => {
+	if (firingStatsLoading.value) {
+		return {
+			type: "info",
+			title: "Counting rule hits",
+			body: "The Activity column appears once the indexer has counted the last 30 days of alerts."
+		}
+	}
+	if (!firingStatsAvailable.value) {
+		return {
+			type: "warning",
+			title: "Rule hit counts unavailable",
+			body: firingStatsUnavailableReason.value || "The Wazuh indexer could not count rule hits."
+		}
+	}
+	if (customerScope.value && customerStatsStatus.value === "loading") {
+		return {
+			type: "info",
+			title: `Counting hits for ${customerLabel.value}`,
+			body: "This can take a while on a large cluster. The Activity column appears once the count is done."
+		}
+	}
+	if (customerScope.value && customerStatsStatus.value === "error") {
+		return {
+			type: "warning",
+			title: `Hit counts for ${customerLabel.value} unavailable`,
+			body: customerStatsError.value || "The Wazuh indexer could not count this customer's rule hits."
+		}
+	}
+	return null
+})
+
 const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 	const q = filter.value.trim().toLowerCase()
 	const textFiltered = !q
@@ -244,10 +326,12 @@ const filteredRules = computed<CatalogWazuhRuleRow[]>(() => {
 					.includes(q)
 			)
 
-	if (activeChip.value === "noisy") {
+	// The chips sort and filter on hit counts: without them, every rule would be "dead".
+	const chip = showActivity.value ? activeChip.value : "all"
+	if (chip === "noisy") {
 		return [...textFiltered].sort((a, b) => b.hits_30d - a.hits_30d).slice(0, 50)
 	}
-	if (activeChip.value === "dead") {
+	if (chip === "dead") {
 		return textFiltered.filter(r => r.hits_30d === 0 && (r.level ?? 0) >= 7)
 	}
 	return textFiltered
@@ -333,6 +417,7 @@ function loadCustomers() {
 function onCustomerChange(value: string) {
 	customerScope.value = value
 	refetchingForCustomer.value = true
+	pollsLeft = STATS_MAX_POLLS
 	load(true)
 }
 
@@ -412,7 +497,7 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 			render: row => <span class="text-secondary font-mono text-xs">{row.filename || "—"}</span>
 		}
 	]
-	if (firingStatsAvailable.value) cols.push(hitsColumn.value)
+	if (showActivity.value) cols.push(hitsColumn.value)
 	cols.push({
 		title: "",
 		key: "actions",
@@ -437,24 +522,75 @@ const columns = computed<DataTableColumns<CatalogWazuhRuleRow>>(() => {
 	return cols
 })
 
+function stopPolling() {
+	if (pollTimer !== null) {
+		clearTimeout(pollTimer)
+		pollTimer = null
+	}
+}
+
+function statsPending(data: CatalogWazuhRulesResponse) {
+	return data.firing_stats_loading || data.customer_firing_stats_status === "loading"
+}
+
+function applyStats(data: CatalogWazuhRulesResponse) {
+	firingStatsAvailable.value = data.firing_stats_available
+	firingStatsLoading.value = data.firing_stats_loading
+	firingStatsUnavailableReason.value = data.firing_stats_unavailable_reason
+	customerStatsStatus.value = data.customer_firing_stats_status
+	customerStatsError.value = data.customer_firing_stats_error
+}
+
+function schedulePoll() {
+	if (pollsLeft <= 0) return
+	pollsLeft -= 1
+	pollTimer = setTimeout(pollStats, STATS_POLL_MS)
+}
+
+function pollStats() {
+	pollTimer = null
+	const signal = abortController?.signal
+	Api.detectionCatalog
+		.listWazuhRules({ customerCode: customerScope.value || undefined, limit: 1 }, signal)
+		.then(res => {
+			if (!res.data?.success) return
+			if (statsPending(res.data)) {
+				applyStats(res.data)
+				schedulePoll()
+				return
+			}
+			// The counts landed: one full read to put them on the rows.
+			load(true)
+		})
+		.catch(err => {
+			if (axios.isCancel(err)) return
+			schedulePoll()
+		})
+}
+
 function load(isCustomerChange = false) {
+	abortController?.abort()
+	abortController = new AbortController()
+	stopPolling()
 	if (!isCustomerChange) loading.value = true
 	Api.detectionCatalog
-		.listWazuhRules({ customerCode: customerScope.value || undefined })
+		.listWazuhRules({ customerCode: customerScope.value || undefined }, abortController.signal)
 		.then(res => {
 			if (res.data?.success) {
 				rules.value = res.data.rules || []
 				available.value = res.data.available
 				unavailableReason.value = res.data.unavailable_reason
-				firingStatsAvailable.value = res.data.firing_stats_available
+				applyStats(res.data)
+				if (statsPending(res.data)) schedulePoll()
 			} else {
 				message.warning(res.data?.message || "Failed to load Wazuh rules")
 			}
+			loading.value = false
+			refetchingForCustomer.value = false
 		})
 		.catch(err => {
+			if (axios.isCancel(err)) return
 			message.error(getApiErrorMessage(err as ApiError) || "Failed to load Wazuh rules")
-		})
-		.finally(() => {
 			loading.value = false
 			refetchingForCustomer.value = false
 		})
@@ -477,5 +613,10 @@ onGlobalCustomerFilterChange(codes => {
 	if (code !== customerScope.value) {
 		onCustomerChange(code)
 	}
+})
+
+onBeforeUnmount(() => {
+	stopPolling()
+	abortController?.abort()
 })
 </script>

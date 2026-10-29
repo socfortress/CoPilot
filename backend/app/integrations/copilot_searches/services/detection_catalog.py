@@ -32,9 +32,6 @@ from loguru import logger
 from app.integrations.copilot_searches.services.copilot_searches import rules_cache
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
 from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import (
-    fetch_firing_stats_for_customer,
-)
-from app.integrations.copilot_searches.services.wazuh_firing_stats_cache import (
     wazuh_firing_stats_cache,
 )
 from app.integrations.copilot_searches.services.wazuh_rules_cache import (
@@ -472,7 +469,7 @@ async def list_compliance_pivot(framework: str) -> Dict[str, Any]:
         "control_count": len(groups),
         "rules_with_compliance": rules_with_compliance,
         "total_rules": len(wazuh_rules_cache.get_all_rules()),
-        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+        "firing_stats_available": wazuh_firing_stats_cache.has_stats,
     }
 
 
@@ -518,7 +515,7 @@ async def get_compliance_group(framework: str, control: str) -> Dict[str, Any] |
     return {
         "framework": framework,
         "framework_label": framework_meta["label"],
-        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+        "firing_stats_available": wazuh_firing_stats_cache.has_stats,
         "group": {
             "control": control_key,
             "rule_count": len(rule_ids),
@@ -809,11 +806,15 @@ async def list_wazuh_rules(customer_code: Optional[str] = None) -> Dict[str, Any
     responsive (no round-trip per filter keystroke).
 
     When ``customer_code`` is set, firing counts (hits_7d / hits_30d /
-    last_seen) are scoped to that customer's alerts via a fresh ES query
-    (not cached — see ``fetch_firing_stats_for_customer`` for rationale).
-    The rule list itself is the same — every rule is shown — but the hit
-    columns reflect "what's been firing for THIS customer." Rules without
-    any hits for the customer get zeros.
+    last_seen) are scoped to that customer's alerts. That slice is an
+    aggregation as heavy as the global one, so it is computed in the
+    background and kept briefly (``WazuhFiringStatsCache.customer_stats``):
+    until it lands ``customer_firing_stats_status`` is ``loading``, and when
+    the indexer could not answer it is ``error`` with
+    ``customer_firing_stats_error``. In both cases the hit columns are zeros
+    the UI must not show. The rule list itself is the same — every rule is
+    shown — but the hit columns reflect "what's been firing for THIS
+    customer." Rules without any hits for the customer get zeros.
 
     Always returns a populated envelope. When Wazuh is unavailable, ``rules``
     is empty and ``available=False`` + ``unavailable_reason`` carries the
@@ -829,8 +830,13 @@ async def list_wazuh_rules(customer_code: Optional[str] = None) -> Dict[str, Any
     # the row builder — instead build rows with global stats, then patch the
     # firing fields. Keeps _wazuh_row's semantics clean and isolated.
     customer_stats: Dict[int, Dict[str, Any]] = {}
+    customer_status: Optional[str] = None
+    customer_error: Optional[str] = None
     if customer_code:
-        customer_stats = await fetch_firing_stats_for_customer(customer_code)
+        customer_slice = wazuh_firing_stats_cache.customer_stats(customer_code)
+        customer_stats = customer_slice.stats
+        customer_status = customer_slice.status
+        customer_error = customer_slice.error
 
     rows: List[Dict[str, Any]] = []
     for raw in wazuh_rules_cache.get_all_rules():
@@ -865,9 +871,14 @@ async def list_wazuh_rules(customer_code: Optional[str] = None) -> Dict[str, Any
         # Firing-stats availability mirrored on the envelope so the UI knows
         # whether to render the Hits column (no point showing "0" for every
         # row when the indexer isn't reachable — that'd be misleading).
-        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+        "firing_stats_available": wazuh_firing_stats_cache.has_stats,
         "firing_stats_unavailable_reason": wazuh_firing_stats_cache.unavailable_reason,
         "firing_stats_last_refresh": wazuh_firing_stats_cache.last_refresh,
+        # True until the first refresh finishes: the counts aren't known yet,
+        # which is neither "unavailable" nor "nothing fired".
+        "firing_stats_loading": not wazuh_firing_stats_cache.is_loaded,
+        "customer_firing_stats_status": customer_status,
+        "customer_firing_stats_error": customer_error,
         # Echoes the request so the UI can confirm the scope it's showing.
         # Empty string when the global view is being served.
         "customer_code": customer_code or "",
@@ -924,7 +935,7 @@ async def get_wazuh_rule_detail(rule_id: int) -> Optional[Dict[str, Any]]:
         "hits_7d": stats["hits_7d"],
         "hits_30d": stats["hits_30d"],
         "last_seen": stats.get("last_seen"),
-        "firing_stats_available": wazuh_firing_stats_cache.is_available,
+        "firing_stats_available": wazuh_firing_stats_cache.has_stats,
         "firing_stats_unavailable_reason": wazuh_firing_stats_cache.unavailable_reason,
     }
 
