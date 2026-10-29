@@ -53,6 +53,7 @@ from app.db.universal_models import IncidentManagementCustomerReport  # noqa: E4
 from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import AlertContext  # noqa: E402
 from app.incidents.models import AlertTag  # noqa: E402
+from app.incidents.models import AlertToIoC  # noqa: E402
 from app.incidents.models import AlertToTag  # noqa: E402
 from app.incidents.models import Asset  # noqa: E402
 from app.incidents.models import Case  # noqa: E402
@@ -62,6 +63,7 @@ from app.incidents.models import CaseDataStore  # noqa: E402
 from app.incidents.models import CaseEvent  # noqa: E402
 from app.incidents.models import CaseTask  # noqa: E402
 from app.incidents.models import Comment  # noqa: E402
+from app.incidents.models import IoC  # noqa: E402
 from app.soc_management.models.sla import AlertSlaTracking  # noqa: E402
 from app.soc_management.models.sla import CaseSlaTracking  # noqa: E402
 
@@ -224,6 +226,9 @@ async def cleanup(s):
     await s.execute(delete(AlertTag).where(AlertTag.tag.in_(ALERT_TAGS)))
     # sla.cy.ts replies to the waiting alert, which leaves a comment on it.
     await s.execute(delete(Comment).where(Comment.alert_id.in_(alert_ids)))
+    # IOCs the Threat Intel tests put on these alerts (#1318: "e2e_…ioc" descriptions), and their links.
+    await s.execute(delete(AlertToIoC).where(AlertToIoC.alert_id.in_(alert_ids)))
+    await s.execute(delete(IoC).where(IoC.description.like("e2e\\_%ioc")))
     await s.execute(delete(Alert).where(Alert.customer_code.in_(codes)))
     await s.execute(delete(AlertContext).where(AlertContext.source == CONTEXT_SOURCE))
     await s.execute(delete(Agents).where(Agents.customer_code.in_(codes)))
