@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -657,10 +658,19 @@ class CatalogWazuhRulesResponse(BaseModel):
     available: bool = True
     unavailable_reason: Optional[str] = None
     last_refresh: Optional[datetime] = None
-    # Indexer-side availability for the firing-stats column.
+    # Indexer-side availability for the firing-stats column: true only once
+    # the counts are loaded and the last refresh worked.
     firing_stats_available: bool = True
     firing_stats_unavailable_reason: Optional[str] = None
     firing_stats_last_refresh: Optional[datetime] = None
+    # True until the first refresh finishes (#1319): the counts are not known
+    # yet, which is neither "unavailable" nor "nothing fired".
+    firing_stats_loading: bool = False
+    # The customer slice, when ``customer_code`` is set: ``ready``, ``loading``
+    # (computed in the background; ask again) or ``error`` with the reason.
+    # Only ``ready`` hit columns mean anything; the others are zeros.
+    customer_firing_stats_status: Optional[Literal["ready", "loading", "error"]] = None
+    customer_firing_stats_error: Optional[str] = None
     # Echoes the customer scope: empty string for the global view, customer
     # code when scoped. Lets the UI display "Showing hits for customer X"
     # and confirm the right slice was returned.

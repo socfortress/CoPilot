@@ -102,6 +102,12 @@ export interface CatalogWazuhRulesResponse {
 	firing_stats_available: boolean
 	firing_stats_unavailable_reason: string | null
 	firing_stats_last_refresh: string | null
+	// True until the indexer has answered once: neither "unavailable" nor "no hits".
+	firing_stats_loading: boolean
+	// The customer slice when `customer_code` is set (computed in the background).
+	// Only "ready" hit counts mean anything; ask again while "loading".
+	customer_firing_stats_status: "ready" | "loading" | "error" | null
+	customer_firing_stats_error: string | null
 	// Echoes the customer scope: "" for global, customer code when scoped.
 	customer_code: string
 }
