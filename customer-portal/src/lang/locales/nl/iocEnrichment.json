@@ -1,0 +1,79 @@
+{
+	"title": "Threat Intel",
+	"check": "Controleren",
+	"checkAgain": "Opnieuw controleren",
+	"checkHint": "Deze IOC opzoeken in de Threat Intel-bronnen van het SOC",
+	"checkedAt": "Gecontroleerd {date}",
+	"nextCheckAt": "Opnieuw te controleren na {date}",
+	"showDetails": "Details",
+	"hideDetails": "Details verbergen",
+	"checked": "IOC gecontroleerd",
+	"loadFailed": "De Threat Intel-resultaten konden niet worden geladen.",
+	"verdicts": {
+		"malicious": "Kwaadaardig",
+		"suspicious": "Verdacht",
+		"known": "Bekend bij Threat Intel",
+		"clean": "Geen detecties",
+		"unknown": "Niet geanalyseerd",
+		"not_found": "Niet gevonden",
+		"unchecked": "Niet gecontroleerd",
+		"not_sent": "Niet verstuurd"
+	},
+	"sources": {
+		"virustotal": "VirusTotal",
+		"opencti": "OpenCTI"
+	},
+	"kinds": {
+		"internal": "Een privéadres of interne naam: wordt nooit naar een Threat Intel-bron gestuurd.",
+		"invalid": "Deze waarde kan niet worden opgezocht."
+	},
+	"status": {
+		"found": "Gevonden",
+		"not_found": "Niet gevonden",
+		"not_checked": "Nog niet gecontroleerd",
+		"unsupported": "Dit soort waarde kan niet worden opgezocht",
+		"internal": "Niet verstuurd: privéadres of interne naam",
+		"not_configured": "Niet beschikbaar"
+	},
+	"errors": {
+		"rateLimited": "VirusTotal is bezet. Probeer het over een minuut opnieuw.",
+		"unavailable": "Niet bereikbaar. Probeer het later opnieuw.",
+		"refreshFailed": "Kon niet opnieuw worden gecontroleerd; het getoonde antwoord is van {date}."
+	},
+	"failures": {
+		"notEnabled": "Threat Intel-controles zijn niet ingeschakeld voor je organisatie.",
+		"gone": "Deze IOC staat niet meer op de melding.",
+		"running": "Deze IOC wordt al gecontroleerd. Probeer het zo opnieuw.",
+		"limit": "Je organisatie heeft haar daglimiet voor IOC-controles bereikt. Probeer het later opnieuw.",
+		"generic": "De IOC kon niet worden gecontroleerd. Probeer het later opnieuw."
+	},
+	"virustotal": {
+		"detections": "Detecties",
+		"engineCounts": "Engines",
+		"malicious": "Kwaadaardig",
+		"suspicious": "Verdacht",
+		"harmless": "Onschuldig",
+		"undetected": "Niet gedetecteerd",
+		"engines": "Gemarkeerd door {flagged} van {engines} engines",
+		"noEngines": "Nog door geen enkele engine geanalyseerd",
+		"reputation": "Reputatie",
+		"country": "Land",
+		"asOwner": "Netwerkeigenaar",
+		"fileType": "Bestandstype",
+		"lastAnalysis": "Laatst geanalyseerd",
+		"tags": "Tags",
+		"open": "Openen op VirusTotal"
+	},
+	"opencti": {
+		"score": "Score",
+		"noScore": "Geen score",
+		"types": "Type",
+		"labels": "Labels",
+		"indicators": "Indicatoren",
+		"reports": "Rapporten",
+		"validUntil": "geldig tot {date}",
+		"revoked": "Ingetrokken",
+		"published": "gepubliceerd op {date}",
+		"withheld": "{count} item niet getoond vanwege de deelmarkering | {count} items niet getoond vanwege hun deelmarkering"
+	}
+}

@@ -1,0 +1,79 @@
+{
+	"title": "Threat Intel",
+	"check": "Comprobar",
+	"checkAgain": "Comprobar de nuevo",
+	"checkHint": "Buscar este IOC en las fuentes de Threat Intel del SOC",
+	"checkedAt": "Comprobado {date}",
+	"nextCheckAt": "Se puede comprobar de nuevo después de {date}",
+	"showDetails": "Detalles",
+	"hideDetails": "Ocultar detalles",
+	"checked": "IOC comprobado",
+	"loadFailed": "No se pudieron cargar los resultados de Threat Intel.",
+	"verdicts": {
+		"malicious": "Malicioso",
+		"suspicious": "Sospechoso",
+		"known": "Conocido por Threat Intel",
+		"clean": "Sin detecciones",
+		"unknown": "Sin analizar",
+		"not_found": "No encontrado",
+		"unchecked": "Sin comprobar",
+		"not_sent": "No enviado"
+	},
+	"sources": {
+		"virustotal": "VirusTotal",
+		"opencti": "OpenCTI"
+	},
+	"kinds": {
+		"internal": "Una dirección privada o un nombre interno: nunca se envía a una fuente de Threat Intel.",
+		"invalid": "Este valor no se puede buscar."
+	},
+	"status": {
+		"found": "Encontrado",
+		"not_found": "No encontrado",
+		"not_checked": "Aún sin comprobar",
+		"unsupported": "Este tipo de valor no se puede buscar",
+		"internal": "No enviado: dirección privada o nombre interno",
+		"not_configured": "No disponible"
+	},
+	"errors": {
+		"rateLimited": "VirusTotal está ocupado. Inténtalo de nuevo en un minuto.",
+		"unavailable": "No se pudo contactar. Inténtalo más tarde.",
+		"refreshFailed": "No se pudo comprobar de nuevo; la respuesta mostrada es del {date}."
+	},
+	"failures": {
+		"notEnabled": "Las comprobaciones de Threat Intel no están activadas para tu organización.",
+		"gone": "Este IOC ya no está en la alerta.",
+		"running": "Este IOC ya se está comprobando. Inténtalo de nuevo en un momento.",
+		"limit": "Tu organización ha alcanzado su límite diario de comprobaciones de IOC. Inténtalo más tarde.",
+		"generic": "No se pudo comprobar el IOC. Inténtalo más tarde."
+	},
+	"virustotal": {
+		"detections": "Detecciones",
+		"engineCounts": "Motores",
+		"malicious": "Maliciosos",
+		"suspicious": "Sospechosos",
+		"harmless": "Inofensivos",
+		"undetected": "No detectados",
+		"engines": "Marcado por {flagged} de {engines} motores",
+		"noEngines": "Ningún motor lo ha analizado",
+		"reputation": "Reputación",
+		"country": "País",
+		"asOwner": "Propietario de la red",
+		"fileType": "Tipo de archivo",
+		"lastAnalysis": "Último análisis",
+		"tags": "Etiquetas",
+		"open": "Abrir en VirusTotal"
+	},
+	"opencti": {
+		"score": "Puntuación",
+		"noScore": "Sin puntuación",
+		"types": "Tipo",
+		"labels": "Etiquetas",
+		"indicators": "Indicadores",
+		"reports": "Informes",
+		"validUntil": "válido hasta el {date}",
+		"revoked": "Revocado",
+		"published": "publicado el {date}",
+		"withheld": "{count} elemento oculto por su marcado de difusión | {count} elementos ocultos por su marcado de difusión"
+	}
+}

@@ -37,7 +37,8 @@
 						/>
 					</n-tab-pane>
 
-					<n-tab-pane name="iocs" :tab="$t('alerts.details.tabs.iocs')">
+					<!-- Lazy: with Threat Intel on (#1318) the IOCs read what the SOC keeps about them when shown. -->
+					<n-tab-pane name="iocs" :tab="$t('alerts.details.tabs.iocs')" display-directive="show:lazy">
 						<AlertIocs :alert />
 					</n-tab-pane>
 

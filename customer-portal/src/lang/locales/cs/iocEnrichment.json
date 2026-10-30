@@ -1,0 +1,79 @@
+{
+	"title": "Threat Intel",
+	"check": "Ověřit",
+	"checkAgain": "Ověřit znovu",
+	"checkHint": "Vyhledat tento IOC ve zdrojích Threat Intel SOC",
+	"checkedAt": "Ověřeno {date}",
+	"nextCheckAt": "Znovu ověřitelné po {date}",
+	"showDetails": "Podrobnosti",
+	"hideDetails": "Skrýt podrobnosti",
+	"checked": "IOC ověřen",
+	"loadFailed": "Výsledky Threat Intel se nepodařilo načíst.",
+	"verdicts": {
+		"malicious": "Škodlivý",
+		"suspicious": "Podezřelý",
+		"known": "Známý v Threat Intel",
+		"clean": "Žádné detekce",
+		"unknown": "Neanalyzováno",
+		"not_found": "Nenalezeno",
+		"unchecked": "Neověřeno",
+		"not_sent": "Neodesláno"
+	},
+	"sources": {
+		"virustotal": "VirusTotal",
+		"opencti": "OpenCTI"
+	},
+	"kinds": {
+		"internal": "Soukromá adresa nebo interní název: nikdy se neodesílá do zdroje Threat Intel.",
+		"invalid": "Tuto hodnotu nelze vyhledat."
+	},
+	"status": {
+		"found": "Nalezeno",
+		"not_found": "Nenalezeno",
+		"not_checked": "Zatím neověřeno",
+		"unsupported": "Tento druh hodnoty nelze vyhledat",
+		"internal": "Neodesláno: soukromá adresa nebo interní název",
+		"not_configured": "Není k dispozici"
+	},
+	"errors": {
+		"rateLimited": "VirusTotal je přetížen. Zkuste to znovu za minutu.",
+		"unavailable": "Není dostupný. Zkuste to později.",
+		"refreshFailed": "Nepodařilo se ověřit znovu; zobrazená odpověď je z {date}."
+	},
+	"failures": {
+		"notEnabled": "Ověřování Threat Intel není pro vaši organizaci zapnuto.",
+		"gone": "Tento IOC už u výstrahy není.",
+		"running": "Tento IOC se již ověřuje. Zkuste to za chvíli znovu.",
+		"limit": "Vaše organizace dosáhla denního limitu ověření IOC. Zkuste to později.",
+		"generic": "IOC se nepodařilo ověřit. Zkuste to později."
+	},
+	"virustotal": {
+		"detections": "Detekce",
+		"engineCounts": "Enginy",
+		"malicious": "Škodlivé",
+		"suspicious": "Podezřelé",
+		"harmless": "Neškodné",
+		"undetected": "Nedetekováno",
+		"engines": "Označeno {flagged} z {engines} enginů",
+		"noEngines": "Žádný engine ho zatím neanalyzoval",
+		"reputation": "Reputace",
+		"country": "Země",
+		"asOwner": "Vlastník sítě",
+		"fileType": "Typ souboru",
+		"lastAnalysis": "Poslední analýza",
+		"tags": "Štítky",
+		"open": "Otevřít na VirusTotal"
+	},
+	"opencti": {
+		"score": "Skóre",
+		"noScore": "Bez skóre",
+		"types": "Typ",
+		"labels": "Štítky",
+		"indicators": "Indikátory",
+		"reports": "Zprávy",
+		"validUntil": "platný do {date}",
+		"revoked": "Odvoláno",
+		"published": "zveřejněno {date}",
+		"withheld": "{count} položka skryta kvůli označení sdílení | {count} položky skryty kvůli označení sdílení | {count} položek skryto kvůli označení sdílení"
+	}
+}

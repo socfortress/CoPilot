@@ -12,6 +12,7 @@ import { useActivityAvailability } from "@/composables/common/useActivityAvailab
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { useAuditAvailability } from "@/composables/common/useAuditAvailability"
 import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
+import { useIocEnrichmentAvailability } from "@/composables/common/useIocEnrichmentAvailability"
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
@@ -79,6 +80,8 @@ export const useAuthStore = defineStore("auth", {
 			useLocalesStore().reset()
 			// Whether the user may ask the SOC is the customer's choice too (#1305).
 			useSocRequestsAvailability().reset()
+			// So is whether they may check their IOCs against Threat Intel (#1318).
+			useIocEnrichmentAvailability().reset()
 			// The bell's server notifications are the user's own (#1282).
 			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).
