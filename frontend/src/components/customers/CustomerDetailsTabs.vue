@@ -114,16 +114,14 @@
 				<n-tab-pane name="Audit Log" tab="Audit Log" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalAudit :customer-code="customer.customer_code" />
 				</n-tab-pane>
-				<n-tab-pane
-					name="Portal Languages"
-					tab="Portal Languages"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
+				<n-tab-pane name="Portal Languages" tab="Portal Languages" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalLanguages :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane name="Ask the SOC" tab="Ask the SOC" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalAskSoc :customer-code="customer.customer_code" />
+				</n-tab-pane>
+				<n-tab-pane name="IOC Enrichment" tab="IOC Enrichment" display-directive="show:lazy" class="p-4!">
+					<CustomerPortalIocEnrichment :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
 					<CustomerSecurity :customer-code="customer.customer_code" />
@@ -142,7 +140,7 @@
 				:placement="subTabsPlacement"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
-				<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
+				<n-tab-pane name="Agents" tab="Agents list" display-directive="show" class="p-4! pr-0!">
 					<n-scrollbar trigger="none" :class="scrollbarClass">
 						<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 					</n-scrollbar>
@@ -261,6 +259,10 @@ const CustomerPortalAudit = defineAsyncComponent(() => import("@/components/cust
 const CustomerPortalLanguages = defineAsyncComponent(() => import("@/components/customerPortal/LanguageSettings.vue"))
 // Per-customer switch for "Ask the SOC": portal users' questions about their alerts and cases (#1305).
 const CustomerPortalAskSoc = defineAsyncComponent(() => import("@/components/customerPortal/AskSocSettings.vue"))
+// Per-customer switch for Threat Intel on the IOCs of portal users' alerts (#1318).
+const CustomerPortalIocEnrichment = defineAsyncComponent(
+	() => import("@/components/customerPortal/IocEnrichmentSettings.vue")
+)
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
 const CustomerWaf = defineAsyncComponent(() => import("@/components/customerWaf/CustomerWaf.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
@@ -306,6 +308,7 @@ const CUSTOMER_SUB_TABS = new Set([
 	"Audit Log",
 	"Portal Languages",
 	"Ask the SOC",
+	"IOC Enrichment",
 	"Security"
 ])
 

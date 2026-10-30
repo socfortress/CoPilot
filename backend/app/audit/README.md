@@ -97,6 +97,8 @@ one instrumentation point.
 | `soc_request.create` | a portal user asks the SOC about an alert or a case (#1305) | `case` or `alert` / its id | new = {request_id, urgency, origin_alert_id}; refusals (switched off, cooldown, daily limit, comment not written) as failures with the reason in details; never the question |
 | `soc_request.answer` | an analyst marks a customer question answered by hand (#1305) | `soc_request` / id | new = {status, via: manual}; answering by a SOC comment is not audited apart (the comment is) |
 | `soc_request.settings_update` | Customers → customer → Ask the SOC (#1305), when it changes | `customer_portal_soc_request_settings` / customer_code | old/new = {enabled, daily_request_limit} |
+| `ioc_enrichment.lookup` | a portal user checks an IOC of their alert against VirusTotal / OpenCTI and at least one source is asked (#1318) | `ioc` / its id | new = {alert_id, value, sources: {source: status}}; failure when no source answered (nothing cached, nothing counted); a result served from the cache is not audited |
+| `ioc_enrichment.settings_update` | Customers → customer → IOC Enrichment (#1318), when it changes | `customer_portal_ioc_enrichment_settings` / customer_code | old/new = {enabled, daily_lookup_limit} |
 | `connector.create/update/delete` | `app/connectors` services | `connector` / name | new/old = sanitized config (no secrets) |
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |

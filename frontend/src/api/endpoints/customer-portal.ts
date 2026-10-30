@@ -12,6 +12,7 @@ import type {
 	CustomerPortalSlaSettings
 } from "@/types/customer-portal"
 import type { FlaskBaseResponse } from "@/types/flask"
+import type { CustomerPortalIocEnrichmentSettings, IocEnrichmentConnectors } from "@/types/ioc-enrichment"
 import type { CustomerPortalSocRequestSettings } from "@/types/soc-requests"
 import { HttpClient } from "../http-client"
 
@@ -107,6 +108,19 @@ export interface CustomerPortalSocRequestSettingsPayload {
 
 type SocRequestSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalSocRequestSettings
+}
+
+export interface CustomerPortalIocEnrichmentSettingsPayload {
+	enabled: boolean
+	/** Lookups per customer over any 24 hours; null = unlimited. A cached answer never counts. */
+	daily_lookup_limit: number | null
+}
+
+type IocEnrichmentSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalIocEnrichmentSettings
+	connectors: IocEnrichmentConnectors
+	/** How long an answer is shown before a portal user may ask the source again. */
+	cache_hours: number
 }
 
 export interface CustomerPortalNotificationSettingsPayload {
@@ -218,5 +232,17 @@ export default {
 	/** Admin-only: lets this customer's portal users ask the SOC, with a daily limit (#1305). */
 	setCustomerSocRequestSettings(customerCode: string, payload: CustomerPortalSocRequestSettingsPayload) {
 		return HttpClient.put<SocRequestSettingsResponse>(`/customer_portal/soc_requests/settings/${customerCode}`, payload)
+	},
+	getCustomerIocEnrichmentSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<IocEnrichmentSettingsResponse>(`/customer_portal/ioc_enrichment/settings/${customerCode}`, {
+			signal
+		})
+	},
+	/** Admin-only: lets this customer's portal users check their alerts' IOCs against Threat Intel (#1318). */
+	setCustomerIocEnrichmentSettings(customerCode: string, payload: CustomerPortalIocEnrichmentSettingsPayload) {
+		return HttpClient.put<IocEnrichmentSettingsResponse>(
+			`/customer_portal/ioc_enrichment/settings/${customerCode}`,
+			payload
+		)
 	}
 }

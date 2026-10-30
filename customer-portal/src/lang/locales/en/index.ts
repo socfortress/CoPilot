@@ -11,6 +11,7 @@ import common from "./common.json" with { type: "json" }
 import dashboards from "./dashboards.json" with { type: "json" }
 import eventSearch from "./eventSearch.json" with { type: "json" }
 import exposure from "./exposure.json" with { type: "json" }
+import iocEnrichment from "./iocEnrichment.json" with { type: "json" }
 import navigation from "./navigation.json" with { type: "json" }
 import notifications from "./notifications.json" with { type: "json" }
 import overview from "./overview.json" with { type: "json" }
@@ -38,5 +39,6 @@ export default {
 	users,
 	audit,
 	notifications,
-	socRequests
+	socRequests,
+	iocEnrichment
 }

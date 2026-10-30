@@ -85,6 +85,31 @@ query CoPilotObservableLookup($filters: FilterGroup, $first: Int, $indicators: I
     + INDICATOR_FRAGMENT
 )
 
+# The Customer Portal's lookup (#1318): only what an end customer may be shown, and the marking
+# of every object, so the portal can withhold what its TLP does not let the SOC pass on. No
+# fragment: CoreMeta would also bring the author and internal ids, which the portal never shows.
+PORTAL_OBSERVABLE_QUERY = """
+query CoPilotPortalObservable($filters: FilterGroup, $first: Int, $indicators: Int, $reports: Int) {
+    stixCyberObservables(first: $first, filters: $filters) {
+        edges {
+            node {
+                entity_type
+                observable_value
+                x_opencti_score
+                objectLabel { value }
+                objectMarking { definition }
+                indicators(first: $indicators) {
+                    edges { node { name x_opencti_score valid_until revoked objectMarking { definition } } }
+                }
+                reports(first: $reports) {
+                    edges { node { name published objectMarking { definition } } }
+                }
+            }
+        }
+    }
+}
+"""
+
 INDICATORS_QUERY = (
     """
 query CoPilotIndicators($search: String, $filters: FilterGroup, $first: Int, $after: ID) {

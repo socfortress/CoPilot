@@ -7,6 +7,7 @@ import auth from "./endpoints/auth"
 import cases from "./endpoints/cases"
 import caseTemplates from "./endpoints/caseTemplates"
 import exposure from "./endpoints/exposure"
+import iocEnrichment from "./endpoints/iocEnrichment"
 import languages from "./endpoints/languages"
 import notifications from "./endpoints/notifications"
 import portal from "./endpoints/portal"
@@ -27,6 +28,7 @@ export default {
 	cases,
 	caseTemplates,
 	exposure,
+	iocEnrichment,
 	languages,
 	siem,
 	sla,

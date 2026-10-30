@@ -58,6 +58,8 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         # Ask the SOC about one of their alerts or cases, where the customer allows it (#1305).
         ("POST", "/api/customer_portal/soc_requests/alert/{alert_id}"),
         ("POST", "/api/customer_portal/soc_requests/case/{case_id}"),
+        # Check one of their alerts' IOCs against Threat Intel (#1318): reads, but spends the daily limit.
+        ("POST", "/api/customer_portal/ioc_enrichment/alert/{alert_id}/ioc/{ioc_id}"),
         # Asset criticality of the customer's own agents.
         ("POST", "/api/agents/{agent_id}/critical"),
         ("POST", "/api/agents/{agent_id}/noncritical"),

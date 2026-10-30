@@ -37,14 +37,17 @@ export SMTP_USE_TLS="false"
 export SMTP_USERNAME=""
 export SMTP_PASSWORD=""
 export SMTP_FROM="copilot-e2e@e2e.example"
+# The fake VirusTotal and OpenCTI Cypress runs for the IOC checks (#1318): the connector rows
+# point there only while ioc-enrichment.cy.ts runs.
+export E2E_TI_PORT="${E2E_TI_PORT:-2527}"
 # The emails' links point at the portal under test.
 export CUSTOMER_PORTAL_URL="http://localhost:$WEB_PORT"
 export PYTHONPATH="$BACKEND_DIR"
 export E2E_PYTHON="$PYTHON"
 
-for port in "$API_PORT" "$WEB_PORT" "$E2E_SMTP_PORT"; do
+for port in "$API_PORT" "$WEB_PORT" "$E2E_SMTP_PORT" "$E2E_TI_PORT"; do
 	if lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
-		echo "Port $port is already in use: stop what is on it or set E2E_API_PORT / E2E_WEB_PORT / E2E_SMTP_PORT." >&2
+		echo "Port $port is already in use: stop what is on it or set E2E_API_PORT / E2E_WEB_PORT / E2E_SMTP_PORT / E2E_TI_PORT." >&2
 		exit 1
 	fi
 done

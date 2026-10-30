@@ -1,0 +1,79 @@
+{
+	"title": "Threat Intel",
+	"check": "Check",
+	"checkAgain": "Check again",
+	"checkHint": "Look this IOC up in the SOC's Threat Intel sources",
+	"checkedAt": "Checked {date}",
+	"nextCheckAt": "Can be checked again after {date}",
+	"showDetails": "Details",
+	"hideDetails": "Hide details",
+	"checked": "IOC checked",
+	"loadFailed": "Threat Intel results could not be loaded.",
+	"verdicts": {
+		"malicious": "Malicious",
+		"suspicious": "Suspicious",
+		"known": "Known to Threat Intel",
+		"clean": "No detections",
+		"unknown": "Not analysed",
+		"not_found": "Not found",
+		"unchecked": "Not checked",
+		"not_sent": "Not sent"
+	},
+	"sources": {
+		"virustotal": "VirusTotal",
+		"opencti": "OpenCTI"
+	},
+	"kinds": {
+		"internal": "A private address or internal name: never sent to a Threat Intel source.",
+		"invalid": "This value can't be looked up."
+	},
+	"status": {
+		"found": "Found",
+		"not_found": "Not found",
+		"not_checked": "Not checked yet",
+		"unsupported": "Can't look up this kind of value",
+		"internal": "Not sent: a private address or internal name",
+		"not_configured": "Not available"
+	},
+	"errors": {
+		"rateLimited": "VirusTotal is busy. Try again in a minute.",
+		"unavailable": "Could not be reached. Try again later.",
+		"refreshFailed": "Could not be checked again; the answer shown is from {date}."
+	},
+	"failures": {
+		"notEnabled": "Threat Intel checks are not enabled for your organization.",
+		"gone": "This IOC is no longer on the alert.",
+		"running": "This IOC is already being checked. Try again in a moment.",
+		"limit": "Your organization has reached its daily limit of IOC checks. Try again later.",
+		"generic": "The IOC could not be checked. Try again later."
+	},
+	"virustotal": {
+		"detections": "Detections",
+		"engineCounts": "Engines",
+		"malicious": "Malicious",
+		"suspicious": "Suspicious",
+		"harmless": "Harmless",
+		"undetected": "Undetected",
+		"engines": "Flagged by {flagged} of {engines} engines",
+		"noEngines": "No engine has analysed it",
+		"reputation": "Reputation",
+		"country": "Country",
+		"asOwner": "Network owner",
+		"fileType": "File type",
+		"lastAnalysis": "Last analysed",
+		"tags": "Tags",
+		"open": "Open on VirusTotal"
+	},
+	"opencti": {
+		"score": "Score",
+		"noScore": "No score",
+		"types": "Type",
+		"labels": "Labels",
+		"indicators": "Indicators",
+		"reports": "Reports",
+		"validUntil": "valid until {date}",
+		"revoked": "Revoked",
+		"published": "published {date}",
+		"withheld": "{count} item withheld by its sharing marking | {count} items withheld by their sharing marking"
+	}
+}
