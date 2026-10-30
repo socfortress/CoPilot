@@ -114,12 +114,7 @@
 				<n-tab-pane name="Audit Log" tab="Audit Log" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalAudit :customer-code="customer.customer_code" />
 				</n-tab-pane>
-				<n-tab-pane
-					name="Portal Languages"
-					tab="Portal Languages"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
+				<n-tab-pane name="Portal Languages" tab="Portal Languages" display-directive="show:lazy" class="p-4!">
 					<CustomerPortalLanguages :customer-code="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane name="Ask the SOC" tab="Ask the SOC" display-directive="show:lazy" class="p-4!">
@@ -145,7 +140,7 @@
 				:placement="subTabsPlacement"
 				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
 			>
-				<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="p-4! pr-0!">
+				<n-tab-pane name="Agents" tab="Agents list" display-directive="show" class="p-4! pr-0!">
 					<n-scrollbar trigger="none" :class="scrollbarClass">
 						<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
 					</n-scrollbar>
