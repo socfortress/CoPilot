@@ -90,6 +90,16 @@ describe("the customer questions page", () => {
 		expect(wrapper.get("[data-testid=customer-questions-status]").text()).toContain("Answered (3)")
 	})
 
+	it("marks a question drafted with Talon in the portal chat", async () => {
+		socRequests.list.mockResolvedValue(
+			listed([question(1, { case_id: 4, drafted_with_talon: true }), question(2, { alert_id: 9 })])
+		)
+		const { wrapper } = await render()
+		const rows = wrapper.findAll("[data-testid=customer-question-row]")
+		expect(rows[0]?.get("[data-testid=customer-question-drafted-with-talon]").text()).toBe("Drafted with Talon")
+		expect(rows[1]?.find("[data-testid=customer-question-drafted-with-talon]").exists()).toBe(false)
+	})
+
 	it("keeps the status in the URL, the default left out", async () => {
 		socRequests.list.mockResolvedValue(listed([]))
 		const { wrapper, router } = await render("/customer-questions?status=answered")

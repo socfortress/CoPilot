@@ -99,6 +99,7 @@ one instrumentation point.
 | `soc_request.settings_update` | Customers → customer → Ask the SOC (#1305), when it changes | `customer_portal_soc_request_settings` / customer_code | old/new = {enabled, daily_request_limit} |
 | `ioc_enrichment.lookup` | a portal user checks an IOC of their alert against VirusTotal / OpenCTI and at least one source is asked (#1318) | `ioc` / its id | new = {alert_id, value, sources: {source: status}}; failure when no source answered (nothing cached, nothing counted); a result served from the cache is not audited |
 | `ioc_enrichment.settings_update` | Customers → customer → IOC Enrichment (#1318), when it changes | `customer_portal_ioc_enrichment_settings` / customer_code | old/new = {enabled, daily_lookup_limit} |
+| `talon_portal_chat.update` | Customers → customer → AI Report → Talon chat in the portal (talon-analyst D97), every admin write; and the chat turned off because the customer's AI reports were (details say so) | `customer_portal_chat_settings` / customer_code | old/new = {portal_chat_enabled, log_search_enabled, daily_message_limit, user_daily_message_limit, version} |
 | `connector.create/update/delete` | `app/connectors` services | `connector` / name | new/old = sanitized config (no secrets) |
 | `agent.delete` | `app/agents/routes/agents.py` delete | `agent` / agent_id | + customer_code |
 | `agent.criticality_change` | asset critical/non-critical toggle | `agent`/`asset` / id | old/new = {critical: bool} |

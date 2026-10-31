@@ -1,4 +1,4 @@
-"""The five identity headers CoPilot sends on every talon-analyst v2 request (talon-analyst SPEC §8
+"""The identity headers CoPilot sends on every talon-analyst v2 request (talon-analyst SPEC §8
 "v2 API" Identity, §5.3, D40, D41, D55; plan M5-5a).
 
 talon-analyst trusts these headers on a request that carries the API key: they are how it knows
@@ -18,6 +18,11 @@ browser sent never reaches talon-analyst.
   ``{"*"}`` (tag RBAC off, or an unrestricted role) is ``*``; otherwise the sorted tag ids, or empty
   for none. ``include_untagged`` is ``true`` or ``false``.
 
+A Customer Portal user's requests (talon-analyst D97) get an identity of their own,
+``portal_identity_headers``: role ``customer``, their own customers, tags ``*``, and a sixth header,
+``X-Talon-Read-Only``. The SOC builder above refuses a ``customer_user``, so a portal user reaches
+talon-analyst only through the portal builder.
+
 The formats are talon-analyst's ``talon/api/identity.py`` and ``talon/tenancy/access.py``.
 """
 import re
@@ -31,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
+from app.auth.services.read_only import read_only_customer_codes
 from app.incidents.middleware.tag_access import tag_access_handler
 from app.middleware.customer_access import customer_access_handler
 
@@ -39,8 +45,15 @@ ROLE_HEADER = "X-Talon-Role"
 CUSTOMERS_HEADER = "X-Talon-Customers"
 TAGS_HEADER = "X-Talon-Tags"
 UNTAGGED_HEADER = "X-Talon-Untagged"
+READ_ONLY_HEADER = "X-Talon-Read-Only"
 #: Every identity header, in the order they are sent. Nothing else named ``X-Talon-*`` is ever sent.
 IDENTITY_HEADERS = (USER_HEADER, ROLE_HEADER, CUSTOMERS_HEADER, TAGS_HEADER, UNTAGGED_HEADER)
+#: The portal identity's headers (talon-analyst D97, FR-CHAT-9): the five, plus ``X-Talon-Read-Only``,
+#: which talon-analyst requires on its ``/v2/portal/`` routes and ignores everywhere else.
+PORTAL_IDENTITY_HEADERS = (*IDENTITY_HEADERS, READ_ONLY_HEADER)
+#: The portal user's ``X-Talon-Role``: a value of its own, never ``customer_user``, so a portal user
+#: reaches talon-analyst only through ``portal_identity_headers`` and only its portal routes.
+PORTAL_ROLE = "customer"
 
 ALL = "*"
 #: The roles talon-analyst lets chat (its ``ROLES``). A ``customer_user`` or the scheduler never
@@ -157,4 +170,48 @@ def ops_poller_identity() -> Dict[str, str]:
         CUSTOMERS_HEADER: ALL,
         TAGS_HEADER: ALL,
         UNTAGGED_HEADER: "true",
+    }
+
+
+# ── the portal identity (talon-analyst D97, FR-CHAT-9; plan PC-3) ─────────────
+
+
+class PortalIdentityRefused(Exception):
+    """No portal identity can be built for this user: not a portal user, or no customer."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
+
+
+async def portal_identity_headers(user: User, session: AsyncSession) -> Dict[str, str]:
+    """The six ``X-Talon-*`` headers of a Customer Portal user's request to talon-analyst's
+    ``/v2/portal/`` routes, computed now from CoPilot's own rules, never from the request.
+
+    - ``X-Talon-User``: ``str(user.id)``, as for the SOC.
+    - ``X-Talon-Role``: ``customer``. Only a ``customer_user`` (by the database role, not the token)
+      gets one; anyone else is refused (``not_portal_role``), as the SOC builder refuses them.
+    - ``X-Talon-Customers``: the user's own customers (``user_customer_access``), never ``*``; a code
+      outside talon-analyst's grammar is dropped. None left is ``customer_not_accessible``.
+    - ``X-Talon-Tags: *`` and ``X-Talon-Untagged: true``, always: ``customer_user`` is one of the tag
+      handler's ``UNRESTRICTED_ROLES`` (a customer sees every alert of its own customer), and
+      talon-analyst refuses any other value on its portal routes.
+    - ``X-Talon-Read-Only``: the user's customers they may only read (``user_customer_access.read_only``,
+      #1312), a subset of ``X-Talon-Customers``, empty for none.
+    """
+    if getattr(user, "role_id", None) != RoleEnum.customer_user.value:
+        raise PortalIdentityRefused("not_portal_role")
+    accessible = [code for code in await customer_access_handler.get_user_accessible_customers(user, session) if code != ALL]
+    customers = customers_header(user, "customer", accessible)
+    if not customers:
+        raise PortalIdentityRefused("customer_not_accessible")
+    kept = set(customers.split(","))
+    read_only = sorted(code for code in await read_only_customer_codes(user, session) if code in kept)
+    return {
+        USER_HEADER: str(user.id),
+        ROLE_HEADER: PORTAL_ROLE,
+        CUSTOMERS_HEADER: customers,
+        TAGS_HEADER: ALL,
+        UNTAGGED_HEADER: "true",
+        READ_ONLY_HEADER: ",".join(read_only),
     }

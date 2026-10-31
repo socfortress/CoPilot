@@ -20,6 +20,7 @@ from app.customer_portal.schema.ai_reports import PortalAiReportAvailabilityResp
 from app.customer_portal.schema.ai_reports import PortalAiReportSettings
 from app.customer_portal.schema.ai_reports import PortalAiReportSettingsResponse
 from app.customer_portal.schema.ai_reports import UpdatePortalAiReportSettingsRequest
+from app.customer_portal.services import talon_chat
 from app.customer_portal.services.ai_reports import count_recent_requests
 from app.customer_portal.services.ai_reports import get_ai_report_settings
 from app.customer_portal.services.ai_reports import get_portal_ai_insights
@@ -131,10 +132,15 @@ async def set_customer_ai_report_settings(
             user_id=getattr(current_user, "id", None),
             **optional,
         )
+        # The cascade (talon-analyst D97): a customer that can't read Talon's reports can't chat
+        # about them, so turning them off turns the portal chat off, in this transaction. Turning
+        # them on again doesn't turn the chat on.
+        chat_change = await talon_chat.cascade_ai_reports_off(customer_code, current_user, session) if not request.enabled else None
         await session.commit()
         await session.refresh(settings)
         used = await count_recent_requests(customer_code, session)
 
+    await talon_chat.audit_cascade(customer_code, current_user, chat_change)
     after = _settings_values(settings)
     logger.info(f"Customer portal AI report settings for {customer_code}: {after}")
     if after != before:

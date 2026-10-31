@@ -796,6 +796,49 @@ class CustomerPortalSocRequest(SQLModel, table=True):
     # Who answered, for the SOC; never sent to the portal.
     answered_by: Optional[str] = Field(default=None, max_length=256, nullable=True)
     answered_via: Optional[str] = Field(default=None, max_length=16, nullable=True)  # comment | manual
+    # The Talon portal chat draft this question was filed from (talon-analyst D97, PC-3): it marks
+    # the request "drafted with Talon" for the SOC and makes filing a draft idempotent. Set in the
+    # row's first insert (``soc_requests._reserve``); unique, so a draft is filed at most once.
+    talon_draft_id: Optional[str] = Field(
+        default=None,
+        sa_column=Column(String(36), nullable=True, unique=True, index=True),
+    )
+
+
+class CustomerPortalChatSettings(SQLModel, table=True):
+    """Per-customer switches for Talon chat in the Customer Portal (talon-analyst D97, PC-3).
+
+    **Opt-in** like the other portal switches: a customer with no row cannot chat. Written by an
+    admin only and audited (``talon_portal_chat.update``); ``version`` is bumped by every write and
+    recorded by talon-analyst per turn. talon-analyst reads this row itself, over its read-only
+    MySQL user, before every model request, so a portal that forgot its own check can't get around
+    it. The chat is on only with ``portal_chat_enabled``, a ``daily_message_limit`` and the
+    customer's AI reports on (``customer_portal/services/talon_chat.py``).
+    """
+
+    __tablename__ = "customer_portal_chat_settings"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    portal_chat_enabled: bool = Field(default=False, nullable=False)
+    # Raw log search on the customer's own indices (D97 Q2), off by default.
+    log_search_enabled: bool = Field(default=False, nullable=False)
+    # Portal turns per customer per UTC day, 1 to 100,000; required while the chat is on.
+    daily_message_limit: Optional[int] = Field(default=None, nullable=True)
+    # Portal turns per portal user per UTC day, 1 to ``daily_message_limit``.
+    user_daily_message_limit: Optional[int] = Field(default=None, nullable=True)
+    version: int = Field(default=1, nullable=False)
+    updated_by: Optional[int] = Field(default=None, nullable=True)  # the admin's user id
+    updated_at: datetime = Field(default_factory=now_utc, nullable=False)
 
 
 class CustomerPortalIocEnrichmentSettings(SQLModel, table=True):

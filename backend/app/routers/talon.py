@@ -10,6 +10,7 @@ from app.connectors.talon.routes.talon_collections import (
 from app.connectors.talon.routes.talon_health import talon_health_router
 from app.connectors.talon.routes.talon_memory import talon_memory_router
 from app.connectors.talon.routes.talon_ops import talon_ops_router
+from app.connectors.talon.routes.talon_portal import talon_portal_router
 from app.connectors.talon.routes.talon_v2 import talon_v2_proxy_router
 from app.connectors.talon.routes.talon_v2 import talon_v2_router
 
@@ -27,6 +28,9 @@ router.include_router(talon_ops_router, prefix="/talon/ops", tags=["talon-v2"])
 # Talon v2 (talon-analyst M5): the setting, then the thread and chat proxy behind it.
 router.include_router(talon_v2_router, prefix="/talon/v2", tags=["talon-v2"])
 router.include_router(talon_v2_proxy_router, prefix="/talon/v2", tags=["talon-v2"])
+# Talon portal chat's SOC side (talon-analyst D97): the transcript review proxy, and the IOC lookup
+# meter talon-analyst's service account calls; behind the same setting.
+router.include_router(talon_portal_router, prefix="/talon/v2", tags=["talon-v2"])
 # Talon v2 action proposals: approve, deny, withdraw (talon-analyst M5-11), behind the same setting.
 router.include_router(talon_actions_router, prefix="/talon/actions", tags=["talon-v2"])
 # The collection start route for talon-analyst's investigations (EA-4b), behind the same setting,

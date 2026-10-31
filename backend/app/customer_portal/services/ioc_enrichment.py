@@ -309,7 +309,14 @@ def refusal(
 
 
 async def _reserve(user: User, customer_code: str, digest: str, session: AsyncSession) -> int:
-    """Check the rules under the customer's settings lock and write the lookup row, or raise.
+    """Check the rules under the customer's settings lock and write the lookup row, or raise."""
+    return await reserve_lookup(customer_code, digest, session, user_id=getattr(user, "id", None))
+
+
+async def reserve_lookup(customer_code: str, digest: str, session: AsyncSession, *, user_id: Optional[int]) -> int:
+    """The rules and the lookup row, for the portal's own check and for Talon's portal chat lookup
+    meter (``connectors/talon/services/talon_portal_meter.py``, talon-analyst D97): one counter,
+    one limit, one lock. Raises the ``refusal`` (403 off, 409 being checked, 429 the limit).
 
     The transaction of the reads before (the visibility checks) ends first: under MySQL's
     REPEATABLE READ a transaction reads the snapshot of its first plain read, so a request that
@@ -344,7 +351,7 @@ async def _reserve(user: User, customer_code: str, digest: str, session: AsyncSe
     row = CustomerPortalIocLookup(
         customer_code=customer_code,
         value_sha256=digest,
-        requested_by_user_id=getattr(user, "id", None),
+        requested_by_user_id=user_id,
         requested_at=now,
     )
     session.add(row)

@@ -126,6 +126,8 @@ class SocRequestOut(PortalSocRequest):
     title: Optional[str] = Field(None, description="The case's or the alert's name")
     answered_by: Optional[str] = None
     answered_via: Optional[Literal["comment", "manual"]] = None
+    #: Drafted with Talon in the portal chat, then edited and sent by the customer (talon-analyst D97).
+    drafted_with_talon: bool = False
 
 
 class SocRequestsResponse(BaseModel):
