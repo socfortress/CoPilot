@@ -150,6 +150,11 @@
 				</div>
 			</div>
 		</n-spin>
+
+		<n-divider class="my-2!" />
+
+		<!-- Talon chat for this customer's portal users (talon-analyst D97): only while AI reports are on. -->
+		<PortalChatSettings :customer-code :ai-reports-enabled="settings ? enabled : null" />
 	</div>
 </template>
 
@@ -157,8 +162,19 @@
 import type { CustomerPortalAiReportSettingsPayload } from "@/api/endpoints/customer-portal"
 import type { ApiError } from "@/types/common"
 import type { CustomerPortalAiReportSettings } from "@/types/customer-portal"
-import { NAlert, NButton, NCard, NInputNumber, NRadioButton, NRadioGroup, NSpin, NSwitch, useMessage } from "naive-ui"
-import { computed, onBeforeMount, ref, watch } from "vue"
+import {
+	NAlert,
+	NButton,
+	NCard,
+	NDivider,
+	NInputNumber,
+	NRadioButton,
+	NRadioGroup,
+	NSpin,
+	NSwitch,
+	useMessage
+} from "naive-ui"
+import { computed, defineAsyncComponent, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -168,6 +184,8 @@ import { formatDate } from "@/utils/format"
 const { customerCode } = defineProps<{
 	customerCode: string
 }>()
+
+const PortalChatSettings = defineAsyncComponent(() => import("./PortalChatSettings.vue"))
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat

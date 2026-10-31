@@ -147,6 +147,9 @@ class AuditAction(str, Enum):
     TALON_OPS_MUTE = "talon_ops.mute"
     TALON_OPS_REOPEN = "talon_ops.reopen"
     TALON_OPS_RUN = "talon_ops.run"
+    # The per-customer Talon portal chat settings (talon-analyst D97, PC-3): an admin's change, or
+    # the chat turned off because the customer's AI reports were, with the old and new values.
+    TALON_PORTAL_CHAT_UPDATE = "talon_portal_chat.update"
 
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"

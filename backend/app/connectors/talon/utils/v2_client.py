@@ -6,14 +6,16 @@ call returns the status and the body for the route to pass on. ``None`` as the s
 was no answer to pass on (no connector, a connection error, an answer too big to relay).
 
 Every upstream header is built here from scratch: the connector's API key, the content type and
-the five identity headers from ``services/identity.py``. Nothing is copied from the browser's
-request, which is how a client-sent ``X-Talon-*`` header is dropped.
+the five identity headers from ``services/identity.py`` (six for a Customer Portal user). Nothing is
+copied from the browser's request, which is how a client-sent ``X-Talon-*`` header is dropped. A
+portal identity is sent to ``/v2/portal/…`` only, and nothing else is (``check_identity_path``).
 
 The chat stream (``open_v2_stream``) is the one call whose upstream outlives the function: on a 2xx
 it returns a ``V2Stream`` that owns the upstream connection until ``aclose``, which
 ``V2StreamingResponse`` always calls, however the response ends (finished, cut off by the browser,
 cancelled). On any other answer the upstream is read (at most 4 KB) and closed before returning.
 """
+import re
 from dataclasses import dataclass
 from typing import Any
 from typing import AsyncIterator
@@ -31,6 +33,9 @@ from starlette.types import Scope
 from starlette.types import Send
 
 from app.connectors.talon.services.identity import IDENTITY_HEADERS
+from app.connectors.talon.services.identity import PORTAL_IDENTITY_HEADERS
+from app.connectors.talon.services.identity import PORTAL_ROLE
+from app.connectors.talon.services.identity import ROLE_HEADER
 from app.connectors.talon.utils import capped_body
 from app.connectors.talon.utils.universal import MAX_REFUSAL_BODY_BYTES
 from app.connectors.utils import get_connector_info_from_db
@@ -65,15 +70,40 @@ class V2Answer:
     body: bytes = b""
 
 
+#: The only talon-analyst path prefix a portal identity is ever sent to (talon-analyst D97: the
+#: trailing slash is part of it, so ``/v2/portal-review/`` is not under it).
+PORTAL_PREFIX = "/v2/portal/"
+#: A portal path's characters after the prefix: path segments of ids and names only. No ``.``
+#: segment, no query, fragment, percent-escape or backslash can ride along.
+_PORTAL_REST = re.compile(r"[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*")
+
+
+def is_portal_identity(identity: Mapping[str, str]) -> bool:
+    return set(identity) == set(PORTAL_IDENTITY_HEADERS)
+
+
+def check_identity_path(identity: Mapping[str, str], path: str) -> None:
+    """A portal identity goes to ``/v2/portal/…`` and nowhere else; a SOC identity never goes
+    there. Raises ``ValueError`` otherwise: a bug in CoPilot, never a request to forward."""
+    portal_path = path.startswith(PORTAL_PREFIX)
+    if is_portal_identity(identity):
+        if identity.get(ROLE_HEADER) != PORTAL_ROLE or not portal_path or not _PORTAL_REST.fullmatch(path[len(PORTAL_PREFIX) :]):
+            raise ValueError("a portal identity is sent to talon-analyst's /v2/portal/ routes only")
+    elif portal_path or identity.get(ROLE_HEADER) == PORTAL_ROLE:
+        raise ValueError("talon-analyst's /v2/portal/ routes take the portal identity only")
+
+
 def build_upstream_headers(api_key: str, identity: Mapping[str, str], *, accept: str, json_body: bool) -> Dict[str, str]:
     """Every header of an upstream v2 request, built from nothing. ``identity`` must hold exactly
-    the five identity headers (``talon_identity_headers``)."""
-    if set(identity) != set(IDENTITY_HEADERS):
-        raise ValueError("the identity must be exactly the five X-Talon-* headers")
+    the five identity headers (``talon_identity_headers``), or exactly the portal's six
+    (``portal_identity_headers``)."""
+    names = PORTAL_IDENTITY_HEADERS if is_portal_identity(identity) else IDENTITY_HEADERS
+    if set(identity) != set(names):
+        raise ValueError("the identity must be exactly the five X-Talon-* headers, or the portal's six")
     headers = {"x-api-key": api_key, "Accept": accept, "Accept-Encoding": "identity"}
     if json_body:
         headers["Content-Type"] = "application/json"
-    for name in IDENTITY_HEADERS:
+    for name in names:
         headers[name] = identity[name]
     return headers
 
@@ -127,6 +157,7 @@ async def v2_request(
     max_body_bytes: int = MAX_JSON_BODY_BYTES,
 ) -> V2Answer:
     """One v2 request that answers JSON. Never raises for an upstream status or a transport error."""
+    check_identity_path(identity, path)
     attributes = await _connector(connector_name)
     if attributes is None:
         return V2Answer(None)
@@ -192,6 +223,7 @@ async def open_v2_stream(
     """POST ``json_body`` and open the answer as a stream. A 2xx is a ``V2Stream`` the caller must
     close (``V2StreamingResponse`` does); anything else is a ``V2Answer`` whose upstream is already
     closed, with at most ``MAX_REFUSAL_BODY_BYTES`` of its body."""
+    check_identity_path(identity, path)
     attributes = await _connector(connector_name)
     if attributes is None:
         return V2Answer(None)

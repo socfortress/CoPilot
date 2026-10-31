@@ -4,6 +4,8 @@ import type {
 	CustomerPortalAuditSettings,
 	CustomerPortalBrandingListItem,
 	CustomerPortalBrandingOverride,
+	CustomerPortalChatProposedLimits,
+	CustomerPortalChatSettings,
 	CustomerPortalEffectiveBranding,
 	CustomerPortalExposureSettings,
 	CustomerPortalLanguageSettings,
@@ -55,6 +57,20 @@ type BrandingResponse = FlaskBaseResponse & {
 
 type AiReportSettingsResponse = FlaskBaseResponse & {
 	settings: CustomerPortalAiReportSettings
+}
+
+/** `PUT /customer_portal/talon_chat/settings/{code}`: every field, as the admin set it. */
+export interface CustomerPortalChatSettingsPayload {
+	portal_chat_enabled: boolean
+	log_search_enabled: boolean
+	daily_message_limit: number | null
+	user_daily_message_limit: number | null
+}
+
+type PortalChatSettingsResponse = FlaskBaseResponse & {
+	settings: CustomerPortalChatSettings
+	ai_reports_enabled: boolean
+	proposed: CustomerPortalChatProposedLimits
 }
 
 export interface CustomerPortalSlaSettingsPayload {
@@ -170,6 +186,22 @@ export default {
 	/** Admin-only: flips both portal AI surfaces for this customer at once, and whether its users may request analyses. */
 	setCustomerAiReportSettings(customerCode: string, payload: CustomerPortalAiReportSettingsPayload) {
 		return HttpClient.put<AiReportSettingsResponse>(`/customer_portal/ai_reports/settings/${customerCode}`, payload)
+	},
+	getCustomerPortalChatSettings(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<PortalChatSettingsResponse>(
+			`/customer_portal/talon_chat/settings/${encodeURIComponent(customerCode)}`,
+			{ signal }
+		)
+	},
+	/**
+	 * Admin-only: Talon chat for this customer's portal users (talon-analyst D97). Turning it on needs
+	 * the customer's AI reports on and a daily message limit; refusals are `{detail, code}` (422).
+	 */
+	setCustomerPortalChatSettings(customerCode: string, payload: CustomerPortalChatSettingsPayload) {
+		return HttpClient.put<PortalChatSettingsResponse>(
+			`/customer_portal/talon_chat/settings/${encodeURIComponent(customerCode)}`,
+			payload
+		)
 	},
 	getCustomerSlaSettings(customerCode: string, signal?: AbortSignal) {
 		return HttpClient.get<SlaSettingsResponse>(`/customer_portal/sla/settings/${customerCode}`, { signal })

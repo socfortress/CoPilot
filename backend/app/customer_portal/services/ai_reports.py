@@ -76,10 +76,16 @@ def _enabled_customer_codes_subquery():
     return select(CustomerPortalAiReportSettings.customer_code).where(CustomerPortalAiReportSettings.enabled.is_(True))
 
 
-async def get_ai_report_settings(customer_code: str, session: AsyncSession) -> Optional[CustomerPortalAiReportSettings]:
-    result = await session.execute(
-        select(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code == customer_code),
-    )
+async def get_ai_report_settings(
+    customer_code: str,
+    session: AsyncSession,
+    *,
+    lock: bool = False,
+) -> Optional[CustomerPortalAiReportSettings]:
+    query = select(CustomerPortalAiReportSettings).where(CustomerPortalAiReportSettings.customer_code == customer_code)
+    if lock:  # the portal chat's settings write reads this switch under a lock (talon_chat.save_settings)
+        query = query.with_for_update()
+    result = await session.execute(query)
     return result.scalars().first()
 
 

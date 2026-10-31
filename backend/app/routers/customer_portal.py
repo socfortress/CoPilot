@@ -18,6 +18,7 @@ from app.customer_portal.routes.notifications import (
 from app.customer_portal.routes.settings import customer_portal_settings_router
 from app.customer_portal.routes.sla import customer_portal_sla_router
 from app.customer_portal.routes.soc_requests import customer_portal_soc_requests_router
+from app.customer_portal.routes.talon_chat import customer_portal_talon_chat_router
 from app.customer_portal.routes.tenant_users import customer_portal_tenant_users_router
 
 # Instantiate the APIRouter
@@ -111,4 +112,10 @@ router.include_router(
     customer_portal_ioc_enrichment_router,
     prefix="/customer_portal",
     tags=["Customer Portal IOC Enrichment"],
+)
+# Talon chat for portal users (talon-analyst D97) — opt-in per customer, admin-set; the portal proxy
+router.include_router(
+    customer_portal_talon_chat_router,
+    prefix="/customer_portal",
+    tags=["Customer Portal Talon Chat"],
 )

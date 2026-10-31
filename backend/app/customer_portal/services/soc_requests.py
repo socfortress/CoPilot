@@ -19,6 +19,10 @@ The SOC hears about it through CoPilot's notification routing (the internal trig
   the functions: those routes import ``soc_request_answers``, and this module must not be
   imported at their import time.
 - **The portal sees** its own questions and whether the SOC answered, never who answered.
+- **Drafted with Talon** (talon-analyst D97): the portal chat's draft submit
+  (``talon_chat_drafts.py``) files through ``ask_on_alert`` / ``ask_on_case`` like the portal's
+  own form, as the customer and under the same rules, with ``talon_draft_id`` set in the row's
+  first insert (unique: a draft is filed once) and named on the comment's first line.
 """
 
 from datetime import datetime
@@ -34,6 +38,7 @@ from sqlalchemy import delete
 from sqlalchemy import func
 from sqlalchemy import or_
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.audit.models.audit import AuditAction
@@ -73,6 +78,33 @@ URGENCY_LABELS = {"low": "Low", "normal": "Normal", "high": "High"}
 
 NOT_ENABLED = "Asking the SOC is not enabled for your organization"
 FAILED = "Your question could not be sent. Please try again later."
+#: The first line of the comment a question drafted with Talon leaves on its target (talon-analyst
+#: D97): the SOC knows an AI drafted it, edited and sent by the customer.
+DRAFTED_WITH_TALON = "Drafted with Talon, reviewed and sent by the customer."
+
+# The machine codes of a refusal (talon-analyst SPEC §8 "Portal chat API" Errors), so the portal
+# chat's draft submit can report a failed filing by code. The portal's own route shows the text.
+CODE_OFF = "soc_requests_off"
+CODE_LIMIT = "soc_request_limit"
+CODE_COOLDOWN = "soc_request_cooldown"
+CODE_READ_ONLY = "read_only"
+CODE_FAILED = "internal_failure"
+
+
+class SocRequestRefused(HTTPException):
+    """A refusal of the rules, with its machine ``code``; answered like any ``HTTPException``."""
+
+    def __init__(self, status_code: int, detail: str, code: str) -> None:
+        super().__init__(status_code=status_code, detail=detail)
+        self.code = code
+
+
+class DraftAlreadyFiled(Exception):
+    """Another request holds this Talon draft id already (the unique key): it filed the draft."""
+
+    def __init__(self, talon_draft_id: str) -> None:
+        super().__init__("this Talon draft has a request already")
+        self.talon_draft_id = talon_draft_id
 
 
 def _now() -> datetime:
@@ -83,9 +115,11 @@ def _iso(moment: Optional[datetime]) -> Optional[str]:
     return moment.replace(microsecond=0).isoformat() + "Z" if moment else None
 
 
-def comment_text(question: str, urgency: str) -> str:
-    """The comment left on the target: what the SOC reads in its timeline."""
-    return f"Question for the SOC (urgency: {URGENCY_LABELS.get(urgency, 'Normal')}):\n\n{question}"
+def comment_text(question: str, urgency: str, *, drafted_with_talon: bool = False) -> str:
+    """The comment left on the target: what the SOC reads in its timeline. A question drafted with
+    Talon says so on its first line."""
+    text = f"Question for the SOC (urgency: {URGENCY_LABELS.get(urgency, 'Normal')}):\n\n{question}"
+    return f"{DRAFTED_WITH_TALON}\n{text}" if drafted_with_talon else text
 
 
 # ── the switch ────────────────────────────────────────────────────────────────
@@ -149,15 +183,16 @@ def refusal(
 ) -> Optional[HTTPException]:
     """Why a question cannot be asked now, or ``None``. Pure, so the rules test without a DB."""
     if settings is None or not settings.enabled:
-        return HTTPException(status_code=403, detail=NOT_ENABLED)
+        return SocRequestRefused(403, NOT_ENABLED, CODE_OFF)
     if last_request_at is not None and now - last_request_at < REQUEST_COOLDOWN:
         minutes = max(1, -(-int((last_request_at + REQUEST_COOLDOWN - now).total_seconds()) // 60))
-        return HTTPException(
-            status_code=429,
-            detail=f"A question about this was sent a moment ago. You can ask again in {minutes} minute{'s' if minutes != 1 else ''}.",
+        return SocRequestRefused(
+            429,
+            f"A question about this was sent a moment ago. You can ask again in {minutes} minute{'s' if minutes != 1 else ''}.",
+            CODE_COOLDOWN,
         )
     if settings.daily_request_limit is not None and recent_requests >= settings.daily_request_limit:
-        return HTTPException(status_code=429, detail="Your organization has reached its daily limit of questions. Please try again later.")
+        return SocRequestRefused(429, "Your organization has reached its daily limit of questions. Please try again later.", CODE_LIMIT)
     return None
 
 
@@ -267,6 +302,7 @@ def to_soc(request: CustomerPortalSocRequest, cases: dict, alerts: dict) -> SocR
         title=title,
         answered_by=request.answered_by,
         answered_via=request.answered_via if request.answered_via in ("comment", "manual") else None,
+        drafted_with_talon=bool(request.talon_draft_id),
     )
 
 
@@ -321,6 +357,7 @@ async def _reserve(
     alert_id: Optional[int] = None,
     cooldown_case: Optional[int] = None,
     cooldown_alert: Optional[int] = None,
+    talon_draft_id: Optional[str] = None,
 ) -> CustomerPortalSocRequest:
     """Check the rules under the customer's settings lock and write the request row, or raise.
 
@@ -328,6 +365,11 @@ async def _reserve(
     REPEATABLE READ a transaction reads the snapshot of its first plain read, so a request that
     waited for the lock would otherwise count the questions as they were before it waited, and
     two users could both take the last slot of the day.
+
+    ``talon_draft_id`` (a question filed from a Talon portal chat draft, talon-analyst D97) is set
+    in this, the row's first insert, under the lock and before the case and the comment are
+    written: its unique key makes a second filing of the draft fail here (``DraftAlreadyFiled``),
+    before anything reaches the SOC.
     """
     if await is_read_only_for(user, customer_code, session):
         # A question is a comment on the alert or case: not for a user who may only read (#1312).
@@ -339,7 +381,7 @@ async def _reserve(
             AuditResult.FAILURE,
             READ_ONLY,
         )
-        raise HTTPException(status_code=403, detail=READ_ONLY)
+        raise SocRequestRefused(403, READ_ONLY, CODE_READ_ONLY)
     await session.commit()
     now = _now()
     settings = await get_settings(customer_code, session, lock=True)
@@ -367,9 +409,16 @@ async def _reserve(
         requested_by_user_id=getattr(user, "id", None),
         requested_by=user.username,
         requested_at=now,
+        talon_draft_id=talon_draft_id,
     )
     session.add(request)
-    await session.commit()  # releases the settings lock before the case and the comment are written
+    try:
+        await session.commit()  # releases the settings lock before the case and the comment are written
+    except IntegrityError:
+        await session.rollback()
+        if talon_draft_id is None:
+            raise
+        raise DraftAlreadyFiled(talon_draft_id)
     await session.refresh(request)
     return request
 
@@ -407,11 +456,22 @@ async def _case_from_alert(alert_id: int, user: User, session: AsyncSession) -> 
     return link.case_id
 
 
-async def ask_on_alert(alert_id: int, body: AskOnAlertRequest, user: User, session: AsyncSession) -> PortalSocRequest:
-    """A portal user's question about one of their alerts: on a case (open or new) or on the alert."""
+async def ask_on_alert(
+    alert_id: int,
+    body: AskOnAlertRequest,
+    user: User,
+    session: AsyncSession,
+    *,
+    talon_draft_id: Optional[str] = None,
+) -> PortalSocRequest:
+    """A portal user's question about one of their alerts: on a case (open or new) or on the alert.
+
+    ``talon_draft_id``: the question was drafted with Talon in the portal chat (talon-analyst D97);
+    set on the request row's first insert and named on the comment's first line."""
     alert = await ensure_alert_visible(alert_id, user, session)
     customer_code, title = alert.customer_code, alert.alert_name
     on_case = body.target == "case"
+    text = comment_text(body.question, body.urgency, drafted_with_talon=talon_draft_id is not None)
     request = await _reserve(
         user,
         customer_code,
@@ -420,16 +480,17 @@ async def ask_on_alert(alert_id: int, body: AskOnAlertRequest, user: User, sessi
         urgency=body.urgency,
         alert_id=None if on_case else alert_id,
         cooldown_alert=alert_id,
+        talon_draft_id=talon_draft_id,
     )
     try:
         if on_case:
             case_id = await open_case_for_alert(alert_id, customer_code, session) or await _case_from_alert(alert_id, user, session)
-            comment_id = await _comment_on_case(case_id, comment_text(body.question, body.urgency), user, session)
+            comment_id = await _comment_on_case(case_id, text, user, session)
             stored = await session.get(CustomerPortalSocRequest, request.id)
             stored.case_id, stored.origin_alert_id, stored.comment_id = case_id, alert_id, comment_id
             title = (await session.execute(select(Case.case_name).where(Case.id == case_id))).scalar_one_or_none() or title
         else:
-            comment_id = await _comment_on_alert(alert_id, comment_text(body.question, body.urgency), user, session)
+            comment_id = await _comment_on_alert(alert_id, text, user, session)
             stored = await session.get(CustomerPortalSocRequest, request.id)
             stored.comment_id = comment_id
         await session.commit()
@@ -438,12 +499,20 @@ async def ask_on_alert(alert_id: int, body: AskOnAlertRequest, user: User, sessi
         logger.error(f"Could not file {user.username}'s question about alert {alert_id} ({customer_code}): {e}")
         await _forget(request.id, session)
         await _audit(user, customer_code, "alert", alert_id, AuditResult.FAILURE, "The question could not be filed")
-        raise HTTPException(status_code=502, detail=FAILED)
+        raise SocRequestRefused(502, FAILED, CODE_FAILED)
     return await _sent(stored, title, user, session)
 
 
-async def ask_on_case(case_id: int, body: AskOnCaseRequest, user: User, session: AsyncSession) -> PortalSocRequest:
-    """A portal user's question about one of their cases, left on the case."""
+async def ask_on_case(
+    case_id: int,
+    body: AskOnCaseRequest,
+    user: User,
+    session: AsyncSession,
+    *,
+    talon_draft_id: Optional[str] = None,
+) -> PortalSocRequest:
+    """A portal user's question about one of their cases, left on the case (``talon_draft_id`` as
+    for ``ask_on_alert``)."""
     case = await ensure_case_visible(case_id, user, session)
     customer_code, title = case.customer_code, case.case_name
     request = await _reserve(
@@ -454,9 +523,15 @@ async def ask_on_case(case_id: int, body: AskOnCaseRequest, user: User, session:
         urgency=body.urgency,
         case_id=case_id,
         cooldown_case=case_id,
+        talon_draft_id=talon_draft_id,
     )
     try:
-        comment_id = await _comment_on_case(case_id, comment_text(body.question, body.urgency), user, session)
+        comment_id = await _comment_on_case(
+            case_id,
+            comment_text(body.question, body.urgency, drafted_with_talon=talon_draft_id is not None),
+            user,
+            session,
+        )
         stored = await session.get(CustomerPortalSocRequest, request.id)
         stored.comment_id = comment_id
         await session.commit()
@@ -465,7 +540,7 @@ async def ask_on_case(case_id: int, body: AskOnCaseRequest, user: User, session:
         logger.error(f"Could not file {user.username}'s question about case {case_id} ({customer_code}): {e}")
         await _forget(request.id, session)
         await _audit(user, customer_code, "case", case_id, AuditResult.FAILURE, "The question could not be filed")
-        raise HTTPException(status_code=502, detail=FAILED)
+        raise SocRequestRefused(502, FAILED, CODE_FAILED)
     return await _sent(stored, title, user, session)
 
 
@@ -491,7 +566,12 @@ async def _sent(request: CustomerPortalSocRequest, title: Optional[str], user: U
         entity_id,
         AuditResult.SUCCESS,
         None,
-        new_value={"request_id": request.id, "urgency": request.urgency, "origin_alert_id": request.origin_alert_id},
+        new_value={
+            "request_id": request.id,
+            "urgency": request.urgency,
+            "origin_alert_id": request.origin_alert_id,
+            **({"talon_draft_id": request.talon_draft_id} if request.talon_draft_id else {}),
+        },
     )
     logger.info(f"Portal user {user.username} asked the SOC about {entity_type} {entity_id} ({request.customer_code})")
     return to_portal(request)

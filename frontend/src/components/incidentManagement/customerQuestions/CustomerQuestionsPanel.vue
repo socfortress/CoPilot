@@ -18,6 +18,15 @@
 					>
 						{{ URGENCY_LABELS[request.urgency] }}
 					</n-tag>
+					<n-tag
+						v-if="request.drafted_with_talon"
+						size="tiny"
+						:bordered="false"
+						title="Talon drafted this question in the portal chat; the customer edited and sent it"
+						data-testid="customer-question-drafted-with-talon"
+					>
+						Drafted with Talon
+					</n-tag>
 					<span class="text-secondary text-xs">
 						<bdi>{{ request.requested_by }}</bdi>
 						· {{ formatDate(request.requested_at, dFormats.datetime, { tz: true }) }}

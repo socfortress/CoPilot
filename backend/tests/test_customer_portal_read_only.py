@@ -93,6 +93,8 @@ REFUSED = frozenset(
         ("POST", "/api/customer_portal/soc_requests/case/{case_id}"),
         ("POST", "/api/agents/{agent_id}/critical"),
         ("POST", "/api/agents/{agent_id}/noncritical"),
+        # A Talon portal chat draft sent to the SOC (talon-analyst D97): refused with code read_only.
+        ("POST", "/api/customer_portal/talon_chat/drafts/{draft_id}/submit"),
     },
 )
 
@@ -108,6 +110,7 @@ CHECKED_IN = {
     ): "app.customer_portal.services.ai_requests.request_alert_analysis",
     ("POST", "/api/customer_portal/soc_requests/alert/{alert_id}"): "app.customer_portal.services.soc_requests._reserve",
     ("POST", "/api/customer_portal/soc_requests/case/{case_id}"): "app.customer_portal.services.soc_requests._reserve",
+    ("POST", "/api/customer_portal/talon_chat/drafts/{draft_id}/submit"): "app.customer_portal.services.talon_chat_drafts.submit",
 }
 MARKERS = ("ensure_may_write", "write=True", "is_read_only_for")
 
@@ -251,7 +254,8 @@ def test_every_portal_write_is_either_refused_to_a_reader_or_their_own():
     assert REFUSED <= ALLOWED_CUSTOMER_USER_WRITES, sorted(REFUSED - ALLOWED_CUSTOMER_USER_WRITES)
     own = {path for _, path in KEPT}
     # What a reader keeps is theirs: account, preferences, searches, user management, and reads
-    # (a Threat Intel lookup of an IOC changes nothing of the customer's, #1318).
+    # (a Threat Intel lookup of an IOC changes nothing of the customer's, #1318), and their own Talon
+    # portal chat threads (chatting is reading, talon-analyst D97; a draft's submit is refused above).
     for path in own:
         assert any(
             part in path
@@ -264,6 +268,9 @@ def test_every_portal_write_is_either_refused_to_a_reader_or_their_own():
                 "/panel-data",
                 "/copilot_searches/",
                 "/ioc_enrichment/",
+                "/talon_chat/threads",
+                "/talon_chat/chat/",
+                "/talon_chat/drafts/{draft_id}/discard",
             )
         ), path
 

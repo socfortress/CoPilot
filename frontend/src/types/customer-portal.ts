@@ -120,3 +120,27 @@ export interface CustomerPortalBrandingListItem {
 	theme_from_brand_color: boolean | null
 	updated_at: string
 }
+
+/**
+ * Talon chat in the Customer Portal (talon-analyst D97): a customer's switches and daily message
+ * limits. Opt-in: a missing row reads as off (`version` null). Written by an admin only.
+ */
+export interface CustomerPortalChatSettings {
+	customer_code: string
+	portal_chat_enabled: boolean
+	/** Raw log search on the customer's own indices, off by default. */
+	log_search_enabled: boolean
+	/** Portal turns per customer per UTC day; required while the chat is on. */
+	daily_message_limit: number | null
+	/** Portal turns per portal user per UTC day, at most the customer's. */
+	user_daily_message_limit: number | null
+	/** Bumped by every write; null before the first. */
+	version: number | null
+	updated_at: string | null
+	updated_by: number | null
+}
+
+export interface CustomerPortalChatProposedLimits {
+	daily_message_limit: number
+	user_daily_message_limit: number
+}

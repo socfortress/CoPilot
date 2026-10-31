@@ -58,6 +58,15 @@
 							<n-tag :type="URGENCY_TAG[request.urgency]" size="small" :bordered="false">
 								{{ URGENCY_LABELS[request.urgency] }}
 							</n-tag>
+							<n-tag
+								v-if="request.drafted_with_talon"
+								size="small"
+								:bordered="false"
+								title="Talon drafted this question in the portal chat; the customer edited and sent it"
+								data-testid="customer-question-drafted-with-talon"
+							>
+								Drafted with Talon
+							</n-tag>
 							<n-button
 								v-if="questionTarget(request)"
 								text

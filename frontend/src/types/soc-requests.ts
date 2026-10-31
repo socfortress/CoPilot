@@ -25,6 +25,8 @@ export interface SocRequest {
 	answered_at: string | null
 	answered_by: string | null
 	answered_via: "comment" | "manual" | null
+	/** Drafted with Talon in the portal chat, then edited and sent by the customer (talon-analyst D97). */
+	drafted_with_talon?: boolean
 }
 
 export interface SocRequestsQuery {

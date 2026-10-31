@@ -86,6 +86,17 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("DELETE", "/api/customer_portal/users/{user_id}/totp"),
         ("POST", "/api/customer_portal/users/{user_id}/temporary-password"),
         ("PUT", "/api/customer_portal/users/{user_id}/read-only"),  # #1312
+        # Talon portal chat (talon-analyst D97), where a SOC admin turned it on: their own
+        # threads (the user comes from the token, the switch is checked on every request), a turn,
+        # thumbs up or down, and a Talon draft sent to the SOC (filed through "Ask the SOC" above,
+        # under its rules; refused for a read-only user) or discarded.
+        ("POST", "/api/customer_portal/talon_chat/threads"),
+        ("PATCH", "/api/customer_portal/talon_chat/threads/{thread_id}"),
+        ("DELETE", "/api/customer_portal/talon_chat/threads/{thread_id}"),
+        ("POST", "/api/customer_portal/talon_chat/threads/{thread_id}/feedback"),
+        ("POST", "/api/customer_portal/talon_chat/chat/{thread_id}"),
+        ("POST", "/api/customer_portal/talon_chat/drafts/{draft_id}/submit"),
+        ("POST", "/api/customer_portal/talon_chat/drafts/{draft_id}/discard"),
         # Reads that take a body, so they are POSTs. They change nothing.
         ("POST", "/api/siem/dashboards/panel-data"),
         ("POST", "/api/copilot_searches/by-ids"),
