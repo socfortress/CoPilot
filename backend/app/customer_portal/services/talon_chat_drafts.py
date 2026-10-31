@@ -26,7 +26,8 @@ in the portal, picks the urgency and (for an alert) where it goes, and submits i
    alert or case): otherwise ``not_found``. An alert draft with ``file_on: "case"`` (the default) goes on the alert's open case
    or a new case from the alert, ``"alert"`` on the alert itself; a case draft on the case.
 5. **Posts the outcome** (FR-API-41): ``submitted`` with the request's id, or ``failed`` with the
-   refusal's code, retried a few times. A lost outcome strands nothing: the next submit finds the
+   refusal's code and the claim's ``claimed_at`` (a stale claim's ``failed`` is ``draft_conflict``
+   there, and the live claim stands), retried a few times on no answer. A lost outcome strands nothing: the next submit finds the
    request in step 2 and reports it.
 """
 import asyncio
@@ -151,13 +152,18 @@ async def filed_row(draft_id: str, session: AsyncSession) -> Optional[CustomerPo
 
 
 async def post_outcome(portal: Portal, draft_id: str, payload: Dict[str, Any]) -> bool:
-    """FR-API-41, as the user. Retried on no answer or a 5xx; a refusal is final (logged)."""
+    """FR-API-41, as the user. Retried on no answer or a 5xx; a refusal is final (logged). A
+    ``draft_conflict`` on a ``failed`` outcome means another request's claim is live (talon-analyst
+    applies ``failed`` only for the claim it names): that claim stands, nothing is retried."""
     for attempt in range(OUTCOME_ATTEMPTS):
         result = await v2_request("POST", f"/v2/portal/drafts/{draft_id}/outcome", portal.identity, json_body=payload)
         if result.status is not None and 200 <= result.status < 300:
             return True
         if result.status is not None and 400 <= result.status < 500:
-            logger.error(f"Talon draft {draft_id}: talon-analyst refused the outcome {payload.get('outcome')} ({result.status})")
+            if payload.get("outcome") == "failed" and result.status == 409:
+                logger.info(f"Talon draft {draft_id}: the failed outcome names a stale claim; another request's claim is live")
+            else:
+                logger.error(f"Talon draft {draft_id}: talon-analyst refused the outcome {payload.get('outcome')} ({result.status})")
             return False
         if attempt + 1 < OUTCOME_ATTEMPTS:
             await asyncio.sleep(OUTCOME_PAUSE_SECONDS)
@@ -166,12 +172,16 @@ async def post_outcome(portal: Portal, draft_id: str, payload: Dict[str, Any]) -
 
 
 async def report_submitted(portal: Portal, draft_id: str, request_id: int) -> JSONResponse:
+    """``submitted`` with the request's id. talon-analyst accepts it from ``submitting``, and from
+    ``pending`` or ``expired`` as a late ref (PR #197), so the lookup-only pass works for any of them."""
     await post_outcome(portal, draft_id, {"outcome": "submitted", "copilot_ref": str(request_id)})
     return submitted(request_id)
 
 
-async def report_failed(portal: Portal, draft_id: str, code: str) -> JSONResponse:
-    await post_outcome(portal, draft_id, {"outcome": "failed", "failure": code})
+async def report_failed(portal: Portal, draft_id: str, code: str, claimed_at: Any) -> JSONResponse:
+    """``failed`` with the code and the ``claimed_at`` of the claim this request holds (FR-API-41 as
+    of talon-analyst PR #197): a stale one is refused there and the live claim stands."""
+    await post_outcome(portal, draft_id, {"outcome": "failed", "failure": code, "claimed_at": claimed_at})
     return coded(code)
 
 
@@ -307,6 +317,9 @@ async def submit(user: User, session: AsyncSession, draft_id: str, request: Requ
         return answer(claim) if claim.status is None or not 200 <= claim.status < 300 else coded("failed")
     if found == IN_PROGRESS or claimed.get("claimed") is not True:
         return coded("draft_conflict")
+    # The claim this request holds, named on a failed outcome (FR-API-41).
+    claimed_draft = claimed.get("draft") if isinstance(claimed.get("draft"), dict) else {}
+    claimed_at = claimed_draft.get("claimed_at")
 
     # (3) File, as the customer, on the draft's own target; (4) the outcome.
     result = await file(canonical, customer_code, target, body, user, session)
@@ -314,4 +327,4 @@ async def submit(user: User, session: AsyncSession, draft_id: str, request: Requ
         return await report_submitted(portal, canonical, result)
     if result == "draft_conflict":
         return coded("draft_conflict")
-    return await report_failed(portal, canonical, result)
+    return await report_failed(portal, canonical, result, claimed_at)

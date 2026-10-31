@@ -847,7 +847,7 @@ def test_every_refusal_of_the_submit_has_its_code(setup, code, status, outcome, 
     if outcome is None:
         assert talon.outcomes == []
     else:
-        assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": outcome})]
+        assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": outcome, "claimed_at": "2026-10-31T12:00:01Z"})]
         assert talon.drafts[draft_id]["status"] == "pending"  # the customer may try again
 
 
@@ -1095,7 +1095,7 @@ def test_a_draft_is_filed_only_on_its_own_customers_target():
     draft_id, response, filed = call(scenario, talon=talon)
     assert response.status_code == 404 and response.json()["code"] == "not_found"
     assert filed == []
-    assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": "not_found"})]
+    assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": "not_found", "claimed_at": "2026-10-31T12:00:01Z"})]
 
 
 def test_an_orphan_that_gets_its_comment_meanwhile_is_kept_and_reported():
@@ -1321,3 +1321,74 @@ def test_a_new_threads_language_is_checked_against_its_own_customer():
         ]
 
     assert call(scenario, talon=talon) == [(ACME, "en"), (ACME, "de"), (GLOBEX, "fr"), (GLOBEX, "en")]
+
+
+# ── talon-analyst PR #197: the outcome contract ───────────────────────────────
+
+
+def test_a_failed_outcome_names_the_claim_and_a_stale_one_is_left_to_the_live_claim(monkeypatch):
+    """A failed outcome carries the claim answer's claimed_at; when another request has claimed the
+    draft since, talon-analyst answers draft_conflict, the live claim stands, nothing is retried."""
+    from app.customer_portal.services import soc_requests
+
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        draft_id = talon.add_draft("alert", ctx.ids.linked)
+
+        async def refused(*args, **kwargs):
+            # Meanwhile another request's claim replaced ours (past the claim window).
+            talon.drafts[draft_id]["claimed_at"] = "2026-10-31T12:10:00Z"
+            raise soc_requests.SocRequestRefused(403, soc_requests.NOT_ENABLED, soc_requests.CODE_OFF)
+
+        monkeypatch.setattr(soc_requests, "_reserve", refused)
+        response = await submit(client, draft_id)
+        outcome_posts = [r for r in talon.requests if r.url.path.endswith("/outcome")]
+        return draft_id, response, outcome_posts
+
+    draft_id, response, outcome_posts = call(scenario, talon=talon)
+    assert response.status_code == 403 and response.json()["code"] == "soc_requests_off"
+    assert len(outcome_posts) == 1  # the 409 is final: not retried
+    assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": "soc_requests_off", "claimed_at": "2026-10-31T12:00:01Z"})]
+    assert talon.drafts[draft_id]["status"] == "submitting"  # the live claim stands
+
+
+def test_the_lookup_only_pass_reports_a_filed_draft_talon_still_has_pending():
+    """Talon accepts submitted from pending as a late ref (PR #197): a draft CoPilot filed whose
+    outcome was lost, and which talon-analyst returned to pending, is reported, even while off."""
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        draft_id = talon.add_draft("alert", ctx.ids.linked)
+        first = await submit(client, draft_id)
+        talon.drafts[draft_id].update(status="pending", copilot_ref=None)
+        talon.outcomes.clear()
+        await set_chat(ctx.db, portal_chat_enabled=False)
+        again = await submit(client, draft_id)
+        return draft_id, first, again
+
+    draft_id, first, again = call(scenario, talon=talon)
+    assert again.status_code == 200 and again.json() == first.json()
+    assert talon.outcomes == [(draft_id, {"outcome": "submitted", "copilot_ref": str(first.json()["request_id"])})]
+    assert talon.drafts[draft_id]["status"] == "submitted" and talon.drafts[draft_id]["late_ref"] is True
+
+
+def test_a_thread_talon_reads_as_off_is_still_refused_by_copilots_own_switch():
+    """FR-API-45 answers a switched-off thread with accessible: false, never a refusal; CoPilot's
+    own check on the thread's customer still refuses the turn (portal_off)."""
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        thread_id = talon.add_thread()
+        talon.switched_off.add(ACME)
+        await set_chat(ctx.db, portal_chat_enabled=False)
+        await set_chat(ctx.db, GLOBEX, portal_chat_enabled=True)
+        async with ctx.db.session() as s:  # jane also of GLOBEX, so not every switch is off
+            s.add(UserCustomerAccess(user_id=10, customer_code=GLOBEX))
+            await s.commit()
+        chat = await send(client, "POST", f"{BASE}/chat/{thread_id}", {"message": "hi"})
+        return chat, [r.url.path for r in talon.requests if r.url.path.startswith("/v2/portal/")]
+
+    chat, forwarded = call(scenario, talon=talon)
+    assert chat.status_code == 403 and chat.json()["code"] == "portal_off"
+    assert all(not path.startswith("/v2/portal/chat/") for path in forwarded)

@@ -128,6 +128,8 @@ class FakeTalon:
         self.claim_override = None  # callable(draft) -> httpx.Response
         self.messages_override = None  # an httpx.Response for every thread read-back (a busy transcript pool)
         self.outcomes = []
+        self.claims = 0
+        self.switched_off = set()  # customers talon-analyst reads as off (FR-API-45 still answers)
         self.stream = (
             b'data: {"type":"start"}\n\n'
             b'data: {"type":"error","errorText":"portal chat is turned off for this customer","code":"portal_off"}\n\n'
@@ -152,13 +154,16 @@ class FakeTalon:
             "file_on": None,
             "status": status,
             "copilot_ref": None,
+            "claimed_at": None,
             "owner": owner,
         }
         return draft_id
 
     def thread_body(self, thread_id):
+        """FR-API-45's (and the list's) thread: never refused for the switch, ``accessible`` instead."""
         thread = self.threads[thread_id]
-        return {"id": thread_id, "title": None, "customer_code": thread["customer_code"], "status": "active", "accessible": True}
+        accessible = thread["customer_code"] not in self.switched_off
+        return {"id": thread_id, "title": None, "customer_code": thread["customer_code"], "status": "active", "accessible": accessible}
 
     def portal_requests(self):
         """Every request to talon-analyst's portal chat or review routes (its health route apart)."""
@@ -211,7 +216,14 @@ class FakeTalon:
             if self.claim_override is not None:
                 return self.claim_override(draft)
             if draft["status"] == "pending":
-                draft.update(status="submitting", urgency=body["urgency"], file_on=body.get("file_on"))
+                self.claims += 1
+                draft.update(
+                    status="submitting",
+                    urgency=body["urgency"],
+                    file_on=body.get("file_on"),
+                    claimed_at=f"2026-10-31T12:00:{self.claims:02d}Z",
+                )
+                public = {k: v for k, v in draft.items() if k != "owner"}
                 return _json(200, {"draft": public, "claimed": True})
             if draft["status"] == "submitting":
                 return _json(200, {"draft": public, "claimed": False})
@@ -220,8 +232,15 @@ class FakeTalon:
             self.outcomes.append((object_id, body))
             outcome = body["outcome"]
             if outcome == "submitted":
-                draft.update(status="submitted", copilot_ref=body["copilot_ref"])
+                # From submitting, and from pending or expired as a late ref (talon-analyst PR #197).
+                if draft["status"] == "submitted" and draft["copilot_ref"] != body["copilot_ref"]:
+                    return refusal("draft_conflict", 409)
+                late = draft["status"] in ("pending", "expired")
+                draft.update(status="submitted", copilot_ref=body["copilot_ref"], late_ref=late)
             elif outcome == "failed":
+                # Only for the draft's current claim (talon-analyst PR #197): a stale one is a conflict.
+                if draft["status"] != "submitting" or body.get("claimed_at") != draft.get("claimed_at"):
+                    return refusal("draft_conflict", 409)
                 draft.update(status="pending")
             elif outcome == "discarded":
                 if draft["status"] != "pending":
