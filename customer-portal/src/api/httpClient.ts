@@ -49,7 +49,8 @@ export function isAccountDisabled(headers: unknown): boolean {
 	return String(value ?? "").toLowerCase() === "true"
 }
 
-async function holdForPasswordChange() {
+/** Take the user to the password change (#1277); also used by the fetch-based Talon chat stream. */
+export async function holdForPasswordChange() {
 	// Loaded on demand: the router imports the pages, which import this client.
 	const { default: router } = await import("@/router")
 	const current = router.currentRoute.value

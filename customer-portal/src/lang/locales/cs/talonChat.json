@@ -1,0 +1,162 @@
+{
+	"page": {
+		"title": "Zeptat se Talonu",
+		"intro": "Zeptejte se Talonu, AI analytika SOC, na své výstrahy, jeho AI zprávy a svá aktiva.",
+		"reviewNotice": "Konverzace může prohlížet váš SOC.",
+		"noActionsNotice": "Talon nemůže provádět žádné akce. Odpovídá na dotazy a může připravit dotaz pro váš SOC, který odešlete sami.",
+		"unavailableTitle": "Zeptat se Talonu není k dispozici",
+		"unavailableText": "Váš SOC nezapnul funkci Zeptat se Talonu pro vaši organizaci.",
+		"checkFailedTitle": "Funkci Zeptat se Talonu nelze ověřit",
+		"checkFailedText": "Nepodařilo se ověřit, zda je funkce Zeptat se Talonu pro vaši organizaci zapnutá. Zkuste to za chvíli znovu."
+	},
+	"threads": {
+		"title": "Konverzace",
+		"new": "Nová konverzace",
+		"empty": "Zatím žádné konverzace.",
+		"loadMore": "Zobrazit další",
+		"loadFailed": "Konverzace se nepodařilo načíst.",
+		"untitled": "Konverzace z {date}",
+		"aboutAlert": "Výstraha #{id}",
+		"notAccessible": "Není k dispozici",
+		"archive": "Zavřít konverzaci",
+		"archiveNamed": "Zavřít konverzaci: {title}",
+		"archiveConfirm": "Zavřít tuto konverzaci? Zmizí z vašeho seznamu.",
+		"archived": "Konverzace byla zavřena"
+	},
+	"newThread": {
+		"title": "Nová konverzace",
+		"customerLabel": "Organizace",
+		"customerPlaceholder": "Vyberte organizaci",
+		"noCustomers": "Funkce Zeptat se Talonu není zapnutá pro žádnou z vašich organizací.",
+		"start": "Začít",
+		"cancel": "Zrušit"
+	},
+	"askAboutAlert": {
+		"button": "Zeptat se Talonu na tuto výstrahu"
+	},
+	"conversation": {
+		"empty": "Začněte položením dotazu.",
+		"loadEarlier": "Zobrazit starší zprávy",
+		"placeholder": "Zeptejte se Talonu na své výstrahy, zprávy nebo aktiva",
+		"inputLabel": "Vaše zpráva pro Talon",
+		"send": "Odeslat",
+		"thinking": "Talon odpovídá…",
+		"tooLong": "Zpráva může mít nejvýše {max} znaků",
+		"cutOff": "Tato odpověď byla přerušena, než se dokončila.",
+		"you": "Vy",
+		"talon": "Talon",
+		"aboutAlert": "K výstraze #{id}",
+		"notAccessible": "Tato konverzace už není k dispozici. Stále ji můžete zavřít.",
+		"answered": "Talon odpověděl."
+	},
+	"checked": {
+		"line": "Zkontrolováno: {items}",
+		"kinds": {
+			"alert": "výstraha | {count} výstrahy | {count} výstrah",
+			"alert_list": "seznam vašich výstrah | seznam vašich výstrah ({count}krát) | seznam vašich výstrah ({count}krát)",
+			"report": "AI zpráva | {count} AI zprávy | {count} AI zpráv",
+			"assets": "vaše aktiva | vaše aktiva ({count}krát) | vaše aktiva ({count}krát)",
+			"event_search": "1 vyhledávání událostí | {count} vyhledávání událostí | {count} vyhledávání událostí",
+			"event": "1 událost | {count} události | {count} událostí",
+			"earlier_result": "jeden dřívější výsledek | {count} dřívější výsledky | {count} dřívějších výsledků",
+			"soc_draft": "1 dotaz pro váš SOC | {count} dotazy pro váš SOC | {count} dotazů pro váš SOC",
+			"analysis_offer": "1 návrh AI analýzy | {count} návrhy AI analýzy | {count} návrhů AI analýzy"
+		},
+		"intel": {
+			"ip": "1 IP adresa | {count} IP adresy | {count} IP adres",
+			"domain": "1 doména | {count} domény | {count} domén",
+			"url": "1 URL | {count} URL | {count} URL",
+			"hash": "1 hash souboru | {count} hashe souborů | {count} hashů souborů",
+			"cve": "1 zranitelnost (CVE) | {count} zranitelnosti (CVE) | {count} zranitelností (CVE)",
+			"technique": "1 útočná technika | {count} útočné techniky | {count} útočných technik",
+			"opencti_object": "1 záznam threat intelligence | {count} záznamy threat intelligence | {count} záznamů threat intelligence",
+			"other": "1 dotaz do threat intelligence | {count} dotazy do threat intelligence | {count} dotazů do threat intelligence"
+		}
+	},
+	"feedback": {
+		"up": "Užitečné",
+		"down": "Neužitečné",
+		"failed": "Vaše hodnocení se nepodařilo uložit."
+	},
+	"draft": {
+		"title": "Dotaz pro váš SOC",
+		"intro": "Talon připravil tento dotaz. Zkontrolujte ho, zvolte naléhavost a odešlete ho, pokud chcete, aby se tím SOC zabýval.",
+		"aboutAlert": "K výstraze #{id}",
+		"aboutCase": "K případu #{id}",
+		"questionLabel": "Dotaz pro SOC",
+		"urgencyLegend": "Jak je to naléhavé?",
+		"urgencyRequired": "Zvolte naléhavost",
+		"fileOnLegend": "Kam má dotaz jít?",
+		"fileOn": {
+			"case": "K případu výstrahy",
+			"caseHint": "Přidá se k případu, který tuto výstrahu obsahuje, nebo k novému případu z ní otevřenému",
+			"alert": "Jen k této výstraze",
+			"alertHint": "Komentář u výstrahy, bez případu"
+		},
+		"submit": "Odeslat do SOC",
+		"discard": "Zahodit",
+		"loading": "Načítání návrhu…",
+		"loadFailed": "Návrh se nepodařilo načíst.",
+		"unavailable": "Tento návrh už není k dispozici.",
+		"socRequestsOff": "Dotazy na SOC jsou pro vaši organizaci vypnuté.",
+		"status": {
+			"submitting": "Odesílá se do SOC…",
+			"submitted": "Odesláno do SOC",
+			"discarded": "Zahozeno",
+			"expired": "Platnost tohoto návrhu vypršela"
+		},
+		"submittedText": "SOC má váš dotaz (požadavek #{id}). Jeho odpověď se objeví v komentářích výstrahy nebo případu.",
+		"submittedNoId": "SOC má váš dotaz. Jeho odpověď se objeví v komentářích výstrahy nebo případu.",
+		"refresh": "Zkontrolovat znovu"
+	},
+	"analysisOffer": {
+		"title": "AI analýza",
+		"text": "Talon navrhuje AI analýzu výstrahy #{id}.",
+		"openAlert": "Otevřít výstrahu",
+		"loadFailed": "Nepodařilo se ověřit, zda lze analýzu spustit.",
+		"notAllowed": "AI analýza není pro tuto výstrahu k dispozici.",
+		"requested": "Analýza byla vyžádána. Její zpráva se objeví na kartě AI zpráva u výstrahy."
+	},
+	"errors": {
+		"invalid_request": "Talon nedokázal požadavek přečíst.",
+		"invalid_headers": "Talon nedokázal ověřit, kdo jste. Přihlaste se prosím znovu.",
+		"not_portal_role": "Funkce Zeptat se Talonu je jen pro uživatele portálu.",
+		"portal_role_refused": "Toto není v portálu k dispozici.",
+		"customer_not_accessible": "K této organizaci nemáte přístup.",
+		"portal_off": "Funkce Zeptat se Talonu je pro tuto organizaci vypnutá.",
+		"settings_unavailable": "Nastavení funkce Zeptat se Talonu teď nelze načíst. Zkuste to za chvíli znovu.",
+		"thread_not_found": "Tato konverzace nebyla nalezena.",
+		"thread_archived": "Tato konverzace je zavřená.",
+		"access_removed": "Váš přístup k organizaci této konverzace byl odebrán.",
+		"thread_limit": "Máte příliš mnoho otevřených konverzací. Nejprve jednu zavřete.",
+		"new_thread_limit": "Dnes jste začali příliš mnoho nových konverzací. Zkuste to zítra.",
+		"alert_not_found": "Výstraha nebyla nalezena.",
+		"body_too_large": "Zpráva je příliš velká.",
+		"message_too_long": "Zpráva je příliš dlouhá.",
+		"busy_thread": "V této konverzaci se ještě píše odpověď.",
+		"busy_user": "Pro vás se už jedna odpověď píše. Počkejte, až bude hotová.",
+		"busy": "Talon je vytížený. Zkuste to za chvíli znovu.",
+		"turn_limit": "Odpověď dosáhla svého limitu. Zkuste užší dotaz.",
+		"timeout": "Odpověď trvala příliš dlouho. Zkuste to znovu.",
+		"budget_customer": "Talon dosáhl limitu využití pro vaši organizaci. Zkuste to později.",
+		"budget_portal": "Funkce Zeptat se Talonu dosáhla denního limitu pro vaši organizaci. Zkuste to zítra.",
+		"budget_portal_user": "Dosáhli jste svého denního limitu pro funkci Zeptat se Talonu. Zkuste to zítra.",
+		"messages_customer": "Vaše organizace dosáhla denního počtu zpráv pro Talon.",
+		"messages_user": "Dosáhli jste svého denního počtu zpráv pro Talon.",
+		"budget_unavailable": "Talon teď nemůže ověřit své limity využití. Zkuste to za chvíli znovu.",
+		"failed": "Talon nedokázal odpovědět. Zkuste to znovu.",
+		"draft_not_found": "Tento návrh nebyl nalezen.",
+		"draft_expired": "Platnost tohoto návrhu vypršela.",
+		"draft_conflict": "Tento návrh už byl odeslán nebo zahozen.",
+		"read_only": "Váš účet může data této organizace zobrazit, ale ne měnit.",
+		"soc_requests_off": "Dotazy na SOC jsou pro vaši organizaci vypnuté.",
+		"soc_request_limit": "Denní počet dotazů na SOC byl dosažen.",
+		"soc_request_cooldown": "Dotaz k tomuto tématu byl právě odeslán. Zkuste to za několik minut.",
+		"invalid_question": "Dotaz nelze v této podobě odeslat. Zkontrolujte ho a zkuste to znovu.",
+		"not_found": "Výstraha nebo případ nebyly nalezeny.",
+		"internal_failure": "Dotaz se nepodařilo odeslat. Zkuste to znovu.",
+		"stream_closed": "Spojení s Talonem se přerušilo dříve, než byla odpověď hotová.",
+		"network": "Talon není dostupný. Zkontrolujte připojení a zkuste to znovu.",
+		"unknown": "Něco se pokazilo. Zkuste to znovu."
+	}
+}

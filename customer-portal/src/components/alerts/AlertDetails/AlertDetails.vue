@@ -11,6 +11,9 @@
 					@reply="activeTab = 'comments'"
 				/>
 
+				<!-- Shown when Ask Talon is on for the alert's customer (talon-analyst D97). -->
+				<TalonAskAboutAlert :alert-id="alert.id" :customer-code="alert.customer_code" />
+
 				<n-tabs v-model:value="activeTab" type="line" animated>
 					<n-tab-pane name="overview" :tab="$t('alerts.details.tabs.overview')">
 						<AlertOverview :alert @status-updated="handleStatusUpdated" />
@@ -82,6 +85,7 @@ import { useI18n } from "vue-i18n"
 import Api from "@/api"
 import WaitingOnYouNotice from "@/components/common/WaitingOnYouNotice.vue"
 import AskSoc from "@/components/socRequests/AskSoc.vue"
+import TalonAskAboutAlert from "@/components/talonChat/TalonAskAboutAlert.vue"
 import { useAiReportsAvailability } from "@/composables/common/useAiReportsAvailability"
 import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"

@@ -128,6 +128,13 @@ const router = createRouter({
 		},
 
 		{
+			// "Ask Talon" (talon-analyst D97): the page says so when it isn't on for the user.
+			path: "/talon",
+			name: "TalonChat",
+			component: () => import("@/views/TalonChat.vue"),
+			meta: { title: "Ask Talon", titleKey: "navigation.routes.talonChat", auth: true, roles: RouteRole.All }
+		},
+		{
 			path: "/exposure",
 			name: "Exposure",
 			component: () => import("@/views/Exposure.vue"),

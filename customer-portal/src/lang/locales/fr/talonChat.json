@@ -1,0 +1,162 @@
+{
+	"page": {
+		"title": "Demander à Talon",
+		"intro": "Interrogez Talon, l'analyste IA du SOC, sur vos alertes, ses rapports IA et vos actifs.",
+		"reviewNotice": "Les conversations peuvent être consultées par votre SOC.",
+		"noActionsNotice": "Talon ne peut effectuer aucune action. Il répond aux questions et peut rédiger une question pour votre SOC, que vous envoyez vous-même.",
+		"unavailableTitle": "Demander à Talon n'est pas disponible",
+		"unavailableText": "Votre SOC n'a pas activé Demander à Talon pour votre organisation.",
+		"checkFailedTitle": "Demander à Talon n'a pas pu être vérifié",
+		"checkFailedText": "Impossible de vérifier si Demander à Talon est activé pour votre organisation. Réessayez dans un instant."
+	},
+	"threads": {
+		"title": "Conversations",
+		"new": "Nouvelle conversation",
+		"empty": "Aucune conversation pour l'instant.",
+		"loadMore": "Afficher plus",
+		"loadFailed": "Impossible de charger les conversations.",
+		"untitled": "Conversation du {date}",
+		"aboutAlert": "Alerte #{id}",
+		"notAccessible": "Non disponible",
+		"archive": "Fermer la conversation",
+		"archiveNamed": "Fermer la conversation : {title}",
+		"archiveConfirm": "Fermer cette conversation ? Elle quitte votre liste.",
+		"archived": "Conversation fermée"
+	},
+	"newThread": {
+		"title": "Nouvelle conversation",
+		"customerLabel": "Organisation",
+		"customerPlaceholder": "Choisissez une organisation",
+		"noCustomers": "Demander à Talon n'est activé pour aucune de vos organisations.",
+		"start": "Commencer",
+		"cancel": "Annuler"
+	},
+	"askAboutAlert": {
+		"button": "Demander à Talon à propos de cette alerte"
+	},
+	"conversation": {
+		"empty": "Posez une question pour commencer.",
+		"loadEarlier": "Afficher les messages précédents",
+		"placeholder": "Interrogez Talon sur vos alertes, rapports ou actifs",
+		"inputLabel": "Votre message à Talon",
+		"send": "Envoyer",
+		"thinking": "Talon répond…",
+		"tooLong": "Le message ne doit pas dépasser {max} caractères",
+		"cutOff": "Cette réponse a été interrompue avant la fin.",
+		"you": "Vous",
+		"talon": "Talon",
+		"aboutAlert": "À propos de l'alerte #{id}",
+		"notAccessible": "Cette conversation n'est plus disponible. Vous pouvez toujours la fermer.",
+		"answered": "Talon a répondu."
+	},
+	"checked": {
+		"line": "Vérifié : {items}",
+		"kinds": {
+			"alert": "l'alerte | {count} alertes",
+			"alert_list": "votre liste d'alertes | votre liste d'alertes ({count} fois)",
+			"report": "le rapport IA | {count} rapports IA",
+			"assets": "vos actifs | vos actifs ({count} fois)",
+			"event_search": "1 recherche d'événements | {count} recherches d'événements",
+			"event": "1 événement | {count} événements",
+			"earlier_result": "un résultat précédent | {count} résultats précédents",
+			"soc_draft": "1 question pour votre SOC | {count} questions pour votre SOC",
+			"analysis_offer": "1 proposition d'analyse IA | {count} propositions d'analyse IA"
+		},
+		"intel": {
+			"ip": "1 adresse IP | {count} adresses IP",
+			"domain": "1 domaine | {count} domaines",
+			"url": "1 URL | {count} URL",
+			"hash": "1 empreinte de fichier | {count} empreintes de fichier",
+			"cve": "1 vulnérabilité (CVE) | {count} vulnérabilités (CVE)",
+			"technique": "1 technique d'attaque | {count} techniques d'attaque",
+			"opencti_object": "1 fiche de renseignement sur les menaces | {count} fiches de renseignement sur les menaces",
+			"other": "1 recherche de renseignement sur les menaces | {count} recherches de renseignement sur les menaces"
+		}
+	},
+	"feedback": {
+		"up": "Utile",
+		"down": "Pas utile",
+		"failed": "Votre avis n'a pas pu être enregistré."
+	},
+	"draft": {
+		"title": "Question pour votre SOC",
+		"intro": "Talon a rédigé cette question. Vérifiez-la, choisissez son urgence et envoyez-la si vous voulez que le SOC s'en occupe.",
+		"aboutAlert": "À propos de l'alerte #{id}",
+		"aboutCase": "À propos du dossier #{id}",
+		"questionLabel": "La question pour le SOC",
+		"urgencyLegend": "Quelle est l'urgence ?",
+		"urgencyRequired": "Choisissez l'urgence",
+		"fileOnLegend": "Où doit-elle aller ?",
+		"fileOn": {
+			"case": "Sur le dossier de l'alerte",
+			"caseHint": "Ajoutée au dossier qui contient cette alerte, ou à un nouveau dossier ouvert à partir d'elle",
+			"alert": "Sur cette alerte uniquement",
+			"alertHint": "Un commentaire sur l'alerte, sans dossier"
+		},
+		"submit": "Envoyer au SOC",
+		"discard": "Abandonner",
+		"loading": "Chargement du brouillon…",
+		"loadFailed": "Impossible de charger le brouillon.",
+		"unavailable": "Ce brouillon n'est plus disponible.",
+		"socRequestsOff": "Les questions au SOC sont désactivées pour votre organisation.",
+		"status": {
+			"submitting": "Envoi au SOC en cours…",
+			"submitted": "Envoyée au SOC",
+			"discarded": "Abandonnée",
+			"expired": "Ce brouillon a expiré"
+		},
+		"submittedText": "Le SOC a reçu votre question (demande #{id}). Sa réponse apparaît dans les commentaires de l'alerte ou du dossier.",
+		"submittedNoId": "Le SOC a reçu votre question. Sa réponse apparaît dans les commentaires de l'alerte ou du dossier.",
+		"refresh": "Vérifier à nouveau"
+	},
+	"analysisOffer": {
+		"title": "Analyse IA",
+		"text": "Talon propose une analyse IA de l'alerte #{id}.",
+		"openAlert": "Ouvrir l'alerte",
+		"loadFailed": "Impossible de vérifier si une analyse peut être lancée.",
+		"notAllowed": "L'analyse IA n'est pas disponible pour cette alerte.",
+		"requested": "L'analyse a été demandée. Son rapport apparaît dans l'onglet Rapport IA de l'alerte."
+	},
+	"errors": {
+		"invalid_request": "Talon n'a pas pu lire la demande.",
+		"invalid_headers": "Talon n'a pas pu vérifier votre identité. Veuillez vous reconnecter.",
+		"not_portal_role": "Demander à Talon est réservé aux utilisateurs du portail.",
+		"portal_role_refused": "Ceci n'est pas disponible dans le portail.",
+		"customer_not_accessible": "Vous n'avez pas accès à cette organisation.",
+		"portal_off": "Demander à Talon est désactivé pour cette organisation.",
+		"settings_unavailable": "Les paramètres de Demander à Talon ne peuvent pas être lus pour le moment. Réessayez dans un instant.",
+		"thread_not_found": "Cette conversation est introuvable.",
+		"thread_archived": "Cette conversation est fermée.",
+		"access_removed": "Votre accès à l'organisation de cette conversation a été retiré.",
+		"thread_limit": "Vous avez trop de conversations ouvertes. Fermez-en une d'abord.",
+		"new_thread_limit": "Vous avez commencé trop de nouvelles conversations aujourd'hui. Réessayez demain.",
+		"alert_not_found": "L'alerte est introuvable.",
+		"body_too_large": "Le message est trop volumineux.",
+		"message_too_long": "Le message est trop long.",
+		"busy_thread": "Une réponse est encore en cours de rédaction dans cette conversation.",
+		"busy_user": "Une réponse est déjà en cours de rédaction pour vous. Attendez qu'elle soit terminée.",
+		"busy": "Talon est occupé. Réessayez dans un instant.",
+		"turn_limit": "La réponse a atteint sa limite. Essayez une question plus précise.",
+		"timeout": "La réponse a pris trop de temps. Réessayez.",
+		"budget_customer": "Talon a atteint sa limite d'utilisation pour votre organisation. Réessayez plus tard.",
+		"budget_portal": "Demander à Talon a atteint sa limite quotidienne pour votre organisation. Réessayez demain.",
+		"budget_portal_user": "Vous avez atteint votre limite quotidienne pour Demander à Talon. Réessayez demain.",
+		"messages_customer": "Votre organisation a atteint son nombre quotidien de messages à Talon.",
+		"messages_user": "Vous avez atteint votre nombre quotidien de messages à Talon.",
+		"budget_unavailable": "Talon ne peut pas vérifier ses limites d'utilisation pour le moment. Réessayez dans un instant.",
+		"failed": "Talon n'a pas pu répondre. Réessayez.",
+		"draft_not_found": "Ce brouillon est introuvable.",
+		"draft_expired": "Ce brouillon a expiré.",
+		"draft_conflict": "Ce brouillon a déjà été envoyé ou abandonné.",
+		"read_only": "Votre compte peut consulter les données de cette organisation, mais pas les modifier.",
+		"soc_requests_off": "Les questions au SOC sont désactivées pour votre organisation.",
+		"soc_request_limit": "Le nombre quotidien de questions au SOC est atteint.",
+		"soc_request_cooldown": "Une question sur ce sujet vient d'être envoyée. Réessayez dans quelques minutes.",
+		"invalid_question": "La question ne peut pas être envoyée telle quelle. Vérifiez-la et réessayez.",
+		"not_found": "L'alerte ou le dossier est introuvable.",
+		"internal_failure": "La question n'a pas pu être envoyée. Réessayez.",
+		"stream_closed": "La connexion à Talon a été coupée avant la fin de la réponse.",
+		"network": "Talon est injoignable. Vérifiez votre connexion et réessayez.",
+		"unknown": "Une erreur s'est produite. Réessayez."
+	}
+}

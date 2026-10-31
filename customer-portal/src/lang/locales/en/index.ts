@@ -19,6 +19,7 @@ import profile from "./profile.json" with { type: "json" }
 import reports from "./reports.json" with { type: "json" }
 import sla from "./sla.json" with { type: "json" }
 import socRequests from "./socRequests.json" with { type: "json" }
+import talonChat from "./talonChat.json" with { type: "json" }
 import users from "./users.json" with { type: "json" }
 
 export default {
@@ -40,5 +41,6 @@ export default {
 	audit,
 	notifications,
 	socRequests,
-	iocEnrichment
+	iocEnrichment,
+	talonChat
 }

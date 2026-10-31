@@ -32,6 +32,7 @@ import { useRoute, useRouter } from "vue-router"
 import { useActivityAvailability } from "@/composables/common/useActivityAvailability"
 import { useExposureAvailability } from "@/composables/common/useExposureAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
+import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useThemeStore } from "@/stores/theme"
 import getItems from "./items"
 
@@ -53,8 +54,15 @@ const themeStore = useThemeStore()
 const { available: slaAvailable, isEnabledFor: isSlaEnabledFor } = useSlaAvailability()
 const { available: activityAvailable, isEnabledFor: isActivityEnabledFor } = useActivityAvailability()
 const { available: exposureAvailable, isEnabledFor: isExposureEnabledFor } = useExposureAvailability()
+// "Ask Talon" (talon-analyst D97): only while the availability route says so; a failure is hidden.
+const { available: talonChatAvailable, isEnabledFor: isTalonChatEnabledFor } = useTalonChatAvailability()
 const menuOptions = computed<MenuMixedOption[]>(() =>
-	getItems({ sla: slaAvailable.value, activity: activityAvailable.value, exposure: exposureAvailable.value })
+	getItems({
+		sla: slaAvailable.value,
+		activity: activityAvailable.value,
+		exposure: exposureAvailable.value,
+		talonChat: talonChatAvailable.value
+	})
 )
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
@@ -75,6 +83,7 @@ onBeforeMount(() => {
 	isSlaEnabledFor()
 	isActivityEnabledFor()
 	isExposureEnabledFor()
+	isTalonChatEnabledFor()
 
 	router.afterEach(route => {
 		if (route?.matched?.length) {

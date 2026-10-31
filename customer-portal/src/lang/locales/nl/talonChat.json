@@ -1,0 +1,162 @@
+{
+	"page": {
+		"title": "Vraag het Talon",
+		"intro": "Vraag Talon, de AI-analist van het SOC, naar je meldingen, zijn AI-rapporten en je assets.",
+		"reviewNotice": "Chats kunnen door je SOC worden ingezien.",
+		"noActionsNotice": "Talon kan geen acties uitvoeren. Talon beantwoordt vragen en kan een vraag voor je SOC opstellen die je zelf verstuurt.",
+		"unavailableTitle": "Vraag het Talon is niet beschikbaar",
+		"unavailableText": "Je SOC heeft Vraag het Talon niet ingeschakeld voor je organisatie.",
+		"checkFailedTitle": "Vraag het Talon kon niet worden gecontroleerd",
+		"checkFailedText": "Er kon niet worden gecontroleerd of Vraag het Talon is ingeschakeld voor je organisatie. Probeer het zo opnieuw."
+	},
+	"threads": {
+		"title": "Gesprekken",
+		"new": "Nieuw gesprek",
+		"empty": "Nog geen gesprekken.",
+		"loadMore": "Meer tonen",
+		"loadFailed": "De gesprekken konden niet worden geladen.",
+		"untitled": "Gesprek van {date}",
+		"aboutAlert": "Melding #{id}",
+		"notAccessible": "Niet beschikbaar",
+		"archive": "Gesprek sluiten",
+		"archiveNamed": "Gesprek sluiten: {title}",
+		"archiveConfirm": "Dit gesprek sluiten? Het verdwijnt uit je lijst.",
+		"archived": "Gesprek gesloten"
+	},
+	"newThread": {
+		"title": "Nieuw gesprek",
+		"customerLabel": "Organisatie",
+		"customerPlaceholder": "Kies een organisatie",
+		"noCustomers": "Vraag het Talon is voor geen van je organisaties ingeschakeld.",
+		"start": "Beginnen",
+		"cancel": "Annuleren"
+	},
+	"askAboutAlert": {
+		"button": "Vraag Talon naar deze melding"
+	},
+	"conversation": {
+		"empty": "Stel een vraag om te beginnen.",
+		"loadEarlier": "Eerdere berichten tonen",
+		"placeholder": "Vraag Talon naar je meldingen, rapporten of assets",
+		"inputLabel": "Je bericht aan Talon",
+		"send": "Versturen",
+		"thinking": "Talon antwoordt…",
+		"tooLong": "Het bericht mag hoogstens {max} tekens lang zijn",
+		"cutOff": "Dit antwoord werd afgebroken voordat het klaar was.",
+		"you": "Jij",
+		"talon": "Talon",
+		"aboutAlert": "Over melding #{id}",
+		"notAccessible": "Dit gesprek is niet meer beschikbaar. Je kunt het nog wel sluiten.",
+		"answered": "Talon heeft geantwoord."
+	},
+	"checked": {
+		"line": "Gecontroleerd: {items}",
+		"kinds": {
+			"alert": "de melding | {count} meldingen",
+			"alert_list": "je meldingenlijst | je meldingenlijst ({count} keer)",
+			"report": "het AI-rapport | {count} AI-rapporten",
+			"assets": "je assets | je assets ({count} keer)",
+			"event_search": "1 zoekopdracht in gebeurtenissen | {count} zoekopdrachten in gebeurtenissen",
+			"event": "1 gebeurtenis | {count} gebeurtenissen",
+			"earlier_result": "een eerder resultaat | {count} eerdere resultaten",
+			"soc_draft": "1 vraag voor je SOC | {count} vragen voor je SOC",
+			"analysis_offer": "1 voorstel voor een AI-analyse | {count} voorstellen voor een AI-analyse"
+		},
+		"intel": {
+			"ip": "1 IP-adres | {count} IP-adressen",
+			"domain": "1 domein | {count} domeinen",
+			"url": "1 URL | {count} URL's",
+			"hash": "1 bestandshash | {count} bestandshashes",
+			"cve": "1 kwetsbaarheid (CVE) | {count} kwetsbaarheden (CVE's)",
+			"technique": "1 aanvalstechniek | {count} aanvalstechnieken",
+			"opencti_object": "1 threat-intelligence-record | {count} threat-intelligence-records",
+			"other": "1 threat-intelligence-opzoeking | {count} threat-intelligence-opzoekingen"
+		}
+	},
+	"feedback": {
+		"up": "Nuttig",
+		"down": "Niet nuttig",
+		"failed": "Je feedback kon niet worden opgeslagen."
+	},
+	"draft": {
+		"title": "Vraag voor je SOC",
+		"intro": "Talon heeft deze vraag opgesteld. Controleer haar, kies hoe dringend het is en verstuur haar als je wilt dat het SOC ernaar kijkt.",
+		"aboutAlert": "Over melding #{id}",
+		"aboutCase": "Over zaak #{id}",
+		"questionLabel": "De vraag voor het SOC",
+		"urgencyLegend": "Hoe dringend is het?",
+		"urgencyRequired": "Kies hoe dringend het is",
+		"fileOnLegend": "Waar moet hij heen?",
+		"fileOn": {
+			"case": "Op de zaak van de melding",
+			"caseHint": "Toegevoegd aan de zaak met deze melding, of aan een nieuwe zaak vanuit deze melding",
+			"alert": "Alleen op deze melding",
+			"alertHint": "Een opmerking op de melding, geen zaak"
+		},
+		"submit": "Naar het SOC sturen",
+		"discard": "Verwerpen",
+		"loading": "Het concept wordt geladen…",
+		"loadFailed": "Het concept kon niet worden geladen.",
+		"unavailable": "Dit concept is niet meer beschikbaar.",
+		"socRequestsOff": "Vragen aan het SOC zijn uitgeschakeld voor je organisatie.",
+		"status": {
+			"submitting": "Wordt naar het SOC gestuurd…",
+			"submitted": "Naar het SOC gestuurd",
+			"discarded": "Verworpen",
+			"expired": "Dit concept is verlopen"
+		},
+		"submittedText": "Het SOC heeft je vraag (verzoek #{id}). Het antwoord verschijnt in de opmerkingen van de melding of zaak.",
+		"submittedNoId": "Het SOC heeft je vraag. Het antwoord verschijnt in de opmerkingen van de melding of zaak.",
+		"refresh": "Opnieuw controleren"
+	},
+	"analysisOffer": {
+		"title": "AI-analyse",
+		"text": "Talon stelt een AI-analyse van melding #{id} voor.",
+		"openAlert": "Melding openen",
+		"loadFailed": "Er kon niet worden gecontroleerd of een analyse mogelijk is.",
+		"notAllowed": "Een AI-analyse is niet beschikbaar voor deze melding.",
+		"requested": "De analyse is aangevraagd. Het rapport verschijnt op het tabblad AI-rapport van de melding."
+	},
+	"errors": {
+		"invalid_request": "Talon kon het verzoek niet lezen.",
+		"invalid_headers": "Talon kon niet controleren wie je bent. Meld je opnieuw aan.",
+		"not_portal_role": "Vraag het Talon is alleen voor portaalgebruikers.",
+		"portal_role_refused": "Dit is niet beschikbaar in het portaal.",
+		"customer_not_accessible": "Je hebt geen toegang tot deze organisatie.",
+		"portal_off": "Vraag het Talon is uitgeschakeld voor deze organisatie.",
+		"settings_unavailable": "De instellingen van Vraag het Talon kunnen nu niet worden gelezen. Probeer het zo opnieuw.",
+		"thread_not_found": "Dit gesprek is niet gevonden.",
+		"thread_archived": "Dit gesprek is gesloten.",
+		"access_removed": "Je toegang tot de organisatie van dit gesprek is ingetrokken.",
+		"thread_limit": "Je hebt te veel open gesprekken. Sluit er eerst een.",
+		"new_thread_limit": "Je bent vandaag te veel nieuwe gesprekken begonnen. Probeer het morgen opnieuw.",
+		"alert_not_found": "De melding is niet gevonden.",
+		"body_too_large": "Het bericht is te groot.",
+		"message_too_long": "Het bericht is te lang.",
+		"busy_thread": "In dit gesprek wordt nog een antwoord geschreven.",
+		"busy_user": "Er wordt al een antwoord voor je geschreven. Wacht tot het klaar is.",
+		"busy": "Talon is bezet. Probeer het zo opnieuw.",
+		"turn_limit": "Het antwoord heeft zijn limiet bereikt. Stel een gerichtere vraag.",
+		"timeout": "Het antwoord duurde te lang. Probeer het opnieuw.",
+		"budget_customer": "Talon heeft zijn gebruikslimiet voor je organisatie bereikt. Probeer het later opnieuw.",
+		"budget_portal": "Vraag het Talon heeft zijn daglimiet voor je organisatie bereikt. Probeer het morgen opnieuw.",
+		"budget_portal_user": "Je hebt je daglimiet voor Vraag het Talon bereikt. Probeer het morgen opnieuw.",
+		"messages_customer": "Je organisatie heeft het dagelijkse aantal berichten aan Talon bereikt.",
+		"messages_user": "Je hebt je dagelijkse aantal berichten aan Talon bereikt.",
+		"budget_unavailable": "Talon kan zijn gebruikslimieten nu niet controleren. Probeer het zo opnieuw.",
+		"failed": "Talon kon niet antwoorden. Probeer het opnieuw.",
+		"draft_not_found": "Dit concept is niet gevonden.",
+		"draft_expired": "Dit concept is verlopen.",
+		"draft_conflict": "Dit concept is al verstuurd of verworpen.",
+		"read_only": "Je account kan de gegevens van deze organisatie bekijken, maar niet wijzigen.",
+		"soc_requests_off": "Vragen aan het SOC zijn uitgeschakeld voor je organisatie.",
+		"soc_request_limit": "Het dagelijkse aantal vragen aan het SOC is bereikt.",
+		"soc_request_cooldown": "Er is net een vraag hierover verstuurd. Probeer het over een paar minuten opnieuw.",
+		"invalid_question": "De vraag kan zo niet worden verstuurd. Controleer haar en probeer het opnieuw.",
+		"not_found": "De melding of zaak is niet gevonden.",
+		"internal_failure": "De vraag kon niet worden verstuurd. Probeer het opnieuw.",
+		"stream_closed": "De verbinding met Talon werd verbroken voordat het antwoord klaar was.",
+		"network": "Talon is niet bereikbaar. Controleer je verbinding en probeer het opnieuw.",
+		"unknown": "Er ging iets mis. Probeer het opnieuw."
+	}
+}

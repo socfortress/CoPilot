@@ -16,6 +16,7 @@ import { useIocEnrichmentAvailability } from "@/composables/common/useIocEnrichm
 import { useServerNotifications } from "@/composables/common/useServerNotifications"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
+import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useCustomerFilterStore } from "@/stores/customerFilter"
 import { useLocalesStore } from "@/stores/i18n"
 import { useReportGenerationStore } from "@/stores/reportGeneration"
@@ -82,6 +83,8 @@ export const useAuthStore = defineStore("auth", {
 			useSocRequestsAvailability().reset()
 			// So is whether they may check their IOCs against Threat Intel (#1318).
 			useIocEnrichmentAvailability().reset()
+			// And whether they may ask Talon (talon-analyst D97).
+			useTalonChatAvailability().reset()
 			// The bell's server notifications are the user's own (#1282).
 			useServerNotifications().reset()
 			// Event search's saved and recent searches are the user's own (#1258).

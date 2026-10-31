@@ -1,0 +1,162 @@
+{
+	"page": {
+		"title": "Ask Talon",
+		"intro": "Ask Talon, the SOC's AI analyst, about your alerts, its AI reports and your assets.",
+		"reviewNotice": "Chats may be reviewed by your SOC.",
+		"noActionsNotice": "Talon can't take actions. It answers questions, and can draft a question for your SOC that you send yourself.",
+		"unavailableTitle": "Ask Talon isn't available",
+		"unavailableText": "Your SOC hasn't turned on Ask Talon for your organization.",
+		"checkFailedTitle": "Ask Talon couldn't be checked",
+		"checkFailedText": "Whether Ask Talon is on for your organization couldn't be checked. Try again shortly."
+	},
+	"threads": {
+		"title": "Conversations",
+		"new": "New conversation",
+		"empty": "No conversations yet.",
+		"loadMore": "Show more",
+		"loadFailed": "The conversations could not be loaded.",
+		"untitled": "Conversation of {date}",
+		"aboutAlert": "Alert #{id}",
+		"notAccessible": "Not available",
+		"archive": "Close conversation",
+		"archiveNamed": "Close conversation: {title}",
+		"archiveConfirm": "Close this conversation? It leaves your list.",
+		"archived": "Conversation closed"
+	},
+	"newThread": {
+		"title": "New conversation",
+		"customerLabel": "Organization",
+		"customerPlaceholder": "Choose an organization",
+		"noCustomers": "Ask Talon isn't on for any of your organizations.",
+		"start": "Start",
+		"cancel": "Cancel"
+	},
+	"askAboutAlert": {
+		"button": "Ask Talon about this alert"
+	},
+	"conversation": {
+		"empty": "Ask a question to start.",
+		"loadEarlier": "Show earlier messages",
+		"placeholder": "Ask Talon about your alerts, reports or assets",
+		"inputLabel": "Your message to Talon",
+		"send": "Send",
+		"thinking": "Talon is answering…",
+		"tooLong": "Keep the message under {max} characters",
+		"cutOff": "This reply was cut off before it finished.",
+		"you": "You",
+		"talon": "Talon",
+		"aboutAlert": "About alert #{id}",
+		"notAccessible": "This conversation isn't available any more. You can still close it.",
+		"answered": "Talon has answered."
+	},
+	"checked": {
+		"line": "Checked: {items}",
+		"kinds": {
+			"alert": "the alert | {count} alerts",
+			"alert_list": "your alert list | your alert list ({count} times)",
+			"report": "the AI report | {count} AI reports",
+			"assets": "your assets | your assets ({count} times)",
+			"event_search": "1 event search | {count} event searches",
+			"event": "1 event | {count} events",
+			"earlier_result": "an earlier result | {count} earlier results",
+			"soc_draft": "1 question for your SOC | {count} questions for your SOC",
+			"analysis_offer": "1 AI analysis offer | {count} AI analysis offers"
+		},
+		"intel": {
+			"ip": "1 IP address | {count} IP addresses",
+			"domain": "1 domain | {count} domains",
+			"url": "1 URL | {count} URLs",
+			"hash": "1 file hash | {count} file hashes",
+			"cve": "1 vulnerability (CVE) | {count} vulnerabilities (CVEs)",
+			"technique": "1 attack technique | {count} attack techniques",
+			"opencti_object": "1 threat-intel record | {count} threat-intel records",
+			"other": "1 threat-intel lookup | {count} threat-intel lookups"
+		}
+	},
+	"feedback": {
+		"up": "Helpful",
+		"down": "Not helpful",
+		"failed": "Your feedback could not be saved."
+	},
+	"draft": {
+		"title": "Question for your SOC",
+		"intro": "Talon drafted this question. Check it, choose how urgent it is, and send it if you want the SOC to look into it.",
+		"aboutAlert": "About alert #{id}",
+		"aboutCase": "About case #{id}",
+		"questionLabel": "The question for the SOC",
+		"urgencyLegend": "How urgent is it?",
+		"urgencyRequired": "Choose how urgent it is",
+		"fileOnLegend": "Where should it go?",
+		"fileOn": {
+			"case": "On the alert's case",
+			"caseHint": "Added to the case that holds this alert, or a new case opened from it",
+			"alert": "On this alert only",
+			"alertHint": "A comment on the alert, no case"
+		},
+		"submit": "Send to the SOC",
+		"discard": "Discard",
+		"loading": "Loading the draft…",
+		"loadFailed": "The draft could not be loaded.",
+		"unavailable": "This draft is no longer available.",
+		"socRequestsOff": "Questions to the SOC are turned off for your organization.",
+		"status": {
+			"submitting": "Being sent to the SOC…",
+			"submitted": "Sent to the SOC",
+			"discarded": "Discarded",
+			"expired": "This draft expired"
+		},
+		"submittedText": "The SOC has your question (request #{id}). Its reply appears in the comments of the alert or case.",
+		"submittedNoId": "The SOC has your question. Its reply appears in the comments of the alert or case.",
+		"refresh": "Check again"
+	},
+	"analysisOffer": {
+		"title": "AI analysis",
+		"text": "Talon suggests an AI analysis of alert #{id}.",
+		"openAlert": "Open the alert",
+		"loadFailed": "Whether an analysis can be run could not be checked.",
+		"notAllowed": "Running an AI analysis isn't available for this alert.",
+		"requested": "The analysis was requested. Its report appears on the alert's AI Report tab."
+	},
+	"errors": {
+		"invalid_request": "Talon couldn't read the request.",
+		"invalid_headers": "Talon couldn't check who you are. Please sign in again.",
+		"not_portal_role": "Ask Talon is for portal users only.",
+		"portal_role_refused": "This isn't available in the portal.",
+		"customer_not_accessible": "You don't have access to this organization.",
+		"portal_off": "Ask Talon is turned off for this organization.",
+		"settings_unavailable": "Ask Talon's settings can't be read right now. Try again shortly.",
+		"thread_not_found": "This conversation wasn't found.",
+		"thread_archived": "This conversation is closed.",
+		"access_removed": "Your access to this conversation's organization was removed.",
+		"thread_limit": "You have too many open conversations. Close one first.",
+		"new_thread_limit": "You started too many new conversations today. Try again tomorrow.",
+		"alert_not_found": "The alert wasn't found.",
+		"body_too_large": "The message is too large.",
+		"message_too_long": "The message is too long.",
+		"busy_thread": "A reply is still being written in this conversation.",
+		"busy_user": "You already have a reply being written. Wait for it to finish.",
+		"busy": "Talon is busy. Try again shortly.",
+		"turn_limit": "The reply reached its limit. Try asking a narrower question.",
+		"timeout": "The reply took too long. Try again.",
+		"budget_customer": "Talon has reached its usage limit for your organization. Try again later.",
+		"budget_portal": "Ask Talon has reached its daily limit for your organization. Try again tomorrow.",
+		"budget_portal_user": "You have reached your daily limit for Ask Talon. Try again tomorrow.",
+		"messages_customer": "Your organization has reached its daily number of messages to Talon.",
+		"messages_user": "You have reached your daily number of messages to Talon.",
+		"budget_unavailable": "Talon can't check its usage limits right now. Try again shortly.",
+		"failed": "Talon couldn't answer. Try again.",
+		"draft_not_found": "This draft wasn't found.",
+		"draft_expired": "This draft expired.",
+		"draft_conflict": "This draft was already sent or discarded.",
+		"read_only": "Your account can view this organization's data but not change it.",
+		"soc_requests_off": "Questions to the SOC are turned off for your organization.",
+		"soc_request_limit": "The daily number of questions to the SOC is reached.",
+		"soc_request_cooldown": "A question about this was just sent. Try again in a few minutes.",
+		"invalid_question": "The question can't be sent as it is. Check it and try again.",
+		"not_found": "The alert or case wasn't found.",
+		"internal_failure": "The question couldn't be sent. Try again.",
+		"stream_closed": "The connection to Talon closed before the reply finished.",
+		"network": "Talon couldn't be reached. Check your connection and try again.",
+		"unknown": "Something went wrong. Try again."
+	}
+}

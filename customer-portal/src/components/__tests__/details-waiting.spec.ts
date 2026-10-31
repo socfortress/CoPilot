@@ -17,7 +17,16 @@ vi.mock("@/composables/common/useAiReportsAvailability", () => ({
 function stub(name: string) {
 	return defineComponent({ name, emits: ["added", "updated", "deleted"], setup: () => () => h("div") })
 }
-const ALERT_CHILDREN = ["AlertOverview", "AlertAssets", "AlertCases", "AlertIocs", "AlertAiReport", "AlertComments"]
+// Ask Talon about this alert (talon-analyst D97) has its own spec.
+const ALERT_CHILDREN = [
+	"AlertOverview",
+	"AlertAssets",
+	"AlertCases",
+	"AlertIocs",
+	"AlertAiReport",
+	"AlertComments",
+	"TalonAskAboutAlert"
+]
 const CASE_CHILDREN = ["CaseOverview", "CaseAlerts", "CaseTasks", "CaseTimeline", "CaseFiles", "CaseComments"]
 const stubs = (names: string[]) => Object.fromEntries(names.map(name => [name, stub(name)]))
 

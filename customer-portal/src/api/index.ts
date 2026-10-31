@@ -15,6 +15,7 @@ import reports from "./endpoints/reports"
 import siem from "./endpoints/siem"
 import sla from "./endpoints/sla"
 import socRequests from "./endpoints/socRequests"
+import talonChat from "./endpoints/talonChat"
 import totp from "./endpoints/totp"
 import users from "./endpoints/users"
 
@@ -33,6 +34,7 @@ export default {
 	siem,
 	sla,
 	socRequests,
+	talonChat,
 	notifications,
 	portal,
 	reports,
