@@ -17,6 +17,19 @@
 		<div v-if="checking" class="flex justify-center py-10"><n-spin /></div>
 
 		<div
+			v-else-if="!enabled && checkFailed"
+			class="bg-default border-default flex flex-col items-center gap-2 rounded-lg border px-6 py-14 text-center"
+			data-testid="talon-chat-check-failed"
+		>
+			<Icon name="carbon:warning" :size="28" class="text-tertiary" />
+			<p class="m-0 font-semibold">{{ $t("talonChat.page.checkFailedTitle") }}</p>
+			<p class="text-secondary m-0 max-w-md text-sm">{{ $t("talonChat.page.checkFailedText") }}</p>
+			<n-button size="small" secondary data-testid="talon-chat-check-retry" @click="refresh()">
+				{{ $t("common.actions.tryAgain") }}
+			</n-button>
+		</div>
+
+		<div
 			v-else-if="!enabled"
 			class="bg-default border-default flex flex-col items-center gap-2 rounded-lg border px-6 py-14 text-center"
 			data-testid="talon-chat-unavailable"
@@ -33,6 +46,7 @@
 				:loading="loadingThreads"
 				:has-more="!!nextCursor"
 				:error-code="threadsErrorCode"
+				:busy="streaming"
 				@select="select"
 				@archive="archive"
 				@new="startNew"
@@ -48,7 +62,12 @@
 					@created="created"
 					@cancel="showNew = false"
 				/>
-				<TalonConversation v-else :thread-id="selectedId" @turn="loadThreads(false, true)" />
+				<TalonConversation
+					v-else
+					:thread-id="selectedId"
+					@turn="loadThreads(false, true)"
+					@streaming="value => (streaming = value)"
+				/>
 			</section>
 		</div>
 	</div>
@@ -57,7 +76,7 @@
 <script setup lang="ts">
 import type { PortalCustomer } from "@/types/auth"
 import type { TalonChatThread } from "@/types/talonChat"
-import { NSpin, useMessage } from "naive-ui"
+import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import { useRoute, useRouter } from "vue-router"
@@ -66,7 +85,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useAuthStore } from "@/stores/auth"
-import { errorCodeOf, errorText } from "./talonChat"
+import { errorCodeOf, errorText, THREAD_ID } from "./talonChat"
 import TalonConversation from "./TalonConversation.vue"
 import TalonNewThread from "./TalonNewThread.vue"
 import TalonThreadList from "./TalonThreadList.vue"
@@ -81,12 +100,16 @@ const router = useRouter()
 const toast = useMessage()
 const { t } = useI18n()
 const authStore = useAuthStore()
-const { isEnabledFor, availabilityFor } = useTalonChatAvailability()
+const { lookup } = useTalonChatAvailability()
 
 const PAGE_SIZE = 20
 
 const checking = ref(true)
 const enabled = ref(false)
+/** No organization could be confirmed on, and a lookup failed: "couldn't check", not "off". */
+const checkFailed = ref(false)
+/** A reply is streaming: nothing may replace the conversation until it ends. */
+const streaming = ref(false)
 const chatCustomers = ref<PortalCustomer[]>([])
 
 const threads = ref<TalonChatThread[]>([])
@@ -96,18 +119,17 @@ const { loading: loadingThreads, run } = useLatestRequest()
 const showNew = ref(false)
 
 const selectedId = computed(() => {
+	// Only a well-formed id is read from the address; anything else opens no conversation.
 	const value = route.query.thread
-	return typeof value === "string" && value ? value : null
+	return typeof value === "string" && THREAD_ID.test(value) ? value : null
 })
 
 async function checkAvailability() {
 	const customers = authStore.accessibleCustomers
-	const [any, ...each] = await Promise.all([
-		isEnabledFor(),
-		...customers.map(customer => availabilityFor(customer.customer_code))
-	])
-	chatCustomers.value = customers.filter((_, index) => !!each[index])
-	enabled.value = any || chatCustomers.value.length > 0
+	const [any, ...each] = await Promise.all([lookup(), ...customers.map(customer => lookup(customer.customer_code))])
+	chatCustomers.value = customers.filter((_, index) => each[index]?.state === "on")
+	enabled.value = any?.state === "on" || chatCustomers.value.length > 0
+	checkFailed.value = !enabled.value && [any, ...each].some(answer => answer?.state === "error")
 	checking.value = false
 }
 
@@ -134,11 +156,13 @@ function loadThreads(more = false, quiet = false) {
 }
 
 function select(id: string) {
+	if (streaming.value) return
 	showNew.value = false
 	if (id !== selectedId.value) router.push({ query: { ...route.query, thread: id } })
 }
 
 function startNew() {
+	if (streaming.value) return
 	showNew.value = true
 }
 
@@ -148,6 +172,7 @@ function created(thread: TalonChatThread) {
 }
 
 async function archive(id: string) {
+	if (streaming.value && id === selectedId.value) return
 	try {
 		await Api.talonChat.archiveThread(id)
 		threads.value = threads.value.filter(thread => thread.id !== id)

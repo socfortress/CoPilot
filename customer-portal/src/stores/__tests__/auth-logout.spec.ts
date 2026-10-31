@@ -6,6 +6,7 @@ import { useExposureAvailability } from "@/composables/common/useExposureAvailab
 import { useIocEnrichmentAvailability } from "@/composables/common/useIocEnrichmentAvailability"
 import { useSlaAvailability } from "@/composables/common/useSlaAvailability"
 import { useSocRequestsAvailability } from "@/composables/common/useSocRequestsAvailability"
+import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useAuthStore } from "../auth"
 
 const aiAvailability = vi.hoisted(() => vi.fn())
@@ -14,6 +15,7 @@ const activityAvailability = vi.hoisted(() => vi.fn())
 const exposureAvailability = vi.hoisted(() => vi.fn())
 const socRequestsAvailability = vi.hoisted(() => vi.fn())
 const iocEnrichmentAvailability = vi.hoisted(() => vi.fn())
+const talonChatAvailability = vi.hoisted(() => vi.fn())
 vi.mock("@/api", () => ({
 	default: {
 		aiReports: { getAvailability: aiAvailability },
@@ -21,7 +23,8 @@ vi.mock("@/api", () => ({
 		activity: { getAvailability: activityAvailability },
 		exposure: { getAvailability: exposureAvailability },
 		socRequests: { getAvailability: socRequestsAvailability },
-		iocEnrichment: { getAvailability: iocEnrichmentAvailability }
+		iocEnrichment: { getAvailability: iocEnrichmentAvailability },
+		talonChat: { getAvailability: talonChatAvailability }
 	}
 }))
 
@@ -43,12 +46,14 @@ describe("logout clears the cached portal switches", () => {
 		exposureAvailability.mockReset().mockImplementation(enabled)
 		socRequestsAvailability.mockReset().mockImplementation(enabled)
 		iocEnrichmentAvailability.mockReset().mockImplementation(enabled)
+		talonChatAvailability.mockReset().mockImplementation(enabled)
 		useAiReportsAvailability().reset()
 		useSlaAvailability().reset()
 		useActivityAvailability().reset()
 		useExposureAvailability().reset()
 		useSocRequestsAvailability().reset()
 		useIocEnrichmentAvailability().reset()
+		useTalonChatAvailability().reset()
 	})
 
 	it("asks the backend again after a logout", async () => {
@@ -58,7 +63,9 @@ describe("logout clears the cached portal switches", () => {
 		await useExposureAvailability().isEnabledFor()
 		await useSocRequestsAvailability().isEnabledFor("ACME")
 		await useIocEnrichmentAvailability().isEnabledFor("ACME")
+		await useTalonChatAvailability().isEnabledFor()
 		expect(useSlaAvailability().available.value).toBe(true)
+		expect(useTalonChatAvailability().available.value).toBe(true)
 		expect(useActivityAvailability().available.value).toBe(true)
 		expect(useExposureAvailability().available.value).toBe(true)
 
@@ -67,6 +74,8 @@ describe("logout clears the cached portal switches", () => {
 		expect(useSlaAvailability().available.value).toBe(false)
 		expect(useActivityAvailability().available.value).toBe(false)
 		expect(useExposureAvailability().available.value).toBe(false)
+		// Ask Talon (talon-analyst D97): the menu entry goes, and the next user is asked about afresh.
+		expect(useTalonChatAvailability().available.value).toBe(false)
 		await useAiReportsAvailability().isEnabledFor("ACME")
 		await useSlaAvailability().isEnabledFor()
 		await useExposureAvailability().isEnabledFor()
@@ -79,5 +88,7 @@ describe("logout clears the cached portal switches", () => {
 		expect(socRequestsAvailability).toHaveBeenCalledTimes(2)
 		await useIocEnrichmentAvailability().isEnabledFor("ACME")
 		expect(iocEnrichmentAvailability).toHaveBeenCalledTimes(2)
+		await useTalonChatAvailability().isEnabledFor()
+		expect(talonChatAvailability).toHaveBeenCalledTimes(2)
 	})
 })

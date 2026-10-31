@@ -4,10 +4,11 @@ import { NSelect } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import i18n from "@/lang"
+import { useLocalesStore } from "@/stores/i18n"
 import TalonNewThread from "../TalonNewThread.vue"
 import { thread } from "./fixtures"
 
-const talonChat = vi.hoisted(() => ({ createThread: vi.fn() }))
+const talonChat = vi.hoisted(() => ({ createThread: vi.fn(), getAvailability: vi.fn() }))
 vi.mock("@/api", () => ({ default: { talonChat } }))
 
 const ACME: PortalCustomer = { customer_code: "ACME", customer_name: "Acme Corp" }
@@ -30,7 +31,7 @@ describe("a new Ask Talon conversation", () => {
 		expect(wrapper.get("[data-testid=talon-new-thread-customer]").text()).toBe("Acme Corp")
 		await wrapper.get("[data-testid=talon-new-thread]").trigger("submit")
 		await flushPromises()
-		expect(talonChat.createThread).toHaveBeenCalledWith({ customer_code: "ACME" })
+		expect(talonChat.createThread).toHaveBeenCalledWith({ customer_code: "ACME", language: "en" })
 		expect(wrapper.emitted("created")).toEqual([[thread()]])
 	})
 
@@ -51,7 +52,16 @@ describe("a new Ask Talon conversation", () => {
 		select.vm.$emit("update:value", "BETA")
 		await wrapper.get("[data-testid=talon-new-thread]").trigger("submit")
 		await flushPromises()
-		expect(talonChat.createThread).toHaveBeenCalledWith({ customer_code: "BETA" })
+		expect(talonChat.createThread).toHaveBeenCalledWith({ customer_code: "BETA", language: "en" })
+	})
+
+	it("asks for answers in the portal's language", async () => {
+		talonChat.createThread.mockResolvedValue({ data: thread() })
+		useLocalesStore().apply("de")
+		const wrapper = render([ACME])
+		await wrapper.get("[data-testid=talon-new-thread]").trigger("submit")
+		await flushPromises()
+		expect(talonChat.createThread).toHaveBeenCalledWith({ customer_code: "ACME", language: "de" })
 	})
 
 	it("says why a conversation can't start, by code", async () => {

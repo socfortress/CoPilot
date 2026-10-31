@@ -271,7 +271,8 @@ export function fromUIMessage(raw: TalonChatUIMessage): TalonChatMessage | null 
 
 	if (metadata.status === "failed") {
 		out.status = "failed"
-		out.errorCode = codeFrom(metadata.code) ?? codeFrom(metadata.error_code) ?? FAILED_CODE
+		// The contract's `metadata.code` (FR-API-37); none, or one malformed, is the generic failure.
+		out.errorCode = codeFrom(metadata.code) ?? FAILED_CODE
 	} else if (metadata.status === "cut_off") {
 		out.status = "cut_off"
 	}

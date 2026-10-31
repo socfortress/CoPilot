@@ -1,4 +1,5 @@
-import type { TalonChatThread, TalonCheckedItem } from "@/types/talonChat"
+import type { InjectionKey } from "vue"
+import type { TalonChatThread, TalonCheckedItem, TalonDraftFileOn, TalonDraftUrgency } from "@/types/talonChat"
 import { codeFrom } from "@/api/talonChatStream"
 import { i18nGlobal } from "@/lang"
 import { useSettingsStore } from "@/stores/settings"
@@ -127,3 +128,19 @@ export function threadTitle(thread: Pick<TalonChatThread, "title" | "created_at"
 	const date = String(formatDate(thread.created_at, useSettingsStore().dateFormat.datetime, { tz: true }))
 	return i18nGlobal.t("talonChat.threads.untitled", { date })
 }
+
+/** A thread id as the address may carry it (`?thread=`): anything else is ignored. */
+export const THREAD_ID = /^[\w-]{1,64}$/
+
+/** What the user typed in a SOC draft card, kept by draft id while the conversation is open. */
+export interface DraftEdits {
+	question: string
+	urgency: TalonDraftUrgency | null
+	fileOn: TalonDraftFileOn
+}
+
+/**
+ * The conversation's draft edits: a card that is mounted again (its turn read back after the
+ * stream) picks up what the user had typed instead of starting over.
+ */
+export const DRAFT_EDITS: InjectionKey<Map<string, DraftEdits>> = Symbol("talon-draft-edits")

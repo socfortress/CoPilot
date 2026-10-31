@@ -5,7 +5,9 @@
 		"reviewNotice": "Chats kunnen door je SOC worden ingezien.",
 		"noActionsNotice": "Talon kan geen acties uitvoeren. Talon beantwoordt vragen en kan een vraag voor je SOC opstellen die je zelf verstuurt.",
 		"unavailableTitle": "Vraag het Talon is niet beschikbaar",
-		"unavailableText": "Je SOC heeft Vraag het Talon niet ingeschakeld voor je organisatie."
+		"unavailableText": "Je SOC heeft Vraag het Talon niet ingeschakeld voor je organisatie.",
+		"checkFailedTitle": "Vraag het Talon kon niet worden gecontroleerd",
+		"checkFailedText": "Er kon niet worden gecontroleerd of Vraag het Talon is ingeschakeld voor je organisatie. Probeer het zo opnieuw."
 	},
 	"threads": {
 		"title": "Gesprekken",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Melding #{id}",
 		"notAccessible": "Niet beschikbaar",
 		"archive": "Gesprek sluiten",
+		"archiveNamed": "Gesprek sluiten: {title}",
 		"archiveConfirm": "Dit gesprek sluiten? Het verdwijnt uit je lijst.",
 		"archived": "Gesprek gesloten"
 	},
@@ -43,7 +46,8 @@
 		"you": "Jij",
 		"talon": "Talon",
 		"aboutAlert": "Over melding #{id}",
-		"notAccessible": "Dit gesprek is niet meer beschikbaar. Je kunt het nog wel sluiten."
+		"notAccessible": "Dit gesprek is niet meer beschikbaar. Je kunt het nog wel sluiten.",
+		"answered": "Talon heeft geantwoord."
 	},
 	"checked": {
 		"line": "Gecontroleerd: {items}",

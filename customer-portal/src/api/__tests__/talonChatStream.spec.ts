@@ -223,6 +223,7 @@ describe("the read-back (FR-API-37)", () => {
 		expect(user?.items).toEqual([{ kind: "text", id: "run-1-user-text", text: "What happened?" }])
 		expect(assistant?.runId).toBe("run-1")
 		expect(assistant?.feedback).toBe("up")
+		expect(fromUIMessage({ ...turn[1]!, metadata: { feedback: "sideways" } })?.feedback).toBeNull()
 		expect(assistant?.checked).toEqual([{ kind: "alert", count: 1 }])
 		expect(assistant?.items.map(item => item.kind)).toEqual(["text", "soc-draft", "analysis-offer"])
 	})
@@ -237,6 +238,14 @@ describe("the read-back (FR-API-37)", () => {
 		expect([failed?.status, failed?.errorCode]).toEqual(["failed", "messages_user"])
 		const generic = fromUIMessage({ id: "x-assistant", role: "assistant", parts: [], metadata: { status: "failed" } })
 		expect(generic?.errorCode).toBe("failed")
+		// Only the contract's `metadata.code` is read.
+		const other = fromUIMessage({
+			id: "y-assistant",
+			role: "assistant",
+			parts: [],
+			metadata: { status: "failed", error_code: "busy_user" }
+		})
+		expect(other?.errorCode).toBe("failed")
 	})
 
 	it("drops a role the chat doesn't show and a malformed message", () => {

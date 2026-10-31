@@ -67,4 +67,37 @@ describe("useTalonChatAvailability (talon-analyst D97)", () => {
 		await isEnabledFor()
 		expect(getAvailability).toHaveBeenCalledTimes(3)
 	})
+
+	it("tells a failed check apart from off: couldn't check is not cached", async () => {
+		getAvailability.mockImplementationOnce(() => Promise.reject(new Error("network")))
+		getAvailability.mockImplementationOnce(() => answer(false))
+		const { lookup } = useTalonChatAvailability()
+		expect((await lookup("ACME")).state).toBe("error")
+		expect((await lookup("ACME")).state).toBe("off")
+		expect((await lookup("ACME")).state).toBe("off")
+		expect(getAvailability).toHaveBeenCalledTimes(2)
+	})
+
+	it("asks again for a customer whose switch a request found off", async () => {
+		getAvailability.mockImplementation(() => answer(true))
+		const { isEnabledFor, invalidate } = useTalonChatAvailability()
+		await isEnabledFor("ACME")
+		await isEnabledFor()
+		invalidate("ACME")
+		getAvailability.mockImplementation(() => answer(false))
+		expect(await isEnabledFor("ACME")).toBe(false)
+		expect(await isEnabledFor()).toBe(false)
+		expect(getAvailability).toHaveBeenCalledTimes(4)
+	})
+
+	it("lets no lookup still in flight at logout set the next session's menu", async () => {
+		let resolve: (value: unknown) => void = () => {}
+		getAvailability.mockImplementationOnce(() => new Promise(r => (resolve = r)))
+		const { available, isEnabledFor, reset } = useTalonChatAvailability()
+		const pending = isEnabledFor()
+		reset()
+		resolve({ data: { enabled: true } })
+		expect(await pending).toBe(false)
+		expect(available.value).toBe(false)
+	})
 })

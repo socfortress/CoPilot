@@ -2,7 +2,16 @@ import type { TalonChatStreamResult } from "../talonChat"
 import type { TalonChatChunk } from "@/types/talonChat"
 import { createPinia, setActivePinia } from "pinia"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { useAuthStore } from "@/stores/auth"
 import talonChat from "../talonChat"
+
+const routerReplace = vi.hoisted(() => vi.fn())
+vi.mock("@/router", () => ({
+	default: {
+		currentRoute: { value: { matched: [{}], name: "TalonChat", fullPath: "/talon?thread=th-1" } },
+		replace: routerReplace
+	}
+}))
 
 function body(text: string) {
 	const bytes = new TextEncoder().encode(text)
@@ -65,5 +74,20 @@ describe("streaming an Ask Talon turn", () => {
 	it("reports a stream that stopped before finish as closed", async () => {
 		const { ends } = await stream(new Response(body('data: {"type":"start"}\n\n'), { status: 200 }))
 		expect(ends).toEqual([{ kind: "closed" }])
+	})
+
+	it("holds the user on the password change, as the HTTP client does, and shows no error", async () => {
+		routerReplace.mockReset()
+		useAuthStore().user = { access_token: "token", role: null, username: "jane", customer_codes: ["ACME"] }
+		const { ends } = await stream(
+			new Response(JSON.stringify({ detail: "change your password" }), {
+				status: 403,
+				headers: { "content-type": "application/json", "x-password-change-required": "true" }
+			})
+		)
+		await new Promise(resolve => setTimeout(resolve, 0))
+		expect(ends).toEqual([{ kind: "aborted" }])
+		expect(useAuthStore().mustChangePassword).toBe(true)
+		expect(routerReplace).toHaveBeenCalledWith({ name: "ChangePassword", query: { redirect: "/talon?thread=th-1" } })
 	})
 })

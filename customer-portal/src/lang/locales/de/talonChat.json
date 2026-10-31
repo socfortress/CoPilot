@@ -5,7 +5,9 @@
 		"reviewNotice": "Chats können von Ihrem SOC eingesehen werden.",
 		"noActionsNotice": "Talon kann keine Aktionen ausführen. Talon beantwortet Fragen und kann eine Frage an Ihr SOC entwerfen, die Sie selbst absenden.",
 		"unavailableTitle": "Talon fragen ist nicht verfügbar",
-		"unavailableText": "Ihr SOC hat Talon fragen für Ihre Organisation nicht aktiviert."
+		"unavailableText": "Ihr SOC hat Talon fragen für Ihre Organisation nicht aktiviert.",
+		"checkFailedTitle": "Talon fragen konnte nicht geprüft werden",
+		"checkFailedText": "Ob Talon fragen für Ihre Organisation aktiviert ist, konnte nicht geprüft werden. Versuchen Sie es gleich noch einmal."
 	},
 	"threads": {
 		"title": "Unterhaltungen",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Alarm #{id}",
 		"notAccessible": "Nicht verfügbar",
 		"archive": "Unterhaltung schließen",
+		"archiveNamed": "Unterhaltung schließen: {title}",
 		"archiveConfirm": "Diese Unterhaltung schließen? Sie verschwindet aus Ihrer Liste.",
 		"archived": "Unterhaltung geschlossen"
 	},
@@ -43,7 +46,8 @@
 		"you": "Sie",
 		"talon": "Talon",
 		"aboutAlert": "Zu Alarm #{id}",
-		"notAccessible": "Diese Unterhaltung ist nicht mehr verfügbar. Sie können sie weiterhin schließen."
+		"notAccessible": "Diese Unterhaltung ist nicht mehr verfügbar. Sie können sie weiterhin schließen.",
+		"answered": "Talon hat geantwortet."
 	},
 	"checked": {
 		"line": "Geprüft: {items}",

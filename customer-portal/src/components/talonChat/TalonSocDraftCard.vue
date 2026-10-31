@@ -31,8 +31,9 @@
 		</n-alert>
 
 		<template v-else-if="draft">
-			<!-- Pending: the user edits, picks the urgency and where it goes, then sends or discards. -->
-			<template v-if="draft.status === 'pending'">
+			<!-- Pending (or a claim that never finished): the user edits, picks the urgency and where it
+			     goes, then sends or discards. -->
+			<template v-if="editable">
 				<template v-if="canDraft">
 					<p class="text-secondary m-0 text-xs">{{ $t("talonChat.draft.intro") }}</p>
 					<form class="flex flex-col gap-3" data-testid="talon-draft-form" @submit.prevent="submit()">
@@ -89,7 +90,14 @@
 								<template #icon><Icon name="carbon:send" /></template>
 								{{ $t("talonChat.draft.submit") }}
 							</n-button>
-							<n-button secondary :loading="discarding" :disabled="busy" data-testid="talon-draft-discard" @click="discard()">
+							<n-button
+								v-if="draft.status === 'pending'"
+								secondary
+								:loading="discarding"
+								:disabled="busy"
+								data-testid="talon-draft-discard"
+								@click="discard()"
+							>
 								{{ $t("talonChat.draft.discard") }}
 							</n-button>
 						</div>
@@ -130,13 +138,15 @@
 <script setup lang="ts">
 import type { TagProps } from "naive-ui"
 import type { TalonDraftFileOn, TalonDraftStatus, TalonDraftUrgency, TalonSocDraft } from "@/types/talonChat"
+import { useIntervalFn, useNow } from "@vueuse/core"
 import { NAlert, NButton, NInput, NRadio, NRadioGroup, NSpin, NTag } from "naive-ui"
-import { computed, ref, watch } from "vue"
+import { computed, inject, ref, watch } from "vue"
 import Api from "@/api"
+import { utcMillis } from "@/components/alerts/AlertDetails/aiInvestigation"
 import Icon from "@/components/common/Icon.vue"
 import { normalizeQuestion, QUESTION_MAX, questionLength, questionProblem, URGENCY_OPTIONS } from "@/components/socRequests/askSoc"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
-import { errorCodeOf, errorText } from "./talonChat"
+import { DRAFT_EDITS, errorCodeOf, errorText } from "./talonChat"
 
 /**
  * A question Talon drafted for the SOC (`ask_the_soc`, talon-analyst D97 Q4). Read back by its id
@@ -154,6 +164,8 @@ const { draftId, canDraft = false } = defineProps<{
 }>()
 
 const FILE_ON: TalonDraftFileOn[] = ["case", "alert"]
+/** talon-analyst's `CLAIM_WINDOW` (FR-API-40): a claim with no outcome after it may be claimed again. */
+const CLAIM_WINDOW_MS = 10 * 60_000
 const STATUS_TAG: Record<TalonDraftStatus, NonNullable<TagProps["type"]>> = {
 	pending: "default",
 	submitting: "info",
@@ -176,15 +188,37 @@ const submitting = ref(false)
 const discarding = ref(false)
 const actionErrorCode = ref<string | null>(null)
 
+const edits = inject(DRAFT_EDITS, null)
+const now = useNow({ scheduler: tick => useIntervalFn(tick, 30_000) })
+
 const busy = computed(() => submitting.value || discarding.value)
+/** Being sent for longer than the claim window: that send died, and the user may send it again. */
+const staleSubmitting = computed(() => {
+	const current = draft.value
+	if (current?.status !== "submitting" || !current.claimed_at) return false
+	const claimed = utcMillis(current.claimed_at)
+	return Number.isFinite(claimed) && now.value.getTime() - claimed > CLAIM_WINDOW_MS
+})
+const editable = computed(() => draft.value?.status === "pending" || staleSubmitting.value)
 const length = computed(() => questionLength(question.value))
 const problem = computed(() => questionProblem(question.value))
 
 function show(next: TalonSocDraft) {
 	const first = !draft.value || draft.value.id !== next.id
 	draft.value = next
-	if (first) question.value = next.question ?? ""
+	if (!first) return
+	// A card mounted again (its turn read back) picks up what the user had typed.
+	const saved = edits?.get(next.id)
+	question.value = saved?.question ?? next.question ?? ""
+	urgency.value = saved?.urgency ?? null
+	fileOn.value = saved?.fileOn ?? "case"
 }
+
+watch([question, urgency, fileOn], () => {
+	if (draft.value && editable.value) {
+		edits?.set(draft.value.id, { question: question.value, urgency: urgency.value, fileOn: fileOn.value })
+	}
+})
 
 function load() {
 	loadErrorCode.value = null
@@ -213,6 +247,7 @@ async function submit() {
 		}
 		const res = await Api.talonChat.submitDraft(draftId, payload)
 		const requestId = res.data?.request_id
+		edits?.delete(draftId)
 		draft.value = {
 			...draft.value,
 			status: "submitted",
@@ -229,6 +264,8 @@ async function submit() {
 			await load()
 		} else {
 			actionErrorCode.value = code ?? "unknown"
+			// No code, or no answer at all: whether it was filed is unknown, so read the draft again.
+			if (!code || code === "network") await load()
 		}
 	} finally {
 		submitting.value = false
@@ -240,6 +277,7 @@ async function discard() {
 	discarding.value = true
 	try {
 		const res = await Api.talonChat.discardDraft(draftId)
+		edits?.delete(draftId)
 		if (res.data?.id) show(res.data)
 		else if (draft.value) draft.value = { ...draft.value, status: "discarded" }
 	} catch (err) {

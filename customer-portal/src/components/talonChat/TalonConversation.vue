@@ -20,7 +20,10 @@
 			</div>
 		</n-alert>
 
-		<div class="flex flex-col gap-4" aria-live="polite">
+		<!-- Not a live region: a streamed reply would be read out token by token. One announcement at its end instead. -->
+		<p class="sr-only" role="status" aria-live="polite" data-testid="talon-conversation-announcement">{{ announcement }}</p>
+
+		<div class="flex flex-col gap-4" :aria-busy="streaming" data-testid="talon-conversation-messages">
 			<div v-if="olderCursor" class="flex justify-center">
 				<n-button size="small" secondary :loading="loadingOlder" data-testid="talon-conversation-earlier" @click="loadOlder()">
 					{{ $t("talonChat.conversation.loadEarlier") }}
@@ -48,6 +51,10 @@
 			{{ $t("talonChat.conversation.notAccessible") }}
 		</p>
 
+		<p v-else-if="thread?.status === 'archived'" class="text-secondary m-0 text-sm" data-testid="talon-conversation-archived">
+			{{ errorText("thread_archived") }}
+		</p>
+
 		<form v-else class="flex flex-col gap-2" data-testid="talon-composer" @submit.prevent="send()">
 			<n-alert v-if="sendErrorCode" type="error" :bordered="false" closable data-testid="talon-send-error" @close="sendErrorCode = null">
 				{{ errorText(sendErrorCode) }}
@@ -59,12 +66,12 @@
 				:placeholder="$t('talonChat.conversation.placeholder')"
 				:status="tooLong ? 'error' : undefined"
 				:disabled="streaming || !thread"
-				:input-props="{ 'aria-label': $t('talonChat.conversation.inputLabel') }"
+				:input-props="{ 'aria-label': $t('talonChat.conversation.inputLabel'), 'aria-describedby': counterId }"
 				data-testid="talon-composer-input"
 				@keydown="onKeydown"
 			/>
 			<div class="flex flex-wrap items-center justify-between gap-2">
-				<span class="text-xs tabular-nums" :class="tooLong ? 'text-error' : 'text-secondary'" data-testid="talon-composer-count">
+				<span :id="counterId" class="text-xs tabular-nums" :class="tooLong ? 'text-error' : 'text-secondary'" data-testid="talon-composer-count">
 					<template v-if="tooLong">{{ $t("talonChat.conversation.tooLong", { max: MESSAGE_MAX }) }} · </template>{{ length }} / {{ MESSAGE_MAX }}
 				</span>
 				<n-button
@@ -83,9 +90,10 @@
 </template>
 
 <script setup lang="ts">
+import type { DraftEdits } from "./talonChat"
 import type { TalonChatAvailability, TalonChatMessage, TalonChatRating, TalonChatThread } from "@/types/talonChat"
 import { NAlert, NButton, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeUnmount, ref, watch } from "vue"
+import { computed, onBeforeUnmount, provide, ref, useId, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import { RouterLink } from "vue-router"
 import Api from "@/api"
@@ -95,7 +103,7 @@ import { useCustomers } from "@/composables/common/useCustomers"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
-import { errorCodeOf, errorText, MESSAGE_MAX, messageLength, threadTitle } from "./talonChat"
+import { DRAFT_EDITS, errorCodeOf, errorText, MESSAGE_MAX, messageLength, threadTitle } from "./talonChat"
 import TalonMessage from "./TalonMessage.vue"
 
 /**
@@ -109,12 +117,15 @@ const { threadId } = defineProps<{ threadId: string }>()
 const emit = defineEmits<{
 	/** A turn ended: the thread's title or order in the list may have changed. */
 	turn: []
+	/** A reply started or stopped streaming: the page keeps this conversation open meanwhile. */
+	streaming: [value: boolean]
 }>()
 
 const { t } = useI18n()
 const toast = useMessage()
 const { customerName } = useCustomers()
-const { availabilityFor } = useTalonChatAvailability()
+const { availabilityFor, invalidate } = useTalonChatAvailability()
+const counterId = useId()
 
 const PAGE_SIZE = 20
 
@@ -136,12 +147,22 @@ let controller: AbortController | null = null
 let localSeq = 0
 
 const feedbackBusy = ref(new Set<string>())
+/** Said once to a screen reader when a reply ends. */
+const announcement = ref("")
+// A draft card mounted again (its turn read back after the stream) keeps what the user typed.
+const draftEdits = new Map<string, DraftEdits>()
+provide(DRAFT_EDITS, draftEdits)
 
 const length = computed(() => messageLength(draft.value))
 const tooLong = computed(() => length.value > MESSAGE_MAX)
 const title = computed(() => {
 	return thread.value ? threadTitle(thread.value) : ""
 })
+
+/** The customer's switch is off now: the cached "on" must go, so the menu and pages ask again. */
+function noteCode(code: string | null | undefined) {
+	if (code === "portal_off") invalidate(thread.value?.customer_code)
+}
 
 function isLocal(message: TalonChatMessage) {
 	return message.id.startsWith("local-")
@@ -169,6 +190,7 @@ function loadNewest() {
 		},
 		err => {
 			loadErrorCode.value = errorCodeOf(err) ?? "unknown"
+			noteCode(loadErrorCode.value)
 		}
 	)
 }
@@ -202,6 +224,7 @@ async function send() {
 	if (!text || tooLong.value || streaming.value || !thread.value) return
 
 	sendErrorCode.value = null
+	announcement.value = ""
 	streaming.value = true
 	const seq = ++localSeq
 	messages.value.push(newUserMessage(`local-${seq}-user`, text), newAssistantMessage(`local-${seq}-assistant`))
@@ -209,7 +232,8 @@ async function send() {
 	const assistant = messages.value[messages.value.length - 1] as TalonChatMessage
 	draft.value = ""
 
-	controller = new AbortController()
+	const mine = new AbortController()
+	controller = mine
 	let refused = false
 	await Api.talonChat.streamChat(
 		threadId,
@@ -228,15 +252,27 @@ async function send() {
 				endAssistantMessage(assistant, result.kind)
 			}
 		},
-		controller.signal
+		mine.signal
 	)
+	// Cut off by leaving the thread: what follows belongs to the conversation now shown.
+	if (mine.signal.aborted) return
 	controller = null
 	streaming.value = false
-	if (refused) return
+	if (refused) {
+		noteCode(sendErrorCode.value)
+		announcement.value = errorText(sendErrorCode.value)
+		return
+	}
 	emit("turn")
-	// A completed turn is read back: its run id (feedback) and the cards' state come from there.
-	// A failed one keeps its own code on screen.
-	if (assistant.status === "completed") await loadNewest()
+	if (assistant.status === "completed") {
+		announcement.value = t("talonChat.conversation.answered")
+		// A completed turn is read back: its run id (feedback) and the cards' state come from there.
+		await loadNewest()
+	} else {
+		// A failed one keeps its own code on screen.
+		noteCode(assistant.errorCode)
+		announcement.value = errorText(assistant.errorCode)
+	}
 }
 
 async function rate(message: TalonChatMessage, rating: TalonChatRating | null) {
@@ -260,6 +296,10 @@ watch(
 	() => threadId,
 	() => {
 		controller?.abort()
+		controller = null
+		streaming.value = false
+		announcement.value = ""
+		draftEdits.clear()
 		thread.value = null
 		messages.value = []
 		olderCursor.value = null
@@ -271,6 +311,11 @@ watch(
 	{ immediate: true }
 )
 
+watch(streaming, value => emit("streaming", value))
+
 // Leaving cuts the reply off (talon-analyst records it and frees the thread).
-onBeforeUnmount(() => controller?.abort())
+onBeforeUnmount(() => {
+	controller?.abort()
+	if (streaming.value) emit("streaming", false)
+})
 </script>

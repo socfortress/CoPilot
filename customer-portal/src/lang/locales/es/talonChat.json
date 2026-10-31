@@ -5,7 +5,9 @@
 		"reviewNotice": "Tu SOC puede revisar las conversaciones.",
 		"noActionsNotice": "Talon no puede realizar acciones. Responde preguntas y puede redactar una pregunta para tu SOC que tú mismo envías.",
 		"unavailableTitle": "Preguntar a Talon no está disponible",
-		"unavailableText": "Tu SOC no ha activado Preguntar a Talon para tu organización."
+		"unavailableText": "Tu SOC no ha activado Preguntar a Talon para tu organización.",
+		"checkFailedTitle": "No se pudo comprobar Preguntar a Talon",
+		"checkFailedText": "No se pudo comprobar si Preguntar a Talon está activado para tu organización. Inténtalo de nuevo en breve."
 	},
 	"threads": {
 		"title": "Conversaciones",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Alerta #{id}",
 		"notAccessible": "No disponible",
 		"archive": "Cerrar conversación",
+		"archiveNamed": "Cerrar conversación: {title}",
 		"archiveConfirm": "¿Cerrar esta conversación? Saldrá de tu lista.",
 		"archived": "Conversación cerrada"
 	},
@@ -43,7 +46,8 @@
 		"you": "Tú",
 		"talon": "Talon",
 		"aboutAlert": "Sobre la alerta #{id}",
-		"notAccessible": "Esta conversación ya no está disponible. Aún puedes cerrarla."
+		"notAccessible": "Esta conversación ya no está disponible. Aún puedes cerrarla.",
+		"answered": "Talon ha respondido."
 	},
 	"checked": {
 		"line": "Revisado: {items}",

@@ -5,7 +5,9 @@
 		"reviewNotice": "Chats may be reviewed by your SOC.",
 		"noActionsNotice": "Talon can't take actions. It answers questions, and can draft a question for your SOC that you send yourself.",
 		"unavailableTitle": "Ask Talon isn't available",
-		"unavailableText": "Your SOC hasn't turned on Ask Talon for your organization."
+		"unavailableText": "Your SOC hasn't turned on Ask Talon for your organization.",
+		"checkFailedTitle": "Ask Talon couldn't be checked",
+		"checkFailedText": "Whether Ask Talon is on for your organization couldn't be checked. Try again shortly."
 	},
 	"threads": {
 		"title": "Conversations",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Alert #{id}",
 		"notAccessible": "Not available",
 		"archive": "Close conversation",
+		"archiveNamed": "Close conversation: {title}",
 		"archiveConfirm": "Close this conversation? It leaves your list.",
 		"archived": "Conversation closed"
 	},
@@ -43,7 +46,8 @@
 		"you": "You",
 		"talon": "Talon",
 		"aboutAlert": "About alert #{id}",
-		"notAccessible": "This conversation isn't available any more. You can still close it."
+		"notAccessible": "This conversation isn't available any more. You can still close it.",
+		"answered": "Talon has answered."
 	},
 	"checked": {
 		"line": "Checked: {items}",

@@ -11,7 +11,7 @@ import type {
 	TalonSocDraft
 } from "@/types/talonChat"
 import { useAuthStore } from "@/stores/auth"
-import { API_ROOT, HttpClient, isAccountDisabled } from "../httpClient"
+import { API_ROOT, holdForPasswordChange, HttpClient, isAccountDisabled, isPasswordChangeRequired } from "../httpClient"
 import { codeFrom, createTalonChatParser } from "../talonChatStream"
 
 /**
@@ -67,6 +67,7 @@ export default {
 		const body: Record<string, unknown> = { customer_code: payload.customer_code }
 		if (payload.title) body.title = payload.title
 		if (payload.alert_id) body.alert_id = payload.alert_id
+		if (payload.language) body.language = payload.language
 		return HttpClient.post<TalonChatThread>(`${BASE}/threads`, body)
 	},
 	/** Close a conversation (archive; one without a turn is deleted). */
@@ -131,7 +132,15 @@ export default {
 		}
 
 		if (!response.ok) {
-			// As the HTTP client does for every other request: an ended session signs out.
+			// As the HTTP client does for every other request: a password an admin chose holds the
+			// user on the change (#1277), and the page that asked is left behind, so nothing is shown.
+			if (response.status === 403 && isPasswordChangeRequired(response.headers)) {
+				store.setPasswordChangeRequired(true)
+				void holdForPasswordChange()
+				end({ kind: "aborted" })
+				return
+			}
+			// An ended session signs out.
 			if (response.status === 401 && !window.location.pathname.includes("login")) {
 				window.location.href = isAccountDisabled(response.headers) ? "/logout?reason=disabled" : "/logout"
 			}

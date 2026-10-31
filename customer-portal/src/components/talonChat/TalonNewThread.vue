@@ -50,6 +50,8 @@ import { NAlert, NButton, NSelect } from "naive-ui"
 import { computed, ref, watch } from "vue"
 import Api from "@/api"
 import { useCustomers } from "@/composables/common/useCustomers"
+import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
+import { useLocalesStore } from "@/stores/i18n"
 import { errorCodeOf, errorText } from "./talonChat"
 
 /**
@@ -66,6 +68,9 @@ const { customers, cancellable = false } = defineProps<{
 const emit = defineEmits<{ created: [thread: TalonChatThread]; cancel: [] }>()
 
 const { filterCustomer, renderCustomerLabel } = useCustomers()
+const { invalidate } = useTalonChatAvailability()
+// The thread answers in the portal's language (talon-analyst FR-API-34); CoPilot validates it.
+const localesStore = useLocalesStore()
 
 const options = computed<SelectOption[]>(() =>
 	customers.map(customer => ({ label: customer.customer_name, value: customer.customer_code }))
@@ -88,10 +93,11 @@ async function start() {
 	creating.value = true
 	errorCode.value = null
 	try {
-		const res = await Api.talonChat.createThread({ customer_code: customerCode.value })
+		const res = await Api.talonChat.createThread({ customer_code: customerCode.value, language: localesStore.locale })
 		emit("created", res.data)
 	} catch (err) {
 		errorCode.value = errorCodeOf(err) ?? "unknown"
+		if (errorCode.value === "portal_off") invalidate(customerCode.value ?? undefined)
 	} finally {
 		creating.value = false
 	}

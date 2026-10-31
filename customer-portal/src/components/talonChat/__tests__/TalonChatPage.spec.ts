@@ -1,3 +1,4 @@
+import type { TalonChatStreamHandlers } from "@/api/endpoints/talonChat"
 import { flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -10,7 +11,8 @@ const talonChat = vi.hoisted(() => ({
 	getAvailability: vi.fn(),
 	listThreads: vi.fn(),
 	getMessages: vi.fn(),
-	archiveThread: vi.fn()
+	archiveThread: vi.fn(),
+	streamChat: vi.fn()
 }))
 vi.mock("@/api", () => ({ default: { talonChat } }))
 
@@ -56,11 +58,68 @@ describe("the Ask Talon page", () => {
 		expect(talonChat.listThreads).not.toHaveBeenCalled()
 	})
 
-	it("hides itself when the availability route fails", async () => {
+	it("says it couldn't check, not that it is off, when the availability route fails; and tries again", async () => {
 		talonChat.getAvailability.mockRejectedValue(new Error("network"))
 		const { wrapper } = await render()
-		expect(wrapper.find("[data-testid=talon-chat-unavailable]").exists()).toBe(true)
+		expect(wrapper.get("[data-testid=talon-chat-check-failed]").text()).toContain("Ask Talon couldn't be checked")
+		expect(wrapper.find("[data-testid=talon-chat-unavailable]").exists()).toBe(false)
 		expect(wrapper.find("[data-testid=talon-thread-list]").exists()).toBe(false)
+
+		availability(["ACME"])
+		await wrapper.get("[data-testid=talon-chat-check-retry]").trigger("click")
+		await flushPromises()
+		expect(wrapper.find("[data-testid=talon-thread-list]").exists()).toBe(true)
+	})
+
+	it("ignores a malformed thread id in the address", async () => {
+		availability(["ACME"])
+		const { wrapper } = await render("/talon?thread=..%2F..%2Fadmin")
+		expect(talonChat.getMessages).not.toHaveBeenCalled()
+		expect(wrapper.find("[data-testid=talon-conversation]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=talon-new-thread]").exists()).toBe(true)
+	})
+
+	it("names the conversation on its close button", async () => {
+		availability(["ACME"])
+		const { wrapper } = await render()
+		expect(wrapper.get("[data-testid=talon-thread-archive-th-1]").attributes("aria-label")).toBe(
+			"Close conversation: Scheduled task on HOST-A"
+		)
+	})
+
+	it("keeps a streaming reply's conversation open: no new conversation, no other thread, no close", async () => {
+		availability(["ACME"])
+		talonChat.listThreads.mockResolvedValue({ data: { threads: [thread(), thread({ id: "th-2", title: "Other" })], next: null } })
+		let finish: (() => void) | null = null
+		talonChat.streamChat.mockImplementation(
+			(_id: string, _text: string, handlers: TalonChatStreamHandlers, signal: AbortSignal) =>
+				new Promise<void>(resolve => {
+					handlers.onChunk({ type: "text-start", id: "t" })
+					handlers.onChunk({ type: "text-delta", id: "t", delta: "Working" })
+					finish = () => {
+						handlers.onEnd({ kind: signal.aborted ? "aborted" : "finished" })
+						resolve()
+					}
+				})
+		)
+		const { wrapper, router } = await render("/talon?thread=th-1")
+		await wrapper.get("[data-testid=talon-composer-input] textarea").setValue("Hi")
+		await wrapper.get("[data-testid=talon-composer]").trigger("submit")
+		await flushPromises()
+
+		expect(wrapper.get("[data-testid=talon-thread-new]").attributes("disabled")).toBeDefined()
+		expect(wrapper.get("[data-testid=talon-thread-th-2]").attributes("disabled")).toBeDefined()
+		expect(wrapper.get("[data-testid=talon-thread-archive-th-1]").attributes("disabled")).toBeDefined()
+		await wrapper.get("[data-testid=talon-thread-new]").trigger("click")
+		await wrapper.get("[data-testid=talon-thread-th-2]").trigger("click")
+		await flushPromises()
+		expect(router.currentRoute.value.query.thread).toBe("th-1")
+		expect(wrapper.find("[data-testid=talon-conversation]").exists()).toBe(true)
+		expect(wrapper.text()).toContain("Working")
+
+		;(finish as unknown as () => void)()
+		await flushPromises()
+		expect(wrapper.get("[data-testid=talon-thread-new]").attributes("disabled")).toBeUndefined()
 	})
 
 	it("shows the conversations, the review notice and what Talon can't do", async () => {

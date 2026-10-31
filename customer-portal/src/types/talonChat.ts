@@ -44,6 +44,8 @@ export interface TalonChatThreadCreate {
 	customer_code: string
 	title?: string | null
 	alert_id?: number | null
+	/** The portal language the thread answers in; CoPilot validates it. */
+	language?: string | null
 }
 
 /** A read-back `UIMessage` (FR-API-37): only its text, "checked" and card parts are read. */

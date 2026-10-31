@@ -5,7 +5,9 @@
 		"reviewNotice": "Konverzace může prohlížet váš SOC.",
 		"noActionsNotice": "Talon nemůže provádět žádné akce. Odpovídá na dotazy a může připravit dotaz pro váš SOC, který odešlete sami.",
 		"unavailableTitle": "Zeptat se Talonu není k dispozici",
-		"unavailableText": "Váš SOC nezapnul funkci Zeptat se Talonu pro vaši organizaci."
+		"unavailableText": "Váš SOC nezapnul funkci Zeptat se Talonu pro vaši organizaci.",
+		"checkFailedTitle": "Funkci Zeptat se Talonu nelze ověřit",
+		"checkFailedText": "Nepodařilo se ověřit, zda je funkce Zeptat se Talonu pro vaši organizaci zapnutá. Zkuste to za chvíli znovu."
 	},
 	"threads": {
 		"title": "Konverzace",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Výstraha #{id}",
 		"notAccessible": "Není k dispozici",
 		"archive": "Zavřít konverzaci",
+		"archiveNamed": "Zavřít konverzaci: {title}",
 		"archiveConfirm": "Zavřít tuto konverzaci? Zmizí z vašeho seznamu.",
 		"archived": "Konverzace byla zavřena"
 	},
@@ -43,7 +46,8 @@
 		"you": "Vy",
 		"talon": "Talon",
 		"aboutAlert": "K výstraze #{id}",
-		"notAccessible": "Tato konverzace už není k dispozici. Stále ji můžete zavřít."
+		"notAccessible": "Tato konverzace už není k dispozici. Stále ji můžete zavřít.",
+		"answered": "Talon odpověděl."
 	},
 	"checked": {
 		"line": "Zkontrolováno: {items}",

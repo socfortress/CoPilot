@@ -1,8 +1,10 @@
 import type { TalonChatStreamHandlers, TalonChatStreamResult } from "@/api/endpoints/talonChat"
 import type { TalonChatChunk, TalonChatUIMessage } from "@/types/talonChat"
 import { flushPromises, mount } from "@vue/test-utils"
+import { NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { defineComponent, h, ref } from "vue"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import i18n from "@/lang"
 import { useAuthStore } from "@/stores/auth"
@@ -205,5 +207,153 @@ describe("an Ask Talon conversation", () => {
 		const wrapper = await render()
 		expect(wrapper.find("[data-testid=talon-composer]").exists()).toBe(false)
 		expect(wrapper.find("[data-testid=talon-conversation-not-accessible]").exists()).toBe(true)
+	})
+
+	it("shows a reply as it streams: the text and the checked line before the turn ends", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		let handlers: TalonChatStreamHandlers | null = null
+		talonChat.streamChat.mockImplementation(
+			(_id: string, _text: string, h: TalonChatStreamHandlers) =>
+				new Promise<void>(() => {
+					handlers = h
+				})
+		)
+		const wrapper = await render()
+		await type(wrapper, "What happened?")
+		await send(wrapper)
+		const h = handlers as unknown as TalonChatStreamHandlers
+		h.onChunk({ type: "start" })
+		h.onChunk({ type: "data-checked", items: [{ kind: "alert", count: 1 }] })
+		await flushPromises()
+		expect(wrapper.get("[data-testid=talon-message-checked]").text()).toBe("Checked: the alert")
+		expect(wrapper.find("[data-testid=talon-message-streaming]").exists()).toBe(true)
+
+		h.onChunk({ type: "data-checked", items: [{ kind: "alert", count: 1 }, { kind: "event_search", count: 2 }] })
+		h.onChunk({ type: "text-start", id: "text-1" })
+		h.onChunk({ type: "text-delta", id: "text-1", delta: "The task " })
+		await flushPromises()
+		expect(wrapper.findAll("[data-testid=talon-message-text]").map(t => t.text())).toEqual(["What happened?", "The task"])
+		expect(wrapper.get("[data-testid=talon-message-checked]").text()).toBe("Checked: the alert, 2 event searches")
+
+		h.onChunk({ type: "text-delta", id: "text-1", delta: "was scheduled." })
+		await flushPromises()
+		expect(wrapper.findAll("[data-testid=talon-message-text]")[1]?.text()).toBe("The task was scheduled.")
+		// Busy while it streams, and nothing announced token by token.
+		expect(wrapper.get("[data-testid=talon-conversation-messages]").attributes("aria-busy")).toBe("true")
+		expect(wrapper.get("[data-testid=talon-conversation-messages]").attributes("aria-live")).toBeUndefined()
+		expect(wrapper.get("[data-testid=talon-conversation-announcement]").text()).toBe("")
+	})
+
+	it("announces once that Talon answered, when the reply ends", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		streams([{ type: "text-start", id: "t" }, { type: "text-delta", id: "t", delta: "Done." }, { type: "finish" }])
+		const wrapper = await render()
+		await type(wrapper, "Hi")
+		await send(wrapper)
+		expect(wrapper.get("[data-testid=talon-conversation-messages]").attributes("aria-busy")).toBe("false")
+		expect(wrapper.get("[data-testid=talon-conversation-announcement]").text()).toBe("Talon has answered.")
+	})
+
+	it("ties the composer's counter to its input", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		const wrapper = await render()
+		const counter = wrapper.get("[data-testid=talon-composer-count]").attributes("id")
+		expect(counter).toBeTruthy()
+		expect(wrapper.get("[data-testid=talon-composer-input] textarea").attributes("aria-describedby")).toBe(counter)
+	})
+
+	it("cuts the reply off when the conversation is left", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		const signals: AbortSignal[] = []
+		talonChat.streamChat.mockImplementation((_id: string, _t: string, _h: TalonChatStreamHandlers, signal: AbortSignal) => {
+			signals.push(signal)
+			return new Promise<void>(() => {})
+		})
+		const wrapper = await render()
+		await type(wrapper, "Hi")
+		await send(wrapper)
+		expect(signals[0]?.aborted).toBe(false)
+		wrapper.unmount()
+		expect(signals[0]?.aborted).toBe(true)
+	})
+
+	it("cuts the reply off when another thread is opened, and lets the new one send", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		const signals: AbortSignal[] = []
+		talonChat.streamChat.mockImplementation((_id: string, _t: string, _h: TalonChatStreamHandlers, signal: AbortSignal) => {
+			signals.push(signal)
+			return new Promise<void>(() => {})
+		})
+		const threadId = ref("th-1")
+		const streaming: boolean[] = []
+		const host = defineComponent({
+			setup: () => () =>
+				h(NMessageProvider, null, () =>
+					h(TalonConversation, { threadId: threadId.value, onStreaming: (value: boolean) => streaming.push(value) }))
+		})
+		const wrapper = mount(host, { global: { plugins: [testRouter()] } })
+		await flushPromises()
+		await wrapper.get("[data-testid=talon-composer-input] textarea").setValue("Hi")
+		await wrapper.get("[data-testid=talon-composer]").trigger("submit")
+		await flushPromises()
+		expect(streaming).toEqual([true])
+
+		talonChat.getMessages.mockResolvedValue(page([], { thread: thread({ id: "th-2" }) }))
+		threadId.value = "th-2"
+		await flushPromises()
+		expect(signals[0]?.aborted).toBe(true)
+		expect(streaming).toEqual([true, false])
+		expect(wrapper.findAll("[data-testid=talon-message]")).toHaveLength(0)
+		expect(wrapper.get("[data-testid=talon-composer-input] textarea").attributes("disabled")).toBeUndefined()
+	})
+
+	it("offers no composer on a closed (archived) thread", async () => {
+		talonChat.getMessages.mockResolvedValue(page(turn("run-1", "Q", [{ type: "text", text: "A" }]), { thread: thread({ status: "archived" }) }))
+		const wrapper = await render()
+		expect(wrapper.find("[data-testid=talon-composer]").exists()).toBe(false)
+		expect(wrapper.get("[data-testid=talon-conversation-archived]").text()).toBe("This conversation is closed.")
+	})
+
+	it("forgets the cached availability when a turn finds the switch off", async () => {
+		talonChat.getMessages.mockResolvedValue(page([]))
+		streams([], { kind: "refused", status: 403, code: "portal_off" })
+		const wrapper = await render()
+		expect(talonChat.getAvailability).toHaveBeenCalledTimes(1)
+		await type(wrapper, "Hi")
+		await send(wrapper)
+		await useTalonChatAvailability().isEnabledFor("ACME")
+		expect(talonChat.getAvailability).toHaveBeenCalledTimes(2)
+	})
+
+	it("keeps a draft card's edits when its turn is read back after the stream", async () => {
+		talonChat.getMessages.mockResolvedValueOnce(page([]))
+		let handlers: TalonChatStreamHandlers | null = null
+		let finish: () => void = () => {}
+		talonChat.streamChat.mockImplementation(
+			(_id: string, _text: string, h: TalonChatStreamHandlers) =>
+				new Promise<void>(resolve => {
+					handlers = h
+					finish = () => {
+						h.onEnd({ kind: "finished" })
+						resolve()
+					}
+				})
+		)
+		const wrapper = await render()
+		await type(wrapper, "Ask the SOC for me")
+		await send(wrapper)
+		const h = handlers as unknown as TalonChatStreamHandlers
+		h.onChunk({ type: "data-soc-draft", draftId: "d-1" })
+		h.onChunk({ type: "finish" })
+		await flushPromises()
+		await wrapper.get("[data-testid=talon-draft-question] textarea").setValue("Edited before the read-back")
+
+		talonChat.getMessages.mockResolvedValueOnce(page(turn("run-3", "Ask the SOC for me", [{ type: "data-soc-draft", data: { id: "d-1" } }])))
+		finish()
+		await flushPromises()
+		expect(talonChat.getMessages).toHaveBeenCalledTimes(2)
+		expect((wrapper.get("[data-testid=talon-draft-question] textarea").element as HTMLTextAreaElement).value).toBe(
+			"Edited before the read-back"
+		)
 	})
 })

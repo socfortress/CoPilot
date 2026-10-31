@@ -5,7 +5,9 @@
 		"reviewNotice": "Le chat possono essere riviste dal tuo SOC.",
 		"noActionsNotice": "Talon non può eseguire azioni. Risponde alle domande e può preparare una domanda per il tuo SOC, che invii tu.",
 		"unavailableTitle": "Chiedi a Talon non è disponibile",
-		"unavailableText": "Il tuo SOC non ha attivato Chiedi a Talon per la tua organizzazione."
+		"unavailableText": "Il tuo SOC non ha attivato Chiedi a Talon per la tua organizzazione.",
+		"checkFailedTitle": "Impossibile verificare Chiedi a Talon",
+		"checkFailedText": "Non è stato possibile verificare se Chiedi a Talon è attivo per la tua organizzazione. Riprova tra poco."
 	},
 	"threads": {
 		"title": "Conversazioni",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Alert #{id}",
 		"notAccessible": "Non disponibile",
 		"archive": "Chiudi la conversazione",
+		"archiveNamed": "Chiudi la conversazione: {title}",
 		"archiveConfirm": "Chiudere questa conversazione? Uscirà dal tuo elenco.",
 		"archived": "Conversazione chiusa"
 	},
@@ -43,7 +46,8 @@
 		"you": "Tu",
 		"talon": "Talon",
 		"aboutAlert": "Sull'alert #{id}",
-		"notAccessible": "Questa conversazione non è più disponibile. Puoi comunque chiuderla."
+		"notAccessible": "Questa conversazione non è più disponibile. Puoi comunque chiuderla.",
+		"answered": "Talon ha risposto."
 	},
 	"checked": {
 		"line": "Controllato: {items}",

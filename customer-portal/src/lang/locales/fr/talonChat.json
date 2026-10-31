@@ -5,7 +5,9 @@
 		"reviewNotice": "Les conversations peuvent être consultées par votre SOC.",
 		"noActionsNotice": "Talon ne peut effectuer aucune action. Il répond aux questions et peut rédiger une question pour votre SOC, que vous envoyez vous-même.",
 		"unavailableTitle": "Demander à Talon n'est pas disponible",
-		"unavailableText": "Votre SOC n'a pas activé Demander à Talon pour votre organisation."
+		"unavailableText": "Votre SOC n'a pas activé Demander à Talon pour votre organisation.",
+		"checkFailedTitle": "Demander à Talon n'a pas pu être vérifié",
+		"checkFailedText": "Impossible de vérifier si Demander à Talon est activé pour votre organisation. Réessayez dans un instant."
 	},
 	"threads": {
 		"title": "Conversations",
@@ -17,6 +19,7 @@
 		"aboutAlert": "Alerte #{id}",
 		"notAccessible": "Non disponible",
 		"archive": "Fermer la conversation",
+		"archiveNamed": "Fermer la conversation : {title}",
 		"archiveConfirm": "Fermer cette conversation ? Elle quitte votre liste.",
 		"archived": "Conversation fermée"
 	},
@@ -43,7 +46,8 @@
 		"you": "Vous",
 		"talon": "Talon",
 		"aboutAlert": "À propos de l'alerte #{id}",
-		"notAccessible": "Cette conversation n'est plus disponible. Vous pouvez toujours la fermer."
+		"notAccessible": "Cette conversation n'est plus disponible. Vous pouvez toujours la fermer.",
+		"answered": "Talon a répondu."
 	},
 	"checked": {
 		"line": "Vérifié : {items}",

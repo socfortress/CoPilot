@@ -3,6 +3,7 @@ import { flushPromises, mount } from "@vue/test-utils"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import i18n from "@/lang"
+import { DRAFT_EDITS } from "../talonChat"
 import TalonSocDraftCard from "../TalonSocDraftCard.vue"
 import { draft } from "./fixtures"
 
@@ -162,5 +163,48 @@ describe("a SOC draft card", () => {
 		const wrapper = await render()
 		expect(wrapper.find("img").exists()).toBe(false)
 		expect(wrapper.get("[data-testid=talon-draft-question-text]").text()).toBe("<img src=x onerror=alert(1)>")
+	})
+
+	it("offers the form again for a draft whose send never finished (10 minutes after its claim)", async () => {
+		const longAgo = new Date(Date.now() - 11 * 60_000).toISOString()
+		talonChat.getDraft.mockResolvedValue({ data: draft({ status: "submitting", claimed_at: longAgo }) })
+		const stale = await render()
+		expect(stale.find("[data-testid=talon-draft-form]").exists()).toBe(true)
+		// Only a pending draft may be discarded.
+		expect(stale.find("[data-testid=talon-draft-discard]").exists()).toBe(false)
+
+		const recent = new Date(Date.now() - 2 * 60_000).toISOString()
+		talonChat.getDraft.mockResolvedValue({ data: draft({ status: "submitting", claimed_at: recent }) })
+		const fresh = await render()
+		expect(fresh.find("[data-testid=talon-draft-form]").exists()).toBe(false)
+		expect(fresh.get("[data-testid=talon-draft-status]").text()).toBe("Being sent to the SOC…")
+	})
+
+	it("reads the draft again after a failure without a code: it may have been filed", async () => {
+		talonChat.getDraft.mockResolvedValue({ data: draft() })
+		talonChat.submitDraft.mockRejectedValue({ response: { status: 502, data: "Bad gateway" } })
+		const wrapper = await render()
+		await choose(wrapper, "talon-draft-urgency", "high")
+		talonChat.getDraft.mockResolvedValue({ data: draft({ status: "submitted", copilot_ref: "90" }) })
+		await submit(wrapper)
+		expect(talonChat.getDraft).toHaveBeenCalledTimes(2)
+		expect(wrapper.get("[data-testid=talon-draft-status]").text()).toBe("Sent to the SOC")
+	})
+
+	it("keeps what the user typed when the card is mounted again in the same conversation", async () => {
+		talonChat.getDraft.mockResolvedValue({ data: draft() })
+		const edits = new Map()
+		const first = mount(TalonSocDraftCard, { props: { draftId: "d-1", canDraft: true }, global: { provide: { [DRAFT_EDITS as symbol]: edits } } })
+		await flushPromises()
+		await first.get("[data-testid=talon-draft-question] textarea").setValue("My own words")
+		await choose(first, "talon-draft-urgency", "low")
+		await choose(first, "talon-draft-file-on", "alert")
+		first.unmount()
+
+		const again = mount(TalonSocDraftCard, { props: { draftId: "d-1", canDraft: true }, global: { provide: { [DRAFT_EDITS as symbol]: edits } } })
+		await flushPromises()
+		expect((again.get("[data-testid=talon-draft-question] textarea").element as HTMLTextAreaElement).value).toBe("My own words")
+		const checked = again.findAll("input").filter(i => (i.element as HTMLInputElement).checked).map(i => i.attributes("value"))
+		expect(checked.sort()).toEqual(["alert", "low"])
 	})
 })
