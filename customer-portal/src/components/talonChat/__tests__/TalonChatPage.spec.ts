@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useAuthStore } from "@/stores/auth"
 import TalonChatPage from "../TalonChatPage.vue"
+import TalonThreadList from "../TalonThreadList.vue"
 import { testRouter, thread, withProviders } from "./fixtures"
 
 const talonChat = vi.hoisted(() => ({
@@ -146,5 +147,22 @@ describe("the Ask Talon page", () => {
 		expect(router.currentRoute.value.query.thread).toBe("th-1")
 		expect(wrapper.find("[data-testid=talon-conversation]").exists()).toBe(true)
 		expect(talonChat.getMessages).toHaveBeenCalledWith("th-1", { limit: 20 }, expect.any(AbortSignal))
+	})
+
+	it.each(["archived", "deleted"] as const)("drops a closed conversation (%s) from the list and the address", async status => {
+		availability(["ACME"])
+		talonChat.listThreads.mockResolvedValue({ data: { threads: [thread(), thread({ id: "th-2", title: "Other" })], next: null } })
+		talonChat.archiveThread.mockResolvedValue({ data: thread({ status, archived_at: "2026-10-31T10:00:00Z" }) })
+		const { wrapper, router } = await render("/talon?thread=th-1")
+		expect(wrapper.find("[data-testid=talon-conversation]").exists()).toBe(true)
+
+		wrapper.findComponent(TalonThreadList).vm.$emit("archive", "th-1")
+		await flushPromises()
+		expect(talonChat.archiveThread).toHaveBeenCalledWith("th-1")
+		expect(wrapper.find("[data-testid=talon-thread-th-1]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=talon-thread-th-2]").exists()).toBe(true)
+		expect(router.currentRoute.value.query.thread).toBeUndefined()
+		expect(wrapper.find("[data-testid=talon-conversation]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=talon-new-thread]").exists()).toBe(true)
 	})
 })

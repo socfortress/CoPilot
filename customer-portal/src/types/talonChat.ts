@@ -16,8 +16,9 @@ export interface TalonChatAvailability {
 	can_request_analysis: boolean
 }
 
-export type TalonChatThreadStatus = "active" | "archived"
-export type TalonChatThreadStatusFilter = TalonChatThreadStatus | "all"
+/** `deleted`: the archive answer for a thread without a turn, which is deleted outright (FR-API-36). */
+export type TalonChatThreadStatus = "active" | "archived" | "deleted"
+export type TalonChatThreadStatusFilter = "active" | "archived" | "all"
 
 /** A portal thread (FR-API-33 to -36): always one customer's. */
 export interface TalonChatThread {

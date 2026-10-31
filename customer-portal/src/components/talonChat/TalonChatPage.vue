@@ -174,6 +174,7 @@ function created(thread: TalonChatThread) {
 async function archive(id: string) {
 	if (streaming.value && id === selectedId.value) return
 	try {
+		// The answer is the thread `archived`, or `deleted` when it had no turn: gone from the list either way.
 		await Api.talonChat.archiveThread(id)
 		threads.value = threads.value.filter(thread => thread.id !== id)
 		toast.success(t("talonChat.threads.archived"))
