@@ -217,10 +217,18 @@ async def create_thread(user: User, session: AsyncSession, request: Request) -> 
         alert_customer = (await session.execute(select(Alert.customer_code).where(Alert.id == body.alert_id))).scalar_one_or_none()
         if alert_customer != body.customer_code:
             return coded("alert_not_found")
-    language, _ = await portal_locale(user, session)
+    language = await thread_language(user, session, body.language)
     await release(session)
     payload = {"customer_code": body.customer_code, "title": body.title, "alert_id": body.alert_id, "language": language}
     return answer(await v2_request("POST", "/v2/portal/threads", portal.identity, json_body=payload))
+
+
+async def thread_language(user: User, session: AsyncSession, asked: Optional[str]) -> str:
+    """A new thread's language: the one the portal shows when it is among the user's available
+    portal languages (``available_for_user``), else the user's portal language (``portal_locale``).
+    Never a value the server doesn't offer the user."""
+    language, available = await portal_locale(user, session)
+    return asked if isinstance(asked, str) and asked in available else language
 
 
 async def _with_thread(user: User, session: AsyncSession, thread_id: str) -> Union[Tuple[Portal, str], JSONResponse]:

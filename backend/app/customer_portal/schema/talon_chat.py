@@ -81,13 +81,16 @@ class PortalChatAvailabilityResponse(BaseModel):
 
 
 class ThreadCreate(BaseModel):
-    """FR-API-34 as the portal sends it. ``language`` is the user's portal language, set by CoPilot."""
+    """FR-API-34 as the portal sends it. ``language`` is the locale the portal shows (the browser's
+    when the user never picked one); CoPilot keeps it only when it is one of the user's available
+    portal languages, else uses the user's portal language (``talon_chat_proxy.thread_language``)."""
 
     model_config = ConfigDict(extra="forbid")
 
     customer_code: str = Field(..., min_length=1, max_length=64)
     title: Optional[str] = Field(None, max_length=MAX_TITLE_CHARS)
     alert_id: Optional[StrictInt] = Field(None, ge=1, le=2_147_483_647)
+    language: Optional[str] = Field(None, max_length=16)
 
 
 class ThreadRename(BaseModel):

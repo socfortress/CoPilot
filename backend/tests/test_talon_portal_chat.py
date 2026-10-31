@@ -420,26 +420,48 @@ def test_the_portal_identity_headers_and_never_the_browsers():
         assert request.headers["x-api-key"] == "dummy-talon-key"
 
 
-def test_a_new_thread_takes_the_users_customer_and_language_never_the_bodys_identity():
+def test_a_new_thread_takes_the_users_customer_never_the_bodys_identity():
     talon = FakeTalon()
 
     async def scenario(client, ctx):
         other = await send(client, "POST", f"{BASE}/threads", {"customer_code": GLOBEX})
         unknown_field = await send(client, "POST", f"{BASE}/threads", {"customer_code": ACME, "user_id": 1})
-        language = await send(client, "POST", f"{BASE}/threads", {"customer_code": ACME, "language": "de"})
         foreign_alert = await send(client, "POST", f"{BASE}/threads", {"customer_code": ACME, "alert_id": ctx.ids.globex_alert})
         good = await send(client, "POST", f"{BASE}/threads", {"customer_code": ACME, "title": "HOST-A", "alert_id": ctx.ids.lonely})
         creates = [json.loads(r.content) for r in talon.requests if r.method == "POST" and r.url.path == "/v2/portal/threads"]
-        return other, unknown_field, language, foreign_alert, good, creates, ctx.ids.lonely
+        return other, unknown_field, foreign_alert, good, creates, ctx.ids.lonely
 
-    other, unknown_field, language, foreign_alert, good, creates, alert_id = call(scenario, talon=talon)
+    other, unknown_field, foreign_alert, good, creates, alert_id = call(scenario, talon=talon)
     assert other.status_code == 403 and other.json()["code"] == "customer_not_accessible"
     assert unknown_field.status_code == 422 and unknown_field.json()["code"] == "invalid_request"
-    assert language.status_code == 422  # the language is the user's portal language, set by CoPilot
     assert foreign_alert.status_code == 404 and foreign_alert.json()["code"] == "alert_not_found"
     assert good.status_code == 201
     (create,) = creates
     assert create == {"customer_code": ACME, "title": "HOST-A", "alert_id": alert_id, "language": "en"}
+
+
+def test_a_new_threads_language_is_the_portals_when_the_user_may_have_it():
+    from app.db.universal_models import CustomerPortalLanguageSettings
+
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        async with ctx.db.session() as s:
+            s.add(CustomerPortalLanguageSettings(customer_code=ACME, languages=["en", "de"]))
+            await s.commit()
+        answers = []
+        for language in ("de", "fr", "xx-not-a-locale", None, "en"):
+            body = {"customer_code": ACME, **({"language": language} if language is not None else {})}
+            answers.append((await send(client, "POST", f"{BASE}/threads", body)).status_code)
+        too_long = await send(client, "POST", f"{BASE}/threads", {"customer_code": ACME, "language": "x" * 17})
+        creates = [json.loads(r.content)["language"] for r in talon.requests if r.method == "POST" and r.url.path == "/v2/portal/threads"]
+        return answers, too_long, creates
+
+    answers, too_long, creates = call(scenario, talon=talon)
+    assert answers == [201] * 5
+    # Available to the user: kept; not available (fr is a portal locale, but not this customer's), or absent: the portal language.
+    assert creates == ["de", "en", "en", "en", "en"]
+    assert too_long.status_code == 422 and too_long.json()["code"] == "invalid_request"
 
 
 def test_soc_roles_and_unknown_tokens_are_refused_on_the_portal_routes():
