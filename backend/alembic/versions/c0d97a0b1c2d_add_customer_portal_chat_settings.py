@@ -12,6 +12,8 @@ plan PC-3):
   by every write. talon-analyst reads it over its read-only MySQL user.
 - ``customer_portal_soc_request.talon_draft_id``: the portal chat draft a SOC request was filed
   from, unique, so a draft is filed at most once and the SOC sees "drafted with Talon".
+- ``customer_portal_ioc_lookup.reserved_by``: ``talon`` for a lookup Talon's portal chat meter
+  reserved (NULL for the portal's own), so the meter completes only its own rows.
 
 Opt-in: no settings row means no chat, so existing deployments offer nothing new on upgrade.
 """
@@ -59,8 +61,11 @@ def upgrade() -> None:
         unique=True,
     )
 
+    op.add_column("customer_portal_ioc_lookup", sa.Column("reserved_by", sa.String(length=16), nullable=True))
+
 
 def downgrade() -> None:
+    op.drop_column("customer_portal_ioc_lookup", "reserved_by")
     op.drop_index("ix_customer_portal_soc_request_talon_draft_id", table_name="customer_portal_soc_request")
     op.drop_column("customer_portal_soc_request", "talon_draft_id")
     # Dropping a table drops its indexes; MySQL refuses to drop an index alone while a

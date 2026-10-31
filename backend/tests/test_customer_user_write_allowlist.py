@@ -86,7 +86,7 @@ ALLOWED_CUSTOMER_USER_WRITES = frozenset(
         ("DELETE", "/api/customer_portal/users/{user_id}/totp"),
         ("POST", "/api/customer_portal/users/{user_id}/temporary-password"),
         ("PUT", "/api/customer_portal/users/{user_id}/read-only"),  # #1312
-        # Talon portal chat (talon-analyst D97), where the customer's admin turned it on: their own
+        # Talon portal chat (talon-analyst D97), where a SOC admin turned it on: their own
         # threads (the user comes from the token, the switch is checked on every request), a turn,
         # thumbs up or down, and a Talon draft sent to the SOC (filed through "Ask the SOC" above,
         # under its rules; refused for a read-only user) or discarded.

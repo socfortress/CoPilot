@@ -21,11 +21,14 @@ Real routers, a real in-memory database, real request parsing; talon-analyst is 
 Run with: cd backend && python -m pytest tests/test_talon_portal_chat.py
 """
 
+import asyncio
 import json
 
 import httpx
 import pytest
 
+from app.auth.models.users import User
+from app.auth.models.users import UserCustomerAccess
 from app.auth.models.users import UserTagAccess
 from app.connectors.talon.services.identity import PORTAL_IDENTITY_HEADERS
 from app.connectors.talon.utils import v2_client
@@ -96,11 +99,12 @@ def test_only_an_admin_writes_and_every_write_bumps_the_version_and_is_audited(a
 
     analyst, demoted, portal, first, second, other_customer, unknown, stored = call(scenario, chat=False)
     assert (analyst.status_code, demoted.status_code, portal.status_code) == (403, 403, 403)
+    assert demoted.json() == {"detail": "only an admin may change the portal chat settings", "code": "admin_only"}
     assert first.status_code == 200 and first.json()["settings"]["version"] == 1
     assert second.status_code == 200 and second.json()["settings"]["version"] == 2
     assert second.json()["settings"]["log_search_enabled"] is True and second.json()["settings"]["updated_by"] == 1
-    assert other_customer.status_code == 403
-    assert unknown.status_code == 404
+    assert other_customer.status_code == 403 and other_customer.json()["code"] == "customer_not_accessible"
+    assert unknown.status_code == 404 and unknown.json() == {"detail": "customer not found", "code": "customer_not_found"}
     (row,) = stored
     assert (row.portal_chat_enabled, row.log_search_enabled, row.daily_message_limit, row.user_daily_message_limit, row.version) == (
         True,
@@ -1070,3 +1074,169 @@ def test_the_read_back_forwards_only_the_callers_paging():
         return [dict(r.url.params) for r in talon.requests if r.url.path.endswith("/messages")]
 
     assert call(scenario, talon=talon) == [{}, {"limit": "5", "before": "c1"}]
+
+
+# ── review fixes (#1327) ──────────────────────────────────────────────────────
+
+
+def test_a_draft_is_filed_only_on_its_own_customers_target():
+    """M1: a user of ACME and GLOBEX can't get an ACME draft filed on a GLOBEX alert or case."""
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        await set_chat(ctx.db, GLOBEX, portal_chat_enabled=False)
+        async with ctx.db.session() as s:  # multi may write on GLOBEX for this test
+            await s.execute(UserCustomerAccess.__table__.update().values(read_only=False))
+            await s.commit()
+        draft_id = talon.add_draft("alert", ctx.ids.globex_alert, customer_code=ACME, owner="12")
+        response = await submit(client, draft_id, user="multi")
+        return draft_id, response, await rows(ctx.db, CustomerPortalSocRequest)
+
+    draft_id, response, filed = call(scenario, talon=talon)
+    assert response.status_code == 404 and response.json()["code"] == "not_found"
+    assert filed == []
+    assert talon.outcomes == [(draft_id, {"outcome": "failed", "failure": "not_found"})]
+
+
+def test_an_orphan_that_gets_its_comment_meanwhile_is_kept_and_reported():
+    """L1: the orphan delete is conditional; a row whose comment was written in between stays."""
+    from sqlalchemy import update
+    from sqlalchemy.sql.dml import Delete
+
+    from app.customer_portal.services import talon_chat_drafts
+
+    async def scenario(client, ctx):
+        draft_id = "0b6f0c55-7a39-4e57-9d6e-3f1a2b3c4d5e"
+        async with ctx.db.session() as s:
+            row = CustomerPortalSocRequest(
+                customer_code=ACME,
+                question=QUESTION,
+                status="open",
+                requested_by="jane",
+                requested_at=a_while_ago(6),
+                talon_draft_id=draft_id,
+            )
+            s.add(row)
+            await s.commit()
+            row_id = row.id
+        async with ctx.db.session() as session:
+            real = session.execute
+
+            async def racing(statement, *args, **kwargs):
+                if isinstance(statement, Delete):  # the filing writes its comment just before the delete
+                    await real(update(CustomerPortalSocRequest).where(CustomerPortalSocRequest.id == row_id).values(comment_id=7))
+                    await session.commit()
+                return await real(statement, *args, **kwargs)
+
+            session.execute = racing
+            found = await talon_chat_drafts.look(draft_id, ACME, session)
+        return row_id, found, await rows(ctx.db, CustomerPortalSocRequest)
+
+    row_id, found, stored = call(scenario)
+    assert found == row_id
+    assert [r.id for r in stored] == [row_id]
+
+
+def test_a_unique_key_conflict_without_a_comment_is_a_conflict_and_posts_no_outcome(monkeypatch):
+    """L2: the other request hasn't finished: it reports the draft, not this one."""
+    from app.customer_portal.services import soc_requests
+
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        draft_id = talon.add_draft("case", ctx.ids.open_case)
+        real = soc_requests._reserve
+
+        async def racing(*args, **kwargs):
+            async with ctx.db.session() as s:
+                s.add(
+                    CustomerPortalSocRequest(
+                        customer_code=ACME,
+                        question="theirs",
+                        status="open",
+                        requested_by="jane",
+                        requested_at=a_while_ago(0),
+                        talon_draft_id=draft_id,
+                    ),
+                )
+                await s.commit()
+            return await real(*args, **kwargs)
+
+        monkeypatch.setattr(soc_requests, "_reserve", racing)
+        return await submit(client, draft_id)
+
+    response = call(scenario, talon=talon)
+    assert response.status_code == 409 and response.json()["code"] == "draft_conflict"
+    assert talon.outcomes == []
+
+
+def test_a_filed_draft_is_reported_even_while_the_switch_is_off():
+    """L3: the lookup-only pass records a filing that already happened; it files nothing new."""
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        filed_id = talon.add_draft("alert", ctx.ids.linked)
+        unfiled_id = talon.add_draft("alert", ctx.ids.lonely)
+        first = await submit(client, filed_id)
+        talon.outcomes.clear()
+        await set_chat(ctx.db, portal_chat_enabled=False)
+        again = await submit(client, filed_id)
+        other_user = await submit(client, filed_id, user="rory")
+        unfiled = await submit(client, unfiled_id)
+        return filed_id, first, again, other_user, unfiled, await rows(ctx.db, CustomerPortalSocRequest)
+
+    filed_id, first, again, other_user, unfiled, filed = call(scenario, talon=talon)
+    assert first.status_code == 200 and again.status_code == 200 and again.json() == first.json()
+    assert other_user.status_code == 403 and other_user.json()["code"] == "portal_off"  # not theirs: no lookup answer
+    assert unfiled.status_code == 403 and unfiled.json()["code"] == "portal_off"
+    assert len(filed) == 1
+    assert talon.outcomes == [(filed_id, {"outcome": "submitted", "copilot_ref": str(filed[0].id)})]
+
+
+def test_two_simultaneous_submits_of_one_draft_file_it_once():
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        draft_id = talon.add_draft("alert", ctx.ids.linked)
+        answers = await asyncio.gather(submit(client, draft_id), submit(client, draft_id))
+        return answers, await rows(ctx.db, CustomerPortalSocRequest)
+
+    answers, filed = call(scenario, talon=talon)
+    (row,) = filed
+    assert {r.status_code for r in answers} <= {200, 409} and any(r.status_code == 200 for r in answers)
+    for response in answers:
+        assert response.json() == {"request_id": row.id} if response.status_code == 200 else response.json()["code"] == "draft_conflict"
+    assert {body["outcome"] for _, body in talon.outcomes} == {"submitted"}
+    assert {body["copilot_ref"] for _, body in talon.outcomes} == {str(row.id)}
+
+
+def test_the_meter_refuses_a_disabled_portal_user():
+    async def scenario(client, ctx):
+        async with ctx.db.session() as s:
+            await s.execute(User.__table__.update().where(User.id == 10).values(disabled_at=a_while_ago(1)))
+            await s.commit()
+        return await reserve(client), await rows(ctx.db, CustomerPortalIocLookup)
+
+    response, stored = call(scenario)
+    assert response.status_code == 404 and response.json()["code"] == "not_found"
+    assert stored == []
+
+
+def test_the_meter_completes_only_its_own_open_lookups():
+    """L4: a lookup the portal itself reserved is never completed or deleted by the meter."""
+    from app.customer_portal.services import ioc_enrichment
+
+    async def scenario(client, ctx):
+        async with ctx.db.session() as s:
+            portal_own = await ioc_enrichment.reserve_lookup(ACME, "f" * 64, s, user_id=10)
+        meters = (await reserve(client)).json()["lookup_id"]
+        refused = await client.post(f"{METER}/{portal_own}/complete", json={"answered": False}, headers=as_user("talon-analyst"))
+        done = await client.post(f"{METER}/{meters}/complete", json={"answered": True}, headers=as_user("talon-analyst"))
+        stored = {row.id: row for row in await rows(ctx.db, CustomerPortalIocLookup)}
+        return portal_own, meters, refused, done, stored
+
+    portal_own, meters, refused, done, stored = call(scenario)
+    assert refused.status_code == 404 and refused.json()["code"] == "not_found"
+    assert done.status_code == 204
+    assert stored[portal_own].completed_at is None and stored[portal_own].reserved_by is None
+    assert stored[meters].completed_at is not None and stored[meters].reserved_by == "talon"

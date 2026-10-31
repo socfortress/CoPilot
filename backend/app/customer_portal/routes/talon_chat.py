@@ -12,8 +12,11 @@ Three audiences:
   request (``services/talon_chat_proxy.py``), and the draft submit files through the portal's own
   "Ask the SOC" service (``services/talon_chat_drafts.py``).
 
-Every refusal of these routes but the token's own (401, and 403 for a role the route doesn't take,
-or a demoted admin's token on the PUT) and an unknown customer on the PUT (404) is ``{"detail", "code"}`` with a code from talon-analyst's table (``connectors/talon/utils/portal_errors``).
+Every refusal of these routes is ``{"detail", "code"}`` with a code from talon-analyst's table
+(``connectors/talon/utils/portal_errors``), plus two of CoPilot's own on the settings routes
+(``admin_only``, ``customer_not_found``). The exceptions are the token's own refusals (401, and 403
+for a role the route doesn't take: the shared ``AuthHandler``) and an unexpected failure
+(``internal_errors``' 500).
 Bodies and path ids are checked in the services for the same reason. Static paths before those with
 a parameter under the same prefix.
 """
@@ -21,11 +24,11 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Request
 from fastapi import Security
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
@@ -44,10 +47,9 @@ from app.customer_portal.services import talon_chat
 from app.customer_portal.services import talon_chat_drafts as drafts
 from app.customer_portal.services import talon_chat_proxy as proxy
 from app.customer_portal.services.ai_reports import is_ai_reports_enabled
-from app.customer_portal.services.customers import ensure_customer_exists
 from app.db.db_session import get_db
+from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
-from app.middleware.customer_access import verify_customer_code_access
 
 customer_portal_talon_chat_router = APIRouter()
 
@@ -75,18 +77,21 @@ def _settings_schema(customer_code: str, row) -> PortalChatSettings:
     "/talon_chat/settings/{customer_code}",
     response_model=PortalChatSettingsResponse,
     description="A customer's Talon portal chat switches and daily message limits, with the form's proposed limits",
-    dependencies=[SOC, Depends(verify_customer_code_access)],
+    dependencies=[SOC],
 )
 async def get_portal_chat_settings(
     customer_code: str,
-    response: Response,
+    current_user: User = Depends(AuthHandler().get_current_user),
     session: AsyncSession = Depends(get_db),
-) -> PortalChatSettingsResponse:
-    response.headers.update(NO_STORE)
+) -> Response:
+    # The access check here, not ``verify_customer_code_access``, so its refusal is coded too.
+    if not await customer_access_handler.check_customer_access(current_user, customer_code, session):
+        return coded("customer_not_accessible")
     async with internal_errors("read the portal chat settings"):
         row = await talon_chat.get_settings(customer_code, session)
         ai_reports = await is_ai_reports_enabled(customer_code, session)
-    return PortalChatSettingsResponse(settings=_settings_schema(customer_code, row), ai_reports_enabled=ai_reports)
+    answer = PortalChatSettingsResponse(settings=_settings_schema(customer_code, row), ai_reports_enabled=ai_reports)
+    return JSONResponse(answer.model_dump(), headers=NO_STORE)
 
 
 @customer_portal_talon_chat_router.put(
@@ -106,11 +111,13 @@ async def put_portal_chat_settings(
 ) -> Response:
     # The database role too: a token issued before a demotion still carries the admin scope.
     if current_user.role_id != RoleEnum.admin.value:
-        raise HTTPException(status_code=403, detail="Only an admin may change the portal chat settings")
+        return coded("admin_only")
     body = await proxy.read_body(request, UpdatePortalChatSettingsRequest)
     if isinstance(body, JSONResponse):
         return body
-    await ensure_customer_exists(session, customer_code)
+    exists = await session.execute(select(Customers.customer_code).where(Customers.customer_code == customer_code))
+    if customer_code not in set(exists.scalars().all()):
+        return coded("customer_not_found")
     async with internal_errors("save the portal chat settings", session):
         row, problem = await talon_chat.save_settings(customer_code, body.model_dump(), current_user, session)
         ai_reports = await is_ai_reports_enabled(customer_code, session)

@@ -64,6 +64,13 @@ ERRORS: Dict[str, Tuple[int, str]] = {
     "ioc_limit": (429, "today's threat-intel lookups are used up"),
 }
 
+#: CoPilot's own codes, on its SOC-facing settings routes only (the portal never calls them), beside
+#: talon-analyst's table: there is no code there for an admin-only write or an unknown customer.
+COPILOT_ERRORS: Dict[str, Tuple[int, str]] = {
+    "admin_only": (403, "only an admin may change the portal chat settings"),
+    "customer_not_found": (404, "customer not found"),
+}
+
 #: Every coded answer is the caller's own and must not be kept by a browser or a proxy.
 NO_STORE = {"Cache-Control": "no-store"}
 #: The longest talon-analyst ``detail`` passed on as it is (its texts are short and fixed).
@@ -80,7 +87,7 @@ def status_of(code: str) -> int:
 
 def coded(code: str, status: Optional[int] = None) -> JSONResponse:
     """CoPilot's own refusal: ``{detail, code}`` with the table's text and status."""
-    default_status, text = ERRORS[code]
+    default_status, text = ERRORS[code] if code in ERRORS else COPILOT_ERRORS[code]
     return JSONResponse({"detail": text, "code": code}, status_code=status or default_status, headers=NO_STORE)
 
 

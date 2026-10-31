@@ -55,6 +55,8 @@ from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
 
 SERVICE_ONLY = "Only the Talon service account may reserve portal chat lookups"
+#: ``customer_portal_ioc_lookup.reserved_by`` of the rows this meter reserves (the portal's own are NULL).
+METER = "talon"
 #: The longest indicator value metered (the portal's own IOC values are bounded the same way).
 MAX_VALUE_CHARS = 2048
 
@@ -161,7 +163,7 @@ async def reserve(user: User, session: AsyncSession, body: Dict[str, Any]) -> Re
         return coded("not_found")
     digest = ioc_enrichment.value_digest(sources.classify(value)[1])
     try:
-        lookup_id = await ioc_enrichment.reserve_lookup(customer_code, digest, session, user_id=user_id)
+        lookup_id = await ioc_enrichment.reserve_lookup(customer_code, digest, session, user_id=user_id, reserved_by=METER)
     except HTTPException as e:
         code = _REFUSALS.get(e.status_code)
         if code is None:
@@ -175,13 +177,31 @@ async def complete(user: User, session: AsyncSession, lookup_id: int, body: Dict
     """``POST /talon/v2/portal/ioc_lookups/{lookup_id}/complete`` ``{answered}`` → ``204``.
 
     ``answered: true`` sets ``completed_at``; ``false`` deletes the row (a lookup no source answered
-    costs nothing). Only a lookup still open: a completed one is never touched again."""
+    costs nothing). Only a lookup this meter reserved (``reserved_by``) and still open, locked
+    while it changes: a completed one, or one of the portal's own, is never touched."""
     await require_service_account(user, session)
     answered = body.get("answered")
     if set(body) != {"answered"} or not isinstance(answered, bool):
         return coded("invalid_request")
-    row = await session.get(CustomerPortalIocLookup, lookup_id)
-    if row is None or row.completed_at is not None:
+    # Only a row this meter reserved and that is still open, locked while it changes: never one of
+    # the portal's own lookups, and never one completed in between (review of #1327, L4).
+    row = (
+        (
+            await session.execute(
+                select(CustomerPortalIocLookup)
+                .where(
+                    CustomerPortalIocLookup.id == lookup_id,
+                    CustomerPortalIocLookup.reserved_by == METER,
+                    CustomerPortalIocLookup.completed_at.is_(None),
+                )
+                .with_for_update(),
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if row is None:
+        await session.rollback()
         return coded("not_found")
     if answered:
         row.completed_at = ioc_enrichment._now()

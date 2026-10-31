@@ -917,6 +917,9 @@ class CustomerPortalIocLookup(SQLModel, table=True):
     requested_by_user_id: Optional[int] = Field(default=None)
     requested_at: datetime = Field(default_factory=now_utc, index=True)
     completed_at: Optional[datetime] = Field(default=None, nullable=True)
+    # Who reserved it: NULL for the portal's own check, ``talon`` for Talon portal chat's lookup
+    # meter (talon-analyst D97), which may complete only its own rows.
+    reserved_by: Optional[str] = Field(default=None, max_length=16, nullable=True)
 
 
 class CustomerWafInstance(SQLModel, table=True):
