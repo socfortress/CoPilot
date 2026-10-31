@@ -699,7 +699,7 @@ def test_an_orphan_is_deleted_and_the_draft_filed_again():
                     status="open",
                     requested_by="jane",
                     requested_by_user_id=10,
-                    requested_at=a_while_ago(6),
+                    requested_at=a_while_ago(16),
                     talon_draft_id=draft_id,
                 ),
             )
@@ -1113,7 +1113,7 @@ def test_an_orphan_that_gets_its_comment_meanwhile_is_kept_and_reported():
                 question=QUESTION,
                 status="open",
                 requested_by="jane",
-                requested_at=a_while_ago(6),
+                requested_at=a_while_ago(16),
                 talon_draft_id=draft_id,
             )
             s.add(row)
@@ -1240,3 +1240,84 @@ def test_the_meter_completes_only_its_own_open_lookups():
     assert done.status_code == 204
     assert stored[portal_own].completed_at is None and stored[portal_own].reserved_by is None
     assert stored[meters].completed_at is not None and stored[meters].reserved_by == "talon"
+
+
+# ── the three-PR cross-check (#1327) ──────────────────────────────────────────
+
+
+def test_a_threads_customer_is_read_from_the_thread_not_its_transcript():
+    """Chat, rename, archive and feedback learn the thread's customer from GET /v2/portal/threads/{id};
+    a busy transcript pool (the read-back refused) never refuses a chat turn."""
+    talon = FakeTalon()
+    talon.messages_override = httpx.Response(503, json={"detail": "Talon request failed", "code": "failed"})
+
+    async def scenario(client, ctx):
+        thread_id = talon.add_thread()
+        chat = await send(client, "POST", f"{BASE}/chat/{thread_id}", {"message": "hello"})
+        rename = await send(client, "PATCH", f"{BASE}/threads/{thread_id}", {"title": "Renamed"})
+        feedback = await send(client, "POST", f"{BASE}/threads/{thread_id}/feedback", {"run_id": "run-1", "rating": "up"})
+        archive = await send(client, "DELETE", f"{BASE}/threads/{thread_id}", None)
+        lookups = [r.method for r in talon.requests if r.url.path == f"/v2/portal/threads/{thread_id}"]
+        read_backs = [r for r in talon.requests if r.url.path.endswith("/messages")]
+        return chat, rename, feedback, archive, lookups, read_backs
+
+    chat, rename, feedback, archive, lookups, read_backs = call(scenario, talon=talon)
+    assert (chat.status_code, rename.status_code, feedback.status_code, archive.status_code) == (200, 200, 204, 200)
+    assert lookups == ["GET", "GET", "PATCH", "GET", "GET", "DELETE"]
+    assert read_backs == []
+
+
+def test_a_reservation_inside_talons_claim_window_is_not_an_orphan():
+    """ORPHAN_AFTER (15 min) is past talon-analyst's CLAIM_WINDOW (10 min): a row 12 minutes old may
+    still be filing under a live claim, so it is kept and the submit is a conflict."""
+    from app.customer_portal.services import talon_chat_drafts
+
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        draft_id = talon.add_draft("alert", ctx.ids.lonely)
+        async with ctx.db.session() as s:
+            s.add(
+                CustomerPortalSocRequest(
+                    customer_code=ACME,
+                    question=QUESTION,
+                    status="open",
+                    requested_by="jane",
+                    requested_at=a_while_ago(12),
+                    talon_draft_id=draft_id,
+                ),
+            )
+            await s.commit()
+        response = await submit(client, draft_id)
+        return response, await rows(ctx.db, CustomerPortalSocRequest)
+
+    response, stored = call(scenario, talon=talon)
+    assert talon_chat_drafts.ORPHAN_AFTER.total_seconds() == 15 * 60
+    assert response.status_code == 409 and response.json()["code"] == "draft_conflict"
+    assert len(stored) == 1 and stored[0].comment_id is None
+
+
+def test_a_new_threads_language_is_checked_against_its_own_customer():
+    """Not the union across the user's customers: GLOBEX's French is no language for an ACME thread."""
+    from app.db.universal_models import CustomerPortalLanguageSettings
+
+    talon = FakeTalon()
+
+    async def scenario(client, ctx):
+        async with ctx.db.session() as s:
+            s.add_all(
+                [
+                    CustomerPortalLanguageSettings(customer_code=ACME, languages=["en", "de"]),
+                    CustomerPortalLanguageSettings(customer_code=GLOBEX, languages=["en", "fr"]),
+                ],
+            )
+            await s.commit()
+        for customer, language in ((ACME, "fr"), (ACME, "de"), (GLOBEX, "fr"), (GLOBEX, "de")):
+            created = await send(client, "POST", f"{BASE}/threads", {"customer_code": customer, "language": language}, user="multi")
+            assert created.status_code == 201, created.text
+        return [
+            (body["customer_code"], body["language"])
+            for body in (json.loads(r.content) for r in talon.requests if r.method == "POST" and r.url.path == "/v2/portal/threads")
+        ]
+
+    assert call(scenario, talon=talon) == [(ACME, "en"), (ACME, "de"), (GLOBEX, "fr"), (GLOBEX, "en")]

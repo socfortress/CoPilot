@@ -9,7 +9,7 @@ a new thread, which must be one of the user's own.
 
 **The switch, on every request** (``talon_chat.enabled_customers``, availability's rule): a route
 that names a customer checks that customer; a route that names a thread checks the thread's
-customer, which CoPilot reads from talon-analyst first (the thread's read-back, one turn); a route
+customer, which CoPilot reads from talon-analyst first (``GET /v2/portal/threads/{id}``); a route
 that names a draft checks the draft's customer, read back the same way. Off is ``portal_off`` before
 anything is forwarded. talon-analyst reads the same switch itself before every model request, so a
 thread turned off mid-turn stops at its next request there.
@@ -60,7 +60,9 @@ from app.customer_portal.schema.talon_chat import SubmitMessage
 from app.customer_portal.schema.talon_chat import ThreadCreate
 from app.customer_portal.schema.talon_chat import ThreadRename
 from app.customer_portal.services import talon_chat
-from app.customer_portal.services.languages import portal_locale
+from app.customer_portal.services.languages import get_settings as get_language_settings
+from app.customer_portal.services.languages import languages_of
+from app.customer_portal.utils.locales import effective_locale
 from app.incidents.models import Alert
 
 #: The largest request body read from the portal (a message, a title, a draft's question).
@@ -170,26 +172,24 @@ async def release(session: AsyncSession) -> None:
 # ── threads ───────────────────────────────────────────────────────────────────
 
 
-async def thread_customer(portal: Portal, thread_id: str, params: Optional[Dict[str, Any]] = None) -> Union[V2Answer, JSONResponse]:
-    """Read the thread back (one turn, or the caller's page) and check its customer's switch.
-    Returns the read-back to relay, or the refusal."""
-    result = await v2_request(
-        "GET",
-        f"/v2/portal/threads/{thread_id}/messages",
-        portal.identity,
-        params=params if params is not None else {"limit": 1},
-        max_body_bytes=MAX_MESSAGES_BODY_BYTES,
-    )
-    payload = parsed(result)
-    if payload is None:
-        return coded("failed") if result.status is not None and 200 <= result.status < 300 else answer(result)
-    thread = payload.get("thread")
+def check_thread(portal: Portal, thread: Any) -> Optional[JSONResponse]:
+    """A thread object from talon-analyst: the user's customer, and that customer's switch on."""
     customer_code = thread.get("customer_code") if isinstance(thread, dict) else None
     if customer_code not in portal.customers:  # talon-analyst never answers another's thread; checked anyway
         return coded("thread_not_found")
     if customer_code not in portal.enabled:
         return coded("portal_off")
-    return result
+    return None
+
+
+async def thread_customer(portal: Portal, thread_id: str) -> Optional[JSONResponse]:
+    """Read the thread itself (``GET /v2/portal/threads/{id}``, one list item, the same owner check)
+    and check its customer's switch. None when it may go on, else the refusal."""
+    result = await v2_request("GET", f"/v2/portal/threads/{thread_id}", portal.identity)
+    thread = parsed(result)
+    if thread is None:
+        return coded("failed") if result.status is not None and 200 <= result.status < 300 else answer(result)
+    return check_thread(portal, thread)
 
 
 async def list_threads(user: User, session: AsyncSession, params: Dict[str, Any]) -> Response:
@@ -217,18 +217,20 @@ async def create_thread(user: User, session: AsyncSession, request: Request) -> 
         alert_customer = (await session.execute(select(Alert.customer_code).where(Alert.id == body.alert_id))).scalar_one_or_none()
         if alert_customer != body.customer_code:
             return coded("alert_not_found")
-    language = await thread_language(user, session, body.language)
+    language = await thread_language(user, session, body.customer_code, body.language)
     await release(session)
     payload = {"customer_code": body.customer_code, "title": body.title, "alert_id": body.alert_id, "language": language}
     return answer(await v2_request("POST", "/v2/portal/threads", portal.identity, json_body=payload))
 
 
-async def thread_language(user: User, session: AsyncSession, asked: Optional[str]) -> str:
-    """A new thread's language: the one the portal shows when it is among the user's available
-    portal languages (``available_for_user``), else the user's portal language (``portal_locale``).
-    Never a value the server doesn't offer the user."""
-    language, available = await portal_locale(user, session)
-    return asked if isinstance(asked, str) and asked in available else language
+async def thread_language(user: User, session: AsyncSession, customer_code: str, asked: Optional[str]) -> str:
+    """A new thread's language: the one the portal shows when it is one of the thread's own
+    customer's portal languages, else the user's own pick when it is one of them, else English.
+    Never a language that customer doesn't offer (not the union across the user's customers)."""
+    available = languages_of(await get_language_settings(customer_code, session))
+    if isinstance(asked, str) and asked in available:
+        return asked
+    return effective_locale(getattr(user, "locale", None), available)
 
 
 async def _with_thread(user: User, session: AsyncSession, thread_id: str) -> Union[Tuple[Portal, str], JSONResponse]:
@@ -239,9 +241,9 @@ async def _with_thread(user: User, session: AsyncSession, thread_id: str) -> Uni
     if isinstance(portal, JSONResponse):
         return portal
     await release(session)
-    checked = await thread_customer(portal, canonical)
-    if isinstance(checked, JSONResponse):
-        return checked
+    refused = await thread_customer(portal, canonical)
+    if refused is not None:
+        return refused
     return portal, canonical
 
 
@@ -265,7 +267,7 @@ async def archive_thread(user: User, session: AsyncSession, thread_id: str) -> R
 
 
 async def thread_messages(user: User, session: AsyncSession, thread_id: str, params: Dict[str, Any]) -> Response:
-    """FR-API-37: the page asked for is the read-back that checks the thread's customer."""
+    """FR-API-37."""
     canonical = object_id(thread_id)
     if canonical is None:
         return coded("thread_not_found")
@@ -273,10 +275,19 @@ async def thread_messages(user: User, session: AsyncSession, thread_id: str, par
     if isinstance(portal, JSONResponse):
         return portal
     await release(session)
-    checked = await thread_customer(portal, canonical, {k: v for k, v in params.items() if v is not None})
-    if isinstance(checked, JSONResponse):
-        return checked
-    return relay(checked)
+    # The page asked for carries the thread: one request, and its customer checked before relaying.
+    result = await v2_request(
+        "GET",
+        f"/v2/portal/threads/{canonical}/messages",
+        portal.identity,
+        params={k: v for k, v in params.items() if v is not None},
+        max_body_bytes=MAX_MESSAGES_BODY_BYTES,
+    )
+    payload = parsed(result)
+    if payload is None:
+        return coded("failed") if result.status is not None and 200 <= result.status < 300 else answer(result)
+    refused = check_thread(portal, payload.get("thread"))
+    return refused if refused is not None else relay(result)
 
 
 async def feedback(user: User, session: AsyncSession, thread_id: str, request: Request) -> Response:

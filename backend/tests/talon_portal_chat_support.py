@@ -126,6 +126,7 @@ class FakeTalon:
         self.drafts = {}  # id -> draft dict (plus "owner")
         self.portal_chat = True
         self.claim_override = None  # callable(draft) -> httpx.Response
+        self.messages_override = None  # an httpx.Response for every thread read-back (a busy transcript pool)
         self.outcomes = []
         self.stream = (
             b'data: {"type":"start"}\n\n'
@@ -191,7 +192,11 @@ class FakeTalon:
             if kind == "chat":
                 return httpx.Response(200, headers={"content-type": "text/event-stream"}, content=self.stream)
             if rest == "/messages":
+                if self.messages_override is not None:
+                    return self.messages_override
                 return _json(200, {"thread": self.thread_body(object_id), "messages": [], "next": None})
+            # GET /v2/portal/threads/{id}: the thread itself, as one item of the list (PATCH and
+            # DELETE answer the thread too).
             if rest == "/feedback":
                 return httpx.Response(204)
             return _json(200, self.thread_body(object_id))

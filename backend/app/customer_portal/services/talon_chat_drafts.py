@@ -71,8 +71,10 @@ from app.incidents.models import Alert
 from app.incidents.models import Case
 from app.time_utils import now_utc
 
-#: A reservation with a draft id and no comment this old is an orphan (SPEC §5.3).
-ORPHAN_AFTER = timedelta(minutes=5)
+#: A reservation with a draft id and no comment this old is an orphan. The SPEC says 5 minutes;
+#: it is 15, past talon-analyst's ``CLAIM_WINDOW`` (10 minutes, FR-API-40), so a row whose claim is
+#: still live is never deleted under the request filing it (the three-PR cross-check of #1327).
+ORPHAN_AFTER = timedelta(minutes=15)
 #: Outcome posts: attempts and the pause between them.
 OUTCOME_ATTEMPTS = 3
 OUTCOME_PAUSE_SECONDS = 0.5
