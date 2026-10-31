@@ -1,0 +1,158 @@
+{
+	"page": {
+		"title": "Talon fragen",
+		"intro": "Fragen Sie Talon, den KI-Analysten des SOC, zu Ihren Alarmen, seinen KI-Berichten und Ihren Assets.",
+		"reviewNotice": "Chats können von Ihrem SOC eingesehen werden.",
+		"noActionsNotice": "Talon kann keine Aktionen ausführen. Talon beantwortet Fragen und kann eine Frage an Ihr SOC entwerfen, die Sie selbst absenden.",
+		"unavailableTitle": "Talon fragen ist nicht verfügbar",
+		"unavailableText": "Ihr SOC hat Talon fragen für Ihre Organisation nicht aktiviert."
+	},
+	"threads": {
+		"title": "Unterhaltungen",
+		"new": "Neue Unterhaltung",
+		"empty": "Noch keine Unterhaltungen.",
+		"loadMore": "Mehr anzeigen",
+		"loadFailed": "Die Unterhaltungen konnten nicht geladen werden.",
+		"untitled": "Unterhaltung vom {date}",
+		"aboutAlert": "Alarm #{id}",
+		"notAccessible": "Nicht verfügbar",
+		"archive": "Unterhaltung schließen",
+		"archiveConfirm": "Diese Unterhaltung schließen? Sie verschwindet aus Ihrer Liste.",
+		"archived": "Unterhaltung geschlossen"
+	},
+	"newThread": {
+		"title": "Neue Unterhaltung",
+		"customerLabel": "Organisation",
+		"customerPlaceholder": "Organisation wählen",
+		"noCustomers": "Talon fragen ist für keine Ihrer Organisationen aktiviert.",
+		"start": "Beginnen",
+		"cancel": "Abbrechen"
+	},
+	"askAboutAlert": {
+		"button": "Talon zu diesem Alarm fragen"
+	},
+	"conversation": {
+		"empty": "Stellen Sie eine Frage, um zu beginnen.",
+		"loadEarlier": "Frühere Nachrichten anzeigen",
+		"placeholder": "Fragen Sie Talon zu Ihren Alarmen, Berichten oder Assets",
+		"inputLabel": "Ihre Nachricht an Talon",
+		"send": "Senden",
+		"thinking": "Talon antwortet…",
+		"tooLong": "Die Nachricht darf höchstens {max} Zeichen lang sein",
+		"cutOff": "Diese Antwort wurde abgebrochen, bevor sie fertig war.",
+		"you": "Sie",
+		"talon": "Talon",
+		"aboutAlert": "Zu Alarm #{id}",
+		"notAccessible": "Diese Unterhaltung ist nicht mehr verfügbar. Sie können sie weiterhin schließen."
+	},
+	"checked": {
+		"line": "Geprüft: {items}",
+		"kinds": {
+			"alert": "der Alarm | {count} Alarme",
+			"alert_list": "Ihre Alarmliste | Ihre Alarmliste ({count}-mal)",
+			"report": "der KI-Bericht | {count} KI-Berichte",
+			"assets": "Ihre Assets | Ihre Assets ({count}-mal)",
+			"event_search": "1 Ereignissuche | {count} Ereignissuchen",
+			"event": "1 Ereignis | {count} Ereignisse",
+			"earlier_result": "ein früheres Ergebnis | {count} frühere Ergebnisse",
+			"soc_draft": "1 Frage an Ihr SOC | {count} Fragen an Ihr SOC",
+			"analysis_offer": "1 Angebot einer KI-Analyse | {count} Angebote einer KI-Analyse"
+		},
+		"intel": {
+			"ip": "1 IP-Adresse | {count} IP-Adressen",
+			"domain": "1 Domain | {count} Domains",
+			"url": "1 URL | {count} URLs",
+			"hash": "1 Datei-Hash | {count} Datei-Hashes",
+			"cve": "1 Schwachstelle (CVE) | {count} Schwachstellen (CVEs)",
+			"technique": "1 Angriffstechnik | {count} Angriffstechniken",
+			"opencti_object": "1 Threat-Intel-Eintrag | {count} Threat-Intel-Einträge",
+			"other": "1 Threat-Intel-Abfrage | {count} Threat-Intel-Abfragen"
+		}
+	},
+	"feedback": {
+		"up": "Hilfreich",
+		"down": "Nicht hilfreich",
+		"failed": "Ihr Feedback konnte nicht gespeichert werden."
+	},
+	"draft": {
+		"title": "Frage an Ihr SOC",
+		"intro": "Talon hat diese Frage entworfen. Prüfen Sie sie, wählen Sie die Dringlichkeit und senden Sie sie ab, wenn das SOC der Sache nachgehen soll.",
+		"aboutAlert": "Zu Alarm #{id}",
+		"aboutCase": "Zu Fall #{id}",
+		"questionLabel": "Die Frage an das SOC",
+		"urgencyLegend": "Wie dringend ist es?",
+		"urgencyRequired": "Wählen Sie die Dringlichkeit",
+		"fileOnLegend": "Wohin soll sie gehen?",
+		"fileOn": {
+			"case": "Zum Fall des Alarms",
+			"caseHint": "Zum Fall, der diesen Alarm enthält, oder zu einem neuen Fall aus diesem Alarm",
+			"alert": "Nur zu diesem Alarm",
+			"alertHint": "Ein Kommentar zum Alarm, kein Fall"
+		},
+		"submit": "An das SOC senden",
+		"discard": "Verwerfen",
+		"loading": "Der Entwurf wird geladen…",
+		"loadFailed": "Der Entwurf konnte nicht geladen werden.",
+		"unavailable": "Dieser Entwurf ist nicht mehr verfügbar.",
+		"socRequestsOff": "Fragen an das SOC sind für Ihre Organisation ausgeschaltet.",
+		"status": {
+			"submitting": "Wird an das SOC gesendet…",
+			"submitted": "An das SOC gesendet",
+			"discarded": "Verworfen",
+			"expired": "Dieser Entwurf ist abgelaufen"
+		},
+		"submittedText": "Das SOC hat Ihre Frage erhalten (Anfrage #{id}). Die Antwort erscheint in den Kommentaren des Alarms oder Falls.",
+		"submittedNoId": "Das SOC hat Ihre Frage erhalten. Die Antwort erscheint in den Kommentaren des Alarms oder Falls.",
+		"refresh": "Erneut prüfen"
+	},
+	"analysisOffer": {
+		"title": "KI-Analyse",
+		"text": "Talon schlägt eine KI-Analyse von Alarm #{id} vor.",
+		"openAlert": "Alarm öffnen",
+		"loadFailed": "Es konnte nicht geprüft werden, ob eine Analyse möglich ist.",
+		"notAllowed": "Eine KI-Analyse ist für diesen Alarm nicht verfügbar.",
+		"requested": "Die Analyse wurde angefordert. Ihr Bericht erscheint im Tab KI-Bericht des Alarms."
+	},
+	"errors": {
+		"invalid_request": "Talon konnte die Anfrage nicht lesen.",
+		"invalid_headers": "Talon konnte Ihre Identität nicht prüfen. Bitte melden Sie sich erneut an.",
+		"not_portal_role": "Talon fragen ist nur für Portalbenutzer.",
+		"portal_role_refused": "Dies ist im Portal nicht verfügbar.",
+		"customer_not_accessible": "Sie haben keinen Zugriff auf diese Organisation.",
+		"portal_off": "Talon fragen ist für diese Organisation ausgeschaltet.",
+		"settings_unavailable": "Die Einstellungen von Talon fragen können gerade nicht gelesen werden. Versuchen Sie es gleich noch einmal.",
+		"thread_not_found": "Diese Unterhaltung wurde nicht gefunden.",
+		"thread_archived": "Diese Unterhaltung ist geschlossen.",
+		"access_removed": "Ihr Zugriff auf die Organisation dieser Unterhaltung wurde entfernt.",
+		"thread_limit": "Sie haben zu viele offene Unterhaltungen. Schließen Sie zuerst eine.",
+		"new_thread_limit": "Sie haben heute zu viele neue Unterhaltungen begonnen. Versuchen Sie es morgen wieder.",
+		"alert_not_found": "Der Alarm wurde nicht gefunden.",
+		"body_too_large": "Die Nachricht ist zu groß.",
+		"message_too_long": "Die Nachricht ist zu lang.",
+		"busy_thread": "In dieser Unterhaltung wird noch eine Antwort geschrieben.",
+		"busy_user": "Für Sie wird bereits eine Antwort geschrieben. Warten Sie, bis sie fertig ist.",
+		"busy": "Talon ist ausgelastet. Versuchen Sie es gleich noch einmal.",
+		"turn_limit": "Die Antwort hat ihr Limit erreicht. Stellen Sie eine engere Frage.",
+		"timeout": "Die Antwort hat zu lange gedauert. Versuchen Sie es erneut.",
+		"budget_customer": "Talon hat sein Nutzungslimit für Ihre Organisation erreicht. Versuchen Sie es später wieder.",
+		"budget_portal": "Talon fragen hat sein Tageslimit für Ihre Organisation erreicht. Versuchen Sie es morgen wieder.",
+		"budget_portal_user": "Sie haben Ihr Tageslimit für Talon fragen erreicht. Versuchen Sie es morgen wieder.",
+		"messages_customer": "Ihre Organisation hat die tägliche Anzahl an Nachrichten an Talon erreicht.",
+		"messages_user": "Sie haben Ihre tägliche Anzahl an Nachrichten an Talon erreicht.",
+		"budget_unavailable": "Talon kann seine Nutzungslimits gerade nicht prüfen. Versuchen Sie es gleich noch einmal.",
+		"failed": "Talon konnte nicht antworten. Versuchen Sie es erneut.",
+		"draft_not_found": "Dieser Entwurf wurde nicht gefunden.",
+		"draft_expired": "Dieser Entwurf ist abgelaufen.",
+		"draft_conflict": "Dieser Entwurf wurde bereits gesendet oder verworfen.",
+		"read_only": "Ihr Konto kann die Daten dieser Organisation ansehen, aber nicht ändern.",
+		"soc_requests_off": "Fragen an das SOC sind für Ihre Organisation ausgeschaltet.",
+		"soc_request_limit": "Die tägliche Anzahl an Fragen an das SOC ist erreicht.",
+		"soc_request_cooldown": "Zu diesem Thema wurde gerade eine Frage gesendet. Versuchen Sie es in ein paar Minuten wieder.",
+		"invalid_question": "Die Frage kann so nicht gesendet werden. Prüfen Sie sie und versuchen Sie es erneut.",
+		"not_found": "Der Alarm oder Fall wurde nicht gefunden.",
+		"internal_failure": "Die Frage konnte nicht gesendet werden. Versuchen Sie es erneut.",
+		"stream_closed": "Die Verbindung zu Talon wurde getrennt, bevor die Antwort fertig war.",
+		"network": "Talon war nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+		"unknown": "Etwas ist schiefgelaufen. Versuchen Sie es erneut."
+	}
+}

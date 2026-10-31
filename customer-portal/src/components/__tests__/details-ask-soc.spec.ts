@@ -33,7 +33,9 @@ const CHILDREN = [
 	"CaseTimeline",
 	"CaseFiles",
 	"CaseComments",
-	"AskSoc"
+	"AskSoc",
+	// Ask Talon about this alert (talon-analyst D97) has its own spec.
+	"TalonAskAboutAlert"
 ]
 const stubs = Object.fromEntries(CHILDREN.map(name => [name, stub(name)]))
 

@@ -23,9 +23,15 @@ describe("navbar items", () => {
 		expect(keys({ sla: true, activity: true })).not.toContain("Exposure")
 	})
 
+	it("offers Ask Talon only when its availability says so (talon-analyst D97)", () => {
+		expect(keys()).not.toContain("TalonChat")
+		expect(keys({ talonChat: true })).toContain("TalonChat")
+		expect(keys({ exposure: true, activity: true, sla: true })).not.toContain("TalonChat")
+	})
+
 	it("puts Exposure, Activity and Service Levels last, in that order", () => {
-		const all = keys({ exposure: true, activity: true, sla: true })
-		expect(all.slice(-3)).toEqual(["Exposure", "Activity", "Sla"])
+		const all = keys({ exposure: true, activity: true, sla: true, talonChat: true })
+		expect(all.slice(-4)).toEqual(["TalonChat", "Exposure", "Activity", "Sla"])
 		expect(all[0]).toBe("Overview")
 		expect(keys({ activity: true, sla: true }).slice(-2)).toEqual(["Activity", "Sla"])
 	})

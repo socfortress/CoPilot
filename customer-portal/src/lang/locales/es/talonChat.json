@@ -1,0 +1,158 @@
+{
+	"page": {
+		"title": "Preguntar a Talon",
+		"intro": "Pregunta a Talon, el analista de IA del SOC, sobre tus alertas, sus informes de IA y tus activos.",
+		"reviewNotice": "Tu SOC puede revisar las conversaciones.",
+		"noActionsNotice": "Talon no puede realizar acciones. Responde preguntas y puede redactar una pregunta para tu SOC que tú mismo envías.",
+		"unavailableTitle": "Preguntar a Talon no está disponible",
+		"unavailableText": "Tu SOC no ha activado Preguntar a Talon para tu organización."
+	},
+	"threads": {
+		"title": "Conversaciones",
+		"new": "Nueva conversación",
+		"empty": "Aún no hay conversaciones.",
+		"loadMore": "Mostrar más",
+		"loadFailed": "No se pudieron cargar las conversaciones.",
+		"untitled": "Conversación del {date}",
+		"aboutAlert": "Alerta #{id}",
+		"notAccessible": "No disponible",
+		"archive": "Cerrar conversación",
+		"archiveConfirm": "¿Cerrar esta conversación? Saldrá de tu lista.",
+		"archived": "Conversación cerrada"
+	},
+	"newThread": {
+		"title": "Nueva conversación",
+		"customerLabel": "Organización",
+		"customerPlaceholder": "Elige una organización",
+		"noCustomers": "Preguntar a Talon no está activado para ninguna de tus organizaciones.",
+		"start": "Empezar",
+		"cancel": "Cancelar"
+	},
+	"askAboutAlert": {
+		"button": "Preguntar a Talon sobre esta alerta"
+	},
+	"conversation": {
+		"empty": "Haz una pregunta para empezar.",
+		"loadEarlier": "Mostrar mensajes anteriores",
+		"placeholder": "Pregunta a Talon sobre tus alertas, informes o activos",
+		"inputLabel": "Tu mensaje para Talon",
+		"send": "Enviar",
+		"thinking": "Talon está respondiendo…",
+		"tooLong": "El mensaje no puede superar los {max} caracteres",
+		"cutOff": "Esta respuesta se interrumpió antes de terminar.",
+		"you": "Tú",
+		"talon": "Talon",
+		"aboutAlert": "Sobre la alerta #{id}",
+		"notAccessible": "Esta conversación ya no está disponible. Aún puedes cerrarla."
+	},
+	"checked": {
+		"line": "Revisado: {items}",
+		"kinds": {
+			"alert": "la alerta | {count} alertas",
+			"alert_list": "tu lista de alertas | tu lista de alertas ({count} veces)",
+			"report": "el informe de IA | {count} informes de IA",
+			"assets": "tus activos | tus activos ({count} veces)",
+			"event_search": "1 búsqueda de eventos | {count} búsquedas de eventos",
+			"event": "1 evento | {count} eventos",
+			"earlier_result": "un resultado anterior | {count} resultados anteriores",
+			"soc_draft": "1 pregunta para tu SOC | {count} preguntas para tu SOC",
+			"analysis_offer": "1 propuesta de análisis de IA | {count} propuestas de análisis de IA"
+		},
+		"intel": {
+			"ip": "1 dirección IP | {count} direcciones IP",
+			"domain": "1 dominio | {count} dominios",
+			"url": "1 URL | {count} URL",
+			"hash": "1 hash de archivo | {count} hashes de archivo",
+			"cve": "1 vulnerabilidad (CVE) | {count} vulnerabilidades (CVE)",
+			"technique": "1 técnica de ataque | {count} técnicas de ataque",
+			"opencti_object": "1 registro de inteligencia de amenazas | {count} registros de inteligencia de amenazas",
+			"other": "1 consulta de inteligencia de amenazas | {count} consultas de inteligencia de amenazas"
+		}
+	},
+	"feedback": {
+		"up": "Útil",
+		"down": "No es útil",
+		"failed": "No se pudo guardar tu valoración."
+	},
+	"draft": {
+		"title": "Pregunta para tu SOC",
+		"intro": "Talon redactó esta pregunta. Revísala, elige su urgencia y envíala si quieres que el SOC lo investigue.",
+		"aboutAlert": "Sobre la alerta #{id}",
+		"aboutCase": "Sobre el caso #{id}",
+		"questionLabel": "La pregunta para el SOC",
+		"urgencyLegend": "¿Qué tan urgente es?",
+		"urgencyRequired": "Elige la urgencia",
+		"fileOnLegend": "¿Dónde debe ir?",
+		"fileOn": {
+			"case": "En el caso de la alerta",
+			"caseHint": "Se añade al caso que contiene esta alerta, o a un caso nuevo abierto a partir de ella",
+			"alert": "Solo en esta alerta",
+			"alertHint": "Un comentario en la alerta, sin caso"
+		},
+		"submit": "Enviar al SOC",
+		"discard": "Descartar",
+		"loading": "Cargando el borrador…",
+		"loadFailed": "No se pudo cargar el borrador.",
+		"unavailable": "Este borrador ya no está disponible.",
+		"socRequestsOff": "Las preguntas al SOC están desactivadas para tu organización.",
+		"status": {
+			"submitting": "Enviando al SOC…",
+			"submitted": "Enviada al SOC",
+			"discarded": "Descartada",
+			"expired": "Este borrador caducó"
+		},
+		"submittedText": "El SOC tiene tu pregunta (solicitud #{id}). Su respuesta aparece en los comentarios de la alerta o del caso.",
+		"submittedNoId": "El SOC tiene tu pregunta. Su respuesta aparece en los comentarios de la alerta o del caso.",
+		"refresh": "Comprobar de nuevo"
+	},
+	"analysisOffer": {
+		"title": "Análisis de IA",
+		"text": "Talon sugiere un análisis de IA de la alerta #{id}.",
+		"openAlert": "Abrir la alerta",
+		"loadFailed": "No se pudo comprobar si se puede ejecutar un análisis.",
+		"notAllowed": "El análisis de IA no está disponible para esta alerta.",
+		"requested": "Se solicitó el análisis. Su informe aparece en la pestaña Informe de IA de la alerta."
+	},
+	"errors": {
+		"invalid_request": "Talon no pudo leer la solicitud.",
+		"invalid_headers": "Talon no pudo comprobar quién eres. Vuelve a iniciar sesión.",
+		"not_portal_role": "Preguntar a Talon es solo para usuarios del portal.",
+		"portal_role_refused": "Esto no está disponible en el portal.",
+		"customer_not_accessible": "No tienes acceso a esta organización.",
+		"portal_off": "Preguntar a Talon está desactivado para esta organización.",
+		"settings_unavailable": "No se pueden leer los ajustes de Preguntar a Talon en este momento. Inténtalo de nuevo en breve.",
+		"thread_not_found": "No se encontró esta conversación.",
+		"thread_archived": "Esta conversación está cerrada.",
+		"access_removed": "Se retiró tu acceso a la organización de esta conversación.",
+		"thread_limit": "Tienes demasiadas conversaciones abiertas. Cierra una primero.",
+		"new_thread_limit": "Hoy empezaste demasiadas conversaciones nuevas. Inténtalo mañana.",
+		"alert_not_found": "No se encontró la alerta.",
+		"body_too_large": "El mensaje es demasiado grande.",
+		"message_too_long": "El mensaje es demasiado largo.",
+		"busy_thread": "Todavía se está escribiendo una respuesta en esta conversación.",
+		"busy_user": "Ya se está escribiendo una respuesta para ti. Espera a que termine.",
+		"busy": "Talon está ocupado. Inténtalo de nuevo en breve.",
+		"turn_limit": "La respuesta alcanzó su límite. Prueba con una pregunta más concreta.",
+		"timeout": "La respuesta tardó demasiado. Inténtalo de nuevo.",
+		"budget_customer": "Talon alcanzó su límite de uso para tu organización. Inténtalo más tarde.",
+		"budget_portal": "Preguntar a Talon alcanzó su límite diario para tu organización. Inténtalo mañana.",
+		"budget_portal_user": "Alcanzaste tu límite diario de Preguntar a Talon. Inténtalo mañana.",
+		"messages_customer": "Tu organización alcanzó su número diario de mensajes a Talon.",
+		"messages_user": "Alcanzaste tu número diario de mensajes a Talon.",
+		"budget_unavailable": "Talon no puede comprobar sus límites de uso en este momento. Inténtalo de nuevo en breve.",
+		"failed": "Talon no pudo responder. Inténtalo de nuevo.",
+		"draft_not_found": "No se encontró este borrador.",
+		"draft_expired": "Este borrador caducó.",
+		"draft_conflict": "Este borrador ya se envió o se descartó.",
+		"read_only": "Tu cuenta puede ver los datos de esta organización, pero no modificarlos.",
+		"soc_requests_off": "Las preguntas al SOC están desactivadas para tu organización.",
+		"soc_request_limit": "Se alcanzó el número diario de preguntas al SOC.",
+		"soc_request_cooldown": "Se acaba de enviar una pregunta sobre esto. Inténtalo de nuevo en unos minutos.",
+		"invalid_question": "La pregunta no se puede enviar tal como está. Revísala e inténtalo de nuevo.",
+		"not_found": "No se encontró la alerta o el caso.",
+		"internal_failure": "No se pudo enviar la pregunta. Inténtalo de nuevo.",
+		"stream_closed": "La conexión con Talon se cerró antes de que terminara la respuesta.",
+		"network": "No se pudo contactar con Talon. Revisa tu conexión e inténtalo de nuevo.",
+		"unknown": "Algo salió mal. Inténtalo de nuevo."
+	}
+}

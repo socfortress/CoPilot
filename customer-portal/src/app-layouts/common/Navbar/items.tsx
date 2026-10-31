@@ -12,13 +12,16 @@ export interface NavbarFeatures {
 	activity?: boolean
 	/** The Exposure page is on for one of the user's customers (#1289). */
 	exposure?: boolean
+	/** "Ask Talon" is on for one of the user's customers (talon-analyst D97). */
+	talonChat?: boolean
 }
 
 // Labels are translated as the menu renders them (#1310), so they follow a language change.
 export default function getItems({
 	sla = false,
 	activity = false,
-	exposure = false
+	exposure = false,
+	talonChat = false
 }: NavbarFeatures = {}): MenuMixedOption[] {
 	const items: MenuMixedOption[] = [
 		{
@@ -120,6 +123,19 @@ export default function getItems({
 			icon: renderIcon(ICONS.processes)
 		}
 	]
+
+	if (talonChat) {
+		items.push({
+			label: () =>
+				h(
+					RouterLink,
+					{ to: { name: "TalonChat" }, "data-testid": "nav-talon-chat" },
+					{ default: () => i18nGlobal.t("navigation.routes.talonChat") }
+				),
+			key: "TalonChat",
+			icon: renderIcon(ICONS.chatbot)
+		})
+	}
 
 	if (exposure) {
 		items.push({
