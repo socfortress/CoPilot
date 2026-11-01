@@ -1,212 +1,276 @@
 <template>
-	<n-tabs v-model:value="mainTab" type="line" animated :tabs-padding="24" class="h-full">
-		<n-tab-pane name="Customer" tab="Customer" display-directive="show" class="pt-0!">
-			<n-tabs
-				v-model:value="customerSubTab"
-				type="line"
-				animated
-				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
-				:placement="subTabsPlacement"
-				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
-			>
-				<n-tab-pane name="Info" tab="Info" display-directive="show:lazy" class="p-4!">
-					<CustomerInfo
-						v-if="customerInfo"
-						v-model:loading="loadingDeleteModel"
-						:customer="customerInfo"
-						@delete="emit('delete')"
-						@submitted="emit('update:customerInfo', $event)"
-					/>
-				</n-tab-pane>
-				<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy" class="p-4!">
-					<CustomerProvision
-						:customer-meta
-						:customer-code="customer.customer_code"
-						:customer-name="customer.customer_name"
-						@delete="emit('update:customerMeta', null)"
-						@submitted="emit('update:customerMeta', $event)"
-					/>
-				</n-tab-pane>
-				<n-tab-pane
-					name="3rd Party Integrations"
-					tab="3rd Party Integrations"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
-					<CustomerIntegrations
-						:customer-code="customer.customer_code"
-						:customer-name="customer.customer_name"
-					/>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Network Connectors"
-					tab="Network Connectors"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
-					<CustomerNetworkConnectors
-						:customer-code="customer.customer_code"
-						:customer-name="customer.customer_name"
-					/>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Notification Workflows"
-					tab="Notification Workflows"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
-					<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="AI Triggers" tab="AI Triggers" display-directive="show:lazy" class="p-4!">
-					<CustomerAITriggers :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<!-- Talon's automation policy (talon-analyst D85, AP-2): admins only, behind "Talon v2" (D54). -->
-				<n-tab-pane
-					v-if="showAutomation"
-					name="AI Automation"
-					tab="AI Automation"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
-					<CustomerTalonAutomation :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane
-					name="Notifications"
-					tab="Notifications"
-					display-directive="show:lazy"
-					class="overflow-hidden p-4!"
-				>
-					<CustomerAiNotifications :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Event Sources" tab="Event Sources" display-directive="show:lazy" class="p-4!">
-					<CustomerEventSources :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Reporting" tab="Reporting" display-directive="show:lazy" class="p-4!">
-					<CustomerReporting :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Portal Branding" tab="Portal Branding" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalBranding :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="WAF" tab="WAF" display-directive="show:lazy" class="p-4!">
-					<CustomerWaf :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="AI Report" tab="AI Report" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalAiReport :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="SLA" tab="SLA" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalSla :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Activity" tab="Activity" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalActivity :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane
-					name="Portal Notifications"
-					tab="Portal Notifications"
-					display-directive="show:lazy"
-					class="p-4!"
-				>
-					<CustomerPortalNotifications :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Exposure" tab="Exposure" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalExposure :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Audit Log" tab="Audit Log" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalAudit :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Portal Languages" tab="Portal Languages" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalLanguages :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="Ask the SOC" tab="Ask the SOC" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalAskSoc :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane name="IOC Enrichment" tab="IOC Enrichment" display-directive="show:lazy" class="p-4!">
-					<CustomerPortalIocEnrichment :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane v-if="isAdmin" name="Security" tab="Security" display-directive="show:lazy" class="p-4!">
-					<CustomerSecurity :customer-code="customer.customer_code" />
-				</n-tab-pane>
+	<div ref="root" class="customer-sections" data-testid="customer-sections">
+		<CustomerSectionsBar
+			:groups
+			:sections="visible"
+			:current
+			:status
+			:pinned
+			@select="open"
+			@open-group="openGroup"
+			@toggle-pin="togglePin"
+		/>
 
-				<template #suffix><div class="h-4 w-full"></div></template>
-			</n-tabs>
-		</n-tab-pane>
+		<div class="sections-body">
+			<CustomerSectionsRail
+				v-if="currentGroup && (!railHidden || narrow)"
+				:group="currentGroup"
+				:current
+				:status
+				@select="open"
+				@hide="setRailHidden(true)"
+			/>
 
-		<n-tab-pane name="Agents" tab="Agents" display-directive="show" class="pt-0!">
-			<n-tabs
-				type="line"
-				animated
-				:tabs-padding="24"
-				class="[&_.n-tabs-nav]:bg-secondary z-20 h-full [&_.n-tabs-nav]:relative [&_.n-tabs-nav]:z-2"
-				:placement="subTabsPlacement"
-				:pane-style="{ minHeight: 'min(450px, 90vh)' }"
-			>
-				<n-tab-pane name="Agents" tab="Agents list" display-directive="show" class="p-4! pr-0!">
-					<n-scrollbar trigger="none" :class="scrollbarClass">
-						<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
-					</n-scrollbar>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Deploy Agent"
-					tab="Deploy Agent"
-					display-directive="show:lazy"
-					class="overflow-hidden p-4!"
-				>
-					<CustomerEdrInstall :customer-code="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane
-					name="Healthcheck Wazuh"
-					tab="Healthcheck Wazuh"
-					display-directive="show:lazy"
-					class="p-4! pr-0!"
-				>
-					<n-scrollbar trigger="none" :class="scrollbarClass">
-						<CustomerHealthcheckList
-							v-model:filters="healthcheckFilters"
-							source="wazuh"
-							:customer-code="customer.customer_code"
+			<div class="sections-main">
+				<div class="sections-toolbar" data-testid="section-toolbar">
+					<n-button
+						v-if="railHidden && !narrow"
+						size="small"
+						secondary
+						data-testid="rail-show"
+						@click="setRailHidden(false)"
+					>
+						<template #icon><Icon name="carbon:side-panel-open" :size="14" /></template>
+						Show sections
+					</n-button>
+					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+						<span v-for="part of currentPath" :key="part" class="toolbar-path">
+							{{ part }}
+							<Icon name="carbon:chevron-right" :size="11" />
+						</span>
+						<span class="truncate text-sm font-semibold">{{ currentSection.label }}</span>
+						<span v-if="currentState?.kind === 'switch'" class="toolbar-state" data-testid="section-state">
+							<SectionMark :state="currentState" with-word />
+						</span>
+					</div>
+					<n-button
+						size="small"
+						:secondary="!isPinned(current)"
+						:type="isPinned(current) ? 'primary' : 'default'"
+						:ghost="isPinned(current)"
+						:aria-pressed="isPinned(current)"
+						data-testid="section-pin"
+						@click="togglePin(current)"
+					>
+						<template #icon>
+							<Icon :name="isPinned(current) ? 'carbon:pin-filled' : 'carbon:pin'" :size="14" />
+						</template>
+						{{ isPinned(current) ? "Pinned" : "Pin" }}
+					</n-button>
+				</div>
+
+				<div class="sections-panes" :style="{ minHeight: 'min(450px, 90vh)' }">
+					<section v-if="wasOpened('Info')" v-show="current === 'Info'" v-bind="pane('Info')">
+						<CustomerInfo
+							v-if="customerInfo"
+							v-model:loading="loadingDeleteModel"
+							:customer="customerInfo"
+							@delete="emit('delete')"
+							@submitted="emit('update:customerInfo', $event)"
 						/>
-					</n-scrollbar>
-				</n-tab-pane>
-				<n-tab-pane
-					name="Healthcheck Velociraptor"
-					tab="Healthcheck Velociraptor"
-					display-directive="show:lazy"
-					class="p-4! pr-0!"
-				>
-					<n-scrollbar trigger="none" :class="scrollbarClass">
-						<CustomerHealthcheckList
-							v-model:filters="healthcheckFilters"
-							source="velociraptor"
+					</section>
+					<section v-if="wasOpened('Provision')" v-show="current === 'Provision'" v-bind="pane('Provision')">
+						<CustomerProvision
+							:customer-meta
 							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
+							@delete="emit('update:customerMeta', null)"
+							@submitted="emit('update:customerMeta', $event)"
 						/>
-					</n-scrollbar>
-				</n-tab-pane>
+					</section>
+					<section v-if="wasOpened('Security')" v-show="current === 'Security'" v-bind="pane('Security')">
+						<CustomerSecurity :customer-code="customer.customer_code" />
+					</section>
 
-				<template #suffix><div class="h-4 w-full"></div></template>
-			</n-tabs>
-		</n-tab-pane>
+					<section v-if="wasOpened('Agents')" v-show="current === 'Agents'" v-bind="pane('Agents', 'pr-0!')">
+						<n-scrollbar trigger="none" :class="scrollbarClass">
+							<CustomerAgents v-if="customerInfo" :customer="customerInfo" />
+						</n-scrollbar>
+					</section>
+					<section
+						v-if="wasOpened('Deploy Agent')"
+						v-show="current === 'Deploy Agent'"
+						v-bind="pane('Deploy Agent', 'overflow-hidden')"
+					>
+						<CustomerEdrInstall :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Healthcheck Wazuh')"
+						v-show="current === 'Healthcheck Wazuh'"
+						v-bind="pane('Healthcheck Wazuh', 'pr-0!')"
+					>
+						<n-scrollbar trigger="none" :class="scrollbarClass">
+							<CustomerHealthcheckList
+								v-model:filters="healthcheckFilters"
+								source="wazuh"
+								:customer-code="customer.customer_code"
+							/>
+						</n-scrollbar>
+					</section>
+					<section
+						v-if="wasOpened('Healthcheck Velociraptor')"
+						v-show="current === 'Healthcheck Velociraptor'"
+						v-bind="pane('Healthcheck Velociraptor', 'pr-0!')"
+					>
+						<n-scrollbar trigger="none" :class="scrollbarClass">
+							<CustomerHealthcheckList
+								v-model:filters="healthcheckFilters"
+								source="velociraptor"
+								:customer-code="customer.customer_code"
+							/>
+						</n-scrollbar>
+					</section>
+					<section
+						v-if="wasOpened('Wazuh Worker') && customerPortainerStackId !== null"
+						v-show="current === 'Wazuh Worker'"
+						v-bind="pane('Wazuh Worker')"
+					>
+						<CustomerWazuhWorker :stack-id="customerPortainerStackId" />
+					</section>
 
-		<n-tab-pane
-			v-if="customerPortainerStackId !== null"
-			name="Wazuh Worker"
-			tab="Wazuh Worker"
-			display-directive="show"
-			class="p-4!"
-		>
-			<CustomerWazuhWorker :stack-id="customerPortainerStackId" />
-		</n-tab-pane>
-	</n-tabs>
+					<section
+						v-if="wasOpened('3rd Party Integrations')"
+						v-show="current === '3rd Party Integrations'"
+						v-bind="pane('3rd Party Integrations')"
+					>
+						<CustomerIntegrations
+							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
+						/>
+					</section>
+					<section
+						v-if="wasOpened('Network Connectors')"
+						v-show="current === 'Network Connectors'"
+						v-bind="pane('Network Connectors')"
+					>
+						<CustomerNetworkConnectors
+							:customer-code="customer.customer_code"
+							:customer-name="customer.customer_name"
+						/>
+					</section>
+					<section
+						v-if="wasOpened('Event Sources')"
+						v-show="current === 'Event Sources'"
+						v-bind="pane('Event Sources')"
+					>
+						<CustomerEventSources :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('WAF')" v-show="current === 'WAF'" v-bind="pane('WAF')">
+						<CustomerWaf :customer-code="customer.customer_code" />
+					</section>
+
+					<section v-if="wasOpened('AI Triggers')" v-show="current === 'AI Triggers'" v-bind="pane('AI Triggers')">
+						<CustomerAITriggers :customer-code="customer.customer_code" />
+					</section>
+					<!-- Talon's automation policy (talon-analyst D85, AP-2): admins only, behind "Talon v2" (D54). -->
+					<section
+						v-if="wasOpened('AI Automation') && showAutomation"
+						v-show="current === 'AI Automation'"
+						v-bind="pane('AI Automation')"
+					>
+						<CustomerTalonAutomation :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Notification Workflows')"
+						v-show="current === 'Notification Workflows'"
+						v-bind="pane('Notification Workflows')"
+					>
+						<CustomerNotificationsWorkflows :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Notifications')"
+						v-show="current === 'Notifications'"
+						v-bind="pane('Notifications', 'overflow-hidden')"
+					>
+						<CustomerAiNotifications :customer-code="customer.customer_code" />
+					</section>
+
+					<section v-if="wasOpened('Reporting')" v-show="current === 'Reporting'" v-bind="pane('Reporting')">
+						<CustomerReporting :customer-code="customer.customer_code" />
+					</section>
+
+					<section
+						v-if="wasOpened('Portal Branding')"
+						v-show="current === 'Portal Branding'"
+						v-bind="pane('Portal Branding')"
+					>
+						<CustomerPortalBranding :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Portal Languages')"
+						v-show="current === 'Portal Languages'"
+						v-bind="pane('Portal Languages')"
+					>
+						<CustomerPortalLanguages :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('SLA')" v-show="current === 'SLA'" v-bind="pane('SLA')">
+						<CustomerPortalSla :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('Activity')" v-show="current === 'Activity'" v-bind="pane('Activity')">
+						<CustomerPortalActivity :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('Exposure')" v-show="current === 'Exposure'" v-bind="pane('Exposure')">
+						<CustomerPortalExposure :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('Audit Log')" v-show="current === 'Audit Log'" v-bind="pane('Audit Log')">
+						<CustomerPortalAudit :customer-code="customer.customer_code" />
+					</section>
+					<section v-if="wasOpened('AI Report')" v-show="current === 'AI Report'" v-bind="pane('AI Report')">
+						<CustomerPortalAiReport :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Ask the SOC')"
+						v-show="current === 'Ask the SOC'"
+						v-bind="pane('Ask the SOC')"
+					>
+						<CustomerPortalAskSoc :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('IOC Enrichment')"
+						v-show="current === 'IOC Enrichment'"
+						v-bind="pane('IOC Enrichment')"
+					>
+						<CustomerPortalIocEnrichment :customer-code="customer.customer_code" />
+					</section>
+					<section
+						v-if="wasOpened('Portal Notifications')"
+						v-show="current === 'Portal Notifications'"
+						v-bind="pane('Portal Notifications')"
+					>
+						<CustomerPortalNotifications :customer-code="customer.customer_code" />
+					</section>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
+import type { GroupId, SectionId } from "./sections/sections"
 import type { Customer, CustomerMeta } from "@/types/customers"
-import { useMediaQuery } from "@vueuse/core"
-import { NScrollbar, NTabPane, NTabs } from "naive-ui"
-import { computed, defineAsyncComponent, ref, watch } from "vue"
+import { useElementSize } from "@vueuse/core"
+import { NButton, NScrollbar } from "naive-ui"
+import { computed, defineAsyncComponent, inject, ref, useTemplateRef, watch } from "vue"
+import { routeLocationKey, routerKey } from "vue-router"
+import Icon from "@/components/common/Icon.vue"
 import { useCustomerHealthcheckFilters } from "@/composables/useCustomerHealthcheckFilters"
 import { useRouteQueryParam } from "@/composables/useNavigation"
 import { useTalonV2AvailabilityWhen } from "@/composables/useTalonV2Gate"
 import { useAuthStore } from "@/stores/auth"
+import CustomerSectionsBar from "./sections/CustomerSectionsBar.vue"
+import CustomerSectionsRail from "./sections/CustomerSectionsRail.vue"
+import SectionMark from "./sections/SectionMark.vue"
+import {
+	DEFAULT_SECTION,
+	groupViews,
+	sectionById,
+	sectionPath,
+	sectionState,
+	tabToSection,
+	visibleSections
+} from "./sections/sections"
+import { useSectionPreferences } from "./sections/useSectionPreferences"
+import { useSectionStatus } from "./sections/useSectionStatus"
 
 const props = defineProps<{
 	customer: Customer
@@ -271,7 +335,7 @@ const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWo
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
 
 const isAdmin = computed(() => useAuthStore().isAdmin)
-// The AI Automation tab: an admin's, behind "Talon v2" (D54). No one else asks for availability.
+// The AI Automation section: an admin's, behind "Talon v2" (D54). No one else asks for availability.
 const { available: talonV2Available } = useTalonV2AvailabilityWhen(isAdmin)
 const showAutomation = computed(() => isAdmin.value && talonV2Available.value)
 
@@ -282,53 +346,165 @@ const loadingDeleteModel = computed({
 
 const scrollbarClass = computed(() => (props.useMaxHeight ? "max-h-117.5 pr-4" : undefined))
 
-// Below the theme's mobile breakpoint a side rail of sub-tabs takes half the screen and clips the
-// pane: the sub-tabs move on top, where they scroll sideways.
-const narrow = useMediaQuery("(max-width: 700px)")
-const subTabsPlacement = computed(() => (narrow.value ? "top" : "left"))
+// Up to 700 px of its own width (a phone, a narrow modal) the rail becomes a row of the group's
+// sections, on top, and can't be hidden. Measured on the component, as its container queries are.
+const root = useTemplateRef<HTMLElement>("root")
+const { width } = useElementSize(root)
+const narrow = computed(() => width.value > 0 && width.value <= 700)
 
-const CUSTOMER_SUB_TABS = new Set([
-	"Info",
-	"Provision",
-	"3rd Party Integrations",
-	"Network Connectors",
-	"Notification Workflows",
-	"AI Triggers",
-	"AI Automation",
-	"Notifications",
-	"Event Sources",
-	"Reporting",
-	"Portal Branding",
-	"WAF",
-	"AI Report",
-	"SLA",
-	"Activity",
-	"Portal Notifications",
-	"Exposure",
-	"Audit Log",
-	"Portal Languages",
-	"Ask the SOC",
-	"IOC Enrichment",
-	"Security"
-])
+// ── which sections, grouped ─────────────────────────────────────────────────
 
-const MAIN_TABS = new Set(["Customer", "Agents", "Wazuh Worker"])
+const visible = computed(() =>
+	visibleSections({
+		admin: isAdmin.value,
+		automation: showAutomation.value,
+		wazuhWorker: props.customerPortainerStackId !== null
+	})
+)
+const groups = computed(() => groupViews(visible.value))
+
+// ── which one is open ───────────────────────────────────────────────────────
+
+// What the viewer (or the link) asked for. Kept when it isn't shown yet: the AI Automation
+// section appears once Talon v2's availability answers, and a link to it then opens it.
+const requested = ref<SectionId>(DEFAULT_SECTION)
+const current = computed<SectionId>(() =>
+	visible.value.some(section => section.id === requested.value) ? requested.value : DEFAULT_SECTION
+)
+const currentSection = computed(() => sectionById(current.value))
+const currentGroup = computed(() => groups.value.find(group => group.id === currentSection.value.group) ?? null)
+const currentPath = computed(() => sectionPath(currentSection.value))
 
 const tabQuery = useRouteQueryParam("tab")
-const mainTab = ref("Customer")
-const customerSubTab = ref("Info")
-
 watch(
 	tabQuery,
 	tab => {
-		if (!tab) return
-		if (CUSTOMER_SUB_TABS.has(tab)) {
-			mainTab.value = "Customer"
-			customerSubTab.value = tab
-		} else if (MAIN_TABS.has(tab)) {
-			mainTab.value = tab
-		}
+		const section = tabToSection(tab)
+		if (section) requested.value = section
 	},
 	{ immediate: true }
 )
+
+// On the customer's own page the open section is in the URL (`?tab=`), so a reload or a shared
+// link opens it again. In a modal the page behind it keeps its URL.
+const router = inject(routerKey, null)
+const route = inject(routeLocationKey, null)
+
+function writeTab(id: SectionId) {
+	if (!router || route?.name !== "Customer") return
+	const tab = id === DEFAULT_SECTION ? undefined : id
+	if ((route.query.tab ?? undefined) === tab) return
+	void router.replace({ query: { ...route.query, tab } })
+}
+
+const lastInGroup = new Map<GroupId, SectionId>()
+
+function open(id: SectionId) {
+	requested.value = id
+	writeTab(id)
+}
+
+function openGroup(id: GroupId) {
+	const group = groups.value.find(item => item.id === id)
+	if (!group) return
+	const last = lastInGroup.get(id)
+	const target = group.sections.find(section => section.id === last) ?? group.sections[0]
+	if (target) open(target.id)
+}
+
+// Sections mount when first opened and stay mounted, as the tabs did (`show:lazy`): a list keeps
+// its filters and scroll when the viewer comes back to it.
+const visited = ref(new Set<SectionId>())
+
+watch(
+	current,
+	id => {
+		lastInGroup.set(sectionById(id).group, id)
+		if (!visited.value.has(id)) visited.value = new Set([...visited.value, id])
+	},
+	{ immediate: true }
+)
+
+function wasOpened(id: SectionId): boolean {
+	return visited.value.has(id)
+}
+
+function pane(id: SectionId, extra = "") {
+	return {
+		"class": ["p-4!", extra],
+		"aria-label": sectionById(id).label,
+		"data-section": id
+	}
+}
+
+// ── what each section holds ────────────────────────────────────────────────
+
+const { status, refresh } = useSectionStatus(() => props.customer.customer_code)
+const currentState = computed(() => sectionState(currentSection.value, status.value))
+
+// A switch may have moved in the section just left: read the lights again.
+watch(current, (_id, previous) => {
+	if (previous) void refresh()
+})
+
+const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPreferences()
 </script>
+
+<style lang="scss" scoped>
+.customer-sections {
+	container: customer-sections / inline-size;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+
+	.sections-body {
+		display: flex;
+		flex: 1;
+		min-height: 0;
+	}
+
+	.sections-main {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.sections-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-height: 44px;
+		padding: 6px 16px;
+		border-bottom: 1px solid var(--border-color);
+	}
+
+	.toolbar-path {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-family: var(--font-family-mono);
+		font-size: 11px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--fg-secondary-color);
+	}
+
+	.toolbar-state {
+		display: inline-flex;
+		align-items: center;
+		height: 22px;
+		padding: 0 9px;
+		margin-left: 4px;
+		border: 1px solid var(--border-color);
+		border-radius: 11px;
+	}
+
+	@container customer-sections (max-width: 700px) {
+		.sections-body {
+			flex-direction: column;
+		}
+	}
+}
+</style>
