@@ -14,7 +14,11 @@ own status, source, day and tags — see ALERT_ROWS_A in portal_overview_seed.py
      time read in its own offset, a reversed range refused with a 422;
   C) the portal user never sees customer B, even when asking for it by code;
   D) a tag-restricted analyst: the page and `total_filtered` agree (the count used to
-     ignore tag RBAC and count every alert of the customer).
+     ignore tag RBAC and count every alert of the customer);
+  E) severity (#1322): any of several levels, an alert with no severity counted under the
+     deployment default (DEFAULT_ALERT_SEVERITY) as every other read path does, combined
+     with the other criteria, an unknown level refused with a 422. The seed has no
+     severities: SEVERITIES sets them on its alerts here.
 
 Every expectation is computed from the seed's own rows, not written out by hand.
 Exits non-zero when a check fails.
@@ -33,6 +37,7 @@ os.environ.setdefault("JWT_SECRET", "e2e-test-secret-not-the-default")
 import httpx  # noqa: E402
 from sqlalchemy import delete  # noqa: E402
 from sqlalchemy import select  # noqa: E402
+from sqlalchemy import update  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 from app.auth.models.users import User  # noqa: E402
@@ -40,6 +45,7 @@ from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.models.users import UserTagAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.db.db_session import async_engine  # noqa: E402
+from app.incidents.models import Alert  # noqa: E402
 from app.incidents.models import AlertTag  # noqa: E402
 from app.incidents.models import TagAccessSettings  # noqa: E402
 from tests.e2e.customer_portal_overview_e2e import build_app  # noqa: E402
@@ -49,11 +55,16 @@ from tests.e2e.portal_overview_seed import PASSWORD  # noqa: E402
 from tests.e2e.portal_overview_seed import PORTAL_USER  # noqa: E402
 from tests.e2e.portal_overview_seed import TAG_PHISHING  # noqa: E402
 from tests.e2e.portal_overview_seed import TAG_VIP  # noqa: E402
+from tests.e2e.portal_overview_seed import alert_name  # noqa: E402
 from tests.e2e.portal_overview_seed import alert_rows  # noqa: E402
 from tests.e2e.portal_overview_seed import cleanup  # noqa: E402
 from tests.e2e.portal_overview_seed import seed  # noqa: E402
 
 TAG_ANALYST = "e2e_ov_tag_analyst"
+
+# Stored severities by alert index: None is "the source gave none" (NULL), which reads as
+# the deployment default. B's Critical alert must never reach A's portal user.
+SEVERITIES = {CUST_A: ["Critical", "High", None, "Low", None, "Medium"], CUST_B: ["Critical"]}
 
 results = []
 
@@ -63,12 +74,33 @@ def check(name, passed, detail=""):
     print(f"  {'PASS' if passed else 'FAIL'}  {name}" + (f"  [{detail}]" if detail else ""))
 
 
-def expected(rows, title=None, status=None, source=None, asset=None, tags=None, day_from=None, day_to=None):
+def effective_severity(name, default):
+    """What ``severity_of`` reads for a seeded alert: its stored level, else the default."""
+    for code, levels in SEVERITIES.items():
+        for i, level in enumerate(levels):
+            if alert_name(code, i) == name:
+                return level or default
+    return default
+
+
+def expected(
+    rows,
+    title=None,
+    status=None,
+    source=None,
+    asset=None,
+    tags=None,
+    day_from=None,
+    day_to=None,
+    severity=None,
+    default="High",
+):
     """The names of the seeded rows a query must return, newest first like the API."""
     return [
         row["name"]
         for row in reversed(rows)
         if (title is None or title.lower() in row["name"].lower())
+        and (severity is None or effective_severity(row["name"], default) in severity)
         and (status is None or row["status"] == status)
         and (source is None or row["source"] == source)
         and (asset is None or asset in row["assets"])
@@ -125,8 +157,21 @@ async def remove_tag_analyst(settings_id, previous):
         await s.commit()
 
 
+async def set_severities():
+    async with AsyncSession(async_engine) as s:
+        for code, levels in SEVERITIES.items():
+            for i, level in enumerate(levels):
+                await s.execute(
+                    update(Alert).where(Alert.customer_code == code, Alert.alert_name == alert_name(code, i)).values(severity=level),
+                )
+        await s.commit()
+
+
 async def main():
     await seed()
+    await set_severities()
+    previous_default = os.environ.get("DEFAULT_ALERT_SEVERITY")
+    os.environ["DEFAULT_ALERT_SEVERITY"] = "High"
     rows_a = alert_rows("A")
     days = sorted({row["day"] for row in rows_a})
 
@@ -215,9 +260,65 @@ async def main():
                 headers=analyst,
                 tags=[TAG_PHISHING],
             )
+            await expect(
+                "a severity whose slice includes hidden alerts returns the visible ones only",
+                [name for name in expected(rows_a, severity=["High"]) if name in vip_only],
+                headers=analyst,
+                severity=["High"],
+            )
         finally:
             await remove_tag_analyst(settings_id, previous)
 
+        print("\n=== E) severity (#1322) ===")
+        await expect("one level", expected(rows_a, severity=["Critical"]), severity=["Critical"])
+        await expect(
+            "several levels match any of them",
+            expected(rows_a, severity=["Critical", "Low"]),
+            severity=["Critical", "Low"],
+        )
+        await expect(
+            "the default level includes the alerts whose source gave none",
+            expected(rows_a, severity=["High"]),
+            severity=["High"],
+        )
+        check(
+            "the default slice is larger than the stored High alerts alone",
+            len(expected(rows_a, severity=["High"])) == 1 + SEVERITIES[CUST_A].count(None),
+        )
+        await expect(
+            "with the other criteria (AND)",
+            expected(rows_a, severity=["High", "Low"], status="OPEN"),
+            severity=["High", "Low"],
+            status="OPEN",
+        )
+        await expect("B's Critical alert never reaches A's user", expected(rows_a, severity=["Critical"]), severity=["Critical"])
+        _, _, _, body = await listed()
+        shown = {alert["alert_name"]: alert.get("severity") for alert in body.get("alerts", [])}
+        check(
+            "each alert carries its effective severity",
+            shown == {row["name"]: effective_severity(row["name"], "High") for row in rows_a},
+            str(shown),
+        )
+        for bad in ("Severe", "high"):
+            status, _, _, body = await listed(severity=[bad])
+            check(f"an unknown level ({bad!r}): 422", status == 422, str(body)[:200])
+
+        os.environ["DEFAULT_ALERT_SEVERITY"] = "Medium"
+        await expect(
+            "a changed default moves the unset alerts at once",
+            expected(rows_a, severity=["Medium"], default="Medium"),
+            severity=["Medium"],
+        )
+        await expect(
+            "and leaves the old default's slice with its stored alerts only",
+            expected(rows_a, severity=["High"], default="Medium"),
+            severity=["High"],
+        )
+
+    if previous_default is None:
+        os.environ.pop("DEFAULT_ALERT_SEVERITY", None)
+    else:
+        os.environ["DEFAULT_ALERT_SEVERITY"] = previous_default
     async with AsyncSession(async_engine) as s:
         await cleanup(s)
     await async_engine.dispose()
