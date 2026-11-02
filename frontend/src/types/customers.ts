@@ -170,3 +170,36 @@ export interface EDRInstallCommands {
 	linux: string
 	macos: string
 }
+
+/** A section of the customer's page that is a per-customer switch (#1325). */
+export interface CustomerSectionSwitch {
+	on: boolean
+}
+
+/** A section of the customer's page that holds a list: how many entries this customer has. */
+export interface CustomerSectionList {
+	count: number
+}
+
+/** `GET /customers/{code}/sections/status`: what each section holds, for the navigation's lights. */
+export interface CustomerSectionStatus {
+	integrations: CustomerSectionList
+	network_connectors: CustomerSectionList
+	event_sources: CustomerSectionList
+	waf: CustomerSectionList
+	ai_triggers: CustomerSectionSwitch
+	notification_workflows: CustomerSectionList
+	notification_routes: CustomerSectionList
+	portal_branding: CustomerSectionSwitch
+	/** On when the customer offers more than English; `count` includes English. */
+	portal_languages: CustomerSectionSwitch & CustomerSectionList
+	portal_sla: CustomerSectionSwitch
+	portal_activity: CustomerSectionSwitch
+	portal_exposure: CustomerSectionSwitch
+	portal_audit: CustomerSectionSwitch
+	/** The AI Report section also holds the portal's Talon chat. */
+	portal_ai_report: CustomerSectionSwitch & { chat_on: boolean }
+	portal_ask_soc: CustomerSectionSwitch
+	portal_ioc_enrichment: CustomerSectionSwitch
+	portal_notifications: CustomerSectionSwitch
+}

@@ -14,7 +14,7 @@
 		<template #icon><Icon name="carbon:launch" :size="13" /></template>
 		{{ text }}
 	</n-button>
-	<n-tooltip v-else-if="route && !alreadyThere" placement="bottom">
+	<n-tooltip v-else-if="route && !alreadyThere" placement="bottom" to="body">
 		<template #trigger>
 			<n-button
 				tag="a"

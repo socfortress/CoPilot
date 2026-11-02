@@ -1,5 +1,6 @@
 import type { BrowserContext, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -52,7 +53,7 @@ async function installExposureMock(context: BrowserContext, role: "admin" | "ana
 
 async function openExposureTab(page: import("@playwright/test").Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*Exposure\s*$/ }).click()
+	await openCustomerSection(page, "Exposure")
 	await expect(page.getByTestId("exposure-settings-switch")).toBeVisible({ timeout: 60_000 })
 }
 

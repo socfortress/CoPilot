@@ -1,5 +1,6 @@
 import type { BrowserContext, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -56,7 +57,7 @@ async function installIocEnrichmentMock(
 
 async function openTab(page: import("@playwright/test").Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*IOC Enrichment\s*$/ }).click()
+	await openCustomerSection(page, "IOC Enrichment")
 	await expect(page.getByTestId("ioc-enrichment-settings-switch")).toBeVisible({ timeout: 60_000 })
 }
 
