@@ -62,6 +62,62 @@ def test_every_criterion_combines():
     assert "alert_creation_time <= '2026-10-13 23:59:59'" in sql
 
 
+# ── severity (#1322) ──────────────────────────────────────────────────────
+
+
+def test_severity_matches_any_of_the_levels():
+    with patch.dict(os.environ, {"DEFAULT_ALERT_SEVERITY": "Informational"}):
+        sql = _sql(dbo._alert_criteria(severity=["Critical", "Medium"]))
+    assert "severity IN ('Critical', 'Medium')" in sql
+    assert "IS NULL" not in sql  # the default level was not asked for
+
+
+def test_the_default_level_includes_alerts_whose_source_gave_no_severity():
+    """NULL reads as the deployment default everywhere (``severity_of``); the filter agrees."""
+    with patch.dict(os.environ, {"DEFAULT_ALERT_SEVERITY": ""}):  # unset: High
+        sql = _sql(dbo._alert_criteria(severity=["Critical", "High"]))
+    assert "severity IN ('Critical', 'High') OR incident_management_alert.severity IS NULL" in sql
+
+
+def test_the_null_slice_follows_the_configured_default():
+    with patch.dict(os.environ, {"DEFAULT_ALERT_SEVERITY": "Medium"}):
+        assert "IS NULL" not in _sql(dbo._alert_criteria(severity=["High"]))
+        assert "IS NULL" in _sql(dbo._alert_criteria(severity=["Medium"]))
+
+
+def test_severity_combines_with_the_other_criteria():
+    clauses = dbo._alert_criteria(status="OPEN", verdict="UNTRIAGED", severity=["Critical"])
+    sql = _sql(clauses)
+    assert len(clauses) == 3
+    assert "status = 'OPEN'" in sql and "verdict IS NULL" in sql and "severity IN ('Critical')" in sql
+
+
+def test_the_alert_response_carries_the_effective_severity():
+    def alert(severity):
+        return SimpleNamespace(
+            id=1,
+            alert_creation_time=datetime(2026, 10, 1),
+            time_closed=None,
+            alert_name="x",
+            alert_description="x",
+            status="OPEN",
+            customer_code="ACME",
+            source="office365",
+            assigned_to=None,
+            escalated=False,
+            severity=severity,
+            verdict=None,
+            verdict_reason=None,
+            verdict_note=None,
+            verdict_by=None,
+            verdict_at=None,
+        )
+
+    with patch.dict(os.environ, {"DEFAULT_ALERT_SEVERITY": "Medium"}):
+        assert dbo.build_alert_out(alert("Critical")).severity == "Critical"
+        assert dbo.build_alert_out(alert(None)).severity == "Medium"
+
+
 def test_a_range_may_be_open_on_either_side():
     assert "alert_creation_time >=" in _sql(dbo._alert_criteria(date_from=datetime(2026, 10, 1)))
     assert "alert_creation_time <=" in _sql(dbo._alert_criteria(date_to=datetime(2026, 10, 1)))
@@ -143,6 +199,7 @@ def _call(**params):
         ioc_value=None,
         verdict=None,
         verdict_reason=None,
+        severity=None,
         date_from=None,
         date_to=None,
         alert_name=None,
@@ -189,6 +246,17 @@ def test_page_and_count_get_the_same_visibility_and_criteria():
         kwargs = call.await_args.kwargs
         assert kwargs["visibility"] is visibility
         assert (kwargs["status"], kwargs["tags"], kwargs["date_from"]) == ("OPEN", ["vip"], datetime(2026, 10, 1))
+
+
+def test_severity_reaches_page_and_count_as_plain_levels():
+    _, listed, counted = _run_with([], severity=[routes.CaseSeverity.CRITICAL, routes.CaseSeverity.LOW])
+    for call in (listed, counted):
+        assert call.await_args.kwargs["severity"] == ["Critical", "Low"]
+
+
+def test_no_severity_filter_reaches_the_services_as_none():
+    _, listed, counted = _run_with([], status="OPEN")
+    assert listed.await_args.kwargs["severity"] is None and counted.await_args.kwargs["severity"] is None
 
 
 def test_the_route_turns_aware_dates_into_naive_utc():

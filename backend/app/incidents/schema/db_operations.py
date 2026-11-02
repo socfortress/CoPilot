@@ -594,6 +594,9 @@ class AlertOut(BaseModel):
     source: str
     assigned_to: Optional[str] = None
     escalated: bool = False
+    # Effective severity (`alert_severity.severity_of`): the stored value, or the
+    # deployment default when the source gave none, as the severity filter reads it (#1322).
+    severity: Optional[str] = None
     verdict: Optional[str] = None
     verdict_reason: Optional[str] = None
     verdict_note: Optional[str] = None

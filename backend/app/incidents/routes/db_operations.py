@@ -93,6 +93,7 @@ from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreListResponse
 from app.incidents.schema.db_operations import CaseReportTemplateDataStoreResponse
 from app.incidents.schema.db_operations import CaseResponse
+from app.incidents.schema.db_operations import CaseSeverity
 from app.incidents.schema.db_operations import CommentAuthorsResponse
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentEdit
@@ -2383,6 +2384,13 @@ async def list_alerts_multiple_filters_endpoint(
         description="TRUE_POSITIVE, FALSE_POSITIVE, or UNTRIAGED for alerts with no verdict recorded yet",
     ),
     verdict_reason: Optional[str] = Query(None, description="False-positive reason; only meaningful alongside verdict=FALSE_POSITIVE"),
+    severity: Optional[List[CaseSeverity]] = Query(
+        None,
+        description=(
+            "Any of these severities (repeat the parameter). An alert whose source gave none counts as the "
+            "deployment default, DEFAULT_ALERT_SEVERITY"
+        ),
+    ),
     date_from: Optional[datetime] = Query(None, description="Alerts created at or after this time (ISO 8601; without an offset, UTC)"),
     date_to: Optional[datetime] = Query(None, description="Alerts created at or before this time (ISO 8601; without an offset, UTC)"),
     alert_name: Optional[str] = Query(None, description="Exact alert name (alert_title searches instead)"),
@@ -2406,6 +2414,7 @@ async def list_alerts_multiple_filters_endpoint(
     """
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
+    severity_levels = [level.value for level in severity] if severity else None
     date_from, date_to = to_naive_utc(date_from), to_naive_utc(date_to)
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=422, detail="date_from must not be after date_to")
@@ -2437,6 +2446,7 @@ async def list_alerts_multiple_filters_endpoint(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        severity=severity_levels,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
@@ -2463,6 +2473,7 @@ async def list_alerts_multiple_filters_endpoint(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        severity=severity_levels,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
