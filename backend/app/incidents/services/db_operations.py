@@ -18,6 +18,7 @@ from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy import distinct
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,6 +85,8 @@ from app.incidents.schema.db_operations import LinkedCaseCreate
 from app.incidents.schema.db_operations import PutNotification
 from app.incidents.schema.db_operations import UpdateAlertStatus
 from app.incidents.schema.db_operations import UpdateCaseStatus
+from app.incidents.services.alert_severity import default_severity
+from app.incidents.services.alert_severity import severity_of
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
@@ -121,6 +124,7 @@ def build_alert_out(
         source=alert.source,
         assigned_to=alert.assigned_to,
         escalated=alert.escalated,
+        severity=severity_of(alert),
         verdict=alert.verdict,
         verdict_reason=alert.verdict_reason,
         verdict_note=alert.verdict_note,
@@ -410,6 +414,7 @@ def _alert_criteria(
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
+    severity: Optional[List[str]] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     alert_name: Optional[str] = None,
@@ -453,6 +458,14 @@ def _alert_criteria(
         filters.append(Alert.verdict.is_(None) if verdict == VERDICT_FILTER_UNTRIAGED else Alert.verdict == verdict)
     if verdict_reason:
         filters.append(Alert.verdict_reason == verdict_reason)
+    if severity:
+        # Any of the levels. NULL means the source gave none and reads as the deployment
+        # default (`severity_of`), so the default level's slice includes those alerts:
+        # the filter must agree with the severity every other read path shows (#1322).
+        by_severity = Alert.severity.in_(severity)
+        if default_severity() in severity:
+            by_severity = or_(by_severity, Alert.severity.is_(None))
+        filters.append(by_severity)
     if date_from:
         filters.append(Alert.alert_creation_time >= date_from)
     if date_to:
@@ -482,6 +495,7 @@ async def alerts_total_multiple_filters(
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
+    severity: Optional[List[str]] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     visibility: Optional[List[Any]] = None,
@@ -508,6 +522,7 @@ async def alerts_total_multiple_filters(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        severity=severity,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
@@ -2449,6 +2464,7 @@ async def list_alerts_multiple_filters(
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
+    severity: Optional[List[str]] = None,
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
@@ -2489,6 +2505,7 @@ async def list_alerts_multiple_filters(
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
+        severity=severity,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,

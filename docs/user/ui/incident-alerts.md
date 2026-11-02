@@ -62,6 +62,8 @@ Use the filter controls to narrow your queue.
 Available filters include:
 
 - **Status** (Open / In progress / Waiting on customer / Closed)
+- **Severity** (multi-select: Critical / High / Medium / Low / Informational)
+  - An alert whose source gives no severity (Office 365, CrowdStrike, Huntress, …) counts as the deployment default, `DEFAULT_ALERT_SEVERITY` (**High** unless set), exactly as it does for notifications and SLA targets
 - **Assigned To** (dropdown)
 - **Customer Code** (dropdown)
 - **Source** (dropdown)

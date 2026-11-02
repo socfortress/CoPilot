@@ -49,6 +49,26 @@
 				</n-button>
 			</n-input-group>
 
+			<n-input-group v-if="filter.type === 'severity'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="severityOptions"
+					:render-label="renderSeverityLabel"
+					placeholder="Select..."
+					multiple
+					clearable
+					:max-tag-count="2"
+					class="min-w-48!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
 			<n-input-group v-if="filter.type === 'assignedTo'">
 				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
 				<n-select
@@ -188,22 +208,25 @@
 </template>
 
 <script setup lang="ts">
+import type { SelectOption } from "naive-ui"
 import type { Ref } from "vue"
 import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
+import type { AlertSeverity, AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
 import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
-import { computed, inject, onBeforeMount, ref } from "vue"
+import { computed, h, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
+import SeverityTag from "@/components/socManagement/ui/SeverityTag.vue"
+import { SEVERITIES } from "@/components/socManagement/utils"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
 import { falsePositiveReasonLabel } from "./utils"
@@ -248,8 +271,13 @@ const falsePositiveReasonOptions: { label: string; value: FalsePositiveReason }[
 		"OTHER"
 	] as FalsePositiveReason[]
 ).map(value => ({ label: falsePositiveReasonLabel(value), value }))
+// Most severe first. An alert whose source gave no severity counts as the deployment
+// default (DEFAULT_ALERT_SEVERITY), so it is listed under that level (#1322).
+const severityOptions: { label: string; value: AlertSeverity }[] = SEVERITIES.map(value => ({ label: value, value }))
+const renderSeverityLabel = (option: SelectOption) => h(SeverityTag, { severity: option.value as AlertSeverity })
 const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Status", value: "status" },
+	{ label: "Severity", value: "severity" },
 	{ label: "Asset Name", value: "assetName" },
 	{ label: "Assigned To", value: "assignedTo" },
 	{ label: "Tag", value: "tag" },
@@ -335,11 +363,28 @@ function getQueryString() {
 			.map(o => ({
 				type: o[0] as AlertsFilterTypes,
 				label: typeOptions.find(t => t.value === o[0])?.label || o[0],
-				// customerCode is multi-valued: a repeated param arrives as string[], a legacy
-				// single one as a plain string — normalize so the select always gets an array.
-				value: (o[0] === "customerCode" ? _castArray(o[1]) : o[1]) as AlertsListFilterValue
+				value: queryValue(o[0] as AlertsFilterTypes, o[1])
 			}))
+			.filter(o => o.value !== null)
 	}
+}
+
+/**
+ * customerCode and severity are multi-valued: a repeated param arrives as string[], a single
+ * one as a plain string — normalize so the select always gets an array. A severity outside
+ * the vocabulary (a hand-edited URL) is dropped rather than sent, since the API refuses it.
+ */
+function queryValue(type: AlertsFilterTypes, raw: unknown): AlertsListFilterValue {
+	if (type === "customerCode") {
+		return _castArray(raw) as string[]
+	}
+	if (type === "severity") {
+		const levels = _castArray(raw).filter((level): level is AlertSeverity =>
+			SEVERITIES.includes(level as AlertSeverity)
+		)
+		return levels.length ? levels : null
+	}
+	return raw as AlertsListFilterValue
 }
 
 function getAvailableUsers() {

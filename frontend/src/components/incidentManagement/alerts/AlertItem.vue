@@ -53,6 +53,13 @@
 							</template>
 						</Badge>
 
+						<Badge v-if="alert.severity" type="splitted" size="small">
+							<template #label>Severity</template>
+							<template #value>
+								<SeverityTag :severity="alert.severity" />
+							</template>
+						</Badge>
+
 						<Badge type="splitted" size="small" bright :color="alert.assigned_to ? 'success' : undefined">
 							<template #iconLeft>
 								<AssigneeIcon :assignee="alert.assigned_to" />
@@ -90,6 +97,15 @@
 							</template>
 						</Badge>
 					</AlertStatusSwitch>
+
+					<Badge v-if="alert.severity" type="splitted">
+						<template #label>Severity</template>
+						<template #value>
+							<div class="flex h-full items-center">
+								<SeverityTag :severity="alert.severity" />
+							</div>
+						</template>
+					</Badge>
 
 					<AlertVerdictSwitch v-slot="{ loading: loadingVerdict }" :alert @updated="updateAlert($event)">
 						<Badge
@@ -297,6 +313,7 @@ import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import Icon from "@/components/common/Icon.vue"
 import ModalPageButton from "@/components/common/ModalPageButton.vue"
 import { statusColor, statusLabel } from "@/components/incidentManagement/common/status"
+import SeverityTag from "@/components/socManagement/ui/SeverityTag.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
