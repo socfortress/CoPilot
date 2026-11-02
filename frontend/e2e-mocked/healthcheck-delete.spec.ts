@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installHealthcheckMock } from "./healthcheck-fixtures"
 import { installMockBackend, signIn } from "./mock-backend"
 
@@ -12,11 +13,7 @@ import { installMockBackend, signIn } from "./mock-backend"
 
 async function openHealthcheck(page: Page, tab = "Healthcheck Wazuh") {
 	await page.goto("/customers/ACME")
-	await page
-		.locator(".n-tabs-tab", { hasText: /^\s*Agents\s*$/ })
-		.first()
-		.click()
-	await page.locator(".n-tabs-tab", { hasText: tab }).click()
+	await openCustomerSection(page, tab)
 	await expect(page.getByTestId("healthcheck-selection-bar")).toBeVisible({ timeout: 60_000 })
 }
 
