@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test"
 import process from "node:process"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "../e2e-mocked/customer-sections"
 import { apiAs, signIn } from "./fixtures/auth"
 import { API_ORIGIN } from "./seed"
 
@@ -20,11 +21,7 @@ const id = (suffix: string) => `e2ehdw-${suffix}`
 
 async function openHealthcheck(page: Page) {
 	await page.goto(`/customers/${CUSTOMER}`)
-	await page
-		.locator(".n-tabs-tab", { hasText: /^\s*Agents\s*$/ })
-		.first()
-		.click()
-	await page.locator(".n-tabs-tab", { hasText: "Healthcheck Wazuh" }).click()
+	await openCustomerSection(page, "Healthcheck Wazuh")
 	await expect(page.getByTestId("healthcheck-selection-bar")).toBeVisible({ timeout: 60_000 })
 }
 

@@ -1,6 +1,7 @@
 import type { BrowserContext, Page, Route } from "@playwright/test"
 import type { ItemSla } from "../src/types/soc-management"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { ALERT_ID, installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -139,7 +140,7 @@ test.describe("as an admin", () => {
 
 	test("publishes the SLA page to a customer from the customer's SLA tab", async ({ page }) => {
 		await page.goto("/customers/ACME")
-		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		await openCustomerSection(page, "SLA")
 		const toggle = page.getByTestId("sla-settings-switch")
 		await expect(toggle).toBeVisible({ timeout: 60_000 })
 		await expect(page.getByTestId("sla-settings-state")).toContainText("SLA figures stay internal")
@@ -181,7 +182,7 @@ test.describe("as an analyst", () => {
 		const writes = await installSlaMock(context, "analyst")
 		await signIn(page)
 		await page.goto("/customers/ACME")
-		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		await openCustomerSection(page, "SLA")
 		await expect(page.getByTestId("sla-settings-readonly")).toBeVisible({ timeout: 60_000 })
 		await expect(page.getByTestId("sla-settings-switch")).toHaveClass(/n-switch--disabled/)
 		await page.getByTestId("sla-settings-switch").click({ force: true })

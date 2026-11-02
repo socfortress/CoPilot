@@ -1,7 +1,7 @@
 /**
- * The customer's AI Automation tab (talon-analyst D85, plan AP-2) is an admin's only, behind the
- * "Talon v2" setting (D54). Anyone else neither sees it nor asks for Talon v2's availability, and a
- * link to `?tab=AI Automation` reads no policy for them.
+ * The customer's AI Automation section (talon-analyst D85, plan AP-2) is an admin's only, behind
+ * the "Talon v2" setting (D54). Anyone else neither sees it nor asks for Talon v2's availability,
+ * and a link to `?tab=AI Automation` reads no policy for them.
  */
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
 import { NMessageProvider } from "naive-ui"
@@ -15,31 +15,22 @@ import CustomerDetailsTabs from "../CustomerDetailsTabs.vue"
 
 const getAvailability = vi.fn()
 const getPolicy = vi.fn()
+const getSectionStatus = vi.fn()
 const tabQuery = ref<string | undefined>(undefined)
 
 vi.mock("@/api", () => ({
 	default: {
 		talonV2: { getAvailability: (signal?: AbortSignal) => getAvailability(signal) },
-		talonAutomation: { getPolicy: (...a: unknown[]) => getPolicy(...a) }
+		talonAutomation: { getPolicy: (...a: unknown[]) => getPolicy(...a) },
+		customers: { getCustomerSectionStatus: (...a: unknown[]) => getSectionStatus(...a) }
 	}
 }))
 vi.mock("@/composables/useNavigation", () => ({ useRouteQueryParam: () => computed(() => tabQuery.value) }))
-
-// Every pane's name; only the outer "Customer" pane renders its content (the sub-tabs), so no
-// tab's component is loaded.
-const Tabs = defineComponent({
-	setup:
-		(_, { slots }) =>
-		() =>
-			h("div", slots.default?.())
-})
-const TabPane = defineComponent({
-	props: { name: { type: String, default: "" } },
-	setup:
-		(props, { slots }) =>
-		() =>
-			h("section", { "data-pane": props.name }, props.name === "Customer" ? slots.default?.() : undefined)
-})
+// The AI Triggers section, opened to show the automation group's rail, reads nothing here.
+vi.mock("@/components/customers/aiTriggers/CustomerAITriggers.vue", () => ({
+	__esModule: true,
+	default: defineComponent({ setup: () => () => h("div") })
+}))
 
 const props = {
 	customer: { customer_code: "ACME", customer_name: "Acme" } as never,
@@ -49,14 +40,6 @@ const props = {
 }
 
 function render() {
-	return mount(CustomerDetailsTabs, {
-		props,
-		global: { stubs: { NTabs: Tabs, Tabs, NTabPane: TabPane, TabPane, NScrollbar: Tabs } }
-	})
-}
-
-/** With Naive's own tabs: only the selected pane mounts its content. */
-function renderWithRealTabs() {
 	return mount(defineComponent({ setup: () => () => h(NMessageProvider, null, () => h(CustomerDetailsTabs, props)) }))
 }
 
@@ -70,33 +53,34 @@ async function settle() {
 	await flushPromises()
 }
 
-const pane = '[data-pane="AI Automation"]'
+const railItem = '[data-testid="rail-item-AI Automation"]'
 
 enableAutoUnmount(afterEach)
 
-describe("customer AI Automation tab visibility", () => {
+describe("customer AI Automation section visibility", () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		resetTalonV2Availability()
-		tabQuery.value = undefined
+		tabQuery.value = "AI Triggers"
 		getAvailability.mockReset().mockResolvedValue({ data: { success: true, enabled: true } })
 		getPolicy.mockReset().mockReturnValue(new Promise(() => {}))
+		getSectionStatus.mockReset().mockReturnValue(new Promise(() => {}))
 	})
 
 	it("an admin with Talon v2 on sees it", async () => {
 		signInAs(AuthUserRole.Admin)
 		const wrapper = render()
-		await flushPromises()
-		expect(wrapper.find(pane).exists()).toBe(true)
+		await settle()
+		expect(wrapper.find(railItem).exists()).toBe(true)
 	})
 
 	it("an admin with Talon v2 off doesn't", async () => {
 		signInAs(AuthUserRole.Admin)
 		getAvailability.mockResolvedValue({ data: { success: true, enabled: false } })
 		const wrapper = render()
-		await flushPromises()
-		expect(wrapper.find('[data-pane="Info"]').exists()).toBe(true)
-		expect(wrapper.find(pane).exists()).toBe(false)
+		await settle()
+		expect(wrapper.find('[data-testid="rail-item-AI Triggers"]').exists()).toBe(true)
+		expect(wrapper.find(railItem).exists()).toBe(false)
 	})
 
 	for (const role of [
@@ -108,9 +92,9 @@ describe("customer AI Automation tab visibility", () => {
 		it(`a ${AuthUserRole[role]} never sees it, nor asks for availability`, async () => {
 			signInAs(role)
 			const wrapper = render()
-			await flushPromises()
-			expect(wrapper.find('[data-pane="Info"]').exists()).toBe(true)
-			expect(wrapper.find(pane).exists()).toBe(false)
+			await settle()
+			expect(wrapper.find('[data-testid="rail-item-AI Triggers"]').exists()).toBe(true)
+			expect(wrapper.find(railItem).exists()).toBe(false)
 			expect(getAvailability).not.toHaveBeenCalled()
 		})
 	}
@@ -118,17 +102,20 @@ describe("customer AI Automation tab visibility", () => {
 	it("?tab=AI Automation: an admin with v2 on reads the policy", async () => {
 		signInAs(AuthUserRole.Admin)
 		tabQuery.value = "AI Automation"
-		renderWithRealTabs()
+		const wrapper = render()
 		await settle()
 		expect(getPolicy).toHaveBeenCalledWith("ACME", expect.any(AbortSignal))
+		expect(wrapper.find('[data-section="AI Automation"]').isVisible()).toBe(true)
 	})
 
-	it("?tab=AI Automation: a non-admin makes no policy call", async () => {
+	it("?tab=AI Automation: a non-admin makes no policy call and opens Info", async () => {
 		signInAs(AuthUserRole.Analyst)
 		tabQuery.value = "AI Automation"
-		renderWithRealTabs()
+		const wrapper = render()
 		await settle()
 		expect(getPolicy).not.toHaveBeenCalled()
 		expect(getAvailability).not.toHaveBeenCalled()
+		expect(wrapper.find('[data-section="AI Automation"]').exists()).toBe(false)
+		expect(wrapper.find('[data-section="Info"]').exists()).toBe(true)
 	})
 })

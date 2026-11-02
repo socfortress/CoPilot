@@ -1,5 +1,6 @@
 import type { BrowserContext, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -51,7 +52,7 @@ async function installAuditMock(context: BrowserContext, role: "admin" | "analys
 
 async function openAuditTab(page: import("@playwright/test").Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*Audit Log\s*$/ }).click()
+	await openCustomerSection(page, "Audit Log")
 	await expect(page.getByTestId("audit-settings-switch")).toBeVisible({ timeout: 60_000 })
 }
 

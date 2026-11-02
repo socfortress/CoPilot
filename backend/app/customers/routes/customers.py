@@ -27,6 +27,8 @@ from app.customers.schema.customers import CustomerRequestBody
 from app.customers.schema.customers import CustomerResponse
 from app.customers.schema.customers import CustomersResponse
 from app.customers.schema.customers import DeleteCustomerResponse
+from app.customers.schema.section_status import CustomerSectionStatusResponse
+from app.customers.services.section_status import get_section_status
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
@@ -690,6 +692,28 @@ async def delete_customer_meta(
         customer_meta=customer_meta_data,
         success=True,
         message="Customer meta deleted successfully",
+    )
+
+
+@customers_router.get(
+    "/{customer_code}/sections/status",
+    response_model=CustomerSectionStatusResponse,
+    description="What each section of the customer's page holds, for the navigation's status lights",
+    dependencies=[
+        Security(AuthHandler().require_any_scope("admin", "analyst")),
+        Depends(verify_customer_code_access),
+    ],
+)
+async def get_customer_section_status(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> CustomerSectionStatusResponse:
+    sections = await get_section_status(customer_code, session)
+    return CustomerSectionStatusResponse(
+        success=True,
+        message="Customer section status fetched successfully",
+        customer_code=customer_code,
+        sections=sections,
     )
 
 

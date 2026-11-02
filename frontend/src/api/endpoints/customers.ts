@@ -7,6 +7,7 @@ import type {
 	CustomerMeta,
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings,
+	CustomerSectionStatus,
 	EDRInstallCommands,
 	UnhealthyAgentsDeletion,
 	UnhealthyAgentsPreview,
@@ -48,6 +49,13 @@ export default {
 			params: { search: query.search, ...(query.limit !== undefined ? { limit: query.limit } : {}) },
 			signal
 		})
+	},
+	/** What each section of the customer's page holds, for the navigation's status lights (#1325). */
+	getCustomerSectionStatus(code: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { customer_code: string; sections: CustomerSectionStatus }>(
+			`/customers/${encodeURIComponent(code)}/sections/status`,
+			{ signal }
+		)
 	},
 	createCustomer(customer: Customer) {
 		return HttpClient.post<FlaskBaseResponse & { customer: Customer }>(`/customers`, customer)

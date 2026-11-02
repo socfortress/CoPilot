@@ -1,5 +1,6 @@
 import type { BrowserContext, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -57,7 +58,7 @@ async function installAiReportMock(context: BrowserContext, role: "admin" | "ana
 
 async function openAiReportTab(page: import("@playwright/test").Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*AI Report\s*$/ }).click()
+	await openCustomerSection(page, "AI Report")
 	await expect(page.getByTestId("ai-requests-switch")).toBeVisible({ timeout: 60_000 })
 }
 

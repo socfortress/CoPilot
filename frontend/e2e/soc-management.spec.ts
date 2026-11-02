@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process"
 import process from "node:process"
 import { fileURLToPath, URL } from "node:url"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "../e2e-mocked/customer-sections"
 import { apiAs, signIn, signOut } from "./fixtures/auth"
 
 /**
@@ -167,7 +168,7 @@ test.describe("an admin", () => {
 		})
 
 		await page.goto(`/customers/${code}`)
-		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		await openCustomerSection(page, "SLA")
 		const toggle = page.getByTestId("sla-settings-switch")
 		await expect(toggle).toBeVisible({ timeout: 30_000 })
 		await expect(page.getByTestId("sla-settings-state")).toContainText("stay internal")
@@ -177,7 +178,7 @@ test.describe("an admin", () => {
 		await expect.poll(stored).toBe(true)
 
 		await page.reload()
-		await page.locator(".n-tabs-tab", { hasText: /^\s*SLA\s*$/ }).click()
+		await openCustomerSection(page, "SLA")
 		await expect(page.getByTestId("sla-settings-switch")).toHaveClass(/n-switch--active/, { timeout: 30_000 })
 		await page.getByTestId("sla-settings-switch").click()
 		await expect.poll(stored).toBe(false)

@@ -1,5 +1,6 @@
 import type { BrowserContext, Page, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -56,7 +57,7 @@ async function installLanguagesMock(context: BrowserContext, role: "admin" | "an
 
 async function openLanguagesTab(page: Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*Portal Languages\s*$/ }).click()
+	await openCustomerSection(page, "Portal Languages")
 	await expect(page.getByTestId("language-settings-list")).toBeVisible({ timeout: 60_000 })
 }
 

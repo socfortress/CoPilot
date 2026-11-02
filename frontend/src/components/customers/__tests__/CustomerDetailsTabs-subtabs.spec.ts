@@ -1,28 +1,35 @@
 import { describe, expect, it } from "vitest"
 import source from "../CustomerDetailsTabs.vue?raw"
+import { SECTION_IDS } from "../sections/sections"
 
 /**
- * `?tab=<name>` opens a customer's sub-tab only when the name is in `CUSTOMER_SUB_TABS`, so a
- * tab missing from that set can't be linked to: it opens on Info instead ("Portal
- * Notifications" was left out when it was added). Every tab pane of the Customer tab is in it.
+ * Every section of the navigation (#1325) has exactly one pane, and every pane is a section: a
+ * section without a pane opens on nothing, and a pane without a section can't be reached (nor
+ * linked to by `?tab=`). Each pane's three mentions of its id agree.
  */
-function customerPanes(): string[] {
-	const customer = source.slice(source.indexOf('name="Customer"'), source.indexOf('name="Agents"'))
-	return [...customer.matchAll(/<n-tab-pane[^>]*?\sname="([^"]+)"/g)].map(m => m[1] ?? "")
+function panes(): { opened: string; shown: string; bound: string }[] {
+	const pattern =
+		/<section\s+v-if="wasOpened\('([^']+)'\)[^"]*"\s+v-show="current === '([^']+)'"\s+v-bind="pane\('([^']+)'/g
+	return [...source.matchAll(pattern)].map(match => ({
+		opened: match[1] ?? "",
+		shown: match[2] ?? "",
+		bound: match[3] ?? ""
+	}))
 }
 
-function subTabSet(): string[] {
-	const body = source.match(/const CUSTOMER_SUB_TABS = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? ""
-	return [...body.matchAll(/"([^"]+)"/g)].map(m => m[1] ?? "")
-}
-
-describe("customer sub-tabs reachable by ?tab=", () => {
-	it("finds the panes and the set", () => {
-		expect(customerPanes()).toContain("Info")
-		expect(subTabSet()).toContain("Info")
+describe("customer sections and their panes", () => {
+	it("finds the panes", () => {
+		expect(panes().map(pane => pane.opened)).toContain("Info")
 	})
 
-	it("lists every pane of the Customer tab, and nothing else", () => {
-		expect([...subTabSet()].sort()).toEqual([...customerPanes()].sort())
+	it("has one pane per section, and nothing else", () => {
+		expect(panes().map(pane => pane.opened).sort()).toEqual([...SECTION_IDS].sort())
+	})
+
+	it("names the same section three times in each pane", () => {
+		for (const pane of panes()) {
+			expect(pane.shown).toBe(pane.opened)
+			expect(pane.bound).toBe(pane.opened)
+		}
 	})
 })

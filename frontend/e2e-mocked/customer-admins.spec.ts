@@ -1,5 +1,6 @@
 import type { BrowserContext, Page, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, signIn } from "./mock-backend"
 
 /**
@@ -109,7 +110,7 @@ test.describe("customer admins and disabled accounts", () => {
 		writes = await installSecurityMock(context)
 		await signIn(page)
 		await page.goto("/customers/ACME")
-		await page.locator(".n-tabs-tab", { hasText: /^\s*Security\s*$/ }).click()
+		await openCustomerSection(page, "Security")
 		await expect(page.getByTestId("security-actions").first()).toBeVisible({ timeout: 60_000 })
 	})
 

@@ -1,5 +1,6 @@
 import type { BrowserContext, Page, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { ALERT_ID, installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -44,7 +45,7 @@ async function installSettingsMock(context: BrowserContext, role: "admin" | "ana
 
 async function openAskTab(page: Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*Ask the SOC\s*$/ }).click()
+	await openCustomerSection(page, "Ask the SOC")
 	await expect(page.getByTestId("ask-soc-settings-switch")).toBeVisible({ timeout: 60_000 })
 }
 

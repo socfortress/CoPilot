@@ -1,5 +1,6 @@
 import type { BrowserContext, Route } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { openCustomerSection } from "./customer-sections"
 import { installMockBackend, mintToken, signIn } from "./mock-backend"
 
 /**
@@ -51,7 +52,7 @@ async function installActivityMock(context: BrowserContext, role: "admin" | "ana
 
 async function openActivityTab(page: import("@playwright/test").Page) {
 	await page.goto("/customers/ACME")
-	await page.locator(".n-tabs-tab", { hasText: /^\s*Activity\s*$/ }).click()
+	await openCustomerSection(page, "Activity")
 	await expect(page.getByTestId("activity-settings-switch")).toBeVisible({ timeout: 60_000 })
 }
 
