@@ -1,6 +1,8 @@
 <template>
 	<div class="customer-sections-bar" data-testid="customer-sections-bar">
+		<!-- Only once something is pinned: the pin sits beside a section's name. -->
 		<n-popover
+			v-if="pinnedSections.length"
 			v-model:show="pinnedOpen"
 			trigger="click"
 			placement="bottom-start"
@@ -22,9 +24,6 @@
 				</button>
 			</template>
 			<div class="pinned-menu" role="menu" aria-label="Pinned sections" data-testid="sections-pinned-menu">
-				<p v-if="!pinnedSections.length" class="text-secondary px-2 py-2 text-sm">
-					Nothing pinned yet. Pin a section from its toolbar to reach it from here on every customer.
-				</p>
 				<div v-for="section of pinnedSections" :key="section.id" class="pinned-row">
 					<button
 						type="button"
@@ -51,7 +50,7 @@
 			</div>
 		</n-popover>
 
-		<span class="bar-divider" aria-hidden="true"></span>
+		<span v-if="pinnedSections.length" class="bar-divider" aria-hidden="true"></span>
 
 		<nav class="bar-groups" aria-label="Customer sections">
 			<template v-for="group of groups" :key="group.id">
@@ -141,7 +140,7 @@ import type { GroupId, GroupView, SectionDef, SectionId } from "./sections"
 import type { CustomerSectionStatus } from "@/types/customers"
 import { onKeyStroke } from "@vueuse/core"
 import { NAutoComplete, NButton, NPopover } from "naive-ui"
-import { computed, nextTick, ref, useTemplateRef } from "vue"
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import SectionGroupMenu from "./SectionGroupMenu.vue"
 import SectionMark from "./SectionMark.vue"
@@ -172,6 +171,13 @@ const pinnedSections = computed(() =>
 	pinned.map(id => sections.find(section => section.id === id)).filter((section): section is SectionDef => !!section)
 )
 const pinnedOpen = ref(false)
+// Unpinning the last section takes the menu away: it must not reopen with the next pin.
+watch(
+	() => pinnedSections.value.length,
+	count => {
+		if (!count) pinnedOpen.value = false
+	}
+)
 
 const openGroup = ref<GroupId | null>(null)
 const keyboardGroup = ref<GroupId | null>(null)

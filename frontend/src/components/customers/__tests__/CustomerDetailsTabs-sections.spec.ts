@@ -234,16 +234,24 @@ describe("the status lights", () => {
 })
 
 describe("per-viewer conveniences", () => {
-	it("pins the open section for this user, and the Pinned menu counts it", async () => {
+	it("pins the open section for this user from beside its name, and the Pinned menu appears with it", async () => {
 		tabQuery.value = "Event Sources"
 		const wrapper = render()
 		await settle()
-		const pin = wrapper.get('[data-testid="section-pin"]')
+		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(false)
+		const toolbar = wrapper.get('[data-testid="section-toolbar"]')
+		const pin = toolbar.get('[data-testid="section-pin"]')
+		// Right after the section's name, not at the end of the toolbar.
+		expect(pin.element.previousElementSibling?.textContent).toBe("Event Sources")
 		expect(pin.attributes("aria-pressed")).toBe("false")
+		expect(pin.attributes("aria-label")).toBe("Pin Event Sources")
 		await pin.trigger("click")
 		expect(pin.attributes("aria-pressed")).toBe("true")
+		expect(pin.attributes("aria-label")).toBe("Unpin Event Sources")
 		expect(JSON.parse(localStorage.getItem(`${PINNED_KEY_PREFIX}ana`) ?? "[]")).toEqual(["Event Sources"])
 		expect(wrapper.get('[data-testid="sections-pinned"]').text()).toContain("1")
+		await pin.trigger("click")
+		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(false)
 	})
 
 	it("hides the rail and shows it again, remembered for this browser", async () => {

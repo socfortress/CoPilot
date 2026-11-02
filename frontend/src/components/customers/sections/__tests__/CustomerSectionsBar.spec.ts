@@ -125,13 +125,28 @@ describe("the pinned sections", () => {
 		expect(wrapper.emitted("select")).toEqual([["Event Sources"]])
 	})
 
-	it("leaves out a pinned section the viewer can no longer open, and says how to pin", async () => {
+	it("is not there while nothing is pinned, nor for a pin the viewer can no longer open", async () => {
+		const empty = render()
+		expect(empty.find('[data-testid="sections-pinned"]').exists()).toBe(false)
+		expect(empty.find(".bar-divider").exists()).toBe(false)
+
 		const analyst = visibleSections({ admin: false, automation: false, wazuhWorker: false })
 		const wrapper = render({ sections: analyst, groups: groupViews(analyst), pinned: ["Security"] })
-		expect(wrapper.get('[data-testid="sections-pinned"]').text()).toContain("0")
+		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(false)
+	})
+
+	it("goes away, closed, when the last pin is taken off", async () => {
+		const wrapper = render({ pinned: ["SLA"] })
 		await wrapper.get('[data-testid="sections-pinned"]').trigger("click")
 		await settle()
-		expect(inBody('[data-testid="sections-pinned-menu"]')?.textContent).toContain("Nothing pinned yet")
+		expect(inBody('[data-testid="sections-pinned-menu"]')).not.toBeNull()
+		await wrapper.setProps({ pinned: [] })
+		await settle()
+		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(false)
+		await wrapper.setProps({ pinned: ["WAF"] })
+		await settle()
+		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(true)
+		expect(inBody('[data-testid="sections-pinned-menu"]')).toBeNull()
 	})
 })
 

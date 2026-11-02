@@ -39,24 +39,22 @@
 							<Icon name="carbon:chevron-right" :size="11" />
 						</span>
 						<span class="truncate text-sm font-semibold">{{ currentSection.label }}</span>
+						<button
+							type="button"
+							class="toolbar-pin"
+							:class="{ 'is-pinned': isPinned(current) }"
+							:aria-pressed="isPinned(current)"
+							:aria-label="isPinned(current) ? `Unpin ${currentSection.label}` : `Pin ${currentSection.label}`"
+							:title="isPinned(current) ? 'Unpin this section' : 'Pin this section'"
+							data-testid="section-pin"
+							@click="togglePin(current)"
+						>
+							<Icon :name="isPinned(current) ? 'carbon:pin-filled' : 'carbon:pin'" :size="14" />
+						</button>
 						<span v-if="currentState?.kind === 'switch'" class="toolbar-state" data-testid="section-state">
 							<SectionMark :state="currentState" with-word />
 						</span>
 					</div>
-					<n-button
-						size="small"
-						:secondary="!isPinned(current)"
-						:type="isPinned(current) ? 'primary' : 'default'"
-						:ghost="isPinned(current)"
-						:aria-pressed="isPinned(current)"
-						data-testid="section-pin"
-						@click="togglePin(current)"
-					>
-						<template #icon>
-							<Icon :name="isPinned(current) ? 'carbon:pin-filled' : 'carbon:pin'" :size="14" />
-						</template>
-						{{ isPinned(current) ? "Pinned" : "Pin" }}
-					</n-button>
 				</div>
 
 				<div class="sections-panes" :style="{ minHeight: 'min(450px, 90vh)' }">
@@ -489,6 +487,30 @@ const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPre
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--fg-secondary-color);
+	}
+
+	// Discreet beside the section's name: the section is the point, pinning it an aside.
+	.toolbar-pin {
+		display: inline-grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		border-radius: var(--border-radius-small);
+		color: var(--fg-secondary-color);
+
+		&:hover {
+			color: var(--fg-default-color);
+			background-color: var(--hover-color);
+		}
+
+		&.is-pinned {
+			color: var(--primary-color);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--primary-color);
+			outline-offset: -2px;
+		}
 	}
 
 	.toolbar-state {
