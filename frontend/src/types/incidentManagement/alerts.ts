@@ -1,4 +1,4 @@
-import type { Case } from "./cases"
+import type { Case, CaseSeverity } from "./cases"
 
 export type AlertsFilter =
 	| { status: AlertStatus }
@@ -12,6 +12,7 @@ export type AlertsFilter =
 	| { iocValue: string }
 	| { verdict: AlertVerdictFilter }
 	| { verdictReason: FalsePositiveReason }
+	| { severity: AlertSeverity[] }
 
 export interface Alert {
 	id: number
@@ -28,6 +29,8 @@ export interface Alert {
 	tags: AlertTag[]
 	linked_cases: Omit<Case, "alerts">[]
 	iocs: AlertIOC[]
+	/** Effective severity: the source's, or the deployment default when it gave none (#1322). Absent from older servers. */
+	severity?: AlertSeverity | null
 	verdict: AlertVerdict | null
 	verdict_reason: FalsePositiveReason | null
 	verdict_note: string | null
@@ -44,6 +47,9 @@ export interface AlertIOC {
 
 /** `PENDING_CUSTOMER`: the SOC waits on the customer and the item's SLA clocks are stopped. */
 export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS" | "PENDING_CUSTOMER"
+
+/** The severity vocabulary shared by alerts and cases (`alert_severity.SEVERITY_LEVELS`). */
+export type AlertSeverity = CaseSeverity
 
 /** An analyst's triage verdict. `null` on an alert means untriaged — a distinct, meaningful state. */
 export type AlertVerdict = "TRUE_POSITIVE" | "FALSE_POSITIVE"

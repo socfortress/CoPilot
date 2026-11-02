@@ -131,6 +131,10 @@ export default {
 						case "verdictReason":
 							params.verdict_reason = filter.value
 							break
+						case "severity":
+							// Repeated param: the alert matches any of the selected levels.
+							params.severity = _castArray(filter.value)
+							break
 						default:
 							params[filter.type] = filter.value
 							break
