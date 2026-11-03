@@ -6,6 +6,14 @@ import { h } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 
+/** The `assigned_to` filter value for "nobody is assigned" (#1331), the backend's sentinel. */
+export const ASSIGNEE_UNASSIGNED = "UNASSIGNED"
+
+/** A calendar day as the Opened filter keeps it: `YYYY-MM-DD`, and a real date. */
+export function isDay(value: unknown): value is string {
+	return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))
+}
+
 export interface DeleteAlertParams {
 	alert: Alert
 	cbBefore?: () => void

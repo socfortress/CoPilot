@@ -13,6 +13,10 @@ export type AlertsFilter =
 	| { verdict: AlertVerdictFilter }
 	| { verdictReason: FalsePositiveReason }
 	| { severity: AlertSeverity[] }
+	/** Two local calendar days (`YYYY-MM-DD`), both included. */
+	| { opened: string[] }
+	| { escalated: "true" | "false" }
+	| { linkedToCase: "true" | "false" }
 
 export interface Alert {
 	id: number

@@ -8,7 +8,10 @@
 					size="small"
 					:options="statusOptions"
 					placeholder="Select..."
-					class="w-32!"
+					multiple
+					clearable
+					:max-tag-count="2"
+					class="min-w-48!"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -61,6 +64,42 @@
 					clearable
 					:max-tag-count="2"
 					class="min-w-48!"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'opened'">
+				<n-input-group-label size="small" :title="OPENED_HELP">
+					{{ getFilterLabel(filter.type) }}
+				</n-input-group-label>
+				<n-date-picker
+					:formatted-value="openedDays(filter.value)"
+					type="daterange"
+					value-format="yyyy-MM-dd"
+					size="small"
+					clearable
+					class="w-64!"
+					@update:formatted-value="filter.value = $event"
+				/>
+				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
+					<template #icon>
+						<Icon :name="DelIcon" />
+					</template>
+				</n-button>
+			</n-input-group>
+
+			<n-input-group v-if="filter.type === 'escalated' || filter.type === 'linkedToCase'">
+				<n-input-group-label size="small">{{ getFilterLabel(filter.type) }}</n-input-group-label>
+				<n-select
+					v-model:value="filter.value"
+					size="small"
+					:options="yesNoOptions"
+					placeholder="Select..."
+					class="w-24!"
 				/>
 				<n-button size="small" secondary tabindex="-1" @click="delFilter(filter.type)">
 					<template #icon>
@@ -214,22 +253,27 @@ import type { AlertsListFilter } from "./types.d"
 import type { AlertsFilterTypes, AlertsListFilterValue } from "@/api/endpoints/incidentManagement/alerts"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { AlertSeverity, AlertVerdictFilter, FalsePositiveReason } from "@/types/incidentManagement/alerts"
+import type {
+	AlertSeverity,
+	AlertStatus,
+	AlertVerdictFilter,
+	FalsePositiveReason
+} from "@/types/incidentManagement/alerts"
 import type { SourceName } from "@/types/incidentManagement/sources"
 import _castArray from "lodash/castArray"
 import _cloneDeep from "lodash/cloneDeep"
 import _isEqual from "lodash/isEqual"
-import { NButton, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
+import { NButton, NDatePicker, NDropdown, NInput, NInputGroup, NInputGroupLabel, NSelect, useMessage } from "naive-ui"
 import { computed, h, inject, onBeforeMount, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import { STATUS_OPTIONS } from "@/components/incidentManagement/common/status"
+import { STATUS_OPTIONS, STATUS_ORDER } from "@/components/incidentManagement/common/status"
 import SeverityTag from "@/components/socManagement/ui/SeverityTag.vue"
 import { SEVERITIES } from "@/components/socManagement/utils"
 import { useGlobalCustomerFilter } from "@/composables/useGlobalCustomerFilter"
 import { getApiErrorMessage } from "@/utils"
-import { falsePositiveReasonLabel } from "./utils"
+import { ASSIGNEE_UNASSIGNED, falsePositiveReasonLabel, isDay } from "./utils"
 
 const { useQueryString, preset } = defineProps<{ useQueryString?: boolean; preset?: AlertsListFilter[] }>()
 
@@ -249,7 +293,17 @@ const loadingCustomers = ref(false)
 const availableUsers = inject<Ref<string[]>>("assignable-users", ref([]))
 const configuredSourcesList = ref<SourceName[]>([])
 const customersList = ref<Customer[]>([])
-const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+// "Unassigned" selects alerts nobody holds (#1331): the work queue nobody has picked up.
+const usersOptions = computed(() => [
+	{ label: "Unassigned", value: ASSIGNEE_UNASSIGNED },
+	...availableUsers.value.map(o => ({ label: o, value: o }))
+])
+const yesNoOptions = [
+	{ label: "Yes", value: "true" },
+	{ label: "No", value: "false" }
+]
+const OPENED_HELP =
+	"When the alert reached the SOC (its SLA clock's opening), which later triggers never move. Local calendar days, both included."
 const customersOptions = computed(() =>
 	customersList.value.map(o => ({ label: `#${o.customer_code} - ${o.customer_name}`, value: o.customer_code }))
 )
@@ -278,6 +332,7 @@ const renderSeverityLabel = (option: SelectOption) => h(SeverityTag, { severity:
 const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Status", value: "status" },
 	{ label: "Severity", value: "severity" },
+	{ label: "Opened", value: "opened" },
 	{ label: "Asset Name", value: "assetName" },
 	{ label: "Assigned To", value: "assignedTo" },
 	{ label: "Tag", value: "tag" },
@@ -286,7 +341,9 @@ const typeOptions: { label: string; value: AlertsFilterTypes }[] = [
 	{ label: "Source", value: "source" },
 	{ label: "IoC", value: "iocValue" },
 	{ label: "Verdict", value: "verdict" },
-	{ label: "FP Reason", value: "verdictReason" }
+	{ label: "FP Reason", value: "verdictReason" },
+	{ label: "Escalated", value: "escalated" },
+	{ label: "Linked to Case", value: "linkedToCase" }
 ]
 
 const filters = ref<AlertsListFilter[]>([])
@@ -299,6 +356,11 @@ const availableFilters = computed(() =>
 )
 
 const isDirty = computed(() => !_isEqual(filters.value, lastFilters.value))
+
+/** The Opened filter's two days, as the date picker reads them. */
+function openedDays(value: AlertsListFilterValue): [string, string] | null {
+	return Array.isArray(value) && value.length === 2 ? [value[0], value[1]] : null
+}
 
 function getFilterLabel(type: AlertsFilterTypes): string {
 	return typeOptions.find(o => o.value === type)?.label || type
@@ -317,14 +379,17 @@ function setFilter(newFilters: AlertsListFilter[]) {
 	for (const newFilter of newFilters) {
 		const filterIndex = filters.value.findIndex(o => o.type === newFilter.type)
 
+		// The status counters pass a single status; the multi-select wants a list.
+		const value = normalizeValue(newFilter.type, newFilter.value)
+
 		if (filterIndex !== -1) {
-			if (newFilter.value && filters.value[filterIndex]) {
-				filters.value[filterIndex].value = newFilter.value
+			if (value && filters.value[filterIndex]) {
+				filters.value[filterIndex].value = value
 			} else {
 				delFilter(newFilter.type)
 			}
-		} else if (newFilter.value) {
-			filters.value.push(newFilter)
+		} else if (value) {
+			filters.value.push({ ...newFilter, value })
 		}
 	}
 
@@ -363,28 +428,48 @@ function getQueryString() {
 			.map(o => ({
 				type: o[0] as AlertsFilterTypes,
 				label: typeOptions.find(t => t.value === o[0])?.label || o[0],
-				value: queryValue(o[0] as AlertsFilterTypes, o[1])
+				value: normalizeValue(o[0] as AlertsFilterTypes, o[1])
 			}))
 			.filter(o => o.value !== null)
 	}
 }
 
 /**
- * customerCode and severity are multi-valued: a repeated param arrives as string[], a single
- * one as a plain string — normalize so the select always gets an array. A severity outside
- * the vocabulary (a hand-edited URL) is dropped rather than sent, since the API refuses it.
+ * The one shape each filter's value takes, wherever it comes from (query string, preset,
+ * the status counters). customerCode, severity and status are multi-valued: a repeated
+ * param arrives as string[], a single one as a plain string, so they become lists. A value
+ * the API would refuse (a hand-edited URL) is dropped, never sent: an unknown severity or
+ * status, an Opened range that is not two days in order, a yes/no that is neither.
  */
-function queryValue(type: AlertsFilterTypes, raw: unknown): AlertsListFilterValue {
-	if (type === "customerCode") {
-		return _castArray(raw) as string[]
+function normalizeValue(type: AlertsFilterTypes, raw: unknown): AlertsListFilterValue {
+	if (raw === null || raw === undefined) {
+		return null
 	}
-	if (type === "severity") {
-		const levels = _castArray(raw).filter((level): level is AlertSeverity =>
-			SEVERITIES.includes(level as AlertSeverity)
-		)
-		return levels.length ? levels : null
+	switch (type) {
+		case "customerCode":
+			return _castArray(raw) as string[]
+		case "severity": {
+			const levels = _castArray(raw).filter((level): level is AlertSeverity =>
+				SEVERITIES.includes(level as AlertSeverity)
+			)
+			return levels.length ? levels : null
+		}
+		case "status": {
+			const statuses = _castArray(raw).filter((status): status is AlertStatus =>
+				STATUS_ORDER.includes(status as AlertStatus)
+			)
+			return statuses.length ? statuses : null
+		}
+		case "opened": {
+			const days = _castArray(raw)
+			return days.length === 2 && days.every(isDay) && days[0] <= days[1] ? (days as string[]) : null
+		}
+		case "escalated":
+		case "linkedToCase":
+			return raw === "true" || raw === "false" ? raw : null
+		default:
+			return raw as AlertsListFilterValue
 	}
-	return raw as AlertsListFilterValue
 }
 
 function getAvailableUsers() {
@@ -493,6 +578,8 @@ function load() {
 onBeforeMount(() => {
 	if (preset?.length) {
 		filters.value = preset
+			.map(o => ({ ...o, value: normalizeValue(o.type, o.value) }))
+			.filter(o => o.value !== null)
 	} else {
 		getQueryString()
 		applyGlobalCustomerCodeFilter()

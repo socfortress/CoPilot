@@ -172,9 +172,10 @@ describe("status pickers", () => {
 		await flushPromises()
 		const select = wrapper.findComponent(NSelect)
 		expect(optionValues(select)).toContain("PENDING_CUSTOMER")
-		expect(select.props("value")).toBe("PENDING_CUSTOMER")
+		// Status is a multi-select (#1331): a single preset status becomes a list of one.
+		expect(select.props("value")).toEqual(["PENDING_CUSTOMER"])
 		expect(wrapper.findComponent(AlertsFilters).emitted("submit")?.[0]).toEqual([
-			[{ type: "status", value: "PENDING_CUSTOMER" }]
+			[{ type: "status", value: ["PENDING_CUSTOMER"] }]
 		])
 	})
 })

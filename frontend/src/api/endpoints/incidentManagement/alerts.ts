@@ -13,6 +13,7 @@ import type {
 	FalsePositiveReason
 } from "@/types/incidentManagement/alerts"
 import _castArray from "lodash/castArray"
+import dayjs from "@/utils/dayjs"
 import { HttpClient } from "../../http-client"
 
 export type AlertsListFilterValue = string | string[] | AlertStatus | null
@@ -120,7 +121,8 @@ export default {
 							params.ioc_value = filter.value
 							break
 						case "status":
-							params.status = filter.value
+							// Repeated param: any of the selected statuses.
+							params.status = _castArray(filter.value)
 							break
 						case "tag":
 							params.tags = _castArray(filter.value)
@@ -134,6 +136,20 @@ export default {
 						case "severity":
 							// Repeated param: the alert matches any of the selected levels.
 							params.severity = _castArray(filter.value)
+							break
+						case "opened": {
+							// Local calendar days, both included: from the first day's local midnight
+							// to the midnight after the last (exclusive), sent as UTC instants.
+							const [from, to] = _castArray(filter.value)
+							params.opened_from = dayjs(from).startOf("day").toISOString()
+							params.opened_before = dayjs(to).add(1, "day").startOf("day").toISOString()
+							break
+						}
+						case "escalated":
+							params.escalated = filter.value
+							break
+						case "linkedToCase":
+							params.linked_to_case = filter.value
 							break
 						default:
 							params[filter.type] = filter.value
