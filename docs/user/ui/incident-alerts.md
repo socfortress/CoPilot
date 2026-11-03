@@ -61,16 +61,21 @@ Use the filter controls to narrow your queue.
 
 Available filters include:
 
-- **Status** (Open / In progress / Waiting on customer / Closed)
+- **Status** (multi-select: Open / In progress / Waiting on customer / Closed; pick the first three for everything not closed)
 - **Severity** (multi-select: Critical / High / Medium / Low / Informational)
   - An alert whose source gives no severity (Office 365, CrowdStrike, Huntress, …) counts as the deployment default, `DEFAULT_ALERT_SEVERITY` (**High** unless set), exactly as it does for notifications and SLA targets
-- **Assigned To** (dropdown)
+- **Opened** (date range: the days the alert reached the SOC, both included, in your local time)
+  - This is when the alert was first opened, which later triggers never move; the date shown on an alert row is its latest trigger
+- **Assigned To** (dropdown; **Unassigned** lists the alerts nobody has picked up)
 - **Customer Code** (dropdown)
 - **Source** (dropdown)
 - **Tag** (multi-select; type + Enter)
 - **Title** (text)
 - **Asset Name** (text)
 - **IoC** (text)
+- **Verdict** / **FP Reason** (dropdown)
+- **Escalated** (Yes / No)
+- **Linked to Case** (Yes / No: whether the alert is in at least one case)
 
 Notes:
 - Filters are intended to speed up triage — they don’t bypass security.
