@@ -178,6 +178,10 @@ class FalsePositiveReason(str, Enum):
 # express all three states an analyst wants to slice by.
 VERDICT_FILTER_UNTRIAGED = "UNTRIAGED"
 
+# Filter-only sentinel for "nobody is assigned" (#1331), the `assigned_to` param's twin of
+# UNTRIAGED: unassigning stores NULL, which an exact-name match can never select.
+ASSIGNEE_FILTER_UNASSIGNED = "UNASSIGNED"
+
 
 class UpdateAlertVerdict(BaseModel):
     """Set, change or clear an alert's triage verdict.

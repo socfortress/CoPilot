@@ -56,7 +56,7 @@ def test_every_criterion_combines():
     sql = _sql(clauses)
     assert len(clauses) == 7
     assert "alert_name LIKE '%login%'" in sql
-    assert "status = 'OPEN'" in sql and "source = 'wazuh'" in sql and "asset_name = 'web-01'" in sql
+    assert "status IN ('OPEN')" in sql and "source = 'wazuh'" in sql and "asset_name = 'web-01'" in sql
     assert "tag IN ('phishing', 'vip')" in sql  # any of the tags
     assert "alert_creation_time >= '2026-10-01 00:00:00'" in sql
     assert "alert_creation_time <= '2026-10-13 23:59:59'" in sql
@@ -89,7 +89,7 @@ def test_severity_combines_with_the_other_criteria():
     clauses = dbo._alert_criteria(status="OPEN", verdict="UNTRIAGED", severity=["Critical"])
     sql = _sql(clauses)
     assert len(clauses) == 3
-    assert "status = 'OPEN'" in sql and "verdict IS NULL" in sql and "severity IN ('Critical')" in sql
+    assert "status IN ('OPEN')" in sql and "verdict IS NULL" in sql and "severity IN ('Critical')" in sql
 
 
 def test_the_alert_response_carries_the_effective_severity():
@@ -118,6 +118,46 @@ def test_the_alert_response_carries_the_effective_severity():
         assert dbo.build_alert_out(alert(None)).severity == "Medium"
 
 
+# ── unassigned, several statuses, escalated, linked to a case (#1331) ──────
+
+
+def test_unassigned_matches_alerts_nobody_is_assigned():
+    sql = _sql(dbo._alert_criteria(assigned_to="UNASSIGNED"))
+    assert "assigned_to IS NULL OR incident_management_alert.assigned_to = ''" in sql
+
+
+def test_a_username_still_matches_exactly():
+    assert "assigned_to = 'alice'" in _sql(dbo._alert_criteria(assigned_to="alice"))
+
+
+def test_several_statuses_match_any_of_them():
+    sql = _sql(dbo._alert_criteria(status=["OPEN", "IN_PROGRESS", "PENDING_CUSTOMER"]))
+    assert "status IN ('OPEN', 'IN_PROGRESS', 'PENDING_CUSTOMER')" in sql
+
+
+@pytest.mark.parametrize("value, clause", [(True, "escalated IS true"), (False, "escalated IS false")])
+def test_escalated_both_ways(value, clause):
+    assert clause in _sql(dbo._alert_criteria(escalated=value))
+
+
+def test_linked_to_case_both_ways():
+    linked = _sql(dbo._alert_criteria(linked_to_case=True))
+    unlinked = _sql(dbo._alert_criteria(linked_to_case=False))
+    assert "incident_management_alert.id IN (SELECT incident_management_casealertlink.alert_id" in linked
+    assert "incident_management_alert.id NOT IN (SELECT incident_management_casealertlink.alert_id" in unlinked
+
+
+def test_the_new_criteria_combine_with_the_others():
+    clauses = dbo._alert_criteria(
+        assigned_to="UNASSIGNED",
+        status=["OPEN", "IN_PROGRESS"],
+        escalated=False,
+        linked_to_case=False,
+        severity=["Critical"],
+    )
+    assert len(clauses) == 5
+
+
 def test_a_range_may_be_open_on_either_side():
     assert "alert_creation_time >=" in _sql(dbo._alert_criteria(date_from=datetime(2026, 10, 1)))
     assert "alert_creation_time <=" in _sql(dbo._alert_criteria(date_to=datetime(2026, 10, 1)))
@@ -142,7 +182,7 @@ def test_the_count_applies_the_visibility_it_is_given():
 
     assert total == 3
     sql = str(session.execute.await_args.args[0].compile(compile_kwargs={"literal_binds": True}))
-    assert "'VISIBILITY' = 'VISIBILITY'" in sql and "status = 'OPEN'" in sql
+    assert "'VISIBILITY' = 'VISIBILITY'" in sql and "status IN ('OPEN')" in sql
 
 
 def test_the_page_uses_the_given_visibility_instead_of_its_own_tag_check():
@@ -200,6 +240,8 @@ def _call(**params):
         verdict=None,
         verdict_reason=None,
         severity=None,
+        escalated=None,
+        linked_to_case=None,
         date_from=None,
         date_to=None,
         alert_name=None,
@@ -240,12 +282,12 @@ def _run_with(visibility, **params):
 
 def test_page_and_count_get_the_same_visibility_and_criteria():
     visibility = ["<customers and tags>"]
-    _, listed, counted = _run_with(visibility, status="OPEN", tags=["vip"], date_from=datetime(2026, 10, 1))
+    _, listed, counted = _run_with(visibility, status=[routes.AlertStatus.OPEN], tags=["vip"], date_from=datetime(2026, 10, 1))
 
     for call in (listed, counted):
         kwargs = call.await_args.kwargs
         assert kwargs["visibility"] is visibility
-        assert (kwargs["status"], kwargs["tags"], kwargs["date_from"]) == ("OPEN", ["vip"], datetime(2026, 10, 1))
+        assert (kwargs["status"], kwargs["tags"], kwargs["date_from"]) == (["OPEN"], ["vip"], datetime(2026, 10, 1))
 
 
 def test_severity_reaches_page_and_count_as_plain_levels():
@@ -255,8 +297,23 @@ def test_severity_reaches_page_and_count_as_plain_levels():
 
 
 def test_no_severity_filter_reaches_the_services_as_none():
-    _, listed, counted = _run_with([], status="OPEN")
+    _, listed, counted = _run_with([], status=[routes.AlertStatus.OPEN])
     assert listed.await_args.kwargs["severity"] is None and counted.await_args.kwargs["severity"] is None
+
+
+def test_statuses_escalated_and_linked_reach_page_and_count():
+    _, listed, counted = _run_with(
+        [],
+        assigned_to="UNASSIGNED",
+        status=[routes.AlertStatus.OPEN, routes.AlertStatus.PENDING_CUSTOMER],
+        escalated=True,
+        linked_to_case=False,
+    )
+    for call in (listed, counted):
+        kwargs = call.await_args.kwargs
+        assert kwargs["assigned_to"] == "UNASSIGNED"
+        assert kwargs["status"] == ["OPEN", "PENDING_CUSTOMER"]
+        assert (kwargs["escalated"], kwargs["linked_to_case"]) == (True, False)
 
 
 def test_the_route_turns_aware_dates_into_naive_utc():
@@ -266,7 +323,7 @@ def test_the_route_turns_aware_dates_into_naive_utc():
 
 
 def test_a_user_who_sees_nothing_gets_an_empty_page_without_querying():
-    response, listed, counted = _run_with(None, status="OPEN")
+    response, listed, counted = _run_with(None, status=[routes.AlertStatus.OPEN])
     assert (response.alerts, response.total_filtered) == ([], 0)
     listed.assert_not_awaited()
     counted.assert_not_awaited()

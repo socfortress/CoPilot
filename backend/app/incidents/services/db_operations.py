@@ -9,6 +9,7 @@ from typing import List
 from typing import NamedTuple
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from fastapi import HTTPException
 from fastapi import UploadFile
@@ -57,6 +58,7 @@ from app.incidents.models import IoCFieldName
 from app.incidents.models import Notification
 from app.incidents.models import ThresholdAlertMetadata
 from app.incidents.models import TimestampFieldName
+from app.incidents.schema.db_operations import ASSIGNEE_FILTER_UNASSIGNED
 from app.incidents.schema.db_operations import VERDICT_FILTER_UNTRIAGED
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
@@ -409,12 +411,14 @@ def _alert_criteria(
     customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[Union[str, List[str]]] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
     severity: Optional[List[str]] = None,
+    escalated: Optional[bool] = None,
+    linked_to_case: Optional[bool] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     alert_name: Optional[str] = None,
@@ -433,7 +437,10 @@ def _alert_criteria(
     in (#1284), so a click on one of its slices lists exactly what it counted.
     """
     filters: List[Any] = []
-    if assigned_to:
+    if assigned_to == ASSIGNEE_FILTER_UNASSIGNED:
+        # Unassigning stores NULL; an empty string is treated the same (#1331).
+        filters.append(or_(Alert.assigned_to.is_(None), Alert.assigned_to == ""))
+    elif assigned_to:
         filters.append(Alert.assigned_to == assigned_to)
     if alert_title:
         filters.append(Alert.alert_name.like(f"%{alert_title}%"))
@@ -446,7 +453,8 @@ def _alert_criteria(
     if asset_name:
         filters.append(Asset.asset_name == asset_name)
     if status:
-        filters.append(Alert.status == status)
+        # One status or any of several (#1331): "everything not closed" is one query.
+        filters.append(Alert.status.in_([status] if isinstance(status, str) else status))
     if tags:
         filters.append(AlertTag.tag.in_(tags))
     if ioc_value:
@@ -466,6 +474,12 @@ def _alert_criteria(
         if default_severity() in severity:
             by_severity = or_(by_severity, Alert.severity.is_(None))
         filters.append(by_severity)
+    if escalated is not None:
+        filters.append(Alert.escalated.is_(escalated))
+    if linked_to_case is not None:
+        # alert_id is part of the link's primary key, never NULL, so NOT IN is safe.
+        linked = Alert.id.in_(select(CaseAlertLink.alert_id))
+        filters.append(linked if linked_to_case else ~linked)
     if date_from:
         filters.append(Alert.alert_creation_time >= date_from)
     if date_to:
@@ -490,12 +504,14 @@ async def alerts_total_multiple_filters(
     customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[Union[str, List[str]]] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
     severity: Optional[List[str]] = None,
+    escalated: Optional[bool] = None,
+    linked_to_case: Optional[bool] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
     visibility: Optional[List[Any]] = None,
@@ -523,6 +539,8 @@ async def alerts_total_multiple_filters(
         verdict=verdict,
         verdict_reason=verdict_reason,
         severity=severity,
+        escalated=escalated,
+        linked_to_case=linked_to_case,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
@@ -2459,12 +2477,14 @@ async def list_alerts_multiple_filters(
     customer_codes: Optional[List[str]] = None,
     source: Optional[str] = None,
     asset_name: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[Union[str, List[str]]] = None,
     tags: Optional[List[str]] = None,
     ioc_value: Optional[str] = None,
     verdict: Optional[str] = None,
     verdict_reason: Optional[str] = None,
     severity: Optional[List[str]] = None,
+    escalated: Optional[bool] = None,
+    linked_to_case: Optional[bool] = None,
     page: int = 1,
     page_size: int = 25,
     order: str = "desc",
@@ -2506,6 +2526,8 @@ async def list_alerts_multiple_filters(
         verdict=verdict,
         verdict_reason=verdict_reason,
         severity=severity,
+        escalated=escalated,
+        linked_to_case=linked_to_case,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
