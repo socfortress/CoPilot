@@ -60,6 +60,20 @@
 							</template>
 						</Badge>
 
+						<Badge
+							v-if="alert.escalated"
+							type="splitted"
+							size="small"
+							bright
+							color="warning"
+							data-testid="alert-escalated-badge"
+						>
+							<template #iconLeft>
+								<Icon :name="EscalatedIcon" :size="13" />
+							</template>
+							<template #value>Escalated</template>
+						</Badge>
+
 						<Badge type="splitted" size="small" bright :color="alert.assigned_to ? 'success' : undefined">
 							<template #iconLeft>
 								<AssigneeIcon :assignee="alert.assigned_to" />
@@ -105,6 +119,19 @@
 								<SeverityTag :severity="alert.severity" />
 							</div>
 						</template>
+					</Badge>
+
+					<Badge
+						v-if="alert.escalated"
+						type="splitted"
+						bright
+						color="warning"
+						data-testid="alert-escalated-badge"
+					>
+						<template #iconLeft>
+							<Icon :name="EscalatedIcon" :size="13" />
+						</template>
+						<template #value>Escalated</template>
 					</Badge>
 
 					<AlertVerdictSwitch v-slot="{ loading: loadingVerdict }" :alert @updated="updateAlert($event)">
@@ -355,6 +382,8 @@ const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
 const EditIcon = "uil:edit-alt"
 const VerdictIcon = "carbon:task-view"
+// The icon cases use for escalation (CaseTimelineFeed), so the two read alike.
+const EscalatedIcon = "carbon:warning-alt"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 const IoCsIcon = "carbon:ibm-watson-discovery"

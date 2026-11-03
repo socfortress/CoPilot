@@ -2,6 +2,14 @@
 	<n-spin :show="loading" class="flex grow flex-col" content-class="flex grow flex-col">
 		<div class="flex grow flex-col justify-between gap-4">
 			<div class="content-box flex flex-col gap-4 py-3">
+				<!-- A banner, not a fourth card: the card row has no room for one in the modal. -->
+				<n-alert v-if="alert.escalated" type="warning" :bordered="false" data-testid="alert-escalated-notice">
+					<template #icon>
+						<Icon :name="EscalatedIcon" />
+					</template>
+					Escalated: this alert has been raised for priority handling.
+				</n-alert>
+
 				<div class="flex flex-col gap-4 sm:flex-row!">
 					<CardKV :color="statusColor(alert.status)" size="lg" class="w-full grow">
 						<template #key>
@@ -242,7 +250,7 @@
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { Alert } from "@/types/incidentManagement/alerts"
-import { NButton, NSpin, useDialog, useMessage } from "naive-ui"
+import { NAlert, NButton, NSpin, useDialog, useMessage } from "naive-ui"
 import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import CardKV from "@/components/common/cards/CardKV.vue"
@@ -285,6 +293,8 @@ const verdictCardColor = computed(() => {
 
 const TrashIcon = "carbon:trash-can"
 const VerdictIcon = "carbon:task-view"
+// The icon cases use for escalation (CaseTimelineFeed), so the two read alike.
+const EscalatedIcon = "carbon:warning-alt"
 const LinkIcon = "carbon:launch"
 const EditIcon = "uil:edit-alt"
 
