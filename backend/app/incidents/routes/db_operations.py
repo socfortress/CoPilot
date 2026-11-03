@@ -2371,12 +2371,12 @@ async def list_alerts_by_source_endpoint(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
 async def list_alerts_multiple_filters_endpoint(
-    assigned_to: Optional[str] = Query(None),
+    assigned_to: Optional[str] = Query(None, description="Exact username, or UNASSIGNED for alerts nobody is assigned"),
     alert_title: Optional[str] = Query(None),
     customer_codes: Optional[List[str]] = Depends(customer_codes_query),
     source: Optional[str] = Query(None),
     asset_name: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    status: Optional[List[AlertStatus]] = Query(None, description="Any of these statuses (repeat the parameter)"),
     tags: Optional[List[str]] = Query(None),
     ioc_value: Optional[str] = Query(None),
     verdict: Optional[str] = Query(
@@ -2391,6 +2391,8 @@ async def list_alerts_multiple_filters_endpoint(
             "deployment default, DEFAULT_ALERT_SEVERITY"
         ),
     ),
+    escalated: Optional[bool] = Query(None, description="true: escalated alerts only; false: not escalated"),
+    linked_to_case: Optional[bool] = Query(None, description="true: alerts linked to at least one case; false: to none"),
     date_from: Optional[datetime] = Query(None, description="Alerts created at or after this time (ISO 8601; without an offset, UTC)"),
     date_to: Optional[datetime] = Query(None, description="Alerts created at or before this time (ISO 8601; without an offset, UTC)"),
     alert_name: Optional[str] = Query(None, description="Exact alert name (alert_title searches instead)"),
@@ -2415,6 +2417,7 @@ async def list_alerts_multiple_filters_endpoint(
     logger.info(f"Listing alerts with filters for user: {current_user.username} with role_id: {current_user.role_id}")
 
     severity_levels = [level.value for level in severity] if severity else None
+    statuses = [value.value for value in status] if status else None
     date_from, date_to = to_naive_utc(date_from), to_naive_utc(date_to)
     if date_from and date_to and date_from > date_to:
         raise HTTPException(status_code=422, detail="date_from must not be after date_to")
@@ -2441,12 +2444,14 @@ async def list_alerts_multiple_filters_endpoint(
         alert_title=alert_title,
         source=source,
         asset_name=asset_name,
-        status=status,
+        status=statuses,
         tags=tags,
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
         severity=severity_levels,
+        escalated=escalated,
+        linked_to_case=linked_to_case,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,
@@ -2468,12 +2473,14 @@ async def list_alerts_multiple_filters_endpoint(
         alert_title=alert_title,
         source=source,
         asset_name=asset_name,
-        status=status,
+        status=statuses,
         tags=tags,
         ioc_value=ioc_value,
         verdict=verdict,
         verdict_reason=verdict_reason,
         severity=severity_levels,
+        escalated=escalated,
+        linked_to_case=linked_to_case,
         date_from=date_from,
         date_to=date_to,
         alert_name=alert_name,

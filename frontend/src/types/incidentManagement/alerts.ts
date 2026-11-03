@@ -13,6 +13,10 @@ export type AlertsFilter =
 	| { verdict: AlertVerdictFilter }
 	| { verdictReason: FalsePositiveReason }
 	| { severity: AlertSeverity[] }
+	/** Two local calendar days (`YYYY-MM-DD`), both included. */
+	| { opened: string[] }
+	| { escalated: "true" | "false" }
+	| { linkedToCase: "true" | "false" }
 
 export interface Alert {
 	id: number
@@ -31,6 +35,8 @@ export interface Alert {
 	iocs: AlertIOC[]
 	/** Effective severity: the source's, or the deployment default when it gave none (#1322). Absent from older servers. */
 	severity?: AlertSeverity | null
+	/** Raised for priority handling (`PUT /alert/escalated`); filterable since #1331. */
+	escalated?: boolean
 	verdict: AlertVerdict | null
 	verdict_reason: FalsePositiveReason | null
 	verdict_note: string | null

@@ -108,7 +108,7 @@ describe("alertsFilters", () => {
 		expect(filters.emitted("submit")?.[0]).toEqual([
 			[
 				{ type: "severity", label: "Severity", value: ["High"] },
-				{ type: "status", label: "Status", value: "OPEN" }
+				{ type: "status", label: "Status", value: ["OPEN"] }
 			]
 		])
 
@@ -136,6 +136,6 @@ describe("alertsFilters", () => {
 		expect(deleteButton).toBeDefined()
 		await deleteButton?.trigger("click")
 
-		expect(filters.emitted("submit")?.at(-1)).toEqual([[{ type: "status", value: "OPEN" }]])
+		expect(filters.emitted("submit")?.at(-1)).toEqual([[{ type: "status", value: ["OPEN"] }]])
 	})
 })

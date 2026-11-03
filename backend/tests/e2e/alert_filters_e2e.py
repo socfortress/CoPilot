@@ -18,7 +18,10 @@ own status, source, day and tags — see ALERT_ROWS_A in portal_overview_seed.py
   E) severity (#1322): any of several levels, an alert with no severity counted under the
      deployment default (DEFAULT_ALERT_SEVERITY) as every other read path does, combined
      with the other criteria, an unknown level refused with a 422. The seed has no
-     severities: SEVERITIES sets them on its alerts here.
+     severities: SEVERITIES sets them on its alerts here;
+  F) #1331: UNASSIGNED (NULL or empty assignee), several statuses at once, escalated and
+     linked to a case both ways, all combined, and none of them leaking B's alerts.
+     ASSIGNEES and ESCALATED are set here; the case links are the seed's (LINKED).
 
 Every expectation is computed from the seed's own rows, not written out by hand.
 Exits non-zero when a check fails.
@@ -65,6 +68,12 @@ TAG_ANALYST = "e2e_ov_tag_analyst"
 # Stored severities by alert index: None is "the source gave none" (NULL), which reads as
 # the deployment default. B's Critical alert must never reach A's portal user.
 SEVERITIES = {CUST_A: ["Critical", "High", None, "Low", None, "Medium"], CUST_B: ["Critical"]}
+# Assignees ("" must read as unassigned, like NULL) and escalation, by alert index. B's
+# first alert is escalated and linked to B's case: it must never reach A's user.
+ASSIGNEES = {CUST_A: ["analyst1", None, "", "analyst2", None, "analyst1"], CUST_B: ["analyst1"]}
+ESCALATED = {CUST_A: [False, True, False, True, False, False], CUST_B: [True]}
+# The seed links A's alerts 0 and 1 to A's first case (and B's alert 0 to B's case).
+LINKED = {alert_name(CUST_A, 0), alert_name(CUST_A, 1)}
 
 results = []
 
@@ -72,6 +81,15 @@ results = []
 def check(name, passed, detail=""):
     results.append((name, passed, detail))
     print(f"  {'PASS' if passed else 'FAIL'}  {name}" + (f"  [{detail}]" if detail else ""))
+
+
+def state_of(table, name):
+    """A seeded alert's value in ASSIGNEES or ESCALATED."""
+    for code, values in table.items():
+        for i, value in enumerate(values):
+            if alert_name(code, i) == name:
+                return value
+    raise KeyError(name)
 
 
 def effective_severity(name, default):
@@ -94,6 +112,10 @@ def expected(
     day_to=None,
     severity=None,
     default="High",
+    statuses=None,
+    unassigned=False,
+    escalated=None,
+    linked=None,
 ):
     """The names of the seeded rows a query must return, newest first like the API."""
     return [
@@ -101,6 +123,10 @@ def expected(
         for row in reversed(rows)
         if (title is None or title.lower() in row["name"].lower())
         and (severity is None or effective_severity(row["name"], default) in severity)
+        and (statuses is None or row["status"] in statuses)
+        and (not unassigned or not state_of(ASSIGNEES, row["name"]))
+        and (escalated is None or state_of(ESCALATED, row["name"]) is escalated)
+        and (linked is None or (row["name"] in LINKED) is linked)
         and (status is None or row["status"] == status)
         and (source is None or row["source"] == source)
         and (asset is None or asset in row["assets"])
@@ -157,19 +183,22 @@ async def remove_tag_analyst(settings_id, previous):
         await s.commit()
 
 
-async def set_severities():
+async def set_alert_states():
+    """The severities, assignees and escalation the seed does not set."""
     async with AsyncSession(async_engine) as s:
         for code, levels in SEVERITIES.items():
             for i, level in enumerate(levels):
                 await s.execute(
-                    update(Alert).where(Alert.customer_code == code, Alert.alert_name == alert_name(code, i)).values(severity=level),
+                    update(Alert)
+                    .where(Alert.customer_code == code, Alert.alert_name == alert_name(code, i))
+                    .values(severity=level, assigned_to=ASSIGNEES[code][i], escalated=ESCALATED[code][i]),
                 )
         await s.commit()
 
 
 async def main():
     await seed()
-    await set_severities()
+    await set_alert_states()
     previous_default = os.environ.get("DEFAULT_ALERT_SEVERITY")
     os.environ["DEFAULT_ALERT_SEVERITY"] = "High"
     rows_a = alert_rows("A")
@@ -302,6 +331,38 @@ async def main():
         for bad in ("Severe", "high"):
             status, _, _, body = await listed(severity=[bad])
             check(f"an unknown level ({bad!r}): 422", status == 422, str(body)[:200])
+
+        print("\n=== F) unassigned, several statuses, escalated, linked to a case (#1331) ===")
+        await expect("UNASSIGNED: a NULL or empty assignee", expected(rows_a, unassigned=True), assigned_to="UNASSIGNED")
+        check("the unassigned slice includes the empty-string assignee", alert_name(CUST_A, 2) in expected(rows_a, unassigned=True))
+        await expect(
+            "a username still matches exactly",
+            [n for n in expected(rows_a) if state_of(ASSIGNEES, n) == "analyst1"],
+            assigned_to="analyst1",
+        )
+        not_closed = ["OPEN", "IN_PROGRESS", "PENDING_CUSTOMER"]
+        await expect("several statuses: everything not closed", expected(rows_a, statuses=not_closed), status=not_closed)
+        await expect("a single status still works", expected(rows_a, statuses=["CLOSED"]), status="CLOSED")
+        status, _, _, body = await listed(status=["OPEN", "DONE"])
+        check("an unknown status: 422", status == 422, str(body)[:200])
+        await expect("escalated", expected(rows_a, escalated=True), escalated="true")
+        await expect("not escalated", expected(rows_a, escalated=False), escalated="false")
+        await expect("linked to a case", expected(rows_a, linked=True), linked_to_case="true")
+        await expect("linked to no case", expected(rows_a, linked=False), linked_to_case="false")
+        await expect(
+            "all combined: unassigned, not closed, not escalated, in no case",
+            expected(rows_a, unassigned=True, statuses=not_closed, escalated=False, linked=False),
+            assigned_to="UNASSIGNED",
+            status=not_closed,
+            escalated="false",
+            linked_to_case="false",
+        )
+        await expect(
+            "escalated and linked: A's alert only, never B's (escalated and linked too)",
+            expected(rows_a, escalated=True, linked=True),
+            escalated="true",
+            linked_to_case="true",
+        )
 
         os.environ["DEFAULT_ALERT_SEVERITY"] = "Medium"
         await expect(
