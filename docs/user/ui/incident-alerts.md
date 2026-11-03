@@ -74,7 +74,7 @@ Available filters include:
 - **Asset Name** (text)
 - **IoC** (text)
 - **Verdict** / **FP Reason** (dropdown)
-- **Escalated** (Yes / No)
+- **Escalated** (Yes / No; an escalated alert carries an amber **Escalated** badge on its row and a notice at the top of its details)
 - **Linked to Case** (Yes / No: whether the alert is in at least one case)
 
 Notes:
