@@ -216,6 +216,13 @@
 					<section v-if="wasOpened('AI Report')" v-show="current === 'AI Report'" v-bind="pane('AI Report')">
 						<CustomerPortalAiReport :customer-code="customer.customer_code" />
 					</section>
+					<section v-if="wasOpened('Talon Chat')" v-show="current === 'Talon Chat'" v-bind="pane('Talon Chat')">
+						<!-- The AI Report switch as the page last read it: turning it off there reloads the chat. -->
+						<CustomerPortalTalonChat
+							:customer-code="customer.customer_code"
+							:ai-reports-enabled="status?.portal_ai_report.on ?? null"
+						/>
+					</section>
 					<section
 						v-if="wasOpened('Ask the SOC')"
 						v-show="current === 'Ask the SOC'"
@@ -307,6 +314,8 @@ const CustomerReporting = defineAsyncComponent(() => import("./reporting/Custome
 const CustomerPortalBranding = defineAsyncComponent(() => import("@/components/customerPortal/Settings.vue"))
 // Per-customer switch for the portal's read-only AI Analyst surfaces.
 const CustomerPortalAiReport = defineAsyncComponent(() => import("@/components/customerPortal/AiReportSettings.vue"))
+// The portal's Talon chat (talon-analyst D97): its own section (#1333), beside the AI Report it needs.
+const CustomerPortalTalonChat = defineAsyncComponent(() => import("@/components/customerPortal/PortalChatSettings.vue"))
 // Per-customer switch for the portal's read-only SLA page (#1187).
 const CustomerPortalSla = defineAsyncComponent(() => import("@/components/customerPortal/SlaSettings.vue"))
 // Per-customer switch for the portal's read-only Activity page (#1284).

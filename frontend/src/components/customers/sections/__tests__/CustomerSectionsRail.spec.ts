@@ -26,10 +26,10 @@ describe("the section rail", () => {
 		expect(wrapper.findAll(".rail-subgroup").map(item => item.text())).toEqual([
 			"Appearance1 of 2 on",
 			"Portal pages2 of 4 on",
-			"AI & requests3 of 3 on",
+			"AI & requests4 of 4 on",
 			"Notifications"
 		])
-		expect(wrapper.findAll(".rail-item")).toHaveLength(10)
+		expect(wrapper.findAll(".rail-item")).toHaveLength(11)
 	})
 
 	it("marks the current section", () => {
@@ -60,7 +60,7 @@ describe("the section rail", () => {
 		const wrapper = render(portal, "SLA", null as never)
 		expect(wrapper.find(".section-led").exists()).toBe(false)
 		expect(wrapper.find(".rail-summary").exists()).toBe(false)
-		expect(wrapper.findAll(".rail-item")).toHaveLength(10)
+		expect(wrapper.findAll(".rail-item")).toHaveLength(11)
 	})
 
 	it("folds a subgroup away and opens it again", async () => {

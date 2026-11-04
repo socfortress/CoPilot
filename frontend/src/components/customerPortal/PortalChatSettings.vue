@@ -193,8 +193,11 @@ import { formProblem, LIMIT_MAX, LIMIT_MIN, PROPOSED_DAILY, PROPOSED_PER_USER } 
 
 const { customerCode, aiReportsEnabled } = defineProps<{
 	customerCode: string
-	/** The AI Report switch above; null until known. The chat can only be on with it. */
-	aiReportsEnabled: boolean | null
+	/**
+	 * The AI Report switch as the page last read it (its own section); null or absent until known,
+	 * then the settings' own answer counts. The chat can only be on with it.
+	 */
+	aiReportsEnabled?: boolean | null
 }>()
 
 const PortalChatReview = defineAsyncComponent(() => import("./PortalChatReview.vue"))
@@ -260,7 +263,7 @@ const problem = computed(() =>
 
 const chatState = computed(() => {
 	if (!aiReports.value && !form.enabled) {
-		return "Turn on the AI findings above first: a customer that can't read Talon's reports can't chat about them."
+		return "Turn on AI Report first (Customer Portal › AI & requests): a customer that can't read Talon's reports can't chat about them."
 	}
 	return settings.value?.portal_chat_enabled
 		? "Portal users of this customer can chat with Talon."
@@ -307,7 +310,7 @@ function save() {
 		})
 }
 
-// Turning AI reports off above turns the chat off on the server too (the cascade): read it again.
+// Turning AI reports off in their section turns the chat off on the server too (the cascade): read it again.
 watch(
 	() => aiReportsEnabled,
 	(now, before) => {

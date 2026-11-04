@@ -58,7 +58,7 @@ describe("groupViews", () => {
 			"AI & requests",
 			"Notifications"
 		])
-		expect(portal?.sections).toHaveLength(10)
+		expect(portal?.sections).toHaveLength(11)
 		const data = views.find(group => group.id === "data")
 		expect(data?.subgroups).toEqual([{ label: "", sections: data?.sections }])
 	})
@@ -72,7 +72,7 @@ describe("groupViews", () => {
 describe("sectionState", () => {
 	const status = statusFixture()
 
-	it("words a switch, the languages and the AI report with its chat", () => {
+	it("words a switch, the languages, the AI report and the Talon chat", () => {
 		expect(sectionState(sectionById("SLA"), status)).toEqual({ kind: "switch", on: true, word: "On" })
 		expect(sectionState(sectionById("Activity"), status)).toEqual({ kind: "switch", on: false, word: "Off" })
 		expect(sectionState(sectionById("Portal Languages"), status)).toEqual({
@@ -83,10 +83,12 @@ describe("sectionState", () => {
 		expect(
 			sectionState(sectionById("Portal Languages"), statusFixture({ portal_languages: { on: true, count: 3 } }))
 		).toEqual({ kind: "switch", on: true, word: "3 languages" })
-		expect(sectionState(sectionById("AI Report"), status)?.word).toBe("On · chat on")
+		// The Talon chat is a section of its own (#1333), beside the AI Report it needs.
+		expect(sectionState(sectionById("AI Report"), status)).toEqual({ kind: "switch", on: true, word: "On" })
+		expect(sectionState(sectionById("Talon Chat"), status)).toEqual({ kind: "switch", on: true, word: "On" })
 		expect(
-			sectionState(sectionById("AI Report"), statusFixture({ portal_ai_report: { on: true, chat_on: false } }))?.word
-		).toBe("On")
+			sectionState(sectionById("Talon Chat"), statusFixture({ portal_talon_chat: { on: false } }))?.word
+		).toBe("Off")
 	})
 
 	it("counts a list with its noun", () => {
@@ -104,7 +106,7 @@ describe("sectionState", () => {
 describe("switchSummary", () => {
 	it("counts the switches that are on, when there are at least two", () => {
 		const portal = SECTIONS.filter(section => section.group === "portal")
-		expect(switchSummary(portal, statusFixture())).toBe("7 of 10 on")
+		expect(switchSummary(portal, statusFixture())).toBe("8 of 11 on")
 		expect(switchSummary([sectionById("AI Triggers")], statusFixture())).toBeNull()
 		expect(switchSummary(portal, null)).toBeNull()
 	})
@@ -116,6 +118,8 @@ describe("searchSections", () => {
 	it("finds by name first, then by keyword or group", () => {
 		expect(searchSections("audit", all).map(section => section.id)).toEqual(["Audit Log"])
 		expect(searchSections("virustotal", all).map(section => section.id)).toEqual(["IOC Enrichment"])
+		expect(searchSections("chat", all)[0]?.id).toBe("Talon Chat")
+		expect(searchSections("ask talon", all).map(section => section.id)).toEqual(["Talon Chat"])
 		const notifications = searchSections("notif", all).map(section => section.id)
 		expect(notifications.slice(0, 3)).toEqual(["Notification Workflows", "Notifications", "Portal Notifications"])
 		expect(searchSections("portal notifications", all).map(section => section.id)).toEqual(["Portal Notifications"])
