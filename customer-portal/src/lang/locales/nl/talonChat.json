@@ -21,7 +21,19 @@
 		"archive": "Gesprek sluiten",
 		"archiveNamed": "Gesprek sluiten: {title}",
 		"archiveConfirm": "Dit gesprek sluiten? Het verdwijnt uit je lijst.",
-		"archived": "Gesprek gesloten"
+		"archived": "Gesprek gesloten",
+		"search": "Gesprekken zoeken",
+		"filterLabel": "Welke gesprekken",
+		"filter": {
+			"active": "Open",
+			"archived": "Gesloten"
+		},
+		"emptyHint": "Begin er een met Nieuw gesprek.",
+		"emptyArchived": "Geen gesloten gesprekken.",
+		"noMatch": "Geen gesprek komt overeen met ‘{query}’.",
+		"actionsNamed": "Acties voor: {title}",
+		"back": "Terug naar de gesprekken",
+		"newShort": "Nieuw"
 	},
 	"newThread": {
 		"title": "Nieuw gesprek",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "Over melding #{id}",
 		"notAccessible": "Dit gesprek is niet meer beschikbaar. Je kunt het nog wel sluiten.",
-		"answered": "Talon heeft geantwoord."
+		"answered": "Talon heeft geantwoord.",
+		"sendHint": "Ctrl of ⌘ + Enter om te versturen"
 	},
 	"checked": {
 		"line": "Gecontroleerd: {items}",

@@ -1,8 +1,10 @@
+import { createPinia, setActivePinia } from "pinia"
 import { describe, expect, it } from "vitest"
 import i18n from "@/lang"
 import { SUPPORTED_LOCALES } from "@/lang/config"
 import * as locales from "@/lang/locales"
-import { checkedLine, ERROR_CODES, errorCodeOf, errorText, knownCode } from "../talonChat"
+import dayjs from "@/utils/dayjs"
+import { checkedLine, ERROR_CODES, errorCodeOf, errorText, knownCode, threadMatches, threadTime } from "../talonChat"
 
 /** The talon-analyst SPEC §8 error table's codes the portal can meet (the `ioc_*` ones are tool results). */
 const SPEC_CODES = [
@@ -103,5 +105,33 @@ describe("the checked line", () => {
 			"Checked: 2 threat-intel lookups"
 		)
 		expect(checkedLine(null)).toBeNull()
+	})
+})
+
+describe("the inbox's row time", () => {
+	// A Wednesday afternoon, local time.
+	const now = dayjs("2026-10-28T15:00:00")
+
+	it("is the time today, the weekday within the week, else the date", () => {
+		setActivePinia(createPinia())
+		expect(threadTime(dayjs("2026-10-28T09:05:00").toISOString(), now)).toBe("09:05")
+		expect(threadTime(dayjs("2026-10-26T18:00:00").toISOString(), now)).toBe("Monday")
+		expect(threadTime(dayjs("2026-10-22T18:00:00").toISOString(), now)).toBe("Thursday")
+		expect(threadTime(dayjs("2026-10-21T18:00:00").toISOString(), now)).toBe("10/21/2026")
+	})
+
+	it("is the date for a time ahead of the clock, and nothing for no time", () => {
+		setActivePinia(createPinia())
+		expect(threadTime(dayjs("2026-10-30T10:00:00").toISOString(), now)).toBe("10/30/2026")
+		expect(threadTime("not a date", now)).toBe("")
+	})
+})
+
+describe("the inbox's search", () => {
+	it("finds the text in the title or the organization, ignoring case and accents", () => {
+		expect(threadMatches("Réseau suspect", "Acme Corp", "reseau")).toBe(true)
+		expect(threadMatches("Phishing click", "Acme Corp", "ACME")).toBe(true)
+		expect(threadMatches("Phishing click", "Acme Corp", "  ")).toBe(true)
+		expect(threadMatches("Phishing click", "Acme Corp", "ransom")).toBe(false)
 	})
 })

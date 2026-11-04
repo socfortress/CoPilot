@@ -21,7 +21,19 @@
 		"archive": "Close conversation",
 		"archiveNamed": "Close conversation: {title}",
 		"archiveConfirm": "Close this conversation? It leaves your list.",
-		"archived": "Conversation closed"
+		"archived": "Conversation closed",
+		"search": "Search conversations",
+		"filterLabel": "Which conversations",
+		"filter": {
+			"active": "Open",
+			"archived": "Closed"
+		},
+		"emptyHint": "Start one with New conversation.",
+		"emptyArchived": "No closed conversations.",
+		"noMatch": "No conversation matches “{query}”.",
+		"actionsNamed": "Actions for: {title}",
+		"back": "Back to the conversations",
+		"newShort": "New"
 	},
 	"newThread": {
 		"title": "New conversation",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "About alert #{id}",
 		"notAccessible": "This conversation isn't available any more. You can still close it.",
-		"answered": "Talon has answered."
+		"answered": "Talon has answered.",
+		"sendHint": "Ctrl or ⌘ + Enter to send"
 	},
 	"checked": {
 		"line": "Checked: {items}",

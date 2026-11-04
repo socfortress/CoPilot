@@ -21,7 +21,19 @@
 		"archive": "Cerrar conversación",
 		"archiveNamed": "Cerrar conversación: {title}",
 		"archiveConfirm": "¿Cerrar esta conversación? Saldrá de tu lista.",
-		"archived": "Conversación cerrada"
+		"archived": "Conversación cerrada",
+		"search": "Buscar conversaciones",
+		"filterLabel": "Qué conversaciones",
+		"filter": {
+			"active": "Abiertas",
+			"archived": "Cerradas"
+		},
+		"emptyHint": "Empiece una con Nueva conversación.",
+		"emptyArchived": "No hay conversaciones cerradas.",
+		"noMatch": "Ninguna conversación coincide con «{query}».",
+		"actionsNamed": "Acciones para: {title}",
+		"back": "Volver a las conversaciones",
+		"newShort": "Nueva"
 	},
 	"newThread": {
 		"title": "Nueva conversación",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "Sobre la alerta #{id}",
 		"notAccessible": "Esta conversación ya no está disponible. Aún puedes cerrarla.",
-		"answered": "Talon ha respondido."
+		"answered": "Talon ha respondido.",
+		"sendHint": "Ctrl o ⌘ + Intro para enviar"
 	},
 	"checked": {
 		"line": "Revisado: {items}",

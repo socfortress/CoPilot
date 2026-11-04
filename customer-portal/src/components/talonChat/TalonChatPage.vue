@@ -1,18 +1,11 @@
 <template>
 	<div class="flex flex-col gap-6" data-testid="talon-chat-page">
-		<header class="flex flex-col gap-1.5">
+		<!-- On: the inbox names itself ("Conversations") and the breadcrumb says "Ask Talon"; the page title stays for screen readers. -->
+		<header v-if="!enabled" class="flex flex-col gap-1.5">
 			<h1 class="font-display text-2xl leading-tight font-semibold tracking-tight">{{ $t("talonChat.page.title") }}</h1>
 			<p class="text-secondary m-0 text-sm">{{ $t("talonChat.page.intro") }}</p>
-			<!-- Said on every visit: what Talon can't do, and who may read the chats (talon-analyst D97 Q7). -->
-			<ul class="text-secondary m-0 flex list-none flex-col gap-1 p-0 text-xs" data-testid="talon-chat-notices">
-				<li class="flex items-center gap-2" data-testid="talon-chat-no-actions">
-					<Icon name="carbon:information" :size="14" class="shrink-0" />{{ $t("talonChat.page.noActionsNotice") }}
-				</li>
-				<li class="flex items-center gap-2" data-testid="talon-chat-review-notice">
-					<Icon name="carbon:view" :size="14" class="shrink-0" />{{ $t("talonChat.page.reviewNotice") }}
-				</li>
-			</ul>
 		</header>
+		<h1 v-else class="sr-only">{{ $t("talonChat.page.title") }}</h1>
 
 		<div v-if="checking" class="flex justify-center py-10"><n-spin /></div>
 
@@ -39,10 +32,12 @@
 			<p class="text-secondary m-0 max-w-md text-sm">{{ $t("talonChat.page.unavailableText") }}</p>
 		</div>
 
-		<div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+		<div v-else class="inbox" :class="{ 'has-detail': detailOpen }" data-testid="talon-inbox">
 			<TalonThreadList
+				class="inbox-list"
 				:threads
 				:selected-id
+				:filter
 				:loading="loadingThreads"
 				:has-more="!!nextCursor"
 				:error-code="threadsErrorCode"
@@ -52,22 +47,51 @@
 				@new="startNew"
 				@more="loadThreads(true)"
 				@retry="loadThreads()"
+				@filter="setFilter"
 			/>
 
-			<section class="min-w-0">
-				<TalonNewThread
-					v-if="showNew || !selectedId"
-					:customers="chatCustomers"
-					:cancellable="!!selectedId"
-					@created="created"
-					@cancel="showNew = false"
-				/>
+			<section class="inbox-pane" data-testid="talon-inbox-pane">
+				<template v-if="showNew || !selectedId">
+					<div v-if="detailOpen" class="border-default flex h-13 shrink-0 items-center border-b px-2 lg:hidden">
+						<n-button quaternary size="small" :disabled="streaming" data-testid="talon-inbox-back" @click="back()">
+							<template #icon><Icon name="carbon:arrow-left" /></template>
+							{{ $t("talonChat.threads.title") }}
+						</n-button>
+					</div>
+					<TalonNewThread :customers="chatCustomers" :cancellable="!!selectedId" @created="created" @cancel="showNew = false" />
+				</template>
 				<TalonConversation
 					v-else
 					:thread-id="selectedId"
 					@turn="loadThreads(false, true)"
 					@streaming="value => (streaming = value)"
-				/>
+					@archive="archive"
+				>
+					<template #leading>
+						<n-button
+							quaternary
+							circle
+							size="small"
+							class="lg:hidden!"
+							:disabled="streaming"
+							:aria-label="$t('talonChat.threads.back')"
+							data-testid="talon-inbox-back"
+							@click="back()"
+						>
+							<template #icon><Icon name="carbon:arrow-left" /></template>
+						</n-button>
+					</template>
+				</TalonConversation>
+
+				<!-- Said on every visit: what Talon can't do, and who may read the chats (talon-analyst D97 Q7). -->
+				<ul class="notices" data-testid="talon-chat-notices">
+					<li data-testid="talon-chat-no-actions">
+						<Icon name="carbon:information" :size="13" class="shrink-0" />{{ $t("talonChat.page.noActionsNotice") }}
+					</li>
+					<li data-testid="talon-chat-review-notice">
+						<Icon name="carbon:view" :size="13" class="shrink-0" />{{ $t("talonChat.page.reviewNotice") }}
+					</li>
+				</ul>
 			</section>
 		</div>
 	</div>
@@ -75,7 +99,7 @@
 
 <script setup lang="ts">
 import type { PortalCustomer } from "@/types/auth"
-import type { TalonChatThread } from "@/types/talonChat"
+import type { TalonChatThread, TalonChatThreadStatusFilter } from "@/types/talonChat"
 import { NButton, NSpin, useMessage } from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
@@ -94,6 +118,9 @@ import TalonThreadList from "./TalonThreadList.vue"
  * "Ask Talon" (talon-analyst D97): the user's conversations with Talon, one organization each.
  * Shown only when the availability route says Ask Talon is on; CoPilot and talon-analyst check
  * the switch again on every request. The open conversation is in the address (`?thread=`).
+ *
+ * Laid out as an inbox (the restyle's variant 07): the conversations beside the open one, in a panel
+ * the height of the window, so the composer stays in view. Below `lg` it is one or the other.
  */
 const route = useRoute()
 const router = useRouter()
@@ -117,12 +144,16 @@ const nextCursor = ref<string | null>(null)
 const threadsErrorCode = ref<string | null>(null)
 const { loading: loadingThreads, run } = useLatestRequest()
 const showNew = ref(false)
+/** Open or archived conversations; an archived one opens read only. */
+const filter = ref<Extract<TalonChatThreadStatusFilter, "active" | "archived">>("active")
 
 const selectedId = computed(() => {
 	// Only a well-formed id is read from the address; anything else opens no conversation.
 	const value = route.query.thread
 	return typeof value === "string" && THREAD_ID.test(value) ? value : null
 })
+/** Narrow screens show the list or this: a conversation, or the new one being started. */
+const detailOpen = computed(() => showNew.value || !!selectedId.value)
 
 async function checkAvailability() {
 	const customers = authStore.accessibleCustomers
@@ -139,7 +170,7 @@ function loadThreads(more = false, quiet = false) {
 	const cursor = more ? nextCursor.value : null
 	return run(
 		async signal => {
-			const res = await Api.talonChat.listThreads({ status: "active", limit: PAGE_SIZE, cursor }, signal)
+			const res = await Api.talonChat.listThreads({ status: filter.value, limit: PAGE_SIZE, cursor }, signal)
 			const page = res.data.threads ?? []
 			if (more) {
 				const shown = new Set(threads.value.map(thread => thread.id))
@@ -161,12 +192,31 @@ function select(id: string) {
 	if (id !== selectedId.value) router.push({ query: { ...route.query, thread: id } })
 }
 
+function setFilter(value: typeof filter.value) {
+	filter.value = value
+	threads.value = []
+	nextCursor.value = null
+	loadThreads()
+}
+
+/** Back to the list on a narrow screen: the conversation leaves the address. */
+function back() {
+	if (streaming.value) return
+	showNew.value = false
+	if (selectedId.value) {
+		const { thread: _closed, ...query } = route.query
+		router.replace({ query })
+	}
+}
+
 function startNew() {
 	if (streaming.value) return
 	showNew.value = true
 }
 
 function created(thread: TalonChatThread) {
+	// A new conversation is an open one: the list shows those again if it was on the archived.
+	if (filter.value !== "active") setFilter("active")
 	threads.value = [thread, ...threads.value.filter(item => item.id !== thread.id)]
 	select(thread.id)
 }
@@ -201,3 +251,64 @@ watch(
 
 onBeforeMount(refresh)
 </script>
+
+<style scoped>
+.inbox {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	/* The page's own bottom padding (`--view-padding`) is the gap under it: nothing left to scroll. */
+	height: calc(100svh - var(--header-bar-height) - var(--toolbar-height) - var(--view-padding));
+	min-height: 32rem;
+	overflow: hidden;
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	background: var(--bg-body-color);
+}
+.inbox-list,
+.inbox-pane {
+	min-height: 0;
+}
+.inbox-pane {
+	display: flex;
+	flex-direction: column;
+}
+.notices {
+	display: flex;
+	flex-shrink: 0;
+	flex-wrap: wrap;
+	gap: 4px 16px;
+	margin: 0;
+	padding: 0 20px 12px;
+	list-style: none;
+	color: var(--fg-tertiary-color);
+	font-size: 11px;
+	line-height: 16px;
+}
+.notices li {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+@media (min-width: 1024px) {
+	.inbox {
+		grid-template-columns: 26rem minmax(0, 1fr);
+	}
+	.inbox-list {
+		border-right: 1px solid var(--border-color);
+	}
+}
+@media (max-width: 1023px) {
+	.inbox.has-detail .inbox-list,
+	.inbox:not(.has-detail) .inbox-pane {
+		display: none;
+	}
+}
+/* No header bar on a phone: the panel starts under the toolbar. */
+@media (max-width: 700px) {
+	.inbox {
+		height: calc(100svh - var(--toolbar-height) - var(--view-padding));
+		min-height: 28rem;
+	}
+}
+</style>
