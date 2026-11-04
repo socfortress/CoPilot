@@ -18,7 +18,7 @@
 		</n-tooltip>
 
 		<n-drawer v-model:show="showDrawer" :width="440" class="max-w-[90vw]" :trap-focus="false">
-			<n-drawer-content title="What's new from SOCFortress" closable data-testid="whats-new-drawer">
+			<n-drawer-content title="What's new from SOCFortress" closable :native-scrollbar="false" data-testid="whats-new-drawer">
 				<div class="flex flex-col">
 					<template v-for="(item, index) of announcements" :key="item.id">
 						<n-divider v-if="index > 0" />
