@@ -1,14 +1,21 @@
 <template>
-	<section class="border-default bg-default flex flex-col gap-3 rounded-lg border px-4 py-3" data-testid="talon-analysis-offer">
+	<section
+		class="border-default bg-default flex flex-col gap-3 rounded-lg border px-4 py-3"
+		data-testid="talon-analysis-offer"
+	>
 		<header class="flex flex-wrap items-center gap-2">
 			<Icon name="carbon:ai-launch" :size="16" class="text-secondary" />
 			<h4 class="m-0 text-sm font-semibold">{{ $t("talonChat.analysisOffer.title") }}</h4>
 		</header>
 
-		<p class="m-0 text-sm">{{ $t("talonChat.analysisOffer.text", { id: alertId }) }}</p>
+		<div class="m-0 text-sm">{{ $t("talonChat.analysisOffer.text", { id: alertId }) }}</div>
 
 		<div class="flex flex-wrap items-center gap-3">
-			<RouterLink :to="{ name: 'AlertDetails', params: { id: alertId } }" class="text-primary text-sm" data-testid="talon-analysis-offer-alert">
+			<RouterLink
+				:to="{ name: 'AlertDetails', params: { id: alertId } }"
+				class="text-primary text-sm"
+				data-testid="talon-analysis-offer-alert"
+			>
 				{{ $t("talonChat.analysisOffer.openAlert") }}
 			</RouterLink>
 
@@ -26,7 +33,11 @@
 		<p v-if="loadFailed" class="text-secondary m-0 text-xs" data-testid="talon-analysis-offer-load-error">
 			{{ $t("talonChat.analysisOffer.loadFailed") }}
 		</p>
-		<p v-else-if="!loading && !allowed" class="text-secondary m-0 text-xs" data-testid="talon-analysis-offer-not-allowed">
+		<p
+			v-else-if="!loading && !allowed"
+			class="text-secondary m-0 text-xs"
+			data-testid="talon-analysis-offer-not-allowed"
+		>
 			{{ $t("talonChat.analysisOffer.notAllowed") }}
 		</p>
 
@@ -79,7 +90,9 @@ const inProgress = computed(() => {
 	if (requested.value) return true
 	const job = analysis.value?.investigation
 	return (
-		!!job && ["pending", "running"].includes(job.status) && Date.now() - utcMillis(job.created_at) < STALE_INVESTIGATION_MS
+		!!job &&
+		["pending", "running"].includes(job.status) &&
+		Date.now() - utcMillis(job.created_at) < STALE_INVESTIGATION_MS
 	)
 })
 
