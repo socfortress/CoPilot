@@ -21,7 +21,19 @@
 		"archive": "Chiudi la conversazione",
 		"archiveNamed": "Chiudi la conversazione: {title}",
 		"archiveConfirm": "Chiudere questa conversazione? Uscirà dal tuo elenco.",
-		"archived": "Conversazione chiusa"
+		"archived": "Conversazione chiusa",
+		"search": "Cerca nelle conversazioni",
+		"filterLabel": "Quali conversazioni",
+		"filter": {
+			"active": "Aperte",
+			"archived": "Chiuse"
+		},
+		"emptyHint": "Iniziane una con Nuova conversazione.",
+		"emptyArchived": "Nessuna conversazione chiusa.",
+		"noMatch": "Nessuna conversazione corrisponde a “{query}”.",
+		"actionsNamed": "Azioni per: {title}",
+		"back": "Torna alle conversazioni",
+		"newShort": "Nuova"
 	},
 	"newThread": {
 		"title": "Nuova conversazione",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "Sull'alert #{id}",
 		"notAccessible": "Questa conversazione non è più disponibile. Puoi comunque chiuderla.",
-		"answered": "Talon ha risposto."
+		"answered": "Talon ha risposto.",
+		"sendHint": "Ctrl o ⌘ + Invio per inviare"
 	},
 	"checked": {
 		"line": "Controllato: {items}",

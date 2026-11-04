@@ -1,91 +1,122 @@
 <template>
-	<div class="flex min-h-0 flex-col gap-4" data-testid="talon-conversation">
-		<div v-if="thread" class="flex flex-wrap items-center gap-2 text-sm">
-			<h2 class="m-0 truncate text-base font-semibold" data-testid="talon-conversation-title">{{ title }}</h2>
-			<span class="text-secondary text-xs">{{ customerName(thread.customer_code) }}</span>
-			<RouterLink
-				v-if="thread.context_alert_id"
-				:to="{ name: 'AlertDetails', params: { id: thread.context_alert_id } }"
-				class="text-primary text-xs"
-				data-testid="talon-conversation-alert"
-			>
-				{{ $t("talonChat.conversation.aboutAlert", { id: thread.context_alert_id }) }}
-			</RouterLink>
-		</div>
-
-		<n-alert v-if="loadErrorCode && !messages.length" type="warning" :bordered="false" data-testid="talon-conversation-load-error">
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<span>{{ errorText(loadErrorCode) }}</span>
-				<n-button size="small" secondary @click="loadNewest()">{{ $t("common.actions.tryAgain") }}</n-button>
-			</div>
-		</n-alert>
-
-		<!-- Not a live region: a streamed reply would be read out token by token. One announcement at its end instead. -->
-		<p class="sr-only" role="status" aria-live="polite" data-testid="talon-conversation-announcement">{{ announcement }}</p>
-
-		<div class="flex flex-col gap-4" :aria-busy="streaming" data-testid="talon-conversation-messages">
-			<div v-if="olderCursor" class="flex justify-center">
-				<n-button size="small" secondary :loading="loadingOlder" data-testid="talon-conversation-earlier" @click="loadOlder()">
-					{{ $t("talonChat.conversation.loadEarlier") }}
-				</n-button>
-			</div>
-
-			<p v-if="!loading && !messages.length && !loadErrorCode" class="text-secondary m-0 text-sm" data-testid="talon-conversation-empty">
-				{{ $t("talonChat.conversation.empty") }}
-			</p>
-			<div v-if="loading && !messages.length" class="flex justify-center py-6"><n-spin size="small" /></div>
-
-			<TalonMessage
-				v-for="message of messages"
-				:key="message.id"
-				:message
-				:show-cards="!readOnly"
-				:can-draft="!readOnly && !!availability?.can_draft"
-				:can-request-analysis="!readOnly && !!availability?.can_request_analysis"
-				:feedback-busy="feedbackBusy.has(message.id)"
-				@feedback="rating => rate(message, rating)"
-			/>
-		</div>
-
-		<p v-if="thread && !thread.accessible" class="text-secondary m-0 text-sm" data-testid="talon-conversation-not-accessible">
-			{{ $t("talonChat.conversation.notAccessible") }}
-		</p>
-
-		<p v-else-if="thread?.status === 'archived'" class="text-secondary m-0 text-sm" data-testid="talon-conversation-archived">
-			{{ errorText("thread_archived") }}
-		</p>
-
-		<form v-else class="flex flex-col gap-2" data-testid="talon-composer" @submit.prevent="send()">
-			<n-alert v-if="sendErrorCode" type="error" :bordered="false" closable data-testid="talon-send-error" @close="sendErrorCode = null">
-				{{ errorText(sendErrorCode) }}
-			</n-alert>
-			<n-input
-				v-model:value="draft"
-				type="textarea"
-				:autosize="{ minRows: 2, maxRows: 8 }"
-				:placeholder="$t('talonChat.conversation.placeholder')"
-				:status="tooLong ? 'error' : undefined"
-				:disabled="streaming || !thread"
-				:input-props="{ 'aria-label': $t('talonChat.conversation.inputLabel'), 'aria-describedby': counterId }"
-				data-testid="talon-composer-input"
-				@keydown="onKeydown"
-			/>
-			<div class="flex flex-wrap items-center justify-between gap-2">
-				<span :id="counterId" class="text-xs tabular-nums" :class="tooLong ? 'text-error' : 'text-secondary'" data-testid="talon-composer-count">
-					<template v-if="tooLong">{{ $t("talonChat.conversation.tooLong", { max: MESSAGE_MAX }) }} · </template>{{ length }} / {{ MESSAGE_MAX }}
+	<div class="flex min-h-0 grow flex-col" data-testid="talon-conversation">
+		<header class="border-default flex min-h-16 shrink-0 items-center gap-2 border-b px-3 py-2 lg:px-6">
+			<slot name="leading" />
+			<div v-if="thread" class="flex min-w-0 grow flex-col gap-0.5">
+				<h2 class="font-display m-0 truncate text-base leading-6 font-semibold tracking-tight" data-testid="talon-conversation-title">{{ title }}</h2>
+				<span class="text-secondary flex min-w-0 flex-wrap items-center gap-x-2 text-xs">
+					<span class="truncate">{{ customerName(thread.customer_code) }}</span>
+					<RouterLink
+						v-if="thread.context_alert_id"
+						:to="{ name: 'AlertDetails', params: { id: thread.context_alert_id } }"
+						class="text-primary"
+						data-testid="talon-conversation-alert"
+					>
+						{{ $t("talonChat.conversation.aboutAlert", { id: thread.context_alert_id }) }}
+					</RouterLink>
 				</span>
-				<n-button
-					type="primary"
-					attr-type="submit"
-					:loading="streaming"
-					:disabled="streaming || !thread || !length || tooLong"
-					data-testid="talon-composer-send"
-				>
-					<template #icon><Icon name="carbon:send" /></template>
-					{{ $t("talonChat.conversation.send") }}
-				</n-button>
 			</div>
-		</form>
+			<TalonThreadActions
+				v-if="thread?.status === 'active'"
+				:thread
+				:disabled="streaming"
+				class="shrink-0"
+				data-testid="talon-conversation-actions"
+				@archive="id => emit('archive', id)"
+			/>
+		</header>
+
+		<div ref="scroller" class="scroller min-h-0 grow overflow-y-auto" @scroll.passive="onScroll">
+			<div ref="content" class="mx-auto flex max-w-[52rem] flex-col gap-4 px-4 py-6 lg:px-6">
+				<n-alert v-if="loadErrorCode && !messages.length" type="warning" :bordered="false" data-testid="talon-conversation-load-error">
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<span>{{ errorText(loadErrorCode) }}</span>
+						<n-button size="small" secondary @click="loadNewest()">{{ $t("common.actions.tryAgain") }}</n-button>
+					</div>
+				</n-alert>
+
+				<!-- Not a live region: a streamed reply would be read out token by token. One announcement at its end instead. -->
+				<p class="sr-only" role="status" aria-live="polite" data-testid="talon-conversation-announcement">{{ announcement }}</p>
+
+				<div class="flex flex-col gap-4" :aria-busy="streaming" data-testid="talon-conversation-messages">
+					<div v-if="olderCursor" class="flex justify-center">
+						<n-button size="small" secondary :loading="loadingOlder" data-testid="talon-conversation-earlier" @click="loadOlder()">
+							{{ $t("talonChat.conversation.loadEarlier") }}
+						</n-button>
+					</div>
+
+					<p
+						v-if="!loading && !messages.length && !loadErrorCode"
+						class="text-secondary m-0 py-10 text-center text-sm"
+						data-testid="talon-conversation-empty"
+					>
+						{{ $t("talonChat.conversation.empty") }}
+					</p>
+					<div v-if="loading && !messages.length" class="flex justify-center py-6"><n-spin size="small" /></div>
+
+					<TalonMessage
+						v-for="message of messages"
+						:key="message.id"
+						:message
+						:show-cards="!readOnly"
+						:can-draft="!readOnly && !!availability?.can_draft"
+						:can-request-analysis="!readOnly && !!availability?.can_request_analysis"
+						:feedback-busy="feedbackBusy.has(message.id)"
+						@feedback="rating => rate(message, rating)"
+					/>
+				</div>
+			</div>
+		</div>
+
+		<div class="shrink-0 px-4 pt-3 pb-2 lg:px-6">
+			<div class="mx-auto max-w-[52rem]">
+				<p v-if="thread && !thread.accessible" class="text-secondary m-0 py-2 text-sm" data-testid="talon-conversation-not-accessible">
+					{{ $t("talonChat.conversation.notAccessible") }}
+				</p>
+
+				<p v-else-if="thread?.status === 'archived'" class="text-secondary m-0 py-2 text-sm" data-testid="talon-conversation-archived">
+					{{ errorText("thread_archived") }}
+				</p>
+
+				<form v-else class="flex flex-col gap-1.5" data-testid="talon-composer" @submit.prevent="send()">
+					<n-alert v-if="sendErrorCode" type="error" :bordered="false" closable data-testid="talon-send-error" @close="sendErrorCode = null">
+						{{ errorText(sendErrorCode) }}
+					</n-alert>
+					<div class="composer" :class="{ 'is-error': tooLong }">
+						<n-input
+							v-model:value="draft"
+							type="textarea"
+							:bordered="false"
+							:autosize="{ minRows: 1, maxRows: 8 }"
+							:placeholder="$t('talonChat.conversation.placeholder')"
+							:status="tooLong ? 'error' : undefined"
+							:disabled="streaming || !thread"
+							:input-props="{ 'aria-label': $t('talonChat.conversation.inputLabel'), 'aria-describedby': counterId }"
+							class="composer-input"
+							data-testid="talon-composer-input"
+							@keydown="onKeydown"
+						/>
+						<n-button
+							type="primary"
+							attr-type="submit"
+							class="shrink-0"
+							:loading="streaming"
+							:disabled="streaming || !thread || !length || tooLong"
+							data-testid="talon-composer-send"
+						>
+							<template #icon><Icon name="carbon:send" /></template>
+							{{ $t("talonChat.conversation.send") }}
+						</n-button>
+					</div>
+					<div class="text-tertiary flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
+						<span>{{ $t("talonChat.conversation.sendHint") }}</span>
+						<span :id="counterId" class="tabular-nums" :class="{ 'text-error': tooLong }" data-testid="talon-composer-count">
+							<template v-if="tooLong">{{ $t("talonChat.conversation.tooLong", { max: MESSAGE_MAX }) }} · </template>{{ length }} / {{ MESSAGE_MAX }}
+						</span>
+					</div>
+				</form>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -93,7 +124,7 @@
 import type { DraftEdits } from "./talonChat"
 import type { TalonChatAvailability, TalonChatMessage, TalonChatRating, TalonChatThread } from "@/types/talonChat"
 import { NAlert, NButton, NInput, NSpin, useMessage } from "naive-ui"
-import { computed, onBeforeUnmount, provide, ref, useId, watch } from "vue"
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, useId, watch } from "vue"
 import { useI18n } from "vue-i18n"
 import { RouterLink } from "vue-router"
 import Api from "@/api"
@@ -105,12 +136,16 @@ import { useReadOnly } from "@/composables/common/useReadOnly"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { DRAFT_EDITS, errorCodeOf, errorText, MESSAGE_MAX, messageLength, threadTitle } from "./talonChat"
 import TalonMessage from "./TalonMessage.vue"
+import TalonThreadActions from "./TalonThreadActions.vue"
 
 /**
  * One "Ask Talon" conversation: its turns read back from CoPilot (newest page first), and a new
  * message streamed in. Once a streamed turn completes it is read back, which gives it its run id
  * (for feedback) and the cards' current state. A refusal before the stream gives the message back
  * to the composer and says why, by its code.
+ *
+ * The turns scroll in their own area between the title and the composer. It follows the newest
+ * turn while the user is at its end, and leaves them where they are when they have scrolled up.
  */
 const { threadId } = defineProps<{ threadId: string }>()
 
@@ -119,6 +154,8 @@ const emit = defineEmits<{
 	turn: []
 	/** A reply started or stopped streaming: the page keeps this conversation open meanwhile. */
 	streaming: [value: boolean]
+	/** The user confirmed closing this conversation from its "…" menu: the page closes it. */
+	archive: [id: string]
 }>()
 
 const { t } = useI18n()
@@ -152,6 +189,54 @@ const announcement = ref("")
 // A draft card mounted again (its turn read back after the stream) keeps what the user typed.
 const draftEdits = new Map<string, DraftEdits>()
 provide(DRAFT_EDITS, draftEdits)
+
+const scroller = ref<HTMLElement | null>(null)
+/** The user is at the end of the turns: new text keeps them there. */
+let following = true
+/** The newest turn's size: it grows chunk by chunk while a reply streams. */
+const newestSize = computed(() => {
+	const last = messages.value[messages.value.length - 1]
+	const text = last?.items.reduce((sum, item) => sum + (item.kind === "text" ? item.text.length : 1), 0) ?? 0
+	return `${messages.value.length}:${text}:${last?.status ?? ""}`
+})
+
+/**
+ * Where `toEnd` last put the view. Its scroll event can arrive after the turns have grown again, when
+ * the view is no longer at their end: that scroll is ours, not the user leaving the end.
+ */
+let ourTop: number | null = null
+
+function onScroll() {
+	const el = scroller.value
+	if (!el) return
+	if (ourTop !== null && Math.abs(el.scrollTop - ourTop) < 1) return
+	ourTop = null
+	following = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+}
+
+async function toEnd() {
+	await nextTick()
+	const el = scroller.value
+	if (!el) return
+	el.scrollTop = el.scrollHeight
+	ourTop = el.scrollTop
+}
+
+watch(newestSize, () => {
+	if (following) toEnd()
+})
+
+// Cards fill in after their turn renders (a draft is read by its id): the turns grow without a new
+// message, and a user at the end stays there.
+const content = ref<HTMLElement | null>(null)
+let resizes: ResizeObserver | null = null
+onMounted(() => {
+	if (typeof ResizeObserver === "undefined" || !content.value) return
+	resizes = new ResizeObserver(() => {
+		if (following) toEnd()
+	})
+	resizes.observe(content.value)
+})
 
 const length = computed(() => messageLength(draft.value))
 const tooLong = computed(() => length.value > MESSAGE_MAX)
@@ -198,16 +283,23 @@ function loadNewest() {
 async function loadOlder() {
 	if (!olderCursor.value) return
 	loadingOlder.value = true
+	const el = scroller.value
+	const fromEnd = el ? el.scrollHeight - el.scrollTop : 0
+	// The page above the user's place is put back where they were, never at the end.
+	following = false
 	try {
 		const res = await Api.talonChat.getMessages(threadId, { limit: PAGE_SIZE, before: olderCursor.value })
 		const shown = new Set(messages.value.map(m => m.id))
 		const older = fromUIMessages(res.data.messages).filter(m => !shown.has(m.id))
 		messages.value = [...older, ...messages.value]
 		olderCursor.value = res.data.next ?? null
+		await nextTick()
+		if (el) el.scrollTop = el.scrollHeight - fromEnd
 	} catch (err) {
 		toast.error(errorText(errorCodeOf(err)))
 	} finally {
 		loadingOlder.value = false
+		onScroll()
 	}
 }
 
@@ -226,8 +318,11 @@ async function send() {
 	sendErrorCode.value = null
 	announcement.value = ""
 	streaming.value = true
+	following = true
 	const seq = ++localSeq
-	messages.value.push(newUserMessage(`local-${seq}-user`, text), newAssistantMessage(`local-${seq}-assistant`))
+	// Stamped now until the turn is read back with the server's own times.
+	const sentAt = new Date().toISOString()
+	messages.value.push(newUserMessage(`local-${seq}-user`, text, sentAt), newAssistantMessage(`local-${seq}-assistant`, sentAt))
 	// The reactive copy: what the template renders, so each chunk shows as it arrives.
 	const assistant = messages.value[messages.value.length - 1] as TalonChatMessage
 	draft.value = ""
@@ -306,6 +401,7 @@ watch(
 		availability.value = null
 		draft.value = ""
 		sendErrorCode.value = null
+		following = true
 		loadNewest()
 	},
 	{ immediate: true }
@@ -315,7 +411,40 @@ watch(streaming, value => emit("streaming", value))
 
 // Leaving cuts the reply off (talon-analyst records it and frees the thread).
 onBeforeUnmount(() => {
+	resizes?.disconnect()
 	controller?.abort()
 	if (streaming.value) emit("streaming", false)
 })
 </script>
+
+<style scoped>
+.scroller {
+	/* The browser keeping the view on what is shown would move it as cards fill in: following the end is ours. */
+	overflow-anchor: none;
+	scrollbar-color: var(--border-color) transparent;
+	scrollbar-width: thin;
+}
+.composer {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	padding: 6px 6px 6px 4px;
+	border: 1px solid var(--border-color);
+	border-radius: 14px;
+	background: var(--bg-default-color);
+	transition: border-color 0.2s, box-shadow 0.2s;
+}
+.composer:focus-within {
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 1px var(--primary-color);
+}
+.composer.is-error {
+	border-color: var(--error-color);
+}
+.composer-input {
+	flex-grow: 1;
+	--n-color: transparent !important;
+	--n-color-focus: transparent !important;
+	--n-box-shadow-focus: none !important;
+}
+</style>

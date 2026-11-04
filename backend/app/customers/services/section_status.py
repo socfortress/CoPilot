@@ -16,7 +16,6 @@ from sqlmodel import select
 
 from app.customer_portal.services.languages import languages_of
 from app.customer_portal.services.talon_chat import chat_switched_on
-from app.customers.schema.section_status import AiReportState
 from app.customers.schema.section_status import CustomerSectionStatus
 from app.customers.schema.section_status import LanguagesState
 from app.customers.schema.section_status import ListState
@@ -110,13 +109,12 @@ def build_status(row: Any) -> CustomerSectionStatus:
         if row.chat_row is not None
         else None
     )
-    ai_report_on = bool(row.portal_ai_report)
     return CustomerSectionStatus(
-        **{key: _switch(getattr(row, key)) for key in SWITCHES if key != "portal_ai_report"},
+        **{key: _switch(getattr(row, key)) for key in SWITCHES},
         **{key: ListState(count=int(getattr(row, key) or 0)) for key in LISTS},
         portal_languages=LanguagesState(on=len(languages) > 1, count=len(languages)),
         # The chat needs the AI reports on as well (``talon_chat.py``): off without them.
-        portal_ai_report=AiReportState(on=ai_report_on, chat_on=ai_report_on and chat_switched_on(chat_row)),
+        portal_talon_chat=_switch(bool(row.portal_ai_report) and chat_switched_on(chat_row)),
     )
 
 

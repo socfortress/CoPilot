@@ -21,7 +21,19 @@
 		"archive": "Unterhaltung schließen",
 		"archiveNamed": "Unterhaltung schließen: {title}",
 		"archiveConfirm": "Diese Unterhaltung schließen? Sie verschwindet aus Ihrer Liste.",
-		"archived": "Unterhaltung geschlossen"
+		"archived": "Unterhaltung geschlossen",
+		"search": "Unterhaltungen durchsuchen",
+		"filterLabel": "Welche Unterhaltungen",
+		"filter": {
+			"active": "Offen",
+			"archived": "Geschlossen"
+		},
+		"emptyHint": "Beginnen Sie eine mit Neue Unterhaltung.",
+		"emptyArchived": "Keine geschlossenen Unterhaltungen.",
+		"noMatch": "Keine Unterhaltung passt zu „{query}“.",
+		"actionsNamed": "Aktionen für: {title}",
+		"back": "Zurück zu den Unterhaltungen",
+		"newShort": "Neu"
 	},
 	"newThread": {
 		"title": "Neue Unterhaltung",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "Zu Alarm #{id}",
 		"notAccessible": "Diese Unterhaltung ist nicht mehr verfügbar. Sie können sie weiterhin schließen.",
-		"answered": "Talon hat geantwortet."
+		"answered": "Talon hat geantwortet.",
+		"sendHint": "Strg oder ⌘ + Eingabe zum Senden"
 	},
 	"checked": {
 		"line": "Geprüft: {items}",

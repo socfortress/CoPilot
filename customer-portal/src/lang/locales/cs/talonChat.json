@@ -21,7 +21,19 @@
 		"archive": "Zavřít konverzaci",
 		"archiveNamed": "Zavřít konverzaci: {title}",
 		"archiveConfirm": "Zavřít tuto konverzaci? Zmizí z vašeho seznamu.",
-		"archived": "Konverzace byla zavřena"
+		"archived": "Konverzace byla zavřena",
+		"search": "Hledat v konverzacích",
+		"filterLabel": "Které konverzace",
+		"filter": {
+			"active": "Otevřené",
+			"archived": "Zavřené"
+		},
+		"emptyHint": "Začněte novou tlačítkem Nová konverzace.",
+		"emptyArchived": "Žádné zavřené konverzace.",
+		"noMatch": "Hledání „{query}“ neodpovídá žádná konverzace.",
+		"actionsNamed": "Akce pro: {title}",
+		"back": "Zpět na konverzace",
+		"newShort": "Nová"
 	},
 	"newThread": {
 		"title": "Nová konverzace",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "K výstraze #{id}",
 		"notAccessible": "Tato konverzace už není k dispozici. Stále ji můžete zavřít.",
-		"answered": "Talon odpověděl."
+		"answered": "Talon odpověděl.",
+		"sendHint": "Ctrl nebo ⌘ + Enter pro odeslání"
 	},
 	"checked": {
 		"line": "Zkontrolováno: {items}",

@@ -197,8 +197,9 @@ export interface CustomerSectionStatus {
 	portal_activity: CustomerSectionSwitch
 	portal_exposure: CustomerSectionSwitch
 	portal_audit: CustomerSectionSwitch
-	/** The AI Report section also holds the portal's Talon chat. */
-	portal_ai_report: CustomerSectionSwitch & { chat_on: boolean }
+	portal_ai_report: CustomerSectionSwitch
+	/** The portal's Talon chat: on only with the AI reports on as well. */
+	portal_talon_chat: CustomerSectionSwitch
 	portal_ask_soc: CustomerSectionSwitch
 	portal_ioc_enrichment: CustomerSectionSwitch
 	portal_notifications: CustomerSectionSwitch

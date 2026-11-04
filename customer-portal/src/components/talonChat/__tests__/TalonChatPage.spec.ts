@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { useTalonChatAvailability } from "@/composables/common/useTalonChatAvailability"
 import { useAuthStore } from "@/stores/auth"
 import TalonChatPage from "../TalonChatPage.vue"
+import TalonConversation from "../TalonConversation.vue"
 import TalonThreadList from "../TalonThreadList.vue"
 import { testRouter, thread, withProviders } from "./fixtures"
 
@@ -80,12 +81,71 @@ describe("the Ask Talon page", () => {
 		expect(wrapper.find("[data-testid=talon-new-thread]").exists()).toBe(true)
 	})
 
-	it("names the conversation on its close button", async () => {
+	it("names the conversation on its actions button", async () => {
 		availability(["ACME"])
 		const { wrapper } = await render()
-		expect(wrapper.get("[data-testid=talon-thread-archive-th-1]").attributes("aria-label")).toBe(
-			"Close conversation: Scheduled task on HOST-A"
+		expect(wrapper.get("[data-testid=talon-thread-actions-th-1]").attributes("aria-label")).toBe(
+			"Actions for: Scheduled task on HOST-A"
 		)
+	})
+
+	it("lists the closed conversations on their own, read only and without actions", async () => {
+		availability(["ACME"])
+		const { wrapper } = await render()
+		talonChat.listThreads.mockResolvedValue({
+			data: { threads: [thread({ id: "th-9", title: "Old one", status: "archived", archived_at: "2026-10-31T10:00:00Z" })], next: null }
+		})
+		await wrapper.get("[data-testid=talon-thread-filter-archived]").trigger("click")
+		await flushPromises()
+		expect(talonChat.listThreads).toHaveBeenLastCalledWith({ status: "archived", limit: 20, cursor: null }, expect.any(AbortSignal))
+		expect(wrapper.get("[data-testid=talon-thread-filter-archived]").classes()).toContain("n-tabs-tab--active")
+		expect(wrapper.find("[data-testid=talon-thread-th-1]").exists()).toBe(false)
+		expect(wrapper.get("[data-testid=talon-thread-th-9]").text()).toContain("Old one")
+		expect(wrapper.find("[data-testid=talon-thread-actions-th-9]").exists()).toBe(false)
+
+		talonChat.listThreads.mockResolvedValue({ data: { threads: [], next: null } })
+		await wrapper.get("[data-testid=talon-thread-filter-active]").trigger("click")
+		await flushPromises()
+		expect(talonChat.listThreads).toHaveBeenLastCalledWith({ status: "active", limit: 20, cursor: null }, expect.any(AbortSignal))
+		expect(wrapper.get("[data-testid=talon-thread-list-empty]").text()).toContain("No conversations yet.")
+	})
+
+	it("searches the listed conversations by title and organization", async () => {
+		availability(["ACME"])
+		talonChat.listThreads.mockResolvedValue({
+			data: { threads: [thread(), thread({ id: "th-2", title: "Phishing click", customer_code: "BETA" })], next: null }
+		})
+		const { wrapper } = await render()
+		const search = wrapper.get("[data-testid=talon-thread-search] input")
+		await search.setValue("phish")
+		expect(wrapper.find("[data-testid=talon-thread-th-1]").exists()).toBe(false)
+		expect(wrapper.find("[data-testid=talon-thread-th-2]").exists()).toBe(true)
+		await search.setValue("acme corp")
+		expect(wrapper.find("[data-testid=talon-thread-th-1]").exists()).toBe(true)
+		expect(wrapper.find("[data-testid=talon-thread-th-2]").exists()).toBe(false)
+		await search.setValue("nothing like it")
+		expect(wrapper.get("[data-testid=talon-thread-no-match]").text()).toBe("No conversation matches “nothing like it”.")
+	})
+
+	it("closes the open conversation from its own menu, as from its row", async () => {
+		availability(["ACME"])
+		talonChat.archiveThread.mockResolvedValue({ data: thread({ status: "archived", archived_at: "2026-10-31T10:00:00Z" }) })
+		const { wrapper, router } = await render("/talon?thread=th-1")
+		expect(wrapper.find("[data-testid=talon-conversation-actions]").exists()).toBe(true)
+		wrapper.findComponent(TalonConversation).vm.$emit("archive", "th-1")
+		await flushPromises()
+		expect(talonChat.archiveThread).toHaveBeenCalledWith("th-1")
+		expect(router.currentRoute.value.query.thread).toBeUndefined()
+	})
+
+	it("goes back to the list from a conversation, taking it out of the address", async () => {
+		availability(["ACME"])
+		const { wrapper, router } = await render("/talon?thread=th-1")
+		expect(wrapper.get("[data-testid=talon-inbox]").classes()).toContain("has-detail")
+		await wrapper.get("[data-testid=talon-inbox-back]").trigger("click")
+		await flushPromises()
+		expect(router.currentRoute.value.query.thread).toBeUndefined()
+		expect(wrapper.get("[data-testid=talon-inbox]").classes()).not.toContain("has-detail")
 	})
 
 	it("keeps a streaming reply's conversation open: no new conversation, no other thread, no close", async () => {
@@ -110,7 +170,8 @@ describe("the Ask Talon page", () => {
 
 		expect(wrapper.get("[data-testid=talon-thread-new]").attributes("disabled")).toBeDefined()
 		expect(wrapper.get("[data-testid=talon-thread-th-2]").attributes("disabled")).toBeDefined()
-		expect(wrapper.get("[data-testid=talon-thread-archive-th-1]").attributes("disabled")).toBeDefined()
+		expect(wrapper.get("[data-testid=talon-thread-actions-th-1]").attributes("disabled")).toBeDefined()
+		expect(wrapper.get("[data-testid=talon-inbox-back]").attributes("disabled")).toBeDefined()
 		await wrapper.get("[data-testid=talon-thread-new]").trigger("click")
 		await wrapper.get("[data-testid=talon-thread-th-2]").trigger("click")
 		await flushPromises()

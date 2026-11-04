@@ -1,7 +1,7 @@
 import type { TalonChatStreamHandlers, TalonChatStreamResult } from "@/api/endpoints/talonChat"
 import type { TalonChatChunk, TalonChatUIMessage } from "@/types/talonChat"
 import { flushPromises, mount } from "@vue/test-utils"
-import { NMessageProvider } from "naive-ui"
+import { NDialogProvider, NMessageProvider } from "naive-ui"
 import { createPinia, setActivePinia } from "pinia"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { defineComponent, h, ref } from "vue"
@@ -289,7 +289,8 @@ describe("an Ask Talon conversation", () => {
 		const host = defineComponent({
 			setup: () => () =>
 				h(NMessageProvider, null, () =>
-					h(TalonConversation, { threadId: threadId.value, onStreaming: (value: boolean) => streaming.push(value) }))
+					h(NDialogProvider, null, () =>
+						h(TalonConversation, { threadId: threadId.value, onStreaming: (value: boolean) => streaming.push(value) })))
 		})
 		const wrapper = mount(host, { global: { plugins: [testRouter()] } })
 		await flushPromises()

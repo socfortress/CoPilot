@@ -43,8 +43,7 @@ async function render() {
 	const Host = defineComponent({
 		render: () => h(NMessageProvider, () => h(AiReportSettings, { customerCode: "ACME" }))
 	})
-	// The portal chat section below has its own spec (PortalChatSettings.spec.ts).
-	const wrapper = mount(Host, { global: { stubs: { PortalChatSettings: true } } })
+	const wrapper = mount(Host)
 	await flushPromises()
 	return wrapper
 }

@@ -31,6 +31,7 @@ export const SECTION_IDS = [
 	"Exposure",
 	"Audit Log",
 	"AI Report",
+	"Talon Chat",
 	"Ask the SOC",
 	"IOC Enrichment",
 	"Portal Notifications"
@@ -196,8 +197,16 @@ export const SECTIONS: SectionDef[] = [
 		label: "AI Report",
 		group: "portal",
 		subgroup: "AI & requests",
-		keywords: ["ai analyst", "talon", "chat"],
+		keywords: ["ai analyst", "talon", "findings", "analysis requests"],
 		status: "portal_ai_report"
+	},
+	{
+		id: "Talon Chat",
+		label: "Talon Chat",
+		group: "portal",
+		subgroup: "AI & requests",
+		keywords: ["ask talon", "ai analyst", "chat", "transcripts", "message limits"],
+		status: "portal_talon_chat"
 	},
 	{
 		id: "Ask the SOC",
@@ -297,14 +306,11 @@ function plural(count: number, noun: [string, string]): string {
 /** What a section holds for this customer, worded; null when unknown or not a switch or a list. */
 export function sectionState(section: SectionDef, status: CustomerSectionStatus | null): SectionState | null {
 	if (!status || !section.status) return null
-	const value = status[section.status] as Partial<{ on: boolean; count: number; chat_on: boolean }> | undefined
+	const value = status[section.status] as Partial<{ on: boolean; count: number }> | undefined
 	if (!value) return null
 	if (section.status === "portal_languages" && typeof value.on === "boolean") {
 		const count = value.count ?? 1
 		return { kind: "switch", on: value.on, word: value.on ? plural(count, ["language", "languages"]) : "English only" }
-	}
-	if (section.status === "portal_ai_report" && typeof value.on === "boolean") {
-		return { kind: "switch", on: value.on, word: value.on ? (value.chat_on ? "On · chat on" : "On") : "Off" }
 	}
 	if (typeof value.on === "boolean") return { kind: "switch", on: value.on, word: value.on ? "On" : "Off" }
 	if (typeof value.count === "number") {

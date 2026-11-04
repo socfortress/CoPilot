@@ -38,6 +38,20 @@ beforeEach(() => {
 })
 
 describe("an Ask Talon message", () => {
+	it("says when it was written, date and time, beside its author", () => {
+		const wrapper = render(assistant({ createdAt: "2026-10-31T09:01:00Z" }))
+		const time = wrapper.get("[data-testid=talon-message-time]")
+		expect(time.attributes("datetime")).toBe("2026-10-31T09:01:00Z")
+		// The user's date format and 24-hour clock, in the browser's time zone.
+		expect(time.text()).toMatch(/^10\/31\/2026 \d{2}:\d{2}$/)
+		expect(wrapper.text()).toContain("Talon")
+	})
+
+	it("shows no time when it isn't known", () => {
+		const wrapper = render(assistant())
+		expect(wrapper.find("[data-testid=talon-message-time]").exists()).toBe(false)
+	})
+
 	it("renders the model's markup as text: no element, no handler", () => {
 		const evil = `<img src=x onerror="window.__xss=1">\n<script>window.__xss=2</script><a href="javascript:alert(1)">x</a>`
 		const wrapper = render(assistant({ items: [{ kind: "text", id: "t", text: evil }] }))

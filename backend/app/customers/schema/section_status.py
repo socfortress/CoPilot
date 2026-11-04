@@ -23,13 +23,6 @@ class LanguagesState(BaseModel):
     count: int = Field(..., ge=1, description="Languages offered, English included")
 
 
-class AiReportState(BaseModel):
-    """The AI Report section also holds the portal's Talon chat (#1326)."""
-
-    on: bool
-    chat_on: bool
-
-
 class CustomerSectionStatus(BaseModel):
     """What each section of a customer's page holds, for the navigation's status lights (#1325).
 
@@ -49,7 +42,9 @@ class CustomerSectionStatus(BaseModel):
     portal_activity: SwitchState
     portal_exposure: SwitchState
     portal_audit: SwitchState
-    portal_ai_report: AiReportState
+    portal_ai_report: SwitchState
+    # The portal's Talon chat (#1326): on only with the AI reports on as well (``talon_chat.py``).
+    portal_talon_chat: SwitchState
     portal_ask_soc: SwitchState
     portal_ioc_enrichment: SwitchState
     portal_notifications: SwitchState

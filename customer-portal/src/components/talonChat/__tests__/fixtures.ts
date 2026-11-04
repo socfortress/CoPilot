@@ -1,6 +1,6 @@
 import type { Component } from "vue"
 import type { TalonChatThread, TalonChatUIMessage, TalonSocDraft } from "@/types/talonChat"
-import { NMessageProvider } from "naive-ui"
+import { NDialogProvider, NMessageProvider } from "naive-ui"
 import { defineComponent, h } from "vue"
 import { createMemoryHistory, createRouter } from "vue-router"
 
@@ -63,9 +63,9 @@ export function testRouter() {
 	})
 }
 
-/** `component` inside the message provider its toasts need. */
+/** `component` inside the message and dialog providers its toasts and confirmations need. */
 export function withProviders(component: Component, props: Record<string, unknown> = {}) {
 	return defineComponent({
-		setup: () => () => h(NMessageProvider, null, () => h(component, props))
+		setup: () => () => h(NMessageProvider, null, () => h(NDialogProvider, null, () => h(component, props)))
 	})
 }

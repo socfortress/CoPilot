@@ -21,7 +21,19 @@
 		"archive": "Fermer la conversation",
 		"archiveNamed": "Fermer la conversation : {title}",
 		"archiveConfirm": "Fermer cette conversation ? Elle quitte votre liste.",
-		"archived": "Conversation fermée"
+		"archived": "Conversation fermée",
+		"search": "Rechercher dans les conversations",
+		"filterLabel": "Quelles conversations",
+		"filter": {
+			"active": "Ouvertes",
+			"archived": "Fermées"
+		},
+		"emptyHint": "Commencez-en une avec Nouvelle conversation.",
+		"emptyArchived": "Aucune conversation fermée.",
+		"noMatch": "Aucune conversation ne correspond à « {query} ».",
+		"actionsNamed": "Actions pour : {title}",
+		"back": "Retour aux conversations",
+		"newShort": "Nouvelle"
 	},
 	"newThread": {
 		"title": "Nouvelle conversation",
@@ -47,7 +59,8 @@
 		"talon": "Talon",
 		"aboutAlert": "À propos de l'alerte #{id}",
 		"notAccessible": "Cette conversation n'est plus disponible. Vous pouvez toujours la fermer.",
-		"answered": "Talon a répondu."
+		"answered": "Talon a répondu.",
+		"sendHint": "Ctrl ou ⌘ + Entrée pour envoyer"
 	},
 	"checked": {
 		"line": "Vérifié : {items}",

@@ -51,7 +51,8 @@ async function installSectionsMock(context: BrowserContext): Promise<Stored> {
 						portal_activity: { on: true },
 						portal_exposure: { on: false },
 						portal_audit: { on: false },
-						portal_ai_report: { on: true, chat_on: false },
+						portal_ai_report: { on: true },
+						portal_talon_chat: { on: false },
 						portal_ask_soc: { on: false },
 						portal_ioc_enrichment: { on: stored.ioc },
 						portal_notifications: { on: false }
@@ -93,9 +94,10 @@ test.describe("the customer's sections", () => {
 		await page.getByTestId("section-group-portal").hover()
 		const menu = page.getByTestId("section-menu-portal")
 		await expect(menu).toBeVisible()
-		await expect(menu).toContainText("3 of 10 on")
+		await expect(menu).toContainText("3 of 11 on")
 		await expect(menu.getByTestId("section-menu-item-Portal Languages")).toContainText("English only")
 		await expect(menu.getByTestId("section-menu-item-AI Report")).toContainText("On")
+		await expect(menu.getByTestId("section-menu-item-Talon Chat")).toContainText("Off")
 		await expect(menu.getByTestId("section-menu-item-Exposure")).toContainText("Off")
 
 		await menu.getByTestId("section-menu-item-Exposure").click()

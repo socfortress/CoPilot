@@ -23,7 +23,13 @@
 
 		<n-alert v-else-if="loadErrorCode" type="warning" :bordered="false" data-testid="talon-draft-load-error">
 			<div class="flex flex-wrap items-center justify-between gap-3">
-				<span>{{ loadErrorCode === "draft_not_found" ? $t("talonChat.draft.unavailable") : $t("talonChat.draft.loadFailed") }}</span>
+				<span>
+					{{
+						loadErrorCode === "draft_not_found"
+							? $t("talonChat.draft.unavailable")
+							: $t("talonChat.draft.loadFailed")
+					}}
+				</span>
 				<n-button v-if="loadErrorCode !== 'draft_not_found'" size="small" secondary @click="load()">
 					{{ $t("common.actions.tryAgain") }}
 				</n-button>
@@ -48,8 +54,14 @@
 							@blur="touched = true"
 						/>
 						<div class="-mt-2 flex flex-wrap justify-between gap-2 text-xs">
-							<span class="text-error" data-testid="talon-draft-problem">{{ touched && problem ? problem : "" }}</span>
-							<span :class="length > QUESTION_MAX ? 'text-error' : 'text-secondary'" class="tabular-nums" data-testid="talon-draft-count">
+							<span class="text-error" data-testid="talon-draft-problem">
+								{{ touched && problem ? problem : "" }}
+							</span>
+							<span
+								:class="length > QUESTION_MAX ? 'text-error' : 'text-secondary'"
+								class="tabular-nums"
+								data-testid="talon-draft-count"
+							>
 								{{ length }} / {{ QUESTION_MAX }}
 							</span>
 						</div>
@@ -58,13 +70,21 @@
 							<legend class="mb-2 text-sm font-medium">{{ $t("talonChat.draft.urgencyLegend") }}</legend>
 							<n-radio-group v-model:value="urgency" :disabled="busy" data-testid="talon-draft-urgency">
 								<div class="flex flex-wrap gap-x-6 gap-y-2">
-									<n-radio v-for="option of URGENCY_OPTIONS" :key="option.value" :value="option.value">
+									<n-radio
+										v-for="option of URGENCY_OPTIONS"
+										:key="option.value"
+										:value="option.value"
+									>
 										<span class="font-medium">{{ option.label }}</span>
 										<span class="text-secondary ml-1 text-xs">{{ option.description }}</span>
 									</n-radio>
 								</div>
 							</n-radio-group>
-							<span v-if="touched && !urgency" class="text-error text-xs" data-testid="talon-draft-urgency-problem">
+							<span
+								v-if="touched && !urgency"
+								class="text-error text-xs"
+								data-testid="talon-draft-urgency-problem"
+							>
 								{{ $t("talonChat.draft.urgencyRequired") }}
 							</span>
 						</fieldset>
@@ -73,9 +93,16 @@
 							<legend class="mb-2 text-sm font-medium">{{ $t("talonChat.draft.fileOnLegend") }}</legend>
 							<n-radio-group v-model:value="fileOn" :disabled="busy" data-testid="talon-draft-file-on">
 								<div class="flex flex-col gap-2">
-									<n-radio v-for="option of FILE_ON" :key="option" :value="option" :data-testid="`talon-draft-file-on-${option}`">
+									<n-radio
+										v-for="option of FILE_ON"
+										:key="option"
+										:value="option"
+										:data-testid="`talon-draft-file-on-${option}`"
+									>
 										<span class="font-medium">{{ $t(`talonChat.draft.fileOn.${option}`) }}</span>
-										<span class="text-secondary ml-1 text-xs">{{ $t(`talonChat.draft.fileOn.${option}Hint`) }}</span>
+										<span class="text-secondary ml-1 text-xs">
+											{{ $t(`talonChat.draft.fileOn.${option}Hint`) }}
+										</span>
 									</n-radio>
 								</div>
 							</n-radio-group>
@@ -86,7 +113,13 @@
 						</n-alert>
 
 						<div class="flex flex-wrap gap-2">
-							<n-button type="primary" attr-type="submit" :loading="submitting" :disabled="busy" data-testid="talon-draft-submit">
+							<n-button
+								type="primary"
+								attr-type="submit"
+								:loading="submitting"
+								:disabled="busy"
+								data-testid="talon-draft-submit"
+							>
 								<template #icon><Icon name="carbon:send" /></template>
 								{{ $t("talonChat.draft.submit") }}
 							</n-button>
@@ -104,26 +137,44 @@
 					</form>
 				</template>
 				<template v-else>
-					<p class="m-0 text-sm break-words whitespace-pre-wrap" data-testid="talon-draft-question-text">
+					<div class="m-0 text-sm break-words whitespace-pre-wrap" data-testid="talon-draft-question-text">
 						<span>{{ draft.question }}</span>
+					</div>
+					<p class="text-secondary m-0 text-xs" data-testid="talon-draft-off">
+						{{ $t("talonChat.draft.socRequestsOff") }}
 					</p>
-					<p class="text-secondary m-0 text-xs" data-testid="talon-draft-off">{{ $t("talonChat.draft.socRequestsOff") }}</p>
 				</template>
 			</template>
 
 			<template v-else>
-				<p class="m-0 text-sm break-words whitespace-pre-wrap" data-testid="talon-draft-question-text">
+				<div class="m-0 text-sm break-words whitespace-pre-wrap" data-testid="talon-draft-question-text">
 					<span>{{ draft.question }}</span>
-				</p>
+				</div>
 				<div class="flex flex-wrap items-center gap-2">
-					<n-tag size="small" :bordered="false" :type="STATUS_TAG[draft.status]" data-testid="talon-draft-status">
+					<n-tag
+						size="small"
+						:bordered="false"
+						:type="STATUS_TAG[draft.status]"
+						data-testid="talon-draft-status"
+					>
 						{{ $t(`talonChat.draft.status.${draft.status}`) }}
 					</n-tag>
-					<n-button v-if="draft.status === 'submitting'" size="tiny" secondary :loading data-testid="talon-draft-refresh" @click="load()">
+					<n-button
+						v-if="draft.status === 'submitting'"
+						size="tiny"
+						secondary
+						:loading
+						data-testid="talon-draft-refresh"
+						@click="load()"
+					>
 						{{ $t("talonChat.draft.refresh") }}
 					</n-button>
 				</div>
-				<p v-if="draft.status === 'submitted'" class="text-secondary m-0 text-xs" data-testid="talon-draft-submitted">
+				<p
+					v-if="draft.status === 'submitted'"
+					class="text-secondary m-0 text-xs"
+					data-testid="talon-draft-submitted"
+				>
 					{{
 						draft.copilot_ref
 							? $t("talonChat.draft.submittedText", { id: draft.copilot_ref })
@@ -144,7 +195,13 @@ import { computed, inject, ref, watch } from "vue"
 import Api from "@/api"
 import { utcMillis } from "@/components/alerts/AlertDetails/aiInvestigation"
 import Icon from "@/components/common/Icon.vue"
-import { normalizeQuestion, QUESTION_MAX, questionLength, questionProblem, URGENCY_OPTIONS } from "@/components/socRequests/askSoc"
+import {
+	normalizeQuestion,
+	QUESTION_MAX,
+	questionLength,
+	questionProblem,
+	URGENCY_OPTIONS
+} from "@/components/socRequests/askSoc"
 import { useLatestRequest } from "@/composables/common/useLatestRequest"
 import { DRAFT_EDITS, errorCodeOf, errorText } from "./talonChat"
 

@@ -97,7 +97,7 @@ describe("the portal chat settings", () => {
 		getCustomerPortalChatSettings.mockResolvedValue(answer({}, false))
 		const wrapper = await render(false)
 		expect(disabled(wrapper, "portal-chat-switch")).toBe(true)
-		expect(wrapper.get("[data-testid=portal-chat-state]").text()).toContain("Turn on the AI findings above first")
+		expect(wrapper.get("[data-testid=portal-chat-state]").text()).toContain("Turn on AI Report first")
 	})
 
 	it("shows why the limits can't be saved, and doesn't send them", async () => {
@@ -142,7 +142,7 @@ describe("the portal chat settings", () => {
 		await wrapper.setProps({ ai: false })
 		await flushPromises()
 		expect(getCustomerPortalChatSettings).toHaveBeenCalledTimes(2)
-		expect(wrapper.get("[data-testid=portal-chat-state]").text()).toContain("Turn on the AI findings above first")
+		expect(wrapper.get("[data-testid=portal-chat-state]").text()).toContain("Turn on AI Report first")
 	})
 
 	it("shows the server's refusal text", async () => {

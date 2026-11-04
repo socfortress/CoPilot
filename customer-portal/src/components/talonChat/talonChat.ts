@@ -1,8 +1,10 @@
+import type { Dayjs } from "dayjs"
 import type { InjectionKey } from "vue"
 import type { TalonChatThread, TalonCheckedItem, TalonDraftFileOn, TalonDraftUrgency } from "@/types/talonChat"
 import { codeFrom } from "@/api/talonChatStream"
 import { i18nGlobal } from "@/lang"
 import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 
 /**
@@ -127,6 +129,37 @@ export function threadTitle(thread: Pick<TalonChatThread, "title" | "created_at"
 	if (thread.title) return thread.title
 	const date = String(formatDate(thread.created_at, useSettingsStore().dateFormat.datetime, { tz: true }))
 	return i18nGlobal.t("talonChat.threads.untitled", { date })
+}
+
+/**
+ * When a conversation last moved, as the inbox shows it: the time today, the weekday within the
+ * last six days, else the date (in the portal's language and the user's date format).
+ */
+export function threadTime(iso: string, now: Dayjs = dayjs()): string {
+	const settings = useSettingsStore()
+	const when = dayjs(iso)
+	if (!when.isValid()) return ""
+	const local = when.locale(String(i18nGlobal.locale.value))
+	if (when.isSame(now, "day")) return local.format(settings.dateFormat.time)
+	if (now.startOf("day").diff(when.startOf("day"), "day") < 7 && when.isBefore(now)) return local.format("dddd")
+	return local.format(settings.dateFormat.date)
+}
+
+/** When a message was written, date and time in the user's format; empty when it isn't known. */
+export function messageTime(iso: string | null): string {
+	if (!iso || !dayjs(iso).isValid()) return ""
+	return String(formatDate(iso, useSettingsStore().dateFormat.datetime, { tz: true }))
+}
+
+/** Whether a conversation's title or organization name holds the search text (case and accents ignored). */
+export function threadMatches(title: string, customerName: string, query: string): boolean {
+	const fold = (value: string) =>
+		value
+			.normalize("NFD")
+			.replace(/\p{M}/gu, "")
+			.toLocaleLowerCase()
+	const needle = fold(query.trim())
+	return !needle || fold(title).includes(needle) || fold(customerName).includes(needle)
 }
 
 /** A thread id as the address may carry it (`?thread=`): anything else is ignored. */
