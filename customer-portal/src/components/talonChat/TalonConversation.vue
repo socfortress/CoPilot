@@ -320,7 +320,9 @@ async function send() {
 	streaming.value = true
 	following = true
 	const seq = ++localSeq
-	messages.value.push(newUserMessage(`local-${seq}-user`, text), newAssistantMessage(`local-${seq}-assistant`))
+	// Stamped now until the turn is read back with the server's own times.
+	const sentAt = new Date().toISOString()
+	messages.value.push(newUserMessage(`local-${seq}-user`, text, sentAt), newAssistantMessage(`local-${seq}-assistant`, sentAt))
 	// The reactive copy: what the template renders, so each chunk shows as it arrives.
 	const assistant = messages.value[messages.value.length - 1] as TalonChatMessage
 	draft.value = ""

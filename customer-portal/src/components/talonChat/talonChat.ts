@@ -145,6 +145,12 @@ export function threadTime(iso: string, now: Dayjs = dayjs()): string {
 	return local.format(settings.dateFormat.date)
 }
 
+/** When a message was written, date and time in the user's format; empty when it isn't known. */
+export function messageTime(iso: string | null): string {
+	if (!iso || !dayjs(iso).isValid()) return ""
+	return String(formatDate(iso, useSettingsStore().dateFormat.datetime, { tz: true }))
+}
+
 /** Whether a conversation's title or organization name holds the search text (case and accents ignored). */
 export function threadMatches(title: string, customerName: string, query: string): boolean {
 	const fold = (value: string) =>
