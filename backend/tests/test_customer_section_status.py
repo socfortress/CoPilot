@@ -247,7 +247,8 @@ def test_switches_lists_languages_and_chat():
     assert sections["portal_ioc_enrichment"] == {"on": True}
     assert sections["portal_branding"] == {"on": True}
     assert sections["portal_languages"] == {"on": True, "count": 3}
-    assert sections["portal_ai_report"] == {"on": True, "chat_on": True}
+    assert sections["portal_ai_report"] == {"on": True}
+    assert sections["portal_talon_chat"] == {"on": True}
     assert sections["integrations"] == {"count": 2}
     assert sections["network_connectors"] == {"count": 1}
     assert sections["event_sources"] == {"count": 3}
@@ -264,7 +265,8 @@ def test_a_customer_with_nothing_set_reads_all_off_and_english_only():
     assert all(state["on"] is False for state in sections.values() if "on" in state)
     assert all(state["count"] == 0 for key, state in sections.items() if key != "portal_languages" and "count" in state)
     assert sections["portal_languages"] == {"on": False, "count": 1}
-    assert sections["portal_ai_report"] == {"on": False, "chat_on": False}
+    assert sections["portal_ai_report"] == {"on": False}
+    assert sections["portal_talon_chat"] == {"on": False}
 
 
 def test_branding_switched_off_english_only_and_chat_without_ai_reports_read_off():
@@ -275,7 +277,8 @@ def test_branding_switched_off_english_only_and_chat_without_ai_reports_read_off
     assert sections["portal_branding"] == {"on": False}
     assert sections["portal_languages"] == {"on": False, "count": 1}
     # The chat row is on with a limit, but the AI reports are off: the chat is off.
-    assert sections["portal_ai_report"] == {"on": False, "chat_on": False}
+    assert sections["portal_ai_report"] == {"on": False}
+    assert sections["portal_talon_chat"] == {"on": False}
     assert sections["integrations"] == {"count": 1}
 
 
@@ -292,7 +295,9 @@ def test_the_chat_needs_a_customer_limit():
             await session.commit()
         return (await client.get(STATUS.format(code="ACME"), headers=as_user("admin"))).json()
 
-    assert call(scenario)["sections"]["portal_ai_report"] == {"on": True, "chat_on": False}
+    sections = call(scenario)["sections"]
+    assert sections["portal_ai_report"] == {"on": True}
+    assert sections["portal_talon_chat"] == {"on": False}
 
 
 def test_who_may_read_it():

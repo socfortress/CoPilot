@@ -211,7 +211,10 @@ async def main():
                 sections.get("portal_languages") == {"on": True, "count": 3},
                 str(sections.get("portal_languages")),
             )
-            check("the AI reports and their chat", sections.get("portal_ai_report") == {"on": True, "chat_on": True})
+            check(
+                "the AI reports and their chat",
+                sections.get("portal_ai_report") == {"on": True} and sections.get("portal_talon_chat") == {"on": True},
+            )
             check(
                 "the lists, this customer's only",
                 [
@@ -241,8 +244,8 @@ async def main():
             sections = (await client.get(STATUS.format(code=CODE), headers=admin)).json()["sections"]
             check(
                 "AI reports off: the chat off",
-                sections["portal_ai_report"] == {"on": False, "chat_on": False},
-                str(sections["portal_ai_report"]),
+                sections["portal_ai_report"] == {"on": False} and sections["portal_talon_chat"] == {"on": False},
+                str((sections["portal_ai_report"], sections["portal_talon_chat"])),
             )
             check("a branding row switched off", sections["portal_branding"] == {"on": False})
 
