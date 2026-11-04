@@ -6,7 +6,7 @@ description: Prerequisites, the two-command guided install of talon-analyst next
 talon-analyst, the current [AI Analyst (Talon)](/power-features/ai-analyst), runs on the same VM as CoPilot as a separate Docker Compose project. It joins CoPilot's Docker network, so CoPilot reaches it as `http://talon-analyst-api:3100`. The images are published as `ghcr.io/socfortress/talon-analyst-*`; each release has a version (for example `0.1.2`), and an install pins one.
 
 <Note>
-  talon-analyst is proprietary SOCFortress software under the SOCFortress EULA, which ships with every release. SOCFortress installs it on request for support clients, and this page describes what that install does. [Contact SOCFortress](https://www.socfortress.co/) to arrange one.
+  talon-analyst is proprietary SOCFortress software under the SOCFortress EULA, which ships with every release. This page walks through installing it yourself. If you'd like a hand, [SOCFortress](https://www.socfortress.co/) can help with the install.
 </Note>
 
 Every setup step is safe to re-run, is a dry run until applied, and never prints a secret. Real values (hosts, passwords, keys) go only into the install's `.env` and `secrets/` on the VM.
