@@ -45,8 +45,13 @@
 					Direct HTTP POST/PUT to a URL you control — automation platforms, chat incoming webhooks, custom
 					endpoints, etc. No Shuffle org required.
 				</span>
-				<span v-else>
+				<span v-else-if="isShuffle">
 					Shuffle proxies to 3,000+ integrations through a customer's authenticated Shuffle org.
+				</span>
+				<span v-else-if="isResend">Sends email directly through Resend. No Shuffle org required.</span>
+				<span v-else-if="form.channel === 'teams'">
+					Posts an Adaptive Card to a Teams channel through a Power Automate Workflows webhook. No Shuffle org
+					required.
 				</span>
 			</template>
 		</n-form-item>
@@ -361,6 +366,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import ChannelConfigFields from "./ChannelConfigFields.vue"
+import { buildGenericChannelConfig } from "./genericChannelConfig"
 
 const props = defineProps<{
 	// Empty for internal-scope routes, which belong to no tenant.
@@ -498,6 +504,8 @@ async function sendTest() {
 
 const isWebhook = computed(() => form.channel === "webhook")
 const isResend = computed(() => form.channel === "resend")
+// Rendered by ChannelConfigFields from the provider's schema.
+const isGenericChannel = computed(() => !isShuffle.value && !isWebhook.value && !isResend.value)
 const isAssigneeMode = computed(() => form.recipient_mode === "assignee")
 
 // n-dynamic-input binds an array of strings; cfg.to is the source of truth.
@@ -867,6 +875,21 @@ const rules: FormRules = {
 			return true
 		},
 		trigger: ["input", "blur"]
+	},
+	// The value is in `cfg`, not in the form's model. Only the create route
+	// requires it: a PATCH without it saves a route that can't deliver.
+	config: {
+		webhook_url: {
+			validator: () => {
+				const url = (cfg as Record<string, unknown>).webhook_url as string | null | undefined
+				if (form.channel === "teams" && !url?.trim()) {
+					return createFieldError("webhook_url", "Webhook URL is required")
+				}
+				clearFieldError("webhook_url")
+				return true
+			},
+			trigger: ["input", "blur"]
+		}
 	}
 }
 
@@ -882,6 +905,14 @@ async function submit() {
 	try {
 		await formRef.value?.validate()
 	} catch {
+		return
+	}
+
+	// Without the catalog there is no schema to build the config from, and a
+	// PATCH replaces it wholesale: an empty one would erase the route's settings.
+	const genericDescriptor = isGenericChannel.value ? activeDescriptor.value : null
+	if (isGenericChannel.value && !genericDescriptor) {
+		message.error("The channel's settings aren't loaded yet. Reopen this form and try again.")
 		return
 	}
 
@@ -944,19 +975,26 @@ async function submit() {
 							max_per_hour: cfg.max_per_hour ?? null
 						}
 					}
-				: {
-						...base,
-						destination: form.destination,
-						shuffle_integration_id: form.shuffle_integration_id,
-						config: {
-							app_id: cfg.app_id ?? null,
-							app_name: cfg.app_name ?? null,
-							// Only when ticked: a backend from before this option rejects the key
-							// (extra="forbid"), so leaving it out keeps a rollback from breaking
-							// every Shuffle route saved since.
-							...(cfg.include_full_report ? { include_full_report: true } : {})
+				: genericDescriptor
+					? {
+							...base,
+							destination: null,
+							shuffle_integration_id: null,
+							config: buildGenericChannelConfig(genericDescriptor, cfg as Record<string, unknown>)
 						}
-					}
+					: {
+							...base,
+							destination: form.destination,
+							shuffle_integration_id: form.shuffle_integration_id,
+							config: {
+								app_id: cfg.app_id ?? null,
+								app_name: cfg.app_name ?? null,
+								// Only when ticked: a backend from before this option rejects the key
+								// (extra="forbid"), so leaving it out keeps a rollback from breaking
+								// every Shuffle route saved since.
+								...(cfg.include_full_report ? { include_full_report: true } : {})
+							}
+						}
 
 		let res
 		if (isInternalScope.value) {
