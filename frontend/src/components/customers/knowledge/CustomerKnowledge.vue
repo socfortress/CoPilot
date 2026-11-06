@@ -15,86 +15,90 @@
 				/>
 			</div>
 
-			<n-spin v-else :show="loading">
-				<div class="min-h-52">
-					<n-alert v-if="failure" type="error" :bordered="false" data-testid="knowledge-failure">
-						<div class="flex flex-wrap items-center justify-between gap-3">
-							<span>{{ failure }}</span>
-							<n-button size="small" @click="load()">Try again</n-button>
-						</div>
-					</n-alert>
+			<div v-else class="flex flex-col gap-4">
+				<n-spin :show="loading">
+					<div class="min-h-52">
+						<n-alert v-if="failure" type="error" :bordered="false" data-testid="knowledge-failure">
+							<div class="flex flex-wrap items-center justify-between gap-3">
+								<span>{{ failure }}</span>
+								<n-button size="small" @click="load()">Try again</n-button>
+							</div>
+						</n-alert>
 
-					<template v-else-if="groups">
-						<CustomerTabEmpty
-							v-if="nothingRecorded"
-							icon="carbon:notebook"
-							eyebrow="No facts yet"
-							title="Nothing recorded about this customer yet"
-							description="Facts are what the SOC knows about this customer that an alert can't say: which range is which, what a host is for, what activity to expect."
-							:points="EMPTY_POINTS"
-							points-title="What you can record"
-						>
-							<template #actions>
-								<n-button
-									v-for="group of groups"
-									:key="group.kind"
-									secondary
-									:data-testid="`knowledge-add-${group.kind}`"
-									@click="openAdd(group.kind)"
-								>
-									<template #icon>
-										<Icon :name="AddIcon" :size="16" />
-									</template>
-									Add {{ group.noun }}
-								</n-button>
-							</template>
-						</CustomerTabEmpty>
-
-						<div v-else class="flex flex-col gap-4">
-							<n-card
-								v-for="group of groups"
-								:key="group.kind"
-								size="small"
-								:data-testid="`knowledge-group-${group.kind}`"
+						<template v-else-if="groups">
+							<CustomerTabEmpty
+								v-if="nothingRecorded"
+								icon="carbon:notebook"
+								eyebrow="No facts yet"
+								title="Nothing recorded about this customer yet"
+								description="Facts are what the SOC knows about this customer that an alert can't say: which range is which, what a host is for, what activity to expect."
+								:points="EMPTY_POINTS"
+								points-title="What you can record"
 							>
-								<template #header>
-									<div class="flex items-center gap-2">
-										<Icon :name="group.icon" :size="16" />
-										<span>{{ group.title }}</span>
-									</div>
-								</template>
-								<template #header-extra>
+								<template #actions>
 									<n-button
-										size="small"
+										v-for="group of groups"
+										:key="group.kind"
+										secondary
 										:data-testid="`knowledge-add-${group.kind}`"
 										@click="openAdd(group.kind)"
 									>
 										<template #icon>
-											<Icon :name="AddIcon" :size="14" />
+											<Icon :name="AddIcon" :size="16" />
 										</template>
-										Add
+										Add {{ group.noun }}
 									</n-button>
 								</template>
+							</CustomerTabEmpty>
 
-								<p class="text-secondary mt-0 mb-3 text-sm">{{ group.about }}</p>
-								<div v-if="group.facts.length" class="flex flex-col gap-2">
-									<CustomerKnowledgeFact
-										v-for="fact of group.facts"
-										:key="fact.id"
-										:fact
-										:customer-code
-										@edit="openEdit(fact)"
-										@deleted="onChanged()"
-									/>
-								</div>
-								<p v-else class="text-tertiary m-0 text-sm" data-testid="knowledge-group-empty">
-									No {{ group.title.toLowerCase() }} recorded yet.
-								</p>
-							</n-card>
-						</div>
-					</template>
-				</div>
-			</n-spin>
+							<div v-else class="flex flex-col gap-4">
+								<n-card
+									v-for="group of groups"
+									:key="group.kind"
+									size="small"
+									:data-testid="`knowledge-group-${group.kind}`"
+								>
+									<template #header>
+										<div class="flex items-center gap-2">
+											<Icon :name="group.icon" :size="16" />
+											<span>{{ group.title }}</span>
+										</div>
+									</template>
+									<template #header-extra>
+										<n-button
+											size="small"
+											:data-testid="`knowledge-add-${group.kind}`"
+											@click="openAdd(group.kind)"
+										>
+											<template #icon>
+												<Icon :name="AddIcon" :size="14" />
+											</template>
+											Add
+										</n-button>
+									</template>
+
+									<p class="text-secondary mt-0 mb-3 text-sm">{{ group.about }}</p>
+									<div v-if="group.facts.length" class="flex flex-col gap-2">
+										<CustomerKnowledgeFact
+											v-for="fact of group.facts"
+											:key="fact.id"
+											:fact
+											:customer-code
+											@edit="openEdit(fact)"
+											@deleted="onChanged()"
+										/>
+									</div>
+									<p v-else class="text-tertiary m-0 text-sm" data-testid="knowledge-group-empty">
+										No {{ group.title.toLowerCase() }} recorded yet.
+									</p>
+								</n-card>
+							</div>
+						</template>
+					</div>
+				</n-spin>
+
+				<CustomerKnowledgeSees :customer-code />
+			</div>
 		</transition>
 	</div>
 </template>
@@ -110,6 +114,7 @@ import { getApiErrorMessage } from "@/utils"
 import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerKnowledgeFact from "./CustomerKnowledgeFact.vue"
 import CustomerKnowledgeForm from "./CustomerKnowledgeForm.vue"
+import CustomerKnowledgeSees from "./CustomerKnowledgeSees.vue"
 import { CONTEXT_LINE, groupFacts, KIND_WORDS, KINDS } from "./knowledge"
 
 const { customerCode } = defineProps<{

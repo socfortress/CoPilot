@@ -1,4 +1,4 @@
-import type { KnowledgeItem, KnowledgeItemBody, KnowledgeItemUpdate } from "@/types/customer-knowledge"
+import type { KnowledgeItem, KnowledgeItemBody, KnowledgeItemUpdate, TalonSees } from "@/types/customer-knowledge"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
@@ -24,5 +24,12 @@ export default {
 	},
 	remove(customerCode: string, itemId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`${base(customerCode)}/${itemId}`)
+	},
+	/**
+	 * What talon-analyst has measured of the customer's log sources: not the facts above. A refusal is
+	 * `{"detail", "code"}` (`memoryFailure` reads it), and the route is a 404 while "Talon v2" is off.
+	 */
+	whatTalonSees(customerCode: string, signal?: AbortSignal) {
+		return HttpClient.get<TalonSees>(`/talon/knowledge/${encodeURIComponent(customerCode)}`, { signal })
 	}
 }

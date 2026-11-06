@@ -84,3 +84,60 @@ export type KnowledgeItemBody = {
 
 /** A change to a fact: the same body, plus the `version` of the fact the analyst opened. */
 export type KnowledgeItemUpdate = KnowledgeItemBody & { expected_version: number }
+
+// ── What Talon sees ───────────────────────────────────────────────────────────
+
+/**
+ * What talon-analyst has measured of a customer's log sources (its daily `source_profile` job),
+ * relayed by `GET /api/talon/knowledge/{customer_code}`. Mirrors
+ * `backend/app/connectors/talon/schema/talon_knowledge.py`. Read-only: none of it is typed by a person.
+ */
+export type TalonSeesStatus = "ok" | "no_sources" | "no_profile" | "no_tenant_map"
+
+export type TalonSeesCategory = "endpoint" | "identity" | "email" | "network" | "cloud" | "waf"
+
+export type TalonSeesRole =
+	| "src_ip"
+	| "dst_ip"
+	| "user"
+	| "host"
+	| "process"
+	| "command_line"
+	| "file_hash"
+	| "file_path"
+	| "url"
+	| "domain"
+	| "email"
+	| "action"
+
+/** A category in none of these: a verified source of it wasn't measured, so nothing is claimed. */
+export interface TalonSeesCoverage {
+	available: TalonSeesCategory[]
+	degraded: TalonSeesCategory[]
+	unavailable: TalonSeesCategory[]
+}
+
+export interface TalonSeesSource {
+	pattern: string
+	categories: TalonSeesCategory[]
+	/** Over the last `event_days`. */
+	events: number | null
+	/** The source went quiet. */
+	degraded: boolean | null
+	measured_at: string | null
+	/** Over the last `field_days`. */
+	fields: Partial<Record<TalonSeesRole, string[]>>
+}
+
+/** Only `ok` carries measurements, and even then the times and windows may be null. */
+export interface TalonSees {
+	success: boolean
+	customer_code: string
+	status: TalonSeesStatus
+	measured_at: string | null
+	field_days: number | null
+	event_days: number | null
+	coverage: TalonSeesCoverage | null
+	sources: TalonSeesSource[]
+	not_measured: string[]
+}

@@ -1,5 +1,6 @@
 """The HTTP client behind the Talon Memory tab (``services/talon_memory.py``): talon-analyst's
-``/v2/memory/...`` routes.
+``/v2/memory/...`` routes. The customer page's "What Talon sees" panel (``services/talon_knowledge.py``)
+uses it too, for ``/v2/knowledge/...`` (``prefix``), with the same safety.
 
 Shaped like ``health_client``: one deadline per request (connect, headers and body together; the
 caller picks it, ``TIMEOUT_SECONDS`` by default, ``STATS_SECONDS``/``SLOW_SECONDS`` for the calls
@@ -68,8 +69,8 @@ class MemoryAnswer:
     timed_out: bool = False
 
 
-def memory_path(segments: Sequence[str]) -> str:
-    """``/v2/memory/<seg>/<seg>…``, each segment checked and percent-encoded (``UnsafePath``)."""
+def memory_path(segments: Sequence[str], prefix: str = PREFIX) -> str:
+    """``<prefix>/<seg>/<seg>…``, each segment checked and percent-encoded (``UnsafePath``)."""
     if not segments:
         raise UnsafePath("no path")
     encoded = []
@@ -77,7 +78,7 @@ def memory_path(segments: Sequence[str]) -> str:
         if not isinstance(segment, str) or not segment or segment in (".", "..") or _UNSAFE_SEGMENT.search(segment):
             raise UnsafePath("unsafe path segment")
         encoded.append(quote(segment, safe=""))
-    return f"{PREFIX}/{'/'.join(encoded)}"
+    return f"{prefix}/{'/'.join(encoded)}"
 
 
 def _new_client(timeout: httpx.Timeout) -> httpx.AsyncClient:
@@ -99,9 +100,10 @@ async def request(
     json_body: Optional[Dict[str, Any]] = None,
     max_body_bytes: Optional[int] = None,
     timeout: Optional[float] = None,
+    prefix: str = PREFIX,
 ) -> MemoryAnswer:
-    """One request to talon-analyst's memory API. ``UnsafePath`` is raised before anything is sent."""
-    path = memory_path(segments)
+    """One request to talon-analyst's API under ``prefix``. ``UnsafePath`` is raised before anything is sent."""
+    path = memory_path(segments, prefix)
     max_body_bytes = MAX_BODY_BYTES if max_body_bytes is None else max_body_bytes
     seconds = TIMEOUT_SECONDS if timeout is None else timeout
     headers = {"Accept": "application/json", "Accept-Encoding": "identity", "x-api-key": api_key}
@@ -109,25 +111,25 @@ async def request(
         headers["Content-Type"] = "application/json"
     query = {k: v for k, v in (params or {}).items() if v is not None}
     # The log line names the route's shape, never a drawer, an asset or a search.
-    shape = f"{method} {PREFIX}/{segments[0] if segments[0] == 'chat' else '<customer>'}/…"
+    shape = f"{method} {prefix}/{segments[0] if segments[0] == 'chat' else '<customer>'}/…"
     try:
         with anyio.fail_after(seconds):
             async with _new_client(httpx.Timeout(seconds)) as client:
                 async with client.stream(method, _url(base_url, path), headers=headers, params=query, json=json_body) as response:
                     if not capped_body.is_identity(response):
-                        logger.warning(f"Talon memory {shape}: the answer came with a Content-Encoding; not read")
+                        logger.warning(f"Talon {shape}: the answer came with a Content-Encoding; not read")
                         return MemoryAnswer(response.status_code, b"", "Talon's answer was compressed; not read")
                     body = await capped_body.read_capped(response, max_body_bytes)
                     if body is None:
-                        logger.warning(f"Talon memory {shape}: the answer is over {max_body_bytes} bytes")
+                        logger.warning(f"Talon {shape}: the answer is over {max_body_bytes} bytes")
                         return MemoryAnswer(response.status_code, b"", "Talon's answer was too large")
                     return MemoryAnswer(response.status_code, body)
     except TimeoutError:
-        logger.warning(f"Talon memory {shape}: no answer within {seconds:g} s")
+        logger.warning(f"Talon {shape}: no answer within {seconds:g} s")
         return MemoryAnswer(None, error=f"Talon did not answer within {seconds:g} s", timed_out=True)
     except Exception as e:  # noqa: BLE001 - a transport error or a malformed connector URL
         name = type(e).__name__
-        logger.warning(f"Talon memory {shape} failed: {name}")
+        logger.warning(f"Talon {shape} failed: {name}")
         if isinstance(e, httpx.TimeoutException):
             return MemoryAnswer(None, error=f"Talon did not answer within {seconds:g} s", timed_out=True)
         return MemoryAnswer(None, error=f"Talon could not be reached ({name})")
