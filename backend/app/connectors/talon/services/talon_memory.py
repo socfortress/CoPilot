@@ -403,14 +403,14 @@ async def customer_problem(user: User, session: AsyncSession, customer_code: str
     result = await session.execute(select(Customers.customer_code).where(Customers.customer_code == customer_code))
     if customer_code not in set(result.scalars().all()):
         return problem(404, UNKNOWN_CUSTOMER, "unknown_customer")
-    if customer_code == RESERVED_CUSTOMER:
-        # talon-analyst matches /v2/memory/chat/... as a user's chat memory first: never asked.
-        return problem(404, RESERVED, "unknown_customer")
     return None
 
 
 async def _for_customer(user: User, session: AsyncSession, customer_code: str) -> Union[Talon, JSONResponse]:
     refused = await customer_problem(user, session, customer_code)
+    if refused is None and customer_code == RESERVED_CUSTOMER:
+        # talon-analyst matches /v2/memory/chat/... as a user's chat memory first: never asked.
+        refused = problem(404, RESERVED, "unknown_customer")
     if refused is not None:
         await session.close()
         return refused
@@ -469,8 +469,9 @@ def _json(answer: MemoryAnswer) -> Union[Any, JSONResponse]:
         return problem(502, NOT_JSON, "bad_answer")
 
 
-def _parsed(answer: MemoryAnswer, parse: Callable[[Any], Any], talon: Optional["Talon"] = None):
-    refused = _answer_problem(answer, talon)
+def _parsed(answer: MemoryAnswer, parse: Callable[[Any], Any], talon: Optional["Talon"] = None, refusal=_answer_problem):
+    """``refusal`` reads the status: the Knowledge panel's rules aren't the memory API's."""
+    refused = refusal(answer, talon)
     if refused is not None:
         return refused
     raw = _json(answer)
@@ -479,7 +480,7 @@ def _parsed(answer: MemoryAnswer, parse: Callable[[Any], Any], talon: Optional["
     try:
         data = parse(raw)
     except Exception as e:  # noqa: BLE001 - a value no check foresaw: a wrong-shape answer, not a 500
-        logger.warning(f"Talon memory: an answer could not be read ({type(e).__name__})")
+        logger.warning(f"Talon: an answer could not be read ({type(e).__name__})")
         data = None
     if data is None:
         return problem(502, WRONG_SHAPE, "bad_answer")
@@ -511,12 +512,12 @@ def _dict(value: Any) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
-def _id(value: Any, scrub) -> Optional[str]:
-    """An id as Talon sent it, or None: a string of at most ``MAX_ID`` characters with nothing
-    unseen in it and nothing the scrubber would change (so never the key)."""
-    if not isinstance(value, str) or not value or len(value) > MAX_ID or _has_unseen(value):
+def _id(value: Any, scrub, cap: int = MAX_ID) -> Optional[str]:
+    """An id as Talon sent it, or None: a string of at most ``cap`` characters with nothing unseen
+    in it and nothing the scrubber would change (so never the key)."""
+    if not isinstance(value, str) or not value or len(value) > cap or _has_unseen(value):
         return None
-    return value if scrub(value, MAX_ID) == value else None
+    return value if scrub(value, cap) == value else None
 
 
 def _source_ref(raw: Any) -> Optional[TalonMemorySourceRef]:
