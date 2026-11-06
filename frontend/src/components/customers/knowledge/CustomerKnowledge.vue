@@ -84,7 +84,7 @@
 										:fact
 										:customer-code
 										@edit="openEdit(fact)"
-										@deleted="load()"
+										@deleted="onChanged()"
 									/>
 								</div>
 								<p v-else class="text-tertiary m-0 text-sm" data-testid="knowledge-group-empty">
@@ -114,6 +114,11 @@ import { CONTEXT_LINE, groupFacts, KIND_WORDS, KINDS } from "./knowledge"
 
 const { customerCode } = defineProps<{
 	customerCode: string
+}>()
+
+const emit = defineEmits<{
+	/** A fact was saved or deleted, so the count beside this section's name is out of date. */
+	(e: "changed"): void
 }>()
 
 const AddIcon = "carbon:add-alt"
@@ -169,9 +174,14 @@ function closeForm() {
 	editingFact.value = null
 }
 
+function onChanged() {
+	emit("changed")
+	load()
+}
+
 function onSubmitted() {
 	closeForm()
-	load()
+	onChanged()
 }
 
 watch(
