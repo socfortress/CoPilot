@@ -20,6 +20,7 @@ from app.customers.schema.section_status import CustomerSectionStatus
 from app.customers.schema.section_status import LanguagesState
 from app.customers.schema.section_status import ListState
 from app.customers.schema.section_status import SwitchState
+from app.db.universal_models import CustomerKnowledgeItem
 from app.db.universal_models import CustomerNotificationRoute
 from app.db.universal_models import CustomerPortalActivitySettings
 from app.db.universal_models import CustomerPortalAiReportSettings
@@ -67,6 +68,7 @@ LISTS = {
     "waf": CustomerWafInstance.customer_code,
     "notification_workflows": Notification.customer_code,
     "notification_routes": CustomerNotificationRoute.customer_code,
+    "knowledge": CustomerKnowledgeItem.customer_code,
 }
 
 

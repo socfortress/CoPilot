@@ -151,6 +151,11 @@ class AuditAction(str, Enum):
     # the chat turned off because the customer's AI reports were, with the old and new values.
     TALON_PORTAL_CHAT_UPDATE = "talon_portal_chat.update"
 
+    # What the SOC records about a customer (talon-analyst D98), with the old and new values
+    CUSTOMER_KNOWLEDGE_CREATE = "customer_knowledge.create"
+    CUSTOMER_KNOWLEDGE_UPDATE = "customer_knowledge.update"
+    CUSTOMER_KNOWLEDGE_DELETE = "customer_knowledge.delete"
+
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"
     UBA_ROLLBACK = "uba.rollback"
