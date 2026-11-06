@@ -47,6 +47,14 @@ vi.mock("@/components/customerPortal/IocEnrichmentSettings.vue", () => marker("I
 vi.mock("@/components/customerPortal/Settings.vue", () => marker("Portal Branding"))
 vi.mock("@/components/customers/integrations/CustomerIntegrations.vue", () => marker("3rd Party Integrations"))
 vi.mock("@/components/customerPortal/SlaSettings.vue", () => marker("SLA"))
+vi.mock("@/components/customers/knowledge/CustomerKnowledge.vue", () => ({
+	__esModule: true,
+	default: defineComponent({
+		emits: ["changed"],
+		setup: (_props, { emit }) =>
+			() => h("button", { "data-testid": "knowledge-changed", "onClick": () => emit("changed") })
+	})
+}))
 
 const router = { replace: vi.fn() }
 const route = reactive<{ name: string; query: Record<string, string> }>({ name: "Customer", query: {} })
@@ -204,6 +212,20 @@ describe("the status lights", () => {
 		await wrapper.get('[data-testid="rail-item-IOC Enrichment"]').trigger("click")
 		await settle()
 		expect(wrapper.get('[data-testid="section-state"]').text()).toContain("Off")
+	})
+
+	it("reads them again when Knowledge changes a fact, with the section still open", async () => {
+		tabQuery.value = "Knowledge"
+		const wrapper = render()
+		await settle()
+		expect(getSectionStatus).toHaveBeenCalledTimes(1)
+		expect(wrapper.get('[data-testid="rail-item-Knowledge"]').text()).toContain("4 facts")
+		getSectionStatus.mockResolvedValue(answered(statusFixture({ knowledge: { count: 5 } })))
+		await wrapper.get('[data-testid="knowledge-changed"]').trigger("click")
+		await settle()
+		expect(getSectionStatus).toHaveBeenCalledTimes(2)
+		expect(visibleSection(wrapper)).toBe("Knowledge")
+		expect(wrapper.get('[data-testid="rail-item-Knowledge"]').text()).toContain("5 facts")
 	})
 
 	it("a switch shows a light with its word, a list its count", async () => {

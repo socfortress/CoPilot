@@ -812,6 +812,7 @@ Tests: `tests/test_customer_section_status.py` (in-memory SQLite, real router, o
 - **The clock applies to a time an edit moves.** A note on an expired fact can change, and clearing an expiry revives the fact on purpose. `expires_at` is naive UTC: a reader compares it against UTC, not MySQL's `NOW()`.
 - **Public space another customer records is a warning, never a refusal, and never says whose.** Every kind counts, on both sides, approved and unexpired only. The warning counts only customers the caller can read, so saving ranges and watching for it can't map another tenant's space. Every overlap is in the audit row's `details`, which only admins read. Don't widen the warning.
 - **A fact is recorded once, and an edit can't undo another.** `natural_key` is set by the service (unique with `customer_code`; none on expected activity, a host may hold several roles). PUT carries `expected_version`, a stale one is a 409, and a save that changes nothing writes nothing. At most 1000 facts per customer.
+- **The count beside the section's name follows a save or delete.** The page reads the lights again when you leave a section, so `CustomerKnowledge.vue` emits `changed` and the page calls `refresh`. A section whose count changes while it stays open needs the same.
 - **Every write is audited** (`customer_knowledge.create/update/delete`, old and new values, right after the commit, with the source IP). Rows are hard-deleted; the audit log keeps what they held. Not in the portal's Audit Log.
 
 Tests: `tests/test_customer_knowledge.py`.

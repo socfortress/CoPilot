@@ -80,7 +80,7 @@
 						<CustomerSecurity :customer-code="customer.customer_code" />
 					</section>
 					<section v-if="wasOpened('Knowledge')" v-show="current === 'Knowledge'" v-bind="pane('Knowledge')">
-						<CustomerKnowledge :customer-code="customer.customer_code" />
+						<CustomerKnowledge :customer-code="customer.customer_code" @changed="refresh()" />
 					</section>
 
 					<section v-if="wasOpened('Agents')" v-show="current === 'Agents'" v-bind="pane('Agents', 'pr-0!')">
