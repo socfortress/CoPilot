@@ -45,7 +45,9 @@ import app.auth.models.users  # noqa: E402,F401 — registers user/role tables
 from app.auth.models.users import User  # noqa: E402
 from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
-from app.customer_knowledge.schema.customer_knowledge import KnowledgeItemBody  # noqa: E402
+from app.customer_knowledge.schema.customer_knowledge import (  # noqa: E402
+    KnowledgeItemBody,
+)
 from app.customer_knowledge.services import customer_knowledge as svc  # noqa: E402
 from app.db.db_session import get_db  # noqa: E402
 from app.db.universal_models import CustomerKnowledgeItem  # noqa: E402
