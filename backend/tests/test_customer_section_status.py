@@ -38,6 +38,7 @@ from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
 from app.customers.services.section_status import get_section_status  # noqa: E402
 from app.db.db_session import get_db  # noqa: E402
+from app.db.universal_models import CustomerKnowledgeItem  # noqa: E402
 from app.db.universal_models import CustomerNotificationRoute  # noqa: E402
 from app.db.universal_models import CustomerPortalAiReportSettings  # noqa: E402
 from app.db.universal_models import CustomerPortalAuditSettings  # noqa: E402
@@ -89,6 +90,7 @@ TABLES = (
     "customer_portal_chat_settings",
     "customer_portal_ioc_enrichment_settings",
     "customer_waf_instances",
+    "customer_knowledge_item",
     "event_sources",
     "customer_notification_route",
     "customer_integrations",
@@ -146,6 +148,17 @@ def _connector(code: str) -> CustomerNetworkConnectors:
     )
 
 
+def _fact(code: str, cidr: str) -> CustomerKnowledgeItem:
+    return CustomerKnowledgeItem(
+        customer_code=code,
+        branch="network",
+        kind="network_zone",
+        value={"cidr": cidr, "zone": "server"},
+        status="approved",
+        source="soc",
+    )
+
+
 def _source(code: str, name: str) -> EventSources:
     return EventSources(customer_code=code, name=name, index_pattern=f"{name}-*", event_type="EDR")
 
@@ -185,6 +198,9 @@ async def _seed(db: Db, *, acme=True) -> None:
                     _source("ACME", "crowdstrike"),
                     _source("GLOBEX", "wazuh"),
                     _waf("ACME", "prod"),
+                    _fact("ACME", "10.0.0.0/24"),
+                    _fact("ACME", "10.0.1.0/24"),
+                    _fact("GLOBEX", "10.0.0.0/24"),
                     _route("ACME", "to the SOC"),
                     _route("ACME", "to the customer"),
                     _route("GLOBEX", "globex route"),
@@ -253,6 +269,7 @@ def test_switches_lists_languages_and_chat():
     assert sections["network_connectors"] == {"count": 1}
     assert sections["event_sources"] == {"count": 3}
     assert sections["waf"] == {"count": 1}
+    assert sections["knowledge"] == {"count": 2}
     assert sections["notification_routes"] == {"count": 2}
     assert sections["notification_workflows"] == {"count": 1}
 

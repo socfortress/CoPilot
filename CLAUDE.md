@@ -802,6 +802,20 @@ Tests: `tests/test_healthcheck_unhealthy_delete.py` (in-memory SQLite, real rout
 
 Tests: `tests/test_customer_section_status.py` (in-memory SQLite, real router, one statement), `tests/e2e/customer_section_status_e2e.py` (13306: every table, the chat rule, access, one statement on MySQL). Frontend: `components/customers/sections/__tests__/`, `components/customers/__tests__/CustomerDetailsTabs-{sections,subtabs,automation}.spec.ts`, `e2e-mocked/customer-sections-nav.spec.ts` (menu preview, keyboard, search, pin across visits, a light following a switch, groups wrapping whole and uncut search names at 1000 px, 360 px).
 
+### What the SOC records about a customer (talon-analyst D98, K1)
+
+*Customers → customer → Knowledge*: facts that help talon-analyst read an alert. Network zones, public ranges, asset roles and expected activity so far. One table, `customer_knowledge_item`, with `value` as JSON validated per kind by the models in `customer_knowledge/schema/customer_knowledge.py` (`extra="forbid"`), so a new kind is a model in `KINDS`, not a migration. Routes: `/customers/{code}/knowledge`, admin and analyst plus `verify_customer_code_access`. No `customer_user` route: customer edits come with an approval queue (`status` and `source` are in the table for it, and are `approved` and `soc` until then, set by the service, never the request; neither has a default, so a row written another way can't come out approved).
+
+- **talon-analyst reads these rows over its read-only MySQL user, and validates them with its own copy of the kinds**, so a kind or field added here reaches no report until it is added there. It drops what it doesn't know, so CoPilot can ship first. Keep the column names.
+- **A fact informs, it never decides.** talon-analyst matches facts to each alert in code, and none lowers a severity by itself. The rules here keep entries narrow: ranges parse and are stored canonically (IPv4-mapped as IPv4, no IPv6 scope ids, which `ipaddress` keeps as free text), a public range is public and no wider than /16 or /48 (the WAF's numbers), expected activity names a host or source range and its window is at most 90 days, starting no more than 90 days ago. Text holds no control or invisible characters or angle brackets, and hosts and accounts no wildcards: they match exactly.
+- **`is_global` isn't enough for "public".** It passes multicast, NAT64 and 6to4 depending on the Python version, so `_NEVER_PUBLIC` lists them. Keep the list when you touch the rule.
+- **The clock applies to a time an edit moves.** A note on an expired fact can change, and clearing an expiry revives the fact on purpose. `expires_at` is naive UTC: a reader compares it against UTC, not MySQL's `NOW()`.
+- **Public space another customer records is a warning, never a refusal, and never says whose.** Every kind counts, on both sides, approved and unexpired only. The warning counts only customers the caller can read, so saving ranges and watching for it can't map another tenant's space. Every overlap is in the audit row's `details`, which only admins read. Don't widen the warning.
+- **A fact is recorded once, and an edit can't undo another.** `natural_key` is set by the service (unique with `customer_code`; none on expected activity, a host may hold several roles). PUT carries `expected_version`, a stale one is a 409, and a save that changes nothing writes nothing. At most 1000 facts per customer.
+- **Every write is audited** (`customer_knowledge.create/update/delete`, old and new values, right after the commit, with the source IP). Rows are hard-deleted; the audit log keeps what they held. Not in the portal's Audit Log.
+
+Tests: `tests/test_customer_knowledge.py`.
+
 ### Tenant scoping: customer codes are not the only tenant key
 
 #1050 made `user_customer_access` authoritative for analysts and guarded every route

@@ -37,6 +37,11 @@ describe("the sections", () => {
 		expect(tabToSection("")).toBeNull()
 	})
 
+	it("shows Knowledge to analysts too", () => {
+		const none = visibleSections({ admin: false, automation: false, wazuhWorker: false }).map(section => section.id)
+		expect(none).toContain("Knowledge")
+	})
+
 	it("shows Security to admins, AI Automation with Talon v2, Wazuh Worker with a stack", () => {
 		const none = visibleSections({ admin: false, automation: false, wazuhWorker: false }).map(section => section.id)
 		expect(none).not.toContain("Security")
@@ -97,6 +102,12 @@ describe("sectionState", () => {
 		expect(sectionState(sectionById("Network Connectors"), status)?.word).toBe("None")
 	})
 
+	it("counts a customer's facts", () => {
+		expect(sectionState(sectionById("Knowledge"), status)).toEqual({ kind: "count", count: 4, word: "4 facts" })
+		expect(sectionState(sectionById("Knowledge"), statusFixture({ knowledge: { count: 1 } }))?.word).toBe("1 fact")
+		expect(sectionState(sectionById("Knowledge"), statusFixture({ knowledge: { count: 0 } }))?.word).toBe("None")
+	})
+
 	it("has nothing to say without a status, or for a section with none", () => {
 		expect(sectionState(sectionById("SLA"), null)).toBeNull()
 		expect(sectionState(sectionById("Info"), status)).toBeNull()
@@ -124,6 +135,13 @@ describe("searchSections", () => {
 		expect(notifications.slice(0, 3)).toEqual(["Notification Workflows", "Notifications", "Portal Notifications"])
 		expect(searchSections("portal notifications", all).map(section => section.id)).toEqual(["Portal Notifications"])
 	})
+
+	it.each(["crown jewels", "pentest", "change window", "public ips", "ip ranges", "zones"])(
+		"finds Knowledge by %s",
+		query => {
+			expect(searchSections(query, all).map(section => section.id)).toContain("Knowledge")
+		}
+	)
 
 	it("ignores case and accents, and an empty query finds nothing", () => {
 		expect(searchSections("SÉCURITY", all).map(section => section.id)).toEqual(["Security"])

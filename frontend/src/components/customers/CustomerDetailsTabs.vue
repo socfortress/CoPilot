@@ -79,6 +79,9 @@
 					<section v-if="wasOpened('Security')" v-show="current === 'Security'" v-bind="pane('Security')">
 						<CustomerSecurity :customer-code="customer.customer_code" />
 					</section>
+					<section v-if="wasOpened('Knowledge')" v-show="current === 'Knowledge'" v-bind="pane('Knowledge')">
+						<CustomerKnowledge :customer-code="customer.customer_code" />
+					</section>
 
 					<section v-if="wasOpened('Agents')" v-show="current === 'Agents'" v-bind="pane('Agents', 'pr-0!')">
 						<n-scrollbar trigger="none" :class="scrollbarClass">
@@ -337,6 +340,8 @@ const CustomerPortalIocEnrichment = defineAsyncComponent(
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
 const CustomerWaf = defineAsyncComponent(() => import("@/components/customerWaf/CustomerWaf.vue"))
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
+// What SOC analysts record about the customer, read by talon-analyst as context (D98).
+const CustomerKnowledge = defineAsyncComponent(() => import("./knowledge/CustomerKnowledge.vue"))
 const CustomerWazuhWorker = defineAsyncComponent(() => import("./CustomerWazuhWorker.vue"))
 
 const { healthcheckFilters } = useCustomerHealthcheckFilters()
