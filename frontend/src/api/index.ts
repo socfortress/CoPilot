@@ -12,6 +12,7 @@ import connectors from "./endpoints/connectors"
 import copilotAction from "./endpoints/copilot-action"
 import copilotMCP from "./endpoints/copilot-mcp"
 import copilotSearches from "./endpoints/copilot-searches"
+import customerKnowledge from "./endpoints/customer-knowledge"
 import customerPortal from "./endpoints/customer-portal"
 import customerWaf from "./endpoints/customer-waf"
 import customers from "./endpoints/customers"
@@ -118,6 +119,7 @@ export default {
 	portainer,
 	shuffle,
 	copilotMCP,
+	customerKnowledge,
 	customerPortal,
 	customerWaf,
 	version,

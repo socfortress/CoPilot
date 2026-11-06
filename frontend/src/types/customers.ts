@@ -187,6 +187,7 @@ export interface CustomerSectionStatus {
 	network_connectors: CustomerSectionList
 	event_sources: CustomerSectionList
 	waf: CustomerSectionList
+	knowledge: CustomerSectionList
 	ai_triggers: CustomerSectionSwitch
 	notification_workflows: CustomerSectionList
 	notification_routes: CustomerSectionList

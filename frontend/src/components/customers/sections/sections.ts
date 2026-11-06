@@ -10,6 +10,7 @@ export const SECTION_IDS = [
 	"Info",
 	"Provision",
 	"Security",
+	"Knowledge",
 	"Agents",
 	"Deploy Agent",
 	"Healthcheck Wazuh",
@@ -81,6 +82,26 @@ export const SECTIONS: SectionDef[] = [
 		group: "overview",
 		keywords: ["users", "password", "2fa", "totp", "customer admin", "read-only", "portal users"],
 		requires: "admin"
+	},
+	{
+		id: "Knowledge",
+		label: "Knowledge",
+		group: "overview",
+		keywords: [
+			"facts",
+			"network",
+			"zones",
+			"ip ranges",
+			"public ips",
+			"assets",
+			"crown jewels",
+			"expected activity",
+			"pentest",
+			"scanner",
+			"change window"
+		],
+		status: "knowledge",
+		noun: ["fact", "facts"]
 	},
 	{ id: "Agents", label: "Agents list", group: "agents", keywords: ["endpoints", "hosts"] },
 	{ id: "Deploy Agent", label: "Deploy Agent", group: "agents", keywords: ["install", "edr", "enroll"] },

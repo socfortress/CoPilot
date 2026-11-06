@@ -42,6 +42,7 @@ async function installSectionsMock(context: BrowserContext): Promise<Stored> {
 						network_connectors: { count: 0 },
 						event_sources: { count: 3 },
 						waf: { count: 1 },
+						knowledge: { count: 0 },
 						ai_triggers: { on: true },
 						notification_workflows: { count: 0 },
 						notification_routes: { count: 2 },

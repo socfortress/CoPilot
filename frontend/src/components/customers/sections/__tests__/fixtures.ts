@@ -7,6 +7,7 @@ export function statusFixture(overrides: Partial<CustomerSectionStatus> = {}): C
 		network_connectors: { count: 0 },
 		event_sources: { count: 1 },
 		waf: { count: 3 },
+		knowledge: { count: 4 },
 		ai_triggers: { on: true },
 		notification_workflows: { count: 1 },
 		notification_routes: { count: 2 },
