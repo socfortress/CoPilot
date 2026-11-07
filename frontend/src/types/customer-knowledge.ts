@@ -4,7 +4,14 @@
  * with `extra="forbid"`, so a key that isn't here is refused.
  */
 
-export type KnowledgeKind = "network_zone" | "public_range" | "asset_role" | "expected_activity"
+export type KnowledgeKind =
+	| "network_zone"
+	| "public_range"
+	| "asset_role"
+	| "expected_activity"
+	| "own_domain"
+	| "identity_tenant"
+	| "account_role"
 
 export type KnowledgeZone = "server" | "workstation" | "dmz" | "guest" | "ot" | "vpn" | "cloud" | "management" | "other"
 
@@ -24,6 +31,12 @@ export type KnowledgeRole =
 	| "other"
 
 export type KnowledgeExpected = "scanner" | "rmm" | "pentest" | "change_window" | "other"
+
+export type KnowledgeDomainUse = "email" | "web" | "ad" | "upn" | "other"
+
+export type KnowledgeTenantProvider = "entra" | "google" | "other"
+
+export type KnowledgeAccountRole = "vip" | "executive" | "admin" | "service" | "break_glass" | "shared" | "other"
 
 export interface NetworkZoneValue {
 	cidr: string
@@ -50,11 +63,34 @@ export interface ExpectedActivityValue {
 	starts_at: string
 }
 
+/** A domain the customer owns (plan K1-7). Stored lower case and IDNA (punycode) encoded. */
+export interface OwnDomainValue {
+	domain: string
+	uses: KnowledgeDomainUse[]
+}
+
+/** The customer's identity tenant: an Entra tenant id (a GUID) or a Google Workspace customer id. */
+export interface IdentityTenantValue {
+	provider: KnowledgeTenantProvider
+	tenant_id: string
+	name: string | null
+}
+
+/** What an account is. An identifier (`jsmith`, `CORP\jsmith`, `jsmith@corp.com`), never a display name. */
+export interface AccountRoleValue {
+	account: string
+	role: KnowledgeAccountRole
+	aliases: string[]
+}
+
 export interface KnowledgeValues {
 	network_zone: NetworkZoneValue
 	public_range: PublicRangeValue
 	asset_role: AssetRoleValue
 	expected_activity: ExpectedActivityValue
+	own_domain: OwnDomainValue
+	identity_tenant: IdentityTenantValue
+	account_role: AccountRoleValue
 }
 
 interface KnowledgeItemFields {

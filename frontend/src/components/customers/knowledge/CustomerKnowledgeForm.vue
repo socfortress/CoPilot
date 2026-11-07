@@ -40,6 +40,81 @@
 			<div class="text-secondary mb-2 text-xs">One of the hosts this customer can least afford to lose.</div>
 		</template>
 
+		<template v-else-if="kind === 'own_domain'">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<n-form-item label="Domain" path="domain">
+					<n-input v-model:value="form.domain" placeholder="e.g. example.com" :maxlength="DOMAIN_MAX" />
+				</n-form-item>
+				<n-form-item label="Used for" path="uses">
+					<n-select
+						v-model:value="form.uses"
+						:options="DOMAIN_USE_OPTIONS"
+						multiple
+						placeholder="Pick one or more uses"
+					/>
+				</n-form-item>
+			</div>
+			<div class="text-secondary mb-2 text-xs">
+				A subdomain counts as the customer's too. Shared suffixes such as co.uk or onmicrosoft.com, and public
+				mail providers, can't be recorded.
+			</div>
+		</template>
+
+		<template v-else-if="kind === 'identity_tenant'">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<n-form-item label="Provider" path="provider">
+					<n-select
+						v-model:value="form.provider"
+						:options="PROVIDER_OPTIONS"
+						placeholder="Pick the provider"
+					/>
+				</n-form-item>
+				<n-form-item ref="tenantItem" label="Tenant id" path="tenantId">
+					<n-input
+						v-model:value="form.tenantId"
+						placeholder="e.g. 72f988bf-86f1-41af-91ab-2d7cd011db47"
+						:maxlength="TENANT_ID_MAX"
+					/>
+				</n-form-item>
+			</div>
+			<n-form-item label="Name (optional)" path="tenantName">
+				<n-input
+					v-model:value="form.tenantName"
+					placeholder="e.g. contoso.onmicrosoft.com"
+					:maxlength="NAME_MAX"
+				/>
+			</n-form-item>
+		</template>
+
+		<template v-else-if="kind === 'account_role'">
+			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+				<n-form-item label="Account" path="account">
+					<n-input v-model:value="form.account" placeholder="e.g. CORP\jsmith" :maxlength="NAME_MAX" />
+				</n-form-item>
+				<n-form-item label="Role" path="accountRole">
+					<n-select
+						v-model:value="form.accountRole"
+						:options="ACCOUNT_ROLE_OPTIONS"
+						placeholder="Pick a role"
+					/>
+				</n-form-item>
+			</div>
+			<div class="text-secondary mb-2 text-xs">
+				The account's name, such as jsmith, CORP\jsmith or jsmith@corp.com, never a person's display name.
+			</div>
+			<n-form-item label="Other spellings (optional)" path="aliases">
+				<n-dynamic-input
+					v-model:value="form.aliases"
+					:on-create="() => ''"
+					:max="ALIASES_MAX"
+					placeholder="e.g. jsmith@corp.com"
+					class="w-full"
+				>
+					<template #create-button-default>Add a spelling</template>
+				</n-dynamic-input>
+			</n-form-item>
+		</template>
+
 		<template v-else>
 			<n-form-item label="What" path="what">
 				<n-select v-model:value="form.what" :options="EXPECTED_OPTIONS" placeholder="Pick what is expected" />
@@ -96,7 +171,8 @@
 			</n-form-item>
 		</div>
 		<div v-if="kind === 'expected_activity'" class="text-secondary mb-2 text-xs">
-			Expected activity has to expire. It can run for {{ EXPECTED_MAX_DAYS }} days at most, ending no later than {{ EXPECTED_MAX_DAYS }} days from now.
+			Expected activity has to expire. It can run for {{ EXPECTED_MAX_DAYS }} days at most, ending no later than
+			{{ EXPECTED_MAX_DAYS }} days from now.
 		</div>
 
 		<n-form-item label="Note (optional)" path="note">
@@ -123,23 +199,17 @@
 import type { FormInst, FormItemInst } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { KnowledgeItem, KnowledgeKind } from "@/types/customer-knowledge"
-import {
-	NButton,
-	NCheckbox,
-	NDatePicker,
-	NDynamicInput,
-	NForm,
-	NFormItem,
-	NInput,
-	NSelect,
-	useMessage
-} from "naive-ui"
+import { NButton, NCheckbox, NDatePicker, NDynamicInput, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
 import { reactive, ref, watch } from "vue"
 import Api from "@/api"
 import { getApiErrorMessage } from "@/utils"
 import {
+	ACCOUNT_ROLE_OPTIONS,
+	ALIASES_MAX,
 	buildBody,
 	CIDR_MAX,
+	DOMAIN_MAX,
+	DOMAIN_USE_OPTIONS,
 	emptyForm,
 	EXPECTED_MAX_DAYS,
 	EXPECTED_OPTIONS,
@@ -148,8 +218,10 @@ import {
 	LIST_MAX,
 	NAME_MAX,
 	NOTE_MAX,
+	PROVIDER_OPTIONS,
 	refusalText,
 	ROLE_OPTIONS,
+	TENANT_ID_MAX,
 	USE_OPTIONS,
 	ZONE_OPTIONS
 } from "./knowledge"
@@ -170,6 +242,7 @@ const message = useMessage()
 const formRef = ref<FormInst | null>(null)
 const hostsItem = ref<FormItemInst | null>(null)
 const expiresItem = ref<FormItemInst | null>(null)
+const tenantItem = ref<FormItemInst | null>(null)
 const submitting = ref(false)
 
 const form = reactive(editingFact ? formFromItem(editingFact) : emptyForm(kind))
@@ -184,6 +257,10 @@ watch(
 watch(
 	() => form.startsAt,
 	() => expiresItem.value?.restoreValidation()
+)
+watch(
+	() => form.provider,
+	() => tenantItem.value?.restoreValidation()
 )
 
 async function submit() {
