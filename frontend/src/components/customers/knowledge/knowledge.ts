@@ -1,11 +1,14 @@
 import type { FormItemRule, FormRules } from "naive-ui"
 import type {
+	KnowledgeAccountRole,
+	KnowledgeDomainUse,
 	KnowledgeExpected,
 	KnowledgeItem,
 	KnowledgeItemBody,
 	KnowledgeKind,
 	KnowledgePublicUse,
 	KnowledgeRole,
+	KnowledgeTenantProvider,
 	KnowledgeZone
 } from "@/types/customer-knowledge"
 import isIP from "validator/es/lib/isIP"
@@ -26,6 +29,9 @@ export const NAME_MAX = 255
 export const CIDR_MAX = 64
 export const LIST_MAX = 50
 export const EXPECTED_MAX_DAYS = 90
+export const DOMAIN_MAX = 253
+export const TENANT_ID_MAX = 128
+export const ALIASES_MAX = 10
 
 const DAY_MS = 86_400_000
 
@@ -42,7 +48,15 @@ export interface KindWords {
 	about: string
 }
 
-export const KINDS: KnowledgeKind[] = ["network_zone", "public_range", "asset_role", "expected_activity"]
+export const KINDS: KnowledgeKind[] = [
+	"network_zone",
+	"public_range",
+	"asset_role",
+	"expected_activity",
+	"own_domain",
+	"identity_tenant",
+	"account_role"
+]
 
 export const KIND_WORDS: Record<KnowledgeKind, KindWords> = {
 	network_zone: {
@@ -68,6 +82,24 @@ export const KIND_WORDS: Record<KnowledgeKind, KindWords> = {
 		noun: "expected activity",
 		icon: "carbon:calendar",
 		about: "Work the SOC knows about, such as a pentest or a scanner: where it runs, and from when to when."
+	},
+	own_domain: {
+		title: "Domains",
+		noun: "domain",
+		icon: "carbon:email",
+		about: "The customer's own domains and what each is for, so its mail and sites stand apart from lookalikes. A subdomain counts too."
+	},
+	identity_tenant: {
+		title: "Identity tenants",
+		noun: "identity tenant",
+		icon: "carbon:cloud",
+		about: "The customer's Microsoft 365 (Entra) or Google Workspace tenant, so a sign-in from another tenant stands out."
+	},
+	account_role: {
+		title: "Accounts",
+		noun: "account",
+		icon: "carbon:user-role",
+		about: "Accounts that matter: VIPs, admins, service and break-glass accounts. Record the account's name, never a person's display name."
 	}
 }
 
@@ -111,6 +143,30 @@ const EXPECTED_LABELS: Record<KnowledgeExpected, string> = {
 	other: "Other"
 }
 
+const DOMAIN_USE_LABELS: Record<KnowledgeDomainUse, string> = {
+	email: "Email",
+	web: "Web",
+	ad: "Active Directory",
+	upn: "UPN suffix",
+	other: "Other"
+}
+
+const PROVIDER_LABELS: Record<KnowledgeTenantProvider, string> = {
+	entra: "Microsoft Entra (Microsoft 365)",
+	google: "Google Workspace",
+	other: "Other"
+}
+
+const ACCOUNT_ROLE_LABELS: Record<KnowledgeAccountRole, string> = {
+	vip: "VIP",
+	executive: "Executive",
+	admin: "Admin",
+	service: "Service account",
+	break_glass: "Break-glass account",
+	shared: "Shared account",
+	other: "Other"
+}
+
 function options<T extends string>(labels: Record<T, string>): { label: string; value: T }[] {
 	return (Object.keys(labels) as T[]).map(value => ({ label: labels[value], value }))
 }
@@ -119,6 +175,9 @@ export const ZONE_OPTIONS = options(ZONE_LABELS)
 export const USE_OPTIONS = options(USE_LABELS)
 export const ROLE_OPTIONS = options(ROLE_LABELS)
 export const EXPECTED_OPTIONS = options(EXPECTED_LABELS)
+export const DOMAIN_USE_OPTIONS = options(DOMAIN_USE_LABELS)
+export const PROVIDER_OPTIONS = options(PROVIDER_LABELS)
+export const ACCOUNT_ROLE_OPTIONS = options(ACCOUNT_ROLE_LABELS)
 
 /** A label for a stored value; one this page doesn't know yet reads as itself. */
 function worded(labels: Record<string, string>, value: string): string {
@@ -144,6 +203,14 @@ export interface KnowledgeForm {
 	startsAt: number | null
 	expiresAt: number | null
 	note: string
+	domain: string
+	uses: KnowledgeDomainUse[]
+	provider: KnowledgeTenantProvider | null
+	tenantId: string
+	tenantName: string
+	account: string
+	accountRole: KnowledgeAccountRole | null
+	aliases: string[]
 }
 
 export function emptyForm(kind: KnowledgeKind): KnowledgeForm {
@@ -162,7 +229,15 @@ export function emptyForm(kind: KnowledgeKind): KnowledgeForm {
 		accounts: [],
 		startsAt: null,
 		expiresAt: null,
-		note: ""
+		note: "",
+		domain: "",
+		uses: [],
+		provider: null,
+		tenantId: "",
+		tenantName: "",
+		account: "",
+		accountRole: null,
+		aliases: []
 	}
 }
 
@@ -199,6 +274,22 @@ export function formFromItem(item: KnowledgeItem): KnowledgeForm {
 				accounts: [...item.value.accounts],
 				startsAt: stamp(item.value.starts_at)
 			}
+		case "own_domain":
+			return { ...form, domain: item.value.domain, uses: [...item.value.uses] }
+		case "identity_tenant":
+			return {
+				...form,
+				provider: item.value.provider,
+				tenantId: item.value.tenant_id,
+				tenantName: item.value.name ?? ""
+			}
+		case "account_role":
+			return {
+				...form,
+				account: item.value.account,
+				accountRole: item.value.role,
+				aliases: [...item.value.aliases]
+			}
 	}
 }
 
@@ -218,7 +309,11 @@ export function buildBody(form: KnowledgeForm): KnowledgeItemBody {
 	const common = { note: form.note.trim() || null, expires_at: iso(form.expiresAt) }
 	switch (form.kind) {
 		case "network_zone":
-			return { ...common, kind: "network_zone", value: { cidr: form.cidr.trim(), zone: form.zone as KnowledgeZone } }
+			return {
+				...common,
+				kind: "network_zone",
+				value: { cidr: form.cidr.trim(), zone: form.zone as KnowledgeZone }
+			}
 		case "public_range":
 			return {
 				...common,
@@ -248,6 +343,28 @@ export function buildBody(form: KnowledgeForm): KnowledgeItemBody {
 					starts_at: iso(form.startsAt) as string
 				}
 			}
+		case "own_domain":
+			return { ...common, kind: "own_domain", value: { domain: form.domain.trim(), uses: [...form.uses] } }
+		case "identity_tenant":
+			return {
+				...common,
+				kind: "identity_tenant",
+				value: {
+					provider: form.provider as KnowledgeTenantProvider,
+					tenant_id: form.tenantId.trim(),
+					name: form.tenantName.trim() || null
+				}
+			}
+		case "account_role":
+			return {
+				...common,
+				kind: "account_role",
+				value: {
+					account: form.account.trim(),
+					role: form.accountRole as KnowledgeAccountRole,
+					aliases: filled(form.aliases)
+				}
+			}
 	}
 }
 
@@ -258,7 +375,12 @@ export const PROBLEMS = {
 	cidr: "Enter an IP address or a CIDR range",
 	host: "Host names can't hold spaces, wildcards, angle brackets or control characters",
 	account: "Account names can't hold wildcards, angle brackets or control characters",
-	text: "Notes and owners can't hold angle brackets or control characters",
+	text: "Notes, owners and names can't hold angle brackets or control characters",
+	domain: "Enter a domain name, such as example.com, without a scheme, path, port or wildcard",
+	identifier: "Record the account's name, such as jsmith, CORP\\jsmith or jsmith@corp.com, not a display name",
+	entraTenant: "An Entra tenant id is a GUID, such as 72f988bf-86f1-41af-91ab-2d7cd011db47",
+	googleTenant: "A Google Workspace customer id starts with C, such as C01b2c3d4",
+	tenant: "Enter the tenant's id as the provider shows it",
 	needsTarget: "Expected activity needs at least one host or source range",
 	needsExpiry: "Expected activity needs an expiry",
 	expiryPast: "The expiry is in the past",
@@ -304,6 +426,68 @@ export function accountProblem(value: string): string | null {
 	const text = value.trim()
 	if (UNSAFE.test(text) || WILDCARD.test(text) || ODD_WHITESPACE.test(text)) return PROBLEMS.account
 	return nameLengthProblem(text)
+}
+
+/** What can't be in a domain, before the backend's IDNA encoding and its suffix and provider lists. */
+const NOT_IN_A_DOMAIN = /[\s*%/@:?#\\[\]<>"'`=&;,]/
+const ASCII_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i
+const NON_ASCII = /[^\u0020-\u007E]/
+
+/**
+ * A domain, as far as the form can tell. The backend encodes an international one (IDNA) and refuses
+ * a shared suffix (`co.uk`, `onmicrosoft.com`) or a public mail provider's: those stay its refusals.
+ */
+export function domainProblem(value: string): string | null {
+	const text = value.trim().replace(/\.$/, "")
+	if (!text) return "Enter the domain"
+	if (UNSAFE.test(text) || NOT_IN_A_DOMAIN.test(text) || isIP(text)) return PROBLEMS.domain
+	const labels = text.split(".")
+	if (text.length > DOMAIN_MAX || labels.length < 2) return PROBLEMS.domain
+	if (labels.some(label => !label || (!NON_ASCII.test(label) && !ASCII_LABEL.test(label)))) return PROBLEMS.domain
+	return /^\d+$/.test(labels[labels.length - 1]) ? PROBLEMS.domain : null
+}
+
+const GUID = /^\{?[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}\}?$/i
+const GOOGLE_TENANT = /^C[0-9A-Za-z]{4,20}$/
+const OTHER_TENANT = /^[0-9A-Z][\w.:-]{0,127}$/i
+
+/** A tenant id in its provider's form. */
+export function tenantIdProblem(provider: KnowledgeTenantProvider | null, value: string): string | null {
+	const text = value.trim()
+	if (!text) return "Enter the tenant's id"
+	if (provider === "entra") return GUID.test(text) ? null : PROBLEMS.entraTenant
+	if (provider === "google") return GOOGLE_TENANT.test(text) ? null : PROBLEMS.googleTenant
+	return OTHER_TENANT.test(text) ? null : PROBLEMS.tenant
+}
+
+/**
+ * An account identifier: an account name (`accountProblem`) that isn't a display name. `CORP\jsmith`'s
+ * domain may hold spaces, as `NT AUTHORITY\SYSTEM` does; the account part never.
+ */
+export function identifierProblem(value: string): string | null {
+	const text = value.trim()
+	const name = accountProblem(text)
+	if (name) return name
+	if (text.includes("\\")) {
+		const [domain, ...rest] = text.split("\\")
+		const account = rest.join("\\")
+		return !domain.trim() || !account || rest.length > 1 || WHITESPACE.test(account) ? PROBLEMS.identifier : null
+	}
+	if (WHITESPACE.test(text)) return PROBLEMS.identifier
+	if (text.includes("@")) {
+		const [local, ...domain] = text.split("@")
+		return !local || domain.length !== 1 || !domain[0] ? PROBLEMS.identifier : null
+	}
+	return null
+}
+
+export function accountIdProblem(value: string): string | null {
+	return value.trim() ? identifierProblem(value) : "Enter the account's name"
+}
+
+export function tenantNameProblem(value: string): string | null {
+	if (value.trim().length > NAME_MAX) return `Keep the name to ${NAME_MAX} characters`
+	return textProblem(value)
 }
 
 export function hostProblem(value: string): string | null {
@@ -400,7 +584,15 @@ export function knowledgeRules(form: KnowledgeForm, kept: KnowledgeForm | null =
 			ON_CHANGE,
 			form.kind === "expected_activity"
 		),
-		note: checked(noteProblem, ON_INPUT)
+		note: checked(noteProblem, ON_INPUT),
+		domain: checked(domainProblem, ON_INPUT, true),
+		uses: checked((uses: KnowledgeDomainUse[]) => (uses.length ? null : "Pick at least one use"), ON_CHANGE, true),
+		provider: { required: true, message: "Pick the provider", trigger: ON_CHANGE },
+		tenantId: checked((tenantId: string) => tenantIdProblem(form.provider, tenantId), ON_INPUT, true),
+		tenantName: checked(tenantNameProblem, ON_INPUT),
+		account: checked(accountIdProblem, ON_INPUT, true),
+		accountRole: { required: true, message: "Pick a role", trigger: ON_CHANGE },
+		aliases: checked((aliases: string[]) => listProblem(aliases, identifierProblem), ON_INPUT)
 	}
 }
 
@@ -461,6 +653,38 @@ export function factView(item: KnowledgeItem, when: (moment: string) => string):
 					...expires
 				]
 			}
+		case "own_domain":
+			return {
+				headline: item.value.domain,
+				crownJewel: false,
+				details: [
+					...detail(
+						"Used for",
+						item.value.uses.map(use => worded(DOMAIN_USE_LABELS, use))
+					),
+					...expires
+				]
+			}
+		case "identity_tenant":
+			return {
+				headline: item.value.name ?? item.value.tenant_id,
+				crownJewel: false,
+				details: [
+					...detail("Provider", [worded(PROVIDER_LABELS, item.value.provider)]),
+					...detail("Tenant id", [item.value.tenant_id]),
+					...expires
+				]
+			}
+		case "account_role":
+			return {
+				headline: item.value.account,
+				crownJewel: false,
+				details: [
+					...detail("Role", [worded(ACCOUNT_ROLE_LABELS, item.value.role)]),
+					...detail("Also known as", item.value.aliases),
+					...expires
+				]
+			}
 	}
 }
 
@@ -477,7 +701,7 @@ export interface FactGroup extends KindWords {
 	facts: KnowledgeItem[]
 }
 
-/** The page's blocks, all four, in order. A kind this page doesn't know yet isn't shown. */
+/** The page's blocks, every kind, in order. A kind this page doesn't know yet isn't shown. */
 export function groupFacts(items: KnowledgeItem[]): FactGroup[] {
 	return KINDS.map(kind => ({ ...KIND_WORDS[kind], kind, facts: items.filter(item => item.kind === kind) }))
 }

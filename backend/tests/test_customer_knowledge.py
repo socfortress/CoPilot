@@ -4,7 +4,7 @@
 Real router, real in-memory database, real request parsing; only token decoding and user lookup are
 replaced (as in test_customer_section_status).
 
-Pinned here:
+Pinned here (plan K1-7 adds domains, tenants and accounts; their own section at the end):
 - the rules, pure: ranges parse and are stored canonically, aren't absurdly wide, a public range is
   public, a typo'd key is refused, expected activity is bounded by target and window, text is clean;
 - admin and analyst, an analyst for their own customers only; a portal user never; an unknown
@@ -49,6 +49,7 @@ from app.customer_knowledge.schema.customer_knowledge import (  # noqa: E402
     KnowledgeItemBody,
 )
 from app.customer_knowledge.services import customer_knowledge as svc  # noqa: E402
+from app.customer_knowledge.services import domains  # noqa: E402
 from app.db.db_session import get_db  # noqa: E402
 from app.db.universal_models import CustomerKnowledgeItem  # noqa: E402
 from app.db.universal_models import Customers  # noqa: E402
@@ -74,6 +75,11 @@ EXPECTED = {
     "value": {"what": "scanner", "hosts": ["SCAN01"], "source_cidrs": [], "accounts": [], "starts_at": STARTED},
     "expires_at": SOON,
 }
+
+
+DOMAIN = {"kind": "own_domain", "value": {"domain": "example.com", "uses": ["email", "web"]}}
+TENANT = {"kind": "identity_tenant", "value": {"provider": "entra", "tenant_id": "72f988bf-86f1-41af-91ab-2d7cd011db47"}}
+ACCOUNT = {"kind": "account_role", "value": {"account": "CORP\\jsmith", "role": "vip"}}
 
 
 def body(**kw) -> KnowledgeItemBody:
@@ -416,7 +422,7 @@ def _stored_zone(code, expires_at=None, status="approved", cidr="10.0.0.0/24", z
     )
 
 
-@pytest.mark.parametrize("payload", [ZONE, PUBLIC, ASSET, EXPECTED])
+@pytest.mark.parametrize("payload", [ZONE, PUBLIC, ASSET, EXPECTED, DOMAIN, TENANT, ACCOUNT])
 def test_each_kind_saves_and_lists(payload):
     async def scenario(client, db):
         saved = await add(client, {**payload, "note": "from the handover"}, who="ana")
@@ -799,3 +805,250 @@ def test_private_overlaps_are_normal():
         return (await add(client, ZONE)).json()
 
     assert call(scenario)["warnings"] == []
+
+
+# --- K1-7: domains, tenants and accounts ------------------------------------------------------------
+
+
+def domain(name, uses=("email",)) -> KnowledgeItemBody:
+    return body(kind="own_domain", value={"domain": name, "uses": list(uses)})
+
+
+def tenant(tenant_id, provider="entra", name=None) -> KnowledgeItemBody:
+    return body(kind="identity_tenant", value={"provider": provider, "tenant_id": tenant_id, "name": name})
+
+
+def account(name, role="vip", aliases=()) -> KnowledgeItemBody:
+    return body(kind="account_role", value={"account": name, "role": role, "aliases": list(aliases)})
+
+
+@pytest.mark.parametrize(
+    ("written", "stored"),
+    [
+        ("Example.COM", "example.com"),
+        ("  mail.example.com.  ", "mail.example.com"),
+        ("bücher.example", "xn--bcher-kva.example"),
+        ("xn--bcher-kva.example", "xn--bcher-kva.example"),
+        ("contoso.onmicrosoft.com", "contoso.onmicrosoft.com"),  # a tenant's own name under the shared suffix
+        ("example.co.uk", "example.co.uk"),
+    ],
+)
+def test_a_domain_is_stored_lower_case_and_idna_encoded(written, stored):
+    checked = svc.check_item(domain(written, uses=("web", "email", "web")), NOW)
+    assert checked.value == {"domain": stored, "uses": ["email", "web"]}
+    assert (checked.branch, checked.natural_key) == ("domains", f"own_domain:{stored}")
+
+
+@pytest.mark.parametrize(
+    ("written", "problem"),
+    [
+        ("com", svc.BAD_DOMAIN),  # one label
+        ("co.uk", domains.SHARED_SUFFIX),
+        ("onmicrosoft.com", domains.SHARED_SUFFIX),
+        ("github.io", domains.SHARED_SUFFIX),
+        ("gmail.com", domains.FREE_MAIL),
+        ("Outlook.com", domains.FREE_MAIL),
+        ("*.example.com", svc.BAD_DOMAIN),
+        ("https://example.com", svc.BAD_DOMAIN),
+        ("example.com/login", svc.BAD_DOMAIN),
+        ("example.com:443", svc.BAD_DOMAIN),
+        ("user@example.com", svc.BAD_DOMAIN),
+        ("exa mple.com", svc.BAD_DOMAIN),
+        ("-bad.example.com", svc.BAD_DOMAIN),
+        ("a..example.com", svc.BAD_DOMAIN),
+        ("example.123", svc.BAD_DOMAIN),
+        ("10.0.0.1", svc.BAD_DOMAIN),
+        ("2001:db8::1", svc.BAD_DOMAIN),
+        ("x" * 64 + ".com", svc.BAD_DOMAIN),
+        ("e\u200bxample.com", svc.BAD_DOMAIN),  # zero-width: IDNA would drop it silently
+        ("example.com<", svc.BAD_DOMAIN),
+        ("example_name.com", svc.BAD_DOMAIN),
+    ],
+)
+def test_what_a_domain_can_t_be(written, problem):
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(domain(written), NOW)
+    assert str(caught.value) == problem
+    assert written not in str(caught.value) or written == "com"  # never echoes input
+
+
+@pytest.mark.parametrize(
+    "value",
+    [{"domain": "example.com", "uses": []}, {"domain": "example.com", "uses": ["mx"]}, {"domain": "example.com"}],
+)
+def test_a_domain_needs_a_known_use(value):
+    with pytest.raises(ValidationError):
+        svc.check_item(body(kind="own_domain", value=value), NOW)
+
+
+@pytest.mark.parametrize(
+    ("provider", "written", "stored"),
+    [
+        ("entra", "72F988BF-86F1-41AF-91AB-2D7CD011DB47", "72f988bf-86f1-41af-91ab-2d7cd011db47"),
+        ("entra", "{72f988bf-86f1-41af-91ab-2d7cd011db47}", "72f988bf-86f1-41af-91ab-2d7cd011db47"),
+        ("google", "C01b2c3d4", "C01b2c3d4"),
+        ("other", "tenant.example:42", "tenant.example:42"),
+    ],
+)
+def test_a_tenant_id_has_its_provider_s_form(provider, written, stored):
+    checked = svc.check_item(tenant(written, provider, name="  Example   Ltd "), NOW)
+    assert checked.value == {"provider": provider, "tenant_id": stored, "name": "Example Ltd"}
+    assert (checked.branch, checked.natural_key) == ("domains", f"identity_tenant:{provider}:{stored.lower()}")
+
+
+@pytest.mark.parametrize(
+    ("provider", "written", "problem"),
+    [
+        ("entra", "not-a-guid", domains.BAD_ENTRA_TENANT),
+        ("entra", "contoso.onmicrosoft.com", domains.BAD_ENTRA_TENANT),
+        ("google", "x123456", domains.BAD_GOOGLE_TENANT),
+        ("google", "C1", domains.BAD_GOOGLE_TENANT),
+        ("other", "two words", domains.BAD_TENANT),
+        ("other", "<tenant>", domains.BAD_TENANT),
+    ],
+)
+def test_what_a_tenant_id_can_t_be(provider, written, problem):
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(tenant(written, provider), NOW)
+    assert str(caught.value) == problem
+
+
+def test_a_tenant_name_is_clean_text():
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(tenant("72f988bf-86f1-41af-91ab-2d7cd011db47", name="</customer_context>"), NOW)
+    assert str(caught.value) == svc.BAD_TEXT
+
+
+@pytest.mark.parametrize("written", ["jsmith", "CORP\\jsmith", "NT AUTHORITY\\SYSTEM", "jsmith@corp.example", "svc-backup$"])
+def test_an_account_is_an_identifier(written):
+    checked = svc.check_item(account(written, role="service"), NOW)
+    assert checked.value == {"account": written, "role": "service", "aliases": []}
+    assert (checked.branch, checked.natural_key) == ("people", f"account_role:{written.lower()}:service")
+
+
+@pytest.mark.parametrize(
+    "written",
+    ["Jane Smith", "CORP\\Jane Smith", "\\jsmith", "CORP\\", "CORP\\a\\b", "a@b@c", "@corp.example", "jsmith@", "j smith@corp.example"],
+)
+def test_a_display_name_is_not_an_account(written):
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(account(written), NOW)
+    assert str(caught.value) == domains.NOT_AN_IDENTIFIER
+
+
+@pytest.mark.parametrize("written", ["svc*", "<svc>", "svc\u200b", "svc\tadmin"])
+def test_an_account_keeps_the_name_rules(written):
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(account(written), NOW)
+    assert str(caught.value) == svc.BAD_ACCOUNT
+
+
+def test_aliases_are_other_spellings_of_the_same_account_once_each():
+    checked = svc.check_item(
+        account("CORP\\jsmith", aliases=["jsmith@corp.example", "corp\\JSMITH", "JSmith@Corp.Example", "j.smith"]),
+        NOW,
+    )
+    assert checked.value["aliases"] == ["j.smith", "jsmith@corp.example"]
+
+
+def test_an_alias_is_held_to_the_same_rules():
+    with pytest.raises(svc.KnowledgeProblem) as caught:
+        svc.check_item(account("jsmith", aliases=["Jane Smith"]), NOW)
+    assert str(caught.value) == domains.NOT_AN_IDENTIFIER
+    with pytest.raises(ValidationError):
+        svc.check_item(account("jsmith", aliases=[f"alias{i}" for i in range(11)]), NOW)
+
+
+@pytest.mark.parametrize("role", ["vip", "executive", "admin", "service", "break_glass", "shared", "other"])
+def test_every_account_role_saves(role):
+    assert svc.check_item(account("jsmith", role=role), NOW).value["role"] == role
+
+
+def test_an_unknown_account_role_doesn_t_fit():
+    with pytest.raises(ValidationError):
+        svc.check_item(account("jsmith", role="ceo"), NOW)
+
+
+def test_a_domain_is_recorded_once_whatever_its_case():
+    async def scenario(client, db):
+        await add(client, DOMAIN)
+        return await add(client, {"kind": "own_domain", "value": {"domain": "EXAMPLE.com", "uses": ["ad"]}})
+
+    answer = call(scenario)
+    assert answer.status_code == 422 and answer.json()["detail"] == svc.DUPLICATE
+
+
+def test_an_account_can_hold_two_roles():
+    async def scenario(client, db):
+        first = await add(client, ACCOUNT)
+        second = await add(client, {"kind": "account_role", "value": {"account": "corp\\JSMITH", "role": "admin"}})
+        again = await add(client, {"kind": "account_role", "value": {"account": "corp\\JSMITH", "role": "vip"}})
+        return first.status_code, second.status_code, again.json()
+
+    first, second, again = call(scenario)
+    assert (first, second) == (200, 200) and again["detail"] == svc.DUPLICATE
+
+
+@pytest.mark.parametrize(
+    ("theirs", "mine"),
+    [("example.com", "example.com"), ("example.com", "mail.example.com"), ("mail.example.com", "example.com")],
+)
+def test_a_domain_another_customer_records_is_a_warning_that_names_nobody(audit_rows, theirs, mine):
+    async def scenario(client, db):
+        await add(client, {"kind": "own_domain", "value": {"domain": theirs, "uses": ["web"]}}, code="GLOBEX")
+        return (await add(client, {"kind": "own_domain", "value": {"domain": mine, "uses": ["email"]}})).json()
+
+    answer = call(scenario)
+    assert answer["success"] and answer["warnings"] == [svc.DOMAIN_OVERLAP] and "GLOBEX" not in str(answer)
+    created = [r for r in audit_rows if r.action == "customer_knowledge.create"]
+    assert created[-1].details == svc.DOMAIN_OVERLAP_AUDIT
+
+
+@pytest.mark.parametrize("mine", ["example.org", "notexample.com", "example.com.evil.example"])
+def test_a_domain_that_only_looks_related_warns_of_nothing(mine):
+    async def scenario(client, db):
+        await add(client, DOMAIN, code="GLOBEX")
+        return (await add(client, {"kind": "own_domain", "value": {"domain": mine, "uses": ["web"]}})).json()["warnings"]
+
+    assert call(scenario) == []
+
+
+def test_a_scoped_analyst_can_t_learn_another_tenant_s_domain(audit_rows):
+    async def scenario(client, db):
+        await add(client, DOMAIN, code="GLOBEX")
+        return await add(client, {"kind": "own_domain", "value": {"domain": "www.example.com", "uses": ["web"]}}, who="ana")
+
+    answer = call(scenario)
+    assert answer.status_code == 200 and answer.json()["warnings"] == []
+    created = [r for r in audit_rows if r.action == "customer_knowledge.create"]
+    assert created[-1].details == svc.DOMAIN_OVERLAP_AUDIT
+
+
+def test_a_tenant_another_customer_records_is_a_warning(audit_rows):
+    async def scenario(client, db):
+        await add(client, TENANT, code="GLOBEX")
+        upper = {"kind": "identity_tenant", "value": {"provider": "entra", "tenant_id": "72F988BF-86F1-41AF-91AB-2D7CD011DB47"}}
+        other = {"kind": "identity_tenant", "value": {"provider": "other", "tenant_id": "72f988bf-86f1-41af-91ab-2d7cd011db47"}}
+        return (await add(client, upper)).json()["warnings"], (await add(client, other)).json()["warnings"]
+
+    same, other_provider = call(scenario)
+    assert same == [svc.TENANT_OVERLAP] and other_provider == []
+    created = [r for r in audit_rows if r.action == "customer_knowledge.create"]
+    assert created[-2].details == svc.TENANT_OVERLAP_AUDIT and created[-1].details is None
+
+
+def test_the_same_account_name_at_two_customers_warns_of_nothing():
+    async def scenario(client, db):
+        await add(client, ACCOUNT, code="GLOBEX")
+        return (await add(client, ACCOUNT)).json()["warnings"]
+
+    assert call(scenario) == []
+
+
+def test_a_new_kind_is_audited_like_the_others(audit_rows):
+    async def scenario(client, db):
+        return await add(client, {**ACCOUNT, "note": "the CFO"})
+
+    assert call(scenario).status_code == 200
+    (created,) = [r for r in audit_rows if r.action == "customer_knowledge.create"]
+    assert created.new_value["kind"] == "account_role" and created.new_value["value"]["account"] == "CORP\\jsmith"

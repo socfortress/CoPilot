@@ -1,9 +1,14 @@
 import type { KnowledgeItem } from "@/types/customer-knowledge"
 import { describe, expect, it } from "vitest"
 import {
+	ACCOUNT_ROLE_OPTIONS,
+	accountIdProblem,
 	accountProblem,
+	ALIASES_MAX,
 	buildBody,
 	cidrProblem,
+	DOMAIN_USE_OPTIONS,
+	domainProblem,
 	emptyForm,
 	EXPECTED_MAX_DAYS,
 	EXPECTED_OPTIONS,
@@ -13,6 +18,7 @@ import {
 	groupFacts,
 	hostNameProblem,
 	hostProblem,
+	identifierProblem,
 	KIND_WORDS,
 	KINDS,
 	knowledgeRules,
@@ -22,10 +28,13 @@ import {
 	noteProblem,
 	ownerProblem,
 	PROBLEMS,
+	PROVIDER_OPTIONS,
 	refusalText,
 	ROLE_OPTIONS,
 	startProblem,
 	targetProblem,
+	tenantIdProblem,
+	tenantNameProblem,
 	USE_OPTIONS,
 	ZONE_OPTIONS
 } from "../knowledge"
@@ -69,6 +78,24 @@ const EXPECTED: KnowledgeItem = {
 	},
 	expires_at: "2026-11-20T12:00:00+00:00"
 }
+const DOMAIN: KnowledgeItem = {
+	...COMMON,
+	branch: "domains",
+	kind: "own_domain",
+	value: { domain: "example.com", uses: ["email", "upn"] }
+}
+const TENANT: KnowledgeItem = {
+	...COMMON,
+	branch: "domains",
+	kind: "identity_tenant",
+	value: { provider: "entra", tenant_id: "72f988bf-86f1-41af-91ab-2d7cd011db47", name: "contoso.onmicrosoft.com" }
+}
+const ACCOUNT: KnowledgeItem = {
+	...COMMON,
+	branch: "people",
+	kind: "account_role",
+	value: { account: "CORP\\jsmith", role: "break_glass", aliases: ["jsmith@corp.example"] }
+}
 
 describe("cidrProblem", () => {
 	it.each(["10.0.0.0/24", "10.0.0.5", " 10.0.0.0/8 ", "2001:db8::/48", "2001:db8::1"])("takes %s", value => {
@@ -98,7 +125,15 @@ describe("refusalText", () => {
 		const backend: [string, string][] = [
 			["host names can't hold spaces, wildcards, angle brackets or control characters", PROBLEMS.host],
 			["account names can't hold wildcards, angle brackets or control characters", PROBLEMS.account],
-			["notes and owners can't hold angle brackets or control characters", PROBLEMS.text],
+			["notes, owners and names can't hold angle brackets or control characters", PROBLEMS.text],
+			["enter a domain name, such as example.com, without a scheme, path, port or wildcard", PROBLEMS.domain],
+			[
+				"record the account's name, such as jsmith, CORP\\jsmith or jsmith@corp.com, not a display name",
+				PROBLEMS.identifier
+			],
+			["an Entra tenant id is a GUID, such as 72f988bf-86f1-41af-91ab-2d7cd011db47", PROBLEMS.entraTenant],
+			["a Google Workspace customer id starts with C, such as C01b2c3d4", PROBLEMS.googleTenant],
+			["enter the tenant's id as the provider shows it", PROBLEMS.tenant],
 			["the start can't be more than 90 days ago", PROBLEMS.startTooOld],
 			["expected activity can't run for more than 90 days", PROBLEMS.windowTooLong],
 			["expected activity can't run for more than 90 days from now", PROBLEMS.expiryTooFar]
@@ -240,11 +275,15 @@ describe("expiryProblem", () => {
 		expect(expiryProblem(form, NOW)).toBe(PROBLEMS.needsExpiry)
 		expect(expiryProblem({ ...form, expiresAt: NOW - 1 }, NOW)).toBe(PROBLEMS.expiryPast)
 		expect(expiryProblem({ ...form, expiresAt: NOW + EXPECTED_MAX_DAYS * DAY }, NOW)).toBeNull()
-		expect(expiryProblem({ ...form, expiresAt: NOW + EXPECTED_MAX_DAYS * DAY + 1 }, NOW)).toBe(PROBLEMS.expiryTooFar)
+		expect(expiryProblem({ ...form, expiresAt: NOW + EXPECTED_MAX_DAYS * DAY + 1 }, NOW)).toBe(
+			PROBLEMS.expiryTooFar
+		)
 		expect(expiryProblem({ ...form, startsAt: NOW + 2 * DAY, expiresAt: NOW + DAY }, NOW)).toBe(
 			PROBLEMS.expiryBeforeStart
 		)
-		expect(expiryProblem({ ...form, startsAt: NOW + DAY, expiresAt: NOW + DAY }, NOW)).toBe(PROBLEMS.expiryBeforeStart)
+		expect(expiryProblem({ ...form, startsAt: NOW + DAY, expiresAt: NOW + DAY }, NOW)).toBe(
+			PROBLEMS.expiryBeforeStart
+		)
 	})
 
 	it("lets an edit keep an expired expiry, but not move it to another past time", () => {
@@ -357,7 +396,9 @@ describe("buildBody", () => {
 			note: null,
 			expires_at: null
 		})
-		expect(buildBody({ ...emptyForm("public_range"), cidr: "203.0.113.0/24", use: "egress", note: " NAT " })).toEqual({
+		expect(
+			buildBody({ ...emptyForm("public_range"), cidr: "203.0.113.0/24", use: "egress", note: " NAT " })
+		).toEqual({
 			kind: "public_range",
 			value: { cidr: "203.0.113.0/24", use: "egress" },
 			note: "NAT",
@@ -400,7 +441,7 @@ describe("buildBody", () => {
 	})
 
 	it("sends a fact back as it came, so an edit changes only what the analyst changed", () => {
-		for (const item of [ZONE, PUBLIC, ASSET, EXPECTED]) {
+		for (const item of [ZONE, PUBLIC, ASSET, EXPECTED, DOMAIN, TENANT, ACCOUNT]) {
 			const body = buildBody(formFromItem(item))
 			expect(body.kind).toBe(item.kind)
 			expect(Object.keys(body.value).sort()).toEqual(Object.keys(item.value).sort())
@@ -472,16 +513,19 @@ describe("lastChanged", () => {
 })
 
 describe("groupFacts", () => {
-	it("gives the four blocks in order, each with its facts, empty or not", () => {
-		const groups = groupFacts([EXPECTED, ZONE, { ...ZONE, id: 2 }])
+	it("gives every block in order, each with its facts, empty or not", () => {
+		const groups = groupFacts([EXPECTED, ZONE, { ...ZONE, id: 2 }, ACCOUNT])
 		expect(groups.map(group => group.kind)).toEqual(KINDS)
 		expect(groups.map(group => group.title)).toEqual([
 			"Network zones",
 			"Public ranges",
 			"Asset roles",
-			"Expected activity"
+			"Expected activity",
+			"Domains",
+			"Identity tenants",
+			"Accounts"
 		])
-		expect(groups.map(group => group.facts.length)).toEqual([2, 0, 0, 1])
+		expect(groups.map(group => group.facts.length)).toEqual([2, 0, 0, 1, 0, 0, 1])
 	})
 
 	it("leaves out a kind this page doesn't know yet", () => {
@@ -523,5 +567,206 @@ describe("the words", () => {
 			"other"
 		])
 		expect(values(EXPECTED_OPTIONS)).toEqual(["scanner", "rmm", "pentest", "change_window", "other"])
+	})
+})
+
+// ── plan K1-7: domains, tenants and accounts ──────────────────────────────────
+
+describe("domainProblem", () => {
+	it.each([
+		"example.com",
+		" Mail.Example.COM ",
+		"example.com.",
+		"bücher.example",
+		"xn--bcher-kva.example",
+		"example.co.uk"
+	])("takes %s", value => {
+		expect(domainProblem(value)).toBeNull()
+	})
+
+	it.each([
+		"com",
+		"*.example.com",
+		"https://example.com",
+		"example.com/login",
+		"example.com:443",
+		"user@example.com",
+		"exa mple.com",
+		"-bad.example.com",
+		"a..example.com",
+		"example.123",
+		"10.0.0.1",
+		"2001:db8::1",
+		`${"x".repeat(64)}.com`,
+		"e\u200Bxample.com",
+		"example.com<",
+		"example_name.com"
+	])("refuses %j", value => {
+		expect(domainProblem(value)).toBe(PROBLEMS.domain)
+	})
+
+	it("asks for a domain when there is none", () => {
+		expect(domainProblem("  ")).toBe("Enter the domain")
+	})
+})
+
+describe("tenantIdProblem", () => {
+	it("takes each provider's form", () => {
+		expect(tenantIdProblem("entra", "72F988BF-86F1-41AF-91AB-2D7CD011DB47")).toBeNull()
+		expect(tenantIdProblem("entra", "{72f988bf-86f1-41af-91ab-2d7cd011db47}")).toBeNull()
+		expect(tenantIdProblem("google", "C01b2c3d4")).toBeNull()
+		expect(tenantIdProblem("other", "tenant.example:42")).toBeNull()
+	})
+
+	it("refuses another form, with the provider's own words", () => {
+		expect(tenantIdProblem("entra", "contoso.onmicrosoft.com")).toBe(PROBLEMS.entraTenant)
+		expect(tenantIdProblem("google", "x123456")).toBe(PROBLEMS.googleTenant)
+		expect(tenantIdProblem("other", "two words")).toBe(PROBLEMS.tenant)
+		expect(tenantIdProblem(null, "<tenant>")).toBe(PROBLEMS.tenant)
+		expect(tenantIdProblem("entra", " ")).toBe("Enter the tenant's id")
+	})
+
+	it("holds a tenant's name to the free-text rules", () => {
+		expect(tenantNameProblem("Contoso Ltd")).toBeNull()
+		expect(tenantNameProblem("</customer_context>")).toBe(PROBLEMS.text)
+		expect(tenantNameProblem("x".repeat(256))).toContain("255")
+	})
+})
+
+describe("identifierProblem", () => {
+	it.each(["jsmith", "CORP\\jsmith", "NT AUTHORITY\\SYSTEM", "jsmith@corp.example", "svc-backup$"])(
+		"takes %s",
+		value => {
+			expect(identifierProblem(value)).toBeNull()
+		}
+	)
+
+	it.each([
+		"Jane Smith",
+		"CORP\\Jane Smith",
+		"\\jsmith",
+		"CORP\\",
+		"CORP\\a\\b",
+		"a@b@c",
+		"@corp.example",
+		"jsmith@",
+		"j smith@corp.example"
+	])("refuses the display name or broken form %j", value => {
+		expect(identifierProblem(value)).toBe(PROBLEMS.identifier)
+	})
+
+	it("keeps the account-name rules first", () => {
+		expect(identifierProblem("svc*")).toBe(PROBLEMS.account)
+		expect(identifierProblem("svc\u200B")).toBe(PROBLEMS.account)
+	})
+
+	it("asks for an account when there is none", () => {
+		expect(accountIdProblem(" ")).toBe("Enter the account's name")
+	})
+})
+
+describe("the K1-7 forms", () => {
+	it("send exactly what each kind's model takes, trimmed", () => {
+		expect(buildBody({ ...emptyForm("own_domain"), domain: " example.com ", uses: ["web", "email"] })).toEqual({
+			kind: "own_domain",
+			value: { domain: "example.com", uses: ["web", "email"] },
+			note: null,
+			expires_at: null
+		})
+		expect(
+			buildBody({
+				...emptyForm("identity_tenant"),
+				provider: "google",
+				tenantId: " C01b2c3d4 ",
+				tenantName: "  "
+			})
+		).toEqual({
+			kind: "identity_tenant",
+			value: { provider: "google", tenant_id: "C01b2c3d4", name: null },
+			note: null,
+			expires_at: null
+		})
+		expect(
+			buildBody({
+				...emptyForm("account_role"),
+				account: " jsmith ",
+				accountRole: "vip",
+				aliases: [" j.smith ", ""]
+			})
+		).toEqual({
+			kind: "account_role",
+			value: { account: "jsmith", role: "vip", aliases: ["j.smith"] },
+			note: null,
+			expires_at: null
+		})
+	})
+
+	it("send a fact back as it came", () => {
+		for (const item of [DOMAIN, TENANT, ACCOUNT]) expect(buildBody(formFromItem(item)).value).toEqual(item.value)
+	})
+
+	it("copy the lists, so editing the form leaves the fact alone", () => {
+		const form = formFromItem(ACCOUNT)
+		form.aliases.push("other")
+		form.uses.push("web")
+		expect(ACCOUNT.kind === "account_role" && ACCOUNT.value.aliases).toEqual(["jsmith@corp.example"])
+		const domain = formFromItem(DOMAIN)
+		domain.uses.push("web")
+		expect(DOMAIN.kind === "own_domain" && DOMAIN.value.uses).toEqual(["email", "upn"])
+	})
+
+	it("check the fields their kind shows", async () => {
+		const rules = knowledgeRules({ ...emptyForm("identity_tenant"), provider: "entra" })
+		const check = (field: string, value: unknown) =>
+			(rules[field] as { validator: (rule: unknown, value: unknown) => true | Error }).validator({}, value)
+		expect(check("tenantId", "not-a-guid")).toEqual(new Error(PROBLEMS.entraTenant))
+		expect(check("tenantId", "72f988bf-86f1-41af-91ab-2d7cd011db47")).toBe(true)
+		expect(check("uses", [])).toEqual(new Error("Pick at least one use"))
+		expect(check("domain", "gmail.com")).toBe(true) // the backend's refusal: a public mail provider
+		expect(check("account", "Jane Smith")).toEqual(new Error(PROBLEMS.identifier))
+		expect(check("aliases", ["ok", "Jane Smith"])).toEqual(new Error(`Jane Smith: ${PROBLEMS.identifier}`))
+	})
+
+	it("show each kind in words", () => {
+		expect(factView(DOMAIN, when)).toEqual({
+			headline: "example.com",
+			crownJewel: false,
+			details: [{ label: "Used for", values: ["Email", "UPN suffix"] }]
+		})
+		expect(factView(TENANT, when)).toEqual({
+			headline: "contoso.onmicrosoft.com",
+			crownJewel: false,
+			details: [
+				{ label: "Provider", values: ["Microsoft Entra (Microsoft 365)"] },
+				{ label: "Tenant id", values: ["72f988bf-86f1-41af-91ab-2d7cd011db47"] }
+			]
+		})
+		expect(factView({ ...TENANT, value: { ...TENANT.value, name: null } } as KnowledgeItem, when).headline).toBe(
+			"72f988bf-86f1-41af-91ab-2d7cd011db47"
+		)
+		expect(factView(ACCOUNT, when)).toEqual({
+			headline: "CORP\\jsmith",
+			crownJewel: false,
+			details: [
+				{ label: "Role", values: ["Break-glass account"] },
+				{ label: "Also known as", values: ["jsmith@corp.example"] }
+			]
+		})
+	})
+
+	it("offer the values the backend's models take", () => {
+		const values = (list: { value: string }[]) => list.map(option => option.value)
+		expect(values(DOMAIN_USE_OPTIONS)).toEqual(["email", "web", "ad", "upn", "other"])
+		expect(values(PROVIDER_OPTIONS)).toEqual(["entra", "google", "other"])
+		expect(values(ACCOUNT_ROLE_OPTIONS)).toEqual([
+			"vip",
+			"executive",
+			"admin",
+			"service",
+			"break_glass",
+			"shared",
+			"other"
+		])
+		expect(ALIASES_MAX).toBe(10)
 	})
 })
