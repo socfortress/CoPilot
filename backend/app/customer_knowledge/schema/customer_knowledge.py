@@ -1,5 +1,6 @@
 """What SOC analysts record about a customer (talon-analyst SPEC D98, plan K1): request and response
-shapes, and one Pydantic model per kind of fact.
+shapes, and one Pydantic model per kind of fact: plan K1's first four, and K1-7's domains, tenants and
+accounts.
 
 **One table, typed values.** ``customer_knowledge_item.value`` is JSON, and each kind's model below
 is what it may hold, with ``extra="forbid"`` so a typo'd key is a 422 at save time. A new kind is a
@@ -23,6 +24,9 @@ from pydantic import Field
 NOTE_MAX = 200
 NAME_MAX = 255
 LIST_MAX = 50
+DOMAIN_MAX = 253
+TENANT_ID_MAX = 128
+ALIASES_MAX = 10
 
 Zone = Literal["server", "workstation", "dmz", "guest", "ot", "vpn", "cloud", "management", "other"]
 PublicUse = Literal["egress", "hosted", "other"]
@@ -40,6 +44,9 @@ Role = Literal[
     "other",
 ]
 Expected = Literal["scanner", "rmm", "pentest", "change_window", "other"]
+DomainUse = Literal["email", "web", "ad", "upn", "other"]
+TenantProvider = Literal["entra", "google", "other"]
+AccountKind = Literal["vip", "executive", "admin", "service", "break_glass", "shared", "other"]
 
 
 class KnowledgeValue(BaseModel):
@@ -83,14 +90,54 @@ class ExpectedActivity(KnowledgeValue):
     starts_at: datetime
 
 
+class OwnDomain(KnowledgeValue):
+    """A domain the customer owns, and what it's used for (talon-analyst plan K1-7). talon-analyst labels
+    a domain in an alert as the customer's own, or as a lookalike of one: where something is, never a
+    sign that it can be trusted. A subdomain of it counts as the customer's too."""
+
+    domain: str = Field(..., min_length=1, max_length=DOMAIN_MAX)
+    uses: List[DomainUse] = Field(..., min_length=1, max_length=5)
+
+
+class IdentityTenant(KnowledgeValue):
+    """The customer's identity tenant: an Entra (Microsoft 365) tenant id, a Google Workspace customer
+    id, or another provider's. talon-analyst labels a sign-in's tenant as the customer's own or foreign."""
+
+    provider: TenantProvider
+    tenant_id: str = Field(..., min_length=1, max_length=TENANT_ID_MAX)
+    name: Optional[str] = Field(default=None, max_length=NAME_MAX)
+
+
+class AccountRole(KnowledgeValue):
+    """What an account is. An identifier (``jsmith``, ``CORP\\jsmith``, ``jsmith@corp.com``), never a
+    person's display name: talon-analyst sends account names to its model provider as tokens, and a
+    name typed in free text would go raw (Taylor's decision, plan K1-7). ``aliases`` are other spellings
+    of the same account."""
+
+    account: str = Field(..., min_length=1, max_length=NAME_MAX)
+    role: AccountKind
+    aliases: List[str] = Field(default_factory=list, max_length=ALIASES_MAX)
+
+
 #: kind -> (branch of the tree, the model of its ``value``).
 KINDS: Dict[str, Tuple[str, Type[KnowledgeValue]]] = {
     "network_zone": ("network", NetworkZone),
     "public_range": ("network", PublicRange),
     "asset_role": ("assets", AssetRole),
     "expected_activity": ("expected", ExpectedActivity),
+    "own_domain": ("domains", OwnDomain),
+    "identity_tenant": ("domains", IdentityTenant),
+    "account_role": ("people", AccountRole),
 }
-Kind = Literal["network_zone", "public_range", "asset_role", "expected_activity"]
+Kind = Literal[
+    "network_zone",
+    "public_range",
+    "asset_role",
+    "expected_activity",
+    "own_domain",
+    "identity_tenant",
+    "account_role",
+]
 
 
 class KnowledgeItemBody(BaseModel):

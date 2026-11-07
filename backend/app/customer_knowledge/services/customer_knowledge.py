@@ -20,6 +20,10 @@ so the risk here is a wrong fact, and these rules keep the entries narrow:
 - **Public space another customer also records is a warning, never a refusal.** It doesn't say who.
   The warning counts only customers the caller can read, as saving a range to see whether it warns
   would otherwise map other tenants' space. Every overlap is in the audit row, which only admins read.
+- **Domains, tenants and accounts (plan K1-7)** are checked in ``domains.py``: a domain isn't a shared
+  suffix or a public mail provider's, a tenant id has its provider's form, and an account is an
+  identifier, never a display name. A domain or a tenant another customer also records is the same
+  kind of warning as overlapping public space.
 
 Every write is audited with the old and new values, straight after its commit. A save that changes
 nothing writes nothing. ``status`` and ``source`` are set here: every fact is ``approved`` and ``soc``
@@ -58,6 +62,12 @@ from app.customer_knowledge.schema.customer_knowledge import NAME_MAX
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItem
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItemBody
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItemUpdate
+from app.customer_knowledge.services.domains import BAD_DOMAIN
+from app.customer_knowledge.services.domains import DomainProblem
+from app.customer_knowledge.services.domains import checked_domain
+from app.customer_knowledge.services.domains import checked_identifier
+from app.customer_knowledge.services.domains import checked_tenant
+from app.customer_knowledge.services.domains import related
 from app.db.universal_models import CustomerKnowledgeItem
 from app.db.universal_models import Customers
 from app.middleware.customer_access import customer_access_handler
@@ -102,15 +112,27 @@ START_TOO_OLD = f"the start can't be more than {EXPECTED_MAX_DAYS} days ago"
 WINDOW_TOO_LONG = f"expected activity can't run for more than {EXPECTED_MAX_DAYS} days"
 BAD_HOST = "host names can't hold spaces, wildcards, angle brackets or control characters"
 BAD_ACCOUNT = "account names can't hold wildcards, angle brackets or control characters"
-BAD_TEXT = "notes and owners can't hold angle brackets or control characters"
+BAD_TEXT = "notes, owners and names can't hold angle brackets or control characters"
 DUPLICATE = "this is already recorded for this customer: change that fact instead"
 TOO_MANY = f"this customer has reached the limit of {MAX_FACTS} facts: remove some first"
 #: Not a refusal: the caller's copy is out of date (409).
 VERSION_CHANGED = "this fact changed after you opened it: open it again to edit the latest version"
 
 OVERLAP = "Another customer records public space that overlaps this. Check it before relying on it."
+DOMAIN_OVERLAP = "Another customer records this domain, or one above or under it. Check it before relying on it."
+TENANT_OVERLAP = "Another customer records this tenant. Check it before relying on it."
 #: In the audit row, which names no other customer: a customer-scoped view of it could show its row.
 OVERLAP_AUDIT = "public space overlaps another customer's"
+DOMAIN_OVERLAP_AUDIT = "domain overlaps another customer's"
+TENANT_OVERLAP_AUDIT = "tenant is another customer's too"
+#: kind -> (the warning, the audit row's line) when another customer records the same thing.
+_OVERLAP_TEXTS = {
+    "network_zone": (OVERLAP, OVERLAP_AUDIT),
+    "public_range": (OVERLAP, OVERLAP_AUDIT),
+    "expected_activity": (OVERLAP, OVERLAP_AUDIT),
+    "own_domain": (DOMAIN_OVERLAP, DOMAIN_OVERLAP_AUDIT),
+    "identity_tenant": (TENANT_OVERLAP, TENANT_OVERLAP_AUDIT),
+}
 
 
 class KnowledgeProblem(ValueError):
@@ -177,6 +199,31 @@ def _account(value: str) -> str:
     return text
 
 
+def _domain(value: str) -> str:
+    if _unsafe(str(value)):  # an invisible character IDNA would drop: refused, as in a host name
+        raise KnowledgeProblem(BAD_DOMAIN)
+    try:
+        return checked_domain(value)
+    except DomainProblem as exc:
+        raise KnowledgeProblem(str(exc)) from None
+
+
+def _tenant(provider: str, value: str) -> str:
+    try:
+        return checked_tenant(provider, value)
+    except DomainProblem as exc:
+        raise KnowledgeProblem(str(exc)) from None
+
+
+def _identifier(value: str) -> str:
+    """An account identifier: an account name (``_account``) that isn't a display name."""
+    text = _account(value)
+    try:
+        return checked_identifier(text)
+    except DomainProblem as exc:
+        raise KnowledgeProblem(str(exc)) from None
+
+
 def _line(value: Optional[str]) -> Optional[str]:
     """Free text as one clean line, or None when there's nothing in it."""
     text = " ".join(str(value or "").split())
@@ -202,12 +249,18 @@ def _iso(moment: Optional[datetime]) -> Optional[str]:
 
 
 def _natural_key(kind: str, value: Mapping[str, Any]) -> Optional[str]:
-    """What makes two facts of a customer the same fact. A host can hold several roles, and expected
-    activity can repeat, so it has no key."""
+    """What makes two facts of a customer the same fact. A host or an account can hold several roles,
+    and expected activity can repeat, so it has no key. A domain is recorded once, with all its uses."""
     if kind in ("network_zone", "public_range"):
         return f"{kind}:{value['cidr']}"
     if kind == "asset_role":
         return f"{kind}:{value['host'].lower()}:{value['role']}"
+    if kind == "own_domain":
+        return f"{kind}:{value['domain']}"
+    if kind == "identity_tenant":
+        return f"{kind}:{value['provider']}:{value['tenant_id'].lower()}"
+    if kind == "account_role":
+        return f"{kind}:{value['account'].lower()}:{value['role']}"
     return None
 
 
@@ -242,6 +295,22 @@ def check_item(body: KnowledgeItemBody, now: datetime, kept: Optional[CustomerKn
     elif body.kind == "asset_role":
         parsed["host"] = _host(parsed["host"])
         parsed["owner"] = _line(parsed["owner"])
+    elif body.kind == "own_domain":
+        parsed["domain"] = _domain(parsed["domain"])
+        parsed["uses"] = sorted(set(parsed["uses"]))
+    elif body.kind == "identity_tenant":
+        parsed["tenant_id"] = _tenant(parsed["provider"], parsed["tenant_id"])
+        parsed["name"] = _line(parsed["name"])
+    elif body.kind == "account_role":
+        parsed["account"] = _identifier(parsed["account"])
+        seen = {parsed["account"].lower()}
+        aliases = []
+        for alias in parsed["aliases"]:
+            checked = _identifier(alias)
+            if checked.lower() not in seen:
+                seen.add(checked.lower())
+                aliases.append(checked)
+        parsed["aliases"] = sorted(aliases, key=str.lower)
     elif body.kind == "expected_activity":
         parsed["hosts"] = sorted({_host(h) for h in parsed["hosts"]})
         parsed["accounts"] = sorted({_account(a) for a in parsed["accounts"]})
@@ -297,7 +366,7 @@ async def _audit(
     old: Optional[Mapping[str, Any]],
     new: Optional[Mapping[str, Any]],
     request: Optional[Request],
-    overlap: bool = False,
+    overlap: Optional[str] = None,
 ) -> None:
     await record_audit_event(
         action=action,
@@ -308,7 +377,7 @@ async def _audit(
         entity_id=str(item_id),
         old_value=dict(old) if old is not None else None,
         new_value=dict(new) if new is not None else None,
-        details=OVERLAP_AUDIT if overlap else None,
+        details=overlap,
         request=request,
     )
 
@@ -360,28 +429,57 @@ def _public_networks(kind: str, value: Any) -> "tuple[Network, ...]":
     return tuple(found)
 
 
+def _same_claim(kind: str, mine: Mapping[str, Any], theirs: Any) -> bool:
+    """Whether another customer's fact of the same kind claims what ``mine`` does: a domain equal to,
+    above or under it, or the same provider's tenant."""
+    if not isinstance(theirs, dict):
+        return False
+    if kind == "own_domain":
+        other = theirs.get("domain")
+        return isinstance(other, str) and related(mine["domain"], other.lower())
+    other = theirs.get("tenant_id")
+    return theirs.get("provider") == mine["provider"] and isinstance(other, str) and other.lower() == mine["tenant_id"].lower()
+
+
 async def _overlapping_customers(checked: CheckedItem, customer_code: str, session: AsyncSession) -> Set[str]:
-    """The other customers whose live facts name public space this fact also names."""
+    """The other customers whose live facts name public space this fact also names, or, for a domain or
+    a tenant, claim the same one."""
+    live = (
+        CustomerKnowledgeItem.customer_code != customer_code,
+        CustomerKnowledgeItem.status == APPROVED,
+        or_(CustomerKnowledgeItem.expires_at.is_(None), CustomerKnowledgeItem.expires_at > to_naive_utc(now_utc())),
+    )
+    if checked.kind in ("own_domain", "identity_tenant"):
+        query = select(CustomerKnowledgeItem.customer_code, CustomerKnowledgeItem.value).where(
+            CustomerKnowledgeItem.kind == checked.kind,
+            *live,
+        )
+        rows = (await session.execute(query)).all()
+        return {code for code, value in rows if _same_claim(checked.kind, checked.value, value)}
     mine = _public_networks(checked.kind, checked.value)
     if not mine:
         return set()
     query = select(CustomerKnowledgeItem.customer_code, CustomerKnowledgeItem.kind, CustomerKnowledgeItem.value).where(
         CustomerKnowledgeItem.kind.in_(_CIDR_FIELDS),
-        CustomerKnowledgeItem.customer_code != customer_code,
-        CustomerKnowledgeItem.status == APPROVED,
-        or_(CustomerKnowledgeItem.expires_at.is_(None), CustomerKnowledgeItem.expires_at > to_naive_utc(now_utc())),
+        *live,
     )
     rows = (await session.execute(query)).all()
     return {code for code, kind, value in rows if any(_overlaps_any(n, _public_networks(kind, value)) for n in mine)}
 
 
-async def _warnings(overlapping: Set[str], user: User, session: AsyncSession) -> List[str]:
+async def _warnings(kind: str, overlapping: Set[str], user: User, session: AsyncSession) -> List[str]:
     """Never says whose, and counts only customers ``user`` can read: for an analyst scoped to one
-    customer, a warning from the rest would be a way to find out what space they record."""
+    customer, a warning from the rest would be a way to find out what space, domains or tenants they
+    record."""
     if not overlapping:
         return []
     readable = await customer_access_handler.get_user_accessible_customers(user, session)
-    return [OVERLAP] if "*" in readable or overlapping & set(readable) else []
+    return [_OVERLAP_TEXTS[kind][0]] if "*" in readable or overlapping & set(readable) else []
+
+
+def _overlap_line(kind: str, overlapping: Set[str]) -> Optional[str]:
+    """The audit row's line for an overlap, which names no other customer."""
+    return _OVERLAP_TEXTS[kind][1] if overlapping else None
 
 
 def _checked(body: KnowledgeItemBody, kept: Optional[CustomerKnowledgeItem] = None) -> CheckedItem:
@@ -417,7 +515,7 @@ async def create_item(
     if (await session.execute(count)).scalar_one() >= MAX_FACTS:
         raise HTTPException(status_code=422, detail=TOO_MANY)
     overlapping = await _overlapping_customers(checked, code, session)
-    warnings = await _warnings(overlapping, user, session)
+    warnings = await _warnings(checked.kind, overlapping, user, session)
     now = now_utc()
     row = CustomerKnowledgeItem(
         customer_code=code,
@@ -436,7 +534,16 @@ async def create_item(
     )
     session.add(row)
     await _commit(session)
-    await _audit(AuditAction.CUSTOMER_KNOWLEDGE_CREATE, user, code, row.id, None, _audited(row), request, bool(overlapping))
+    await _audit(
+        AuditAction.CUSTOMER_KNOWLEDGE_CREATE,
+        user,
+        code,
+        row.id,
+        None,
+        _audited(row),
+        request,
+        _overlap_line(checked.kind, overlapping),
+    )
     await session.refresh(row)
     logger.info(f"Knowledge item {row.id} ({row.kind}) added for {code}")
     return row, warnings
@@ -458,7 +565,7 @@ async def update_item(
         raise HTTPException(status_code=409, detail=VERSION_CHANGED)
     checked = _checked(body, row)
     overlapping = await _overlapping_customers(checked, code, session)
-    warnings = await _warnings(overlapping, user, session)
+    warnings = await _warnings(checked.kind, overlapping, user, session)
     if (row.value, row.note, row.expires_at) == (checked.value, checked.note, checked.expires_at):
         return row, warnings
     old = _audited(row)
@@ -471,7 +578,16 @@ async def update_item(
     row.updated_by_user_id = user.id
     row.updated_by_username = user.username
     await _commit(session)
-    await _audit(AuditAction.CUSTOMER_KNOWLEDGE_UPDATE, user, code, row.id, old, _audited(row), request, bool(overlapping))
+    await _audit(
+        AuditAction.CUSTOMER_KNOWLEDGE_UPDATE,
+        user,
+        code,
+        row.id,
+        old,
+        _audited(row),
+        request,
+        _overlap_line(checked.kind, overlapping),
+    )
     await session.refresh(row)
     logger.info(f"Knowledge item {row.id} ({row.kind}) updated for {code}")
     return row, warnings
