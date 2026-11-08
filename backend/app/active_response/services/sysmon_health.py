@@ -646,8 +646,12 @@ def _is_loopback(host: str) -> bool:
         return False
 
 
-def _sidecar_settings() -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLContext]]:
-    """``(endpoint, refusal, ssl_context)``. Refuses unless the key and an https (or loopback) URL are configured."""
+def sidecar_settings(path: str = "/provision_worker/shared-files") -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLContext]]:
+    """
+    ``(endpoint, refusal, ssl_context)`` for the authenticated WAZUH-UTILS: refuses unless WAZUH_UTILS_API_KEY and an
+    https (or loopback, or explicitly allowed http) WAZUH_UTILS_URL are configured. Also used by the Sysmon config
+    deploy once a key is set.
+    """
     token = os.environ.get("WAZUH_UTILS_API_KEY", "").strip()
     base = os.environ.get("WAZUH_UTILS_URL", "").strip().rstrip("/")
     if not token:
@@ -662,15 +666,19 @@ def _sidecar_settings() -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLC
     insecure_ok = os.environ.get("WAZUH_UTILS_ALLOW_INSECURE_HTTP", "").strip().lower() in ("1", "true", "yes")
     if parsed.scheme != "https" and not (parsed.scheme == "http" and (_is_loopback(parsed.hostname or "") or insecure_ok)):
         refusal = (
-            f"Refusing to send the API key and the scripts to {base}: use https (set WAZUH_UTILS_ALLOW_INSECURE_HTTP=true "
-            "only if you accept them crossing the network in cleartext)."
+            f"Refusing to send the API key to {base}: use https (set WAZUH_UTILS_ALLOW_INSECURE_HTTP=true "
+            "only if you accept it crossing the network in cleartext)."
         )
         return None, refusal, None
     context = None
     ca_bundle = os.environ.get("WAZUH_UTILS_CA_BUNDLE", "").strip()
     if parsed.scheme == "https" and ca_bundle:
         context = ssl.create_default_context(cafile=ca_bundle)
-    return f"{base}/provision_worker/shared-files", None, context
+    return f"{base}{path}", None, context
+
+
+def _sidecar_settings() -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLContext]]:
+    return sidecar_settings("/provision_worker/shared-files")
 
 
 async def publish_shared_scripts(group: str, names: Iterable[str] = SHARED_SCRIPTS) -> Tuple[bool, str]:
@@ -704,11 +712,18 @@ async def publish_shared_scripts(group: str, names: Iterable[str] = SHARED_SCRIP
                 body = await response.text()
                 if response.status == 200:
                     return True, "Published to the shared folder."
-                if response.status == 404:
+                try:
+                    payload = json.loads(body)
+                except ValueError:
+                    payload = {}
+                # The authenticated sidecar answers {"success": false, "message": ...}; a route that does not exist
+                # (an older sidecar) answers FastAPI's default {"detail": "Not Found"}.
+                message = payload.get("message") if isinstance(payload, dict) else None
+                if response.status == 404 and not message:
                     return False, "WAZUH-UTILS on the master has no /shared-files endpoint yet; upgrade it."
-                if response.status in (401, 403):
-                    return False, f"WAZUH-UTILS rejected the API key (HTTP {response.status})."
-                return False, f"WAZUH-UTILS returned HTTP {response.status}: {body[:300]}"
+                if response.status == 401:
+                    return False, "WAZUH-UTILS rejected the API key (HTTP 401)."
+                return False, f"WAZUH-UTILS refused (HTTP {response.status}): {message or body[:300]}"
     except Exception as e:  # noqa: BLE001 - network failures are reported, not raised
         return False, f"Could not reach WAZUH-UTILS at {endpoint}: {e}"
 

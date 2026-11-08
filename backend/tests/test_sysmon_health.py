@@ -614,3 +614,81 @@ def test_routes_are_registered_under_sysmon_config_health():
     assert "/sysmon_config/health/{customer_code}" in paths
     assert "/sysmon_config/health/{customer_code}/apply" in paths
     assert "/sysmon_config/health/apply-all" in paths
+
+
+# --------------------------------------------------------------------------------------------------------------------
+# Sysmon config deploy follows the authenticated sidecar once a key is configured
+# --------------------------------------------------------------------------------------------------------------------
+
+
+def test_sysmon_config_deploy_uses_the_authenticated_sidecar_when_a_key_is_set(monkeypatch):
+    from app.active_response.services import sysmon_config
+
+    monkeypatch.setenv("WAZUH_UTILS_API_KEY", "k")
+    monkeypatch.setenv("WAZUH_UTILS_URL", "https://wazuh-master.example:5003")
+    assert run(sysmon_config.get_wazuh_endpoint(session=None)) == "https://wazuh-master.example:5003/provision_worker/sysmon-config"
+
+    monkeypatch.setenv("WAZUH_UTILS_URL", "http://wazuh-master.example:5003")
+    monkeypatch.delenv("WAZUH_UTILS_ALLOW_INSECURE_HTTP", raising=False)
+    with pytest.raises(ValueError):
+        run(sysmon_config.get_wazuh_endpoint(session=None))
+
+
+def test_sysmon_config_deploy_keeps_the_legacy_endpoint_without_a_key(monkeypatch):
+    from app.active_response.services import sysmon_config
+
+    monkeypatch.delenv("WAZUH_UTILS_API_KEY", raising=False)
+
+    async def connector_url(column_name, connector_name, session):
+        return "https://wazuh-master.example:55000"
+
+    monkeypatch.setattr(sysmon_config, "get_connector_attribute", connector_url)
+    assert run(sysmon_config.get_wazuh_endpoint(session=None)) == "http://wazuh-master.example:5003/provision_worker/sysmon-config"
+
+
+def test_publish_sends_bearer_group_files_and_hashes_and_maps_refusals(monkeypatch):
+    """Drive the real request against a local server: headers, form fields, and the sidecar's error answers."""
+    from aiohttp import web
+
+    seen = {}
+    answer = {"status": 200, "body": {"success": True, "message": "ok"}}
+
+    async def handler(request):
+        seen["auth"] = request.headers.get("Authorization")
+        form = await request.post()
+        seen["group"] = form.get("group")
+        seen["files"] = [(f.filename, f.file.read()) for f in form.getall("files")]
+        seen["sha256"] = form.getall("sha256")
+        return web.json_response(answer["body"], status=answer["status"])
+
+    async def scenario():
+        app = web.Application()
+        app.router.add_post("/provision_worker/shared-files", handler)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "127.0.0.1", 0)
+        await site.start()
+        port = site._server.sockets[0].getsockname()[1]
+        monkeypatch.setenv("WAZUH_UTILS_URL", f"http://127.0.0.1:{port}")  # loopback: allowed over http
+        monkeypatch.setenv("WAZUH_UTILS_API_KEY", "secret-key")
+        try:
+            results = [await sh.publish_shared_scripts("Windows_lab")]
+            answer.update(status=403, body={"success": False, "message": "sysmon_watchdog.ps1 is not in WAZUH_UTILS_ALLOWED_SHA256"})
+            results.append(await sh.publish_shared_scripts("Windows_lab", [sh.WATCHDOG_SCRIPT]))
+            answer.update(status=404, body={"success": False, "message": "Group Windows_lab does not exist"})
+            results.append(await sh.publish_shared_scripts("Windows_lab", [sh.WATCHDOG_SCRIPT]))
+            answer.update(status=404, body={"detail": "Not Found"})
+            results.append(await sh.publish_shared_scripts("Windows_lab", [sh.WATCHDOG_SCRIPT]))
+            return results
+        finally:
+            await runner.cleanup()
+
+    published, pinned, no_group, old_sidecar = run(scenario())
+    assert published == (True, "Published to the shared folder.")
+    assert seen["auth"] == "Bearer secret-key"
+    assert seen["group"] == "Windows_lab"
+    assert seen["files"] == [(sh.WATCHDOG_SCRIPT, sh.load_asset(sh.WATCHDOG_SCRIPT))]
+    assert seen["sha256"] == [sh.asset_sha256(sh.WATCHDOG_SCRIPT)]
+    assert not pinned[0] and "ALLOWED_SHA256" in pinned[1]
+    assert not no_group[0] and "does not exist" in no_group[1]
+    assert not old_sidecar[0] and "no /shared-files endpoint" in old_sidecar[1]
