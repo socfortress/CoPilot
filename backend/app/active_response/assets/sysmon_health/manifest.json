@@ -1,0 +1,10 @@
+{
+  "_comment": "Vendored, byte-exact copies. Source of truth: socfortress/Client-Kickstart-Automated (wazuh/shared/sysmon_watchdog.ps1, client-installer/source/Files/sysmon_config_reload.ps1, wazuh/rules/sysmon_sensor_health_rules.xml); the rules file is also shipped by socfortress/Wazuh-Rules as Windows_Sysmon/sysmon_sensor_health_rules.xml. Update the files and these hashes together; CoPilot refuses to publish a file whose hash does not match.",
+  "source_repo": "socfortress/Client-Kickstart-Automated",
+  "source_commit": "2c3f03ad363c58bf69961b97f96ae4b1313f5487",
+  "files": {
+    "sysmon_watchdog.ps1": "df3227eb886c91bcdd1ae4f863b854e14e680a40e614d78e1b2bf181230d1ff3",
+    "sysmon_config_reload.ps1": "ace519e6ad427648de83647bc499cc1e44244d6327f826fab9da7677886a350c",
+    "sysmon_sensor_health_rules.xml": "6a0cbe110601d87f9a28e71d1854b4c521466d125b7c969d595d9916bb9b7299"
+  }
+}

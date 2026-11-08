@@ -11,6 +11,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.active_response.schema.sysmon_config import SysmonConfigDeploymentResult
+from app.active_response.services.sysmon_health import sidecar_settings
 from app.data_store.data_store_operations import download_sysmon_config
 from app.utils import get_connector_attribute
 
@@ -110,7 +111,18 @@ async def save_to_temp_file(data: bytes) -> str:
 
 
 async def get_wazuh_endpoint(session: AsyncSession) -> str:
-    """Get the Wazuh API endpoint for deploying sysmon configs."""
+    """Get the WAZUH-UTILS endpoint for deploying sysmon configs.
+
+    With WAZUH_UTILS_API_KEY set, the authenticated sidecar at WAZUH_UTILS_URL (https) is used; this refuses rather
+    than fall back to sending the key over plain http. Without a key, the legacy unauthenticated
+    http://<Wazuh-Manager host>:5003 is kept for sidecars that have not been upgraded yet.
+    """
+    if os.environ.get("WAZUH_UTILS_API_KEY", "").strip():
+        endpoint, refusal, _ = sidecar_settings("/provision_worker/sysmon-config")
+        if refusal:
+            raise ValueError(refusal)
+        return endpoint
+
     # Get the base URL from connector
     wazuh_api_base_url = await get_connector_attribute(column_name="connector_url", connector_name="Wazuh-Manager", session=session)
 
@@ -141,8 +153,11 @@ async def upload_to_wazuh(endpoint: str, customer_code: str, file_path: str) -> 
         with open(file_path, "rb") as file_to_upload:
             form_data.add_field("sysmon_config", file_to_upload, filename="sysmon_config.xml", content_type="application/xml")
 
-            # Send the POST request
-            async with http_session.post(endpoint, data=form_data) as response:
+            # Send the POST request (with the bearer token and CA bundle once the sidecar is authenticated)
+            token = os.environ.get("WAZUH_UTILS_API_KEY", "").strip()
+            headers = {"Authorization": f"Bearer {token}"} if token else {}
+            context = sidecar_settings("/provision_worker/sysmon-config")[2] if token else None
+            async with http_session.post(endpoint, data=form_data, headers=headers, ssl=context) as response:
                 if response.status == 200:
                     response_data = await response.json()
                     return True, response_data, None
