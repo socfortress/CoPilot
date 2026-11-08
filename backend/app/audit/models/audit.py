@@ -78,6 +78,8 @@ class AuditAction(str, Enum):
     ARTIFACT_COLLECT = "artifact.collect"
     COPILOT_ACTION_INVOKE = "response.copilot_action_invoke"
     SYSMON_CONFIG_DEPLOY = "response.sysmon_deploy"
+    # Sysmon-health rollout to a Windows group: sensor-health rules, watchdog/reload scripts, agent.conf wodles.
+    SYSMON_HEALTH_APPLY = "response.sysmon_health_apply"
 
     # Cases
     CASE_CREATE = "case.create"

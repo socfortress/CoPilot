@@ -3,6 +3,8 @@ from typing import List
 
 from loguru import logger
 
+from app.active_response.services.sysmon_health import provisioning_wodles
+from app.active_response.services.sysmon_health import reconcile_agent_conf
 from app.connectors.wazuh_manager.utils.universal import (
     send_delete_request as send_wazuh_delete_request,
 )
@@ -101,13 +103,16 @@ def get_template_path(template_info: WazuhAgentsTemplatePaths) -> Path:
 
 
 # Function to update Wazuh group configuration
-async def configure_wazuh_group(group_code, template_path, request: ProvisionNewCustomer):
+async def configure_wazuh_group(group_code, template_path, request: ProvisionNewCustomer, sysmon_health_wodles=None):
     """
     Configures a Wazuh group with the provided group code and template file.
 
     Args:
         group_code (str): The code of the Wazuh group to configure.
         template_path (str): The path to the template file.
+        sysmon_health_wodles (set, optional): For the Windows template only, which of its managed SYSMON-HEALTH
+            wodles to keep (see app/active_response/services/sysmon_health.py). The others, or the whole block
+            when the set is empty, are removed before the configuration is written.
 
     Returns:
         dict: The response from the API request to update the group configuration.
@@ -123,6 +128,8 @@ async def configure_wazuh_group(group_code, template_path, request: ProvisionNew
     # Replace placeholder with the cluster name, use default if None
     cluster_name = request.wazuh_cluster_name if request.wazuh_cluster_name else "YOUR_PATH"
     group_config = group_config.replace("CLUSTER_NAME", cluster_name)
+    if sysmon_health_wodles is not None:
+        group_config = reconcile_agent_conf(group_config, sysmon_health_wodles)
 
     # Make the API request to update the group configuration
     return await send_wazuh_put_request(
@@ -161,7 +168,10 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
         group_code = f"{group}_{request.customer_code}"
         template_path = get_template_path(template)
         try:
-            await configure_wazuh_group(group_code, template_path, request)
+            # Windows: publish the Sysmon watchdog/reload scripts first, then keep only the wodles whose
+            # prerequisites are in place (never raises; a missing piece just leaves its wodle out).
+            sysmon_health_wodles = await provisioning_wodles(group_code) if group == "Windows" else None
+            await configure_wazuh_group(group_code, template_path, request, sysmon_health_wodles=sysmon_health_wodles)
         except Exception as e:
             logger.error(f"Error configuring group {group_code}: {e}")
 
