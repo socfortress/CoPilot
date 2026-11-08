@@ -10,7 +10,8 @@ config reload to work. Pushing them in another order loses the watchdog's first 
 2. ``sysmon_watchdog.ps1`` and ``sysmon_config_reload.ps1`` in the group's shared folder. The Wazuh API cannot upload
    arbitrary shared files, so they go through the WAZUH-UTILS sidecar on the master. These scripts run as SYSTEM on
    every endpoint of the group, so CoPilot only sends them to an authenticated sidecar, over https: both
-   ``WAZUH_UTILS_API_KEY`` and an https ``WAZUH_UTILS_URL`` must be set.
+   ``WAZUH_UTILS_API_KEY`` and an https ``WAZUH_UTILS_URL`` must be set. The sidecar's (self-signed) certificate is
+   only verified when ``WAZUH_UTILS_CA_BUNDLE`` is set.
 3. The two ``<wodle name="command">`` blocks in the group's agent.conf: ``sysmon-watchdog`` and ``sysmon-reload``.
    The canonical text is the ``SYSMON-HEALTH`` block at the end of ``customer_provisioning/templates/windows_agent.conf``,
    so new groups (provisioning) and existing groups (the admin backfill) get the same thing. A wodle is only written
@@ -42,6 +43,7 @@ from typing import List
 from typing import Optional
 from typing import Set
 from typing import Tuple
+from typing import Union
 from urllib.parse import quote
 from urllib.parse import urlparse
 
@@ -637,6 +639,10 @@ async def install_rules(sleep=asyncio.sleep) -> SysmonHealthStep:
     )
 
 
+# aiohttp's ssl= argument: False (encrypted, certificate not verified), an SSLContext (verified), or None (http).
+SidecarSSL = Union[ssl.SSLContext, bool, None]
+
+
 def _is_loopback(host: str) -> bool:
     if host == "localhost":
         return True
@@ -646,11 +652,16 @@ def _is_loopback(host: str) -> bool:
         return False
 
 
-def sidecar_settings(path: str = "/provision_worker/shared-files") -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLContext]]:
+def sidecar_settings(path: str = "/provision_worker/shared-files") -> Tuple[Optional[str], Optional[str], SidecarSSL]:
     """
-    ``(endpoint, refusal, ssl_context)`` for the authenticated WAZUH-UTILS: refuses unless WAZUH_UTILS_API_KEY and an
-    https (or loopback, or explicitly allowed http) WAZUH_UTILS_URL are configured. Also used by the Sysmon config
-    deploy once a key is set.
+    ``(endpoint, refusal, ssl)`` for the authenticated WAZUH-UTILS: refuses unless WAZUH_UTILS_API_KEY and an https (or
+    loopback, or explicitly allowed http) WAZUH_UTILS_URL are configured. Also used by the Sysmon config deploy once a
+    key is set.
+
+    ``ssl`` is passed straight to aiohttp. Over https the sidecar's certificate is not verified unless
+    WAZUH_UTILS_CA_BUNDLE is set (``False``), the same way CoPilot already talks to the Wazuh API: the connection is
+    still encrypted and the API key is what authenticates. With WAZUH_UTILS_CA_BUNDLE the certificate is verified
+    against that file (an SSLContext). Over http it is ``None``.
     """
     token = os.environ.get("WAZUH_UTILS_API_KEY", "").strip()
     base = os.environ.get("WAZUH_UTILS_URL", "").strip().rstrip("/")
@@ -670,14 +681,14 @@ def sidecar_settings(path: str = "/provision_worker/shared-files") -> Tuple[Opti
             "only if you accept it crossing the network in cleartext)."
         )
         return None, refusal, None
-    context = None
-    ca_bundle = os.environ.get("WAZUH_UTILS_CA_BUNDLE", "").strip()
-    if parsed.scheme == "https" and ca_bundle:
-        context = ssl.create_default_context(cafile=ca_bundle)
+    context: SidecarSSL = None
+    if parsed.scheme == "https":
+        ca_bundle = os.environ.get("WAZUH_UTILS_CA_BUNDLE", "").strip()
+        context = ssl.create_default_context(cafile=ca_bundle) if ca_bundle else False
     return f"{base}{path}", None, context
 
 
-def _sidecar_settings() -> Tuple[Optional[str], Optional[str], Optional[ssl.SSLContext]]:
+def _sidecar_settings() -> Tuple[Optional[str], Optional[str], SidecarSSL]:
     return sidecar_settings("/provision_worker/shared-files")
 
 

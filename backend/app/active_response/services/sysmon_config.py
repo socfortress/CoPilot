@@ -153,7 +153,7 @@ async def upload_to_wazuh(endpoint: str, customer_code: str, file_path: str) -> 
         with open(file_path, "rb") as file_to_upload:
             form_data.add_field("sysmon_config", file_to_upload, filename="sysmon_config.xml", content_type="application/xml")
 
-            # Send the POST request (with the bearer token and CA bundle once the sidecar is authenticated)
+            # Send the POST request (with the bearer token and TLS settings once the sidecar is authenticated)
             token = os.environ.get("WAZUH_UTILS_API_KEY", "").strip()
             headers = {"Authorization": f"Bearer {token}"} if token else {}
             context = sidecar_settings("/provision_worker/sysmon-config")[2] if token else None

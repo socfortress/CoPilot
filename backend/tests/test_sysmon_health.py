@@ -452,6 +452,31 @@ def test_publish_refuses_cleartext_http_and_a_missing_url(monkeypatch):
     assert refusal is None and endpoint == "https://wazuh-master.example:5003/provision_worker/shared-files"
 
 
+def test_sidecar_tls_is_unverified_without_a_ca_bundle_and_verified_with_one(monkeypatch):
+    monkeypatch.setenv("WAZUH_UTILS_API_KEY", "k")
+    monkeypatch.setenv("WAZUH_UTILS_URL", "https://wazuh-master.example:5003")
+    monkeypatch.delenv("WAZUH_UTILS_CA_BUNDLE", raising=False)
+    # Only the URL and the key: encrypted, certificate not verified (aiohttp ssl=False), like the Wazuh API calls.
+    assert sh._sidecar_settings()[2] is False
+    monkeypatch.setenv("WAZUH_UTILS_CA_BUNDLE", "   ")
+    assert sh._sidecar_settings()[2] is False
+
+    calls = []
+    sentinel = object()
+
+    def fake_context(cafile=None):
+        calls.append(cafile)
+        return sentinel
+
+    monkeypatch.setattr(sh.ssl, "create_default_context", fake_context)
+    monkeypatch.setenv("WAZUH_UTILS_CA_BUNDLE", "/etc/copilot/wazuh-utils.crt")
+    assert sh._sidecar_settings()[2] is sentinel and calls == ["/etc/copilot/wazuh-utils.crt"]
+
+    # Plain http (loopback, or explicitly allowed) has no TLS settings at all.
+    monkeypatch.setenv("WAZUH_UTILS_URL", "http://127.0.0.1:5003")
+    assert sh._sidecar_settings()[2] is None
+
+
 def test_publish_refuses_an_invalid_group_name(monkeypatch):
     monkeypatch.setenv("WAZUH_UTILS_API_KEY", "k")
     monkeypatch.setenv("WAZUH_UTILS_URL", "https://wazuh-master.example:5003")
