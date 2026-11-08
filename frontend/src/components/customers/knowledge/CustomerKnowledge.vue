@@ -31,7 +31,7 @@
 								icon="carbon:notebook"
 								eyebrow="No facts yet"
 								title="Nothing recorded about this customer yet"
-								description="Facts are what the SOC knows about this customer that an alert can't say: which range is which, what a host is for, what activity to expect."
+								description="Facts are what the SOC knows about this customer that an alert can't say: when and where it works, which range is which, what a host is for, what activity to expect."
 								:points="EMPTY_POINTS"
 								points-title="What you can record"
 							>
@@ -66,6 +66,7 @@
 									</template>
 									<template #header-extra>
 										<n-button
+											v-if="group.canAdd"
 											size="small"
 											:data-testid="`knowledge-add-${group.kind}`"
 											@click="openAdd(group.kind)"

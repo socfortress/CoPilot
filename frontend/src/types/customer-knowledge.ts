@@ -4,6 +4,8 @@
  * with `extra="forbid"`, so a key that isn't here is refused.
  */
 
+import type { Weekday, WorkingWindow } from "./soc-management"
+
 export type KnowledgeKind =
 	| "network_zone"
 	| "public_range"
@@ -12,6 +14,7 @@ export type KnowledgeKind =
 	| "own_domain"
 	| "identity_tenant"
 	| "account_role"
+	| "business_profile"
 
 export type KnowledgeZone = "server" | "workstation" | "dmz" | "guest" | "ot" | "vpn" | "cloud" | "management" | "other"
 
@@ -83,6 +86,19 @@ export interface AccountRoleValue {
 	aliases: string[]
 }
 
+/**
+ * When and where the customer works (plan K1-8), one per customer: an IANA time zone, a working week
+ * or round-the-clock operation (never both), and the countries it operates in (ISO 3166-1 alpha-2).
+ * `week` has an SLA business-hours calendar's shape: per open day, windows of `HH:MM` in the profile's
+ * zone; a closed day is left out, and a night shift is two windows on two days.
+ */
+export interface BusinessProfileValue {
+	time_zone: string
+	week: Partial<Record<Weekday, WorkingWindow[]>>
+	always_open: boolean
+	countries: string[]
+}
+
 export interface KnowledgeValues {
 	network_zone: NetworkZoneValue
 	public_range: PublicRangeValue
@@ -91,6 +107,7 @@ export interface KnowledgeValues {
 	own_domain: OwnDomainValue
 	identity_tenant: IdentityTenantValue
 	account_role: AccountRoleValue
+	business_profile: BusinessProfileValue
 }
 
 interface KnowledgeItemFields {

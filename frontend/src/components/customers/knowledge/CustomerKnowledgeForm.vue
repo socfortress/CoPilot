@@ -115,6 +115,64 @@
 			</n-form-item>
 		</template>
 
+		<template v-else-if="kind === 'business_profile'">
+			<n-form-item label="Time zone" path="timeZone">
+				<n-select
+					v-model:value="form.timeZone"
+					:options="zones"
+					filterable
+					placeholder="e.g. America/Denver"
+					data-testid="knowledge-time-zone"
+				/>
+			</n-form-item>
+			<div class="text-secondary mb-2 text-xs" data-testid="knowledge-now-there">
+				<template v-if="now">It's {{ now }} there now.</template>
+				<template v-else>Pick the zone of the customer's main office, by its region and city.</template>
+			</div>
+
+			<n-form-item :show-feedback="false">
+				<n-checkbox v-model:checked="form.alwaysOpen" data-testid="knowledge-always-open">
+					Works around the clock (24/7)
+				</n-checkbox>
+			</n-form-item>
+			<n-form-item v-if="!form.alwaysOpen" ref="weekItem" label="Business hours (optional)" path="week">
+				<div class="flex w-full flex-col gap-2">
+					<WeekScheduleEditor v-model="form.week" />
+					<div class="text-secondary flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+						<span>
+							In the customer's own time. Record a night shift as two windows on two days, as SLA
+							calendars do.
+						</span>
+						<n-button
+							v-if="slaCalendar"
+							text
+							type="primary"
+							size="tiny"
+							data-testid="knowledge-copy-sla"
+							@click="copySlaCalendar"
+						>
+							Copy this customer's SLA calendar
+						</n-button>
+					</div>
+				</div>
+			</n-form-item>
+
+			<n-form-item label="Countries it operates in (optional)" path="countries">
+				<n-select
+					v-model:value="form.countries"
+					:options="COUNTRY_OPTIONS"
+					multiple
+					filterable
+					placeholder="e.g. United States"
+					data-testid="knowledge-countries"
+				/>
+			</n-form-item>
+			<div class="text-secondary mb-2 text-xs">
+				Where its people and offices are. An address that a log pipeline places elsewhere is worth a look, never
+				an attack by itself.
+			</div>
+		</template>
+
 		<template v-else>
 			<n-form-item label="What" path="what">
 				<n-select v-model:value="form.what" :options="EXPECTED_OPTIONS" placeholder="Pick what is expected" />
@@ -199,10 +257,14 @@
 import type { FormInst, FormItemInst } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { KnowledgeItem, KnowledgeKind } from "@/types/customer-knowledge"
+import type { BusinessCalendar } from "@/types/soc-management"
 import { NButton, NCheckbox, NDatePicker, NDynamicInput, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui"
-import { reactive, ref, watch } from "vue"
+import { computed, onBeforeUnmount, reactive, ref, watch } from "vue"
 import Api from "@/api"
+import { timezoneOptions } from "@/components/socManagement/policies/calendar"
+import WeekScheduleEditor from "@/components/socManagement/policies/WeekScheduleEditor.vue"
 import { getApiErrorMessage } from "@/utils"
+import { COUNTRY_OPTIONS } from "./countries"
 import {
 	ACCOUNT_ROLE_OPTIONS,
 	ALIASES_MAX,
@@ -214,10 +276,12 @@ import {
 	EXPECTED_MAX_DAYS,
 	EXPECTED_OPTIONS,
 	formFromItem,
+	fromCalendar,
 	knowledgeRules,
 	LIST_MAX,
 	NAME_MAX,
 	NOTE_MAX,
+	nowThere,
 	PROVIDER_OPTIONS,
 	refusalText,
 	ROLE_OPTIONS,
@@ -243,6 +307,7 @@ const formRef = ref<FormInst | null>(null)
 const hostsItem = ref<FormItemInst | null>(null)
 const expiresItem = ref<FormItemInst | null>(null)
 const tenantItem = ref<FormItemInst | null>(null)
+const weekItem = ref<FormItemInst | null>(null)
 const submitting = ref(false)
 
 const form = reactive(editingFact ? formFromItem(editingFact) : emptyForm(kind))
@@ -262,6 +327,35 @@ watch(
 	() => form.provider,
 	() => tenantItem.value?.restoreValidation()
 )
+
+// ── the business profile ──
+const zones = computed(() => timezoneOptions(form.timeZone ?? undefined))
+const clock = ref(Date.now())
+const ticker = kind === "business_profile" ? setInterval(() => (clock.value = Date.now()), 30_000) : undefined
+onBeforeUnmount(() => clearInterval(ticker))
+const now = computed(() => nowThere(form.timeZone, clock.value))
+
+/** The customer's own SLA calendar, offered for copying; the deployment's default isn't the customer's. */
+const slaCalendar = ref<BusinessCalendar | null>(null)
+if (kind === "business_profile") {
+	Api.socManagement
+		.getCalendar(customerCode)
+		.then(res => {
+			if (res.data.success && res.data.calendar.source === "customer") slaCalendar.value = res.data.calendar
+		})
+		.catch(() => {
+			// Only an offer: without it, the hours are typed in.
+		})
+}
+
+function copySlaCalendar() {
+	if (!slaCalendar.value) return
+	const copied = fromCalendar(slaCalendar.value)
+	form.timeZone = copied.timeZone
+	form.week = copied.week
+	weekItem.value?.restoreValidation()
+	message.info("Copied the SLA calendar's time zone and hours. Its holidays aren't part of a profile.")
+}
 
 async function submit() {
 	try {

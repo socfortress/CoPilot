@@ -24,6 +24,9 @@ so the risk here is a wrong fact, and these rules keep the entries narrow:
   suffix or a public mail provider's, a tenant id has its provider's form, and an account is an
   identifier, never a display name. A domain or a tenant another customer also records is the same
   kind of warning as overlapping public space.
+- **A business profile (plan K1-8)** is checked in ``business.py``: an IANA time zone, a working week
+  with an SLA calendar's shape and rules or round-the-clock operation, and ISO country codes. A
+  customer has one: a second is refused as a duplicate, so the SOC edits the one it has.
 
 Every write is audited with the old and new values, straight after its commit. A save that changes
 nothing writes nothing. ``status`` and ``source`` are set here: every fact is ``approved`` and ``soc``
@@ -62,6 +65,10 @@ from app.customer_knowledge.schema.customer_knowledge import NAME_MAX
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItem
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItemBody
 from app.customer_knowledge.schema.customer_knowledge import KnowledgeItemUpdate
+from app.customer_knowledge.services.business import BusinessProblem
+from app.customer_knowledge.services.business import checked_countries
+from app.customer_knowledge.services.business import checked_time_zone
+from app.customer_knowledge.services.business import checked_week
 from app.customer_knowledge.services.domains import BAD_DOMAIN
 from app.customer_knowledge.services.domains import DomainProblem
 from app.customer_knowledge.services.domains import checked_domain
@@ -224,6 +231,18 @@ def _identifier(value: str) -> str:
         raise KnowledgeProblem(str(exc)) from None
 
 
+def _business(value: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return {
+            "time_zone": checked_time_zone(value["time_zone"]),
+            "week": checked_week(value["week"], value["always_open"]),
+            "always_open": value["always_open"],
+            "countries": checked_countries(value["countries"]),
+        }
+    except BusinessProblem as exc:
+        raise KnowledgeProblem(str(exc)) from None
+
+
 def _line(value: Optional[str]) -> Optional[str]:
     """Free text as one clean line, or None when there's nothing in it."""
     text = " ".join(str(value or "").split())
@@ -250,7 +269,8 @@ def _iso(moment: Optional[datetime]) -> Optional[str]:
 
 def _natural_key(kind: str, value: Mapping[str, Any]) -> Optional[str]:
     """What makes two facts of a customer the same fact. A host or an account can hold several roles,
-    and expected activity can repeat, so it has no key. A domain is recorded once, with all its uses."""
+    and expected activity can repeat, so it has no key. A domain is recorded once, with all its uses,
+    and a customer has one business profile."""
     if kind in ("network_zone", "public_range"):
         return f"{kind}:{value['cidr']}"
     if kind == "asset_role":
@@ -261,6 +281,8 @@ def _natural_key(kind: str, value: Mapping[str, Any]) -> Optional[str]:
         return f"{kind}:{value['provider']}:{value['tenant_id'].lower()}"
     if kind == "account_role":
         return f"{kind}:{value['account'].lower()}:{value['role']}"
+    if kind == "business_profile":
+        return kind
     return None
 
 
@@ -311,6 +333,8 @@ def check_item(body: KnowledgeItemBody, now: datetime, kept: Optional[CustomerKn
                 seen.add(checked.lower())
                 aliases.append(checked)
         parsed["aliases"] = sorted(aliases, key=str.lower)
+    elif body.kind == "business_profile":
+        parsed = _business(parsed)
     elif body.kind == "expected_activity":
         parsed["hosts"] = sorted({_host(h) for h in parsed["hosts"]})
         parsed["accounts"] = sorted({_account(a) for a in parsed["accounts"]})

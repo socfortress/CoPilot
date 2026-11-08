@@ -4,7 +4,8 @@
 Real router, real in-memory database, real request parsing; only token decoding and user lookup are
 replaced (as in test_customer_section_status).
 
-Pinned here (plan K1-7 adds domains, tenants and accounts; their own section at the end):
+Pinned here (plan K1-7 adds domains, tenants and accounts, and K1-8 a business profile; each has its
+own section at the end):
 - the rules, pure: ranges parse and are stored canonically, aren't absurdly wide, a public range is
   public, a typo'd key is refused, expected activity is bounded by target and window, text is clean;
 - admin and analyst, an analyst for their own customers only; a portal user never; an unknown
@@ -48,6 +49,7 @@ from app.auth.utils import AuthHandler  # noqa: E402
 from app.customer_knowledge.schema.customer_knowledge import (  # noqa: E402
     KnowledgeItemBody,
 )
+from app.customer_knowledge.services import business  # noqa: E402
 from app.customer_knowledge.services import customer_knowledge as svc  # noqa: E402
 from app.customer_knowledge.services import domains  # noqa: E402
 from app.db.db_session import get_db  # noqa: E402
@@ -1052,3 +1054,161 @@ def test_a_new_kind_is_audited_like_the_others(audit_rows):
     assert call(scenario).status_code == 200
     (created,) = [r for r in audit_rows if r.action == "customer_knowledge.create"]
     assert created.new_value["kind"] == "account_role" and created.new_value["value"]["account"] == "CORP\\jsmith"
+
+
+# --- K1-8: the business profile ---------------------------------------------------------------------
+
+WORKDAY = [["08:00", "17:00"]]
+BUSINESS = {
+    "kind": "business_profile",
+    "value": {
+        "time_zone": "America/Denver",
+        "week": {day: WORKDAY for day in ("mon", "tue", "wed", "thu", "fri")},
+        "always_open": False,
+        "countries": ["US"],
+    },
+}
+
+
+def profile(**value) -> KnowledgeItemBody:
+    return body(kind="business_profile", value={**BUSINESS["value"], **value})
+
+
+def test_a_business_profile_is_stored_in_order():
+    checked = svc.check_item(
+        profile(
+            time_zone="america/denver",
+            week={"sat": [["13:00", "17:00"], ["09:00", "12:30"]], "mon": WORKDAY, "sun": []},
+            countries=["us", " GB ", "US"],
+        ),
+        NOW,
+    )
+    assert checked.branch == "business" and checked.natural_key == "business_profile"
+    assert checked.value == {
+        "time_zone": "America/Denver",
+        "week": {"mon": WORKDAY, "sat": [["09:00", "12:30"], ["13:00", "17:00"]]},
+        "always_open": False,
+        "countries": ["GB", "US"],
+    }
+    assert list(checked.value["week"]) == ["mon", "sat"]
+
+
+@pytest.mark.parametrize("zone", ["UTC", "Europe/London", "Asia/Kolkata", "America/Argentina/Buenos_Aires", "US/Mountain"])
+def test_a_time_zone_is_an_iana_name(zone):
+    assert svc.check_item(profile(time_zone=zone), NOW).value["time_zone"] == zone
+
+
+@pytest.mark.parametrize(
+    "zone",
+    ["MST", "EST5EDT", "GMT", "Etc/GMT+7", "Etc/UTC", "Mars/Olympus_Mons", "America/Denver<", "posix/America/Denver", "UTC+2"],
+)
+def test_what_a_time_zone_can_t_be(zone):
+    with pytest.raises(svc.KnowledgeProblem, match=business.BAD_TIME_ZONE):
+        svc.check_item(profile(time_zone=zone), NOW)
+
+
+def test_a_night_shift_is_two_windows_on_two_days():
+    week = {"mon": [["22:00", "23:59"]], "tue": [["00:00", "06:00"]]}
+    assert svc.check_item(profile(week=week), NOW).value["week"] == week
+
+
+@pytest.mark.parametrize(
+    ("windows", "problem"),
+    [
+        ([["22:00", "06:00"]], business.BACKWARDS),
+        ([["08:00", "08:00"]], business.BACKWARDS),
+        ([["08:00", "12:00"], ["11:00", "17:00"]], business.OVERLAP),
+        ([["8:00", "17:00"]], business.BAD_HOUR),
+        ([["24:00", "06:00"]], business.BAD_HOUR),
+        ([["08:00", "17:60"]], business.BAD_HOUR),
+        ([["08:00", "noon"]], business.BAD_HOUR),
+    ],
+)
+def test_what_a_day_s_windows_can_t_be(windows, problem):
+    with pytest.raises(svc.KnowledgeProblem, match=problem):
+        svc.check_item(profile(week={"mon": windows}), NOW)
+
+
+def test_windows_that_only_touch_don_t_overlap():
+    week = {"mon": [["08:00", "12:00"], ["12:00", "17:00"]]}
+    assert svc.check_item(profile(week=week), NOW).value["week"] == week
+
+
+@pytest.mark.parametrize(
+    "week",
+    [
+        {"monday": WORKDAY},
+        {"mon": [["08:00"]]},
+        {"mon": [["08:00", "17:00", "18:00"]]},
+        {"mon": [["08:00", "17:00:00"]]},
+        {"mon": [["08:00", "09:00"]] * 7},
+    ],
+)
+def test_a_week_that_doesn_t_fit_its_model(week):
+    with pytest.raises(ValidationError):
+        svc.check_item(profile(week=week), NOW)
+
+
+def test_around_the_clock_has_no_hours():
+    assert svc.check_item(profile(week={}, always_open=True), NOW).value["always_open"] is True
+    with pytest.raises(svc.KnowledgeProblem, match=business.OPEN_WITH_HOURS):
+        svc.check_item(profile(always_open=True), NOW)
+
+
+def test_a_profile_may_give_the_time_zone_alone():
+    checked = svc.check_item(body(kind="business_profile", value={"time_zone": "America/Denver"}), NOW)
+    assert checked.value == {"time_zone": "America/Denver", "week": {}, "always_open": False, "countries": []}
+
+
+@pytest.mark.parametrize("countries", [["USA"], ["XX"], ["U"], ["United States"], ["US", "ZZ"]])
+def test_a_country_is_an_iso_code(countries):
+    with pytest.raises(svc.KnowledgeProblem, match=business.BAD_COUNTRY):
+        svc.check_item(profile(countries=countries), NOW)
+
+
+def test_kosovo_is_the_code_geolocation_uses():
+    assert svc.check_item(profile(countries=["xk"]), NOW).value["countries"] == ["XK"]
+
+
+def test_the_country_list_is_iso_3166():
+    assert len(business.COUNTRIES) == 250 and {"US", "GB", "DE", "IT", "IN"} <= business.COUNTRIES
+
+
+def test_a_customer_has_one_business_profile():
+    async def scenario(client, db):
+        first = await add(client, BUSINESS)
+        second = await add(client, {**BUSINESS, "value": {**BUSINESS["value"], "time_zone": "Europe/London"}})
+        elsewhere = await add(client, BUSINESS, code="GLOBEX")
+        item = first.json()["item"]["id"]
+        changed = await client.put(
+            f"{BASE.format(code='ACME')}/{item}",
+            json={**BUSINESS, "value": {**BUSINESS["value"], "always_open": True, "week": {}}, "expected_version": 1},
+            headers=as_user("admin"),
+        )
+        return first.status_code, second.json(), elsewhere.status_code, changed.status_code, await stored(db)
+
+    first, second, elsewhere, changed, rows = call(scenario)
+    assert (first, elsewhere, changed) == (200, 200, 200) and second["detail"] == svc.DUPLICATE
+    mine = [row for row in rows if row.customer_code == "ACME"]
+    assert len(mine) == 1 and mine[0].value["always_open"] is True and mine[0].branch == "business"
+
+
+def test_a_business_profile_warns_of_nothing_and_is_audited(audit_rows):
+    async def scenario(client, db):
+        await add(client, BUSINESS, code="GLOBEX")
+        return await add(client, {**BUSINESS, "note": "head office in Denver"})
+
+    answer = call(scenario)
+    assert answer.status_code == 200 and answer.json()["warnings"] == []
+    created = [r for r in audit_rows if r.action == "customer_knowledge.create" and r.new_value["note"]]
+    assert created[-1].new_value["value"]["time_zone"] == "America/Denver"
+
+
+def test_an_sla_calendar_s_week_is_a_profile_s_week():
+    """The same shape, so the form can copy a customer's SLA calendar (``soc_management``)."""
+    from app.soc_management.domain.calendar import BusinessCalendar
+
+    week = {"mon": [["09:00", "12:00"], ["13:00", "17:30"]], "fri": [["09:00", "15:00"]]}
+    calendar = BusinessCalendar.from_dict({"timezone": "Europe/Rome", "week": week}).to_dict()
+    copied = svc.check_item(profile(time_zone=calendar["timezone"], week=calendar["week"]), NOW).value
+    assert copied["week"] == week and copied["time_zone"] == "Europe/Rome"
