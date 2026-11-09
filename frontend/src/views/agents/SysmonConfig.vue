@@ -298,8 +298,12 @@ function getConfigContent(customerCode: string) {
 		.getConfigContent(customerCode)
 		.then(res => {
 			if (res.data.success) {
-				currentConfig.value = _clone(res.data)
-				backupConfig.value = _clone(res.data)
+				// The editor keeps "\n" line breaks only, and hands a CRLF file back as changed as soon as it takes
+				// it. That would mark the stored config unsaved and keep Deploy disabled, so both copies start
+				// from the editor's line breaks.
+				const config = { ...res.data, config_content: res.data.config_content?.replace(/\r\n?/g, "\n") }
+				currentConfig.value = _clone(config)
+				backupConfig.value = _clone(config)
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
