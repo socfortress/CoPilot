@@ -19,3 +19,20 @@ export interface DeployConfigResponse {
 	/** Set when the endpoints will not apply the deployed config yet, and why. */
 	sysmon_health_warning?: string | null
 }
+
+/** This CoPilot's default Sysmon config, which pre-fills "Add new Configuration". */
+export interface DefaultConfigResponse {
+	/** Whether a default is set on this CoPilot. */
+	present: boolean
+	/** The default, rendered for `rendered_for` when a customer code was given. */
+	config_content: string | null
+	/** The customer code that replaced each __INSTALLDIRNAME__ placeholder. */
+	rendered_for: string | null
+}
+
+export interface SaveDefaultConfigResponse {
+	/** How many times __INSTALLDIRNAME__ occurs in what was saved. */
+	placeholders: number
+	/** How many of the customer's install-folder paths were turned back into the placeholder. */
+	restored: number
+}

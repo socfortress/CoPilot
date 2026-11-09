@@ -49,3 +49,26 @@ class SysmonConfigDeploymentResult(BaseModel):
         None,
         description="Set when the endpoints will not (or may not) apply the deployed config yet, and why.",
     )
+
+
+class SysmonDefaultConfigResponse(BaseModel):
+    success: bool
+    message: str
+    present: bool = Field(..., description="Whether this CoPilot has a default Sysmon config.")
+    config_content: Optional[str] = Field(None, description="The default, rendered for rendered_for when a customer code was given.")
+    rendered_for: Optional[str] = Field(None, description="The customer code that replaced each __INSTALLDIRNAME__ placeholder.")
+
+
+class SysmonDefaultConfigSaveRequest(BaseModel):
+    config_content: str
+    customer_code: Optional[str] = Field(
+        None,
+        description="The customer the content was rendered for: its install-folder paths are turned back into __INSTALLDIRNAME__.",
+    )
+
+
+class SysmonDefaultConfigSaveResponse(BaseModel):
+    success: bool
+    message: str
+    placeholders: int = Field(..., description="How many times __INSTALLDIRNAME__ occurs in what was saved.")
+    restored: int = Field(..., description="How many of the customer's install-folder paths were turned back into the placeholder.")

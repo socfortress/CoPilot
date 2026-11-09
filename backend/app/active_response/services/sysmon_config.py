@@ -21,6 +21,33 @@ from app.utils import get_connector_attribute
 # sysmon_config.xml carries them; only the copy rendered by a customer's build is deployable. Listed explicitly, not
 # matched as any __NAME__: a detection config can legitimately match cmd.exe's %__APPDIR__% or %__CD__%.
 INSTALLER_TOKEN_RE = re.compile(r"__INSTALLDIRNAME__")
+INSTALL_DIR_PLACEHOLDER = "__INSTALLDIRNAME__"
+# What the Wazuh sidecar (WAZUH-UTILS) accepts for one uploaded sysmon_config.xml
+MAX_SYSMON_CONFIG_BYTES = 5 * 1024 * 1024
+# A customer code that can be told apart inside an install-folder path. Any other code is never templatized.
+_INSTALL_DIR_CODE_RE = re.compile(r"[A-Za-z0-9._-]+")
+
+
+def render_default_config(template: str, customer_code: str) -> str:
+    """This CoPilot's default config for one customer: each install-folder placeholder becomes the customer's code."""
+    return template.replace(INSTALL_DIR_PLACEHOLDER, customer_code)
+
+
+def templatize_install_dir(content: str, customer_code: Optional[str]) -> Tuple[str, int]:
+    r"""
+    Undo render_default_config: turn the customer's install-folder paths back into the installer's placeholder.
+
+    Only the exact (case-sensitive) path segment \Program Files\<code>\ is replaced, so the code anywhere else in the
+    config (a rule matching a file or host name) is left alone. A no-op for an empty code, or one with characters outside
+    [A-Za-z0-9._-]. Returns the content and how many paths were turned back.
+    """
+    if not customer_code or customer_code == INSTALL_DIR_PLACEHOLDER or not _INSTALL_DIR_CODE_RE.fullmatch(customer_code):
+        return content, 0
+    rendered = f"\\Program Files\\{customer_code}\\"
+    count = content.count(rendered)
+    if not count:
+        return content, 0
+    return content.replace(rendered, f"\\Program Files\\{INSTALL_DIR_PLACEHOLDER}\\"), count
 
 
 def _unrendered_tokens(root: ET.Element) -> List[str]:
@@ -46,8 +73,13 @@ def _filters_something(event_filtering: ET.Element) -> bool:
     return any(len(event) or event.attrib.get("onmatch", "").strip().lower() == "exclude" for event in events)
 
 
-async def validate_sysmon_config(xml_content: str) -> None:
-    """Validate a Sysmon configuration XML string."""
+async def validate_sysmon_config(xml_content: str, allow_installer_tokens: bool = False) -> None:
+    """
+    Validate a Sysmon configuration XML string.
+
+    allow_installer_tokens skips only the installer-token check: this CoPilot's default config is the installer's
+    template, so it keeps its __INSTALLDIRNAME__ placeholders. A customer's config (upload, deploy) never does.
+    """
     try:
         root = ET.fromstring(xml_content)
 
@@ -75,7 +107,7 @@ async def validate_sysmon_config(xml_content: str) -> None:
                 raise HTTPException(status_code=400, detail="RuleGroup must have 'groupRelation' attribute")
 
         # An installer template (e.g. a path with __INSTALLDIRNAME__ in it) would never match on an endpoint
-        tokens = _unrendered_tokens(root)
+        tokens = [] if allow_installer_tokens else _unrendered_tokens(root)
         if tokens:
             raise HTTPException(
                 status_code=400,

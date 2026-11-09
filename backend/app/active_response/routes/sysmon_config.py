@@ -1,3 +1,4 @@
+import hashlib
 from typing import Optional
 from typing import Tuple
 
@@ -6,6 +7,7 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import Form
 from fastapi import HTTPException
+from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi import Security
@@ -18,9 +20,16 @@ from app.active_response.schema.sysmon_config import SysmonConfigContentResponse
 from app.active_response.schema.sysmon_config import SysmonConfigDeploymentResult
 from app.active_response.schema.sysmon_config import SysmonConfigListResponse
 from app.active_response.schema.sysmon_config import SysmonConfigUploadResponse
+from app.active_response.schema.sysmon_config import SysmonDefaultConfigResponse
+from app.active_response.schema.sysmon_config import SysmonDefaultConfigSaveRequest
+from app.active_response.schema.sysmon_config import SysmonDefaultConfigSaveResponse
 from app.active_response.schema.sysmon_health import SysmonHealthApplyResult
+from app.active_response.services.sysmon_config import INSTALL_DIR_PLACEHOLDER
+from app.active_response.services.sysmon_config import MAX_SYSMON_CONFIG_BYTES
 from app.active_response.services.sysmon_config import check_config_exists
 from app.active_response.services.sysmon_config import deploy_sysmon_config_to_worker
+from app.active_response.services.sysmon_config import render_default_config
+from app.active_response.services.sysmon_config import templatize_install_dir
 from app.active_response.services.sysmon_config import validate_sysmon_config
 from app.active_response.services.sysmon_health import RELOAD_TAG
 from app.active_response.services.sysmon_health import SYSMON_HEALTH_LOCK
@@ -32,9 +41,13 @@ from app.audit.services.audit import record_audit_event
 from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
+from app.data_store.data_store_operations import SYSMON_CONFIG_DEFAULT_OBJECT
+from app.data_store.data_store_operations import SYSMON_CONFIG_DEFAULTS_BUCKET
 from app.data_store.data_store_operations import download_sysmon_config
 from app.data_store.data_store_operations import list_sysmon_configs
+from app.data_store.data_store_operations import read_default_sysmon_config
 from app.data_store.data_store_operations import upload_sysmon_config
+from app.data_store.data_store_operations import write_default_sysmon_config
 from app.db.db_session import get_db
 from app.middleware.customer_access import scoped_customer_codes
 from app.middleware.customer_access import verify_customer_code_access
@@ -84,6 +97,137 @@ async def upload_customer_sysmon_config(
         )
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail="File is not valid UTF-8 encoded text")
+
+
+# This CoPilot's default Sysmon config, which pre-fills "Add new Configuration". It is the installer's template: its
+# install-folder paths keep the __INSTALLDIRNAME__ placeholder, which the editor gets replaced with the new customer's
+# code. It lives in a bucket of its own, so deploys (which read the customer's stored copy) never see it.
+# Admin only, like uploading a customer's config. These routes must come before the /{customer_code} route, which
+# would otherwise take "default-config" for a customer code.
+NO_DEFAULT_MESSAGE = 'No default Sysmon config is set on this CoPilot. An admin can set one with "Save as default".'
+
+
+@sysmon_config_router.get(
+    "/default-config",
+    response_model=SysmonDefaultConfigResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def get_sysmon_default_config(
+    customer_code: Optional[str] = Query(
+        None,
+        description=f"Render the default for this customer: its code replaces each {INSTALL_DIR_PLACEHOLDER} placeholder.",
+    ),
+):
+    """This CoPilot's default Sysmon config, rendered for a customer when a customer code is given."""
+    try:
+        stored = await read_default_sysmon_config()
+    except Exception as e:  # noqa: BLE001 - a read failure is reported as one, never as "no default"
+        logger.error(f"Could not read this CoPilot's default Sysmon config: {e}")
+        raise HTTPException(status_code=502, detail=f"Could not read this CoPilot's default Sysmon config from its data store (MinIO): {e}")
+    if stored is None:
+        return SysmonDefaultConfigResponse(success=True, message=NO_DEFAULT_MESSAGE, present=False)
+
+    try:
+        template = stored.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=500,
+            detail='This CoPilot\'s default Sysmon config is not valid UTF-8 text. An admin can replace it with "Save as default".',
+        )
+    if not customer_code:
+        return SysmonDefaultConfigResponse(
+            success=True,
+            message="Retrieved this CoPilot's default Sysmon config",
+            present=True,
+            config_content=template,
+        )
+    return SysmonDefaultConfigResponse(
+        success=True,
+        message=f"Retrieved this CoPilot's default Sysmon config, rendered for {customer_code}",
+        present=True,
+        config_content=render_default_config(template, customer_code),
+        rendered_for=customer_code,
+    )
+
+
+def _default_saved_message(placeholders: int, restored: int, customer_code: Optional[str]) -> str:
+    if not placeholders:
+        return (
+            f"Saved this CoPilot's default Sysmon config. It has no {INSTALL_DIR_PLACEHOLDER} placeholder, so every new "
+            "configuration will get these exact install-folder paths."
+        )
+    turned_back = f', {restored} of them turned back from "{customer_code}"' if restored else ""
+    return (
+        f"Saved this CoPilot's default Sysmon config: {placeholders} {INSTALL_DIR_PLACEHOLDER} "
+        f"placeholder{'' if placeholders == 1 else 's'}{turned_back}. \"Add new Configuration\" fills them in with each new "
+        "customer's code."
+    )
+
+
+@sysmon_config_router.put(
+    "/default-config",
+    response_model=SysmonDefaultConfigSaveResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def save_sysmon_default_config(
+    body: SysmonDefaultConfigSaveRequest,
+    request: Request,
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    """
+    Replace this CoPilot's default Sysmon config. No customer's stored config changes.
+
+    With customer_code, the content is the editor's copy for that customer: its install-folder paths
+    (\\Program Files\\<customer_code>\\) are turned back into the placeholder first, so each new customer gets their own.
+    """
+    content, restored = templatize_install_dir(body.config_content, body.customer_code)
+    try:
+        data = content.encode("utf-8")
+    except UnicodeEncodeError:
+        raise HTTPException(status_code=400, detail="The config is not valid UTF-8 text")
+    if len(data) > MAX_SYSMON_CONFIG_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"The config is {len(data)} bytes, over the {MAX_SYSMON_CONFIG_BYTES} bytes (5 MiB) the Wazuh sidecar accepts for "
+                "a deploy. Nothing was saved."
+            ),
+        )
+    # A customer's upload's checks, except the installer-token one: the default keeps its placeholders
+    await validate_sysmon_config(content, allow_installer_tokens=True)
+
+    placeholders = content.count(INSTALL_DIR_PLACEHOLDER)
+    # Identifies what was saved without keeping the config itself
+    saved = {
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "size": len(data),
+        "placeholders": placeholders,
+        "restored": restored,
+        "customer_code": body.customer_code,
+    }
+    audit = {
+        "action": AuditAction.SYSMON_CONFIG_DEFAULT_SAVE,
+        "actor_user_id": current_user.id,
+        "actor_username": current_user.username,
+        "entity_type": "sysmon_config_default",
+        "entity_id": f"{SYSMON_CONFIG_DEFAULTS_BUCKET}/{SYSMON_CONFIG_DEFAULT_OBJECT}",
+        "new_value": saved,
+        "request": request,
+    }
+    try:
+        await write_default_sysmon_config(data)
+    except Exception as e:  # noqa: BLE001 - audited, then reported
+        logger.error(f"Could not save this CoPilot's default Sysmon config: {e}")
+        await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Could not store it: {e}"[:1000])
+        raise HTTPException(status_code=502, detail=f"Could not save this CoPilot's default Sysmon config to its data store (MinIO): {e}")
+    await record_audit_event(**audit, result=AuditResult.SUCCESS)
+
+    return SysmonDefaultConfigSaveResponse(
+        success=True,
+        message=_default_saved_message(placeholders, restored, body.customer_code),
+        placeholders=placeholders,
+        restored=restored,
+    )
 
 
 # This route must come before the /{customer_code} route

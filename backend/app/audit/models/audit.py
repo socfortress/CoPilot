@@ -80,6 +80,9 @@ class AuditAction(str, Enum):
     SYSMON_CONFIG_DEPLOY = "response.sysmon_deploy"
     # Sysmon-health rollout to a Windows group: sensor-health rules, watchdog/reload scripts, agent.conf wodles.
     SYSMON_HEALTH_APPLY = "response.sysmon_health_apply"
+    # This CoPilot's default Sysmon config replaced (it pre-fills "Add new Configuration"). The row identifies the
+    # config by its sha256 and size; the XML itself is never stored.
+    SYSMON_CONFIG_DEFAULT_SAVE = "response.sysmon_default_save"
 
     # Cases
     CASE_CREATE = "case.create"
