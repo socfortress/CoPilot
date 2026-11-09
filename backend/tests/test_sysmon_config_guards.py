@@ -123,15 +123,25 @@ def test_an_unrendered_installer_token_is_refused_and_points_at_the_rendered_art
 
 
 def test_a_token_in_an_attribute_is_refused_too_but_one_in_a_comment_is_not():
-    in_attribute = POPULATED.replace('name="technique_id', 'name="__RULE_PREFIX__technique_id')
-    assert "__RULE_PREFIX__" in refusal(in_attribute)
+    in_attribute = POPULATED.replace('name="technique_id', 'name="__INSTALLDIRNAME__technique_id')
+    assert "__INSTALLDIRNAME__" in refusal(in_attribute)
     in_comment = POPULATED.replace("<HashAlgorithms>", "<!-- rendered from __INSTALLDIRNAME__ --><HashAlgorithms>")
     run(service.validate_sysmon_config(in_comment))
 
 
 @pytest.mark.parametrize(
     "value",
-    ["__PSScriptPolicyTest_", "C:\\Windows\\Temp\\__PSScriptPolicyTest_x.ps1", "__init__.py", "a__b__c", "___"],
+    [
+        "__PSScriptPolicyTest_",
+        "C:\\Windows\\Temp\\__PSScriptPolicyTest_x.ps1",
+        "__init__.py",
+        "a__b__c",
+        "___",
+        # cmd.exe pseudo-variables a detection rule may match; only the installer's own tokens are refused.
+        "%__APPDIR__%",
+        "%__CD__%",
+        "__SOME_OTHER_NAME__",
+    ],
 )
 def test_common_double_underscore_values_are_not_mistaken_for_tokens(value):
     run(service.validate_sysmon_config(POPULATED.replace("powershell.exe", value)))
@@ -293,6 +303,14 @@ def test_a_blocked_apply_warns_that_endpoints_will_not_apply_the_config(audit_ro
 def test_a_blocked_apply_with_a_reload_wodle_already_in_place_says_the_config_still_applies(audit_rows):
     result, _, _, _ = _route(ADMIN, health=LEGACY_RELOAD)
     assert "will still apply this config" in result.sysmon_health_warning
+
+
+def test_an_apply_that_could_not_read_the_group_says_the_outcome_is_unconfirmed():
+    unreadable = _health(False, [], [("read", "error", "agent.conf unreadable")], "Could not read the group.")
+    unreadable.status.read_errors = ["Could not read the group's agent.conf."]
+    warning = routes._reload_warning(unreadable)
+    assert warning.startswith("Could not confirm that the endpoints will apply this config")
+    assert "is not in" not in warning
 
 
 def test_an_apply_that_raises_warns_and_writes_no_apply_row(audit_rows):

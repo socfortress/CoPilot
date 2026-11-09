@@ -221,7 +221,12 @@ async def deploy_sysmon_config(
 def _reload_warning(health: SysmonHealthApplyResult) -> Optional[str]:
     """Why the endpoints will not pick the deployed config up after this apply; None when nothing stands in the way."""
     reason = f"{health.message} {health.steps[-1].detail if health.steps else ''}".strip()
-    if RELOAD_TAG not in (health.status.wodles_present if health.status else []):
+    if health.status is None or health.status.read_errors:
+        return (
+            "Could not confirm that the endpoints will apply this config: the group's state could not be read, so it is "
+            f"unknown whether {health.group}'s agent.conf has the sysmon-reload wodle. {reason}"
+        )
+    if RELOAD_TAG not in health.status.wodles_present:
         return (
             "Endpoints will not apply this config until the Sysmon health apply succeeds: the sysmon-reload wodle, which "
             f"applies the deployed config on each agent, is not in {health.group}'s agent.conf. {reason}"

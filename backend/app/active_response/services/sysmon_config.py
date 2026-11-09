@@ -17,9 +17,10 @@ from app.active_response.services.sysmon_health import sidecar_settings
 from app.data_store.data_store_operations import download_sysmon_config
 from app.utils import get_connector_attribute
 
-# A build-time placeholder of the Windows installer (socfortress/Client-Kickstart-Automated), e.g. __INSTALLDIRNAME__.
-# The installer's committed sysmon_config.xml carries them; only the copy rendered by a customer's build is deployable.
-INSTALLER_TOKEN_RE = re.compile(r"__[A-Z][A-Z0-9_]*__")
+# The Windows installer's build-time placeholders (socfortress/Client-Kickstart-Automated build.ps1). Its committed
+# sysmon_config.xml carries them; only the copy rendered by a customer's build is deployable. Listed explicitly, not
+# matched as any __NAME__: a detection config can legitimately match cmd.exe's %__APPDIR__% or %__CD__%.
+INSTALLER_TOKEN_RE = re.compile(r"__INSTALLDIRNAME__")
 
 
 def _unrendered_tokens(root: ET.Element) -> List[str]:
