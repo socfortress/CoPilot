@@ -433,6 +433,7 @@ async def get_sysmon_health_status(customer_code: str, session: AsyncSession) ->
     status.wodles_wanted = sorted(wanted_wodles(status.rules.current, scripts_ok, status.sysmon_config_present))
     if agent_conf is not None:
         status.wodles_present = wodle_tags_present(agent_conf)
+        status.managed_block_present = BLOCK_BEGIN in agent_conf
         try:
             status.agent_conf_current = same_agent_conf(reconcile_agent_conf(agent_conf, status.wodles_wanted), agent_conf)
         except ValueError as e:

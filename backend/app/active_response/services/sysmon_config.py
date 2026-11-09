@@ -81,7 +81,8 @@ async def validate_sysmon_config(xml_content: str) -> None:
                 status_code=400,
                 detail=(
                     f"The config contains unrendered installer token(s) {', '.join(tokens)}: it is the installer's template. "
-                    "Use the rendered sysmon_config artifact from the customer's installer build instead."
+                    "Use the rendered sysmon_config artifact from the customer's installer build instead, or replace each "
+                    "token with the customer's InstallDirName (customer.json on their installer branch)."
                 ),
             )
 
