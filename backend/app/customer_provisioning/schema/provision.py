@@ -147,6 +147,10 @@ class CustomerProvisionResponse(BaseModel):
         None,
         description="Whether the Wazuh worker was provisioned successfully",
     )
+    sysmon_health_warning: Optional[str] = Field(
+        None,
+        description="Why the Windows group was provisioned without the sysmon-watchdog wodle (the Sysmon health apply adds it later)",
+    )
 
 
 class GetDashboardsResponse(BaseModel):

@@ -601,35 +601,95 @@ def test_provisioning_writes_only_the_wodles_whose_prerequisites_are_met(monkeyp
     assert sh.wodle_tags_present(sent["data"]) == sorted(wanted)
 
 
-def test_provisioning_wodles_degrade_quietly(monkeypatch):
+def test_provisioning_wodles_degrade_quietly_and_say_why(monkeypatch):
+    warnings = []
+    handler = sh.logger.add(lambda message: warnings.append(message.record["message"]), level="WARNING")
+
     async def rules_missing():
         return sh.SysmonHealthFileState(name=sh.RULES_FILENAME, expected_sha256="x")
 
     monkeypatch.setattr(sh, "rules_state", rules_missing)
-    assert run(sh.provisioning_wodles("Windows_acme")) == set()
+    try:
+        wodles, reason = run(sh.provisioning_wodles("Windows_acme"))
+        assert wodles == set() and reason == f"{sh.RULES_FILENAME} is missing on the manager"
 
-    async def rules_current():
-        return sh.SysmonHealthFileState(name=sh.RULES_FILENAME, present=True, current=True, expected_sha256="x")
+        async def rules_outdated():
+            return sh.SysmonHealthFileState(name=sh.RULES_FILENAME, present=True, expected_sha256="x")
 
-    async def publish_fails(group, names=sh.SHARED_SCRIPTS):
-        return False, "no key"
+        monkeypatch.setattr(sh, "rules_state", rules_outdated)
+        assert run(sh.provisioning_wodles("Windows_acme")) == (set(), f"{sh.RULES_FILENAME} is outdated on the manager")
 
-    monkeypatch.setattr(sh, "rules_state", rules_current)
-    monkeypatch.setattr(sh, "publish_shared_scripts", publish_fails)
-    assert run(sh.provisioning_wodles("Windows_acme")) == set()
+        async def rules_unreadable():
+            return sh.SysmonHealthFileState(name=sh.RULES_FILENAME, readable=False, read_error="HTTP 500", expected_sha256="x")
 
-    async def publish_ok(group, names=sh.SHARED_SCRIPTS):
-        return True, "ok"
+        monkeypatch.setattr(sh, "rules_state", rules_unreadable)
+        assert run(sh.provisioning_wodles("Windows_acme")) == (set(), f"{sh.RULES_FILENAME} could not be read on the manager (HTTP 500)")
 
-    async def scripts_current(group):
-        return [
-            sh.SysmonHealthFileState(name=name, present=True, current=True, expected_sha256=sh.asset_sha256(name))
-            for name in sh.SHARED_SCRIPTS
-        ]
+        async def rules_current():
+            return sh.SysmonHealthFileState(name=sh.RULES_FILENAME, present=True, current=True, expected_sha256="x")
 
-    monkeypatch.setattr(sh, "publish_shared_scripts", publish_ok)
-    monkeypatch.setattr(sh, "shared_script_states", scripts_current)
-    assert run(sh.provisioning_wodles("Windows_acme")) == {sh.WATCHDOG_TAG}
+        async def publish_fails(group, names=sh.SHARED_SCRIPTS):
+            return False, "WAZUH_UTILS_API_KEY is not set."
+
+        monkeypatch.setattr(sh, "rules_state", rules_current)
+        monkeypatch.setattr(sh, "publish_shared_scripts", publish_fails)
+        wodles, reason = run(sh.provisioning_wodles("Windows_acme"))
+        assert wodles == set() and "not published" in reason and "WAZUH_UTILS_API_KEY is not set." in reason
+
+        async def publish_ok(group, names=sh.SHARED_SCRIPTS):
+            return True, "ok"
+
+        def scripts(current):
+            async def states(group):
+                return [
+                    sh.SysmonHealthFileState(name=name, present=True, current=current, expected_sha256=sh.asset_sha256(name))
+                    for name in sh.SHARED_SCRIPTS
+                ]
+
+            return states
+
+        monkeypatch.setattr(sh, "publish_shared_scripts", publish_ok)
+        monkeypatch.setattr(sh, "shared_script_states", scripts(False))
+        wodles, reason = run(sh.provisioning_wodles("Windows_acme"))
+        assert wodles == set() and "could not be verified" in reason
+
+        async def explodes(group):
+            raise RuntimeError("manager unreachable")
+
+        monkeypatch.setattr(sh, "shared_script_states", explodes)
+        wodles, reason = run(sh.provisioning_wodles("Windows_acme"))
+        assert wodles == set() and "manager unreachable" in reason
+
+        warned = len(warnings)
+        monkeypatch.setattr(sh, "shared_script_states", scripts(True))
+        assert run(sh.provisioning_wodles("Windows_acme")) == ({sh.WATCHDOG_TAG}, None)
+        assert len(warnings) == warned  # nothing to warn about when the watchdog is kept
+    finally:
+        sh.logger.remove(handler)
+    # Every dropped watchdog was logged at WARNING, with its reason.
+    assert len(warnings) == 6 and all("without the sysmon-watchdog wodle" in line for line in warnings)
+
+
+def test_provisioning_reports_a_dropped_watchdog_and_still_configures_every_group(monkeypatch):
+    configured = []
+
+    async def wodles(group):
+        return set(), "sysmon_sensor_health_rules.xml is missing on the manager"
+
+    async def configure(group_code, template_path, request, sysmon_health_wodles=None):
+        configured.append((group_code, sysmon_health_wodles))
+
+    monkeypatch.setattr(provisioning, "provisioning_wodles", wodles)
+    monkeypatch.setattr(provisioning, "configure_wazuh_group", configure)
+    reason = run(provisioning.apply_group_configurations(_Request()))
+    assert reason == "sysmon_sensor_health_rules.xml is missing on the manager"
+    assert configured == [("Linux_acme", None), ("Windows_acme", set()), ("Mac_acme", None)]
+
+    async def kept(group):
+        return {sh.WATCHDOG_TAG}, None
+
+    monkeypatch.setattr(provisioning, "provisioning_wodles", kept)
+    assert run(provisioning.apply_group_configurations(_Request())) is None
 
 
 def test_routes_are_registered_under_sysmon_config_health():

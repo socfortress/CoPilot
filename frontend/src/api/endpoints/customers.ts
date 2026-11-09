@@ -160,15 +160,17 @@ export default {
 
 	// #region Customer Provisioning
 	newCustomerProvision(provision: CustomerProvision, code: string) {
-		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta; wazuh_worker_provisioned: boolean }>(
-			`/customer_provisioning/provision`,
-			provision,
-			{
-				params: {
-					customer_code: code
-				}
+		return HttpClient.post<
+			FlaskBaseResponse & {
+				customer_meta: CustomerMeta
+				wazuh_worker_provisioned: boolean
+				sysmon_health_warning?: string | null
 			}
-		)
+		>(`/customer_provisioning/provision`, provision, {
+			params: {
+				customer_code: code
+			}
+		})
 	},
 	getCustomerProvision(code: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(

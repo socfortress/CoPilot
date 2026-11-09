@@ -1,6 +1,8 @@
 import os
+import re
 import tempfile
 import xml.etree.ElementTree as ET
+from typing import List
 from typing import Optional
 from typing import Tuple
 from urllib.parse import urlparse
@@ -14,6 +16,34 @@ from app.active_response.schema.sysmon_config import SysmonConfigDeploymentResul
 from app.active_response.services.sysmon_health import sidecar_settings
 from app.data_store.data_store_operations import download_sysmon_config
 from app.utils import get_connector_attribute
+
+# The Windows installer's build-time placeholders (socfortress/Client-Kickstart-Automated build.ps1). Its committed
+# sysmon_config.xml carries them; only the copy rendered by a customer's build is deployable. Listed explicitly, not
+# matched as any __NAME__: a detection config can legitimately match cmd.exe's %__APPDIR__% or %__CD__%.
+INSTALLER_TOKEN_RE = re.compile(r"__INSTALLDIRNAME__")
+
+
+def _unrendered_tokens(root: ET.Element) -> List[str]:
+    """Installer tokens in element text and attribute values. Comments are dropped by the parser, so they never count."""
+    found = set()
+    for element in root.iter():
+        for value in [element.text, element.tail, *element.attrib.values()]:
+            if value:
+                found.update(INSTALLER_TOKEN_RE.findall(value))
+    return sorted(found)
+
+
+def _filters_something(event_filtering: ET.Element) -> bool:
+    """
+    Whether any event-filter element (ProcessCreate, NetworkConnect, ...) has a child filter.
+
+    An empty onmatch="exclude" also counts: Sysmon reads it as "log every event of this type". The skeleton that
+    "Add new Configuration" creates, one empty RuleGroup, has neither.
+    """
+    events = [child for child in event_filtering if child.tag != "RuleGroup"]
+    for rule_group in event_filtering.findall("RuleGroup"):
+        events.extend(rule_group)
+    return any(len(event) or event.attrib.get("onmatch", "").strip().lower() == "exclude" for event in events)
 
 
 async def validate_sysmon_config(xml_content: str) -> None:
@@ -43,6 +73,27 @@ async def validate_sysmon_config(xml_content: str) -> None:
         for rule_group in rule_groups:
             if not rule_group.attrib.get("groupRelation"):
                 raise HTTPException(status_code=400, detail="RuleGroup must have 'groupRelation' attribute")
+
+        # An installer template (e.g. a path with __INSTALLDIRNAME__ in it) would never match on an endpoint
+        tokens = _unrendered_tokens(root)
+        if tokens:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"The config contains unrendered installer token(s) {', '.join(tokens)}: it is the installer's template. "
+                    "Use the rendered sysmon_config artifact from the customer's installer build instead."
+                ),
+            )
+
+        # The empty skeleton would replace the endpoints' config with one that filters nothing
+        if not _filters_something(event_filtering):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "The config has no event filters: no event element (ProcessCreate, NetworkConnect, ...) in any RuleGroup "
+                    "has a filter. Deploying it would replace the endpoints' Sysmon config with an empty one."
+                ),
+            )
 
     except ET.ParseError as e:
         raise HTTPException(status_code=400, detail=f"Invalid XML syntax: {str(e)}")
@@ -189,6 +240,25 @@ async def deploy_sysmon_config_to_worker(customer_code: str, session: AsyncSessi
                 message=f"Failed to fetch Sysmon config for {customer_code}",
                 customer_code=customer_code,
                 error_detail=str(fetch_error),
+            )
+
+        # Validate what is about to ship, with the upload's checks: the stored copy may predate them
+        try:
+            await validate_sysmon_config(config_data.decode("utf-8"))
+        except UnicodeDecodeError:
+            return SysmonConfigDeploymentResult(
+                success=False,
+                message="Not deployed: the stored Sysmon config is not valid UTF-8 text",
+                customer_code=customer_code,
+                error_detail="The stored Sysmon config is not valid UTF-8 text",
+            )
+        except HTTPException as invalid:
+            logger.warning(f"Refusing to deploy the stored Sysmon config for {customer_code}: {invalid.detail}")
+            return SysmonConfigDeploymentResult(
+                success=False,
+                message=f"Not deployed: {invalid.detail}",
+                customer_code=customer_code,
+                error_detail=str(invalid.detail),
             )
 
         # Step 2: Save to temporary file

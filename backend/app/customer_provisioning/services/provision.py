@@ -101,7 +101,9 @@ async def provision_wazuh_customer(
             detail=f"Failed to start stream {provision_meta_data['stream_id']}",
         )
     await create_wazuh_groups(request)
-    await apply_group_configurations(request)
+    # Provisioning goes on without the Sysmon watchdog; the response says why it was left out.
+    sysmon_health_warning = await apply_group_configurations(request)
+    sysmon_health_note = f". Sysmon watchdog not enabled: {sysmon_health_warning}" if sysmon_health_warning else ""
     provision_meta_data["grafana_organization_id"] = (await create_grafana_organization(request)).orgId
     provision_meta_data["wazuh_datasource_uid"] = (
         await create_grafana_datasource(
@@ -166,10 +168,11 @@ async def provision_wazuh_customer(
 
         if provision_worker.success is False:
             return CustomerProvisionResponse(
-                message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision",
+                message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision{sysmon_health_note}",
                 success=True,
                 customer_meta=customer_meta.model_dump(),
                 wazuh_worker_provisioned=False,
+                sysmon_health_warning=sysmon_health_warning,
             )
 
     if request.provision_ha_proxy is True:
@@ -185,17 +188,19 @@ async def provision_wazuh_customer(
 
         if provsion_haproxy.success is False:
             return CustomerProvisionResponse(
-                message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision",
+                message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision{sysmon_health_note}",
                 success=True,
                 customer_meta=customer_meta.model_dump(),
                 wazuh_worker_provisioned=True,
+                sysmon_health_warning=sysmon_health_warning,
             )
 
     return CustomerProvisionResponse(
-        message=f"Customer {request.customer_name} provisioned successfully",
+        message=f"Customer {request.customer_name} provisioned successfully{sysmon_health_note}",
         success=True,
         customer_meta=customer_meta.model_dump(),
         wazuh_worker_provisioned=True,
+        sysmon_health_warning=sysmon_health_warning,
     )
 
 

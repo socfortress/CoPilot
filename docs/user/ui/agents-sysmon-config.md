@@ -96,3 +96,6 @@ Video context:
 - Sysmon configs can be complex—test changes on a small set of endpoints first.
 - Any change can shift event volume dramatically—coordinate with index/retention planning.
 - A broken config may fail to apply; keep validation and rollback procedures.
+- **Add new Configuration** only opens a skeleton in the editor; nothing is stored until you upload real content. Upload refuses a config without event filters, and one still carrying installer tokens such as `__INSTALLDIRNAME__` (use the rendered `sysmon_config` artifact from the customer's installer build).
+- **Deploy** ships the uploaded copy, not the editor's text, so it stays disabled while there are unsaved changes.
+- Endpoints apply a deployed config through the group's `sysmon-reload` wodle. An admin's deploy adds it (with the Sysmon health apply); when it cannot be added, or a responder deploys to a group without it, CoPilot shows a warning saying why.

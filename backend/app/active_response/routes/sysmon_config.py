@@ -1,3 +1,6 @@
+from typing import Optional
+from typing import Tuple
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
@@ -7,17 +10,25 @@ from fastapi import Request
 from fastapi import Response
 from fastapi import Security
 from fastapi import UploadFile
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.active_response.routes.sysmon_health import _audit_payload
 from app.active_response.schema.sysmon_config import SysmonConfigContentResponse
 from app.active_response.schema.sysmon_config import SysmonConfigDeploymentResult
 from app.active_response.schema.sysmon_config import SysmonConfigListResponse
 from app.active_response.schema.sysmon_config import SysmonConfigUploadResponse
+from app.active_response.schema.sysmon_health import SysmonHealthApplyResult
 from app.active_response.services.sysmon_config import check_config_exists
 from app.active_response.services.sysmon_config import deploy_sysmon_config_to_worker
 from app.active_response.services.sysmon_config import validate_sysmon_config
+from app.active_response.services.sysmon_health import RELOAD_TAG
+from app.active_response.services.sysmon_health import apply_sysmon_health
+from app.active_response.services.sysmon_health import get_sysmon_health_status
 from app.audit.models.audit import AuditAction
+from app.audit.models.audit import AuditResult
 from app.audit.services.audit import record_audit_event
+from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.data_store.data_store_operations import download_sysmon_config
@@ -154,7 +165,9 @@ async def deploy_sysmon_config(
 ):
     """
     Deploy a customer's Sysmon config to the Wazuh master.
-    Fetches the config from MinIO storage and sends it to the Wazuh master.
+    Fetches the config from MinIO storage, validates it, and sends it to the Wazuh master.
+    The agents apply it through the sysmon-reload wodle: after a successful deploy, an admin's call also runs the
+    Sysmon health apply (see _enable_sysmon_reload), which adds that wodle to the group's agent.conf.
     The Wazuh Master needs to be running the Customer-Provisioning-Worker application.
     Currently we are invoking this via a wodle command that must be placed in the wazuh agent group.
     <wodle name="command">
@@ -184,13 +197,87 @@ async def deploy_sysmon_config(
     }
     }
     """
+    result = None
+    try:
+        result = await deploy_sysmon_config_to_worker(customer_code=customer_code, session=session)
+    finally:
+        # Written after the deploy, with its outcome (the service reports failures rather than raising).
+        await record_audit_event(
+            action=AuditAction.SYSMON_CONFIG_DEPLOY,
+            actor_user_id=current_user.id,
+            actor_username=current_user.username,
+            customer_code=customer_code,
+            entity_type="sysmon_config",
+            entity_id=customer_code,
+            result=AuditResult.SUCCESS if result is not None and result.success else AuditResult.FAILURE,
+            details=None if result is None or result.success else result.message,
+            request=request,
+        )
+    if result.success:
+        result.sysmon_health, result.sysmon_health_warning = await _enable_sysmon_reload(customer_code, request, current_user, session)
+    return result
+
+
+def _reload_warning(health: SysmonHealthApplyResult) -> Optional[str]:
+    """Why the endpoints will not pick the deployed config up after this apply; None when nothing stands in the way."""
+    reason = f"{health.message} {health.steps[-1].detail if health.steps else ''}".strip()
+    if health.status is None or health.status.read_errors:
+        return (
+            "Could not confirm that the endpoints will apply this config: the group's state could not be read, so it is "
+            f"unknown whether {health.group}'s agent.conf has the sysmon-reload wodle. {reason}"
+        )
+    if RELOAD_TAG not in health.status.wodles_present:
+        return (
+            "Endpoints will not apply this config until the Sysmon health apply succeeds: the sysmon-reload wodle, which "
+            f"applies the deployed config on each agent, is not in {health.group}'s agent.conf. {reason}"
+        )
+    if not health.success:
+        return f"The Sysmon health apply did not complete, but the group's sysmon-reload wodle will still apply this config. {reason}"
+    return None
+
+
+async def _enable_sysmon_reload(
+    customer_code: str,
+    request: Request,
+    current_user: User,
+    session: AsyncSession,
+) -> Tuple[Optional[SysmonHealthApplyResult], Optional[str]]:
+    """
+    After a successful deploy: the agents only pick sysmon_config.xml up through the sysmon-reload wodle, which the
+    Sysmon health apply writes once the config is in the group. An admin's deploy runs that apply (never installing
+    the rules, which restarts the manager); anyone else's only checks for the wodle, since applying is admin only.
+
+    Returns the apply result (admins) and a warning when the endpoints will not apply the config yet.
+    """
+    if current_user.role_id != RoleEnum.admin:
+        try:
+            status = await get_sysmon_health_status(customer_code, session)
+        except Exception as e:  # noqa: BLE001 - the deploy itself succeeded; only the check failed
+            logger.error(f"Sysmon config deploy: could not check {customer_code}'s sysmon-reload wodle: {e}")
+            status = None
+        if status is not None and RELOAD_TAG in status.wodles_present:
+            return None, None
+        unconfirmed = "Could not read the group's agent.conf. " if status is None or status.read_errors else ""
+        return None, (
+            f"{unconfirmed}Endpoints will not apply this config until the group's agent.conf has the sysmon-reload wodle, "
+            "which applies the deployed config on each agent. An admin adds it by deploying the config again, or with the "
+            f"Sysmon health apply (POST /api/sysmon_config/health/{customer_code}/apply)."
+        )
+
+    try:
+        health = await apply_sysmon_health(customer_code, session, dry_run=False, install_rules_if_needed=False)
+    except Exception as e:  # noqa: BLE001 - the deploy itself succeeded; report the apply, don't 500
+        logger.error(f"Sysmon config deploy: the Sysmon health apply for {customer_code} failed: {e}")
+        return None, f"Endpoints will not apply this config until the Sysmon health apply succeeds; it could not run: {e}"
     await record_audit_event(
-        action=AuditAction.SYSMON_CONFIG_DEPLOY,
+        action=AuditAction.SYSMON_HEALTH_APPLY,
         actor_user_id=current_user.id,
         actor_username=current_user.username,
         customer_code=customer_code,
-        entity_type="sysmon_config",
-        entity_id=customer_code,
+        entity_type="wazuh_group",
+        entity_id=health.group,
+        result=AuditResult.SUCCESS if health.success else AuditResult.FAILURE,
+        new_value=_audit_payload(health, install_rules=False),
         request=request,
     )
-    return await deploy_sysmon_config_to_worker(customer_code=customer_code, session=session)
+    return health, _reload_warning(health)

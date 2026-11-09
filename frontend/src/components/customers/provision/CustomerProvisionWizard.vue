@@ -644,6 +644,13 @@ async function submit() {
 		.newCustomerProvision(form.value, customerCode.value)
 		.then(res => {
 			if (res.data.success) {
+				// Provisioning succeeded, but the Windows group went without the Sysmon watchdog: say why.
+				if (res.data.sysmon_health_warning) {
+					message.warning(`Sysmon watchdog not enabled: ${res.data.sysmon_health_warning}`, {
+						duration: 0,
+						closable: true
+					})
+				}
 				emit("submitted", res.data.customer_meta)
 				reset()
 			} else {
