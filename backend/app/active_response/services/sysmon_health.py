@@ -951,26 +951,39 @@ async def apply_sysmon_health_all(
     return result
 
 
-async def provisioning_wodles(group: str) -> Set[str]:
+async def provisioning_wodles(group: str) -> Tuple[Set[str], Optional[str]]:
     """
     For a NEW customer's Windows group: publish the scripts and return which managed wodles the template may keep.
 
     Never installs rules (that restarts the manager for every customer on it) and never raises: a missing prerequisite
     just leaves the wodle out, and the admin backfill adds it later. A new group has no sysmon_config.xml yet, so the
     reload wodle is always held back here.
+
+    Returns ``(wodles, reason)``: ``reason`` says why the sysmon-watchdog wodle was left out (also logged at WARNING),
+    and is None when it is kept.
     """
+    wanted: Set[str] = set()
+    reason = None
     try:
-        if not (await rules_state()).current:
-            logger.warning(
-                f"Sysmon health: {RULES_FILENAME} is not current on the manager; {group} is provisioned without the watchdog wodle.",
-            )
-            return set()
-        published, detail = await publish_shared_scripts(group)
-        if not published:
-            logger.warning(f"Sysmon health: scripts not published to {group} ({detail}); provisioning without the watchdog wodle.")
-            return set()
-        scripts_ok = {state.name: state.current for state in await shared_script_states(group)}
-        return wanted_wodles(True, scripts_ok, sysmon_config_present=False)
+        rules = await rules_state()
+        if not rules.readable:
+            reason = f"{RULES_FILENAME} could not be read on the manager ({rules.read_error})"
+        elif not rules.current:
+            reason = f"{RULES_FILENAME} is {'outdated' if rules.present else 'missing'} on the manager"
+        else:
+            published, detail = await publish_shared_scripts(group)
+            if not published:
+                reason = f"the scripts were not published to the group's shared folder: {detail}"
+            else:
+                scripts_ok = {state.name: state.current for state in await shared_script_states(group)}
+                wanted = wanted_wodles(True, scripts_ok, sysmon_config_present=False)
+                if WATCHDOG_TAG not in wanted:
+                    reason = f"{WATCHDOG_SCRIPT} was published but could not be verified in the group's shared folder"
     except Exception as e:  # noqa: BLE001 - provisioning must not fail on an optional feature
-        logger.error(f"Sysmon health: provisioning check for {group} failed: {e}")
-        return set()
+        wanted, reason = set(), f"the provisioning check failed: {e}"
+    if reason:
+        logger.warning(
+            f"Sysmon health: {group} is provisioned without the sysmon-watchdog wodle: {reason}. "
+            "The Sysmon health apply adds it once that is fixed.",
+        )
+    return wanted, reason

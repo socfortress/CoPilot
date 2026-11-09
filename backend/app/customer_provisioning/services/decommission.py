@@ -19,6 +19,7 @@ from app.customer_provisioning.services.portainer import list_node_ips
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
+from app.data_store.data_store_operations import delete_file_from_minio
 from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
 
@@ -92,6 +93,26 @@ async def clear_customer_portainer_stack_id(
     logger.info(f"Successfully cleared Portainer stack ID for customer {customer_name}")
 
 
+async def delete_stored_sysmon_config(customer_code: str) -> None:
+    """
+    Remove the customer's Sysmon config from MinIO (sysmon-configs/<code>/sysmon_config.xml), so a customer later
+    provisioned with the same code does not inherit it. Best effort: never raises, and a missing object is no error.
+    """
+    bucket_name = "sysmon-configs"
+    object_name = f"{customer_code}/sysmon_config.xml"
+    try:
+        result = await delete_file_from_minio(bucket_name, object_name)
+    except Exception as e:  # noqa: BLE001 - decommission must not fail on a leftover file
+        logger.warning(f"Could not delete the stored Sysmon config {bucket_name}/{object_name}: {e}")
+        return
+    if result.get("success"):
+        logger.info(f"Deleted the stored Sysmon config {bucket_name}/{object_name}")
+    else:
+        logger.info(
+            f"No stored Sysmon config deleted at {bucket_name}/{object_name} (none stored, or MinIO refused): {result.get('error')}",
+        )
+
+
 async def decomission_wazuh_customer(
     customer_meta: CustomersMeta,
     session: AsyncSession,
@@ -99,7 +120,7 @@ async def decomission_wazuh_customer(
     """
     Decommissions a Wazuh customer by performing the following steps:
     1. Deletes the Wazuh Agents associated with the customer.
-    2. Deletes the Wazuh Group associated with the customer.
+    2. Deletes the Wazuh Group associated with the customer, and the Sysmon config stored for it in MinIO.
     3. Deletes the Graylog Stream associated with the customer.
     4. Deletes the Graylog Index Set associated with the customer.
     5. Deletes the Grafana Organization associated with the customer.
@@ -128,6 +149,9 @@ async def decomission_wazuh_customer(
 
     # Delete Wazuh Group
     groups_deleted = await delete_wazuh_groups(customer_meta.customer_code)
+
+    # Delete the Sysmon config stored for those groups (best effort)
+    await delete_stored_sysmon_config(customer_meta.customer_code)
 
     # Delete Graylog Stream
     await delete_stream(customer_meta.customer_meta_graylog_stream)

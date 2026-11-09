@@ -126,11 +126,12 @@
 								<span class="hidden @xs:flex">Upload</span>
 							</div>
 						</n-button>
+						<!-- Deploy ships the stored copy, not the editor's text: unsaved changes must be uploaded first. -->
 						<n-button
 							:loading="deployingConfig"
 							size="small"
 							type="success"
-							:disabled="!currentConfig.config_content"
+							:disabled="!currentConfig.config_content || isDirty"
 							@click="deployConfig()"
 						>
 							<div class="flex items-center gap-2">
@@ -250,8 +251,9 @@ function getCustomers() {
 		})
 }
 
+// The skeleton opens as unsaved content: nothing is stored until an admin uploads a real config (the backend
+// refuses one without event filters).
 function newConfig(customerCode: string) {
-	customers.value.push(customerCode)
 	currentConfig.value = {
 		customer_code: customerCode,
 		config_content: `<Sysmon schemaversion="4.60">
@@ -260,15 +262,7 @@ function newConfig(customerCode: string) {
 	</EventFiltering>
 </Sysmon>`
 	}
-	backupConfig.value = {
-		customer_code: customerCode,
-		config_content: `<Sysmon schemaversion="4.60">
-	<EventFiltering>
-		<RuleGroup groupRelation="or"></RuleGroup>
-	</EventFiltering>
-</Sysmon>`
-	}
-	uploadConfigFile()
+	backupConfig.value = null
 }
 
 function loadConfig(customerCode: string) {
@@ -335,6 +329,9 @@ function uploadConfigFile() {
 				if (res.data.success) {
 					currentConfig.value = _clone(currentConfig.value)
 					backupConfig.value = _clone(currentConfig.value)
+					if (!customers.value.includes(res.data.customer_code)) {
+						customers.value.push(res.data.customer_code)
+					}
 					message.success("Sysmon Config uploaded Successfully")
 				} else {
 					message.error("An error occurred. Please try again later.")
@@ -357,9 +354,13 @@ function deployConfig() {
 			.deployConfig(currentConfig.value.customer_code)
 			.then(res => {
 				if (res.data.success) {
-					message.success("Sysmon Config deployed successfully")
+					message.success(res.data.message || "Sysmon Config deployed successfully")
+					// The endpoints only apply the config through the group's sysmon-reload wodle.
+					if (res.data.sysmon_health_warning) {
+						message.warning(res.data.sysmon_health_warning, { duration: 0, closable: true })
+					}
 				} else {
-					message.error("An error occurred. Please try again later.")
+					message.error(res.data?.message || "An error occurred. Please try again later.")
 				}
 			})
 			.catch(err => {

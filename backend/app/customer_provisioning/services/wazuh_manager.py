@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+from typing import Optional
 
 from loguru import logger
 
@@ -140,7 +141,7 @@ async def configure_wazuh_group(group_code, template_path, request: ProvisionNew
 
 
 # Function to apply configurations for all groups
-async def apply_group_configurations(request: ProvisionNewCustomer):
+async def apply_group_configurations(request: ProvisionNewCustomer) -> Optional[str]:
     """
     Apply configurations for Wazuh groups for a new customer.
 
@@ -148,7 +149,7 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
         request (ProvisionNewCustomer): The request object containing customer information.
 
     Returns:
-        None
+        Optional[str]: Why the Windows group was provisioned without the sysmon-watchdog wodle, or None when it has it.
 
     Raises:
         Exception: If there is an error configuring a group.
@@ -164,16 +165,20 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
         "Mac": WazuhAgentsTemplatePaths.MAC_AGENT,
     }
 
+    watchdog_dropped = None
     for group, template in group_templates.items():
         group_code = f"{group}_{request.customer_code}"
         template_path = get_template_path(template)
         try:
             # Windows: publish the Sysmon watchdog/reload scripts first, then keep only the wodles whose
-            # prerequisites are in place (never raises; a missing piece just leaves its wodle out).
-            sysmon_health_wodles = await provisioning_wodles(group_code) if group == "Windows" else None
+            # prerequisites are in place (never raises; a missing piece just leaves its wodle out, and says why).
+            sysmon_health_wodles = None
+            if group == "Windows":
+                sysmon_health_wodles, watchdog_dropped = await provisioning_wodles(group_code)
             await configure_wazuh_group(group_code, template_path, request, sysmon_health_wodles=sysmon_health_wodles)
         except Exception as e:
             logger.error(f"Error configuring group {group_code}: {e}")
+    return watchdog_dropped
 
 
 ######### ! WAZUH MANAGER DECOMISSIONING ! ############
