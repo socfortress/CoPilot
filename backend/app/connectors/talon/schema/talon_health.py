@@ -183,3 +183,14 @@ class TalonHealthResponse(BaseModel):
     health: TalonHealthSection
     history: TalonHistorySection
     metrics: TalonMetricsSection
+    latest_version: Optional[str] = Field(
+        None,
+        description=(
+            "The newest talon-analyst release on GHCR (the image's highest X.Y.Z tag), as CoPilot last looked it up; "
+            "None when the check is off (TALON_RELEASE_CHECK_ENABLED), failed, or no Talon connector is configured"
+        ),
+    )
+    update_available: bool = Field(
+        False,
+        description="latest_version is newer than the version Talon reports; False unless both are X.Y.Z",
+    )

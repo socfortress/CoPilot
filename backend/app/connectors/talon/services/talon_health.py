@@ -26,6 +26,11 @@ can open the page, never a secret):
 Talon is asked at most once per 30 s per ``hours`` value and connector (``_CACHE``, one request in
 flight per key); the per-user scoping is applied after the cache, on every request. The request's
 database session is closed before Talon is asked, so no pooled connection waits on it.
+
+Beside Talon, and only with a Talon connector configured, CoPilot looks up the newest talon-analyst
+release on GHCR (``services/talon_release.py``: cached 12 h, a failure 15 min, a 3 s deadline,
+``TALON_RELEASE_CHECK_ENABLED=false`` for no request at all) and compares it with the version Talon
+reports: ``latest_version`` and ``update_available``, the banner's "<version> available" badge.
 """
 import asyncio
 import hashlib
@@ -78,6 +83,7 @@ from app.connectors.talon.schema.talon_health import TalonMetricsBucket
 from app.connectors.talon.schema.talon_health import TalonMetricsData
 from app.connectors.talon.schema.talon_health import TalonMetricsSection
 from app.connectors.talon.schema.talon_health import TalonProbe
+from app.connectors.talon.services import talon_release
 from app.connectors.talon.services.talon_v2 import is_v2_enabled
 from app.connectors.talon.utils import health_client
 from app.connectors.talon.utils.health_client import Probe
@@ -481,6 +487,7 @@ _LOCKS: Dict[Tuple[str, int], asyncio.Lock] = {}
 def clear_cache() -> None:
     _CACHE.clear()
     _LOCKS.clear()
+    talon_release.clear_cache()
 
 
 def _cache_key(attributes: Mapping[str, Any], hours: int) -> Tuple[str, int]:
@@ -515,6 +522,14 @@ async def _upstream(attributes: Optional[Mapping[str, Any]], hours: int) -> Upst
         _prune()
         _CACHE[key] = (time.monotonic() + CACHE_SECONDS, upstream)
         return upstream
+
+
+async def _latest_release(attributes: Optional[Mapping[str, Any]]) -> Optional[str]:
+    """The newest talon-analyst release (``services/talon_release.py``), asked beside Talon. A CoPilot
+    without a configured Talon connector has nothing to compare it with, so it never asks GHCR."""
+    if attributes is None or not strip_url(attributes.get("connector_url")):
+        return None
+    return await talon_release.latest_release()
 
 
 def _prune() -> None:
@@ -639,7 +654,8 @@ async def get_talon_health(
     # Everything from the database has been read: no pooled connection waits on Talon.
     await session.close()
 
-    upstream = await _upstream(attributes, hours)
+    upstream, latest = await asyncio.gather(_upstream(attributes, hours), _latest_release(attributes))
+    running = upstream.health.data.version if upstream.health.data is not None else None
     copilot = TalonCopilotView(
         connector=_connector_state(attributes),
         reachable=upstream.reachable,
@@ -658,4 +674,6 @@ async def get_talon_health(
         health=_scoped_health(upstream.health, customers),
         history=upstream.history,
         metrics=upstream.metrics,
+        latest_version=latest,
+        update_available=talon_release.is_newer(latest, running),
     )

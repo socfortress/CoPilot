@@ -108,6 +108,9 @@ export function healthReport(extra: Partial<TalonHealthReport> = {}): TalonHealt
 			bucket_minutes: 60,
 			series: [bucket("2026-10-22T07:00:00Z"), bucket("2026-10-22T08:00:00Z", { cost_usd: null })]
 		}),
+		// GHCR's newest release is the one running: no badge.
+		latest_version: "0.1.3",
+		update_available: false,
 		...extra
 	}
 }
