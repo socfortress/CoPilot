@@ -253,6 +253,26 @@ NO_SIDECAR = _health(
 LEGACY_RELOAD = _health(False, [sh.RELOAD_TAG], [("rules", "skipped", "sysmon_sensor_health_rules.xml is missing.")], "Stopped: rules.")
 
 
+def _status(wodles_present=(), managed=False, read_errors=()):
+    return SysmonHealthStatus(
+        customer_code="acme",
+        group="Windows_acme",
+        group_exists=True,
+        wodles_present=list(wodles_present),
+        managed_block_present=managed,
+        read_errors=list(read_errors),
+    )
+
+
+# A new customer: provisioned after Phase 0, so its agent.conf has CoPilot's block (with the watchdog), but no reload.
+NEW_GROUP = _status([sh.WATCHDOG_TAG], managed=True)
+# An existing customer that applies deploys through a hand-added sysmon-reload wodle.
+EXISTING_WITH_RELOAD = _status([sh.RELOAD_TAG])
+# An existing customer from before Phase 0 with no reload wodle at all.
+EXISTING_WITHOUT_RELOAD = _status([])
+UNREADABLE = _status(read_errors=["Could not read the group's agent.conf."])
+
+
 def _route(user, deployed=DEPLOYED, health=None, status=None):
     deploy = AsyncMock(return_value=deployed.model_copy(deep=True) if isinstance(deployed, SysmonConfigDeploymentResult) else None)
     if isinstance(deployed, BaseException):
@@ -274,9 +294,9 @@ def _rows(audit_rows, action):
 
 
 def test_an_admin_deploy_applies_sysmon_health_without_installing_rules_and_audits_both(audit_rows):
-    result, apply, read_status, session = _route(ADMIN, health=APPLIED)
+    result, apply, read_status, session = _route(ADMIN, health=APPLIED, status=NEW_GROUP)
     apply.assert_awaited_once_with("acme", session, dry_run=False, install_rules_if_needed=False)
-    read_status.assert_not_awaited()
+    read_status.assert_awaited_once()
     assert result.success and result.sysmon_health.success and result.sysmon_health_warning is None
     deploy_rows = _rows(audit_rows, AuditAction.SYSMON_CONFIG_DEPLOY)
     assert [(row.result, row.customer_code) for row in deploy_rows] == [(AuditResult.SUCCESS.value, "acme")]
@@ -292,7 +312,7 @@ def test_an_admin_deploy_applies_sysmon_health_without_installing_rules_and_audi
 
 @pytest.mark.parametrize("health, why", [(RULES_MISSING, "install_rules=true"), (NO_SIDECAR, "WAZUH_UTILS_API_KEY is not set.")])
 def test_a_blocked_apply_warns_that_endpoints_will_not_apply_the_config(audit_rows, health, why):
-    result, _, _, _ = _route(ADMIN, health=health)
+    result, _, _, _ = _route(ADMIN, health=health, status=NEW_GROUP)
     assert result.success  # the deploy itself worked
     assert result.sysmon_health.success is False
     assert "Endpoints will not apply this config until the Sysmon health apply succeeds" in result.sysmon_health_warning
@@ -300,9 +320,8 @@ def test_a_blocked_apply_warns_that_endpoints_will_not_apply_the_config(audit_ro
     assert [row.result for row in _rows(audit_rows, AuditAction.SYSMON_HEALTH_APPLY)] == [AuditResult.FAILURE.value]
 
 
-def test_a_blocked_apply_with_a_reload_wodle_already_in_place_says_the_config_still_applies(audit_rows):
-    result, _, _, _ = _route(ADMIN, health=LEGACY_RELOAD)
-    assert "will still apply this config" in result.sysmon_health_warning
+def test_reload_warning_says_an_existing_reload_wodle_still_applies_the_config():
+    assert "will still apply this config" in routes._reload_warning(LEGACY_RELOAD)
 
 
 def test_an_apply_that_could_not_read_the_group_says_the_outcome_is_unconfirmed():
@@ -314,7 +333,7 @@ def test_an_apply_that_could_not_read_the_group_says_the_outcome_is_unconfirmed(
 
 
 def test_an_apply_that_raises_warns_and_writes_no_apply_row(audit_rows):
-    result, _, _, _ = _route(ADMIN, health=RuntimeError("manager unreachable"))
+    result, _, _, _ = _route(ADMIN, health=RuntimeError("manager unreachable"), status=NEW_GROUP)
     assert result.success and result.sysmon_health is None
     assert "could not run: manager unreachable" in result.sysmon_health_warning
     assert _rows(audit_rows, AuditAction.SYSMON_HEALTH_APPLY) == []
@@ -322,29 +341,66 @@ def test_an_apply_that_raises_warns_and_writes_no_apply_row(audit_rows):
 
 
 @pytest.mark.parametrize(
-    "status, warned, unconfirmed",
+    "status, warned, hint",
     [
-        (SysmonHealthStatus(customer_code="acme", group="Windows_acme", wodles_present=[sh.RELOAD_TAG]), False, False),
-        (SysmonHealthStatus(customer_code="acme", group="Windows_acme", wodles_present=[sh.WATCHDOG_TAG]), True, False),
-        (
-            SysmonHealthStatus(customer_code="acme", group="Windows_acme", read_errors=["Could not read the group's agent.conf."]),
-            True,
-            True,
-        ),
-        (RuntimeError("manager unreachable"), True, True),
+        (EXISTING_WITH_RELOAD, False, None),
+        (NEW_GROUP, True, "An admin adds it by deploying the config again"),
+        (EXISTING_WITHOUT_RELOAD, True, "no CoPilot-managed Sysmon health block"),
+        (UNREADABLE, True, "Could not read the group's agent.conf"),
+        (RuntimeError("manager unreachable"), True, "Could not read the group's agent.conf"),
     ],
 )
-def test_a_responder_deploy_never_applies_and_warns_only_without_a_reload_wodle(audit_rows, status, warned, unconfirmed):
+def test_a_responder_deploy_never_applies_and_warns_only_without_a_reload_wodle(audit_rows, status, warned, hint):
     result, apply, read_status, _ = _route(RESPONDER, status=status)
     apply.assert_not_awaited()
     read_status.assert_awaited_once()
     assert result.success and result.sysmon_health is None
     assert (result.sysmon_health_warning is not None) == warned
     if warned:
-        assert "Endpoints will not apply this config" in result.sysmon_health_warning
-        assert "/api/sysmon_config/health/acme/apply" in result.sysmon_health_warning
-        assert ("Could not read" in result.sysmon_health_warning) == unconfirmed
+        assert hint in result.sysmon_health_warning
     assert _rows(audit_rows, AuditAction.SYSMON_HEALTH_APPLY) == []
+
+
+@pytest.mark.parametrize(
+    "status, warned, hint",
+    [
+        # Existing customers are left alone: no apply, so their agent.conf is not rewritten and their agents don't restart.
+        (EXISTING_WITH_RELOAD, False, None),
+        (EXISTING_WITHOUT_RELOAD, True, "/api/sysmon_config/health/acme/apply?dry_run=false"),
+        (UNREADABLE, True, "Could not read the group's agent.conf"),
+        (RuntimeError("manager unreachable"), True, "Could not read the group's agent.conf"),
+    ],
+)
+def test_an_admin_deploy_leaves_groups_that_predate_phase0_alone(audit_rows, status, warned, hint):
+    result, apply, read_status, _ = _route(ADMIN, health=APPLIED, status=status)
+    apply.assert_not_awaited()
+    read_status.assert_awaited_once()
+    assert result.success and result.sysmon_health is None
+    assert (result.sysmon_health_warning is not None) == warned
+    if warned:
+        assert hint in result.sysmon_health_warning
+    assert _rows(audit_rows, AuditAction.SYSMON_HEALTH_APPLY) == []
+
+
+def test_an_admin_deploy_does_not_wait_behind_a_running_apply(audit_rows):
+    async def deploy_while_locked():
+        async with routes.SYSMON_HEALTH_LOCK:
+            return await routes._enable_sysmon_reload("acme", None, ADMIN, object())
+
+    apply = AsyncMock(return_value=APPLIED)
+    with patch.object(routes, "apply_sysmon_health", apply), patch.object(
+        routes,
+        "get_sysmon_health_status",
+        AsyncMock(return_value=NEW_GROUP),
+    ):
+        health, warning = run(deploy_while_locked())
+    apply.assert_not_awaited()
+    assert health is None and "another Sysmon health apply is running" in warning
+
+
+def test_a_responder_hint_is_a_real_apply_not_a_dry_run(audit_rows):
+    result, _, _, _ = _route(RESPONDER, status=NEW_GROUP)
+    assert "/api/sysmon_config/health/acme/apply?dry_run=false" in result.sysmon_health_warning
 
 
 def test_a_failed_deploy_applies_nothing_and_is_audited_as_a_failure(audit_rows):

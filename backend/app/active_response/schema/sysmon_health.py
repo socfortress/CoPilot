@@ -30,6 +30,10 @@ class SysmonHealthStatus(BaseModel):
         description="A sysmon_config.xml is in the group's shared folder (needed by the reload wodle).",
     )
     agent_conf_current: bool = Field(False, description="The group's agent.conf already contains exactly the wodles CoPilot would write.")
+    managed_block_present: bool = Field(
+        False,
+        description="The group's agent.conf has CoPilot's SYSMON-HEALTH block: it was provisioned or applied after Phase 0 (a new customer).",
+    )
     wodles_wanted: List[str] = Field([], description="Wodle tags whose prerequisites are met, i.e. what CoPilot would put in agent.conf.")
     wodles_present: List[str] = Field(
         [],

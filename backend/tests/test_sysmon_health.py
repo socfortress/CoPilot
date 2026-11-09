@@ -340,6 +340,7 @@ def test_full_rollout_runs_in_order_and_converges_despite_reindentation(monkeypa
     assert [call[0] for call in fake.calls] == ["install_rules", "publish", "put_agent_conf"]
     assert sh.wodle_tags_present(fake.agent_conf()) == [sh.RELOAD_TAG, sh.WATCHDOG_TAG]
     assert result.status.agent_conf_current and not result.status.problems
+    assert result.status.managed_block_present
     # Running it again changes nothing, even though the stored agent.conf was re-indented.
     fake.calls.clear()
     again = run(sh.apply_sysmon_health("lab", session=None, dry_run=False))
@@ -777,3 +778,12 @@ def test_publish_sends_bearer_group_files_and_hashes_and_maps_refusals(monkeypat
     assert not pinned[0] and "ALLOWED_SHA256" in pinned[1]
     assert not no_group[0] and "does not exist" in no_group[1]
     assert not old_sidecar[0] and "no /shared-files endpoint" in old_sidecar[1]
+
+
+def test_status_reports_whether_the_group_is_managed(monkeypatch):
+    fake = FakeManager(rules=True, scripts=True).install(monkeypatch)
+    assert sh.BLOCK_BEGIN not in fake.agent_conf()
+    assert run(sh.get_sysmon_health_status("lab", session=None)).managed_block_present is False
+    run(sh.apply_sysmon_health("lab", session=None, dry_run=False))
+    assert sh.BLOCK_BEGIN in fake.agent_conf()
+    assert run(sh.get_sysmon_health_status("lab", session=None)).managed_block_present is True

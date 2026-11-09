@@ -23,6 +23,7 @@ from app.active_response.services.sysmon_config import check_config_exists
 from app.active_response.services.sysmon_config import deploy_sysmon_config_to_worker
 from app.active_response.services.sysmon_config import validate_sysmon_config
 from app.active_response.services.sysmon_health import RELOAD_TAG
+from app.active_response.services.sysmon_health import SYSMON_HEALTH_LOCK
 from app.active_response.services.sysmon_health import apply_sysmon_health
 from app.active_response.services.sysmon_health import get_sysmon_health_status
 from app.audit.models.audit import AuditAction
@@ -243,25 +244,50 @@ async def _enable_sysmon_reload(
     session: AsyncSession,
 ) -> Tuple[Optional[SysmonHealthApplyResult], Optional[str]]:
     """
-    After a successful deploy: the agents only pick sysmon_config.xml up through the sysmon-reload wodle, which the
-    Sysmon health apply writes once the config is in the group. An admin's deploy runs that apply (never installing
-    the rules, which restarts the manager); anyone else's only checks for the wodle, since applying is admin only.
+    After a successful deploy: the agents only pick sysmon_config.xml up through a sysmon-reload wodle in the group's
+    agent.conf. What happens depends on the group:
 
-    Returns the apply result (admins) and a warning when the endpoints will not apply the config yet.
+    - It already has one (CoPilot-managed, or hand-added on an existing customer): it applies the config. Nothing else
+      is touched.
+    - It carries CoPilot's SYSMON-HEALTH block (provisioned or applied after Phase 0: a new customer): an admin's
+      deploy runs the Sysmon health apply, which adds the reload. It never installs the rules (that restarts the
+      manager) and is skipped while another apply holds the lock, rather than waiting behind it.
+    - Anything else predates Phase 0 (an existing customer): its agent.conf is left alone, because rewriting it
+      restarts every agent in the group. Enabling the reload there stays an explicit admin action, and the warning
+      says how.
+
+    Returns the apply result (when one ran) and a warning when the endpoints will not, or may not, apply the config.
     """
-    if current_user.role_id != RoleEnum.admin:
-        try:
-            status = await get_sysmon_health_status(customer_code, session)
-        except Exception as e:  # noqa: BLE001 - the deploy itself succeeded; only the check failed
-            logger.error(f"Sysmon config deploy: could not check {customer_code}'s sysmon-reload wodle: {e}")
-            status = None
-        if status is not None and RELOAD_TAG in status.wodles_present:
-            return None, None
-        unconfirmed = "Could not read the group's agent.conf. " if status is None or status.read_errors else ""
+    apply_hint = f"POST /api/sysmon_config/health/{customer_code}/apply?dry_run=false"
+    try:
+        status = await get_sysmon_health_status(customer_code, session)
+    except Exception as e:  # noqa: BLE001 - the deploy itself succeeded; only the check failed
+        logger.error(f"Sysmon config deploy: could not check {customer_code}'s Windows group: {e}")
+        status = None
+    if status is None or status.read_errors:
         return None, (
-            f"{unconfirmed}Endpoints will not apply this config until the group's agent.conf has the sysmon-reload wodle, "
-            "which applies the deployed config on each agent. An admin adds it by deploying the config again, or with the "
-            f"Sysmon health apply (POST /api/sysmon_config/health/{customer_code}/apply)."
+            "Could not read the group's agent.conf, so it is unknown whether the endpoints will apply this config (that "
+            f"needs a sysmon-reload wodle in it). Check with GET /api/sysmon_config/health/{customer_code}."
+        )
+    if RELOAD_TAG in status.wodles_present:
+        return None, None
+    if not status.managed_block_present:
+        return None, (
+            f"Endpoints will not apply this config yet: {status.group}'s agent.conf has no sysmon-reload wodle and no "
+            "CoPilot-managed Sysmon health block (the group predates it, or was provisioned without the watchdog), so the "
+            "deploy left its agent.conf alone. An admin can enable the "
+            f"reload with the Sysmon health apply ({apply_hint}; preview it first without dry_run=false). That rewrites "
+            "agent.conf and restarts the group's agents."
+        )
+    if current_user.role_id != RoleEnum.admin:
+        return None, (
+            "Endpoints will not apply this config until the group's agent.conf has the sysmon-reload wodle, which applies "
+            f"the deployed config on each agent. An admin adds it by deploying the config again, or with {apply_hint}."
+        )
+    if SYSMON_HEALTH_LOCK.locked():
+        return None, (
+            "Endpoints will not apply this config yet: another Sysmon health apply is running, so the sysmon-reload wodle "
+            f"was not added. Deploy again once it has finished, or run {apply_hint}."
         )
 
     try:
