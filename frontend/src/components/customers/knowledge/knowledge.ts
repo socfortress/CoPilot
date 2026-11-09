@@ -11,8 +11,11 @@ import type {
 	KnowledgeTenantProvider,
 	KnowledgeZone
 } from "@/types/customer-knowledge"
+import type { BusinessCalendar, Weekday, WorkingWindow } from "@/types/soc-management"
 import isIP from "validator/es/lib/isIP"
 import isIPRange from "validator/es/lib/isIPRange"
+import { dayError, WEEKDAY_LABEL, WEEKDAYS } from "@/components/socManagement/policies/calendar"
+import { countryName, isCountryCode } from "./countries"
 
 /**
  * What SOC analysts record about a customer (talon-analyst D98): the words, the form's rules and
@@ -32,6 +35,9 @@ export const EXPECTED_MAX_DAYS = 90
 export const DOMAIN_MAX = 253
 export const TENANT_ID_MAX = 128
 export const ALIASES_MAX = 10
+export const TIME_ZONE_MAX = 64
+export const WINDOWS_MAX = 6
+export const COUNTRIES_MAX = 50
 
 const DAY_MS = 86_400_000
 
@@ -49,6 +55,7 @@ export interface KindWords {
 }
 
 export const KINDS: KnowledgeKind[] = [
+	"business_profile",
 	"network_zone",
 	"public_range",
 	"asset_role",
@@ -59,6 +66,12 @@ export const KINDS: KnowledgeKind[] = [
 ]
 
 export const KIND_WORDS: Record<KnowledgeKind, KindWords> = {
+	business_profile: {
+		title: "Business context",
+		noun: "business context",
+		icon: "carbon:time",
+		about: "When and where the customer works: its time zone, business hours and the countries it operates in, so an alert's time and an address's country can be read against them."
+	},
 	network_zone: {
 		title: "Network zones",
 		noun: "network zone",
@@ -179,6 +192,9 @@ export const DOMAIN_USE_OPTIONS = options(DOMAIN_USE_LABELS)
 export const PROVIDER_OPTIONS = options(PROVIDER_LABELS)
 export const ACCOUNT_ROLE_OPTIONS = options(ACCOUNT_ROLE_LABELS)
 
+/** Kinds a customer has one of: their block offers "Add" only while it's empty. */
+export const SINGLE_KINDS: ReadonlySet<KnowledgeKind> = new Set(["business_profile"])
+
 /** A label for a stored value; one this page doesn't know yet reads as itself. */
 function worded(labels: Record<string, string>, value: string): string {
 	return labels[value] ?? value
@@ -211,6 +227,41 @@ export interface KnowledgeForm {
 	account: string
 	accountRole: KnowledgeAccountRole | null
 	aliases: string[]
+	timeZone: string | null
+	/** Every day, closed ones empty: the shape the SLA calendar's week editor edits. */
+	week: Record<Weekday, WorkingWindow[]>
+	alwaysOpen: boolean
+	countries: string[]
+}
+
+/** A week with every day closed. */
+export function closedWeek(): Record<Weekday, WorkingWindow[]> {
+	return fullWeek({})
+}
+
+/** A stored or an SLA calendar's week as the editor holds it: every day, copied, so editing leaves the source alone. */
+export function fullWeek(week: Partial<Record<Weekday, WorkingWindow[]>>): Record<Weekday, WorkingWindow[]> {
+	return Object.fromEntries(
+		WEEKDAYS.map(day => [day, (week[day] ?? []).map(([start, end]) => [start, end] as WorkingWindow)])
+	) as Record<Weekday, WorkingWindow[]>
+}
+
+/** The open days in week order, each with its windows in order: what the backend stores. */
+export function openDays(week: Record<Weekday, WorkingWindow[]>): Partial<Record<Weekday, WorkingWindow[]>> {
+	return Object.fromEntries(
+		WEEKDAYS.filter(day => week[day].length).map(day => [
+			day,
+			week[day].map(([start, end]) => [start, end] as WorkingWindow).sort((a, b) => a[0].localeCompare(b[0]))
+		])
+	)
+}
+
+/** A customer's own SLA calendar, copied into a profile: its zone and its week, never its holidays. */
+export function fromCalendar(calendar: Pick<BusinessCalendar, "timezone" | "week">): {
+	timeZone: string
+	week: Record<Weekday, WorkingWindow[]>
+} {
+	return { timeZone: calendar.timezone, week: fullWeek(calendar.week) }
 }
 
 export function emptyForm(kind: KnowledgeKind): KnowledgeForm {
@@ -237,7 +288,11 @@ export function emptyForm(kind: KnowledgeKind): KnowledgeForm {
 		tenantName: "",
 		account: "",
 		accountRole: null,
-		aliases: []
+		aliases: [],
+		timeZone: null,
+		week: closedWeek(),
+		alwaysOpen: false,
+		countries: []
 	}
 }
 
@@ -289,6 +344,14 @@ export function formFromItem(item: KnowledgeItem): KnowledgeForm {
 				account: item.value.account,
 				accountRole: item.value.role,
 				aliases: [...item.value.aliases]
+			}
+		case "business_profile":
+			return {
+				...form,
+				timeZone: item.value.time_zone,
+				week: fullWeek(item.value.week),
+				alwaysOpen: item.value.always_open,
+				countries: [...item.value.countries]
 			}
 	}
 }
@@ -365,6 +428,18 @@ export function buildBody(form: KnowledgeForm): KnowledgeItemBody {
 					aliases: filled(form.aliases)
 				}
 			}
+		case "business_profile":
+			return {
+				...common,
+				kind: "business_profile",
+				value: {
+					time_zone: (form.timeZone ?? "").trim(),
+					// Round the clock has no hours: the switch wins over what the editor still holds.
+					week: form.alwaysOpen ? {} : openDays(form.week),
+					always_open: form.alwaysOpen,
+					countries: [...form.countries]
+				}
+			}
 	}
 }
 
@@ -387,7 +462,9 @@ export const PROBLEMS = {
 	expiryTooFar: `Expected activity can't run for more than ${EXPECTED_MAX_DAYS} days from now`,
 	expiryBeforeStart: "The expiry is before the start",
 	startTooOld: `The start can't be more than ${EXPECTED_MAX_DAYS} days ago`,
-	windowTooLong: `Expected activity can't run for more than ${EXPECTED_MAX_DAYS} days`
+	windowTooLong: `Expected activity can't run for more than ${EXPECTED_MAX_DAYS} days`,
+	timeZone: "Pick a time zone by its region and city, such as America/Denver",
+	country: "Enter countries as two-letter ISO codes, such as US or GB"
 } as const
 
 /** A backend refusal, worded as the form's own problems are: its fixed texts start in lower case. */
@@ -488,6 +565,32 @@ export function accountIdProblem(value: string): string | null {
 export function tenantNameProblem(value: string): string | null {
 	if (value.trim().length > NAME_MAX) return `Keep the name to ${NAME_MAX} characters`
 	return textProblem(value)
+}
+
+/**
+ * An IANA zone by its region and city, or UTC: never an abbreviation (`MST`) or a fixed `Etc/` offset.
+ * Whether the zone exists is the backend's call, as the browser's list can be older or newer.
+ */
+export function timeZoneProblem(value: string | null): string | null {
+	const text = (value ?? "").trim()
+	if (!text) return "Pick the customer's time zone"
+	if (text.length > TIME_ZONE_MAX) return PROBLEMS.timeZone
+	return text === "UTC" || (text.includes("/") && !text.startsWith("Etc/")) ? null : PROBLEMS.timeZone
+}
+
+/** The first day whose windows are wrong, named, in the SLA calendar editor's words. */
+export function weekProblem(week: Record<Weekday, WorkingWindow[]>): string | null {
+	for (const day of WEEKDAYS) {
+		if (week[day].length > WINDOWS_MAX) return `${WEEKDAY_LABEL[day]}: keep to ${WINDOWS_MAX} windows`
+		const problem = dayError(week[day])
+		if (problem) return `${WEEKDAY_LABEL[day]}: ${problem.toLowerCase()}`
+	}
+	return null
+}
+
+export function countriesProblem(codes: string[]): string | null {
+	if (codes.length > COUNTRIES_MAX) return `Keep to ${COUNTRIES_MAX} countries`
+	return codes.every(isCountryCode) ? null : PROBLEMS.country
 }
 
 export function hostProblem(value: string): string | null {
@@ -592,7 +695,14 @@ export function knowledgeRules(form: KnowledgeForm, kept: KnowledgeForm | null =
 		tenantName: checked(tenantNameProblem, ON_INPUT),
 		account: checked(accountIdProblem, ON_INPUT, true),
 		accountRole: { required: true, message: "Pick a role", trigger: ON_CHANGE },
-		aliases: checked((aliases: string[]) => listProblem(aliases, identifierProblem), ON_INPUT)
+		aliases: checked((aliases: string[]) => listProblem(aliases, identifierProblem), ON_INPUT),
+		timeZone: checked(timeZoneProblem, ON_CHANGE, true),
+		// The switch clears the hours when the body is built, so the editor behind it isn't judged.
+		week: checked(
+			(week: Record<Weekday, WorkingWindow[]>) => (form.alwaysOpen ? null : weekProblem(week)),
+			ON_CHANGE
+		),
+		countries: checked(countriesProblem, ON_CHANGE)
 	}
 }
 
@@ -685,6 +795,64 @@ export function factView(item: KnowledgeItem, when: (moment: string) => string):
 					...expires
 				]
 			}
+		case "business_profile":
+			return {
+				headline: item.value.time_zone,
+				crownJewel: false,
+				details: [
+					...detail("Hours", item.value.always_open ? ["Around the clock"] : hoursLines(item.value.week)),
+					...detail(
+						"Countries",
+						item.value.countries.map(code => `${countryName(code)} (${code})`)
+					),
+					...expires
+				]
+			}
+	}
+}
+
+/** "Mon–Fri" for a run of three days or more, else each day: "Sat, Sun". */
+function dayRuns(days: Weekday[]): string {
+	const short = (day: Weekday) => WEEKDAY_LABEL[day].slice(0, 3)
+	const parts: string[] = []
+	let index = 0
+	while (index < days.length) {
+		let end = index
+		while (end + 1 < days.length && WEEKDAYS.indexOf(days[end + 1]) === WEEKDAYS.indexOf(days[end]) + 1) end++
+		if (end - index >= 2) parts.push(`${short(days[index])}–${short(days[end])}`)
+		else parts.push(...days.slice(index, end + 1).map(short))
+		index = end + 1
+	}
+	return parts.join(", ")
+}
+
+/** A week in words, days with the same windows together: "Mon–Fri 08:00–17:00". */
+export function hoursLines(week: Partial<Record<Weekday, WorkingWindow[]>>): string[] {
+	const byWindows = new Map<string, Weekday[]>()
+	for (const day of WEEKDAYS) {
+		const windows = week[day] ?? []
+		if (!windows.length) continue
+		const text = windows.map(([start, end]) => `${start}–${end}`).join(", ")
+		byWindows.set(text, [...(byWindows.get(text) ?? []), day])
+	}
+	return [...byWindows].map(([windows, days]) => `${dayRuns(days)} ${windows}`)
+}
+
+/** "Tuesday 14:05": the time at `now` in `timeZone`, or null for a zone the browser doesn't know. */
+export function nowThere(timeZone: string | null, now: number): string | null {
+	if (!timeZone) return null
+	try {
+		const parts = new Intl.DateTimeFormat("en-GB", {
+			timeZone,
+			weekday: "long",
+			hour: "2-digit",
+			minute: "2-digit",
+			hourCycle: "h23"
+		}).formatToParts(new Date(now))
+		const part = (type: string) => parts.find(p => p.type === type)?.value ?? ""
+		return `${part("weekday")} ${part("hour")}:${part("minute")}`
+	} catch {
+		return null
 	}
 }
 
@@ -699,9 +867,14 @@ export function lastChanged(item: KnowledgeItem, when: (moment: string) => strin
 export interface FactGroup extends KindWords {
 	kind: KnowledgeKind
 	facts: KnowledgeItem[]
+	/** False for a kind a customer has one of, once it has it: the SOC edits that one. */
+	canAdd: boolean
 }
 
 /** The page's blocks, every kind, in order. A kind this page doesn't know yet isn't shown. */
 export function groupFacts(items: KnowledgeItem[]): FactGroup[] {
-	return KINDS.map(kind => ({ ...KIND_WORDS[kind], kind, facts: items.filter(item => item.kind === kind) }))
+	return KINDS.map(kind => {
+		const facts = items.filter(item => item.kind === kind)
+		return { ...KIND_WORDS[kind], kind, facts, canAdd: !SINGLE_KINDS.has(kind) || !facts.length }
+	})
 }

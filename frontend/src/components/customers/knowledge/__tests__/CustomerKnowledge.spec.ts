@@ -162,3 +162,23 @@ describe("what Talon sees", () => {
 		expect(wrapper.findComponent(CustomerKnowledgeSees).exists()).toBe(true)
 	})
 })
+
+describe("a kind a customer has one of", () => {
+	const BUSINESS: KnowledgeItem = {
+		...ZONE,
+		id: 2,
+		branch: "business",
+		kind: "business_profile",
+		value: { time_zone: "America/Denver", week: {}, always_open: true, countries: [] }
+	}
+
+	it("offers Add while the business context is empty, and not once it's recorded", async () => {
+		const empty = await render()
+		expect(empty.find('[data-testid="knowledge-add-business_profile"]').exists()).toBe(true)
+
+		list.mockResolvedValue({ data: { success: true, items: [ZONE, BUSINESS] } })
+		const recorded = await render()
+		expect(recorded.find('[data-testid="knowledge-add-business_profile"]').exists()).toBe(false)
+		expect(recorded.find('[data-testid="knowledge-add-network_zone"]').exists()).toBe(true)
+	})
+})

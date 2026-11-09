@@ -1,6 +1,6 @@
 """What SOC analysts record about a customer (talon-analyst SPEC D98, plan K1): request and response
-shapes, and one Pydantic model per kind of fact: plan K1's first four, and K1-7's domains, tenants and
-accounts.
+shapes, and one Pydantic model per kind of fact: plan K1's first four, K1-7's domains, tenants and
+accounts, and K1-8's business profile.
 
 **One table, typed values.** ``customer_knowledge_item.value`` is JSON, and each kind's model below
 is what it may hold, with ``extra="forbid"`` so a typo'd key is a 422 at save time. A new kind is a
@@ -10,6 +10,7 @@ what it doesn't know, so CoPilot can ship first.
 """
 
 from datetime import datetime
+from typing import Annotated
 from typing import Dict
 from typing import List
 from typing import Literal
@@ -27,6 +28,9 @@ LIST_MAX = 50
 DOMAIN_MAX = 253
 TENANT_ID_MAX = 128
 ALIASES_MAX = 10
+TIME_ZONE_MAX = 64
+WINDOWS_MAX = 6
+COUNTRIES_MAX = 50
 
 Zone = Literal["server", "workstation", "dmz", "guest", "ot", "vpn", "cloud", "management", "other"]
 PublicUse = Literal["egress", "hosted", "other"]
@@ -47,6 +51,9 @@ Expected = Literal["scanner", "rmm", "pentest", "change_window", "other"]
 DomainUse = Literal["email", "web", "ad", "upn", "other"]
 TenantProvider = Literal["entra", "google", "other"]
 AccountKind = Literal["vip", "executive", "admin", "service", "break_glass", "shared", "other"]
+Weekday = Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+#: ``HH:MM``; checked in ``services/business.py``.
+Hour = Annotated[str, Field(max_length=5)]
 
 
 class KnowledgeValue(BaseModel):
@@ -119,6 +126,21 @@ class AccountRole(KnowledgeValue):
     aliases: List[str] = Field(default_factory=list, max_length=ALIASES_MAX)
 
 
+class BusinessProfile(KnowledgeValue):
+    """When and where the customer works (talon-analyst plan K1-8), one per customer: its IANA time
+    zone, its working week or round-the-clock operation, and the countries it operates in (ISO 3166-1
+    alpha-2). ``week`` has the shape of an SLA business-hours calendar's (``soc_management``): per day,
+    working windows of ``HH:MM`` in the profile's zone, a closed day left out, and a night shift as two
+    windows on two days. talon-analyst shows an event's local time, whether it falls inside these
+    hours, and whether a geolocated address is in a country the customer operates in. A description,
+    never a reason to lower a severity: inside business hours doesn't make activity expected."""
+
+    time_zone: str = Field(..., min_length=1, max_length=TIME_ZONE_MAX)
+    week: Dict[Weekday, Annotated[List[Tuple[Hour, Hour]], Field(max_length=WINDOWS_MAX)]] = Field(default_factory=dict)
+    always_open: bool = False
+    countries: List[str] = Field(default_factory=list, max_length=COUNTRIES_MAX)
+
+
 #: kind -> (branch of the tree, the model of its ``value``).
 KINDS: Dict[str, Tuple[str, Type[KnowledgeValue]]] = {
     "network_zone": ("network", NetworkZone),
@@ -128,6 +150,7 @@ KINDS: Dict[str, Tuple[str, Type[KnowledgeValue]]] = {
     "own_domain": ("domains", OwnDomain),
     "identity_tenant": ("domains", IdentityTenant),
     "account_role": ("people", AccountRole),
+    "business_profile": ("business", BusinessProfile),
 }
 Kind = Literal[
     "network_zone",
@@ -137,6 +160,7 @@ Kind = Literal[
     "own_domain",
     "identity_tenant",
     "account_role",
+    "business_profile",
 ]
 
 

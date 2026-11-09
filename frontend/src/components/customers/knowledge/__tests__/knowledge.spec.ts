@@ -1,5 +1,6 @@
 import type { KnowledgeItem } from "@/types/customer-knowledge"
 import { describe, expect, it } from "vitest"
+import { COUNTRY_CODES, COUNTRY_OPTIONS, countryName } from "../countries"
 import {
 	ACCOUNT_ROLE_OPTIONS,
 	accountIdProblem,
@@ -7,6 +8,8 @@ import {
 	ALIASES_MAX,
 	buildBody,
 	cidrProblem,
+	closedWeek,
+	countriesProblem,
 	DOMAIN_USE_OPTIONS,
 	domainProblem,
 	emptyForm,
@@ -15,9 +18,12 @@ import {
 	expiryProblem,
 	factView,
 	formFromItem,
+	fromCalendar,
+	fullWeek,
 	groupFacts,
 	hostNameProblem,
 	hostProblem,
+	hoursLines,
 	identifierProblem,
 	KIND_WORDS,
 	KINDS,
@@ -26,16 +32,21 @@ import {
 	listProblem,
 	NOTE_MAX,
 	noteProblem,
+	nowThere,
+	openDays,
 	ownerProblem,
 	PROBLEMS,
 	PROVIDER_OPTIONS,
 	refusalText,
 	ROLE_OPTIONS,
+	SINGLE_KINDS,
 	startProblem,
 	targetProblem,
 	tenantIdProblem,
 	tenantNameProblem,
+	timeZoneProblem,
 	USE_OPTIONS,
+	weekProblem,
 	ZONE_OPTIONS
 } from "../knowledge"
 
@@ -95,6 +106,18 @@ const ACCOUNT: KnowledgeItem = {
 	branch: "people",
 	kind: "account_role",
 	value: { account: "CORP\\jsmith", role: "break_glass", aliases: ["jsmith@corp.example"] }
+}
+const WORKDAY: [string, string][] = [["08:00", "17:00"]]
+const BUSINESS: KnowledgeItem = {
+	...COMMON,
+	branch: "business",
+	kind: "business_profile",
+	value: {
+		time_zone: "America/Denver",
+		week: { mon: WORKDAY, tue: WORKDAY, wed: WORKDAY, thu: WORKDAY, fri: WORKDAY, sat: [["09:00", "12:00"]] },
+		always_open: false,
+		countries: ["US", "CA"]
+	}
 }
 
 describe("cidrProblem", () => {
@@ -517,6 +540,7 @@ describe("groupFacts", () => {
 		const groups = groupFacts([EXPECTED, ZONE, { ...ZONE, id: 2 }, ACCOUNT])
 		expect(groups.map(group => group.kind)).toEqual(KINDS)
 		expect(groups.map(group => group.title)).toEqual([
+			"Business context",
 			"Network zones",
 			"Public ranges",
 			"Asset roles",
@@ -525,7 +549,8 @@ describe("groupFacts", () => {
 			"Identity tenants",
 			"Accounts"
 		])
-		expect(groups.map(group => group.facts.length)).toEqual([2, 0, 0, 1, 0, 0, 1])
+		expect(groups.map(group => group.facts.length)).toEqual([0, 2, 0, 0, 1, 0, 0, 1])
+		expect(groups.every(group => group.canAdd)).toBe(true)
 	})
 
 	it("leaves out a kind this page doesn't know yet", () => {
@@ -768,5 +793,168 @@ describe("the K1-7 forms", () => {
 			"other"
 		])
 		expect(ALIASES_MAX).toBe(10)
+	})
+})
+
+describe("the business profile (K1-8)", () => {
+	it("is a kind a customer has one of: Add goes once it's recorded", () => {
+		expect(SINGLE_KINDS.has("business_profile")).toBe(true)
+		const groups = groupFacts([BUSINESS, ZONE])
+		expect(groups.find(group => group.kind === "business_profile")?.canAdd).toBe(false)
+		expect(groups.filter(group => group.kind !== "business_profile").every(group => group.canAdd)).toBe(true)
+		expect(KINDS[0]).toBe("business_profile")
+	})
+
+	it("sends the open days in week order, each with its windows in order", () => {
+		const week = closedWeek()
+		week.sat = [
+			["13:00", "17:00"],
+			["09:00", "12:00"]
+		]
+		week.mon = [["08:00", "17:00"]]
+		expect(
+			buildBody({ ...emptyForm("business_profile"), timeZone: " America/Denver ", week, countries: ["US"] })
+		).toEqual({
+			kind: "business_profile",
+			value: {
+				time_zone: "America/Denver",
+				week: {
+					mon: [["08:00", "17:00"]],
+					sat: [
+						["09:00", "12:00"],
+						["13:00", "17:00"]
+					]
+				},
+				always_open: false,
+				countries: ["US"]
+			},
+			note: null,
+			expires_at: null
+		})
+		expect(Object.keys(openDays(week))).toEqual(["mon", "sat"])
+	})
+
+	it("sends no hours for a customer open around the clock, whatever the editor still holds", () => {
+		const form = { ...formFromItem(BUSINESS), alwaysOpen: true }
+		expect(buildBody(form).value).toEqual({
+			time_zone: "America/Denver",
+			week: {},
+			always_open: true,
+			countries: ["US", "CA"]
+		})
+	})
+
+	it("sends a profile back as it came, and copies its week", () => {
+		expect(buildBody(formFromItem(BUSINESS)).value).toEqual(BUSINESS.value)
+		const form = formFromItem(BUSINESS)
+		form.week.mon.push(["18:00", "19:00"])
+		form.countries.push("GB")
+		expect(BUSINESS.kind === "business_profile" && BUSINESS.value.week.mon).toEqual(WORKDAY)
+		expect(BUSINESS.kind === "business_profile" && BUSINESS.value.countries).toEqual(["US", "CA"])
+		expect(formFromItem(BUSINESS).week.sun).toEqual([])
+	})
+
+	it("copies an SLA calendar's zone and week, never its holidays, and leaves the calendar alone", () => {
+		const calendar = { timezone: "Europe/Rome", week: { mon: WORKDAY } as Record<string, [string, string][]> }
+		const copied = fromCalendar(calendar as never)
+		expect(copied.timeZone).toBe("Europe/Rome")
+		expect(copied.week).toEqual({ ...fullWeek({}), mon: WORKDAY })
+		copied.week.mon[0][1] = "18:00"
+		expect(calendar.week.mon).toEqual([["08:00", "17:00"]])
+	})
+
+	it("takes an IANA zone by region and city, or UTC", () => {
+		for (const zone of ["America/Denver", "UTC", "America/Argentina/Buenos_Aires"])
+			expect(timeZoneProblem(zone)).toBeNull()
+		for (const zone of ["MST", "EST5EDT", "GMT", "Etc/GMT+7"]) expect(timeZoneProblem(zone)).toBe(PROBLEMS.timeZone)
+		expect(timeZoneProblem(null)).toBe("Pick the customer's time zone")
+		expect(timeZoneProblem(" ")).toBe("Pick the customer's time zone")
+	})
+
+	it("names the first day whose windows are wrong, in the SLA editor's words", () => {
+		const week = closedWeek()
+		expect(weekProblem(week)).toBeNull()
+		week.tue = [["22:00", "06:00"]]
+		expect(weekProblem(week)).toBe("Tuesday: a window must start before it ends")
+		week.mon = [
+			["08:00", "12:00"],
+			["11:00", "17:00"]
+		]
+		expect(weekProblem(week)).toBe("Monday: windows overlap")
+		week.mon = Array.from({ length: 7 }, (_, i) => [`0${i}:00`, `0${i}:30`] as [string, string])
+		expect(weekProblem(week)).toBe("Monday: keep to 6 windows")
+	})
+
+	it("doesn't judge the hours of a customer open around the clock", () => {
+		const form = { ...emptyForm("business_profile"), alwaysOpen: true }
+		form.week.mon = [["17:00", "08:00"]]
+		const rules = knowledgeRules(form)
+		const check = (field: string, value: unknown) =>
+			(rules[field] as { validator: (rule: unknown, value: unknown) => true | Error }).validator({}, value)
+		expect(check("week", form.week)).toBe(true)
+		form.alwaysOpen = false
+		expect(check("week", form.week)).toEqual(new Error("Monday: a window must start before it ends"))
+		expect(check("timeZone", "MST")).toEqual(new Error(PROBLEMS.timeZone))
+		expect(check("countries", ["US", "XX"])).toEqual(new Error(PROBLEMS.country))
+	})
+
+	it("takes ISO country codes the backend takes", () => {
+		expect(countriesProblem(["US", "GB", "XK"])).toBeNull()
+		expect(countriesProblem(["USA"])).toBe(PROBLEMS.country)
+		expect(countriesProblem(["us"])).toBe(PROBLEMS.country)
+		expect(countriesProblem(COUNTRY_CODES.slice(0, 51))).toBe("Keep to 50 countries")
+		expect(COUNTRY_CODES).toHaveLength(250)
+		expect(new Set(COUNTRY_CODES).size).toBe(250)
+		expect(COUNTRY_OPTIONS.find(option => option.value === "US")?.label).toBe("United States (US)")
+		expect(countryName("GB")).toBe("United Kingdom")
+	})
+
+	it("reads the week in words, days with the same windows together", () => {
+		expect(hoursLines(BUSINESS.kind === "business_profile" ? BUSINESS.value.week : {})).toEqual([
+			"Mon–Fri 08:00–17:00",
+			"Sat 09:00–12:00"
+		])
+		expect(
+			hoursLines({
+				mon: WORKDAY,
+				wed: WORKDAY,
+				sat: [
+					["09:00", "12:00"],
+					["13:00", "15:00"]
+				],
+				sun: [
+					["09:00", "12:00"],
+					["13:00", "15:00"]
+				]
+			})
+		).toEqual(["Mon, Wed 08:00–17:00", "Sat, Sun 09:00–12:00, 13:00–15:00"])
+		expect(hoursLines({})).toEqual([])
+	})
+
+	it("shows the profile in words", () => {
+		expect(factView(BUSINESS, when)).toEqual({
+			headline: "America/Denver",
+			crownJewel: false,
+			details: [
+				{ label: "Hours", values: ["Mon–Fri 08:00–17:00", "Sat 09:00–12:00"] },
+				{ label: "Countries", values: ["United States (US)", "Canada (CA)"] }
+			]
+		})
+		const open = { ...BUSINESS, value: { ...BUSINESS.value, week: {}, always_open: true, countries: [] } }
+		expect(factView(open as KnowledgeItem, when).details).toEqual([
+			{ label: "Hours", values: ["Around the clock"] }
+		])
+		const zoneOnly = { ...BUSINESS, value: { time_zone: "UTC", week: {}, always_open: false, countries: [] } }
+		expect(factView(zoneOnly as KnowledgeItem, when)).toEqual({ headline: "UTC", crownJewel: false, details: [] })
+	})
+
+	it("tells the time there, through daylight saving", () => {
+		// 2026-11-06 12:00 UTC is a Friday: 05:00 in Denver (MST, UTC-7), 21:00 in Tokyo.
+		expect(nowThere("America/Denver", NOW)).toBe("Friday 05:00")
+		expect(nowThere("Asia/Tokyo", NOW)).toBe("Friday 21:00")
+		// 2026-07-01 12:00 UTC: 06:00 in Denver (MDT, UTC-6).
+		expect(nowThere("America/Denver", Date.parse("2026-07-01T12:00:00Z"))).toBe("Wednesday 06:00")
+		expect(nowThere("Mars/Olympus_Mons", NOW)).toBeNull()
+		expect(nowThere(null, NOW)).toBeNull()
 	})
 })
