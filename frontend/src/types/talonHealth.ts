@@ -134,4 +134,11 @@ export interface TalonHealthReport {
 	health: TalonSection<TalonHealthData>
 	history: TalonSection<TalonHistoryData>
 	metrics: TalonSection<TalonMetricsData>
+	/**
+	 * The newest talon-analyst release on GHCR (the image's highest X.Y.Z tag), as CoPilot last looked
+	 * it up; null when the check is off (`TALON_RELEASE_CHECK_ENABLED`), failed, or there is no Talon.
+	 */
+	latest_version: string | null
+	/** `latest_version` is newer than `health.data.version`; false unless both are X.Y.Z. */
+	update_available: boolean
 }

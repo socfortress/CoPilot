@@ -91,6 +91,20 @@ export function banner(report: TalonHealthReport | null): Banner {
 	return { tone: "neutral", icon: "carbon:help", title: "Status unknown", reason: health?.error ?? null }
 }
 
+/** How to upgrade talon-analyst: the "<version> available" badge's tooltip (talon-analyst INSTALL.md §5). */
+export const UPGRADE_COMMAND = "scripts/upgrade.sh"
+export const UPGRADE_TEXT = `On the talon-analyst host: ${UPGRADE_COMMAND} (talon-analyst INSTALL.md §5)`
+
+/**
+ * The newer talon-analyst release to name beside the running version, or null. Only CoPilot's own
+ * verdict (`update_available`) shows it: the page never compares versions itself.
+ */
+export function newerRelease(report: TalonHealthReport | null | undefined): string | null {
+	if (report?.update_available !== true) return null
+	const latest = report.latest_version
+	return typeof latest === "string" && latest.trim() ? latest.trim() : null
+}
+
 /** Shown when CoPilot's answer lacks a section the page reads (an older or a misbehaving backend). */
 export const WRONG_SHAPE_TEXT = "CoPilot's answer about Talon's health was not in the expected shape"
 

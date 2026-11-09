@@ -16,8 +16,10 @@ import {
 	formatUsdText,
 	formatWriteback,
 	groupComponents,
+	newerRelease,
 	OLD_TALON_TEXT,
 	secondsSince,
+	UPGRADE_TEXT,
 	uptimeCells,
 	uptimeSummary,
 	worstStatus
@@ -25,6 +27,16 @@ import {
 import { component, healthReport, must, oldTalonReport, unreachableReport } from "./fixtures"
 
 describe("talon health helpers", () => {
+	it("names a newer talon-analyst release only on CoPilot's verdict", () => {
+		expect(newerRelease(healthReport({ latest_version: "0.1.10", update_available: true }))).toBe("0.1.10")
+		expect(newerRelease(healthReport())).toBeNull()
+		expect(newerRelease(healthReport({ latest_version: "0.1.10", update_available: false }))).toBeNull()
+		expect(newerRelease(healthReport({ latest_version: null, update_available: true }))).toBeNull()
+		expect(newerRelease(healthReport({ latest_version: " ", update_available: true }))).toBeNull()
+		expect(newerRelease(null)).toBeNull()
+		expect(UPGRADE_TEXT).toBe("On the talon-analyst host: scripts/upgrade.sh (talon-analyst INSTALL.md §5)")
+	})
+
 	it("the banner follows talon-analyst's verdict", () => {
 		expect(banner(healthReport()).title).toBe("Degraded")
 		const ok = healthReport()

@@ -2,11 +2,13 @@
 
 Real routers, a real in-memory database (``talon_v2_support``), talon-analyst as an
 ``httpx.MockTransport`` plugged in under the real health client (its 5 s deadline, capped reads, no
-redirects, no proxy). No network.
+redirects, no proxy), and GHCR for the release check likewise (``talon_release_support``). No network.
 """
 import asyncio
 import json
+import os
 import ssl
+import time
 from contextlib import ExitStack
 from datetime import timedelta
 from types import SimpleNamespace
@@ -23,10 +25,15 @@ from sqlmodel import SQLModel
 from app.auth.utils import AuthHandler
 from app.connectors.talon.models.talon_v2 import TalonInvestigationTrigger
 from app.connectors.talon.services import talon_health
+from app.connectors.talon.services import talon_release
+from app.connectors.talon.utils import ghcr_client
 from app.connectors.talon.utils import health_client
 from app.db.universal_models import AiAnalystJob
 from app.db.universal_models import AiAnalystReport
 from app.incidents.models import AIAnalystTriggerEnabled
+from tests.talon_release_support import TAGS_PATH
+from tests.talon_release_support import Registry
+from tests.talon_release_support import ghcr
 from tests.talon_v2_support import ACME
 from tests.talon_v2_support import CHAT
 from tests.talon_v2_support import COMPLETED
@@ -224,9 +231,11 @@ async def _extra_rows(db):
         await session.commit()
 
 
-def run(scenario, *, respond=None, attributes="default", enabled=False):
-    """Run ``scenario(client, fake)`` against the real router with talon-analyst faked."""
+def run(scenario, *, respond=None, attributes="default", enabled=False, registry=None, release_check="true"):
+    """Run ``scenario(client, fake)`` against the real router with talon-analyst faked, and GHCR
+    (the release check) too: ``registry`` answers it, ``fake.registry`` records what it was asked."""
     fake = Fake(respond or talon())
+    fake.registry = Registry(registry or ghcr())
     attrs = connector() if attributes == "default" else attributes
 
     async def _inner():
@@ -249,6 +258,8 @@ def run(scenario, *, respond=None, attributes="default", enabled=False):
                 )
                 stack.enter_context(patch.object(AuthHandler, "_resolve_user", resolve_user))
                 stack.enter_context(patch.object(health_client, "_new_client", fake.new_client))
+                stack.enter_context(patch.object(ghcr_client, "_new_client", fake.registry.new_client))
+                stack.enter_context(patch.dict(os.environ, {talon_release.ENABLED_ENV: release_check}))
                 stack.enter_context(patch.object(talon_health, "get_connector_info_from_db", AsyncMock(return_value=attrs)))
                 transport = httpx.ASGITransport(app=app)
                 async with httpx.AsyncClient(transport=transport, base_url="http://copilot") as client:
@@ -791,3 +802,98 @@ def test_the_cache_drops_expired_entries_and_their_idle_locks():
         return len(talon_health._CACHE), len(talon_health._LOCKS)
 
     assert run(scenario) == (1, 1)
+
+
+# ── the release check: latest_version and update_available ───────────────────
+
+
+def test_a_newer_release_on_ghcr_is_an_update():
+    respond = talon({"/v2/health": lambda r: httpx.Response(200, json=health_payload(version="0.1.9"))})
+    response, fake = run(get(), respond=respond, registry=ghcr(tags=["0.1.8", "latest", "0.1.9", "sha-abc", "0.1.10"]))
+    body = body_of(response)
+    assert body["health"]["data"]["version"] == "0.1.9"
+    assert (body["latest_version"], body["update_available"]) == ("0.1.10", True)
+    assert fake.registry.paths() == ["/token", TAGS_PATH]
+    # GHCR's requests are its own: Talon's fake saw none of them, and GHCR none of Talon's key.
+    assert sorted(fake.paths()) == ["/health", "/v2/health", "/v2/health/history", "/v2/health/metrics"]
+    assert all("x-api-key" not in r.headers and TALON_KEY not in str(r.url) for r in fake.registry.requests)
+
+
+def test_talon_on_the_newest_release_or_past_it_has_no_update():
+    body = body_of(run(get())[0])
+    assert (body["health"]["data"]["version"], body["latest_version"], body["update_available"]) == ("0.1.3", "0.1.3", False)
+    respond = talon({"/v2/health": lambda r: httpx.Response(200, json=health_payload(version="0.2.0"))})
+    body = body_of(run(get(), respond=respond)[0])
+    assert (body["latest_version"], body["update_available"]) == ("0.1.3", False)
+
+
+@pytest.mark.parametrize("version", ["unknown", "0.1.2.dev4+g1a2b3c", None, 12])
+def test_a_version_that_is_not_x_y_z_has_no_update(version):
+    respond = talon({"/v2/health": lambda r: httpx.Response(200, json=health_payload(version=version))})
+    body = body_of(run(get(), respond=respond)[0])
+    assert (body["latest_version"], body["update_available"]) == ("0.1.3", False)
+
+
+def test_an_unreachable_talon_has_no_update():
+    response, _ = run(
+        get(),
+        respond=talon(
+            {path: httpx.ConnectError("refused") for path in ("/health", "/v2/health", "/v2/health/history", "/v2/health/metrics")},
+        ),
+    )
+    body = body_of(response)
+    assert body["health"]["data"] is None
+    assert body["update_available"] is False
+
+
+def test_a_failed_release_check_never_fails_the_dashboard():
+    response, fake = run(get(), registry=ghcr(overrides={TAGS_PATH: httpx.ConnectError("refused")}))
+    assert response.status_code == 200
+    body = body_of(response)
+    assert body["health"]["data"]["version"] == "0.1.3" and len(body["health"]["data"]["components"]) == 5
+    assert (body["latest_version"], body["update_available"]) == (None, False)
+
+
+def test_a_slow_ghcr_holds_the_dashboard_no_longer_than_its_deadline(monkeypatch):
+    monkeypatch.setattr(ghcr_client, "TIMEOUT_SECONDS", 0.3)
+
+    async def slow(request):
+        await asyncio.sleep(10)
+        return httpx.Response(200, json={"token": "never"})
+
+    started = time.perf_counter()
+    response, _ = run(get(), registry=ghcr(overrides={"/token": slow}))
+    assert response.status_code == 200
+    assert body_of(response)["latest_version"] is None
+    assert time.perf_counter() - started < 5
+
+
+def test_switched_off_the_release_check_asks_ghcr_nothing():
+    respond = talon({"/v2/health": lambda r: httpx.Response(200, json=health_payload(version="0.0.1"))})
+    response, fake = run(get(), respond=respond, release_check="false")
+    body = body_of(response)
+    assert (body["latest_version"], body["update_available"]) == (None, False)
+    assert fake.registry.requests == []
+    assert body["health"]["data"]["version"] == "0.0.1"
+
+
+@pytest.mark.parametrize("attributes", [None, "no-url"])
+def test_without_a_configured_talon_ghcr_is_not_asked(attributes):
+    attrs = connector(connector_url="") if attributes == "no-url" else None
+    response, fake = run(get(), attributes=attrs)
+    assert body_of(response)["latest_version"] is None
+    assert fake.registry.requests == []
+
+
+def test_ghcr_is_asked_once_across_refreshes_windows_and_users():
+    async def scenario(client, fake):
+        for user, query in [("admin", ""), ("admin", ""), ("ana", ""), ("admin", "?hours=168")]:
+            body = body_of(await client.get(f"/talon/health{query}", headers=as_user(user)))
+            assert body["latest_version"] == "0.1.3"
+        # Talon's own cache expiring doesn't touch the release check's.
+        for key, (_, value) in list(talon_health._CACHE.items()):
+            talon_health._CACHE[key] = (0.0, value)
+        await client.get("/talon/health", headers=as_user("admin"))
+        return fake.registry.paths()
+
+    assert run(scenario) == ["/token", TAGS_PATH]

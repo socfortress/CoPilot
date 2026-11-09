@@ -36,11 +36,40 @@
 				</div>
 			</div>
 			<div class="text-secondary flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-				<span v-if="health?.version" data-testid="talon-health-version">
-					talon-analyst
-					<b class="text-default font-mono">
-						<bdi>{{ health.version }}</bdi>
-					</b>
+				<span v-if="health?.version" class="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+					<span data-testid="talon-health-version">
+						talon-analyst
+						<b class="text-default font-mono">
+							<bdi>{{ health.version }}</bdi>
+						</b>
+					</span>
+					<!-- A newer release, as CoPilot's backend found it on GHCR; how to upgrade on hover,
+					and for a screen reader the same text. -->
+					<template v-if="newer">
+						<n-tooltip>
+							<template #trigger>
+								<n-tag
+									size="small"
+									type="info"
+									round
+									:bordered="false"
+									tabindex="0"
+									aria-describedby="talon-health-update-help"
+									data-testid="talon-health-update"
+								>
+									<template #icon><Icon name="carbon:arrow-up" :size="12" /></template>
+									<bdi class="font-mono">{{ newer }}</bdi>
+									available
+								</n-tag>
+							</template>
+							<span data-testid="talon-health-update-how">
+								On the talon-analyst host:
+								<code>{{ UPGRADE_COMMAND }}</code>
+								(talon-analyst INSTALL.md §5)
+							</span>
+						</n-tooltip>
+						<span id="talon-health-update-help" class="sr-only">{{ UPGRADE_TEXT }}</span>
+					</template>
 				</span>
 				<span v-if="uptime" data-testid="talon-health-uptime">
 					up
@@ -229,7 +258,7 @@
 // reload keeps the previous render, dimmed.
 import type { TalonHealthReport, TalonSection } from "@/types/talonHealth"
 import axios from "axios"
-import { NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NSpin } from "naive-ui"
+import { NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NSpin, NTag, NTooltip } from "naive-ui"
 import { getActivePinia } from "pinia"
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
@@ -247,10 +276,13 @@ import {
 	formatLatency,
 	groupComponents,
 	isHealthReport,
+	newerRelease,
 	OLD_TALON_TEXT,
 	REFRESH_MS,
 	secondsSince,
 	TALON_DOCS,
+	UPGRADE_COMMAND,
+	UPGRADE_TEXT,
 	WINDOWS,
 	WRONG_SHAPE_TEXT
 } from "./health/health"
@@ -288,6 +320,7 @@ let lastLoad = 0
 
 const health = computed(() => report.value?.health?.data ?? null)
 const bannerState = computed(() => banner(report.value))
+const newer = computed(() => newerRelease(report.value))
 const groups = computed(() => groupComponents(health.value?.components))
 const uptime = computed(() => formatDuration(health.value?.uptime_seconds))
 const checkedAgo = computed(() => formatAgo(secondsSince(report.value?.checked_at, now.value)))

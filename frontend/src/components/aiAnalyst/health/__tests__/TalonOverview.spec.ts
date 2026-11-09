@@ -3,7 +3,8 @@
  * component grid by group, the uptime bars, the charts and the configuration; it keeps CoPilot's
  * checks when Talon is unreachable or too old for the health API; a null metric is "no data", never
  * 0; it refreshes every 60 s only while the tab is shown and the page visible; and the 24 h / 7 d
- * toggle asks for `hours=168`.
+ * toggle asks for `hours=168`. A newer talon-analyst release (CoPilot's `update_available`) is a
+ * "<version> available" badge beside the version, saying how to upgrade; nothing otherwise.
  */
 import type { TalonHealthReport } from "@/types/talonHealth"
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils"
@@ -14,7 +15,7 @@ import { defineComponent, h } from "vue"
 import { useAuthStore } from "@/stores/auth"
 import { AuthUserRole } from "@/types/auth"
 import TalonOverview from "../../TalonOverview.vue"
-import { OLD_TALON_TEXT, REFRESH_MS, TALON_DOCS, WRONG_SHAPE_TEXT } from "../health"
+import { OLD_TALON_TEXT, REFRESH_MS, TALON_DOCS, UPGRADE_TEXT, WRONG_SHAPE_TEXT } from "../health"
 import { bucket, healthReport, must, oldTalonReport, unreachableReport } from "./fixtures"
 
 const getHealth = vi.fn()
@@ -36,6 +37,18 @@ function answer(report: TalonHealthReport) {
 
 function render(props: Record<string, unknown> = {}) {
 	return mount(TalonOverview, { props })
+}
+
+// naive's tooltip shows its content on hover only: here both the trigger and the content render.
+const Tooltip = defineComponent({
+	setup:
+		(_, { slots }) =>
+		() =>
+			h("span", [slots.trigger?.(), h("span", { "data-testid": "tooltip-content" }, slots.default?.())])
+})
+
+function renderWithTooltips() {
+	return mount(TalonOverview, { global: { stubs: { Tooltip } } })
 }
 
 function texts(wrapper: ReturnType<typeof render>, testId: string) {
@@ -369,5 +382,60 @@ describe("talon health dashboard", () => {
 		await flushPromises()
 		expect(other.get('[data-testid="talon-config-budget-none"]').text()).toContain("Not reported")
 		expect(other.get('[data-testid="talon-health-config"]').text()).not.toContain("Unlimited")
+	})
+
+	it("a newer talon-analyst release is a badge beside the version, saying how to upgrade", async () => {
+		getHealth.mockReturnValue(answer(healthReport({ latest_version: "0.1.10", update_available: true })))
+		const wrapper = renderWithTooltips()
+		await flushPromises()
+
+		expect(wrapper.get('[data-testid="talon-health-version"]').text()).toBe("talon-analyst 0.1.3")
+		const badge = wrapper.get('[data-testid="talon-health-update"]')
+		expect(badge.text()).toBe("0.1.10 available")
+		expect(wrapper.get('[data-testid="talon-health-update-how"]').text()).toBe(UPGRADE_TEXT)
+		expect(wrapper.get('[data-testid="talon-health-update-how"] code').text()).toBe("scripts/upgrade.sh")
+		// Reachable by keyboard, and a screen reader gets the same text as the tooltip.
+		expect(badge.attributes("tabindex")).toBe("0")
+		expect(badge.attributes("aria-describedby")).toBe("talon-health-update-help")
+		expect(wrapper.get("#talon-health-update-help").text()).toBe(UPGRADE_TEXT)
+	})
+
+	it.each([
+		["the newest release running", { latest_version: "0.1.3", update_available: false }],
+		["the check off or failed", { latest_version: null, update_available: false }],
+		["a newer tag but no verdict", { latest_version: "0.1.10", update_available: false }],
+		["a verdict but no release", { latest_version: null, update_available: true }],
+		["an answer without the fields", { latest_version: undefined, update_available: undefined }]
+	])("no badge with %s", async (_, extra) => {
+		getHealth.mockReturnValue(answer(healthReport(extra)))
+		const wrapper = renderWithTooltips()
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-version"]').text()).toBe("talon-analyst 0.1.3")
+		expect(wrapper.find('[data-testid="talon-health-update"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="talon-health-update-how"]').exists()).toBe(false)
+		expect(wrapper.find("#talon-health-update-help").exists()).toBe(false)
+	})
+
+	it("the badge goes once a refresh finds Talon upgraded", async () => {
+		getHealth.mockReturnValue(answer(healthReport({ latest_version: "0.1.4", update_available: true })))
+		const wrapper = renderWithTooltips()
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-update"]').text()).toBe("0.1.4 available")
+
+		const upgraded = healthReport({ latest_version: "0.1.4", update_available: false })
+		must(upgraded.health.data).version = "0.1.4"
+		getHealth.mockReturnValue(answer(upgraded))
+		await wrapper.get('[data-testid="talon-health-refresh"]').trigger("click")
+		await flushPromises()
+		expect(wrapper.get('[data-testid="talon-health-version"]').text()).toBe("talon-analyst 0.1.4")
+		expect(wrapper.find('[data-testid="talon-health-update"]').exists()).toBe(false)
+	})
+
+	it("no badge without a running version", async () => {
+		getHealth.mockReturnValue(answer({ ...unreachableReport(), latest_version: "0.1.10", update_available: true }))
+		const wrapper = renderWithTooltips()
+		await flushPromises()
+		expect(wrapper.find('[data-testid="talon-health-version"]').exists()).toBe(false)
+		expect(wrapper.find('[data-testid="talon-health-update"]').exists()).toBe(false)
 	})
 })

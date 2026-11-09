@@ -31,10 +31,12 @@ Per-customer items, such as which customers are in live write-back, show only th
 At the top:
 
 - **The overall state:** **All systems operational**, **Degraded** or **Down**. This is Talon's own verdict: **Down** when its database fails, its migrations aren't at the running version, or the investigation model provider refuses its key; **Degraded** when any other component warns or fails. When Talon can't answer at all, CoPilot shows **Down** with the reason (for example "Talon could not be reached"); with a Talon too old for the health endpoint it shows **Status unknown**.
-- **Talon's version and uptime.**
+- **Talon's version and uptime.** When a newer talon-analyst release is out, a tag such as **"0.1.9 available"** sits beside the version; hover it for how to upgrade (on the talon-analyst host, `scripts/upgrade.sh`; talon-analyst's INSTALL.md §5).
 - **When it was checked** ("checked 12s ago"), and a **Refresh** button.
 
 The page refreshes itself every 60 seconds while the Overview tab is shown and the browser tab is visible. CoPilot asks Talon at most once every 30 seconds, so a refresh within that time shows the same check.
+
+CoPilot's backend learns the newest release from GHCR, where talon-analyst's images are published: it asks for the public `ghcr.io/socfortress/talon-analyst-api` image's tags anonymously (plain HTTPS GETs to `ghcr.io`, nothing about your CoPilot or customers), at most once every 12 hours, and takes the highest `X.Y.Z`. A failed lookup is retried after 15 minutes and never affects the rest of the page. For an air-gapped deployment, set `TALON_RELEASE_CHECK_ENABLED=false` in CoPilot's `.env`: no request is made and no tag is shown.
 
 ## From CoPilot
 
