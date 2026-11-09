@@ -80,6 +80,7 @@ Why this matters:
 
 - The default is the installer's template: its install-folder paths read `C:\Program Files\__INSTALLDIRNAME__\...`. When you pick a customer, CoPilot replaces `__INSTALLDIRNAME__` with the customer's code, so the editor shows `C:\Program Files\<customer code>\...`.
 - A message says the editor was pre-filled, and which install folder it used. If this customer's installer uses a different install folder (its `InstallDirName`), change those paths before uploading.
+- If the default has no `__INSTALLDIRNAME__` placeholder, nothing is filled in: the editor gets the default as stored, and a warning says so. Its install-folder paths may name another customer's folder, so check them before uploading.
 - The pre-filled config is **unsaved**: **Upload** stores it for the customer, and **Deploy** stays disabled until you do.
 - When no default is set, or it could not be loaded, the editor starts from the empty skeleton as before, and a message says so.
 

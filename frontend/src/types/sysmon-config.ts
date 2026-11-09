@@ -26,8 +26,13 @@ export interface DefaultConfigResponse {
 	present: boolean
 	/** The default, rendered for `rendered_for` when a customer code was given. */
 	config_content: string | null
-	/** The customer code that replaced each __INSTALLDIRNAME__ placeholder. */
+	/**
+	 * The customer code that replaced each __INSTALLDIRNAME__ placeholder. Null when no customer code was given, or when
+	 * the default has no placeholder: then it comes back as stored.
+	 */
 	rendered_for: string | null
+	/** How many times __INSTALLDIRNAME__ occurs in the stored default. Each was replaced when `rendered_for` is set. */
+	placeholders: number
 }
 
 export interface SaveDefaultConfigResponse {

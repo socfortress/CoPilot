@@ -134,12 +134,27 @@ async def get_sysmon_default_config(
             status_code=500,
             detail='This CoPilot\'s default Sysmon config is not valid UTF-8 text. An admin can replace it with "Save as default".',
         )
+    placeholders = template.count(INSTALL_DIR_PLACEHOLDER)
     if not customer_code:
         return SysmonDefaultConfigResponse(
             success=True,
             message="Retrieved this CoPilot's default Sysmon config",
             present=True,
             config_content=template,
+            placeholders=placeholders,
+        )
+    # Without a placeholder nothing is rendered: the default comes back as stored, with whatever install-folder paths it
+    # was saved with (possibly another customer's). rendered_for stays unset, so the editor says to check them.
+    if not placeholders:
+        return SysmonDefaultConfigResponse(
+            success=True,
+            message=(
+                f"Retrieved this CoPilot's default Sysmon config. It has no {INSTALL_DIR_PLACEHOLDER} placeholder, so its "
+                f"install-folder paths were not set for {customer_code}."
+            ),
+            present=True,
+            config_content=template,
+            placeholders=0,
         )
     return SysmonDefaultConfigResponse(
         success=True,
@@ -147,6 +162,7 @@ async def get_sysmon_default_config(
         present=True,
         config_content=render_default_config(template, customer_code),
         rendered_for=customer_code,
+        placeholders=placeholders,
     )
 
 

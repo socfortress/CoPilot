@@ -7,8 +7,9 @@ What is pinned here:
   case-sensitive, and a round trip that gives the template back;
 * the default lives in a bucket of its own (created at startup by both create_buckets), its getter tells "not set"
   from a MinIO failure, and its saver raises;
-* GET/PUT /api/sysmon_config/default-config: absent, present, rendered, a read error, the placeholder restored on
-  save, the audit row (no XML in it), the size limit, admin only, and routed ahead of /{customer_code}.
+* GET/PUT /api/sysmon_config/default-config: absent, present, rendered, one without a placeholder not reported as
+  rendered, a read error, the placeholder restored on save, the audit row (no XML in it), the size limit, admin only,
+  and routed ahead of /{customer_code}.
 
 The configs below are small synthetic ones. The real default never belongs in this (public) repo.
 No network, no database: MinIO and the audit write are fakes.
@@ -307,20 +308,34 @@ def _get(stored, customer_code=None):
 def test_no_default_set_is_not_an_error():
     result = _get(None, "acme")
     assert result.success is True and result.present is False
-    assert result.config_content is None and result.rendered_for is None
+    assert result.config_content is None and result.rendered_for is None and result.placeholders == 0
     assert "No default Sysmon config is set on this CoPilot" in result.message
 
 
 def test_the_default_comes_back_as_stored_without_a_customer_code():
     result = _get(TEMPLATE.encode())
     assert result.present is True and result.config_content == TEMPLATE and result.rendered_for is None
+    assert result.placeholders == 2
 
 
 def test_the_default_comes_back_rendered_for_a_customer():
     result = _get(TEMPLATE.encode(), "acme")
-    assert result.present is True and result.rendered_for == "acme"
+    assert result.present is True and result.rendered_for == "acme" and result.placeholders == 2
     assert result.config_content == service.render_default_config(TEMPLATE, "acme")
     assert PLACEHOLDER not in result.config_content
+
+
+# Saved from a config whose install folder was not the customer's code (e.g. the installer slug "acme" for a customer
+# coded otherwise): nothing was turned back into the placeholder, so the paths name that folder for every customer.
+OTHER_CUSTOMERS = TEMPLATE.replace(PLACEHOLDER, "acme")
+
+
+def test_a_default_without_a_placeholder_is_not_reported_as_rendered_for_the_customer():
+    result = _get(OTHER_CUSTOMERS.encode(), "Y")
+    assert result.present is True and result.config_content == OTHER_CUSTOMERS
+    # The editor names the install folder only from rendered_for, so it never claims "Y" for acme's paths.
+    assert result.rendered_for is None and result.placeholders == 0
+    assert f"no {PLACEHOLDER} placeholder" in result.message and "not set for Y" in result.message
 
 
 @pytest.mark.parametrize("error", [ConnectionError("MinIO is down"), _s3_error("AccessDenied")])

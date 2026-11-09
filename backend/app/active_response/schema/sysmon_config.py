@@ -56,7 +56,17 @@ class SysmonDefaultConfigResponse(BaseModel):
     message: str
     present: bool = Field(..., description="Whether this CoPilot has a default Sysmon config.")
     config_content: Optional[str] = Field(None, description="The default, rendered for rendered_for when a customer code was given.")
-    rendered_for: Optional[str] = Field(None, description="The customer code that replaced each __INSTALLDIRNAME__ placeholder.")
+    rendered_for: Optional[str] = Field(
+        None,
+        description=(
+            "The customer code that replaced each __INSTALLDIRNAME__ placeholder. Unset when no customer code was given, or "
+            "when the default has no placeholder: then it comes back as stored."
+        ),
+    )
+    placeholders: int = Field(
+        0,
+        description="How many times __INSTALLDIRNAME__ occurs in the stored default. Each was replaced when rendered_for is set.",
+    )
 
 
 class SysmonDefaultConfigSaveRequest(BaseModel):

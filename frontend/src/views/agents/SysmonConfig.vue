@@ -312,11 +312,19 @@ function newConfig(customerCode: string) {
 
 			if (res.data.success && res.data.present && res.data.config_content) {
 				open(res.data.config_content.replace(/\r\n?/g, "\n"))
-				const code = res.data.rendered_for || customerCode
-				prefillNotice = message.info(
-					`Pre-filled from this CoPilot's default Sysmon config. Install-folder paths use "${code}": change them if this customer's installer uses a different install folder. Nothing is stored until you upload.`,
-					{ duration: 0, closable: true }
-				)
+				// Names an install folder only when the backend put one in. A default without the placeholder comes
+				// back as stored, so its paths may name another customer's folder.
+				if (res.data.rendered_for && res.data.placeholders > 0) {
+					prefillNotice = message.info(
+						`Pre-filled from this CoPilot's default Sysmon config. Install-folder paths use "${res.data.rendered_for}": change them if this customer's installer uses a different install folder. Nothing is stored until you upload.`,
+						{ duration: 0, closable: true }
+					)
+				} else {
+					prefillNotice = message.warning(
+						`Pre-filled from this CoPilot's default Sysmon config, which has no __INSTALLDIRNAME__ placeholder, so its install-folder paths were not set for "${customerCode}". Check them before uploading: they may name another customer's install folder. Nothing is stored until you upload.`,
+						{ duration: 0, closable: true }
+					)
+				}
 			} else {
 				open(EMPTY_CONFIG)
 				message.info(
