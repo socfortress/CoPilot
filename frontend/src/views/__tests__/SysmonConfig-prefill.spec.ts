@@ -105,6 +105,21 @@ describe("pre-filling a new Sysmon configuration", () => {
 		expect(options).toMatchObject({ duration: 0, closable: true })
 	})
 
+	it("warns that the placeholder is still in when the code is no folder name", async () => {
+		const template = "C:\\Program Files\\__INSTALLDIRNAME__\\chainsaw\\chainsaw.exe"
+		const wrapper = await addNewConfiguration({
+			present: true,
+			config_content: template,
+			rendered_for: null,
+			placeholders: 1
+		})
+		expect(wrapper.get("[data-testid=editor]").text()).toBe(template)
+		expect(message.info).not.toHaveBeenCalled()
+		const [[notice]] = message.warning.mock.calls
+		expect(notice).toContain("cannot be used as an install folder name")
+		expect(notice).not.toContain("has no __INSTALLDIRNAME__ placeholder")
+	})
+
 	it("opens the empty skeleton when no default is set", async () => {
 		const wrapper = await addNewConfiguration({
 			present: false,

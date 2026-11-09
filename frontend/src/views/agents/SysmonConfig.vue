@@ -280,12 +280,17 @@ const EMPTY_CONFIG = `<Sysmon schemaversion="4.60">
 let editorRequest = 0
 let defaultConfigController: AbortController | null = null
 let prefillNotice: MessageReactive | null = null
+// The customer whose code the editor's default was rendered with. Only then does "Save as default" turn that code's
+// install-folder paths back into the placeholder: for any other content (a stored config, pasted XML) it would guess,
+// and could rewrite a real vendor folder that happens to share the customer's name.
+let prefilledFor: string | null = null
 
 function startEditorRequest() {
 	defaultConfigController?.abort()
 	defaultConfigController = null
 	prefillNotice?.destroy()
 	prefillNotice = null
+	prefilledFor = null
 	return ++editorRequest
 }
 
@@ -315,8 +320,15 @@ function newConfig(customerCode: string) {
 				// Names an install folder only when the backend put one in. A default without the placeholder comes
 				// back as stored, so its paths may name another customer's folder.
 				if (res.data.rendered_for && res.data.placeholders > 0) {
+					prefilledFor = res.data.rendered_for
 					prefillNotice = message.info(
 						`Pre-filled from this CoPilot's default Sysmon config. Install-folder paths use "${res.data.rendered_for}": change them if this customer's installer uses a different install folder. Nothing is stored until you upload.`,
+						{ duration: 0, closable: true }
+					)
+				} else if (res.data.placeholders > 0) {
+					// The customer code is not a usable folder name, so the backend left the placeholder in.
+					prefillNotice = message.warning(
+						`Pre-filled from this CoPilot's default Sysmon config. "${customerCode}" cannot be used as an install folder name, so the __INSTALLDIRNAME__ placeholder is still in it: replace it with this customer's install folder before uploading. Nothing is stored until you upload.`,
 						{ duration: 0, closable: true }
 					)
 				} else {
@@ -411,20 +423,22 @@ function getConfigContent(customerCode: string) {
 function uploadConfigFile() {
 	if (currentConfig.value) {
 		uploadingConfig.value = true
+		// What is uploaded is what becomes "saved": the editor may have moved on (more edits, another customer) by
+		// the time the response arrives.
+		const uploaded = _clone(currentConfig.value)
 
 		Api.sysmonConfig
 			.uploadConfigFile(
-				currentConfig.value.customer_code,
-				new File(
-					[currentConfig.value.config_content],
-					`sysmon_config-${currentConfig.value.customer_code}.xml`,
-					{ type: "text/xml;charset=utf-8" }
-				)
+				uploaded.customer_code,
+				new File([uploaded.config_content], `sysmon_config-${uploaded.customer_code}.xml`, {
+					type: "text/xml;charset=utf-8"
+				})
 			)
 			.then(res => {
 				if (res.data.success) {
-					currentConfig.value = _clone(currentConfig.value)
-					backupConfig.value = _clone(currentConfig.value)
+					if (currentConfig.value?.customer_code === uploaded.customer_code) {
+						backupConfig.value = uploaded
+					}
 					if (!customers.value.includes(res.data.customer_code)) {
 						customers.value.push(res.data.customer_code)
 					}
@@ -473,21 +487,25 @@ function confirmSaveAsDefault() {
 	if (!currentConfig.value?.config_content) return
 
 	const { customer_code: customerCode, config_content: configContent } = currentConfig.value
+	// Only a config pre-filled from the default has its install-folder paths turned back into the placeholder.
+	const restoreFor = prefilledFor === customerCode ? customerCode : undefined
 
 	dialog.warning({
 		title: "Save as default",
 		// Plain text, never HTML: the customer code is data.
-		content: `Replace this CoPilot's default Sysmon config? "Add new Configuration" pre-fills new customers with it. Install-folder paths for "${customerCode}" are turned back into the __INSTALLDIRNAME__ placeholder.`,
+		content: restoreFor
+			? `Replace this CoPilot's default Sysmon config? "Add new Configuration" pre-fills new customers with it. Install-folder paths for "${restoreFor}" are turned back into the __INSTALLDIRNAME__ placeholder.`
+			: `Replace this CoPilot's default Sysmon config? "Add new Configuration" pre-fills new customers with it. The editor's content is saved exactly as it is: keep the __INSTALLDIRNAME__ placeholder in its install-folder paths so each new customer gets their own.`,
 		positiveText: "Save as default",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
-			saveAsDefault(configContent, customerCode)
+			saveAsDefault(configContent, restoreFor)
 		}
 	})
 }
 
 // Leaves the customer's stored config and the editor (including its unsaved state) as they are.
-function saveAsDefault(configContent: string, customerCode: string) {
+function saveAsDefault(configContent: string, customerCode?: string) {
 	savingDefault.value = true
 
 	Api.sysmonConfig

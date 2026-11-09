@@ -325,6 +325,21 @@ def test_the_default_comes_back_rendered_for_a_customer():
     assert PLACEHOLDER not in result.config_content
 
 
+@pytest.mark.parametrize("code", ["a&b", "<x>", "acme corp", "a\\b", 'q"t'])
+def test_a_code_that_is_no_folder_name_is_never_written_into_the_xml(code):
+    # Customer codes have no format rule: rendering one like these would make the XML malformed, or the paths wrong.
+    result = _get(TEMPLATE.encode(), code)
+    assert result.present is True and result.config_content == TEMPLATE
+    assert result.rendered_for is None and result.placeholders == 2
+    assert "cannot be used as an install folder name" in result.message and "left in place" in result.message
+
+
+def test_usable_as_install_dir():
+    assert service.usable_as_install_dir("acme") and service.usable_as_install_dir("Acme_2.x-y")
+    for code in (None, "", PLACEHOLDER, "a b", "a&b", "a\\b", "a/b"):
+        assert not service.usable_as_install_dir(code)
+
+
 # Saved from a config whose install folder was not the customer's code (e.g. the installer slug "acme" for a customer
 # coded otherwise): nothing was turned back into the placeholder, so the paths name that folder for every customer.
 OTHER_CUSTOMERS = TEMPLATE.replace(PLACEHOLDER, "acme")

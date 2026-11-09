@@ -30,6 +30,7 @@ from app.active_response.services.sysmon_config import check_config_exists
 from app.active_response.services.sysmon_config import deploy_sysmon_config_to_worker
 from app.active_response.services.sysmon_config import render_default_config
 from app.active_response.services.sysmon_config import templatize_install_dir
+from app.active_response.services.sysmon_config import usable_as_install_dir
 from app.active_response.services.sysmon_config import validate_sysmon_config
 from app.active_response.services.sysmon_health import RELOAD_TAG
 from app.active_response.services.sysmon_health import SYSMON_HEALTH_LOCK
@@ -155,6 +156,19 @@ async def get_sysmon_default_config(
             present=True,
             config_content=template,
             placeholders=0,
+        )
+    # Customer codes have no format rule; one that is not a valid folder name is never written into the XML. The
+    # placeholder stays, and Upload refuses it until the admin puts the customer's install folder in.
+    if not usable_as_install_dir(customer_code):
+        return SysmonDefaultConfigResponse(
+            success=True,
+            message=(
+                f"Retrieved this CoPilot's default Sysmon config. {customer_code!r} cannot be used as an install folder name, so its "
+                f"{placeholders} {INSTALL_DIR_PLACEHOLDER} placeholder{'' if placeholders == 1 else 's'} {'was' if placeholders == 1 else 'were'} left in place."
+            ),
+            present=True,
+            config_content=template,
+            placeholders=placeholders,
         )
     return SysmonDefaultConfigResponse(
         success=True,

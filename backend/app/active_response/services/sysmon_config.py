@@ -28,6 +28,11 @@ MAX_SYSMON_CONFIG_BYTES = 5 * 1024 * 1024
 _INSTALL_DIR_CODE_RE = re.compile(r"[A-Za-z0-9._-]+")
 
 
+def usable_as_install_dir(customer_code: Optional[str]) -> bool:
+    """Whether a customer code can stand in for an install folder name: the installer's own rule for InstallDirName."""
+    return bool(customer_code) and customer_code != INSTALL_DIR_PLACEHOLDER and bool(_INSTALL_DIR_CODE_RE.fullmatch(customer_code))
+
+
 def render_default_config(template: str, customer_code: str) -> str:
     """This CoPilot's default config for one customer: each install-folder placeholder becomes the customer's code."""
     return template.replace(INSTALL_DIR_PLACEHOLDER, customer_code)
@@ -41,7 +46,7 @@ def templatize_install_dir(content: str, customer_code: Optional[str]) -> Tuple[
     config (a rule matching a file or host name) is left alone. A no-op for an empty code, or one with characters outside
     [A-Za-z0-9._-]. Returns the content and how many paths were turned back.
     """
-    if not customer_code or customer_code == INSTALL_DIR_PLACEHOLDER or not _INSTALL_DIR_CODE_RE.fullmatch(customer_code):
+    if not usable_as_install_dir(customer_code):
         return content, 0
     rendered = f"\\Program Files\\{customer_code}\\"
     count = content.count(rendered)

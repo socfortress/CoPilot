@@ -83,6 +83,7 @@ Why this matters:
 - If the default has no `__INSTALLDIRNAME__` placeholder, nothing is filled in: the editor gets the default as stored, and a warning says so. Its install-folder paths may name another customer's folder, so check them before uploading.
 - The pre-filled config is **unsaved**: **Upload** stores it for the customer, and **Deploy** stays disabled until you do.
 - When no default is set, or it could not be loaded, the editor starts from the empty skeleton as before, and a message says so.
+- Customer codes that aren't valid folder names (letters, digits, `.`, `_`, `-`) are never written into the XML: the `__INSTALLDIRNAME__` placeholder stays in, and you replace it with the customer's install folder before uploading.
 
 The default, and **Save as default**, are for admins only.
 
@@ -90,18 +91,18 @@ The default, and **Save as default**, are for admins only.
 
 **Save as default** (next to **Upload** and **Deploy**) replaces this CoPilot's default with the editor's content, after a confirmation.
 
-- The customer's install-folder paths (exactly `\Program Files\<customer code>\`) are turned back into the `__INSTALLDIRNAME__` placeholder, so each new customer gets their own folder again. Nothing else in the config changes.
+- If the editor was pre-filled from the default (**Add new Configuration**), the customer's install-folder paths (exactly `\Program Files\<customer code>\`) are turned back into the `__INSTALLDIRNAME__` placeholder, so each new customer gets their own folder again. Any other content (a stored config, or XML you pasted) is saved exactly as it is.
 - Saving the default does **not** change the customer's stored config, and the editor keeps its unsaved changes, if any. Upload separately if this customer should get the same config.
-- CoPilot checks the default like an upload (valid XML, at least one event filter, at most 5 MiB), except that it keeps `__INSTALLDIRNAME__`.
+- CoPilot checks the default like an upload (valid XML, at least one event filter), except that it keeps `__INSTALLDIRNAME__`. It also refuses a default over 5 MiB, the most a Wazuh group file can be.
 - If the saved default has no placeholder, CoPilot warns you: every new configuration will get exactly those install-folder paths.
 - Each save is recorded in the audit log as `response.sysmon_default_save`, with the config's SHA-256, size and placeholder count. The XML itself is not stored there.
 
 ### Seeding the default (once per CoPilot)
 
-1. Click **Add new Configuration** and pick any customer.
+1. Click **Add new Configuration** and pick any customer. It only lists customers without a stored config; if every customer has one, open any of them instead (saving the default never changes that customer's config).
 2. Replace the editor's content with `client-installer/source/Files/sysmon_config.xml` from the `main` branch of the Windows installer repository. That file still has the `__INSTALLDIRNAME__` placeholder.
 3. Click **Save as default** and confirm. **Do not upload**: that customer would get the template, and the upload refuses it anyway because of the placeholder.
-4. To update the default later, do the same with the new file, or edit any customer's config in the editor and save it as the default.
+4. To update the default later, do the same with the new file, or open **Add new Configuration** (pre-filled from the current default), edit it and save it as the default.
 
 The default is per environment: it is stored in this CoPilot's own MinIO (in a bucket of its own, `sysmon-config-defaults`), and never leaves this CoPilot. A deploy only ever ships the customer's uploaded config, never the default, so the placeholder never reaches an endpoint.
 
