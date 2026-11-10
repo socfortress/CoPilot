@@ -1,5 +1,11 @@
 import type { FlaskBaseResponse } from "@/types/flask"
-import type { ConfigContent, DeployConfigResponse, UploadConfigFileResponse } from "@/types/sysmon-config"
+import type {
+	ConfigContent,
+	DefaultConfigResponse,
+	DeployConfigResponse,
+	SaveDefaultConfigResponse,
+	UploadConfigFileResponse
+} from "@/types/sysmon-config"
 import { HttpClient } from "../http-client"
 
 export default {
@@ -21,5 +27,22 @@ export default {
 	},
 	deployConfig(customerCode: string) {
 		return HttpClient.post<FlaskBaseResponse & DeployConfigResponse>(`/sysmon_config/deploy/${customerCode}`)
+	},
+	/** This CoPilot's default Sysmon config, rendered for the customer when a code is given. Admin only. */
+	getDefaultConfig(customerCode?: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & DefaultConfigResponse>(`/sysmon_config/default-config`, {
+			params: customerCode ? { customer_code: customerCode } : undefined,
+			signal
+		})
+	},
+	/**
+	 * Replace this CoPilot's default Sysmon config. With a customer code, its install-folder paths are turned back into
+	 * the __INSTALLDIRNAME__ placeholder first. Admin only.
+	 */
+	saveDefaultConfig(configContent: string, customerCode?: string) {
+		return HttpClient.put<FlaskBaseResponse & SaveDefaultConfigResponse>(`/sysmon_config/default-config`, {
+			config_content: configContent,
+			customer_code: customerCode || null
+		})
 	}
 }

@@ -1,4 +1,5 @@
 import hashlib
+import io
 import os
 import tempfile
 from typing import Optional
@@ -7,6 +8,7 @@ import aiohttp
 from fastapi import HTTPException
 from fastapi import UploadFile
 from loguru import logger
+from miniopy_async.error import S3Error
 
 from app.data_store.data_store_schema import CaseDataStoreCreation
 from app.data_store.data_store_schema import CaseReportTemplateDataStoreCreation
@@ -174,6 +176,7 @@ async def upload_file_to_datastore(
 
 async def create_buckets() -> None:
     await create_bucket_if_not_exists("copilot-cases")
+    await create_bucket_if_not_exists(SYSMON_CONFIG_DEFAULTS_BUCKET)
 
 
 async def delete_file(bucket_name: str, object_name: str) -> None:
@@ -274,6 +277,50 @@ async def list_sysmon_configs() -> list:
     except Exception as e:
         logger.error(f"Error listing sysmon configs: returning empty list - {e}")
         return []
+
+
+# ! This CoPilot's default Sysmon config ! #
+# A single object in a bucket of its own, so it never shows up in list_sysmon_configs and no customer code can name it.
+# It is the installer's template (install-folder paths carry __INSTALLDIRNAME__): "Add new Configuration" renders it
+# for the customer. It stays in this CoPilot's MinIO: the config itself is never part of the (public) repo.
+SYSMON_CONFIG_DEFAULTS_BUCKET = "sysmon-config-defaults"
+SYSMON_CONFIG_DEFAULT_OBJECT = "sysmon_config.xml"
+# MinIO's answers that mean "no default is set" (the bucket is created at startup, but may not exist yet)
+_NO_DEFAULT_CODES = frozenset({"NoSuchKey", "NoSuchBucket"})
+
+
+async def read_default_sysmon_config() -> Optional[bytes]:
+    """
+    This CoPilot's default Sysmon config, or None when none is set.
+
+    Every other failure raises: an unreachable MinIO must not look like "no default". (download_data_store turns every
+    error into a 404, which is why it is not used here.)
+    """
+    async with await create_session() as client:
+        try:
+            response = await client.get_object(SYSMON_CONFIG_DEFAULTS_BUCKET, SYSMON_CONFIG_DEFAULT_OBJECT)
+        except S3Error as e:
+            if e.code in _NO_DEFAULT_CODES:
+                return None
+            raise
+        try:
+            return await response.read()
+        finally:
+            response.close()
+
+
+async def write_default_sysmon_config(content: bytes) -> None:
+    """Store this CoPilot's default Sysmon config, replacing the previous one. Raises when it could not be stored."""
+    await create_bucket_if_not_exists(SYSMON_CONFIG_DEFAULTS_BUCKET)
+    async with await create_session() as client:
+        await client.put_object(
+            SYSMON_CONFIG_DEFAULTS_BUCKET,
+            SYSMON_CONFIG_DEFAULT_OBJECT,
+            io.BytesIO(content),
+            length=len(content),
+            content_type="application/xml",
+        )
+    logger.info(f"Stored this CoPilot's default Sysmon config ({len(content)} bytes)")
 
 
 # ! Agent Data Store Operations ! #
