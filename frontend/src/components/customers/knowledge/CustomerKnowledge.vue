@@ -16,7 +16,16 @@
 			</div>
 
 			<div v-else class="flex flex-col gap-4">
-				<CustomerKnowledgeNav v-if="navLinks.length" :links="navLinks" :active @go="go" @ready="refresh()" />
+				<CustomerKnowledgeNav v-if="navLinks.length" :links="navLinks" :active @go="go" @ready="refresh()">
+					<template #end>
+						<SegmentedToggle
+							v-model="density"
+							:options="DENSITY_OPTIONS"
+							label="Fact size"
+							test-id="knowledge-density"
+						/>
+					</template>
+				</CustomerKnowledgeNav>
 
 				<n-spin :show="loading">
 					<div class="min-h-52">
@@ -83,12 +92,18 @@
 									</template>
 
 									<p class="text-secondary mt-0 mb-3 text-sm">{{ group.about }}</p>
-									<div v-if="group.facts.length" class="flex flex-col gap-2">
+									<div
+										v-if="group.facts.length"
+										class="flex flex-col"
+										:class="compact ? 'knowledge-facts-compact' : 'gap-2'"
+										data-testid="knowledge-group-facts"
+									>
 										<CustomerKnowledgeFact
 											v-for="fact of group.facts"
 											:key="fact.id"
 											:fact
 											:customer-code
+											:compact
 											@edit="openEdit(fact)"
 											@deleted="onChanged()"
 										/>
@@ -111,12 +126,14 @@
 </template>
 
 <script setup lang="ts">
+import type { KnowledgeDensity } from "./useKnowledgeDensity"
 import type { ApiError } from "@/types/common"
 import type { KnowledgeItem, KnowledgeKind } from "@/types/customer-knowledge"
 import { NAlert, NButton, NCard, NSpin } from "naive-ui"
 import { computed, onBeforeUnmount, ref, watch } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import SegmentedToggle from "@/components/common/SegmentedToggle.vue"
 import { getApiErrorMessage } from "@/utils"
 import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerKnowledgeFact from "./CustomerKnowledgeFact.vue"
@@ -124,6 +141,7 @@ import CustomerKnowledgeForm from "./CustomerKnowledgeForm.vue"
 import CustomerKnowledgeNav from "./CustomerKnowledgeNav.vue"
 import CustomerKnowledgeSees from "./CustomerKnowledgeSees.vue"
 import { CONTEXT_LINE, groupFacts, KIND_WORDS, KINDS } from "./knowledge"
+import { useKnowledgeDensity } from "./useKnowledgeDensity"
 import { useKnowledgeSpy } from "./useKnowledgeSpy"
 
 const { customerCode } = defineProps<{
@@ -162,6 +180,13 @@ const navLinks = computed(() => {
 })
 const navIds = computed(() => navLinks.value.map(link => link.id))
 const { active, go, refresh } = useKnowledgeSpy(root, navIds)
+
+const DENSITY_OPTIONS: { value: KnowledgeDensity; label: string }[] = [
+	{ value: "large", label: "Large" },
+	{ value: "compact", label: "Compact" }
+]
+const { density } = useKnowledgeDensity()
+const compact = computed(() => density.value === "compact")
 
 let controller: AbortController | null = null
 
@@ -228,6 +253,17 @@ onBeforeUnmount(() => controller?.abort())
 // The bar's backdrop reads the timeline of a marker beside it, not inside it.
 [data-testid="customer-knowledge"] {
 	timeline-scope: --knowledge-nav-approach;
+}
+
+// Compact: the facts are rows of one list, a hairline between them.
+.knowledge-facts-compact {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	overflow: hidden;
+
+	> * + * {
+		border-top: 1px solid var(--border-color);
+	}
 }
 
 // A jump lands below the app's toolbar and the bar of jumps, not under them.

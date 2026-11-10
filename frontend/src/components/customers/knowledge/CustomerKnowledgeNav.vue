@@ -24,6 +24,9 @@
 				<span v-if="link.count !== undefined" class="knowledge-nav-count">{{ link.count }}</span>
 			</button>
 		</div>
+		<div v-if="$slots.end" class="knowledge-nav-end">
+			<slot name="end" />
+		</div>
 	</nav>
 </template>
 
@@ -96,6 +99,9 @@ watch(
 }
 
 .knowledge-nav {
+	display: flex;
+	align-items: center;
+	gap: 12px;
 	position: sticky;
 	top: var(--toolbar-height);
 	z-index: 2;
@@ -137,6 +143,8 @@ watch(
 
 .knowledge-nav-track {
 	display: flex;
+	flex: 1;
+	min-width: 0;
 	gap: 4px;
 	overflow-x: auto;
 	scrollbar-width: none;
@@ -144,6 +152,15 @@ watch(
 	&::-webkit-scrollbar {
 		display: none;
 	}
+}
+
+// Controls for the whole list (its density), kept in view while the row of jumps scrolls sideways.
+.knowledge-nav-end {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	padding-left: 12px;
+	border-left: 1px solid var(--border-color);
 }
 
 .knowledge-nav-link {
