@@ -18,21 +18,24 @@
 				:current
 				:status
 				@select="open"
-				@hide="setRailHidden(true)"
 			/>
 
 			<div class="sections-main">
 				<div class="sections-toolbar" data-testid="section-toolbar">
-					<n-button
-						v-if="railHidden && !narrow"
-						size="small"
-						secondary
-						data-testid="rail-show"
-						@click="setRailHidden(false)"
-					>
-						<template #icon><Icon name="carbon:side-panel-open" :size="14" /></template>
-						Show sections
-					</n-button>
+					<template v-if="!narrow">
+						<button
+							type="button"
+							class="toolbar-rail"
+							:class="{ 'is-open': !railHidden }"
+							:aria-label="railHidden ? 'Show sections' : 'Hide sections'"
+							:title="railHidden ? 'Show sections' : 'Hide sections'"
+							data-testid="rail-toggle"
+							@click="setRailHidden(!railHidden)"
+						>
+							<Icon :name="railHidden ? 'carbon:side-panel-open' : 'carbon:side-panel-close'" :size="16" />
+						</button>
+						<span class="toolbar-divider" aria-hidden="true" />
+					</template>
 					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
 						<span v-for="part of currentPath" :key="part" class="toolbar-path">
 							{{ part }}
@@ -257,7 +260,7 @@
 import type { GroupId, SectionId } from "./sections/sections"
 import type { Customer, CustomerMeta } from "@/types/customers"
 import { useElementSize } from "@vueuse/core"
-import { NButton, NScrollbar } from "naive-ui"
+import { NScrollbar } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, useTemplateRef, watch } from "vue"
 import { routeLocationKey, routerKey } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
@@ -490,6 +493,40 @@ const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPre
 		min-height: 44px;
 		padding: 6px 16px;
 		border-bottom: 1px solid var(--border-color);
+	}
+
+	// One control hides and shows the rail, from the same place, in either state.
+	.toolbar-rail {
+		display: inline-grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		margin-left: -6px;
+		border-radius: var(--border-radius-small);
+		color: var(--fg-secondary-color);
+
+		&:hover {
+			color: var(--fg-default-color);
+			background-color: var(--hover-color);
+		}
+
+		&.is-open {
+			color: var(--fg-default-color);
+			background-color: var(--hover-color);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--primary-color);
+			outline-offset: -2px;
+		}
+	}
+
+	.toolbar-divider {
+		flex-shrink: 0;
+		width: 1px;
+		height: 16px;
+		background-color: var(--border-color);
 	}
 
 	.toolbar-path {
