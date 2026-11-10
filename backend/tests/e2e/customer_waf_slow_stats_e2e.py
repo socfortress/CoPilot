@@ -2,7 +2,7 @@
 
 The whole request path a browser takes, with nothing mocked but the WAF:
 
-    client → nginx (the frontend image's own site template, nginx 1.30.3 as in its Dockerfile)
+    client → nginx (the frontend image's own site template, nginx 1.30.6 as in its Dockerfile)
            → backend (real WAF routers, real JWT, real MySQL on 13306, served by uvicorn)
            → a fake WAF that answers /logs/stats and /logs/ after a chosen delay
 
@@ -70,7 +70,7 @@ assert "13306" in os.environ["MYSQL_URL"], "refusing to run against anything but
 CUSTOMER = "E2E_WAF_SLOW"
 ADMIN = "e2e_waf_slow_admin"
 TOKEN = "wafst_" + "S" * 43
-NGINX_IMAGE = "nginx:1.30.3-alpine"  # frontend/Dockerfile's runtime image
+NGINX_IMAGE = "nginx:1.30.6-alpine"  # frontend/Dockerfile's runtime image
 REPO = Path(__file__).resolve().parents[3]
 NGINX_CONF = Path(os.environ.get("E2E_NGINX_CONF") or REPO / "frontend/build/etc/nginx/sites-enabled/default.conf")
 UNROUTABLE = "192.0.2.1"  # RFC 5737 TEST-NET-1: never routed, so a connection attempt just hangs
