@@ -18,25 +18,28 @@
 				:current
 				:status
 				@select="open"
-				@hide="setRailHidden(true)"
 			/>
 
 			<div class="sections-main">
 				<div class="sections-toolbar" data-testid="section-toolbar">
-					<n-button
-						v-if="railHidden && !narrow"
-						size="small"
-						secondary
-						data-testid="rail-show"
-						@click="setRailHidden(false)"
-					>
-						<template #icon><Icon name="carbon:side-panel-open" :size="14" /></template>
-						Show sections
-					</n-button>
+					<template v-if="!narrow">
+						<button
+							type="button"
+							class="toolbar-rail"
+							:class="{ 'is-open': !railHidden }"
+							:aria-label="railHidden ? 'Show sections' : 'Hide sections'"
+							:title="railHidden ? 'Show sections' : 'Hide sections'"
+							data-testid="rail-toggle"
+							@click="setRailHidden(!railHidden)"
+						>
+							<Icon :name="railHidden ? 'carbon:side-panel-open' : 'carbon:side-panel-close'" :size="16" />
+						</button>
+						<span class="toolbar-divider" aria-hidden="true" />
+					</template>
 					<div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
 						<span v-for="part of currentPath" :key="part" class="toolbar-path">
 							{{ part }}
-							<Icon name="carbon:chevron-right" :size="11" />
+							<span class="toolbar-separator" aria-hidden="true">/</span>
 						</span>
 						<span class="truncate text-sm font-semibold">{{ currentSection.label }}</span>
 						<button
@@ -49,12 +52,12 @@
 							data-testid="section-pin"
 							@click="togglePin(current)"
 						>
-							<Icon :name="isPinned(current) ? 'carbon:pin-filled' : 'carbon:pin'" :size="14" />
+							<Icon :name="isPinned(current) ? 'carbon:pin-filled' : 'carbon:pin'" :size="13" />
 						</button>
-						<span v-if="currentState?.kind === 'switch'" class="toolbar-state" data-testid="section-state">
-							<SectionMark :state="currentState" with-word />
-						</span>
 					</div>
+					<span v-if="currentState?.kind === 'switch'" class="toolbar-state" data-testid="section-state">
+						<SectionMark :state="currentState" with-word />
+					</span>
 				</div>
 
 				<div class="sections-panes" :style="{ minHeight: 'min(450px, 90vh)' }">
@@ -257,7 +260,7 @@
 import type { GroupId, SectionId } from "./sections/sections"
 import type { Customer, CustomerMeta } from "@/types/customers"
 import { useElementSize } from "@vueuse/core"
-import { NButton, NScrollbar } from "naive-ui"
+import { NScrollbar } from "naive-ui"
 import { computed, defineAsyncComponent, inject, ref, useTemplateRef, watch } from "vue"
 import { routeLocationKey, routerKey } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
@@ -492,23 +495,14 @@ const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPre
 		border-bottom: 1px solid var(--border-color);
 	}
 
-	.toolbar-path {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		font-family: var(--font-family-mono);
-		font-size: 11px;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--fg-secondary-color);
-	}
-
-	// Discreet beside the section's name: the section is the point, pinning it an aside.
-	.toolbar-pin {
+	// One control hides and shows the rail, from the same place, in either state.
+	.toolbar-rail {
 		display: inline-grid;
 		place-items: center;
-		width: 24px;
-		height: 24px;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		margin-left: -6px;
 		border-radius: var(--border-radius-small);
 		color: var(--fg-secondary-color);
 
@@ -517,8 +511,9 @@ const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPre
 			background-color: var(--hover-color);
 		}
 
-		&.is-pinned {
-			color: var(--primary-color);
+		&.is-open {
+			color: var(--fg-default-color);
+			background-color: var(--hover-color);
 		}
 
 		&:focus-visible {
@@ -527,14 +522,59 @@ const { pinned, isPinned, togglePin, railHidden, setRailHidden } = useSectionPre
 		}
 	}
 
+	.toolbar-divider {
+		flex-shrink: 0;
+		width: 1px;
+		height: 16px;
+		background-color: var(--border-color);
+	}
+
+	.toolbar-path {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14px;
+		color: var(--fg-secondary-color);
+	}
+
+	.toolbar-separator {
+		color: var(--fg-tertiary-color);
+	}
+
+	// Discreet beside the section's name: the section is the point, pinning it an aside.
+	.toolbar-pin {
+		display: inline-grid;
+		place-items: center;
+		width: 22px;
+		height: 22px;
+		border-radius: var(--border-radius-small);
+		color: var(--fg-tertiary-color);
+
+		&:hover {
+			color: var(--fg-default-color);
+			background-color: var(--hover-color);
+		}
+
+		&.is-pinned {
+			color: rgba(var(--primary-color-rgb) / 0.8);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--primary-color);
+			outline-offset: -2px;
+		}
+	}
+
+	// A switch's state at the toolbar's end, in plain words beside its light.
 	.toolbar-state {
 		display: inline-flex;
 		align-items: center;
-		height: 22px;
-		padding: 0 9px;
-		margin-left: 4px;
-		border: 1px solid var(--border-color);
-		border-radius: 11px;
+		flex-shrink: 0;
+
+		:deep(.section-word) {
+			font-size: 13px;
+			text-transform: none;
+		}
 	}
 
 	@container customer-sections (max-width: 700px) {

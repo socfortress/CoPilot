@@ -81,11 +81,9 @@ describe("the section rail", () => {
 		expect(wrapper.find('[data-testid="rail-item-IOC Enrichment"]').exists()).toBe(true)
 	})
 
-	it("asks to open a section, and to hide itself", async () => {
+	it("asks to open a section", async () => {
 		const wrapper = render()
 		await wrapper.get('[data-testid="rail-item-Exposure"]').trigger("click")
-		await wrapper.get('[data-testid="rail-hide"]').trigger("click")
 		expect(wrapper.emitted("select")).toEqual([["Exposure"]])
-		expect(wrapper.emitted("hide")).toHaveLength(1)
 	})
 })

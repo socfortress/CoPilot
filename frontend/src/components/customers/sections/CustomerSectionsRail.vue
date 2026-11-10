@@ -40,11 +40,6 @@
 				</template>
 			</template>
 		</div>
-
-		<button type="button" class="rail-hide" data-testid="rail-hide" @click="emit('hide')">
-			<Icon name="carbon:side-panel-close" :size="14" />
-			Hide sections
-		</button>
 	</nav>
 </template>
 
@@ -68,7 +63,6 @@ const { group, current, status } = defineProps<{
 
 const emit = defineEmits<{
 	(e: "select", id: SectionId): void
-	(e: "hide"): void
 }>()
 
 const collapsed = ref(new Set<string>())
@@ -176,24 +170,6 @@ watch(
 		}
 	}
 
-	.rail-hide {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		width: fit-content;
-		height: 30px;
-		margin: 16px 12px 0;
-		padding: 0 10px;
-		border: 1px solid var(--border-color);
-		border-radius: var(--border-radius-small);
-		font-size: 12px;
-		color: var(--fg-secondary-color);
-
-		&:hover {
-			color: var(--fg-default-color);
-		}
-	}
-
 	button:focus-visible {
 		outline: 2px solid var(--primary-color);
 		outline-offset: -2px;
@@ -211,8 +187,7 @@ watch(
 			scrollbar-width: none;
 		}
 
-		.rail-subgroup,
-		.rail-hide {
+		.rail-subgroup {
 			display: none;
 		}
 

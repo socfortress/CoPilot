@@ -276,14 +276,18 @@ describe("per-viewer conveniences", () => {
 		expect(wrapper.find('[data-testid="sections-pinned"]').exists()).toBe(false)
 	})
 
-	it("hides the rail and shows it again, remembered for this browser", async () => {
+	it("hides the rail and shows it again from one toggle, remembered for this browser", async () => {
 		const wrapper = render()
 		await settle()
-		await wrapper.get('[data-testid="rail-hide"]').trigger("click")
+		const toggle = () => wrapper.get('[data-testid="rail-toggle"]')
+		expect(toggle().attributes("aria-label")).toBe("Hide sections")
+		await toggle().trigger("click")
 		expect(wrapper.find('[data-testid="customer-sections-rail"]').exists()).toBe(false)
 		expect(localStorage.getItem(RAIL_HIDDEN_KEY)).toBe("true")
-		await wrapper.get('[data-testid="rail-show"]').trigger("click")
+		expect(toggle().attributes("aria-label")).toBe("Show sections")
+		await toggle().trigger("click")
 		expect(wrapper.find('[data-testid="customer-sections-rail"]').exists()).toBe(true)
 		expect(localStorage.getItem(RAIL_HIDDEN_KEY)).toBe("false")
+		expect(toggle().attributes("aria-label")).toBe("Hide sections")
 	})
 })

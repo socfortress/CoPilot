@@ -1,5 +1,5 @@
 <template>
-	<CardEntity embedded size="small" data-testid="knowledge-fact">
+	<CardEntity v-if="!compact" embedded size="small" data-testid="knowledge-fact">
 		<template #headerMain>
 			<div class="flex flex-wrap items-center gap-2">
 				<span class="text-default font-medium break-all" data-testid="knowledge-fact-headline">
@@ -29,55 +29,56 @@
 		</template>
 
 		<template #footerExtra>
-			<div class="flex items-center justify-end gap-2">
-				<n-button size="tiny" quaternary data-testid="knowledge-fact-edit" @click="emit('edit')">
-					<template #icon>
-						<Icon :name="EditIcon" :size="14" />
-					</template>
-					Edit
-				</n-button>
-
-				<n-popconfirm to="body" @positive-click="remove">
-					<template #trigger>
-						<n-button size="tiny" quaternary :loading="deleting" data-testid="knowledge-fact-delete">
-							<template #icon>
-								<Icon :name="DeleteIcon" :size="14" />
-							</template>
-							Delete
-						</n-button>
-					</template>
-					Delete this fact? talon-analyst stops reading it. The audit log keeps what it held.
-				</n-popconfirm>
-			</div>
+			<CustomerKnowledgeFactActions :deleting @edit="emit('edit')" @delete="remove()" />
 		</template>
 	</CardEntity>
+
+	<!-- Compact: one row. Who changed it last is the row's tooltip; the note is cut to the row, whole in its own. -->
+	<div v-else class="knowledge-fact-row" :title="changed ?? undefined" data-testid="knowledge-fact">
+		<span class="text-default font-medium break-all" data-testid="knowledge-fact-headline">{{ view.headline }}</span>
+		<n-tag v-if="view.crownJewel" size="tiny" type="error" :bordered="false">Crown jewel</n-tag>
+		<n-tag v-if="fact.expired" size="tiny" type="warning" :bordered="false" data-testid="knowledge-fact-expired">
+			Expired
+		</n-tag>
+		<span v-for="detail of view.details" :key="detail.label" class="knowledge-fact-detail">
+			<span class="text-secondary">{{ detail.label }}</span>
+			<code v-for="value of detail.values" :key="value">{{ value }}</code>
+		</span>
+		<span v-if="fact.note" class="knowledge-fact-note" :title="fact.note" data-testid="knowledge-fact-note">
+			{{ fact.note }}
+		</span>
+		<CustomerKnowledgeFactActions compact class="ml-auto" :deleting @edit="emit('edit')" @delete="remove()" />
+	</div>
 </template>
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common"
 import type { KnowledgeItem } from "@/types/customer-knowledge"
-import { NButton, NPopconfirm, NTag, useMessage } from "naive-ui"
+import { NTag, useMessage } from "naive-ui"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
-import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import { formatDate } from "@/utils/format"
+import CustomerKnowledgeFactActions from "./CustomerKnowledgeFactActions.vue"
 import { factView, lastChanged } from "./knowledge"
 
-const { fact, customerCode } = defineProps<{
+const {
+	fact,
+	customerCode,
+	compact = false
+} = defineProps<{
 	fact: KnowledgeItem
 	customerCode: string
+	/** One row instead of a card (the pane's Compact choice). */
+	compact?: boolean
 }>()
 
 const emit = defineEmits<{
 	(e: "edit"): void
 	(e: "deleted"): void
 }>()
-
-const EditIcon = "carbon:edit"
-const DeleteIcon = "carbon:trash-can"
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
@@ -107,3 +108,36 @@ async function remove() {
 	}
 }
 </script>
+
+<style lang="scss" scoped>
+.knowledge-fact-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: 12px;
+	row-gap: 4px;
+	min-height: 40px;
+	padding: 4px 8px 4px 12px;
+	font-size: 13px;
+
+	&:hover {
+		background-color: var(--hover-color);
+	}
+}
+
+.knowledge-fact-detail {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+.knowledge-fact-note {
+	flex: 1 1 160px;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--fg-secondary-color);
+}
+</style>

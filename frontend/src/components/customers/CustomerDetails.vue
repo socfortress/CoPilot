@@ -8,6 +8,7 @@
 			:customer-meta
 			:customer-portainer-stack-id
 			:use-max-height
+			class="border-border overflow-clip rounded-lg border"
 			@delete="emit('delete')"
 			@update:customer-info="customerInfo = $event"
 			@update:customer-meta="customerMeta = $event"

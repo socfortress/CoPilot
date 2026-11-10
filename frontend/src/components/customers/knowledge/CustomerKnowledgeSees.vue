@@ -23,7 +23,11 @@
 			</div>
 		</n-alert>
 
-		<p v-else-if="seen?.status === 'no_profile'" class="text-secondary m-0 text-sm" data-testid="knowledge-sees-no-profile">
+		<p
+			v-else-if="seen?.status === 'no_profile'"
+			class="text-secondary m-0 text-sm"
+			data-testid="knowledge-sees-no-profile"
+		>
 			{{ NO_PROFILE_TEXT }}
 		</p>
 
@@ -45,11 +49,11 @@
 			{{ NO_TENANT_MAP_TEXT }}
 		</n-alert>
 
-		<div v-else-if="seen" class="flex flex-col gap-4" data-testid="knowledge-sees-measured">
+		<div v-else-if="seen" class="flex flex-col gap-7" data-testid="knowledge-sees-measured">
 			<p class="text-secondary m-0 text-sm" data-testid="knowledge-sees-when">{{ measured }}</p>
 
 			<section class="flex flex-col gap-2">
-				<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">Coverage</span>
+				<span class="text-secondary font-mono text-[10px] tracking-[0.14em] uppercase">Coverage</span>
 				<ul class="m-0 flex list-none flex-col gap-1 p-0">
 					<li
 						v-for="row of coverage"
@@ -64,8 +68,8 @@
 			</section>
 
 			<section class="flex flex-col gap-2">
-				<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">Log sources</span>
-				<p v-if="sources.length" class="text-tertiary m-0 text-xs" data-testid="knowledge-sees-fields-note">
+				<span class="text-secondary font-mono text-[10px] tracking-[0.14em] uppercase">Log sources</span>
+				<p v-if="sources.length" class="text-default m-0 text-xs" data-testid="knowledge-sees-fields-note">
 					{{ fieldsNote }}
 				</p>
 				<CardEntity
@@ -77,7 +81,10 @@
 				>
 					<template #headerMain>
 						<div class="flex flex-wrap items-center gap-2">
-							<span class="text-default font-mono font-medium break-all" data-testid="knowledge-sees-source-pattern">
+							<span
+								class="text-default font-mono font-medium break-all"
+								data-testid="knowledge-sees-source-pattern"
+							>
 								{{ source.pattern }}
 							</span>
 							<n-tag
@@ -98,10 +105,18 @@
 								<span class="font-medium">Categories:</span>
 								<span>{{ source.categories.join(", ") }}</span>
 							</div>
-							<p v-if="source.events" class="text-secondary m-0" data-testid="knowledge-sees-source-events">
+							<p
+								v-if="source.events"
+								class="text-secondary m-0"
+								data-testid="knowledge-sees-source-events"
+							>
 								{{ source.events }}
 							</p>
-							<p v-if="source.carried" class="text-warning m-0" data-testid="knowledge-sees-source-carried">
+							<p
+								v-if="source.carried"
+								class="text-warning m-0"
+								data-testid="knowledge-sees-source-carried"
+							>
 								{{ source.carried }}
 							</p>
 							<div
@@ -126,11 +141,17 @@
 				</p>
 			</section>
 
-			<section v-if="seen.not_measured.length" class="flex flex-col gap-2" data-testid="knowledge-sees-not-measured">
-				<span class="text-tertiary font-mono text-[10px] tracking-[0.14em] uppercase">Not measured</span>
-				<p class="text-tertiary m-0 text-xs">{{ NOT_MEASURED_ABOUT }}</p>
+			<section
+				v-if="seen.not_measured.length"
+				class="flex flex-col gap-2"
+				data-testid="knowledge-sees-not-measured"
+			>
+				<span class="text-secondary font-mono text-[10px] tracking-[0.14em] uppercase">Not measured</span>
+				<p class="text-default m-0 text-xs">{{ NOT_MEASURED_ABOUT }}</p>
 				<div class="flex flex-wrap gap-1">
-					<code v-for="pattern of seen.not_measured" :key="pattern" class="font-mono break-all">{{ pattern }}</code>
+					<code v-for="pattern of seen.not_measured" :key="pattern" class="font-mono break-all">
+						{{ pattern }}
+					</code>
 				</div>
 			</section>
 		</div>
