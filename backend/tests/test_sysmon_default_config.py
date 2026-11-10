@@ -262,7 +262,8 @@ def test_no_object_means_no_default(code):
 
 
 @pytest.mark.parametrize(
-    "error", [_s3_error("AccessDenied"), _s3_error("InternalError"), ConnectionError("MinIO is down"), OSError("timed out")]
+    "error",
+    [_s3_error("AccessDenied"), _s3_error("InternalError"), ConnectionError("MinIO is down"), OSError("timed out")],
 )
 def test_any_other_read_error_raises(error):
     client = _Minio(error=error)
