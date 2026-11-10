@@ -225,6 +225,11 @@ onBeforeUnmount(() => controller?.abort())
 </script>
 
 <style lang="scss" scoped>
+// The bar's backdrop reads the timeline of a marker beside it, not inside it.
+[data-testid="customer-knowledge"] {
+	timeline-scope: --knowledge-nav-approach;
+}
+
 // A jump lands below the app's toolbar and the bar of jumps, not under them.
 .knowledge-anchor {
 	scroll-margin-top: calc(var(--toolbar-height) + 60px);

@@ -1,5 +1,13 @@
 <template>
-	<nav class="knowledge-nav" aria-label="Knowledge sections" data-testid="knowledge-nav">
+	<!-- Marks where the bar sits in the flow: its scroll timeline drives the backdrop (see the style). -->
+	<div class="knowledge-nav-sentinel" aria-hidden="true" />
+	<nav
+		ref="nav"
+		class="knowledge-nav"
+		:class="{ 'in-overlay': inOverlay }"
+		aria-label="Knowledge sections"
+		data-testid="knowledge-nav"
+	>
 		<div ref="track" class="knowledge-nav-track">
 			<button
 				v-for="link of links"
@@ -45,9 +53,18 @@ const emit = defineEmits<{
 	(e: "ready"): void
 }>()
 
+const nav = ref<HTMLElement | null>(null)
 const track = ref<HTMLElement | null>(null)
 
-onMounted(() => emit("ready"))
+// Under the app's toolbar only on the customer's own page, where both share a scroller. In a modal
+// nothing sits above the bar: it sticks to the top and draws no backdrop.
+const inOverlay = ref(false)
+
+onMounted(() => {
+	const page = document.querySelector("header.toolbar")?.closest(".n-scrollbar-container")
+	inOverlay.value = !nav.value || !page?.contains(nav.value)
+	emit("ready")
+})
 
 watch(
 	() => active,
@@ -66,15 +83,56 @@ watch(
 </script>
 
 <style lang="scss" scoped>
+// The bar sticks below the app's toolbar. That toolbar is see-through, so as the bar nears it a
+// backdrop grows from the bar's top edge up to the top of the page, its edge scrolling with the
+// facts as if the bar's top kept going: the facts never show behind the toolbar above the bar.
+// The growth is a scroll-driven transform, run by the browser in step with the scroll (a script
+// setting it on every scroll event lagged a frame behind and shook). Without scroll-driven
+// animations the bar simply has no backdrop.
+.knowledge-nav-sentinel {
+	position: absolute;
+	height: 0;
+	view-timeline: --knowledge-nav-approach block;
+}
+
 .knowledge-nav {
 	position: sticky;
-	top: 0;
+	top: var(--toolbar-height);
 	z-index: 2;
 	margin: 0 -16px;
 	padding: 8px 16px;
-	padding-top: var(--toolbar-height);
 	background-color: var(--bg-body-color);
 	border-bottom: 1px solid var(--border-color);
+
+	&.in-overlay {
+		top: 0;
+	}
+}
+
+@supports (animation-timeline: view()) {
+	.knowledge-nav:not(.in-overlay)::before {
+		content: "";
+		position: absolute;
+		inset-inline: 0;
+		bottom: 100%;
+		height: var(--toolbar-height);
+		background-color: var(--bg-body-color);
+		pointer-events: none;
+		transform-origin: bottom;
+		animation: knowledge-nav-backdrop linear both;
+		animation-timeline: --knowledge-nav-approach;
+		// From the bar's place in the flow a toolbar's height below the top of the page, to the top.
+		animation-range: cover calc(100% - var(--toolbar-height)) cover 100%;
+	}
+}
+
+@keyframes knowledge-nav-backdrop {
+	from {
+		transform: scaleY(0);
+	}
+	to {
+		transform: scaleY(1);
+	}
 }
 
 .knowledge-nav-track {
