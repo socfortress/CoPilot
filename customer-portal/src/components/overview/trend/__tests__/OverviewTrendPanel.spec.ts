@@ -104,6 +104,17 @@ describe("overviewTrendPanel (#1273)", () => {
 		).toEqual(["6", "4", "1"])
 	})
 
+	it("hides the table, caption included, inside the panel (#1354)", () => {
+		const wrapper = mountPanel()
+		const table = wrapper.get("[data-testid=overview-trend-table]")
+		// A <table>'s caption is outside the box sr-only clips: the class belongs on a block around it.
+		expect(table.classes()).not.toContain("sr-only")
+		expect(table.element.parentElement!.classList).toContain("sr-only")
+		expect(table.get("caption").text()).toBe("Alerts still open at the end of each day, opened and closed, last 7 days")
+		// Positioned inside the panel, so it scrolls with it rather than with the page's frame.
+		expect(table.element.parentElement!.parentElement!.classList).toContain("relative")
+	})
+
 	it("says a quiet period is quiet rather than drawing flat lines", () => {
 		const wrapper = mountPanel({ trend: trend({ hours: [], alerts_open_at_since: 0 }) })
 		expect(wrapper.get("[data-testid=overview-trend-empty]").text()).toContain(
