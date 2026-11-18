@@ -113,6 +113,39 @@ describe("overview trend", () => {
 		cy.wait("@trend").its("request.url").should("contain", "range=30d")
 	})
 
+	it("keeps the screen readers' table, caption included, inside the panel as the page scrolls (#1354)", () => {
+		cy.intercept("GET", TREND).as("trend")
+		cy.visit("/overview?trend=7d")
+		cy.wait("@trend")
+		cy.get("[data-testid=overview-trend-table] caption").should(
+			"have.text",
+			"Alerts still open at the end of each day, opened and closed, last 7 days"
+		)
+
+		// Placed against the layout's frame, it stayed put while the panel scrolled under it, and
+		// Firefox painted its caption over the chart. Inside the panel, it follows it.
+		/** Where the table sits from the panel's top, and whether its block is clipped to a pixel. */
+		const offset = () =>
+			cy.get("[data-testid=overview-trend]").then($panel => {
+				const panel = $panel[0]!.getBoundingClientRect()
+				const table = Cypress.$("[data-testid=overview-trend-table]")[0]!
+				expect(table.parentElement!.getBoundingClientRect().width, "clipped to a pixel").to.be.at.most(1)
+				const box = table.getBoundingClientRect()
+				expect(box.top).to.be.within(panel.top, panel.bottom)
+				return box.top - panel.top
+			})
+
+		offset().then(before => {
+			cy.get("[data-testid=overview-trend]")
+				.closest(".n-scrollbar-container")
+				.then($container => {
+					$container[0]!.scrollTop = 350
+				})
+			cy.get("[data-testid=overview-trend]").closest(".n-scrollbar-container").its("0.scrollTop").should("be.greaterThan", 300)
+			offset().then(after => expect(after).to.be.closeTo(before, 1))
+		})
+	})
+
 	it("contains a failure to the panel, and tries again", () => {
 		let failures = 1
 		cy.intercept("GET", TREND, request => {

@@ -51,9 +51,10 @@
 			</div>
 		</template>
 
+		<!-- relative: the hidden table is placed in here, so it scrolls with the page (#1354). -->
 		<div
 			v-if="days"
-			class="flex grow flex-col transition-opacity"
+			class="relative flex grow flex-col transition-opacity"
 			:class="{ 'opacity-60': loading }"
 			:aria-busy="loading || undefined"
 		>
@@ -122,27 +123,33 @@
 						<OverviewTrendChart :days :entity />
 					</div>
 
-					<table class="sr-only" data-testid="overview-trend-table">
-						<caption>
-							{{ tableCaption }}
-						</caption>
-						<thead>
-							<tr>
-								<th scope="col">{{ $t("overview.trend.table.day") }}</th>
-								<th scope="col">{{ $t("overview.trend.table.openAtDayEnd") }}</th>
-								<th scope="col">{{ $t("overview.trend.opened") }}</th>
-								<th scope="col">{{ $t("overview.trend.closed") }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="day of days" :key="day.day">
-								<th scope="row">{{ dayTitle(day.day) }}</th>
-								<td>{{ day[entity].open ?? "—" }}</td>
-								<td>{{ day[entity].opened }}</td>
-								<td>{{ day[entity].closed }}</td>
-							</tr>
-						</tbody>
-					</table>
+					<!--
+						sr-only on a block, never on the <table>: a table's caption sits outside the box
+						its width, height and clip apply to, so Firefox painted it over the chart (#1354).
+					-->
+					<div class="sr-only" data-testid="overview-trend-table-hidden">
+						<table data-testid="overview-trend-table">
+							<caption>
+								{{ tableCaption }}
+							</caption>
+							<thead>
+								<tr>
+									<th scope="col">{{ $t("overview.trend.table.day") }}</th>
+									<th scope="col">{{ $t("overview.trend.table.openAtDayEnd") }}</th>
+									<th scope="col">{{ $t("overview.trend.opened") }}</th>
+									<th scope="col">{{ $t("overview.trend.closed") }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="day of days" :key="day.day">
+									<th scope="row">{{ dayTitle(day.day) }}</th>
+									<td>{{ day[entity].open ?? "—" }}</td>
+									<td>{{ day[entity].opened }}</td>
+									<td>{{ day[entity].closed }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</template>
 			</template>
 		</div>
