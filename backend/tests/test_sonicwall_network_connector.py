@@ -457,25 +457,42 @@ def test_the_udp_input_is_looked_up_by_its_own_names(monkeypatch):
 
 DROP_TITLE = sonicwall_service.LEVEL1_DROP_RULE_TITLE
 APP_CONTROL = ("Application Control Detection Alert", "Application Control Prevention Alert")
+# Security alerts SonicOS logs at level 1 (ALERT) that the firewall may only report (`fw_action` NA).
+KEPT = (
+    "IPS Detection Alert",
+    "IPS Prevention Alert",
+    *APP_CONTROL,
+    "Anti-Spyware Detection Alert",
+    "Anti-Spyware Prevention Alert",
+    "Gateway Anti-Virus Alert",
+    "Administrator login denied due to bad credentials",
+)
 
 
-def test_the_shipped_drop_rule_keeps_ips_and_application_control_alerts():
-    """Application Control alerts are level 1 with `fw_action` NA when the firewall only detects: the rule
-    dropped them, which emptied every Application Control panel."""
+def test_the_shipped_drop_rule_keeps_the_security_alerts():
+    """Level-1 events the firewall only reported (`fw_action` NA) are dropped, but these are alerts an analyst
+    must see: Application Control's, for one, were dropped, which emptied every Application Control panel."""
     source = sonicwall_service.shipped_pipeline_rule(DROP_TITLE).source
 
     assert source.startswith(f'rule "{DROP_TITLE}"')
     assert 'to_long($message.level) == 1 AND $message.fw_action == "NA"' in source
-    for kept in ("IPS Detection Alert", *APP_CONTROL):
-        assert f'$message.msg_cat != "{kept}"' in source
+    for kept in KEPT:
+        assert f'$message.msg_cat != "{kept}"' in source, kept
     assert "drop_message();" in source
 
 
-def test_the_previous_rule_is_the_shipped_one_without_the_application_control_exceptions():
+def _shipped_without(*names):
     shipped = sonicwall_service.shipped_pipeline_rule(DROP_TITLE).source
-    without = "\n".join(line for line in shipped.splitlines() if not any(name in line for name in APP_CONTROL))
+    return "\n".join(line for line in shipped.splitlines() if not any(f'!= "{name}"' in line for name in names))
 
-    assert without == sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0]
+
+def test_the_previous_versions_are_the_shipped_rule_with_fewer_exceptions():
+    """Every exception added since the first version sits on a line of its own."""
+    first, with_app_control = sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES
+    added_after_app_control = [name for name in KEPT if name not in ("IPS Detection Alert", *APP_CONTROL)]
+
+    assert first == _shipped_without(*APP_CONTROL, *added_after_app_control)
+    assert with_app_control == _shipped_without(*added_after_app_control)
 
 
 def rule(source, title=DROP_TITLE, rule_id="rule-1"):
@@ -500,10 +517,11 @@ def graylog_with(monkeypatch, *rules):
     "stored",
     [
         sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0],
+        sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[1],
         # As some Graylogs hand it back: other line endings and indentation are no edit.
         sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0].replace("\n", "\r\n").replace("    ", "\t") + "\n",
     ],
-    ids=["as shipped", "reformatted"],
+    ids=["first version", "with Application Control", "reformatted"],
 )
 def test_a_rule_as_shipped_before_is_updated(monkeypatch, stored):
     updates = graylog_with(monkeypatch, rule(stored), rule('rule "other" when true then end', title="other", rule_id="rule-2"))

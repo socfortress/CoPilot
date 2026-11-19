@@ -140,6 +140,15 @@ LEVEL1_DROP_RULE_PREVIOUS_SOURCES = (
     "then\n"
     "    drop_message();\n"
     "end",
+    # The first version that kept Application Control alerts, also handed out to paste into Graylog by hand.
+    'rule "DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA"\n'
+    "when\n"
+    '    to_long($message.level) == 1 AND $message.fw_action == "NA" AND $message.msg_cat != "IPS Detection Alert"\n'
+    '    AND $message.msg_cat != "Application Control Detection Alert"\n'
+    '    AND $message.msg_cat != "Application Control Prevention Alert"\n'
+    "then\n"
+    "    drop_message();\n"
+    "end",
 )
 
 
@@ -182,7 +191,7 @@ async def update_level1_drop_rule() -> str:
             continue
         if _normalized(rule.source) in {_normalized(previous) for previous in LEVEL1_DROP_RULE_PREVIOUS_SOURCES}:
             await update_pipeline_rule(rule.id, shipped)
-            logger.info(f"Updated pipeline rule {rule.title} ({rule.id}) to keep Application Control alerts")
+            logger.info(f"Updated pipeline rule {rule.title} ({rule.id}) to the version CoPilot ships")
             outcome = "updated"
         else:
             logger.warning(f"Pipeline rule {rule.title} ({rule.id}) has been edited in Graylog; leaving it as it is")
