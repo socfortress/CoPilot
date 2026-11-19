@@ -55,7 +55,7 @@
         },
         "source": {
           "@type": "string",
-          "@value": "rule \"DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA\"\nwhen\n    to_long($message.level) == 1 AND $message.fw_action == \"NA\" AND $message.msg_cat != \"IPS Detection Alert\"\nthen\n    drop_message();\nend"
+          "@value": "rule \"DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA\"\nwhen\n    to_long($message.level) == 1 AND $message.fw_action == \"NA\" AND $message.msg_cat != \"IPS Detection Alert\"\n    AND $message.msg_cat != \"Application Control Detection Alert\"\n    AND $message.msg_cat != \"Application Control Prevention Alert\"\nthen\n    drop_message();\nend"
         }
       },
       "constraints": [

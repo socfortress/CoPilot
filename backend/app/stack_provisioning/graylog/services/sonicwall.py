@@ -11,11 +11,14 @@ from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import SonicwallDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.services.collector import (
     get_content_pack_id_by_content_pack_name,
 )
 from app.connectors.graylog.services.collector import get_input_id_by_input_name
 from app.connectors.graylog.services.collector import get_stream_id_by_stream_name
+from app.connectors.graylog.services.pipelines import get_pipeline_rules
+from app.connectors.graylog.services.pipelines import update_pipeline_rule
 from app.connectors.graylog.services.streams import assign_stream_to_index
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.wazuh_indexer.services.monitoring import (
@@ -43,6 +46,7 @@ from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallRe
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
 from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
 from app.stack_provisioning.graylog.schema.sonicwall import SonicwallProtocol
+from app.stack_provisioning.graylog.services.provision import load_content_pack_json
 from app.stack_provisioning.graylog.services.provision import (
     provision_content_pack_network_connector,
 )
@@ -119,6 +123,71 @@ def input_content_pack_name(customer_name: str, protocol: SonicwallProtocol) -> 
 def input_title(customer_name: str, protocol: SonicwallProtocol) -> str:
     """The title of the customer's Graylog input, as the input templates name it."""
     return f"{customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - {protocol.value}"
+
+
+#### ! SHARED PIPELINE RULES ! ####
+PIPELINE_TEMPLATE = "SOCFORTRESS_SONICWALL_PROCESSING_PIPELINE.json"
+LEVEL1_DROP_RULE_TITLE = "DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA"
+# Earlier versions of the rule a Graylog may still have, which a deploy replaces with the template's.
+# When the rule changes again, add the version being replaced here.
+LEVEL1_DROP_RULE_PREVIOUS_SOURCES = (
+    # As the SOCFortress SonicWall content pack (Aug 2023) and this connector first shipped it: it dropped
+    # Application Control alerts with every other level-1 event the firewall only reported (`fw_action`
+    # NA), keeping IPS Detection Alerts alone.
+    'rule "DROP SONICWALL LOGS - LEVEL 1, FW ACTION NA"\n'
+    "when\n"
+    '    to_long($message.level) == 1 AND $message.fw_action == "NA" AND $message.msg_cat != "IPS Detection Alert"\n'
+    "then\n"
+    "    drop_message();\n"
+    "end",
+)
+
+
+def _normalized(source: str) -> str:
+    """A rule's source with whitespace runs collapsed, so line endings and indentation never count as an edit."""
+    return " ".join(source.split())
+
+
+def shipped_pipeline_rule(title: str) -> CreatePipelineRule:
+    """A rule of the SonicWall processing pipeline as the template ships it."""
+    for entity in load_content_pack_json(PIPELINE_TEMPLATE)["entities"]:
+        data = entity["data"]
+        if entity["type"]["name"] == "pipeline_rule" and data["title"]["@value"] == title:
+            return CreatePipelineRule(
+                title=title,
+                description=data["description"]["@value"],
+                source=data["source"]["@value"],
+            )
+    raise KeyError(f"{title} is not a rule of {PIPELINE_TEMPLATE}")
+
+
+async def update_level1_drop_rule() -> str:
+    """
+    Bring the shared level-1 drop rule up to the template's version on a Graylog that has an earlier one.
+
+    The processing pipeline's content pack is installed once per Graylog, so a Graylog that already had it
+    (or the SOCFortress SonicWall content pack, installed by hand) keeps the rule it got then. A rule that
+    still reads exactly as shipped before is replaced; one an operator has edited is left as it is.
+
+    Returns:
+        str: "updated", "current", "edited" (left alone) or "missing" (no such rule).
+    """
+    shipped = shipped_pipeline_rule(LEVEL1_DROP_RULE_TITLE)
+    rules = [rule for rule in (await get_pipeline_rules()).pipeline_rules if rule.title == LEVEL1_DROP_RULE_TITLE]
+    if not rules:
+        return "missing"
+    outcome = "current"
+    for rule in rules:
+        if _normalized(rule.source) == _normalized(shipped.source):
+            continue
+        if _normalized(rule.source) in {_normalized(previous) for previous in LEVEL1_DROP_RULE_PREVIOUS_SOURCES}:
+            await update_pipeline_rule(rule.id, shipped)
+            logger.info(f"Updated pipeline rule {rule.title} ({rule.id}) to keep Application Control alerts")
+            outcome = "updated"
+        else:
+            logger.warning(f"Pipeline rule {rule.title} ({rule.id}) has been edited in Graylog; leaving it as it is")
+            outcome = "edited"
+    return outcome
 
 
 #### ! GRAYLOG ! ####
@@ -382,7 +451,8 @@ async def provision_sonicwall(
     Provisions a SonicWall customer by performing the following steps:
     1. Validates Grafana organization ID exists.
     2. Provisions the content packs for the customer: the input for the chosen transport (TLS or UDP),
-       the customer's stream, and the shared processing pipeline.
+       the customer's stream, and the shared processing pipeline. Brings the pipeline's level-1 drop rule
+       up to date if an older install left the previous version (best effort).
     3. Retrieves the stream and index IDs for the customer.
     4. Creates customer network connector metadata.
     5. Assigns the stream to the index.
@@ -404,6 +474,12 @@ async def provision_sonicwall(
         raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
 
     await provision_content_pack(customer_details)
+    # The pipeline is shared and installed once per Graylog: bring a rule an older install left behind up to date.
+    # Best effort, since the customer's own collection doesn't depend on it.
+    try:
+        await update_level1_drop_rule()
+    except Exception as e:
+        logger.warning(f"Could not check the shared SonicWall level-1 drop rule: {e}")
     stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
     customer_network_connector_meta = await create_customer_network_connector_meta(
         customer_details,
