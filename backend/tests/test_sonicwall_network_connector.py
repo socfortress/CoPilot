@@ -28,6 +28,8 @@ from pydantic import ValidationError
 
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-default")
 
+from app.connectors.graylog.schema.pipelines import PipelineRule  # noqa: E402
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse  # noqa: E402
 from app.stack_provisioning.graylog.routes import sonicwall as sonicwall_routes  # noqa: E402
 from app.stack_provisioning.graylog.schema.provision import (  # noqa: E402
     AvailableContentPacks,
@@ -449,3 +451,169 @@ def test_the_udp_input_is_looked_up_by_its_own_names(monkeypatch):
     assert inputs == [f"{CUSTOMER_NAME} - SONICWALL FIREWALL LOGS AND EVENTS - UDP"]
     assert meta.graylog_content_pack_input_id == f"pack:{CUSTOMER_NAME}_SONICWALL_INPUT_SYSLOG_UDP"
     assert meta.network_connector_name == "SONICWALL"
+
+
+# ── The shared level-1 drop rule ────────────────────────────────────
+
+DROP_TITLE = sonicwall_service.LEVEL1_DROP_RULE_TITLE
+APP_CONTROL = ("Application Control Detection Alert", "Application Control Prevention Alert")
+# Security alerts SonicOS logs at level 1 (ALERT) that the firewall may only report (`fw_action` NA).
+KEPT = (
+    "IPS Detection Alert",
+    "IPS Prevention Alert",
+    *APP_CONTROL,
+    "Anti-Spyware Detection Alert",
+    "Anti-Spyware Prevention Alert",
+    "Gateway Anti-Virus Alert",
+    "Administrator login denied due to bad credentials",
+)
+
+
+def test_the_shipped_drop_rule_keeps_the_security_alerts():
+    """Level-1 events the firewall only reported (`fw_action` NA) are dropped, but these are alerts an analyst
+    must see: Application Control's, for one, were dropped, which emptied every Application Control panel."""
+    source = sonicwall_service.shipped_pipeline_rule(DROP_TITLE).source
+
+    assert source.startswith(f'rule "{DROP_TITLE}"')
+    assert 'to_long($message.level) == 1 AND $message.fw_action == "NA"' in source
+    for kept in KEPT:
+        assert f'$message.msg_cat != "{kept}"' in source, kept
+    assert "drop_message();" in source
+
+
+def _shipped_without(*names):
+    shipped = sonicwall_service.shipped_pipeline_rule(DROP_TITLE).source
+    return "\n".join(line for line in shipped.splitlines() if not any(f'!= "{name}"' in line for name in names))
+
+
+def test_the_previous_versions_are_the_shipped_rule_with_fewer_exceptions():
+    """Every exception added since the first version sits on a line of its own."""
+    first, with_app_control = sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES
+    added_after_app_control = [name for name in KEPT if name not in ("IPS Detection Alert", *APP_CONTROL)]
+
+    assert first == _shipped_without(*APP_CONTROL, *added_after_app_control)
+    assert with_app_control == _shipped_without(*added_after_app_control)
+
+
+def rule(source, title=DROP_TITLE, rule_id="rule-1"):
+    return PipelineRule(id=rule_id, title=title, description=title, source=source, created_at="2026-01-01T00:00:00.000Z")
+
+
+def graylog_with(monkeypatch, *rules):
+    updates = []
+
+    async def rules_list():
+        return PipelineRulesResponse(message="ok", pipeline_rules=list(rules), success=True)
+
+    async def update(rule_id, new_rule):
+        updates.append((rule_id, new_rule))
+
+    monkeypatch.setattr(sonicwall_service, "get_pipeline_rules", rules_list)
+    monkeypatch.setattr(sonicwall_service, "update_pipeline_rule", update)
+    return updates
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0],
+        sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[1],
+        # As some Graylogs hand it back: other line endings and indentation are no edit.
+        sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0].replace("\n", "\r\n").replace("    ", "\t") + "\n",
+    ],
+    ids=["first version", "with Application Control", "reformatted"],
+)
+def test_a_rule_as_shipped_before_is_updated(monkeypatch, stored):
+    updates = graylog_with(monkeypatch, rule(stored), rule('rule "other" when true then end', title="other", rule_id="rule-2"))
+
+    assert run(sonicwall_service.update_level1_drop_rule()) == "updated"
+
+    [(rule_id, new_rule)] = updates
+    shipped = sonicwall_service.shipped_pipeline_rule(DROP_TITLE)
+    assert rule_id == "rule-1", "only the drop rule is touched"
+    assert (new_rule.title, new_rule.description, new_rule.source) == (shipped.title, shipped.description, shipped.source)
+
+
+def test_a_current_rule_is_left_alone(monkeypatch):
+    updates = graylog_with(monkeypatch, rule(sonicwall_service.shipped_pipeline_rule(DROP_TITLE).source))
+
+    assert run(sonicwall_service.update_level1_drop_rule()) == "current"
+    assert updates == []
+
+
+def test_a_rule_edited_in_graylog_is_left_alone(monkeypatch):
+    """An operator's own tuning wins: only the exact rule CoPilot shipped before is replaced."""
+    edited = sonicwall_service.LEVEL1_DROP_RULE_PREVIOUS_SOURCES[0].replace('"IPS Detection Alert"', '"Something Else"')
+    updates = graylog_with(monkeypatch, rule(edited))
+
+    assert run(sonicwall_service.update_level1_drop_rule()) == "edited"
+    assert updates == []
+
+
+def test_no_rule_no_update(monkeypatch):
+    updates = graylog_with(monkeypatch, rule('rule "other" when true then end', title="other"))
+
+    assert run(sonicwall_service.update_level1_drop_rule()) == "missing"
+    assert updates == []
+
+
+def _deploy_steps(monkeypatch, update_rule):
+    """Fake every external call `provision_sonicwall` makes, recording their order."""
+    calls = []
+
+    def step(name, result=None):
+        async def fake(*args, **kwargs):
+            calls.append(name)
+            return result
+
+        return fake
+
+    customer_meta = SimpleNamespace(customer_meta=SimpleNamespace(customer_meta_grafana_org_id="2"))
+    meta = SimpleNamespace(grafana_datasource_uid=None, grafana_dashboard_folder_id=None)
+    for name, result in {
+        "validate_grafana_organization_id": "2",
+        "provision_content_pack": None,
+        "get_stream_and_index_ids": ("stream-1", "index-1", "pack-stream", "pack-input"),
+        "create_customer_network_connector_meta": meta,
+        "assign_stream_to_index": None,
+        "get_pipeline_id": ["pipeline-1"],
+        "connect_stream_to_pipeline": None,
+        "create_grafana_datasource": SimpleNamespace(datasource=SimpleNamespace(uid="ds-1")),
+        "create_grafana_folder": SimpleNamespace(id=3, uid="folder-1"),
+        "get_customer_meta": customer_meta,
+        "provision_dashboards": None,
+        "insert_into_customer_network_connectors_meta_table": None,
+        "set_deployed_flag": None,
+    }.items():
+        monkeypatch.setattr(sonicwall_service, name, step(name, result))
+
+    async def update():
+        calls.append("update_level1_drop_rule")
+        return await update_rule()
+
+    monkeypatch.setattr(sonicwall_service, "update_level1_drop_rule", update)
+    return calls
+
+
+def test_a_deploy_updates_the_drop_rule_once_the_pipeline_is_installed(monkeypatch):
+    async def updated():
+        return "updated"
+
+    calls = _deploy_steps(monkeypatch, updated)
+
+    response = run(sonicwall_service.provision_sonicwall(_udp_details(), keys=None, session=None))
+
+    assert response.success
+    assert calls.index("provision_content_pack") < calls.index("update_level1_drop_rule") < calls.index("connect_stream_to_pipeline")
+
+
+def test_a_failed_rule_update_does_not_fail_the_deploy(monkeypatch):
+    async def unreachable():
+        raise HTTPException(status_code=500, detail="Failed to collect pipeline rules")
+
+    calls = _deploy_steps(monkeypatch, unreachable)
+
+    response = run(sonicwall_service.provision_sonicwall(_udp_details(), keys=None, session=None))
+
+    assert response.success
+    assert calls[-1] == "set_deployed_flag"

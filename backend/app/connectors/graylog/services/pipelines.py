@@ -133,6 +133,19 @@ async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
     await send_post_request(endpoint=endpoint, data=data)
 
 
+async def update_pipeline_rule(rule_id: str, rule: CreatePipelineRule) -> None:
+    """
+    Replaces an existing pipeline rule's title, description and source.
+    """
+    endpoint = f"/api/system/pipelines/rule/{rule_id}"
+    data = {
+        "title": rule.title,
+        "description": rule.description,
+        "source": rule.source,
+    }
+    await send_put_request(endpoint=endpoint, data=data)
+
+
 async def create_pipeline_graylog(pipeline: CreatePipeline) -> None:
     """
     Creates a pipeline with the given title in Graylog.
