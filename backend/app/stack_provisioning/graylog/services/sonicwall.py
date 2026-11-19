@@ -1,5 +1,7 @@
 import json
 from datetime import datetime
+from typing import Dict
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
@@ -37,14 +39,86 @@ from app.stack_provisioning.graylog.schema.provision import (
     ProvisionNetworkContentPackRequest,
 )
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
+from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallRequest
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
 from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
+from app.stack_provisioning.graylog.schema.sonicwall import SonicwallProtocol
 from app.stack_provisioning.graylog.services.provision import (
     provision_content_pack_network_connector,
 )
 from app.stack_provisioning.graylog.services.utils import set_deployed_flag
 from app.utils import get_connector_attribute
 from app.utils import get_customer_meta_attribute
+
+
+#### ! DEPLOY OPTIONS ! ####
+def _key_value(keys: Dict[str, str], name: str) -> Optional[str]:
+    """A connector key's value, or None when it is missing or blank."""
+    value = (keys.get(name) or "").strip()
+    return value or None
+
+
+def _syslog_port(value: Optional[str]) -> int:
+    try:
+        port = int(value or "")
+    except ValueError:
+        port = 0
+    if not 1 <= port <= 65535:
+        raise HTTPException(
+            status_code=400,
+            detail="The Sonicwall network connector's SYSLOG_PORT must be a port number between 1 and 65535.",
+        )
+    return port
+
+
+def build_customer_details(
+    request: ProvisionSonicwallRequest,
+    customer_name: str,
+    keys: Dict[str, str],
+) -> SonicwallCustomerDetails:
+    """
+    What `provision_sonicwall` needs, from the deploy request and the customer's connector keys.
+
+    Both inputs listen on SYSLOG_PORT. Only the TLS input reads the certificate and key files, so a
+    customer deployed with UDP may leave TLS_CERT_FILE and TLS_KEY_FILE empty.
+
+    Raises:
+        HTTPException: 400 if SYSLOG_PORT is not a port, or TLS is asked for without its files.
+    """
+    protocol = request.protocol
+    tls_cert_file = _key_value(keys, "TLS_CERT_FILE")
+    tls_key_file = _key_value(keys, "TLS_KEY_FILE")
+    if protocol is SonicwallProtocol.TLS and not (tls_cert_file and tls_key_file):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Deploying SonicWall over TLS needs the TLS_CERT_FILE and TLS_KEY_FILE keys. "
+                "Set them on the customer's Sonicwall network connector, or deploy over UDP."
+            ),
+        )
+    return SonicwallCustomerDetails(
+        customer_code=request.customer_code,
+        customer_name=customer_name,
+        protocol_type=protocol,
+        syslog_port=_syslog_port(_key_value(keys, "SYSLOG_PORT")),
+        tls_cert_file=tls_cert_file if protocol is SonicwallProtocol.TLS else None,
+        tls_key_file=tls_key_file if protocol is SonicwallProtocol.TLS else None,
+        hot_data_retention=request.hot_data_retention,
+        index_replicas=request.index_replicas,
+    )
+
+
+def input_content_pack_name(customer_name: str, protocol: SonicwallProtocol) -> str:
+    """
+    The name the customer's input content pack has once installed: the `name` of
+    `templates/SOCFORTRESS_SONICWALL_INPUT_SYSLOG_<protocol>.json` with `customer_name` replaced.
+    """
+    return f"{customer_name}_SONICWALL_INPUT_SYSLOG_{protocol.value}"
+
+
+def input_title(customer_name: str, protocol: SonicwallProtocol) -> str:
+    """The title of the customer's Graylog input, as the input templates name it."""
+    return f"{customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - {protocol.value}"
 
 
 #### ! GRAYLOG ! ####
@@ -141,6 +215,8 @@ async def provision_content_pack(customer_details: SonicwallCustomerDetails):
             keywords=ContentPackKeywords(
                 customer_name=customer_details.customer_name,
                 customer_code=customer_details.customer_code,
+                # Installs only the input for this transport, besides the stream and pipeline.
+                protocol_type=customer_details.protocol_type.value,
                 syslog_port=customer_details.syslog_port,
                 tls_cert_file=customer_details.tls_cert_file,
                 tls_key_file=customer_details.tls_key_file,
@@ -166,7 +242,7 @@ async def get_stream_and_index_ids(customer_details: SonicwallCustomerDetails):
     )
 
     content_pack_input_id = await get_content_pack_id_by_content_pack_name(
-        content_pack_name=f"{customer_details.customer_name}_SONICWALL_INPUT_SYSLOG_TLS",
+        content_pack_name=input_content_pack_name(customer_details.customer_name, customer_details.protocol_type),
     )
 
     return stream_id, index_id, content_pack_stream_id, content_pack_input_id
@@ -265,7 +341,7 @@ async def create_customer_network_connector_meta(
         network_connector_name="SONICWALL",
         graylog_stream_id=stream_id,
         graylog_input_id=(
-            await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - SONICWALL FIREWALL LOGS AND EVENTS - TLS")
+            await get_input_id_by_input_name(input_name=input_title(customer_details.customer_name, customer_details.protocol_type))
         ),
         graylog_pipeline_id=((await get_pipeline_id(subscription="SONICWALL"))[0]),
         graylog_content_pack_input_id=content_pack_input_id,
@@ -305,7 +381,8 @@ async def provision_sonicwall(
     """
     Provisions a SonicWall customer by performing the following steps:
     1. Validates Grafana organization ID exists.
-    2. Provisions the content pack for the customer.
+    2. Provisions the content packs for the customer: the input for the chosen transport (TLS or UDP),
+       the customer's stream, and the shared processing pipeline.
     3. Retrieves the stream and index IDs for the customer.
     4. Creates customer network connector metadata.
     5. Assigns the stream to the index.
@@ -383,7 +460,7 @@ async def provision_sonicwall(
     )
 
     return ProvisionSonicwallResponse(
-        message="Sonicwall customer provisioned successfully",
+        message=f"Sonicwall customer provisioned successfully with a {customer_details.protocol_type.value} syslog input",
         success=True,
     )
 

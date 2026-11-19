@@ -131,7 +131,7 @@ export const SECTIONS: SectionDef[] = [
 		id: "Network Connectors",
 		label: "Network Connectors",
 		group: "data",
-		keywords: ["firewall", "fortinet", "cato"],
+		keywords: ["firewall", "fortinet", "sonicwall", "sentinelone", "cato"],
 		status: "network_connectors",
 		noun: ["connector", "connectors"]
 	},

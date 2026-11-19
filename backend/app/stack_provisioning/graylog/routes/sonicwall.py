@@ -20,7 +20,7 @@ from app.network_connectors.schema import CustomerNetworkConnectorsResponse
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallKeys
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallRequest
 from app.stack_provisioning.graylog.schema.sonicwall import ProvisionSonicwallResponse
-from app.stack_provisioning.graylog.schema.sonicwall import SonicwallCustomerDetails
+from app.stack_provisioning.graylog.services.sonicwall import build_customer_details
 from app.stack_provisioning.graylog.services.sonicwall import provision_sonicwall
 
 stack_provisioning_graylog_sonicwall_router = APIRouter()
@@ -86,7 +86,10 @@ def extract_sonicwall_keys(
 @stack_provisioning_graylog_sonicwall_router.post(
     "/graylog/provision/sonicwall",
     response_model=ProvisionSonicwallResponse,
-    description="Provision SonicWall for the customer. Uses Graylog-Network instance for all Graylog operations.",
+    description=(
+        "Provision SonicWall for the customer, with a syslog input over TLS (the default) or UDP. "
+        "Uses Graylog-Network instance for all Graylog operations."
+    ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_sonicwall_route(
@@ -115,14 +118,10 @@ async def provision_sonicwall_route(
         sonicwall_keys = extract_sonicwall_keys(customer_integration)
 
         return await provision_sonicwall(
-            customer_details=SonicwallCustomerDetails(
-                customer_code=provision_sonicwall_request.customer_code,
+            customer_details=build_customer_details(
+                provision_sonicwall_request,
                 customer_name=customer_integration.customer_name,
-                tls_cert_file=sonicwall_keys["TLS_CERT_FILE"],
-                tls_key_file=sonicwall_keys["TLS_KEY_FILE"],
-                syslog_port=int(sonicwall_keys["SYSLOG_PORT"]),
-                hot_data_retention=provision_sonicwall_request.hot_data_retention,
-                index_replicas=provision_sonicwall_request.index_replicas,
+                keys=sonicwall_keys,
             ),
             keys=ProvisionSonicwallKeys(**sonicwall_keys),
             session=session,

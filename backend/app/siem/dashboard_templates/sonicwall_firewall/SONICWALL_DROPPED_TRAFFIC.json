@@ -1,0 +1,157 @@
+{
+  "id": "SONICWALL_DROPPED_TRAFFIC",
+  "title": "SonicWall - Dropped Traffic",
+  "description": "Everything the firewall dropped, and the part that matters: drops other than TCP connection teardown (the aborts and rejects of connections that are already closing, which are most of the volume). Shows who sent the blocked traffic, where it was going, on which service, and under which access rule. Internal hosts blocked going out to the WAN are the ones worth a closer look.",
+  "panels": [
+    {
+      "id": "dropped",
+      "title": "Dropped or Blocked",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop"
+    },
+    {
+      "id": "tcp_teardown",
+      "title": "TCP Aborts and Rejects",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND m:(712 OR 713)"
+    },
+    {
+      "id": "blocked_inbound",
+      "title": "Other Drops from the WAN",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713) AND srcZone:WAN"
+    },
+    {
+      "id": "blocked_outbound",
+      "title": "Other Drops to the WAN",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713) AND dstZone:WAN AND _exists_:srcZone AND NOT srcZone:WAN"
+    },
+    {
+      "id": "dropped_over_time",
+      "title": "Dropped Traffic Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop"
+    },
+    {
+      "id": "drop_reasons",
+      "title": "Drop Reasons",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop",
+      "field": "msg_cat",
+      "size": 15
+    },
+    {
+      "id": "access_rules",
+      "title": "Access Rules",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop",
+      "field": "rule",
+      "size": 15
+    },
+    {
+      "id": "blocked_sources",
+      "title": "Blocked Sources (excl. TCP aborts)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "src_ip",
+      "size": 15
+    },
+    {
+      "id": "blocked_destinations",
+      "title": "Blocked Destinations (excl. TCP aborts)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "dst_ip",
+      "size": 15
+    },
+    {
+      "id": "outbound_sources",
+      "title": "Internal Hosts Blocked Going to the WAN",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713) AND dstZone:WAN AND _exists_:srcZone AND NOT srcZone:WAN",
+      "field": "src_ip",
+      "size": 15
+    },
+    {
+      "id": "blocked_services",
+      "title": "Blocked Services (excl. TCP aborts)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "proto",
+      "size": 15
+    },
+    {
+      "id": "source_zones",
+      "title": "Source Zones (excl. TCP aborts)",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "srcZone",
+      "size": 10
+    },
+    {
+      "id": "destination_zones",
+      "title": "Destination Zones (excl. TCP aborts)",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "dstZone",
+      "size": 10
+    },
+    {
+      "id": "notes",
+      "title": "TCP Flags and Notes",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop",
+      "field": "note",
+      "size": 10
+    },
+    {
+      "id": "recent_blocked",
+      "title": "Recent Drops (excl. TCP aborts)",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "fields": [
+        "timestamp",
+        "msg",
+        "src",
+        "dst",
+        "proto",
+        "srcZone",
+        "dstZone",
+        "rule",
+        "note"
+      ],
+      "size": 50
+    }
+  ]
+}

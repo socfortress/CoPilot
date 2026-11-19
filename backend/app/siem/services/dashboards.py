@@ -326,7 +326,9 @@ async def execute_panels(
                 }
 
                 if ptype == "stat":
-                    # Just need the total count
+                    # Just need the total count. The indexer stops counting at 10,000 hits unless
+                    # asked for the exact total, which a firewall passes within minutes.
+                    body["track_total_hits"] = True
                     resp = await es_client.search(index=index_pattern, body=body)
                     total = resp["hits"]["total"]
                     count = total["value"] if isinstance(total, dict) else total

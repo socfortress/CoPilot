@@ -1,0 +1,136 @@
+{
+  "id": "SONICWALL_OVERVIEW",
+  "title": "SonicWall - Overview",
+  "description": "The whole firewall at a glance: event volume, what was dropped or blocked, how many security-service alerts and configuration changes there were, the busiest blocked sources (TCP connection teardown left out), and the latest events.",
+  "panels": [
+    {
+      "id": "events",
+      "title": "Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall"
+    },
+    {
+      "id": "dropped",
+      "title": "Dropped or Blocked",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop"
+    },
+    {
+      "id": "threat_alerts",
+      "title": "Security Service Alerts",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)"
+    },
+    {
+      "id": "config_changes",
+      "title": "Configuration Changes",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432)"
+    },
+    {
+      "id": "events_over_time",
+      "title": "Events Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "syslog_type:sonicwall"
+    },
+    {
+      "id": "event_types",
+      "title": "Top Event Types",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall",
+      "field": "msg_cat",
+      "size": 15
+    },
+    {
+      "id": "blocked_sources",
+      "title": "Top Blocked Sources (excl. TCP aborts)",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND fw_action:drop AND NOT m:(712 OR 713)",
+      "field": "src_ip",
+      "size": 15
+    },
+    {
+      "id": "severity",
+      "title": "Severity",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall",
+      "field": "syslog_level",
+      "size": 10
+    },
+    {
+      "id": "actions",
+      "title": "Firewall Action",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall",
+      "field": "fw_action",
+      "size": 10
+    },
+    {
+      "id": "firewalls",
+      "title": "Firewalls",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall",
+      "field": "fw",
+      "size": 10
+    },
+    {
+      "id": "destinations",
+      "title": "Top Destination IPs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall",
+      "field": "dst_ip",
+      "size": 15
+    },
+    {
+      "id": "services",
+      "title": "Top Services",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall",
+      "field": "proto",
+      "size": 15
+    },
+    {
+      "id": "recent_events",
+      "title": "Recent Events",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall",
+      "fields": [
+        "timestamp",
+        "syslog_level",
+        "msg",
+        "fw_action",
+        "src",
+        "dst",
+        "proto",
+        "rule"
+      ],
+      "size": 50
+    }
+  ]
+}
