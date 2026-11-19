@@ -1,0 +1,143 @@
+{
+  "id": "SONICWALL_ADMIN",
+  "title": "SonicWall - Administration & Logins",
+  "description": "Who signed in to the firewall and what changed: administrator and user logins, failed logins by user and source, administration sessions, and configuration and security policy changes with their old and new values.",
+  "panels": [
+    {
+      "id": "logins",
+      "title": "Successful Logins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(29 OR 199 OR 237 OR 238 OR 1080)"
+    },
+    {
+      "id": "failed_logins",
+      "title": "Failed Logins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(30 OR 32 OR 33 OR 200)"
+    },
+    {
+      "id": "user_events",
+      "title": "User & Session Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND gcat:4"
+    },
+    {
+      "id": "config_changes",
+      "title": "Configuration Changes",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432)"
+    },
+    {
+      "id": "activity_over_time",
+      "title": "Logins, Sessions and Changes Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "syslog_type:sonicwall AND (gcat:4 OR m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432))"
+    },
+    {
+      "id": "failed_login_users",
+      "title": "Failed Logins by User",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(30 OR 32 OR 33 OR 200)",
+      "field": "usr",
+      "size": 15
+    },
+    {
+      "id": "failed_login_sources",
+      "title": "Failed Logins by Source IP",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(30 OR 32 OR 33 OR 200)",
+      "field": "src_ip",
+      "size": 15
+    },
+    {
+      "id": "user_event_types",
+      "title": "User & Session Events by Type",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND gcat:4",
+      "field": "msg_cat",
+      "size": 15
+    },
+    {
+      "id": "user_event_users",
+      "title": "User & Session Events by User",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND gcat:4",
+      "field": "usr",
+      "size": 15
+    },
+    {
+      "id": "changed_settings",
+      "title": "Changed Settings",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432)",
+      "field": "grpName",
+      "size": 15
+    },
+    {
+      "id": "change_users",
+      "title": "Changes by User",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432)",
+      "field": "usr",
+      "size": 15
+    },
+    {
+      "id": "recent_changes",
+      "title": "Recent Configuration Changes",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall AND m:(440 OR 441 OR 442 OR 1382 OR 1383 OR 1432)",
+      "fields": [
+        "timestamp",
+        "usr",
+        "sess",
+        "msg",
+        "grpName",
+        "oldValue",
+        "newValue",
+        "src"
+      ],
+      "size": 50
+    },
+    {
+      "id": "recent_user_events",
+      "title": "Recent Logins and Sessions",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall AND gcat:4",
+      "fields": [
+        "timestamp",
+        "msg",
+        "usr",
+        "sess",
+        "src",
+        "note"
+      ],
+      "size": 50
+    }
+  ]
+}

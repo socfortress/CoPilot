@@ -32,6 +32,7 @@ class AvailableContentPacks(str, Enum):
     SOCFORTRESS_DEFENDER_FOR_ENDPOINT_INPUT_TCP = "The Defender for Endpoint Input TCP content pack"
     SOCFORTRESS_DEFENDER_FOR_ENDPOINT_STREAM = "The Defender for Endpoint Stream content pack"
     SOCFORTRESS_SONICWALL_INPUT_SYSLOG_TLS = "The Sonicwall Input Syslog TLS content pack"
+    SOCFORTRESS_SONICWALL_INPUT_SYSLOG_UDP = "The Sonicwall Input Syslog UDP content pack"
     SOCFORTRESS_SONICWALL_STREAM = "The Sonicwall Stream content pack"
     SOCFORTRESS_SONICWALL_PROCESSING_PIPELINE = "The Sonicwall Processing Pipeline content pack"
 

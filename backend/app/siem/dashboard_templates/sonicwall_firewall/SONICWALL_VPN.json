@@ -1,0 +1,126 @@
+{
+  "id": "SONICWALL_VPN",
+  "title": "SonicWall - VPN & Remote Access",
+  "description": "Site-to-site IPsec and remote access: IKE and IPsec activity per VPN policy, negotiation and authentication failures, remote user logins through the VPN, WAN and SSL VPN zones, and what SSL VPN clients connect to.",
+  "panels": [
+    {
+      "id": "ipsec_events",
+      "title": "IPsec & IKE Events",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND gcat:7"
+    },
+    {
+      "id": "ipsec_failures",
+      "title": "IPsec & IKE Failures",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(65 OR 67 OR 70 OR 88 OR 402 OR 409)"
+    },
+    {
+      "id": "remote_logins",
+      "title": "Remote User Logins",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(237 OR 238 OR 1080)"
+    },
+    {
+      "id": "sslvpn_traffic",
+      "title": "SSL VPN Client Traffic",
+      "type": "stat",
+      "w": 3,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND srcZone:SSLVPN"
+    },
+    {
+      "id": "vpn_over_time",
+      "title": "VPN Activity Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "syslog_type:sonicwall AND (gcat:7 OR m:(237 OR 238 OR 1080) OR srcZone:SSLVPN)"
+    },
+    {
+      "id": "vpn_policies",
+      "title": "VPN Policies",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND gcat:7",
+      "field": "vpnpolicy",
+      "size": 15
+    },
+    {
+      "id": "ipsec_messages",
+      "title": "IPsec & IKE Messages",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND gcat:7",
+      "field": "msg_cat",
+      "size": 15
+    },
+    {
+      "id": "remote_users",
+      "title": "Remote Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(237 OR 238 OR 1080)",
+      "field": "usr",
+      "size": 15
+    },
+    {
+      "id": "remote_login_sources",
+      "title": "Remote Login Source IPs",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(237 OR 238 OR 1080)",
+      "field": "src_ip",
+      "size": 15
+    },
+    {
+      "id": "sslvpn_users",
+      "title": "SSL VPN Users",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND srcZone:SSLVPN",
+      "field": "usr",
+      "size": 15
+    },
+    {
+      "id": "sslvpn_destinations",
+      "title": "SSL VPN Client Destinations",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND srcZone:SSLVPN",
+      "field": "dst_ip",
+      "size": 15
+    },
+    {
+      "id": "recent_vpn",
+      "title": "Recent VPN Events",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall AND (gcat:7 OR m:(237 OR 238 OR 1080) OR srcZone:SSLVPN)",
+      "fields": [
+        "timestamp",
+        "msg",
+        "usr",
+        "src",
+        "dst",
+        "vpnpolicy",
+        "sess",
+        "fw_action"
+      ],
+      "size": 50
+    }
+  ]
+}

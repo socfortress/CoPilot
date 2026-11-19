@@ -1,0 +1,315 @@
+{
+  "v": 1,
+  "id": "REPLACE_UUID_GLOBAL",
+  "rev": 1,
+  "name": "customer_name_SONICWALL_INPUT_SYSLOG_UDP",
+  "summary": "customer_name_SONICWALL_INPUT_SYSLOG_UDP",
+  "description": "",
+  "vendor": "SOCFortress",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "REPLACE_UUID_SPECIFIC",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "customer_name - SONICWALL FIREWALL LOGS AND EVENTS - UDP"
+        },
+        "configuration": {
+          "port": {
+            "@type": "integer",
+            "@value": "SYSLOG_PORT"
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "force_rdns": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "allow_override_date": {
+            "@type": "boolean",
+            "@value": true
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "expand_structured_data": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "store_full_message": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "charset_name": {
+            "@type": "string",
+            "@value": "UTF-8"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 8
+          }
+        },
+        "static_fields": {
+          "syslog_type": {
+            "@type": "string",
+            "@value": "sonicwall"
+          },
+          "syslog_customer": {
+            "@type": "string",
+            "@value": "customer_code"
+          }
+        },
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.syslog.udp.SyslogUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": [
+          {
+            "target_field": {
+              "@type": "string",
+              "@value": "message"
+            },
+            "condition_value": {
+              "@type": "string",
+              "@value": ""
+            },
+            "order": {
+              "@type": "integer",
+              "@value": 0
+            },
+            "converters": [
+              {
+                "type": {
+                  "@type": "string",
+                  "@value": "TOKENIZER"
+                },
+                "configuration": {}
+              }
+            ],
+            "configuration": {},
+            "source_field": {
+              "@type": "string",
+              "@value": "message"
+            },
+            "title": {
+              "@type": "string",
+              "@value": "SONIC WALL KEY VALUE PAIRS EXTRACTOR"
+            },
+            "type": {
+              "@type": "string",
+              "@value": "COPY_INPUT"
+            },
+            "cursor_strategy": {
+              "@type": "string",
+              "@value": "COPY"
+            },
+            "condition_type": {
+              "@type": "string",
+              "@value": "NONE"
+            }
+          },
+          {
+            "target_field": {
+              "@type": "string",
+              "@value": "dst_ip"
+            },
+            "condition_value": {
+              "@type": "string",
+              "@value": ""
+            },
+            "order": {
+              "@type": "integer",
+              "@value": 1
+            },
+            "converters": [],
+            "configuration": {
+              "index": {
+                "@type": "integer",
+                "@value": 1
+              },
+              "split_by": {
+                "@type": "string",
+                "@value": ":"
+              }
+            },
+            "source_field": {
+              "@type": "string",
+              "@value": "dst"
+            },
+            "title": {
+              "@type": "string",
+              "@value": "SONICWALL SPLIT DST IP"
+            },
+            "type": {
+              "@type": "string",
+              "@value": "SPLIT_AND_INDEX"
+            },
+            "cursor_strategy": {
+              "@type": "string",
+              "@value": "COPY"
+            },
+            "condition_type": {
+              "@type": "string",
+              "@value": "NONE"
+            }
+          },
+          {
+            "target_field": {
+              "@type": "string",
+              "@value": "src_ip"
+            },
+            "condition_value": {
+              "@type": "string",
+              "@value": ""
+            },
+            "order": {
+              "@type": "integer",
+              "@value": 1
+            },
+            "converters": [],
+            "configuration": {
+              "index": {
+                "@type": "integer",
+                "@value": 1
+              },
+              "split_by": {
+                "@type": "string",
+                "@value": ":"
+              }
+            },
+            "source_field": {
+              "@type": "string",
+              "@value": "src"
+            },
+            "title": {
+              "@type": "string",
+              "@value": "SONICWALL SPLIT SRC IP"
+            },
+            "type": {
+              "@type": "string",
+              "@value": "SPLIT_AND_INDEX"
+            },
+            "cursor_strategy": {
+              "@type": "string",
+              "@value": "COPY"
+            },
+            "condition_type": {
+              "@type": "string",
+              "@value": "NONE"
+            }
+          },
+          {
+            "target_field": {
+              "@type": "string",
+              "@value": "msg_cat"
+            },
+            "condition_value": {
+              "@type": "string",
+              "@value": ""
+            },
+            "order": {
+              "@type": "integer",
+              "@value": 1
+            },
+            "converters": [],
+            "configuration": {
+              "index": {
+                "@type": "integer",
+                "@value": 1
+              },
+              "split_by": {
+                "@type": "string",
+                "@value": ":"
+              }
+            },
+            "source_field": {
+              "@type": "string",
+              "@value": "msg"
+            },
+            "title": {
+              "@type": "string",
+              "@value": "SONICWALL SPLIT MSG CATEGORY"
+            },
+            "type": {
+              "@type": "string",
+              "@value": "SPLIT_AND_INDEX"
+            },
+            "cursor_strategy": {
+              "@type": "string",
+              "@value": "COPY"
+            },
+            "condition_type": {
+              "@type": "string",
+              "@value": "NONE"
+            }
+          },
+          {
+            "target_field": {
+              "@type": "string",
+              "@value": "msg_detail"
+            },
+            "condition_value": {
+              "@type": "string",
+              "@value": ""
+            },
+            "order": {
+              "@type": "integer",
+              "@value": 1
+            },
+            "converters": [],
+            "configuration": {
+              "index": {
+                "@type": "integer",
+                "@value": 2
+              },
+              "split_by": {
+                "@type": "string",
+                "@value": ":"
+              }
+            },
+            "source_field": {
+              "@type": "string",
+              "@value": "msg"
+            },
+            "title": {
+              "@type": "string",
+              "@value": "SONICWALL SPLIT MSG DETAIL"
+            },
+            "type": {
+              "@type": "string",
+              "@value": "SPLIT_AND_INDEX"
+            },
+            "cursor_strategy": {
+              "@type": "string",
+              "@value": "COPY"
+            },
+            "condition_type": {
+              "@type": "string",
+              "@value": "NONE"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    }
+  ]
+}

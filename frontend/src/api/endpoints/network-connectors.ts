@@ -33,7 +33,10 @@ export interface FortinetProvisionPayload extends FortinetProvision {
 }
 
 export interface SonicwallProvision {
-	tcp_enabled: boolean
+	/** Syslog over TCP with TLS. The backend's default when neither transport is set. */
+	tls_enabled: boolean
+	/** Syslog over UDP, straight from the firewall. */
+	udp_enabled: boolean
 	hot_data_retention: number
 	index_replicas: number
 }

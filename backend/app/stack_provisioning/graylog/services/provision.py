@@ -242,11 +242,17 @@ async def create_etw_rule(rule_title: str) -> None:
 
 # ! NETWORK CONNECTOR CONTENT PACKS PROVISIONING ! #
 async def filter_content_packs(content_packs, protocol_type):
-    if protocol_type == "TCP":
-        return [pack for pack in content_packs if "UDP" not in pack]
-    if protocol_type == "UDP":
-        return [pack for pack in content_packs if "TCP" not in pack]
-    return content_packs
+    """
+    Keep the shared packs (stream, pipeline) and the one input pack for the chosen transport.
+
+    An input pack's name ends with its transport (`..._INPUT_SYSLOG_TCP`, `..._INPUT_SYSLOG_UDP`,
+    `..._INPUT_SYSLOG_TLS`, `..._INPUT_TCP`), so only the input that matches is installed. Without a
+    protocol every pack is kept, for connectors with a single input.
+    """
+    if not protocol_type:
+        return content_packs
+    suffix = f"_{protocol_type.upper()}"
+    return [pack for pack in content_packs if "_INPUT_" not in pack or pack.endswith(suffix)]
 
 
 async def process_content_pack(content_pack, content_pack_request):

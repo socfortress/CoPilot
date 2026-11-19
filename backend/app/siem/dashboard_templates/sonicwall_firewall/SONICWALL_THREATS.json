@@ -1,0 +1,242 @@
+{
+  "id": "SONICWALL_THREATS",
+  "title": "SonicWall - Threat Prevention",
+  "description": "What the security services caught: IPS, Anti-Spyware and Gateway Anti-Virus alerts, Botnet Filter and Geo-IP Filter blocks, and Application Control alerts. Shows the signatures, the hosts on both ends, and whether the traffic was dropped or only detected. Botnet and Geo-IP blocks of an internal host's outbound connection point at the host to check.",
+  "panels": [
+    {
+      "id": "ips_alerts",
+      "title": "IPS Alerts",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609)"
+    },
+    {
+      "id": "anti_spyware_alerts",
+      "title": "Anti-Spyware Alerts",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(794 OR 795)"
+    },
+    {
+      "id": "gateway_av_alerts",
+      "title": "Gateway Anti-Virus Alerts",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:809"
+    },
+    {
+      "id": "botnet_blocks",
+      "title": "Botnet Filter Blocks",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519)"
+    },
+    {
+      "id": "geoip_blocks",
+      "title": "Geo-IP Filter Blocks",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(1198 OR 1474 OR 1199 OR 1475)"
+    },
+    {
+      "id": "app_control_alerts",
+      "title": "Application Control Alerts",
+      "type": "stat",
+      "w": 2,
+      "h": 100,
+      "lucene": "syslog_type:sonicwall AND m:(1154 OR 1155)"
+    },
+    {
+      "id": "alerts_over_time",
+      "title": "Security Service Alerts Over Time",
+      "type": "histogram",
+      "w": 12,
+      "h": 200,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)"
+    },
+    {
+      "id": "alert_types",
+      "title": "Alerts by Type",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)",
+      "field": "msg_cat",
+      "size": 15
+    },
+    {
+      "id": "ips_signatures",
+      "title": "IPS Signatures",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609)",
+      "field": "ipscat",
+      "size": 15
+    },
+    {
+      "id": "ips_sources",
+      "title": "IPS Alert Sources",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609)",
+      "field": "src_ip",
+      "size": 10
+    },
+    {
+      "id": "ips_destinations",
+      "title": "IPS Alert Destinations",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609)",
+      "field": "dst_ip",
+      "size": 10
+    },
+    {
+      "id": "ips_priority",
+      "title": "IPS Priority (1 high, 3 low)",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609)",
+      "field": "ipspri",
+      "size": 10
+    },
+    {
+      "id": "botnet_internal_hosts",
+      "title": "Internal Hosts Reaching Botnet Servers",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1201 OR 1477 OR 1519)",
+      "field": "src_ip",
+      "size": 10
+    },
+    {
+      "id": "botnet_servers",
+      "title": "Botnet Servers Contacted",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1201 OR 1477 OR 1519)",
+      "field": "dst_ip",
+      "size": 10
+    },
+    {
+      "id": "botnet_initiators",
+      "title": "Botnet Initiators Blocked",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1200 OR 1476 OR 1518)",
+      "field": "src_ip",
+      "size": 10
+    },
+    {
+      "id": "geoip_initiators",
+      "title": "Geo-IP: Blocked Initiators",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1198 OR 1474)",
+      "field": "src_ip",
+      "size": 10
+    },
+    {
+      "id": "geoip_services",
+      "title": "Geo-IP: Targeted Services",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1198 OR 1474)",
+      "field": "proto",
+      "size": 10
+    },
+    {
+      "id": "geoip_internal_hosts",
+      "title": "Geo-IP: Internal Hosts Blocked Going Out",
+      "type": "bar_h",
+      "w": 4,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1199 OR 1475)",
+      "field": "src_ip",
+      "size": 10
+    },
+    {
+      "id": "app_control_signatures",
+      "title": "Application Control Signatures",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(1154 OR 1155)",
+      "field": "appcat",
+      "size": 15
+    },
+    {
+      "id": "malware_signatures",
+      "title": "Anti-Spyware and Gateway Anti-Virus Signatures",
+      "type": "bar_h",
+      "w": 6,
+      "h": 320,
+      "lucene": "syslog_type:sonicwall AND m:(794 OR 795 OR 809)",
+      "field": "msg_detail",
+      "size": 15
+    },
+    {
+      "id": "alert_actions",
+      "title": "Dropped or Only Detected",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)",
+      "field": "fw_action",
+      "size": 10
+    },
+    {
+      "id": "alert_source_zones",
+      "title": "Alerts by Source Zone",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)",
+      "field": "srcZone",
+      "size": 10
+    },
+    {
+      "id": "alert_destination_zones",
+      "title": "Alerts by Destination Zone",
+      "type": "pie",
+      "w": 4,
+      "h": 300,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)",
+      "field": "dstZone",
+      "size": 10
+    },
+    {
+      "id": "recent_alerts",
+      "title": "Recent Security Service Alerts",
+      "type": "table",
+      "w": 12,
+      "h": 420,
+      "lucene": "syslog_type:sonicwall AND m:(608 OR 609 OR 794 OR 795 OR 809 OR 1200 OR 1476 OR 1518 OR 1201 OR 1477 OR 1519 OR 1198 OR 1474 OR 1199 OR 1475 OR 1154 OR 1155)",
+      "fields": [
+        "timestamp",
+        "msg",
+        "src",
+        "dst",
+        "proto",
+        "fw_action",
+        "srcZone",
+        "dstZone"
+      ],
+      "size": 50
+    }
+  ]
+}

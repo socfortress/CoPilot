@@ -176,6 +176,7 @@ import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
 import FortinetForm from "./provisions/FortinetForm.vue"
 import SentinelOneForm from "./provisions/SentinelOneForm.vue"
+import { toSonicwallProvision } from "./provisions/sonicwall"
 import SonicwallForm from "./provisions/SonicwallForm.vue"
 
 const { networkConnector, hideDeleteButton, size } = defineProps<{
@@ -229,7 +230,7 @@ const fortinetOptions = ref<FortinetModel>({
 })
 
 const sonicwallOptions = ref<SonicWallModel>({
-	protocol: "tcp",
+	protocol: "tls",
 	hot_data_retention: 1,
 	index_replicas: 0
 })
@@ -310,11 +311,7 @@ function fortinetProvision() {
 function sonicwallProvision() {
 	loadingSonicwallProvision.value = true
 
-	const options: SonicwallProvision = {
-		tcp_enabled: sonicwallOptions.value.protocol === "tcp",
-		hot_data_retention: sonicwallOptions.value.hot_data_retention,
-		index_replicas: sonicwallOptions.value.index_replicas
-	}
+	const options: SonicwallProvision = toSonicwallProvision(sonicwallOptions.value)
 
 	Api.networkConnectors
 		.sonicwallProvision(customerCode.value, serviceName.value, options)

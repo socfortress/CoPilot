@@ -1,0 +1,19 @@
+{
+  "id": "sonicwall_firewall",
+  "title": "SonicWall - Firewall",
+  "description": "Dashboards for SonicWall firewalls (SonicOS) whose syslog reaches the SIEM stack through the SonicWall network connector, over UDP or TLS. They cover dropped and blocked traffic, the security services (IPS, Anti-Spyware, Gateway Anti-Virus, Botnet Filter, Geo-IP Filter, Application Control), site-to-site and remote-access VPN, and administrator logins and configuration changes. Enable them on the customer's sonicwall-<customer_code>* event source.",
+  "vendor": "SonicWall",
+  "product": "SonicOS Firewall",
+  "event_type": "Firewall",
+  "tags": [
+    "sonicwall",
+    "firewall",
+    "network",
+    "ips",
+    "botnet",
+    "geo-ip",
+    "vpn"
+  ],
+  "color": "#F26522",
+  "icon": "network"
+}

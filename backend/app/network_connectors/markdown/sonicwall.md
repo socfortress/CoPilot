@@ -2,9 +2,14 @@
 
 This process involves configuring the SonicWall firewall to send logs to an external syslog server.
 
-## Method 1: Direct Syslog Forwarding (UDP/TCP)
+When you deploy this network connector, CoPilot creates one Graylog input for the customer, listening on the connector's `SYSLOG_PORT`. Choose its transport when you deploy:
 
-For direct syslog forwarding from SonicWall to your SIEM stack, follow the [SonicWall Syslog Configuration Guide](https://socfortress.supportbench.net/ar-1084/).
+-   **UDP**: the firewall sends syslog straight to the SIEM stack (Method 1). `TLS_CERT_FILE` and `TLS_KEY_FILE` are not used and can be left empty.
+-   **TLS**: a local syslog-ng collector forwards the firewall's syslog over TLS (Method 2). `TLS_CERT_FILE` and `TLS_KEY_FILE` are required.
+
+## Method 1: Direct Syslog Forwarding (UDP)
+
+For direct syslog forwarding from SonicWall to your SIEM stack, deploy the network connector with **UDP** and follow the [SonicWall Syslog Configuration Guide](https://socfortress.supportbench.net/ar-1084/).
 
 ### Step 1: Accessing the SonicWall Firewall
 
@@ -19,16 +24,16 @@ Log in to your SonicWall firewall using the web management interface:
 Once logged in, follow these steps to configure syslog forwarding:
 
 -   **Navigate to Log Settings**
-    -   Go to **Log** > **Settings** in the left-hand navigation menu.
+    -   Go to **Log** > **Settings** in the left-hand navigation menu (SonicOS 7: **Device** > **Log** > **Syslog**).
     -   Click on the **Syslog** tab.
 
 -   **Enable Syslog**
     -   Check the box to **Enable Syslog**.
 
 -   **Configure Syslog Server Details**
-    -   **Name or IP Address:** Enter the IP address or hostname of your syslog server.
-    -   **Port:** Specify the port number (default is 514 for UDP, or custom port for TCP).
-    -   **Syslog Format:** Select the syslog format (recommended: **Syslog** or **CEF**).
+    -   **Name or IP Address:** Enter the IP address or hostname of your SIEM stack's Graylog.
+    -   **Port:** Enter the customer's `SYSLOG_PORT` from this network connector. The firewall must send to that port: the SonicWall default of 514 only works if `SYSLOG_PORT` is 514.
+    -   **Syslog Format:** Select **Default** or **Enhanced Syslog**. Both send SonicWall's `key=value` fields, which the SOCFortress content pack parses. CEF, ArcSight and WebTrends formats are not parsed.
     -   **Syslog ID:** (Optional) Enter a unique identifier for this SonicWall device.
 
 -   **Select Log Categories**
@@ -62,7 +67,7 @@ Check your syslog server to verify that it is receiving logs from the SonicWall 
 
 ## Method 2: TLS Encrypted Forwarding via Syslog-NG (Recommended for Production)
 
-For secure, encrypted log forwarding, use a local syslog-ng collector to receive UDP logs from SonicWall within your local network, then forward them via TLS to your SIEM stack.
+For secure, encrypted log forwarding, use a local syslog-ng collector to receive UDP logs from SonicWall within your local network, then forward them via TLS to your SIEM stack. Deploy the network connector with **TLS**, with `TLS_CERT_FILE` and `TLS_KEY_FILE` set.
 
 ### Overview
 
@@ -96,7 +101,7 @@ Configure your SonicWall to send logs to the **local syslog-ng collector IP addr
 -   **Configure Local Collector as Syslog Server**
     -   **Name or IP Address:** Enter the IP address of your local syslog-ng collector
     -   **Port:** 514 (UDP) or the port configured on your collector
-    -   **Syslog Format:** Syslog or CEF
+    -   **Syslog Format:** Default or Enhanced Syslog (CEF, ArcSight and WebTrends formats are not parsed)
     -   Enable relevant log categories
 
 -   **Apply Configuration**
@@ -108,7 +113,7 @@ On your local syslog-ng collector, configure the destination to forward logs via
 
 -   Reference the [Syslog-NG TLS Configuration Guide](https://socfortress.supportbench.net/article/local-log-collector-using-syslog-ng) for detailed steps
 -   Ensure TLS certificates are properly configured
--   Configure the destination with your SIEM stack's IP address and TLS port
+-   Configure the destination with your SIEM stack's IP address and the customer's `SYSLOG_PORT`
 
 ### Step 4: Verify End-to-End Log Flow
 

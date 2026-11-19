@@ -10,6 +10,10 @@ CloudTrail dashboard enabled on an event source that also covers GuardDuty (or t
 still shows only its own service. And `data_aws_severity` is a keyword, so GuardDuty severity bands
 must not use a numeric range — on a keyword, `[7 TO 10]` compares strings and matches nothing.
 
+The SonicWall category's panels are scoped by `syslog_type:sonicwall`, may only read fields the
+SonicWall network connector produces, and leave TCP connection teardown out wherever they rank
+hosts by dropped traffic.
+
 No DB, no network.
 
 Run with: cd backend && python -m pytest tests/test_siem_dashboard_templates.py
@@ -111,3 +115,82 @@ def test_guardduty_severity_bands_match_aws_ranges(severity, band):
     matched = [name for name, pattern in bands.items() if re.fullmatch(pattern, severity)]
 
     assert matched == ([band] if band else [])
+
+
+# ── SonicWall ────────────────────────────────────────────────────────
+
+SONICWALL_TEMPLATES = [path for path in TEMPLATE_FILES if path.parent.name == "sonicwall_firewall"]
+
+# What a SonicWall event carries once the SonicWall network connector's input and pipeline have
+# processed it: Graylog's own fields, the syslog level the pipeline names, the fields the UDP
+# input's extractors derive, and SonicWall's own key=value pairs.
+SONICWALL_FIELDS = {
+    "timestamp",
+    "syslog_type",
+    "syslog_customer",
+    "level",
+    "syslog_level",
+    "src_ip",
+    "dst_ip",
+    "msg_cat",
+    "msg_detail",
+    "m",
+    "msg",
+    "fw",
+    "fw_action",
+    "gcat",
+    "src",
+    "dst",
+    "srcZone",
+    "dstZone",
+    "proto",
+    "rule",
+    "note",
+    "usr",
+    "sess",
+    "ipscat",
+    "ipspri",
+    "appcat",
+    "vpnpolicy",
+    "grpName",
+    "oldValue",
+    "newValue",
+}
+
+
+def lucene_fields(lucene: str) -> set:
+    """The fields a Lucene query names, `_exists_:field` included."""
+    named = set(re.findall(r"(?<![\w.])([A-Za-z_]\w*):", lucene))
+    return (named - {"_exists_"}) | set(re.findall(r"_exists_:(\w+)", lucene))
+
+
+def test_the_sonicwall_category_is_listed():
+    assert "sonicwall_firewall" in {category.id for category in list_categories()}
+    assert SONICWALL_TEMPLATES
+
+
+@pytest.mark.parametrize("path", SONICWALL_TEMPLATES, ids=lambda p: p.stem)
+def test_every_sonicwall_panel_is_scoped_to_sonicwall_events(path):
+    """So a dashboard enabled on an event source that also covers other indices shows only SonicWall."""
+    for panel in load(path)["panels"]:
+        assert panel["lucene"].startswith("syslog_type:sonicwall"), f"{panel['id']} is not scoped to SonicWall"
+
+
+@pytest.mark.parametrize("path", SONICWALL_TEMPLATES, ids=lambda p: p.stem)
+def test_every_sonicwall_panel_reads_fields_the_connector_produces(path):
+    """A misspelt field is no error to the indexer: the panel just stays empty forever."""
+    for panel in load(path)["panels"]:
+        read = lucene_fields(panel["lucene"]) | set(filter(None, [panel.get("field")])) | set(panel.get("fields") or [])
+        unknown = read - SONICWALL_FIELDS
+        assert not unknown, f"{path.stem}/{panel['id']} reads {sorted(unknown)}"
+
+
+def test_hosts_ranked_by_dropped_traffic_leave_tcp_teardown_out():
+    """SonicOS logs each RST or late packet of a closing connection as a drop (events 712 and 713),
+    with the zones of the connection and the addresses of the packet: a server's reset to a LAN
+    client reads LAN to WAN with the server as the source. They are most of the drops, so a panel
+    ranking hosts by dropped traffic without excluding them ranks servers that answered."""
+    for path in SONICWALL_TEMPLATES:
+        for panel in load(path)["panels"]:
+            if "fw_action:drop" in panel["lucene"] and panel.get("field") in ("src_ip", "dst_ip"):
+                assert "NOT m:(712 OR 713)" in panel["lucene"], f"{path.stem}/{panel['id']}"
