@@ -27,7 +27,8 @@ from app.time_utils import now_utc
 
 class Customers(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(sa_column_kwargs={"index": True}, max_length=50, nullable=False)
+    # Unique (migration 38c2e85a670a): MySQL 8.4 needs it for the foreign keys pointing here.
+    customer_code: str = Field(sa_column_kwargs={"index": True, "unique": True}, max_length=50, nullable=False)
     parent_customer_code: Optional[str] = Field(max_length=11)
     customer_name: str = Field(max_length=50, nullable=False)
     contact_last_name: Optional[str] = Field(max_length=50)

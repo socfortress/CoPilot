@@ -1,7 +1,7 @@
 """MySQL 8.4 compatibility for CoPilot's schema migrations.
 
-CoPilot's foreign keys to ``customers.customer_code`` and ``agents.agent_id`` point at
-indexes that are not unique (both tables' primary key is ``id``). MySQL 8.4 deprecates such
+CoPilot's migrations create foreign keys to ``customers.customer_code`` and ``agents.agent_id``
+while their indexes are not unique (both tables' primary key is ``id``). MySQL 8.4 deprecates such
 keys and, while ``restrict_fk_on_non_standard_key`` is ON (its default), refuses to create one
 (ERROR 6125) and refuses every ALTER TABLE on a table they point at (ERROR 1553). Existing keys
 keep working after an upgrade, but a fresh install stops at the first migration, and on an
@@ -12,8 +12,10 @@ A session may switch that check off, so every connection Alembic opens does so b
 migrates. MySQL 8.0 and MariaDB have no such variable, and nothing is done there. Only the
 migrations' connections change: the application's own never run DDL.
 
-The durable fix is a UNIQUE key on both columns, after which the keys are standard and this
-setting no longer matters to them.
+Migration 38c2e85a670a makes ``customers.customer_code`` unique, so its 44 keys are standard
+afterwards. The setting still matters to the migrations before it (a fresh install runs them all),
+to ``agents.agent_id``, which stays non-unique (a Wazuh agent id is unique per manager only), and
+where duplicate customer codes kept the old index.
 """
 
 from loguru import logger

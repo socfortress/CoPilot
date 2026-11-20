@@ -20,8 +20,8 @@ A. An install on the image docker-compose.yml shipped before (``mysql:8.0.46-deb
 B. A fresh install on the same image without any flag (a MySQL 8.4 of the customer's own):
    - every migration applies from an empty database (against the pre-fix tree the first one stops
      with ERROR 6125), and the later migration of A applies and rolls back;
-   - the server itself still refuses such a key outside the migrations: only their own sessions
-     are relaxed;
+   - the server itself still refuses such a key (one to ``agents.agent_id``) outside the
+     migrations: only their own sessions are relaxed;
    - ``mysql_native_password`` is off there, which is why compose turns it on.
 """
 import asyncio
@@ -289,8 +289,9 @@ def fresh_install_without_flags():
     ok, detail = later_migration_round_trip()
     check("a later migration altering customers and agents applies and rolls back", ok, detail)
     try:
+        # agents.agent_id: customers.customer_code is unique since 38c2e85a670a, so a key to it is standard.
         query(
-            "CREATE TABLE e2e_mysql84_plain (customer_code VARCHAR(50), FOREIGN KEY (customer_code) REFERENCES customers (customer_code))",
+            "CREATE TABLE e2e_mysql84_plain (agent_id VARCHAR(256), FOREIGN KEY (agent_id) REFERENCES agents (agent_id))",
             who=APP,
         )
         refused = "created"
