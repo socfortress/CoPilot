@@ -1,0 +1,212 @@
+version: "2"
+
+services:
+    copilot-backend:
+        image: ghcr.io/socfortress/copilot-backend:latest
+        # Expose the Ports for Graylog Alerting and Docs
+        ports:
+            - "5000:5000"
+        volumes:
+            - ./data/copilot-backend-data/logs:/opt/logs
+            # Mount the copilot.db file to persist the database
+            - ./data/data:/opt/copilot/backend/data
+        env_file: .env
+        depends_on:
+            - copilot-mysql
+        restart: always
+
+    copilot-frontend:
+        image: ghcr.io/socfortress/copilot-frontend:latest
+        environment:
+            - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+        ports:
+            - "80:80"
+            - "443:443"
+        restart: always
+
+    # ! Optional Customer Portal Service ! #
+    # copilot-customer-portal:
+    #     image: ghcr.io/socfortress/copilot-customer-portal:latest
+    #     environment:
+    #         - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+    #     ports:
+    #         - "8443:443"
+    #     restart: always
+
+    copilot-mysql:
+        image: mysql:8.0.46-debian
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: copilot
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql-data:/var/lib/mysql
+        restart: always
+
+    copilot-minio:
+        image: ghcr.io/socfortress/minio:release.2024-09-13t20-26-02z
+        environment:
+            MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+            MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+        ports:
+            - "9000:9000"
+        volumes:
+            - ./data/data/minio-data:/data
+        command: server /data --console-address ":9001"
+        restart: always
+
+    copilot-nuclei-module:
+        image: ghcr.io/socfortress/copilot-nuclei-module:latest
+        restart: always
+
+    copilot-mcp:
+        image: ghcr.io/socfortress/copilot-mcp:latest
+        volumes:
+            # Mount the Velociraptor config file from host into container
+            - ./data/copilot-mcp/api.config.yaml:/app/velociraptor-config.yaml:ro
+        environment:
+            # Core OpenAI Configuration
+            - OPENAI_API_KEY=${OPENAI_API_KEY}
+            - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+
+            # Application Configuration
+            - APP_HOST=0.0.0.0
+            - APP_PORT=80
+            - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+            # MCP Server Process Management
+            - MCP_SERVER_ENABLED=${MCP_SERVER_ENABLED:-true}
+            - MCP_SERVER_HOST=0.0.0.0
+            - MCP_SERVER_PORT=9900
+
+            # External OpenSearch Configuration
+            - OPENSEARCH_URL=${OPENSEARCH_URL:-${WAZUH_INDEXER_URL}}
+            - OPENSEARCH_USERNAME=${OPENSEARCH_USERNAME:-${WAZUH_INDEXER_USERNAME}}
+            - OPENSEARCH_PASSWORD=${OPENSEARCH_PASSWORD:-${WAZUH_INDEXER_PASSWORD}}
+            - OPENSEARCH_SSL_VERIFY=${OPENSEARCH_SSL_VERIFY:-false}
+            - OPENSEARCH_SSL_SHOW_WARN=${OPENSEARCH_SSL_SHOW_WARN:-false}
+
+            # OpenSearch MCP Server Configuration
+            - MCP_OPENSEARCH_URL=http://copilot-mcp:9900/sse
+            - MCP_OPENSEARCH_AUTH_TOKEN=${MCP_OPENSEARCH_AUTH_TOKEN:-secret-token}
+
+            # External MySQL Configuration
+            - MYSQL_ENABLED=${MYSQL_ENABLED:-true}
+            - MYSQL_HOST=${MYSQL_HOST:-copilot-mysql}
+            - MYSQL_PORT=${MYSQL_PORT:-3306}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+            - MYSQL_DATABASE=${MYSQL_DATABASE:-copilot}
+
+            # MySQL MCP Server Configuration
+            - MCP_MYSQL_URL=http://copilot-mcp:9901/sse
+            - MCP_MYSQL_AUTH_TOKEN=${MCP_MYSQL_AUTH_TOKEN:-mysql-token}
+            - MCP_MYSQL_SERVER_ENABLED=${MCP_MYSQL_SERVER_ENABLED:-true}
+            - MCP_MYSQL_SERVER_HOST=0.0.0.0
+            - MCP_MYSQL_SERVER_PORT=9901
+
+            # External Wazuh Configuration
+            - WAZUH_PROD_URL=${WAZUH_PROD_URL:-${WAZUH_MANAGER_URL}}
+            - WAZUH_PROD_USERNAME=${WAZUH_PROD_USERNAME:-${WAZUH_MANAGER_USERNAME}}
+            - WAZUH_PROD_PASSWORD=${WAZUH_PROD_PASSWORD:-${WAZUH_MANAGER_PASSWORD}}
+            - WAZUH_PROD_SSL_VERIFY=${WAZUH_PROD_SSL_VERIFY:-false}
+            - WAZUH_PROD_TIMEOUT=${WAZUH_PROD_TIMEOUT:-30}
+
+            # Wazuh MCP Server Configuration
+            - MCP_WAZUH_URL=http://copilot-mcp:8000/sse
+            - MCP_WAZUH_AUTH_TOKEN=${MCP_WAZUH_AUTH_TOKEN:-wazuh-token}
+            - MCP_WAZUH_SERVER_ENABLED=${MCP_WAZUH_SERVER_ENABLED:-true}
+            - MCP_WAZUH_HOST=0.0.0.0
+            - MCP_WAZUH_PORT=8000
+
+            # External Velociraptor Configuration
+            - VELOCIRAPTOR_API_KEY=/app/velociraptor-config.yaml
+            - VELOCIRAPTOR_SSL_VERIFY=${VELOCIRAPTOR_SSL_VERIFY:-false}
+            - VELOCIRAPTOR_TIMEOUT=${VELOCIRAPTOR_TIMEOUT:-30}
+
+            # Velociraptor MCP Server Configuration
+            - MCP_VELOCIRAPTOR_URL=http://copilot-mcp:8001/sse
+            - MCP_VELOCIRAPTOR_AUTH_TOKEN=${MCP_VELOCIRAPTOR_AUTH_TOKEN:-velociraptor-token}
+            - MCP_VELOCIRAPTOR_SERVER_ENABLED=${MCP_VELOCIRAPTOR_SERVER_ENABLED:-true}
+            - MCP_VELOCIRAPTOR_HOST=0.0.0.0
+            - MCP_VELOCIRAPTOR_PORT=8001
+
+        depends_on:
+            - copilot-mysql
+        restart: always
+
+    # --- Tier 1 File Analysis inspection plane -------------------------------
+    # copilot-backend talks HTTP to inspector-runner and NEVER touches the Docker
+    # socket itself. inspector-runner spawns ONE hardened copilot-inspector
+    # container per job (--network none, read-only, force-removed after) through
+    # the allowlisting socket proxy. The sample travels on stdin/stdout (base64) —
+    # no shared volume between the runner and the per-job containers.
+    docker-socket-proxy:
+        image: tecnativa/docker-socket-proxy:0.2.0
+        restart: always
+        environment:
+            # Allow ONLY what the runner needs to spawn/attach/kill per-job containers.
+            CONTAINERS: 1          # create/inspect/start/attach/wait/logs/remove
+            IMAGES: 1              # inspect image presence
+            POST: 1                # allow POST (create/start/attach/wait/kill/remove)
+            # Everything else denied by default:
+            BUILD: 0
+            EXEC: 0
+            VOLUMES: 0
+            NETWORKS: 0
+            SWARM: 0
+            SERVICES: 0
+            SECRETS: 0
+            INFO: 0
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        networks:
+            - inspector-internal
+
+    inspector-runner:
+        image: ghcr.io/socfortress/copilot-inspector-runner:latest
+        restart: always
+        ports:
+            - "9100:9000"          # host 9100 -> container 9000 (host 9000 is MinIO)
+        environment:
+            INSPECTOR_MODE: container            # container (prod) | service (dev only)
+            FILE_ANALYSIS_DEV_MODE: "false"
+            INSPECTOR_IMAGE: ghcr.io/socfortress/copilot-inspector:latest
+            DOCKER_HOST: tcp://docker-socket-proxy:2375
+            INSPECTOR_MAX_CONCURRENT: "2"
+            INSPECTOR_JOB_TIMEOUT: "180"
+            INSPECTOR_MEM_LIMIT: "1g"
+            INSPECTOR_PIDS_LIMIT: "256"
+            INSPECTOR_CPUS: "1.0"
+            # Optional ClamAV signature engine (see clamav service below):
+            CLAMAV_ENABLED: "false"
+            CLAMD_HOST: clamav
+            CLAMD_PORT: "3310"
+        depends_on:
+            - docker-socket-proxy
+        networks:
+            - inspector-internal
+            - default
+
+    # Optional signature engine — enable with CLAMAV_ENABLED=true above.
+    # clamav:
+    #     image: clamav/clamav:1.3
+    #     restart: always
+    #     networks:
+    #         - inspector-internal
+
+volumes:
+    mysql-data:
+
+networks:
+    default:
+        driver: bridge
+        # In case you need to set the MTU
+        #driver_opts:
+        #    com.docker.network.driver.mtu: "1450"
+    # Internal-only network between inspector-runner and the socket proxy.
+    inspector-internal:
+        internal: true

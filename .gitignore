@@ -48,6 +48,9 @@ wheels/
 .env
 .env.*
 !.env.example
+
+# upgrade.sh's backups: SQL dumps and MySQL data archives, with credentials in them
+/backups/
 *.sqbpro
 site/
 *.checkpoint

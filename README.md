@@ -53,9 +53,11 @@ All install + upgrade instructions live in the docs site (so the README doesn’
 Quick upgrade reminder (from your CoPilot directory):
 
 ```bash
-docker compose pull
-docker compose up -d
+git pull        # if you cloned the repository
+./upgrade.sh    # backs MySQL up, moves it to a new version when a release does, pulls the images, restarts CoPilot
 ```
+
+`./upgrade.sh --check` says what it would do without changing anything, and `./upgrade.sh --rollback` goes back. When a release doesn't change MySQL's version, `docker compose pull && docker compose up -d` is enough.
 
 ## Connectors
 

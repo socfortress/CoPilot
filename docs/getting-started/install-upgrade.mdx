@@ -223,6 +223,58 @@ Customer portal users are managed via the main CoPilot admin interface:
 
 You’ll likely want to upgrade often as changes ship frequently.
 
+### With the upgrade script (recommended)
+
+`upgrade.sh`, at the top of the repository, upgrades the whole deployment in a safe order: it backs MySQL up, moves MySQL to a new version when a release does, pulls the new images, restarts CoPilot and waits for the backend to finish its database migrations. Nothing is stopped until every check has passed and you have confirmed.
+
+Run it from your CoPilot directory, the one with `docker-compose.yml` and `.env`, as a user who can run `docker` (root, or a member of the `docker` group). It needs only bash and Docker Compose on the host:
+
+**If you cloned the repository:**
+
+```bash
+git pull               # the new docker-compose.yml and upgrade.sh (don't run docker compose up yet)
+./upgrade.sh --check   # optional: what the upgrade would do; changes nothing
+./upgrade.sh
+```
+
+**If you downloaded only `docker-compose.yml`:** download the script of the release you are moving to (`<VERSION>` as in the install steps), then run it. It edits the `copilot-mysql` service of your `docker-compose.yml` (image and command), keeps a copy of the file, and changes nothing else in it.
+
+```bash
+wget -O upgrade.sh https://raw.githubusercontent.com/socfortress/CoPilot/<VERSION>/upgrade.sh
+chmod +x upgrade.sh
+./upgrade.sh
+```
+
+What it does:
+
+1. **Checks** Docker, the Compose file, MySQL's version, MySQL Shell's upgrade checker and the free disk space. If any check fails, it stops there, with CoPilot still running as before.
+2. **Pulls the new images** while CoPilot keeps running.
+3. **Stops the backend and the MCP server, dumps every database**, and shuts MySQL down cleanly.
+4. **When MySQL moves to a new version, archives MySQL's data directory, then upgrades it.** MySQL 5.7, which installs made before September 2024 may still run, goes through MySQL 8.0 first: 8.4 can't upgrade 5.7 data directly.
+5. **Starts everything and waits for the backend** to answer, its database migrations done.
+
+CoPilot is unavailable from the dump until the backend has started again: usually a few minutes, longer when MySQL upgrades a large database.
+
+**Backups.** Each run writes `backups/upgrade-<time>/`: the SQL dump of every database, the archive of MySQL's data directory (when MySQL changed version), the `docker-compose.yml` from before, the upgrade checker's report and a log. They hold CoPilot's data and credentials: keep them safe, and delete them once you no longer need to go back. The script checks that there is room for them first.
+
+**Rollback.** `./upgrade.sh --rollback` stops CoPilot, puts back the data directory archived by the newest upgrade that changed MySQL's version, and the MySQL version you had before, and starts CoPilot again. Everything written to CoPilot's database since that upgrade is lost.
+
+| Option | What it does |
+|---|---|
+| `--check` | Check and print the plan; change nothing. |
+| `-y`, `--yes` | Don't ask for confirmation (for scripts). |
+| `--rollback [RUN_DIR]` | Go back to the MySQL data and version from before an upgrade (default: the newest that archived them). |
+| `--backup-dir DIR` | Write the backups somewhere else than `./backups`. |
+| `--no-data-archive` | Skip the data directory archive (saves disk space, but `--rollback` needs it; the SQL dump is still taken). |
+| `--no-pull` | Use the images already on the host. |
+| `--edit-compose` | Edit a `docker-compose.yml` tracked by git instead of asking you to `git pull` the new one. |
+| `--skip-checker` | Don't run MySQL Shell's upgrade checker. |
+| `--mysql-timeout SEC`, `--backend-timeout SEC` | How long MySQL (default 1800) and the backend (default 900) may take to start. |
+
+If MySQL's root password was changed after MySQL was created, set `COPILOT_MYSQL_ROOT_PASSWORD` when you run the script.
+
+### Without the script
+
 From your CoPilot directory:
 
 ```bash
@@ -230,7 +282,7 @@ docker compose pull
 docker compose up -d
 ```
 
-If you need a clean restart (rare):
+That is all a release needs when it doesn't change MySQL's version (`docker-compose.yml`'s `copilot-mysql` image). If you need a clean restart (rare):
 
 ```bash
 # This stops containers but keeps named volumes / bind-mounted data intact.
@@ -244,7 +296,7 @@ docker compose up -d
 
 ### Upgrading to MySQL 8.4
 
-`docker-compose.yml` runs MySQL **8.4 LTS** (`mysql:8.4.13`); MySQL 8.0 reached end of life in April 2026. The version is pinned in the Compose file, so `docker compose pull` alone keeps your current MySQL: you move to 8.4 when you update `docker-compose.yml`. Its first start upgrades the data in the `mysql-data` volume in place.
+`docker-compose.yml` runs MySQL **8.4 LTS** (`mysql:8.4.13`); MySQL 8.0 reached end of life in April 2026. The version is pinned in the Compose file, so `docker compose pull` alone keeps your current MySQL: you move to 8.4 when you update `docker-compose.yml`. Its first start upgrades the data in the `mysql-data` volume in place. `upgrade.sh` does all of this for you; by hand:
 
 - **The upgrade can't be undone.** MySQL 8.0 can't read the data once 8.4 has upgraded it, so take a backup first, while the old MySQL is still running:
 
@@ -255,7 +307,17 @@ docker compose up -d
   ```
 
   Or stop the stack (`docker compose down`) and copy the `mysql-data` volume.
+- **Shut MySQL down cleanly before you change its image.** Stop the backend and the MCP server, ask for a full shutdown, and give MySQL time to finish it (Docker kills a container after 10 seconds by default, and MySQL won't upgrade data left by a server that didn't shut down cleanly):
+
+  ```bash
+  docker compose stop copilot-backend copilot-mcp
+  docker compose exec -T copilot-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL innodb_fast_shutdown = 0"'
+  docker compose stop -t 900 copilot-mysql
+  ```
+
+  Then update `docker-compose.yml` and run `docker compose up -d`.
+- **MySQL 5.7 can't be upgraded straight to 8.4.** Installs made before September 2024 may still run `mysql:5.7`: move them to `mysql:8.0.46` first (start it once, let it upgrade the data, shut it down cleanly as above), then to 8.4.
 - **The first start takes longer** while MySQL upgrades its data. The backend may restart a few times until MySQL accepts connections.
 - **Keep the `command:` flags** of `copilot-mysql` if you maintain your own Compose file. `--restrict-fk-on-non-standard-key=OFF` lets CoPilot's schema keep its foreign keys to non-unique columns, which MySQL 8.4 otherwise refuses. `--mysql-native-password=ON` keeps installs first created with the old `mysql:5.7` image (before September 2024) working, since their database users still use that login method.
 
-**Running CoPilot on your own MySQL server?** CoPilot works on MySQL 8.4. Its migrations switch `restrict_fk_on_non_standard_key` off for their own database session, so the server needs no setting for CoPilot; but users on `mysql_native_password` need the plugin enabled (`mysql_native_password=ON`) or a new password set with `caching_sha2_password`. Before upgrading the server itself, run MySQL Shell's upgrade checker (`util.checkForServerUpgrade()`) and fix its errors first.
+**Running CoPilot on your own MySQL server?** `upgrade.sh` leaves a MySQL server outside the Compose stack alone (it still pulls and restarts CoPilot). CoPilot works on MySQL 8.4. Its migrations switch `restrict_fk_on_non_standard_key` off for their own database session, so the server needs no setting for CoPilot; but users on `mysql_native_password` need the plugin enabled (`mysql_native_password=ON`) or a new password set with `caching_sha2_password`. Before upgrading the server itself, run MySQL Shell's upgrade checker (`util.checkForServerUpgrade()`) and fix its errors first.

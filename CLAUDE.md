@@ -25,10 +25,21 @@ docker compose pull && docker compose up -d   # backend, frontend, mysql, minio,
 # Local backend rebuild + hot-swap into the running stack (~5–8 min build):
 cd backend && docker buildx build --load -t ghcr.io/socfortress/copilot-backend:latest .
 docker compose up -d --force-recreate copilot-backend
-# Boot signal: "Application startup complete" + "Uvicorn running on 0.0.0.0:5000"
+# Boot signal: "Application startup complete" + "Uvicorn running on 0.0.0.0:5000", but only when no migration
+# ran: Alembic's fileConfig (alembic/env.py) turns uvicorn's loggers off. upgrade.sh asks the backend over HTTP.
 ```
 
 `.env` at repo root feeds compose; `.env.example` documents every var.
+
+### Upgrading a deployment: `upgrade.sh`
+
+`./upgrade.sh` (repo root; `--check`, `--rollback`, `--help`) upgrades a customer's Compose stack, MySQL included: checks (Docker, compose file, MySQL version, MySQL Shell's `util.checkForServerUpgrade()` from the target image, disk), pulls while CoPilot runs, stops `copilot-backend`/`copilot-mcp`, dumps every database, shuts MySQL down slowly (`innodb_fast_shutdown=0`, `stop -t 900`: Docker's 10 s default kills mysqld mid-shutdown, and MySQL won't upgrade data a server didn't shut down cleanly), archives the data directory, upgrades the data, edits the compose file, starts everything and waits until the backend answers HTTP. Docs: `docs/getting-started/install-upgrade.mdx`. Load-bearing:
+- **The data is upgraded in standalone containers on the same mounts, before the compose file is touched**: a failure leaves the file as it was, and `--rollback` restores the archive and the old image. MySQL 5.7 goes through `mysql:8.0.46` first (8.4 refuses 5.7 data); the compose flags go only to 8.4+ (8.0's mysqld refuses an unknown option).
+- **`TARGET_MYSQL_IMAGE` and `TARGET_FLAGS` must equal `docker-compose.yml`'s `copilot-mysql`** (`test_the_script_targets_what_docker_compose_yml_runs`); moving MySQL again means changing both, and the hop logic past 8.4.
+- **It edits only `copilot-mysql`'s `image` and `command`, with awk** (mawk, gawk, busybox and macOS awk give identical output), and only a key directly under `services:` is the service: `docker compose config` writes `depends_on` as a map with a `copilot-mysql:` key. A compose file tracked by git is refused (`git pull` brings the new one; `--edit-compose` overrides), a custom `command:` or `COMPOSE_FILE` is refused, and every edit is checked with `docker compose config` before any downtime.
+- **Backups go to `backups/upgrade-<UTC time>/`** (git-ignored): `mysql-all-databases.sql.gz`, `mysql-data.tar.gz`, the compose file `.before`, the checker report, `upgrade.log` and a `state` file `--rollback` reads (it takes the newest run with an archive). The root password goes to MySQL on stdin, never in an argument.
+
+Tests: `tests/test_upgrade_script.py` (no Docker; sources the script under every bash on the machine, 3.2 included), `tests/e2e/upgrade_script_e2e.py` (Docker, 30-60 min: 8.0.46 and 5.7.44 stacks upgraded, re-run, rolled back).
 
 ### Backend (`cd backend`, Python 3.11)
 
