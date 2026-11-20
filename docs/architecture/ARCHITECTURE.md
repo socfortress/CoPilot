@@ -193,7 +193,7 @@ Key entry points:
 ## Deployment (Docker Compose)
 - `copilot-backend`: FastAPI service on port 5000.
 - `copilot-frontend`: Vue app with TLS, ports 80/443.
-- `copilot-mysql`: MySQL 8.
+- `copilot-mysql`: MySQL 8.4 LTS.
 - `copilot-minio`: object storage.
 - `copilot-nuclei-module`: web vulnerability scanner module.
 - `copilot-mcp`: MCP service for AI queries.

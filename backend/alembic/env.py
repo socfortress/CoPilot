@@ -24,6 +24,7 @@ from app.customer_provisioning.models.default_settings import (
 
 # from app.connectors.sublime.models.alerts import SublimeAlerts
 # from app.connectors.wazuh_manager.models.rules import DisabledRule
+from app.db.mysql_compat import install_fk_relaxation
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -135,6 +136,10 @@ def run_migrations_online() -> None:
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
+    # MySQL 8.4 refuses foreign keys to non-unique keys, and ALTERs on the tables they point at,
+    # unless the session allows them; CoPilot's keys to customers.customer_code and agents.agent_id
+    # are such keys (app/db/mysql_compat.py).
+    install_fk_relaxation(connectable)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

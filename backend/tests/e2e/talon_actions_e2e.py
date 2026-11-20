@@ -3,7 +3,7 @@ disposable MySQL.
 
     docker run -d --name copilot-e2e-mysql -p 13306:3306 \\
         -e MYSQL_ROOT_PASSWORD=e2eroot -e MYSQL_DATABASE=copilot \\
-        -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.0
+        -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.4.13 --restrict-fk-on-non-standard-key=OFF
 
     cd backend && export MYSQL_URL=127.0.0.1:13306 MYSQL_USER=copilot \\
         MYSQL_PASSWORD=e2epass MYSQL_ROOT_PASSWORD=e2eroot \\
