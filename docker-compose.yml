@@ -34,7 +34,17 @@ services:
     #     restart: always
 
     copilot-mysql:
-        image: mysql:8.0.46-debian
+        # MySQL 8.4 LTS. Its first start upgrades an 8.0 data directory in place, and that can't be
+        # undone: back up the mysql-data volume first (docs/getting-started/install-upgrade.mdx).
+        image: mysql:8.4.13
+        command:
+            # CoPilot's foreign keys to customers.customer_code and agents.agent_id point at
+            # non-unique indexes, which MySQL 8.4 otherwise refuses to create, or to ALTER the
+            # tables of (backend/app/db/mysql_compat.py; migrations also switch it off themselves).
+            - --restrict-fk-on-non-standard-key=OFF
+            # Databases first created by this stack's mysql:5.7 image (until September 2024) still
+            # have users on mysql_native_password, which MySQL 8.4 no longer loads by default.
+            - --mysql-native-password=ON
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: copilot

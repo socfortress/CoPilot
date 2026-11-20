@@ -49,7 +49,7 @@ which additionally checks field-by-field parity and the SQL statement budget.
 # once: the disposable e2e MySQL (never the one in .env)
 docker run -d --name copilot-e2e-mysql -p 13306:3306 \
   -e MYSQL_ROOT_PASSWORD=e2eroot -e MYSQL_DATABASE=copilot \
-  -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.0
+  -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.4.13 --restrict-fk-on-non-standard-key=OFF
 
 # once: the disposable e2e MinIO (never the one in .env), where generated reports go
 docker run -d --name copilot-e2e-minio -p 127.0.0.1:19000:9000 \

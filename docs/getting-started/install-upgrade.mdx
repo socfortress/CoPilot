@@ -241,3 +241,21 @@ docker compose up -d
 ```
 
 > Tip: make sure your persistent `data/` directory is backed up before major upgrades.
+
+### Upgrading to MySQL 8.4
+
+`docker-compose.yml` runs MySQL **8.4 LTS** (`mysql:8.4.13`); MySQL 8.0 reached end of life in April 2026. The version is pinned in the Compose file, so `docker compose pull` alone keeps your current MySQL: you move to 8.4 when you update `docker-compose.yml`. Its first start upgrades the data in the `mysql-data` volume in place.
+
+- **The upgrade can't be undone.** MySQL 8.0 can't read the data once 8.4 has upgraded it, so take a backup first, while the old MySQL is still running:
+
+  ```bash
+  docker compose exec -T copilot-mysql sh -c \
+    'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --routines --events' \
+    > copilot-mysql-backup.sql
+  ```
+
+  Or stop the stack (`docker compose down`) and copy the `mysql-data` volume.
+- **The first start takes longer** while MySQL upgrades its data. The backend may restart a few times until MySQL accepts connections.
+- **Keep the `command:` flags** of `copilot-mysql` if you maintain your own Compose file. `--restrict-fk-on-non-standard-key=OFF` lets CoPilot's schema keep its foreign keys to non-unique columns, which MySQL 8.4 otherwise refuses. `--mysql-native-password=ON` keeps installs first created with the old `mysql:5.7` image (before September 2024) working, since their database users still use that login method.
+
+**Running CoPilot on your own MySQL server?** CoPilot works on MySQL 8.4. Its migrations switch `restrict_fk_on_non_standard_key` off for their own database session, so the server needs no setting for CoPilot; but users on `mysql_native_password` need the plugin enabled (`mysql_native_password=ON`) or a new password set with `caching_sha2_password`. Before upgrading the server itself, run MySQL Shell's upgrade checker (`util.checkForServerUpgrade()`) and fix its errors first.

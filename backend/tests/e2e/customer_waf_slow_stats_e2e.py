@@ -10,7 +10,7 @@ Needs Docker and the disposable MySQL of customer_waf_e2e.py:
 
     docker run -d --name copilot-e2e-mysql -p 13306:3306 \\
         -e MYSQL_ROOT_PASSWORD=e2eroot -e MYSQL_DATABASE=copilot \\
-        -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.0
+        -e MYSQL_USER=copilot -e MYSQL_PASSWORD=e2epass mysql:8.4.13 --restrict-fk-on-non-standard-key=OFF
     cd backend && export PYTHONPATH=$PWD
     .venv/bin/python -c "from app.db.db_setup import apply_migrations; apply_migrations()"
     .venv/bin/python tests/e2e/customer_waf_slow_stats_e2e.py        # about 2.5 minutes
