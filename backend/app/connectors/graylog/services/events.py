@@ -137,3 +137,53 @@ async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
             success=False,
             message="Failed to collect alerts",
         )
+
+
+# ── a scoped caller's view of Graylog's events ───────────────────────────────
+#
+# Graylog's events belong to every customer. CoPilot's event definitions stamp each event with
+# the customer it came from (the ``CUSTOMER_CODE`` field, from ``agent_labels_customer`` or
+# ``syslog_customer``), so a caller who sees only some customers asks Graylog for theirs, and
+# what comes back is checked again here: an event that names none of them is dropped.
+
+EVENT_CUSTOMER_FIELDS = ("CUSTOMER_CODE", "syslog_customer", "agent_labels_customer")
+
+
+def scoped_alert_query(alert_query: AlertQuery, codes: list) -> AlertQuery:
+    """``alert_query`` narrowed to the events of ``codes`` (by Graylog's own search)."""
+    quoted = " OR ".join('"' + code.replace("\\", "\\\\").replace('"', '\\"') + '"' for code in codes)
+    clause = f"fields.CUSTOMER_CODE:({quoted})"
+    current = (alert_query.query or "").strip()
+    query = clause if current in ("", "*") else f"({current}) AND {clause}"
+    return alert_query.model_copy(update={"query": query})
+
+
+def event_customer(event: AlertEvent) -> str:
+    for source in (event.event.fields or {}, event.event.group_by_fields or {}):
+        for field in EVENT_CUSTOMER_FIELDS:
+            value = source.get(field)
+            if value:
+                return str(value)
+    return ""
+
+
+def keep_customer_events(response: GraylogAlertsResponse, codes: list) -> GraylogAlertsResponse:
+    """``response`` with only the events of ``codes``, and only their definitions and streams."""
+    wanted = {code.casefold() for code in codes}
+    events = response.alerts.events
+    kept = [event for event in events if event_customer(event).casefold() in wanted]
+    if len(kept) == len(events):
+        alerts = response.alerts
+    else:
+        # Graylog did not narrow the search as asked: its total would count every customer's events.
+        logger.warning(f"Graylog returned {len(events) - len(kept)} event(s) of other customers; dropped")
+        alerts = response.alerts.model_copy(update={"events": kept, "total_events": len(kept)})
+    definitions = {event.event.event_definition_id for event in kept}
+    streams = {stream for event in kept for stream in (*event.event.streams, *event.event.source_streams)}
+    context = alerts.context.model_copy(
+        update={
+            "event_definitions": {key: value for key, value in alerts.context.event_definitions.items() if key in definitions},
+            "streams": {key: value for key, value in alerts.context.streams.items() if key in streams},
+        },
+    )
+    return response.model_copy(update={"alerts": alerts.model_copy(update={"context": context})})

@@ -897,6 +897,32 @@ Rules when adding a route:
   customers assigned to them — **no assignment means no customer** (#1219 removed the
   pre-#1050 wildcard for unassigned analysts, which was the one remaining way an
   assigned-looking analyst saw everything).
+- **Indexer reads are scoped by the document's customer, not by the index name**
+  (`app/middleware/document_access.py`). The indexer has no tenants, so a route that takes
+  an index, a pattern or a document id from the caller, or searches every index, applies
+  the caller's customers (an admin gets no filter):
+  - `customer_filter`: a clause ANDed into searches and aggregations. It decides as ingest
+    does (`incident_alert.resolve_customer_code`): an agent label first; only without one
+    the syslog customer, the customer code, the Office 365 tenant, the AWS account (one
+    customer's, deployed) or the Wazuh worker. A field some index maps as text is matched
+    through `.keyword` only, since `terms` on an analysed field matches tokens (`acme` in
+    `acme-2`).
+  - `ensure_document_access` / `document_visible`: one document. Another customer's, or one
+    naming no customer, reads as missing.
+  - `agent_filters`: Wazuh's state indices (packages), by agent id, name and exact pair
+    (the Exposure page's rule).
+  - `ensure_index_visible` / `visible_index_names`: where only index names or mappings are
+    shown. `customer_index.index_matches_customer` matches whole words, so `lab` no longer
+    claims `collaboration_0` or `lab2_1`.
+  - The local MCP servers (indexer, Wazuh manager, CoPilot's MySQL, Velociraptor) and the
+    ingest backlog (`/incidents/alerts/alerts/not-created`) are admin-only, and the
+    Detections Catalog's deployment-wide hit counts are an admin's view
+    (`without_global_firing`).
+  - A manual alert (`/incidents/alerts/create/manual`) is filed only under one of the
+    caller's customers, so the UBA service user must be assigned the customers it delivers
+    for (as its verdict polling already needs).
+  - `tests/test_analyst_index_scoping.py` lists every audited route (`INDEXER_ROUTES`): a new
+    route that reads the indexer goes there, with its guard and a test.
 
 **Analysts and responders always have a customer** (#1219,
 `app/auth/services/customer_assignment.py:validate_assignment`): registering one, changing

@@ -282,6 +282,9 @@ from app.incidents.services.verdict_stats import verdict_counts
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_query import customer_codes_query
+from app.middleware.document_access import ensure_index_visible
+from app.middleware.document_access import scoped_codes
+from app.middleware.document_access import visible_index_names
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_assigned_event
 from app.notifications.services.event_builders import case_assigned_event
@@ -388,7 +391,13 @@ async def put_customer_notification_endpoint(
     response_model=AvailableSourcesResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):
+async def get_available_source_values(
+    index_name: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    # Index names name customers: a scoped caller reads only their customers' indices.
+    await ensure_index_visible(current_user, index_name, session)
     return AvailableSourcesResponse(source=await get_index_source(index_name), success=True, message="Source retrieved successfully")
 
 
@@ -397,9 +406,17 @@ async def get_available_source_values(index_name: str, session: AsyncSession = D
     response_model=AvailableIndicesResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_available_indices(source: str, session: AsyncSession = Depends(get_db)):
+async def get_available_indices(
+    source: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    indices = await get_available_indices_via_source(source)
+    codes = await scoped_codes(current_user, session)
+    if codes is not None:
+        indices = await visible_index_names(codes, indices, session)
     return AvailableIndicesResponse(
-        indices=await get_available_indices_via_source(source),
+        indices=indices,
         success=True,
         message="Indices retrieved successfully",
     )
@@ -475,7 +492,12 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     response_model=MappingsResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_wazuh_fields_and_assets(index_name: str, session: AsyncSession = Depends(get_db)):
+async def get_wazuh_fields_and_assets(
+    index_name: str,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+):
+    await ensure_index_visible(current_user, index_name, session)
     index_mapping = await get_index_mappings_key_names(index_name)
     return MappingsResponse(available_mappings=index_mapping, success=True, message="Field names and asset names retrieved successfully")
 
