@@ -29,10 +29,11 @@
 		<!-- These two are not collapsible: they sit side by side to be READ AGAINST
 		     each other, and folding one would leave a comparison with one half. -->
 		<div v-if="content.raw" class="grid gap-3 @4xl:grid-cols-2">
-			<CodeBlock title="Raw source" :code="content.raw" :collapsible="false" />
+			<CodeBlock title="Raw source" :code="content.raw" :lang="scriptLang" :collapsible="false" />
 			<CodeBlock
 				title="Deobfuscated (static — not executed)"
 				:code="content.deobfuscated"
+				:lang="scriptLang"
 				empty-text="— no obfuscation unwound —"
 				:collapsible="false"
 			/>
@@ -55,7 +56,7 @@
 					</n-tag>
 				</div>
 			</div>
-			<CodeBlock title="Macro source (VBA)" :code="content.macros" />
+			<CodeBlock title="Macro source (VBA)" :code="content.macros" lang="vb" />
 		</div>
 
 		<!-- Embedded PDF JavaScript -->
@@ -63,10 +64,11 @@
 			v-if="content.javascript"
 			title="Embedded PDF JavaScript (extracted, not executed)"
 			:code="content.javascript"
+			lang="javascript"
 		/>
 
 		<!-- Extracted document text (PDF visible text) -->
-		<CodeBlock v-if="content.text" title="Extracted text" :code="content.text" />
+		<CodeBlock v-if="content.text" title="Extracted text" :code="content.text" lang="text" />
 
 		<!-- Shortcut target: label/value rows in a card, matching the other detail
 		     surfaces. Inline "Target:" + <code> put the label and the path on one
@@ -101,10 +103,14 @@ import CollapsibleCard from "@/components/common/CollapsibleCard.vue"
 import { SECTION_LABEL } from "@/components/common/section-label"
 
 import CodeBlock from "../CodeBlock.vue"
+import { scriptLanguage } from "../fileAnalysis.helpers"
 
 const props = defineProps<{ result?: InspectorResult | null; loading?: boolean }>()
 
 const content = computed<InspectorContent>(() => props.result?.content ?? {})
+
+/** A script's language comes from its name, rather than guessed from the code. */
+const scriptLang = computed(() => scriptLanguage(props.result?.filename))
 
 const lnkRows = computed(() =>
 	[

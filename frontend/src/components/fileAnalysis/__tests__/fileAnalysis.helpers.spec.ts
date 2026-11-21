@@ -1,6 +1,6 @@
 import type { SandboxConnection } from "@/types/file-analysis"
 import { describe, expect, it } from "vitest"
-import { availableTabs, groupConnections, resolveActiveTab } from "../fileAnalysis.helpers"
+import { availableTabs, groupConnections, resolveActiveTab, scriptLanguage } from "../fileAnalysis.helpers"
 
 describe("availableTabs", () => {
 	it("always offers Metadata, even for a result with nothing else", () => {
@@ -99,5 +99,28 @@ describe("groupConnections", () => {
 		])
 		expect(grouped[0]).toMatchObject({ dst: "8.8.8.8", count: 3 })
 		expect(grouped[1]).toMatchObject({ dst: "10.0.0.1", count: 1 })
+	})
+})
+
+describe("scriptLanguage", () => {
+	it("names the highlighter's language from a script's extension, in any case", () => {
+		expect(scriptLanguage("dropper.ps1")).toBe("powershell")
+		expect(scriptLanguage("LOADER.JS")).toBe("javascript")
+		expect(scriptLanguage("macro.vbs")).toBe("vb")
+		expect(scriptLanguage("install.sh")).toBe("shellscript")
+		expect(scriptLanguage("page.hta")).toBe("html")
+		expect(scriptLanguage("job.wsf")).toBe("xml")
+	})
+
+	it("shows batch as plain text: no grammar is loaded for it", () => {
+		expect(scriptLanguage("run.bat")).toBe("text")
+		expect(scriptLanguage("run.cmd")).toBe("text")
+	})
+
+	it("leaves the guess to the highlighter when the name says nothing", () => {
+		expect(scriptLanguage("sample")).toBeUndefined()
+		expect(scriptLanguage("archive.tar.gz")).toBeUndefined()
+		expect(scriptLanguage("")).toBeUndefined()
+		expect(scriptLanguage(null)).toBeUndefined()
 	})
 })
