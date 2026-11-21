@@ -96,9 +96,12 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { removed: number }>(`/file-analysis/analysis/${jobId}`)
 	},
 
-	/** The COMPLETE raw CAPE report (every API call + all behaviour), fetched on demand. */
+	/**
+	 * The COMPLETE raw CAPE report (every API call + all behaviour), fetched on demand. A blob,
+	 * saved as it came: it runs to tens of MB, and parsing it here would freeze the page (#1361).
+	 */
 	getCapeReport(jobId: string) {
-		return HttpClient.get<Record<string, unknown>>(`/file-analysis/result/${jobId}/cape-report`)
+		return HttpClient.get<Blob>(`/file-analysis/result/${jobId}/cape-report`, { responseType: "blob" })
 	},
 
 	/** A shareable PDF analyst report (verdict + static + reputation + detonation, screenshots embedded). */

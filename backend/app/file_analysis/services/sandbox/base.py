@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import Any
+from typing import AsyncIterator
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -16,6 +17,15 @@ from typing import runtime_checkable
 
 class NotEnabled(Exception):
     """Raised when a detonation operation is attempted on a disabled backend."""
+
+
+class ReportUnavailable(Exception):
+    """The sandbox ran, but its report could not be read into a summary or relayed.
+
+    ``str(exc)`` is a fixed sentence written for the analyst: it never carries the report,
+    CAPE's own error text or a URL, so it can be stored on the job and shown as the reason
+    the detonation failed.
+    """
 
 
 @dataclasses.dataclass
@@ -73,7 +83,12 @@ class SandboxBackend(Protocol):
     async def wait_for_report(self, job_ref: str) -> None:
         ...
 
-    async def get_report(self, job_ref: str) -> dict:
+    async def summarize_report(self, job_ref: str) -> Dict[str, Any]:
+        """The report's ``CapeSummary`` as a dict. The report itself is never parsed in this process."""
+        ...
+
+    async def open_report(self, job_ref: str) -> AsyncIterator[bytes]:
+        """The raw report, chunk by chunk as the sandbox sends it, for relaying unparsed."""
         ...
 
     async def get_screenshots(self, job_ref: str, limit: int = 24) -> list[bytes]:

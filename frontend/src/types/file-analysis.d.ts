@@ -16,6 +16,10 @@ export interface FileAnalysisJob {
 	status: FileAnalysisStatus
 	static_status: FileAnalysisStatus
 	dynamic_status?: FileAnalysisStatus
+	/** The sandbox task, once submitted or reused. Its raw report can be downloaded even without a summary. */
+	dynamic_task_id?: string | null
+	/** Why the sandbox's report gave no summary (a fixed sentence from the backend, e.g. over CAPE_REPORT_MAX_MB). */
+	dynamic_error?: string | null
 	/** True only when SANDBOX_BACKEND != none AND the backend is available. Drives detonation-tab visibility. */
 	sandbox_enabled: boolean
 	/** False when the result came from the dev-only in-process inspector (no container isolation). */

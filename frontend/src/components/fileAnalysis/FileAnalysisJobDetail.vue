@@ -74,6 +74,7 @@
 							:sandbox="result?.sandbox"
 							:loading="loadingResult"
 							:dynamic-status="job?.dynamic_status"
+							:dynamic-error="job?.dynamic_error"
 							:job-id
 						/>
 					</n-tab-pane>

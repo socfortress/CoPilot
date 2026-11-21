@@ -44,6 +44,10 @@ class AnalysisJob(BaseModel):
     status: Status = Status.PENDING
     static_status: Status = Status.PENDING
     dynamic_status: Optional[Status] = None
+    # The sandbox task, once one is submitted or reused, and why its report gave no summary
+    # (a fixed sentence, e.g. the report is over CAPE_REPORT_MAX_MB).
+    dynamic_task_id: Optional[str] = None
+    dynamic_error: Optional[str] = None
     sandbox_enabled: bool = False
     hardened: bool = True
     verdict: Optional[Verdict] = None

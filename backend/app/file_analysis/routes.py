@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import re
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
@@ -18,7 +19,6 @@ from fastapi import Form
 from fastapi import HTTPException
 from fastapi import Security
 from fastapi import UploadFile
-from fastapi.responses import JSONResponse
 from fastapi.responses import StreamingResponse
 from loguru import logger
 from sqlalchemy import func
@@ -317,25 +317,43 @@ async def get_result(job_id: str) -> ResultResponse:
 
 
 @file_analysis_router.get("/result/{job_id}/cape-report", dependencies=[_ANALYST, _JOB_ACCESS])
-async def cape_report(job_id: str) -> JSONResponse:
+async def cape_report(job_id: str) -> StreamingResponse:
     """The COMPLETE raw CAPE report for this analysis (every API call, all behaviour)
     — fetched on demand so analysts can inspect literally everything without bloating
     the stored result. Served straight from CAPE by the detonation task id.
+
+    Relayed as CAPE sends it, chunk by chunk: parsing tens of MB here and serialising them
+    again stalled every request on the backend (#1361). The task id comes from the
+    detonation summary, else from the job (a report too large or unreadable to summarise
+    can still be downloaded).
     """
     job = await state_store.load_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="job not found")
     result = await state_store.load_result(job["customer_code"], job.get("sha256", ""))
-    task_id = ((result or {}).get("sandbox") or {}).get("task_id")
+    task_id = ((result or {}).get("sandbox") or {}).get("task_id") or job.get("dynamic_task_id")
     if not task_id:
         raise HTTPException(status_code=404, detail="this analysis has no detonation report")
     from app.file_analysis.services.sandbox import get_backend
+    from app.file_analysis.services.sandbox.base import NotEnabled
+    from app.file_analysis.services.sandbox.base import ReportUnavailable
 
     try:
-        report = await get_backend().get_report(str(task_id))
-    except Exception as exc:
+        chunks = await get_backend().open_report(str(task_id))
+    except ReportUnavailable as exc:
         raise HTTPException(status_code=502, detail=f"could not fetch the CAPE report: {exc}")
-    return JSONResponse(content=report)
+    except NotEnabled:
+        raise HTTPException(status_code=502, detail="could not fetch the CAPE report: the sandbox is not configured")
+    return StreamingResponse(
+        chunks,
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="cape-report-{re.sub(r"[^A-Za-z0-9_-]", "", job_id)}.json"',
+            "Cache-Control": "no-store",
+            # The report quotes the sample: never let a browser sniff it into something it renders.
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @file_analysis_router.get("/result/{job_id}/report.pdf", dependencies=[_ANALYST, _JOB_ACCESS])
