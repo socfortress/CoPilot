@@ -159,9 +159,13 @@ async def list_enabled_dashboards(
 )
 async def enable_dashboard_endpoint(
     request: EnableDashboardRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EnabledDashboardOperationResponse:
     logger.info(f"Enabling dashboard for customer {request.customer_code}")
+    # The customer is in the body, out of a dependency's reach; checked before its existence, so a
+    # scoped analyst can't probe which codes exist.
+    await customer_access_handler.enforce_customer_access(current_user, request.customer_code, db)
     await verify_customer_exists(request.customer_code, db)
     row = await enable_dashboard(request, db)
     return EnabledDashboardOperationResponse(

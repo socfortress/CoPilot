@@ -885,6 +885,14 @@ Rules when adding a route:
   deployment*.** `["*"]` from the UI normalises to `[]` before the handler sees it, so a
   scoped caller must name their targets and own each one; the empty case is a 403 rather
   than a silent fan-out across tenants.
+- **An event source's `index_pattern` is a tenant boundary.** Event Search and the SIEM
+  dashboards, the Customer Portal's included, add no customer filter: whatever the
+  pattern matches, everyone who reads the source sees. So only an admin (by `role_id`)
+  adds a source or changes its pattern, and an analyst edits the other fields of their
+  own customers' sources (`PUT /siem/event_sources/{id}` checks the source's customer;
+  the edit form resends the unchanged pattern, which is allowed). A dashboard is enabled
+  only on its own customer's source, and panel-data refuses (409) a row bound to another
+  customer's. `tests/test_event_source_tenant_checks.py`.
 - **Admins stay deployment-wide everywhere.** Analysts and responders see exactly the
   customers assigned to them — **no assignment means no customer** (#1219 removed the
   pre-#1050 wildcard for unassigned analysts, which was the one remaining way an

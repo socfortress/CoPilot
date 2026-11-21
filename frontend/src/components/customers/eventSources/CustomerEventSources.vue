@@ -11,8 +11,8 @@
 				/>
 			</div>
 			<div v-else class="flex flex-col gap-4">
-				<div v-if="list.length || loading" class="flex items-center justify-between gap-4">
-					<n-button size="small" type="primary" @click="openForm()">
+				<div v-if="canAdd && (list.length || loading)" class="flex items-center justify-between gap-4">
+					<n-button size="small" type="primary" data-testid="event-sources-add-header" @click="openForm()">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14" />
 						</template>
@@ -38,11 +38,11 @@
 								v-if="!loading"
 								icon="carbon:data-base"
 								title="No event sources yet"
-								description="Event sources tell CoPilot which indices hold this customer's events. Event Search needs at least one before it can search anything for this customer."
+								:description="emptyDescription"
 								:points="EMPTY_POINTS"
 								points-title="How it works"
 							>
-								<template #actions>
+								<template v-if="canAdd" #actions>
 									<n-button type="primary" data-testid="event-sources-add" @click="openForm()">
 										<template #icon>
 											<Icon :name="AddIcon" :size="16" />
@@ -63,9 +63,10 @@
 import type { ApiError } from "@/types/common"
 import type { EventSource } from "@/types/event-sources"
 import { NButton, NSpin, useMessage } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 import CustomerTabEmpty from "../CustomerTabEmpty.vue"
 import CustomerEventSourceForm from "./CustomerEventSourceForm.vue"
@@ -80,11 +81,23 @@ const AddIcon = "carbon:add-alt"
 // What setting this up gives the customer, for the empty tab.
 const EMPTY_POINTS = [
 	{ title: "Name the source", description: "What analysts will pick in Event Search, such as EDR or Office 365." },
-	{ title: "Point at the index", description: "An index pattern like wazuh-<code>_*, and the field that holds each event's time." },
+	{
+		title: "Point at the index",
+		description: "An index pattern like wazuh-<code>_*, and the field that holds each event's time."
+	},
 	{ title: "Search it", description: "The source appears in Event Search, here and in the Customer Portal." }
 ]
 
 const message = useMessage()
+const authStore = useAuthStore()
+// A source's index pattern decides which customer's data it reads, the Customer Portal's searches and
+// dashboards included, so only an admin adds one (the API refuses anyone else).
+const canAdd = computed(() => authStore.isAdmin)
+const EMPTY_DESCRIPTION =
+	"Event sources tell CoPilot which indices hold this customer's events. Event Search needs at least one before it can search anything for this customer."
+const emptyDescription = computed(() =>
+	canAdd.value ? EMPTY_DESCRIPTION : `${EMPTY_DESCRIPTION} Only an admin can add one.`
+)
 const showForm = ref(false)
 const loading = ref(false)
 const list = ref<EventSource[]>([])

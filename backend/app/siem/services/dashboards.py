@@ -29,6 +29,10 @@ from app.siem.schema.dashboards import PanelResult
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "dashboard_templates"
 
+MISMATCHED_SOURCE = (
+    "This dashboard reads an event source of another customer. Disable it, then enable it again on one of this customer's sources."
+)
+
 
 # ── Template browsing (filesystem) ──────────────────────────────
 
@@ -137,12 +141,21 @@ async def enable_dashboard(
                 detail=f"Dashboard template '{request.template_id}' not found in category '{request.library_card}'",
             )
 
-    # Verify event source exists
+    # The event source must be this customer's: panel-data checks the dashboard's customer and then
+    # runs the source's index pattern, so a dashboard bound to another customer's source would show
+    # that customer's events to this one, in the Customer Portal too. Another customer's source is
+    # the same 404 as a missing one.
     es_result = await db.execute(
-        select(EventSources).where(EventSources.id == request.event_source_id),
+        select(EventSources).where(
+            EventSources.id == request.event_source_id,
+            EventSources.customer_code == request.customer_code,
+        ),
     )
     if not es_result.scalars().first():
-        raise HTTPException(status_code=404, detail=f"Event source {request.event_source_id} not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event source {request.event_source_id} not found for customer {request.customer_code}",
+        )
 
     # Check for duplicate
     result = await db.execute(
@@ -448,6 +461,14 @@ async def get_panel_data(
     event_source = es_result.scalars().first()
     if not event_source:
         raise HTTPException(status_code=404, detail="Event source not found")
+    # The access check above was for the dashboard's customer; the query runs the source's pattern.
+    # Enabling refuses a source of another customer, but a row written before it did is refused here.
+    if event_source.customer_code != dashboard.customer_code:
+        logger.warning(
+            f"Dashboard {dashboard.id} of customer {dashboard.customer_code} is bound to event source "
+            f"{event_source.id} of customer {event_source.customer_code}: refused",
+        )
+        raise HTTPException(status_code=409, detail=MISMATCHED_SOURCE)
     if not event_source.enabled:
         raise HTTPException(status_code=400, detail="Event source is disabled")
 

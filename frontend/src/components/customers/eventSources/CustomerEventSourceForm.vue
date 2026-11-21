@@ -6,11 +6,23 @@
 			</n-form-item>
 
 			<n-form-item label="Index Pattern" required>
-				<n-input
-					v-model:value="form.index_pattern"
-					:placeholder="`e.g. wazuh-${props.customerCode}_*`"
-					clearable
-				/>
+				<div class="flex w-full flex-col gap-1">
+					<n-input
+						v-model:value="form.index_pattern"
+						:placeholder="`e.g. wazuh-${props.customerCode}_*`"
+						:disabled="!canSetPattern"
+						:clearable="canSetPattern"
+						data-testid="event-source-pattern"
+					/>
+					<p
+						v-if="!canSetPattern"
+						class="text-secondary text-xs"
+						data-testid="event-source-pattern-admin-only"
+					>
+						Only an admin can change the index pattern: it decides which customer's events this source
+						reads, in Event Search, the dashboards and the Customer Portal.
+					</p>
+				</div>
 			</n-form-item>
 
 			<n-form-item label="Event Type" required>
@@ -41,6 +53,7 @@ import type { EventSource } from "@/types/event-sources"
 import { NButton, NFormItem, NInput, NSelect, NSwitch, useMessage } from "naive-ui"
 import { computed, reactive, ref } from "vue"
 import Api from "@/api"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const props = defineProps<{
@@ -54,9 +67,12 @@ const emit = defineEmits<{
 }>()
 
 const message = useMessage()
+const authStore = useAuthStore()
 const loading = ref(false)
 
 const isEditing = computed(() => !!props.editingSource)
+// The API refuses a pattern change from anyone but an admin; the unchanged pattern is still sent.
+const canSetPattern = computed(() => authStore.isAdmin)
 
 const eventTypeOptions = [
 	{ label: "EDR", value: "EDR" },

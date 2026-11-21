@@ -42,13 +42,21 @@
 
 			<template #footerExtra>
 				<div class="flex flex-wrap gap-3">
-					<n-button size="small" @click.stop="emit('edit')">
+					<n-button size="small" data-testid="event-source-edit" @click.stop="emit('edit')">
 						<template #icon>
 							<Icon :name="EditIcon" />
 						</template>
 						Edit
 					</n-button>
-					<n-button size="small" type="error" ghost :loading="loadingDelete" @click.stop="handleDelete">
+					<n-button
+						v-if="canDelete"
+						size="small"
+						type="error"
+						ghost
+						:loading="loadingDelete"
+						data-testid="event-source-delete"
+						@click.stop="handleDelete"
+					>
 						<template #icon>
 							<Icon :name="DeleteIcon" :size="15" />
 						</template>
@@ -64,11 +72,12 @@
 import type { ApiError } from "@/types/common"
 import type { EventSource } from "@/types/event-sources"
 import { NButton, useDialog, useMessage } from "naive-ui"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import Api from "@/api"
 import Badge from "@/components/common/Badge.vue"
 import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 import { getApiErrorMessage } from "@/utils"
 
 const { source, embedded } = defineProps<{
@@ -89,6 +98,9 @@ const DeleteIcon = "ph:trash"
 
 const dialog = useDialog()
 const message = useMessage()
+const authStore = useAuthStore()
+// Deleting a source is admin-only in the API.
+const canDelete = computed(() => authStore.isAdmin)
 const loadingDelete = ref(false)
 
 function handleDelete() {
