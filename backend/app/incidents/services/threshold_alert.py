@@ -222,6 +222,7 @@ async def retrieve_threshold_alert_timeline(
     index_name: str,
     index_id: str,
     session: AsyncSession,
+    scope: Optional[dict] = None,
 ) -> Optional[List[Dict[str, Any]]]:
     """
     Retrieve the timeline for a threshold alert using stored metadata.
@@ -288,6 +289,9 @@ async def retrieve_threshold_alert_timeline(
             "query": {"bool": {"must": must_clauses}},
             "sort": [{time_field: {"order": "asc"}}],
         }
+        if scope is not None:
+            # The metadata is found by a caller-supplied alert id: only the caller's customers' events come back.
+            query["query"]["bool"]["filter"] = [scope]
 
         logger.info(
             f"Fetching threshold alert timeline for alert ID {alert_id} " f"in index '{index_pattern}' with query: {metadata.replay_query}",

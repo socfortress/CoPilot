@@ -8,6 +8,8 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import RoleEnum
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.talon.services.talon_service_account import (
     refuse_talon_service_account_dependency,
@@ -28,6 +30,16 @@ from app.middleware.license import is_feature_enabled
 copilot_mcp_router = APIRouter()
 auth_handler = AuthHandler()
 
+#: The local servers answer from every customer's data, with deployment-wide credentials: the
+#: indexer, the Wazuh manager, CoPilot's own database and Velociraptor. Nothing here can hold a
+#: model's tool calls to one customer, so only an admin (by the database role) may ask them; the
+#: cloud servers (threat intel, news, knowledge base, attack surface) hold no customer data.
+LOCAL_DATA_ADMIN_ONLY = "Only an admin can ask this server: it answers from every customer's data"
+
+
+def may_query(user: User, mcp_server: MCPServerType) -> bool:
+    return MCPService.is_cloud_service(mcp_server) or user.role_id == RoleEnum.admin
+
 
 @copilot_mcp_router.get(
     "/servers",
@@ -35,7 +47,9 @@ auth_handler = AuthHandler()
     description="Get list of available MCP servers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_available_mcp_servers() -> AvailableMCPServersResponse:
+async def get_available_mcp_servers(
+    current_user: User = Depends(auth_handler.get_current_user),
+) -> AvailableMCPServersResponse:
     """
     Retrieve a list of all available MCP servers with their capabilities.
 
@@ -49,7 +63,9 @@ async def get_available_mcp_servers() -> AvailableMCPServersResponse:
     logger.info("Fetching available MCP servers")
 
     try:
-        servers = ExampleQuestionsService.get_available_servers()
+        servers = [
+            server for server in ExampleQuestionsService.get_available_servers() if may_query(current_user, MCPServerType(server.value))
+        ]
 
         logger.info(f"Found {len(servers)} available MCP servers")
 
@@ -204,12 +220,18 @@ async def get_question_categories(mcp_server: MCPServerType = Query(..., descrip
     description="Process a query to the appropriate MCP server",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(refuse_talon_service_account_dependency)],
 )
-async def query_mcp(request: MCPQueryRequest, session: AsyncSession = Depends(get_db)) -> MCPQueryResponse:
+async def query_mcp(
+    request: MCPQueryRequest,
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(auth_handler.get_current_user),
+) -> MCPQueryResponse:
     """
     Process a query to the MCP agent and return structured response.
     Routes the query to the appropriate MCP server based on the selected server type.
     """
     logger.info(f"Processing MCP query for server: {request.mcp_server.value}")
+    if not may_query(current_user, request.mcp_server):
+        raise HTTPException(status_code=403, detail=LOCAL_DATA_ADMIN_ONLY)
 
     license_key = None
 

@@ -116,6 +116,7 @@ async def search_packages_in_indexer(
     vendor: Optional[str] = None,
     package_version: Optional[str] = None,
     size: int = 500,
+    scope: Optional[List[Dict[str, Any]]] = None,
 ) -> IndexerPackagesResponse:
     """
     Search the Wazuh Indexer for package inventory data across all agents.
@@ -154,6 +155,9 @@ async def search_packages_in_indexer(
         must_clauses.append({"wildcard": {"package.version": {"value": f"*{package_version}*", "case_insensitive": True}}})
 
     query: Dict[str, Any] = {"query": {"bool": {"must": must_clauses}}} if must_clauses else {"query": {"match_all": {}}}
+    if scope is not None:
+        # The caller's customers' agents only (app/middleware/document_access.py:agent_filters).
+        query = {"query": {"bool": {"must": [query["query"]], "filter": scope}}}
 
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
 

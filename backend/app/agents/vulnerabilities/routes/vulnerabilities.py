@@ -65,6 +65,7 @@ from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.universal_models import VulnerabilityReport
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.customer_access import verify_agent_id_access
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_access import verify_optional_customer_code_access
 from app.middleware.customer_query import customer_codes_query
@@ -165,7 +166,8 @@ async def sync_vulnerabilities_background(
     "/agent/{agent_id}",
     response_model=AgentVulnerabilitiesResponse,
     description="Get vulnerabilities for a specific agent",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    # The agent id is a tenant's object: its customer must be one of the caller's.
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst")), Depends(verify_agent_id_access)],
     deprecated=True,  # Marking this endpoint as deprecated in favor of more specific ones
 )
 async def get_agent_vulnerabilities(

@@ -11,9 +11,11 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.services.status import get_agent_os_by_id
+from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.db.db_session import get_db
+from app.incidents.routes import db_operations as incident_routes
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertRequestRoute
@@ -23,6 +25,7 @@ from app.incidents.services.incident_alert import get_single_alert_details
 from app.integrations.copilot_mcp.routes.copilot_mcp import query_mcp
 from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryRequest
 from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryResponse
+from app.middleware.document_access import ensure_document_access
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 
@@ -407,6 +410,7 @@ async def analyze_file_complete(
 async def process_name_intel_socfortress(
     request: SocfortressProcessNameAnalysisRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     """
     Endpoint for SocFortress Process Name Evaluation.
@@ -430,11 +434,27 @@ async def process_name_intel_socfortress(
             input=f"Analyze the process name: {request.process_name}. Provide a risk assessment and any relevant details.",
         ),
         session=session,
+        current_user=current_user,
     )
 
 
 async def current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+async def _alert_for_ai(request: CreateAlertRequestRoute, current_user: User, session: AsyncSession) -> GenericAlertModel:
+    """The indexer document an AI route sends to SOCFortress AI, once the caller may see it.
+
+    Both of the request's targets are checked before anything leaves CoPilot: the CoPilot alert
+    the analysis is commented on (customer and tags, as the alert routes check) and the document
+    itself (its customer, as ingest decides it). Either one of another customer's is refused.
+    """
+    if request.alert_id is not None:
+        await incident_routes._ensure_alert_access(request.alert_id, current_user, session, write=True)
+    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
+    assert isinstance(alert_details, GenericAlertModel)
+    await ensure_document_access(current_user, alert_details.source.model_dump(), session)
+    return alert_details
 
 
 @threat_intel_socfortress_router.post(
@@ -446,11 +466,10 @@ async def current_time():
 async def ai_anaylze_alert_socfortress(
     request: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     # Fetch alert details
-    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
-
-    assert isinstance(alert_details, GenericAlertModel)
+    alert_details = await _alert_for_ai(request, current_user, session)
 
     ai_request = SocfortressAiAlertRequest(
         integration="SOCFORTRESS AI",
@@ -484,11 +503,10 @@ async def ai_anaylze_alert_socfortress(
 async def ai_wazuh_exclusion_rule_socfortress(
     request: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     # Fetch alert details
-    alert_details = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
-
-    assert isinstance(alert_details, GenericAlertModel)
+    alert_details = await _alert_for_ai(request, current_user, session)
 
     ai_request = SocfortressAiAlertRequest(
         integration="SOCFORTRESS AI",
@@ -595,17 +613,16 @@ async def fetch_artifacts(os: str) -> list:
 async def ai_velociraptor_artifact_recommendation_socfortress(
     request: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ):
     # Fetch alert details
-    alert_payload = await get_single_alert_details(CreateAlertRequest(index_name=request.index_name, alert_id=request.index_id))
-
-    assert isinstance(alert_payload, GenericAlertModel)
+    alert_payload = await _alert_for_ai(request, current_user, session)
 
     os = await fetch_agent_os(request.agent_id, session)
 
     ai_request = VelociraptorArtifactRecommendationRequest(
         integration="SOCFORTRESS AI",
-        alert_payload=alert_payload._source.model_dump(),
+        alert_payload=alert_payload.source.model_dump(),
         os=os,
         artifacts=await fetch_artifacts(os),
     )

@@ -29,6 +29,8 @@ from app.connectors.wazuh_indexer.utils.universal import resize_wazuh_index_fiel
 from app.db.db_session import get_db
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_query import customer_codes_query
+from app.middleware.document_access import scoped_codes
+from app.middleware.document_access import visible_index_names
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
 from app.middleware.search_query import search_query
@@ -182,7 +184,10 @@ async def get_indices_size_per_customer(
     description="Fetch Wazuh Indexer shards",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_shards() -> Union[ShardsResponse, HTTPException]:
+async def get_shards(
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> Union[ShardsResponse, HTTPException]:
     """
     Fetch Wazuh Indexer shards.
 
@@ -195,10 +200,14 @@ async def get_shards() -> Union[ShardsResponse, HTTPException]:
         HTTPException: An exception with a 500 status code is raised if the shards cannot be retrieved.
     """
     shards_response = await shards()
-    if shards_response is not None:
-        return shards_response
-    else:
+    if shards_response is None:
         raise HTTPException(status_code=500, detail="Failed to retrieve shards.")
+    codes = await scoped_codes(current_user, session)
+    if codes is not None and isinstance(shards_response, ShardsResponse) and shards_response.shards:
+        # Index names name customers: a scoped caller sees only their customers' shards, like the index list.
+        visible = set(await visible_index_names(codes, {shard.index for shard in shards_response.shards}, session))
+        shards_response.shards = [shard for shard in shards_response.shards if shard.index in visible]
+    return shards_response
 
 
 @wazuh_indexer_router.get(

@@ -526,6 +526,39 @@ async def get_compliance_group(framework: str, control: str) -> Dict[str, Any] |
     }
 
 
+GLOBAL_FIRING_ADMIN_ONLY = "Rule activity across every customer is shown to admins only. Pick a customer to see theirs."
+
+
+def without_global_firing(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """``payload`` with its deployment-wide hit counts taken out, for a caller who sees only some customers.
+
+    The global firing stats count every customer's alerts, so they are an admin's view; anyone else
+    gets them per customer (``list_wazuh_rules(customer_code=...)``). The counts are zeroed and the
+    answer says why, and the compliance groups lose the order the counts gave them.
+    """
+
+    def clear(item: Dict[str, Any]) -> None:
+        for key in ("hits_7d", "hits_30d", "total_hits_7d", "total_hits_30d"):
+            if key in item:
+                item[key] = 0
+        if "last_seen" in item:
+            item["last_seen"] = None
+
+    clear(payload)
+    for row in payload.get("rules") or []:
+        clear(row)
+    groups = payload.get("groups")
+    if isinstance(groups, list):
+        for group in groups:
+            clear(group)
+        groups.sort(key=lambda group: str(group.get("control", "")))
+    if isinstance(payload.get("group"), dict):
+        clear(payload["group"])
+    payload["firing_stats_available"] = False
+    payload["firing_stats_unavailable_reason"] = GLOBAL_FIRING_ADMIN_ONLY
+    return payload
+
+
 def list_compliance_frameworks() -> List[Dict[str, str]]:
     """List the frameworks the compliance pivot supports. Drives the UI selector."""
     return [{"key": key, "label": meta["label"]} for key, meta in COMPLIANCE_FRAMEWORKS.items()]

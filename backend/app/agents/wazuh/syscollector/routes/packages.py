@@ -19,6 +19,7 @@ from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.document_access import agent_filters
 
 packages_router = APIRouter()
 
@@ -38,6 +39,8 @@ async def search_packages(
     vendor: Optional[str] = Query(None, description="Filter by vendor (wildcard match)"),
     package_version: Optional[str] = Query(None, description="Filter by package version (wildcard match)"),
     size: int = Query(500, ge=1, le=10000, description="Maximum number of results to return"),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> IndexerPackagesResponse:
     """
     Search the Wazuh Indexer for package inventory data across all agents.
@@ -52,7 +55,10 @@ async def search_packages(
     - Search for outdated versions of a package across the fleet
     - Inventory packages by type, architecture, or vendor
     """
+    # Every agent for an admin; the caller's customers' agents for anyone else.
+    scope = await agent_filters(current_user, session)
     return await search_packages_in_indexer(
+        scope=scope,
         package_name=package_name,
         agent_name=agent_name,
         agent_id=agent_id,

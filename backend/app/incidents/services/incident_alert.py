@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql import func
 
+from app.auth.models.users import User
 from app.blocking import run_blocking
 from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.connectors.shuffle.services.integrations import execute_workflow
@@ -67,6 +68,7 @@ from app.integrations.office365.services.tenant_lookup import (
     resolve_customer_code_from_office365_tenant,
 )
 from app.integrations.routes import get_customer_by_auth_key
+from app.middleware.customer_access import customer_access_handler
 from app.notifications.services.emit import emit
 from app.notifications.services.event_builders import alert_created_event
 from app.soc_management.services.lifecycle import SlaLifecycleRecorder
@@ -330,8 +332,33 @@ async def get_customer_code(alert_details: dict, session: AsyncSession = None):
         HTTPException: If no valid customer code can be found
     """
     logger.info(f"Fetching customer code for alert {alert_details}")
+    found, value = await _customer_code_from(alert_details, session)
+    if found:
+        return value
 
-    # Iterate over the possible keys and return the value if the key is present
+    # If none of the keys are present, raise an exception
+    logger.info(f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}")
+    raise HTTPException(
+        status_code=400,
+        detail=f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}",
+    )
+
+
+async def resolve_customer_code(alert_details: dict, session: AsyncSession = None) -> Optional[str]:
+    """The customer a document belongs to, by ingest's own rule, or ``None`` when no key names one.
+
+    The same decision ``get_customer_code`` makes when an alert is created, without raising and
+    without logging the document: what the read routes use to keep a scoped caller to their own
+    customers' documents (``app/middleware/document_access.py``).
+    """
+    found, value = await _customer_code_from(alert_details, session)
+    if not found or value is None or value == "":
+        return None
+    return str(value)
+
+
+async def _customer_code_from(alert_details: dict, session: AsyncSession = None) -> Tuple[bool, Any]:
+    """``(True, value)`` for the first key in ``CustomerCodeKeys`` that names the customer, else ``(False, None)``."""
     for key in CustomerCodeKeys:
         logger.info(f"Checking for key {key.value}")
         if key.value in alert_details:
@@ -348,7 +375,7 @@ async def get_customer_code(alert_details: dict, session: AsyncSession = None):
                         session=session,
                     )
                     logger.info(f"Found customer {customer_response.customer_code} for Office365 organization ID {value}")
-                    return customer_response.customer_code
+                    return True, customer_response.customer_code
                 except HTTPException as e:
                     logger.warning(f"Failed to get customer code from Office365 organization ID: {str(e)}")
                     # Continue checking other keys if this lookup fails
@@ -359,7 +386,7 @@ async def get_customer_code(alert_details: dict, session: AsyncSession = None):
                 if session:
                     aws_customer_code = await resolve_customer_code_from_aws_account(str(value), session)
                     if aws_customer_code:
-                        return aws_customer_code
+                        return True, aws_customer_code
                 logger.warning(f"AWS account {value} does not belong to any customer's AWS integration")
                 continue
 
@@ -367,17 +394,12 @@ async def get_customer_code(alert_details: dict, session: AsyncSession = None):
             if key == CustomerCodeKeys.CLUSTER_NODE:
                 processed_value = CustomerCodeKeys.get_processed_value(key, value)
                 logger.info(f"Processed value for {key.value} is {processed_value}")
-                return processed_value
+                return True, processed_value
 
             # For other keys, return the value directly
-            return value
+            return True, value
 
-    # If none of the keys are present, raise an exception
-    logger.info(f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}")
-    raise HTTPException(
-        status_code=400,
-        detail=f"Failed to fetch customer code. Valid customer code field names are {', '.join([key.value for key in CustomerCodeKeys])}",
-    )
+    return False, None
 
 
 async def add_alert_to_document(
@@ -1422,6 +1444,7 @@ async def create_alert(
     alert: CreateAlertRequest,
     session: AsyncSession,
     simga_alert: str = None,
+    acting_user: Optional[User] = None,
 ) -> CreateAlertResponse:
     """
     Creates an alert in CoPilot.
@@ -1441,6 +1464,10 @@ async def create_alert(
     await validate_syslog_type_source(alert_details.syslog_type, session)
     customer_code = await get_customer_code(dict(alert_details.source), session=session)
     logger.info(f"Customer code: {customer_code}")
+    if acting_user is not None and not await customer_access_handler.check_customer_access(acting_user, str(customer_code), session):
+        # A person creating an alert by hand may only file it under one of their own customers,
+        # and another customer's document reads like a missing one.
+        raise HTTPException(status_code=404, detail="Document not found")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
     alert_payload = await build_alert_payload(
@@ -1475,7 +1502,11 @@ async def create_alert(
     return await create_alert_full(alert_payload, customer_code, session)
 
 
-async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: AsyncSession) -> List[Dict[str, Any]]:
+async def retrieve_alert_timeline(
+    alert: CreateAlertRequestRoute,
+    session: AsyncSession,
+    scope: Optional[dict] = None,
+) -> List[Dict[str, Any]]:
     """
     Retrieve the alert timeline for the given alert.
 
@@ -1496,6 +1527,7 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
         index_name=alert.index_name,
         index_id=alert.index_id,
         session=session,
+        scope=scope,
     )
     if threshold_timeline is not None:
         logger.info(f"Retrieved threshold alert timeline with {len(threshold_timeline)} events")
@@ -1511,6 +1543,7 @@ async def retrieve_alert_timeline(alert: CreateAlertRequestRoute, session: Async
             alert_details.source.agent_name,
             start_of_day,
             end_of_day,
+            scope=scope,
         )
     return []
 
@@ -1550,6 +1583,7 @@ async def fetch_alert_timeline(
     agent_name: str,
     start_of_day: str,
     end_of_day: str,
+    scope: Optional[dict] = None,
 ) -> List[Dict[str, Any]]:
     """
     Fetch the alert timeline from the indexer.
@@ -1565,20 +1599,22 @@ async def fetch_alert_timeline(
         List[Dict[str, Any]]: The alert timeline.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    query: Dict[str, Any] = {
+        "bool": {
+            "must": [
+                {"match": {"process_id": process_id}},
+                {"match": {"agent_name": agent_name}},
+                {"range": {"timestamp": {"gte": start_of_day, "lt": end_of_day}}},
+            ],
+        },
+    }
+    if scope is not None:
+        # A host name is no tenant key: the events must be the caller's customers' too.
+        query["bool"]["filter"] = [scope]
     alert_timeline = await run_blocking(
         es_client.search,
         index=index_name,
-        body={
-            "query": {
-                "bool": {
-                    "must": [
-                        {"match": {"process_id": process_id}},
-                        {"match": {"agent_name": agent_name}},
-                        {"range": {"timestamp": {"gte": start_of_day, "lt": end_of_day}}},
-                    ],
-                },
-            },
-        },
+        body={"query": query},
         size=50,
     )
     return alert_timeline["hits"]["hits"]

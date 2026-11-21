@@ -50,6 +50,7 @@ from app.connectors.wazuh_indexer.utils.universal import (
 async def collect_and_aggregate_alerts(
     field_names: List[str],
     search_body: AlertsSearchBody,
+    scope: Optional[dict] = None,
 ) -> Dict[str, int]:
     """
     Collects and aggregates alerts based on the specified field names and search body.
@@ -67,7 +68,7 @@ async def collect_and_aggregate_alerts(
 
     for index_name in indices.indices_list:
         try:
-            alerts_response = await collect_alerts_generic(index_name, body=search_body)
+            alerts_response = await collect_alerts_generic(index_name, body=search_body, scope=scope)
             if alerts_response.success:
                 for alert in alerts_response.alerts:
                     composite_key = tuple(alert["_source"][field] for field in field_names)
@@ -95,6 +96,7 @@ async def collect_alerts_generic(
     index_name: str,
     body: AlertsSearchBody,
     is_host_specific: bool = False,
+    scope: Optional[dict] = None,
 ) -> CollectAlertsResponse:
     """
     Collects alerts from the specified index based on the provided search criteria.
@@ -127,6 +129,9 @@ async def collect_alerts_generic(
             query_builder.add_match_phrase(matches=[("agent_name", body.agent_name)])
 
         query = query_builder.build()
+        if scope is not None:
+            # The caller's customers only (app/middleware/document_access.py): None for an admin.
+            query["query"]["bool"].setdefault("filter", []).append(scope)
 
         alerts = await run_blocking(es_client.search, index=index_name, body=query, size=body.size)
     except RequestError as e:
@@ -135,12 +140,12 @@ async def collect_alerts_generic(
             logger.warning("Retrying with timestamp field set to 'timestamp'")
             body.timestamp_field = "timestamp"
             try:
-                return await collect_alerts_generic(index_name, body, is_host_specific)
+                return await collect_alerts_generic(index_name, body, is_host_specific, scope)
             except RequestError as e:
                 if "No mapping found for [timestamp] in order to sort on" in str(e):
                     logger.warning("Retrying with timestamp field set to '@timestamp'")
                     body.timestamp_field = "@timestamp"
-                    return await collect_alerts_generic(index_name, body, is_host_specific)
+                    return await collect_alerts_generic(index_name, body, is_host_specific, scope)
         else:
             logger.warning(f"An error occurred while collecting alerts: {e}")
             raise HTTPException(
@@ -162,6 +167,7 @@ async def get_alerts_generic(
     search_body: Type[AlertsSearchBody],
     is_host_specific: bool = False,
     index_name: Optional[str] = None,
+    scope: Optional[dict] = None,
 ):
     """
     Retrieves alerts from the Wazuh Indexer based on the provided search criteria.
@@ -187,6 +193,7 @@ async def get_alerts_generic(
                 index_name,
                 body=search_body,
                 is_host_specific=is_host_specific,
+                scope=scope,
             )
             if alerts.success and len(alerts.alerts) > 0:
                 alerts_summary.append(
@@ -224,7 +231,7 @@ async def get_alerts_generic(
     }
 
 
-async def get_alerts(search_body: AlertsSearchBody) -> AlertsSearchResponse:
+async def get_alerts(search_body: AlertsSearchBody, scope: Optional[dict] = None) -> AlertsSearchResponse:
     """
     Retrieves alerts based on the provided search criteria.
 
@@ -234,12 +241,13 @@ async def get_alerts(search_body: AlertsSearchBody) -> AlertsSearchResponse:
     Returns:
         AlertsSearchResponse: The response containing the retrieved alerts.
     """
-    result = await get_alerts_generic(search_body)
+    result = await get_alerts_generic(search_body, scope=scope)
     return AlertsSearchResponse(**result)
 
 
 async def get_host_alerts(
     search_body: HostAlertsSearchBody,
+    scope: Optional[dict] = None,
 ) -> HostAlertsSearchResponse:
     """
     Retrieves alerts specific to a host.
@@ -250,12 +258,13 @@ async def get_host_alerts(
     Returns:
         HostAlertsSearchResponse: The response containing the host alerts.
     """
-    result = await get_alerts_generic(search_body, is_host_specific=True)
+    result = await get_alerts_generic(search_body, is_host_specific=True, scope=scope)
     return HostAlertsSearchResponse(**result)
 
 
 async def get_index_alerts(
     search_body: IndexAlertsSearchBody,
+    scope: Optional[dict] = None,
 ) -> IndexAlertsSearchResponse:
     """
     Retrieves alerts from the specified index based on the search criteria.
@@ -266,11 +275,11 @@ async def get_index_alerts(
     Returns:
         IndexAlertsSearchResponse: The response containing the retrieved alerts.
     """
-    result = await get_alerts_generic(search_body, index_name=search_body.index_name)
+    result = await get_alerts_generic(search_body, index_name=search_body.index_name, scope=scope)
     return IndexAlertsSearchResponse(**result)
 
 
-async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostResponse:
+async def get_alerts_by_host(search_body: AlertsSearchBody, scope: Optional[dict] = None) -> AlertsByHostResponse:
     """
     Retrieves alerts grouped by host.
 
@@ -281,7 +290,7 @@ async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostRespo
         AlertsByHostResponse: The response containing alerts grouped by host.
 
     """
-    aggregated_by_host = await collect_and_aggregate_alerts(["agent_name"], search_body)
+    aggregated_by_host = await collect_and_aggregate_alerts(["agent_name"], search_body, scope)
     alerts_by_host_list: List[AlertsByHost] = [
         AlertsByHost(
             agent_name=host[0],
@@ -296,7 +305,7 @@ async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostRespo
     )
 
 
-async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleResponse:
+async def get_alerts_by_rule(search_body: AlertsSearchBody, scope: Optional[dict] = None) -> AlertsByRuleResponse:
     """
     Retrieves alerts grouped by rule based on the provided search criteria.
 
@@ -310,6 +319,7 @@ async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleRespo
     aggregated_by_rule = await collect_and_aggregate_alerts(
         ["rule_description"],
         search_body,
+        scope,
     )
     alerts_by_rule_list: List[AlertsByRule] = [
         AlertsByRule(
@@ -327,6 +337,7 @@ async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleRespo
 
 async def get_alerts_by_rule_per_host(
     search_body: AlertsSearchBody,
+    scope: Optional[dict] = None,
 ) -> AlertsByRulePerHostResponse:
     """
     Retrieves alerts grouped by rule per host based on the provided search criteria.
@@ -341,6 +352,7 @@ async def get_alerts_by_rule_per_host(
     aggregated_by_rule_per_host = await collect_and_aggregate_alerts(
         ["agent_name", "rule_description"],
         search_body,
+        scope,
     )
     alerts_by_rule_per_host_list: List[AlertsByRulePerHost] = [
         AlertsByRulePerHost(agent_name=agent_name, rule=rule, number_of_alerts=count)

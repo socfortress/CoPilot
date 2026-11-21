@@ -1202,6 +1202,7 @@ def _validate_parameters(
 
 async def execute_rule_search(
     request: ExecuteSearchRequest,
+    scope: Optional[dict] = None,
 ) -> ExecuteSearchResponse:
     """
     Execute a search against the Wazuh indexer using a rule definition.
@@ -1241,9 +1242,10 @@ async def execute_rule_search(
     query = search_def.get("query", {})
     substituted_query = _substitute_parameters(copy.deepcopy(query), merged_params)
 
-    # Build the full search body
+    # Build the full search body. ``scope`` keeps a scoped caller to their customers' documents
+    # whatever pattern and query they sent (app/middleware/document_access.py; None for an admin).
     search_body: dict[str, Any] = {
-        "query": substituted_query,
+        "query": substituted_query if scope is None else {"bool": {"must": [substituted_query], "filter": [scope]}},
     }
 
     # Add size (from request override, rule definition, or default)

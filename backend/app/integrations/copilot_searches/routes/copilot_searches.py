@@ -6,10 +6,13 @@ from fastapi import HTTPException
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.db.db_session import get_db
 from app.integrations.copilot_searches.schema.copilot_searches import BacktestRequest
 from app.integrations.copilot_searches.schema.copilot_searches import BacktestResponse
 from app.integrations.copilot_searches.schema.copilot_searches import (
@@ -176,12 +179,17 @@ from app.integrations.copilot_searches.services.detection_catalog import (
     list_wazuh_rules,
 )
 from app.integrations.copilot_searches.services.detection_catalog import run_log_test
+from app.integrations.copilot_searches.services.detection_catalog import (
+    without_global_firing,
+)
 from app.integrations.copilot_searches.services.mitre_coverage import get_coverage
 from app.integrations.copilot_searches.services.mitre_coverage import mitre_matrix
 from app.integrations.copilot_searches.services.publish import publish_rule
 from app.integrations.copilot_searches.services.rule_linter import lint_result
 from app.middleware.customer_access import verify_customer_code_access
 from app.middleware.customer_access import verify_optional_customer_code_access
+from app.middleware.document_access import customer_filter
+from app.middleware.document_access import scoped_codes
 from app.middleware.search_query import SearchParams
 from app.middleware.search_query import filter_and_limit
 from app.middleware.search_query import search_query
@@ -654,14 +662,17 @@ async def refresh_rules():
     "/execute",
     response_model=ExecuteSearchResponse,
     description="Execute a detection rule search against the Wazuh indexer",
-    # NOTE: customer_user is intentionally excluded. This endpoint passes a
-    # caller-supplied index_pattern and CUSTOMER_CODE straight to the indexer
-    # with no per-tenant restriction, so allowing the multi-tenant portal role
-    # enabled cross-tenant SIEM reads (GHSA-ch48-63px-6wp2). admin/analyst are
-    # all-tenant by design; the customer portal never calls this route.
+    # NOTE: customer_user is intentionally excluded (GHSA-ch48-63px-6wp2): the
+    # portal never calls this route. The index pattern and query are the
+    # caller's, so a scoped analyst's search is narrowed to their customers'
+    # documents (customer_filter); only an admin searches every customer.
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def execute_search(request: ExecuteSearchRequest):
+async def execute_search(
+    request: ExecuteSearchRequest,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Execute a detection rule search against the Wazuh indexer.
 
@@ -692,7 +703,8 @@ async def execute_search(request: ExecuteSearchRequest):
     ```
     """
     try:
-        result = await execute_rule_search(request)
+        scope = await customer_filter(current_user, session, request.index_pattern)
+        result = await execute_rule_search(request, scope=scope)
         return result
     except ValueError as e:
         raise HTTPException(
@@ -1116,9 +1128,13 @@ async def list_catalog_wazuh_rules_endpoint(
         ),
     ),
     search_params: SearchParams = Depends(search_query),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> CatalogWazuhRulesResponse:
     try:
         payload = await list_wazuh_rules(customer_code=customer_code)
+        if not customer_code and await scoped_codes(current_user, session) is not None:
+            payload = without_global_firing(payload)
 
         # Server-side filter so the palette never pulls the whole ruleset to search it client-side.
         if search_params.search or search_params.limit is not None:
@@ -1150,7 +1166,11 @@ async def list_catalog_wazuh_rules_endpoint(
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_catalog_wazuh_rule_endpoint(rule_id: int) -> CatalogWazuhRuleDetailResponse:
+async def get_catalog_wazuh_rule_endpoint(
+    rule_id: int,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CatalogWazuhRuleDetailResponse:
     try:
         detail = await get_wazuh_rule_detail(rule_id)
         if detail is None:
@@ -1158,6 +1178,8 @@ async def get_catalog_wazuh_rule_endpoint(rule_id: int) -> CatalogWazuhRuleDetai
                 status_code=404,
                 detail=f"No Wazuh rule found with id {rule_id}",
             )
+        if await scoped_codes(current_user, session) is not None:
+            detail = without_global_firing(detail)
         return CatalogWazuhRuleDetailResponse(**detail)
     except HTTPException:
         raise
@@ -1251,9 +1273,15 @@ async def list_catalog_compliance_frameworks_endpoint() -> CatalogComplianceFram
     ),
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "customer_user"))],
 )
-async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceResponse:
+async def get_catalog_compliance_endpoint(
+    framework: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> CatalogComplianceResponse:
     try:
         payload = await list_compliance_pivot(framework)
+        if await scoped_codes(current_user, session) is not None:
+            payload = without_global_firing(payload)
         return CatalogComplianceResponse(
             success=True,
             message=(
@@ -1282,6 +1310,8 @@ async def get_catalog_compliance_endpoint(framework: str) -> CatalogComplianceRe
 async def get_catalog_compliance_group_endpoint(
     framework: str,
     control: str,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> CatalogComplianceGroupDetailResponse:
     try:
         payload = await get_compliance_group(framework, control)
@@ -1292,6 +1322,8 @@ async def get_catalog_compliance_group_endpoint(
 
     if payload is None:
         raise HTTPException(status_code=404, detail=f"Compliance control {control!r} not found for {framework!r}")
+    if await scoped_codes(current_user, session) is not None:
+        payload = without_global_firing(payload)
 
     return CatalogComplianceGroupDetailResponse(
         success=True,

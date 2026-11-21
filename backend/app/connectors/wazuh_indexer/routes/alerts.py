@@ -11,6 +11,7 @@ from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.alerts import AlertByIdResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertByIdSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import AlertNotFound
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
@@ -34,6 +35,8 @@ from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.db.db_session import get_db
 from app.middleware.customer_access import customer_access_handler
+from app.middleware.document_access import customer_filter
+from app.middleware.document_access import document_visible
 
 # App specific imports
 
@@ -85,10 +88,18 @@ async def verify_index_name(
     description="Get a single Wazuh indexer alert by index name and document id",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alert_by_index_and_id(request: AlertByIdSearchBody) -> AlertByIdResponse:
+async def get_alert_by_index_and_id(
+    request: AlertByIdSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> AlertByIdResponse:
     logger.info(f"Fetching alert {request.alert_id} from index {request.index_name}")
     alert = await get_alert_by_id(request.index_name, request.alert_id)
     not_found = alert.get("_source", {}).get("message") == "alert not found"
+    if not not_found and not await document_visible(current_user, alert.get("_source"), session):
+        # Another customer's document reads exactly like a missing one, so ids can't be probed.
+        not_found = True
+        alert = AlertNotFound(_index=request.index_name, _id=request.alert_id, _source={"message": "alert not found"}).to_dict()
     return AlertByIdResponse(
         success=not not_found,
         message="Alert retrieved" if not not_found else f"Alert {request.alert_id} not found in index {request.index_name}",
@@ -102,7 +113,11 @@ async def get_alert_by_index_and_id(request: AlertByIdSearchBody) -> AlertByIdRe
     description="Get all alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchResponse:
+async def get_all_alerts(
+    alerts_search_body: AlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> AlertsSearchResponse:
     """
     Get all alerts.
 
@@ -113,7 +128,7 @@ async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchRe
         AlertsSearchResponse: The response containing the search results.
     """
     logger.info("Fetching all alerts")
-    return await get_alerts(alerts_search_body)
+    return await get_alerts(alerts_search_body, scope=await customer_filter(current_user, session))
 
 
 @wazuh_indexer_alerts_router.post(
@@ -124,6 +139,8 @@ async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchRe
 )
 async def get_all_alerts_for_host(
     host_alerts_search_body: HostAlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> HostAlertsSearchResponse:
     """
     Get all alerts for a specific host.
@@ -135,7 +152,8 @@ async def get_all_alerts_for_host(
         HostAlertsSearchResponse: The response containing the host alerts.
     """
     logger.info(f"Fetching all alerts for host {host_alerts_search_body.agent_name}")
-    return await get_host_alerts(host_alerts_search_body)
+    # A host name is no tenant key (two customers can each have a web-01): the documents' customer is.
+    return await get_host_alerts(host_alerts_search_body, scope=await customer_filter(current_user, session))
 
 
 @wazuh_indexer_alerts_router.post(
@@ -146,6 +164,8 @@ async def get_all_alerts_for_host(
 )
 async def get_all_alerts_for_index(
     index_alerts_search_body: IndexAlertsSearchBody = Depends(verify_index_name),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> IndexAlertsSearchResponse:
     """
     Fetches all alerts for a given index.
@@ -157,7 +177,8 @@ async def get_all_alerts_for_index(
         IndexAlertsSearchResponse: The response containing the alerts for the index.
     """
     logger.info(f"Fetching all alerts for index {index_alerts_search_body.index_name}")
-    return await get_index_alerts(index_alerts_search_body)
+    scope = await customer_filter(current_user, session, index_alerts_search_body.index_name)
+    return await get_index_alerts(index_alerts_search_body, scope=scope)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -168,6 +189,8 @@ async def get_all_alerts_for_index(
 )
 async def get_all_alerts_by_host(
     alerts_search_body: AlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> AlertsByHostResponse:
     """
     Fetches the number of all alerts for all hosts.
@@ -179,7 +202,7 @@ async def get_all_alerts_by_host(
         AlertsByHostResponse: The response containing the number of alerts for each host.
     """
     logger.info("Fetching number of all alerts for all hosts")
-    return await get_alerts_by_host(alerts_search_body)
+    return await get_alerts_by_host(alerts_search_body, scope=await customer_filter(current_user, session))
 
 
 @wazuh_indexer_alerts_router.post(
@@ -190,6 +213,8 @@ async def get_all_alerts_by_host(
 )
 async def get_all_alerts_by_rule(
     alerts_search_body: AlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> AlertsByRuleResponse:
     """
     Fetches the number of all alerts for all rules.
@@ -201,7 +226,7 @@ async def get_all_alerts_by_rule(
         AlertsByRuleResponse: The response containing the number of alerts for each rule.
     """
     logger.info("Fetching number of all alerts for all rules")
-    return await get_alerts_by_rule(alerts_search_body)
+    return await get_alerts_by_rule(alerts_search_body, scope=await customer_filter(current_user, session))
 
 
 @wazuh_indexer_alerts_router.post(
@@ -212,6 +237,8 @@ async def get_all_alerts_by_rule(
 )
 async def get_all_alerts_by_rule_per_host(
     alerts_search_body: AlertsSearchBody,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> AlertsByRulePerHostResponse:
     """
     Get number of all alerts for all rules per host
@@ -223,7 +250,7 @@ async def get_all_alerts_by_rule_per_host(
         AlertsByRulePerHostResponse: _description_
     """
     logger.info("Fetching number of all alerts for all rules per host")
-    return await get_alerts_by_rule_per_host(alerts_search_body)
+    return await get_alerts_by_rule_per_host(alerts_search_body, scope=await customer_filter(current_user, session))
 
 
 @wazuh_indexer_alerts_router.post(

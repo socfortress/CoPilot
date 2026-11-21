@@ -19,6 +19,7 @@ from app.connectors.talon.services.talon_service_account import (
     refuse_talon_service_account_dependency,
 )
 from app.db.db_session import get_db
+from app.incidents.routes import db_operations as incident_db_routes
 from app.incidents.schema.alert_collection import AlertsPayload
 from app.incidents.schema.incident_alert import AlertDetailsResponse
 from app.incidents.schema.incident_alert import AlertTimelineResponse
@@ -57,6 +58,8 @@ from app.incidents.services.velo_sigma import build_exclusion_draft
 from app.incidents.services.velo_sigma import create_velo_sigma_alert
 from app.middleware.customer_access import customer_access_handler
 from app.middleware.customer_access import enforce_owned_object_access
+from app.middleware.document_access import customer_filter
+from app.middleware.document_access import ensure_document_access
 
 incidents_alerts_router = APIRouter()
 
@@ -96,8 +99,8 @@ async def get_index_names_route() -> IndexNamesResponse:
 
 @incidents_alerts_router.get(
     "/alerts/not-created",
-    description="Get alerts not created in CoPilot",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    description="Get alerts not created in CoPilot (admin only: the ingest backlog of every customer)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def get_alerts_not_created_route() -> AlertsPayload:
     """
@@ -112,15 +115,16 @@ async def get_alerts_not_created_route() -> AlertsPayload:
 @incidents_alerts_router.post(
     "/alert/details",
     description="Get the details of a single alert",
-    # NOTE: customer_user is intentionally excluded. This reads an arbitrary
-    # index_name + alert_id directly from the indexer with no per-tenant check,
-    # so allowing the multi-tenant portal role enabled cross-tenant SIEM reads
-    # (GHSA-ch48-63px-6wp2). admin/analyst are all-tenant by design; the customer
+    # NOTE: customer_user is intentionally excluded (GHSA-ch48-63px-6wp2): the
     # portal never calls this route (it uses /incidents/db_operations/* instead).
+    # The document is named by index and id, so its customer, as ingest decides
+    # it, must be one of the caller's (ensure_document_access).
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_single_alert_details_route(
     create_alert_request: CreateAlertRequestRoute,
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> AlertDetailsResponse:
     """
     Get the details of a single alert. Get the details of a single alert based on the alert id.
@@ -132,28 +136,30 @@ async def get_single_alert_details_route(
     Returns:
         class AlertDetailsResponse(BaseModel): The response object containing the details of the alert.
     """
+    alert_details = await get_single_alert_details(
+        CreateAlertRequest(index_name=create_alert_request.index_name, alert_id=create_alert_request.index_id),
+    )
+    await ensure_document_access(current_user, alert_details.source.model_dump(), session)
     return AlertDetailsResponse(
         success=True,
         message="Alert details retrieved",
-        alert_details=await get_single_alert_details(
-            CreateAlertRequest(index_name=create_alert_request.index_name, alert_id=create_alert_request.index_id),
-        ),
+        alert_details=alert_details,
     )
 
 
 @incidents_alerts_router.post(
     "/alert/timeline",
     description="Get the timeline of an alert",
-    # NOTE: customer_user is intentionally excluded. This reads an arbitrary
-    # index_name + alert_id directly from the indexer with no per-tenant check,
-    # so allowing the multi-tenant portal role enabled cross-tenant SIEM reads
-    # (GHSA-ch48-63px-6wp2). admin/analyst are all-tenant by design; the customer
-    # portal never calls this route (it uses /incidents/db_operations/* instead).
+    # NOTE: customer_user is intentionally excluded (GHSA-ch48-63px-6wp2): the
+    # portal never calls this route. Every event of the timeline must be one of
+    # the caller's customers' (customer_filter), and a CoPilot alert named for a
+    # threshold timeline must be one they may see.
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alert_timeline_route(
     alert: CreateAlertRequestRoute,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> AlertTimelineResponse:
     """
     Get the timeline of an alert. This route obtains the process_id from the alert details if it exists
@@ -166,11 +172,15 @@ async def get_alert_timeline_route(
     Returns:
         class AlertTimelineResponse(BaseModel): The response object containing the details of the alert.
     """
-    # await retrieve_alert_timeline(alert, session)
+    if alert.alert_id is not None:
+        await incident_db_routes._ensure_alert_access(alert.alert_id, current_user, session)
+    # Both timelines (a threshold alert's replayed query, or the process's events on the host) are
+    # searched with the caller's customers only, whichever index and document were named.
+    scope = await customer_filter(current_user, session, alert.index_name)
     return AlertTimelineResponse(
         success=True,
         message="Alert timeline retrieved",
-        alert_timeline=await retrieve_alert_timeline(alert, session),
+        alert_timeline=await retrieve_alert_timeline(alert, session, scope=scope),
     )
 
 
@@ -184,6 +194,7 @@ async def get_alert_timeline_route(
 async def create_alert_manual_route(
     create_alert_request: CreateAlertRequest,
     session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
 ) -> CreateAlertResponse:
     """
     Create an incident alert in CoPilot. Manually create an incident alert within CoPilot.
@@ -197,7 +208,9 @@ async def create_alert_manual_route(
         CreateAlertResponse: The response object containing the result of the alert creation.
     """
     logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
-    return CreateAlertResponse(success=True, message="Alert created in CoPilot", alert_id=await create_alert(create_alert_request, session))
+    # The alert is filed under the document's customer, which must be one of the caller's.
+    alert_id = await create_alert(create_alert_request, session, acting_user=current_user)
+    return CreateAlertResponse(success=True, message="Alert created in CoPilot", alert_id=alert_id)
 
 
 # @incidents_alerts_router.post(

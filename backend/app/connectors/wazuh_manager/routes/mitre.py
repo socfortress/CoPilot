@@ -3,12 +3,15 @@ from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Path
 from fastapi import Query
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.schema.mitre import AtomicRedTeamMarkdownResponse
 from app.connectors.wazuh_manager.schema.mitre import AtomicTestsListResponse
@@ -31,9 +34,12 @@ from app.connectors.wazuh_manager.services.mitre import get_mitre_techniques
 from app.connectors.wazuh_manager.services.mitre import (
     search_mitre_techniques_in_alerts,
 )
+from app.db.db_session import get_db
+from app.middleware.document_access import customer_filter
 
 # Initialize router and auth handler
 wazuh_manager_mitre_router = APIRouter()
+
 auth_handler = AuthHandler()
 
 
@@ -403,6 +409,8 @@ async def list_mitre_techniques_in_alerts(
         pattern="^[A-Za-z0-9_.]+$",
     ),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
+    current_user: User = Depends(auth_handler.get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> MitreTechniquesInAlertsResponse:
     """Search for MITRE ATT&CK techniques in Wazuh alerts."""
     logger.info(f"Searching for MITRE techniques in alerts from {time_range} (page {page}, size {size})")
@@ -418,6 +426,11 @@ async def list_mitre_techniques_in_alerts(
 
     if rule_group is not None:
         additional_filters.append({"match_phrase": {"rule_groups": {"query": rule_group}}})
+
+    # The caller's customers only, whatever pattern was asked for (None for an admin).
+    scope = await customer_filter(current_user, session, index_pattern)
+    if scope is not None:
+        additional_filters.append(scope)
 
     # Execute the search with the specified parameters
     results = await search_mitre_techniques_in_alerts(
@@ -473,6 +486,8 @@ async def get_mitre_technique_alerts(
     ),
     index_pattern: str = Query("wazuh-*", description="Index pattern to search"),
     alert_id: Optional[str] = Query(None, description="Filter by alert document id"),
+    current_user: User = Depends(auth_handler.get_current_user),
+    session: AsyncSession = Depends(get_db),
 ) -> MitreTechniqueAlertsResponse:
     """Get alert documents for a specific MITRE ATT&CK technique."""
     logger.info(f"Request for alerts related to MITRE technique {technique_id} from {time_range} (page {page}, size {size})")
@@ -494,6 +509,11 @@ async def get_mitre_technique_alerts(
 
     if alert_id is not None:
         additional_filters.append({"term": {"id": alert_id}})
+
+    # The caller's customers only, whatever pattern was asked for (None for an admin).
+    scope = await customer_filter(current_user, session, index_pattern)
+    if scope is not None:
+        additional_filters.append(scope)
 
     # Get the alerts
     results = await get_alerts_by_mitre_id(
