@@ -1,4 +1,8 @@
 import fnmatch
+import re
+from typing import List
+from typing import Optional
+from typing import Sequence
 
 from elasticsearch7.exceptions import NotFoundError
 from fastapi import HTTPException
@@ -17,17 +21,68 @@ from app.siem.schema.events import EventsQueryParams
 from app.siem.schema.events import EventsQueryResponse
 from app.siem.schema.events import FieldMapping
 from app.siem.schema.events import FieldMappingsResponse
+from app.siem.schema.events import MultiSourceEventsQuery
+from app.siem.utils.scroll_token import open_multi_scroll
 from app.siem.utils.scroll_token import open_scroll
+from app.siem.utils.scroll_token import sign_multi_scroll
 from app.siem.utils.scroll_token import sign_scroll
+
+DATE_TYPES = {"date", "date_nanos"}
+NO_LONGER_VALID = "These results are no longer valid: run the search again"
+_GLOB = re.compile(r"[*?]")
 
 
 def _event_from_hit(hit: dict) -> dict:
     return {**hit["_source"], "_id": hit["_id"], "_index": hit["_index"]}
 
 
+def _pattern_parts(index_pattern: str) -> List[str]:
+    return [part.strip() for part in (index_pattern or "").split(",") if part.strip()]
+
+
+def index_in_pattern(index_name: str, index_pattern: str) -> bool:
+    """Whether the indexer would search ``index_name`` for ``index_pattern``.
+
+    A pattern is a comma list of globs, read left to right: a part starting with ``-`` removes
+    what the parts before it matched, and a later part can add an index back. The frontend's
+    ``eventSearch.helpers.ts:indexMatchesPattern`` applies the same rule.
+    """
+    included = False
+    for part in _pattern_parts(index_pattern):
+        if part.startswith("-"):
+            if included and fnmatch.fnmatchcase(index_name, part[1:]):
+                included = False
+        elif fnmatch.fnmatchcase(index_name, part):
+            included = True
+    return included
+
+
 def _index_matches_pattern(index_name: str, index_pattern: str) -> bool:
-    # fnmatch only — ES comma-separated / exclusion (`-foo-*`) patterns are not supported here.
-    return fnmatch.fnmatchcase(index_name, index_pattern)
+    return index_in_pattern(index_name, index_pattern)
+
+
+def _specificity(index_name: str, index_pattern: str) -> int:
+    """How literally a pattern names an index: the literal length of its longest part matching it."""
+    return max(
+        (
+            len(_GLOB.sub("", part))
+            for part in _pattern_parts(index_pattern)
+            if not part.startswith("-") and fnmatch.fnmatchcase(index_name, part)
+        ),
+        default=-1,
+    )
+
+
+def source_for_index(index_name: str, sources: Sequence[EventSources]) -> Optional[EventSources]:
+    """The source an event of ``index_name`` came from: the one whose pattern names it most literally.
+
+    Two sources' patterns can both match an index (``fortigate-acme*`` and a catch-all ``*-acme*``);
+    the most specific wins, the first one asked for on a tie.
+    """
+    candidates = [source for source in sources if index_in_pattern(index_name, source.index_pattern)]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda source: _specificity(index_name, source.index_pattern))
 
 
 async def get_event_source_by_customer_and_name(
@@ -73,7 +128,7 @@ async def query_events(
         # caller may see the customer, and the token is what ties the scroll to it.
         scroll_id = open_scroll(params.scroll_id, customer_code, source_name, secret)
         if scroll_id is None:
-            raise HTTPException(status_code=400, detail="These results are no longer valid: run the search again")
+            raise HTTPException(status_code=400, detail=NO_LONGER_VALID)
         response = await _scroll_next_page(scroll_id)
     else:
         response = await _initial_search(
@@ -90,6 +145,15 @@ async def query_events(
     return response
 
 
+def _shard_warnings(response: dict) -> List[str]:
+    """What the indexer said about a page it could only partly answer."""
+    shards = response.get("_shards") or {}
+    failed = shards.get("failed") or 0
+    if not failed:
+        return []
+    return [f"{failed} of {shards.get('total', failed)} shards could not answer: the results may be incomplete"]
+
+
 async def _initial_search(
     index_pattern: str,
     time_field: str,
@@ -98,6 +162,7 @@ async def _initial_search(
     query: str = None,
     time_from: str = None,
     time_to: str = None,
+    unmapped_sort: bool = False,
 ) -> EventsQueryResponse:
     es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
     try:
@@ -107,6 +172,10 @@ async def _initial_search(
         else:
             query_builder.add_time_range(timerange=timerange, timestamp_field=time_field)
         query_builder.add_sort(time_field, order="desc")
+        if unmapped_sort:
+            # Several sources' indices: one that doesn't map the time field sorts last instead of
+            # failing its shards.
+            query_builder.query["sort"] = [{time_field: {"order": "desc", "unmapped_type": "date"}}]
 
         # Add Lucene query_string if provided
         if query:
@@ -140,6 +209,7 @@ async def _initial_search(
             page_size=page_size,
             success=True,
             message=f"Retrieved {len(hits)} of {total} events",
+            warnings=_shard_warnings(response),
         )
     except Exception as e:
         logger.error(f"Error querying events: {e}")
@@ -176,6 +246,7 @@ async def _scroll_next_page(scroll_id: str) -> EventsQueryResponse:
             page_size=len(hits),
             success=True,
             message=f"Retrieved {len(hits)} of {total} events",
+            warnings=_shard_warnings(response),
         )
     except Exception as e:
         logger.error(f"Error scrolling events: {e}")
@@ -291,7 +362,7 @@ def _fields_from_field_caps(field_caps: dict) -> list:
         parent, _, _ = field_name.rpartition(".")
         if parent and parent in leaf_names:
             continue
-        fields.append(FieldMapping(field=field_name, type=", ".join(sorted(types))))
+        fields.append(FieldMapping(field=field_name, type=", ".join(sorted(types)), conflict=len(types) > 1))
 
     fields.sort(key=lambda f: f.field)
     return fields
@@ -302,3 +373,128 @@ def _leaf_types(caps_by_type) -> set:
     if not isinstance(caps_by_type, dict):
         return set()
     return {field_type for field_type in caps_by_type if field_type not in ("object", "nested")}
+
+
+# ── one search across several sources (#1356) ────────────────────────────────
+#
+# The sources are the customer's own (looked up by the path's customer, which the route checked),
+# so their patterns are what bounds the search, as for one source: only an admin sets a pattern.
+# One query runs over the patterns together, sorted on the time field they share. What makes that
+# safe is checked before the indexer is asked: one time field name, mapped as a date in every index
+# (a date in one index and a keyword in another makes the whole search fail; one name holding epoch
+# milliseconds in one source and ISO text in another sorts one source after the other).
+
+
+async def _sources(customer_code: str, names: Sequence[str], db: AsyncSession) -> List[EventSources]:
+    return [await get_event_source_by_customer_and_name(customer_code, name, db) for name in names]
+
+
+def _excludes(index_pattern: str) -> bool:
+    return any(part.startswith("-") for part in _pattern_parts(index_pattern))
+
+
+def combined_pattern(sources: Sequence[EventSources]) -> str:
+    """The sources' index patterns as one, in the order asked for, a pattern with an exclusion first.
+
+    The indexer applies an exclusion (``-fortigate-acme-old*``) to every part before it, so a
+    source's exclusion placed after another source would also remove that source's indices. First,
+    it removes only its own. Two sources with exclusions can still narrow each other's indices;
+    the search never covers an index that none of the sources covers on its own.
+    """
+    ordered = sorted(sources, key=lambda source: not _excludes(source.index_pattern))
+    return ",".join(source.index_pattern for source in ordered)
+
+
+def shared_time_field(sources: Sequence[EventSources]) -> str:
+    fields = {source.time_field for source in sources}
+    if len(fields) > 1:
+        named = ", ".join(f"{source.name}: {source.time_field}" for source in sources)
+        raise HTTPException(
+            status_code=400,
+            detail=f"These sources use different time fields ({named}). Search them one at a time, or give them the same time field.",
+        )
+    return sources[0].time_field
+
+
+async def check_time_field_is_a_date(index_pattern: str, time_field: str) -> None:
+    """400 unless every index of ``index_pattern`` that maps ``time_field`` maps it as a date."""
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    try:
+        response = await es_client.field_caps(index=index_pattern, fields=time_field, ignore_unavailable=True, allow_no_indices=True)
+    except Exception as e:
+        logger.error(f"Could not read the type of {time_field} in {index_pattern}: {e}")
+        raise HTTPException(status_code=502, detail="Could not check these sources' time field: try again")
+    finally:
+        await es_client.close()
+    types = set((response.get("fields") or {}).get(time_field, {}))
+    if types - DATE_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"These sources can't be searched together: their time field {time_field} is not a date in every index "
+                f"({', '.join(sorted(types))}). Search them one at a time."
+            ),
+        )
+
+
+def _tagged(response: EventsQueryResponse, sources: Sequence[EventSources]) -> EventsQueryResponse:
+    """Each event names the source it came from (``_source_name``), so the results can say so."""
+    for event in response.events:
+        source = source_for_index(str(event.get("_index", "")), sources)
+        event["_source_name"] = source.name if source is not None else None
+    return response
+
+
+async def query_events_multi(customer_code: str, request: MultiSourceEventsQuery, db: AsyncSession) -> EventsQueryResponse:
+    """A page of events from several of a customer's sources at once, newest first."""
+    sources = await _sources(customer_code, request.sources, db)
+    names = [source.name for source in sources]
+    logger.info(f"Querying events for customer {customer_code}, sources {names}")
+    secret = AuthHandler().secret
+
+    if request.scroll_id:
+        # As for one source: the token continues only the search it was issued for, and the
+        # sources are looked up again first, so one disabled since stops the paging there.
+        scroll_id = open_multi_scroll(request.scroll_id, customer_code, names, secret)
+        if scroll_id is None:
+            raise HTTPException(status_code=400, detail=NO_LONGER_VALID)
+        response = await _scroll_next_page(scroll_id)
+    else:
+        time_field = shared_time_field(sources)
+        index_pattern = combined_pattern(sources)
+        await check_time_field_is_a_date(index_pattern, time_field)
+        response = await _initial_search(
+            index_pattern=index_pattern,
+            time_field=time_field,
+            timerange=request.timerange,
+            page_size=request.page_size,
+            query=request.query,
+            time_from=request.time_from,
+            time_to=request.time_to,
+            unmapped_sort=True,
+        )
+
+    response.scroll_id = sign_multi_scroll(response.scroll_id, customer_code, names, secret)
+    return _tagged(response, sources)
+
+
+async def get_field_mappings_multi(customer_code: str, names: Sequence[str], db: AsyncSession) -> FieldMappingsResponse:
+    """The fields of several sources together; a field their indices type differently is marked ``conflict``."""
+    sources = await _sources(customer_code, names, db)
+    index_pattern = combined_pattern(sources)
+    es_client = await create_wazuh_indexer_client_async("Wazuh-Indexer")
+    try:
+        response = await es_client.field_caps(index=index_pattern, fields="*", ignore_unavailable=True, allow_no_indices=True)
+        fields = _fields_from_field_caps(response.get("fields", {}))
+        return FieldMappingsResponse(
+            fields=fields,
+            total=len(fields),
+            index_pattern=index_pattern,
+            success=True,
+            message=f"Retrieved {len(fields)} field mappings",
+        )
+    except Exception as e:
+        logger.error(f"Error retrieving field mappings: {e}")
+        raise HTTPException(status_code=500, detail="Error retrieving field mappings")
+    finally:
+        await es_client.close()

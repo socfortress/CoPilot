@@ -6,8 +6,8 @@ import {
 	EXPECTED_SOURCE_NAME,
 	FALLBACK_SOURCE_NAME,
 	installMockBackend,
-	signIn,
-	sourceOptionLabel
+	selectedFilters,
+	signIn
 } from "./mock-backend"
 
 /**
@@ -80,18 +80,6 @@ test("#1124 — the link identifies the source the alert came from", async ({ pa
 	).toBe(true)
 })
 
-/**
- * What the filter bar currently shows as selected.
- *
- * naive-ui puts a single select's displayed value in the wrapper's `title`, which is the
- * only stable handle on that for a filterable select — the visible text lives in an
- * overlay that swaps out while the menu is open.
- */
-function selectedFilters(page: Page) {
-	return () =>
-		page.locator(".n-base-selection-label[title]").evaluateAll(nodes => nodes.map(n => n.getAttribute("title") ?? ""))
-}
-
 test("#1124 — Event Search opens on the alert's own source", async ({ page }) => {
 	// The symptom the analyst actually reports, asserted on the page rather than on the
 	// link — whatever shape a fix gives the URL, this is what has to end up on screen.
@@ -110,7 +98,7 @@ test("#1124 — Event Search opens on the alert's own source", async ({ page }) 
 				`source — so the filter bar falls back to the first enabled EDR source ` +
 				`("${FALLBACK_SOURCE_NAME}") and the analyst has to change it by hand before any event comes back.`
 		})
-		.toContain(sourceOptionLabel(EXPECTED_SOURCE_NAME))
+		.toContain(EXPECTED_SOURCE_NAME)
 })
 
 test("an index no source claims still falls back to the first enabled EDR source", async ({ page }) => {
@@ -120,7 +108,7 @@ test("an index no source claims still falls back to the first enabled EDR source
 	const selected = selectedFilters(page)
 
 	await expect.poll(selected).toContain(`#${ASSET.customer_code} - Acme Corp`)
-	await expect.poll(selected).toContain(sourceOptionLabel(FALLBACK_SOURCE_NAME))
+	await expect.poll(selected).toContain(FALLBACK_SOURCE_NAME)
 })
 
 test("an explicit source_name wins over the index", async ({ page }) => {
@@ -134,5 +122,5 @@ test("an explicit source_name wins over the index", async ({ page }) => {
 	const selected = selectedFilters(page)
 
 	await expect.poll(selected).toContain(`#${ASSET.customer_code} - Acme Corp`)
-	await expect.poll(selected).toContain(sourceOptionLabel(EXPECTED_SOURCE_NAME))
+	await expect.poll(selected).toContain(EXPECTED_SOURCE_NAME)
 })

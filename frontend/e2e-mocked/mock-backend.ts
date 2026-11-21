@@ -72,7 +72,7 @@ export const EVENT_SOURCES = [
 
 const CUSTOMERS = [{ customer_code: CUSTOMER_CODE, customer_name: "Acme Corp" }]
 
-/** How the filter bar labels an option, and so what a selected source reads as on screen. */
+/** How the filter bar's source menu labels an option (a selected source's tag shows its name alone). */
 export function sourceOptionLabel(name: string) {
 	const source = EVENT_SOURCES.find(s => s.name === name)
 	return `${name} (${source?.event_type})`
@@ -172,6 +172,25 @@ export async function installMockBackend(context: BrowserContext) {
 			return json(route, { success: true, message: "mocked" })
 		}
 	)
+}
+
+/**
+ * What the filter bar currently shows as selected.
+ *
+ * naive-ui puts a single select's displayed value in the wrapper's `title`, which is the
+ * only stable handle on that for a filterable select — the visible text lives in an
+ * overlay that swaps out while the menu is open. The source picker takes several sources
+ * (#1356), and a multiple select shows each one as a tag instead.
+ */
+export function selectedFilters(page: Page) {
+	return async () => [
+		...(await page
+			.locator(".n-base-selection-label[title]")
+			.evaluateAll(nodes => nodes.map(n => n.getAttribute("title") ?? ""))),
+		...(await page
+			.locator(".n-base-selection-tag-wrapper .n-tag__content")
+			.evaluateAll(nodes => nodes.map(n => n.textContent?.trim() ?? "")))
+	]
 }
 
 /**

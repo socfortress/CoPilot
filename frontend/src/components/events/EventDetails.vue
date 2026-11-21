@@ -16,7 +16,7 @@
 							<template #value>{{ customerCode }}</template>
 						</Badge>
 						<Badge v-if="sourceName" type="splitted" bright size="small">
-							<template #label>Source</template>
+							<template #label>Event source</template>
 							<template #value>{{ sourceName }}</template>
 						</Badge>
 						<Badge v-if="resolvedEvent._index" type="splitted" bright size="small">

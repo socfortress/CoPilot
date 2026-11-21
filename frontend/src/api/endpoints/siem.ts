@@ -13,7 +13,7 @@ import type {
 	PanelDataResponse
 } from "@/types/dashboards"
 import type { DisplayColumn, EventSource } from "@/types/event-sources"
-import type { EventSearchResult, FieldMapping } from "@/types/events"
+import type { EventSearchResult, EventsPage, EventsQueryParams, FieldMapping } from "@/types/events"
 import type { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "../http-client"
 
@@ -64,25 +64,22 @@ export default {
 		query: {
 			customerCode: string
 			sourceName: string
-			params: {
-				timerange?: string
-				page_size?: number
-				scroll_id?: string
-				query?: string
-				time_from?: string
-				time_to?: string
-			}
+			params: EventsQueryParams
 		},
 		signal?: AbortSignal
 	) {
-		return HttpClient.get<
-			FlaskBaseResponse & {
-				events: EventSearchResult[]
-				total: number
-				scroll_id: string | null
-				page_size: number
-			}
-		>(`/siem/events/${query.customerCode}/${query.sourceName}`, { params: query.params, signal })
+		return HttpClient.get<FlaskBaseResponse & EventsPage>(`/siem/events/${query.customerCode}/${query.sourceName}`, {
+			params: query.params,
+			signal
+		})
+	},
+	/** One search over several of a customer's sources; the next page sends the same `sources` with `scroll_id`. */
+	queryEventsMulti(customerCode: string, body: EventsQueryParams & { sources: string[] }, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & EventsPage>(
+			`/siem/events/${encodeURIComponent(customerCode)}/search`,
+			body,
+			{ signal }
+		)
 	},
 	getEvent(customerCode: string, sourceName: string, query: SiemEventDocumentQuery, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { event: EventSearchResult }>(
@@ -93,6 +90,14 @@ export default {
 	getFieldMappings(customerCode: string, sourceName: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
 			`/siem/events/${customerCode}/${sourceName}/fields`,
+			{ signal }
+		)
+	},
+	/** The fields of several sources together; a field their indices type differently has `conflict`. */
+	getFieldMappingsMulti(customerCode: string, sources: string[], signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & { fields: FieldMapping[]; total: number; index_pattern: string }>(
+			`/siem/events/${encodeURIComponent(customerCode)}/fields`,
+			{ sources },
 			{ signal }
 		)
 	},
