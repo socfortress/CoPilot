@@ -126,6 +126,40 @@ export function iconForFile(name: string | null | undefined): string {
 	return FILE_ICONS[ext] || "carbon:document"
 }
 
+// Extension → the highlighter's language for a script's source on the Content tab. Guessing from
+// the code reads PowerShell as PHP, so the name decides when it can. Batch has no grammar loaded:
+// plain text rather than another language's colours.
+const SCRIPT_LANGUAGES: Record<string, string> = {
+	ps1: "powershell",
+	psm1: "powershell",
+	psd1: "powershell",
+	js: "javascript",
+	jse: "javascript",
+	mjs: "javascript",
+	cjs: "javascript",
+	vbs: "vb",
+	vbe: "vb",
+	vba: "vb",
+	bas: "vb",
+	sh: "shellscript",
+	bash: "shellscript",
+	zsh: "shellscript",
+	py: "python",
+	hta: "html",
+	htm: "html",
+	html: "html",
+	wsf: "xml",
+	bat: "text",
+	cmd: "text"
+}
+
+/** The highlighter's language for a script named `name`, or undefined to let it guess. */
+export function scriptLanguage(name: string | null | undefined): string | undefined {
+	const dot = (name || "").lastIndexOf(".")
+	if (dot < 0) return undefined
+	return SCRIPT_LANGUAGES[(name || "").slice(dot + 1).toLowerCase()]
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Verdict and source presentation                                           */
 /* -------------------------------------------------------------------------- */

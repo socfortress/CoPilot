@@ -1,5 +1,6 @@
 import flourite from "flourite"
 import { decode } from "html-entities"
+import { detectionSample, highlightable, MAX_HIGHLIGHT_LINE } from "@/utils/code-highlight"
 import { codeThemes, getHighlighter } from "@/utils/highlighter"
 
 const vShiki = {
@@ -13,9 +14,13 @@ const vShiki = {
 
 		const code = binding?.value?.decode ? decode(children.innerHTML) : children.innerHTML
 
+		// Too large to highlight without holding the page up: it stays as it was rendered (#1360).
+		if (!highlightable(code)) return
+
 		let flouriteDetect = null
 		if (!binding?.value?.lang) {
-			const fl = flourite(code, { shiki: true }).language
+			// Detection reads the start only: its cost grows with the square of a line's length.
+			const fl = flourite(detectionSample(code), { shiki: true }).language
 			if (fl !== "unknown") {
 				flouriteDetect = fl
 			}
@@ -33,7 +38,9 @@ const vShiki = {
 
 		const html = (await getHighlighter()).codeToHtml(formattedCode(code), {
 			lang: language,
-			themes: codeThemes
+			themes: codeThemes,
+			// A longer line is shown as it is: tokenizing slows down with the square of its length.
+			tokenizeMaxLineLength: MAX_HIGHLIGHT_LINE
 		})
 		el.innerHTML = html
 	}

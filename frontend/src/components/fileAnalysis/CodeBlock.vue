@@ -7,7 +7,9 @@
 			<span :class="SECTION_LABEL">{{ title }}</span>
 		</template>
 		<div class="p-3">
-			<CodeSource :code="code || emptyText" :max-height="400" />
+			<!-- A sample's content is its author's: shown as text, never parsed as markup. Long lines
+			     wrap, so a one-line obfuscated script can be read without scrolling sideways. -->
+			<CodeSource :code="code || emptyText" :lang :max-height="400" text wrap />
 		</div>
 	</CollapsibleCard>
 </template>
@@ -21,10 +23,12 @@ withDefaults(
 	defineProps<{
 		title: string
 		code?: string
+		/** The highlighter's language; without one it guesses from the start of the code. */
+		lang?: string
 		emptyText?: string
 		defaultCollapsed?: boolean
 		collapsible?: boolean
 	}>(),
-	{ code: "", emptyText: "— nothing extracted —", defaultCollapsed: false, collapsible: true }
+	{ code: "", lang: undefined, emptyText: "— nothing extracted —", defaultCollapsed: false, collapsible: true }
 )
 </script>
