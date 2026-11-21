@@ -12,10 +12,25 @@
 
 		<n-alert v-else-if="!sandbox && dynamicStatus === 'failed'" type="warning" :bordered="false">
 			<template #header>Detonation didn't complete</template>
-			The sandbox couldn't produce a report for this sample. The most common cause is a
-			<b>platform mismatch</b>
-			— e.g. a Windows PE/PowerShell/Office file with only a Linux guest available (or vice-versa). The static
-			analysis above is still valid.
+			<!-- The sandbox ran and its report exists; CoPilot couldn't read it into a summary
+			     (too large, not JSON, …). The backend's sentence says which; the report itself
+			     can still be downloaded, unparsed. -->
+			<div v-if="dynamicError" class="flex flex-col items-start gap-2" data-testid="detonation-report-error">
+				<span>
+					The sandbox ran, but CoPilot couldn't use its report. {{ dynamicError }} The static analysis
+					above is still valid.
+				</span>
+				<n-button v-if="jobId" size="small" secondary :loading="downloadingReport" @click="downloadReport">
+					<template #icon><Icon :name="DownloadIcon" :size="14" /></template>
+					Download the raw CAPE report
+				</n-button>
+			</div>
+			<template v-else>
+				The sandbox couldn't produce a report for this sample. The most common cause is a
+				<b>platform mismatch</b>
+				— e.g. a Windows PE/PowerShell/Office file with only a Linux guest available (or vice-versa). The
+				static analysis above is still valid.
+			</template>
 		</n-alert>
 
 		<n-empty
@@ -254,6 +269,8 @@ const props = defineProps<{
 	sandbox?: SandboxSummary | null
 	loading?: boolean
 	dynamicStatus?: string | null
+	/** Why the sandbox's report gave no summary (the job's `dynamic_error`). */
+	dynamicError?: string | null
 	jobId?: string
 }>()
 
@@ -320,10 +337,8 @@ function downloadReport() {
 	Api.fileAnalysis
 		.getCapeReport(props.jobId)
 		.then(res => {
-			saveAs(
-				new Blob([JSON.stringify(res.data, null, 2)], { type: "application/json" }),
-				`cape-report-${props.jobId}.json`
-			)
+			// Saved exactly as CAPE wrote it: parsing and re-indenting tens of MB froze the page.
+			saveAs(res.data, `cape-report-${props.jobId}.json`)
 		})
 		.catch(() => message.error("Could not fetch the full CAPE report."))
 		.finally(() => {

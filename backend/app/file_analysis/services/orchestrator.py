@@ -328,7 +328,7 @@ async def _detonate(sample_bytes: bytes, inspector: Dict[str, Any], job: Analysi
     from app.file_analysis.services.sandbox import (  # noqa: F401 (kept for explicit-package override)
         package_for,
     )
-    from app.file_analysis.services.sandbox.cape import summarize
+    from app.file_analysis.services.sandbox.base import ReportUnavailable
 
     backend = get_backend()
     try:
@@ -340,9 +340,16 @@ async def _detonate(sample_bytes: bytes, inspector: Dict[str, Any], job: Analysi
         # Bytes stream straight from memory into the CAPE POST — the sample never
         # lands on the CoPilot host's disk.
         ref = existing or await backend.submit(sample_bytes, filename, package, job.customer_code, job.source)
+        # Kept on the job, so the raw report can still be downloaded when no summary is made.
+        job.dynamic_task_id = str(ref)
         await backend.wait_for_report(ref)
-        report = await backend.get_report(ref)
-        return summarize(report).to_dict()
+        # The report is read in a worker process: tens of MB parsed here stalled every
+        # request on the backend (#1361).
+        return await backend.summarize_report(ref)
+    except ReportUnavailable as exc:
+        logger.error(f"detonation report for {job.sha256[:12]} could not be read: {exc}")
+        job.dynamic_error = str(exc)
+        return None
     except Exception as exc:
         logger.error(f"detonation failed for {job.sha256[:12]}: {exc}")
         return None
