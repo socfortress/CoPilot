@@ -7,13 +7,22 @@
 				of
 				<span class="font-semibold">{{ totalEvents }}</span>
 				events
+				<template v-if="multiSource">
+					from
+					<span class="font-semibold">{{ eventSources.length }}</span>
+					sources
+				</template>
 			</p>
 
 			<div class="flex flex-wrap items-center gap-3">
 				<n-button
 					text
-					:disabled="!eventSource"
-					title="Configure which columns to display for this event source"
+					:disabled="!singleSource"
+					:title="
+						multiSource
+							? 'Columns are set per event source: search one source to change its columns'
+							: 'Configure which columns to display for this event source'
+					"
 					@click="emit('configure-columns')"
 				>
 					<template #icon>
@@ -23,6 +32,10 @@
 				</n-button>
 			</div>
 		</div>
+
+		<n-alert v-if="warnings.length" type="warning" :bordered="false" class="mb-2 text-sm">
+			<p v-for="warning of warnings" :key="warning">{{ warning }}</p>
+		</n-alert>
 
 		<n-data-table
 			:columns
@@ -52,7 +65,7 @@ import type { EntityRoute } from "@/composables/useNavigation"
 import type { SafeAny } from "@/types/common"
 import type { DisplayColumn, EventSource } from "@/types/event-sources"
 import type { EventSearchResult } from "@/types/events"
-import { NButton, NDataTable, NEmpty } from "naive-ui"
+import { NAlert, NButton, NDataTable, NEmpty, NTag } from "naive-ui"
 import { computed, h } from "vue"
 import EntityDetailsButton from "@/components/common/EntityDetailsButton.vue"
 import ExpandableText from "@/components/common/ExpandableText.vue"
@@ -62,17 +75,22 @@ import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
 
-const props = defineProps<{
-	events: EventSearchResult[]
-	totalEvents: number
-	loadingEvents: boolean
-	loadingMore: boolean
-	hasSearched: boolean
-	scrollId: string | null
-	eventSource: EventSource | null
-	customerCode: string | null
-	sourceName: string | null
-}>()
+const props = withDefaults(
+	defineProps<{
+		events: EventSearchResult[]
+		totalEvents: number
+		loadingEvents: boolean
+		loadingMore: boolean
+		hasSearched: boolean
+		scrollId: string | null
+		/** The sources searched: one, or several searched together. */
+		eventSources: EventSource[]
+		customerCode: string | null
+		/** What the indexer reported about the results, e.g. shards that could not answer. */
+		warnings?: string[]
+	}>(),
+	{ warnings: () => [] }
+)
 
 const emit = defineEmits<{
 	"load-more": []
@@ -85,6 +103,12 @@ const SettingsIcon = "carbon:settings"
 
 const { routeEventSearchEvent } = useNavigation()
 const dFormats = useSettingsStore().dateFormat
+
+const singleSource = computed(() => (props.eventSources.length === 1 ? props.eventSources[0] : null))
+const multiSource = computed(() => props.eventSources.length > 1)
+
+/** The time field of the search; sources searched together share one (the backend refuses others). */
+const timeField = computed(() => props.eventSources[0]?.time_field)
 
 function resolveColumnWidth(width?: number | null): number {
 	if (width == null || width < MIN_COLUMN_WIDTH) return MIN_COLUMN_WIDTH
@@ -100,11 +124,11 @@ function normalizeColumns(cols: DataTableColumns<EventSearchResult>): DataTableC
 
 /** Source `time_field`, or any key whose name contains `timestamp` (case-insensitive). */
 function isTimeField(key: string): boolean {
-	return key === props.eventSource?.time_field || key.toLowerCase().includes("timestamp")
+	return key === timeField.value || key.toLowerCase().includes("timestamp")
 }
 
 function getEventTime(row: EventSearchResult): SafeAny | undefined {
-	const preferred = props.eventSource?.time_field
+	const preferred = timeField.value
 	const keys = [
 		...(preferred ? [preferred] : []),
 		...Object.keys(row).filter(k => k !== preferred && k.toLowerCase().includes("timestamp"))
@@ -153,7 +177,8 @@ function buildDefaultColumns(): DataTableColumns<EventSearchResult> {
 			}
 		},
 		{
-			title: "Source",
+			// The agent's name, else the syslog sender: the host. Not "Source", which reads like the event source.
+			title: "Host",
 			key: "agent_name",
 			width: 140,
 			ellipsis: { tooltip: { to: "body", contentClass: "max-w-[70vw] text-sm!" } },
@@ -235,12 +260,51 @@ function buildColumnFromConfig(col: DisplayColumn): DataTableColumns<EventSearch
 	}
 }
 
+/** One source's columns: the ones configured for it, else the default layout. */
+function sourceColumns(source: EventSource | null): DataTableColumns<EventSearchResult> {
+	const configured = source?.displayed_columns
+	return configured && configured.length > 0 ? configured.map(buildColumnFromConfig) : buildDefaultColumns()
+}
+
+function eventSourceColumn(): DataTableColumns<EventSearchResult>[number] {
+	return {
+		title: "Event source",
+		key: "_source_name",
+		width: 160,
+		render(row) {
+			const name = row._source_name
+			if (!name) return "-"
+			return h(NTag, { size: "small", bordered: false, title: name, class: "max-w-full" }, () =>
+				h("span", { class: "block truncate" }, name))
+		}
+	}
+}
+
+/**
+ * Several sources: the time of each event, the source it came from, then every searched
+ * source's own columns together, each key once (the first source to name it gives its label).
+ * A source's column on its time field is left out: the first column already shows it.
+ */
+function multiSourceColumns(): DataTableColumns<EventSearchResult> {
+	const [timestamp, ...defaults] = buildDefaultColumns()
+	const seen = new Set<string>(["timestamp", "_source_name", ...(timeField.value ? [timeField.value] : [])])
+	const merged: DataTableColumns<EventSearchResult> = []
+
+	for (const source of props.eventSources) {
+		const columns = source.displayed_columns?.length ? source.displayed_columns.map(buildColumnFromConfig) : defaults
+		for (const column of columns) {
+			const key = "key" in column ? String(column.key) : ""
+			if (!key || seen.has(key)) continue
+			seen.add(key)
+			merged.push(column)
+		}
+	}
+
+	return [timestamp, eventSourceColumn(), ...merged]
+}
+
 const columns = computed<DataTableColumns<EventSearchResult>>(() => {
-	const configured = props.eventSource?.displayed_columns
-	const dataColumns =
-		configured && configured.length > 0
-			? normalizeColumns(configured.map(buildColumnFromConfig))
-			: normalizeColumns(buildDefaultColumns())
+	const dataColumns = normalizeColumns(multiSource.value ? multiSourceColumns() : sourceColumns(singleSource.value))
 
 	return [
 		...dataColumns,
@@ -269,9 +333,11 @@ const columns = computed<DataTableColumns<EventSearchResult>>(() => {
 	]
 })
 
+/** The event's own page, under the source it came from (each row's own when several were searched). */
 function eventDetailRoute(row: EventSearchResult): EntityRoute | undefined {
-	if (!row._id || !row._index || !props.customerCode || !props.sourceName) return undefined
-	return routeEventSearchEvent(props.customerCode, props.sourceName, String(row._index), String(row._id))
+	const sourceName = multiSource.value ? row._source_name : singleSource.value?.name
+	if (!row._id || !row._index || !props.customerCode || !sourceName) return undefined
+	return routeEventSearchEvent(props.customerCode, sourceName, String(row._index), String(row._id))
 }
 
 const scrollX = computed(() =>

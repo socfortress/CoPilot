@@ -9,6 +9,8 @@ event source it was opened for, and continues a scroll only for the same pair.
 
 import hashlib
 import hmac
+import json
+from typing import Iterable
 from typing import Optional
 
 _SEPARATOR = "."  # never part of a scroll id, which is base64
@@ -33,5 +35,36 @@ def open_scroll(token: str, customer_code: str, source_name: str, secret: str) -
     if not separator or not scroll_id:
         return None
     if not hmac.compare_digest(mac, _mac(scroll_id, customer_code, source_name, secret)):
+        return None
+    return scroll_id
+
+
+# ── a search across several sources (#1356) ──────────────────────────────────
+#
+# The token names the set of sources, not their order, under its own purpose: a token handed out
+# for one source never continues a search of several, nor the other way round.
+
+_MULTI_PURPOSE = b"siem-event-scroll-multi"
+
+
+def _multi_mac(scroll_id: str, customer_code: str, source_names: Iterable[str], secret: str) -> str:
+    names = json.dumps(sorted(set(source_names)), separators=(",", ":"), ensure_ascii=False)
+    message = b"\x00".join((_MULTI_PURPOSE, customer_code.encode(), names.encode(), scroll_id.encode()))
+    return hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
+
+
+def sign_multi_scroll(scroll_id: Optional[str], customer_code: str, source_names: Iterable[str], secret: str) -> Optional[str]:
+    """The token handed to the client for a search of ``source_names``; ``None`` stays ``None``."""
+    if not scroll_id:
+        return None
+    return f"{scroll_id}{_SEPARATOR}{_multi_mac(scroll_id, customer_code, source_names, secret)}"
+
+
+def open_multi_scroll(token: str, customer_code: str, source_names: Iterable[str], secret: str) -> Optional[str]:
+    """The scroll id inside ``token``, or ``None`` when it was not issued for this customer and set of sources."""
+    scroll_id, separator, mac = token.rpartition(_SEPARATOR)
+    if not separator or not scroll_id:
+        return None
+    if not hmac.compare_digest(mac, _multi_mac(scroll_id, customer_code, source_names, secret)):
         return None
     return scroll_id

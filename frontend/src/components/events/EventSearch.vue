@@ -16,9 +16,9 @@
 			:loading-more
 			:has-searched
 			:scroll-id
-			:event-source="selectedEventSource"
+			:warnings
+			:event-sources="searchedEventSources"
 			:customer-code="searchFormParams?.customerCode ?? null"
-			:source-name="searchFormParams?.sourceName ?? null"
 			@load-more="loadMoreEvents"
 			@configure-columns="showColumnConfig = true"
 			@row-select="openEventDetail"
@@ -43,14 +43,14 @@
 			v-model:show="showColumnConfig"
 			preset="card"
 			display-directive="show"
-			:title="`Configure columns: ${selectedEventSource?.name ?? ''}`"
+			:title="`Configure columns: ${columnsEventSource?.name ?? ''}`"
 			:style="{ width: 'min(720px, 92vw)' }"
 			:mask-closable="false"
 		>
 			<ColumnConfig
 				ref="columnConfigRef"
 				:open="showColumnConfig"
-				:event-source="selectedEventSource"
+				:event-source="columnsEventSource"
 				:field-mappings
 				:loading-field-mappings="fieldMappingsLoading"
 				@close="showColumnConfig = false"
@@ -75,8 +75,8 @@
 <script setup lang="ts">
 import type { EventSearchFiltersLoad, EventSearchFiltersParams } from "./EventSearchFilters.vue"
 import type { ApiError } from "@/types/common"
-import type { DisplayColumn } from "@/types/event-sources"
-import type { EventSearchResult, FieldMapping } from "@/types/events"
+import type { DisplayColumn, EventSource } from "@/types/event-sources"
+import type { EventSearchResult, EventsPage, EventsQueryParams, FieldMapping } from "@/types/events"
 import { NButton, NDrawer, NDrawerContent, NModal, useMessage } from "naive-ui"
 import { computed, ref, useTemplateRef } from "vue"
 import Api from "@/api"
@@ -97,6 +97,7 @@ const fieldMappingsLoading = ref(false)
 const events = ref<EventSearchResult[]>([])
 const totalEvents = ref(0)
 const scrollId = ref<string | null>(null)
+const warnings = ref<string[]>([])
 const loadingEvents = ref(false)
 const loadingMore = ref(false)
 const hasSearched = ref(false)
@@ -106,15 +107,25 @@ const showDetailDrawer = ref(false)
 const selectedEvent = ref<EventSearchResult | null>(null)
 const columnConfigRef = useTemplateRef("columnConfigRef")
 
-const selectedEventSource = computed(() => {
-	const sourceName = searchFormParams.value?.sourceName
-	const sources = searchFormLoad.value?.eventSources
-	if (!sourceName || !sources) return null
-	return sources.find(s => s.name === sourceName) ?? null
-})
+/**
+ * The sources of the last search, in the order they were picked, kept as they were when it ran:
+ * the filter bar reloads its list when the customer changes, and the results on screen are still
+ * the last search's.
+ */
+const searchedEventSources = ref<EventSource[]>([])
+
+/** Columns are configured per source, so only while one source is searched. */
+const columnsEventSource = computed(() =>
+	searchedEventSources.value.length === 1 ? searchedEventSources.value[0] : null
+)
 
 function handleFiltersSearch(params: EventSearchFiltersParams) {
 	searchFormParams.value = params
+	const load = searchFormLoad.value
+	const sources = load?.customerCode === params.customerCode ? load.eventSources : []
+	searchedEventSources.value = params.sourceNames
+		.map(name => sources.find(s => s.name === name))
+		.filter((s): s is EventSource => s !== undefined)
 	fieldMappings.value = params.fieldMappings
 	searchEvents()
 }
@@ -127,18 +138,32 @@ function resetResults() {
 	events.value = []
 	totalEvents.value = 0
 	scrollId.value = null
+	warnings.value = []
 	hasSearched.value = false
+}
+
+/** One source keeps its own route (the Customer Portal's too); several go to the route that searches them together. */
+function fetchEvents(params: EventSearchFiltersParams, apiParams: EventsQueryParams) {
+	const [first, ...rest] = params.sourceNames
+	if (!rest.length) {
+		return Api.siem.queryEvents({ customerCode: params.customerCode, sourceName: first, params: apiParams })
+	}
+	return Api.siem.queryEventsMulti(params.customerCode, { ...apiParams, sources: params.sourceNames })
+}
+
+function addWarnings(page: EventsPage) {
+	warnings.value = [...new Set([...warnings.value, ...(page.warnings ?? [])])]
 }
 
 function searchEvents() {
 	const params = searchFormParams.value
-	if (!params?.customerCode || !params.sourceName) return
+	if (!params?.customerCode || !params.sourceNames.length) return
 
 	loadingEvents.value = true
 	hasSearched.value = true
 	resetResults()
 
-	const apiParams: { timerange?: string; page_size: number; query?: string; time_from?: string; time_to?: string } = {
+	const apiParams: EventsQueryParams = {
 		page_size: params.pageSize,
 		query: params.query || undefined
 	}
@@ -149,13 +174,13 @@ function searchEvents() {
 		apiParams.timerange = params.timerange
 	}
 
-	Api.siem
-		.queryEvents({ customerCode: params.customerCode, sourceName: params.sourceName, params: apiParams })
+	fetchEvents(params, apiParams)
 		.then(res => {
 			if (res.data.success) {
 				events.value = res.data.events || []
 				totalEvents.value = res.data.total
 				scrollId.value = res.data.scroll_id
+				addWarnings(res.data)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -170,20 +195,16 @@ function searchEvents() {
 
 function loadMoreEvents() {
 	const params = searchFormParams.value
-	if (!params?.customerCode || !params.sourceName || !scrollId.value) return
+	if (!params?.customerCode || !params.sourceNames.length || !scrollId.value) return
 
 	loadingMore.value = true
 
-	Api.siem
-		.queryEvents({
-			customerCode: params.customerCode,
-			sourceName: params.sourceName,
-			params: { scroll_id: scrollId.value }
-		})
+	fetchEvents(params, { scroll_id: scrollId.value })
 		.then(res => {
 			if (res.data.success) {
 				events.value.push(...(res.data.events || []))
 				scrollId.value = res.data.scroll_id
+				addWarnings(res.data)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -202,7 +223,7 @@ function openEventDetail(event: EventSearchResult) {
 }
 
 function onColumnsSaved(saved: DisplayColumn[] | null) {
-	const source = selectedEventSource.value
+	const source = columnsEventSource.value
 	if (source) {
 		source.displayed_columns = saved
 	}
