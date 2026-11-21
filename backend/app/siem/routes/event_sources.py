@@ -62,16 +62,17 @@ async def get_event_sources_endpoint(
 @event_sources_router.post(
     "",
     response_model=EventSourceOperationResponse,
-    description="Create a new event source for a customer",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    description="Create a new event source for a customer (admin only: its index pattern decides what the customer's searches read)",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def create_event_source_endpoint(
     event_source: EventSourceCreate,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventSourceOperationResponse:
     logger.info(f"Creating event source for customer {event_source.customer_code}")
     await verify_customer_exists(event_source.customer_code, db)
-    created = await create_event_source(event_source, db)
+    created = await create_event_source(event_source, db, current_user)
     return EventSourceOperationResponse(
         event_source=EventSourceResponse.from_orm(created),
         success=True,
@@ -82,16 +83,17 @@ async def create_event_source_endpoint(
 @event_sources_router.put(
     "/{event_source_id}",
     response_model=EventSourceOperationResponse,
-    description="Update an existing event source",
+    description="Update an existing event source (an analyst: their own customers' sources, never the index pattern)",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_event_source_endpoint(
     event_source_id: int,
     update_data: EventSourceUpdate,
+    current_user: User = Depends(AuthHandler().get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> EventSourceOperationResponse:
     logger.info(f"Updating event source {event_source_id}")
-    updated = await update_event_source(event_source_id, update_data, db)
+    updated = await update_event_source(event_source_id, update_data, db, current_user)
     return EventSourceOperationResponse(
         event_source=EventSourceResponse.from_orm(updated),
         success=True,
