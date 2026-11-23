@@ -37,6 +37,9 @@ from app.active_response.services.sysmon_config import templatize_install_dir
 from app.active_response.services.sysmon_config import usable_as_install_dir
 from app.active_response.services.sysmon_config import validate_sysmon_config
 from app.active_response.services.sysmon_default_sync import DEFAULT_CONFIG_LOCK
+from app.active_response.services.sysmon_default_sync import (
+    check_running as sysmon_default_check_running,
+)
 from app.active_response.services.sysmon_default_sync import get_sync_status
 from app.active_response.services.sysmon_default_sync import run_sysmon_default_sync
 from app.active_response.services.sysmon_health import RELOAD_TAG
@@ -303,6 +306,15 @@ async def run_sysmon_default_sync_now(
     session: AsyncSession = Depends(get_db),
 ):
     """Check SOCFortress for a newer default Sysmon config now, and apply it the way the scheduled check does."""
+    # Answer at once rather than wait behind a running check (up to a minute of network time) until the proxy gives up
+    if sysmon_default_check_running():
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "A check of SOCFortress's default Sysmon config is already running on this CoPilot (the scheduled one, or "
+                "another admin's Sync now). Its result shows here once it ends; try again in a minute"
+            ),
+        )
     result = await run_sysmon_default_sync(session, force=force, actor=current_user, request=request)
     status = await get_sync_status()
     return SysmonDefaultSyncRunResponse(success=True, message=result.message, result=result, status=status)

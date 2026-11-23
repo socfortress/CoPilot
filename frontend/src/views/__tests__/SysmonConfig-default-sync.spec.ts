@@ -190,6 +190,17 @@ describe("the SOCFortress default sync line", () => {
 		)
 	})
 
+	it("says at once when a check is already running", async () => {
+		const wrapper = await open(status())
+		const detail =
+			"A check of SOCFortress's default Sysmon config is already running on this CoPilot (the scheduled one, or another admin's Sync now). Its result shows here once it ends; try again in a minute"
+		sysmonConfig.syncDefaultConfig.mockRejectedValue({ name: "AxiosError", response: { status: 409, data: { detail } } })
+		await wrapper.get("[data-testid=default-sync-now]").trigger("click")
+		await flushPromises()
+		expect(message.error).toHaveBeenCalledWith(`${detail}.`)
+		expect(wrapper.get("[data-testid=default-sync-now]").attributes("disabled")).toBeUndefined()
+	})
+
 	it.each([
 		[{ mode: "off" as const }, "SOCFortress default sync off"],
 		[{ configured: false, trusted_key_ids: [] }, "SOCFortress default sync not configured"]

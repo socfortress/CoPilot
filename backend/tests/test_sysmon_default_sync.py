@@ -10,8 +10,11 @@ What is pinned here:
 * anti-rollback against sync.json; the local-modification guard in "on", "force" (the env or Sync now) and "off";
   an equal stored default adopted (line endings aside);
 * no license, no key configured, an unusable URL: nothing is fetched; every HTTP error, a network error, a redirect to
-  another host, a compressed body and the 12 MiB cap each give their outcome; MinIO failures too;
+  another host, a compressed body, the 12 MiB cap and an answer still trickling in at the deadline each give their
+  outcome; MinIO failures too; the license read's database transaction ends before the request goes out;
+* content_sha256_crlf is the release signer's normalisation (a lone CR stays), so a release with bare CRs is applied;
 * the job is registered and never raises; the routes resolve before /{customer_code}, are admin only, audit the admin;
+  Sync now answers 409 at once while a check runs;
 * the license key never reaches a log line, a stored record or an audit row (its fingerprint does).
 
 The configs below are small synthetic ones. The real default never belongs in this (public) repo.
@@ -28,6 +31,7 @@ import hashlib
 import inspect
 import json
 import os
+import time
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -41,6 +45,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (  # noqa: E402
 )
 from cryptography.hazmat.primitives.serialization import Encoding  # noqa: E402
 from cryptography.hazmat.primitives.serialization import PublicFormat  # noqa: E402
+from fastapi import HTTPException  # noqa: E402
 from fastapi.routing import APIRoute  # noqa: E402
 from loguru import logger  # noqa: E402
 from miniopy_async.error import S3Error  # noqa: E402
@@ -99,6 +104,11 @@ def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def signer_crlf(data: bytes) -> bytes:
+    """content_sha256_crlf's normalisation, as the release signer (sysmonctl release) and the sync service define it."""
+    return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+
+
 def manifest_for(content: bytes, sequence: int = 1, **overrides) -> dict:
     manifest = {
         "format": "socfortress-sysmon-default/1",
@@ -108,7 +118,7 @@ def manifest_for(content: bytes, sequence: int = 1, **overrides) -> dict:
         "commit": f"{sequence:x}".rjust(40, "a"),
         "created_at": "2026-11-20T12:00:00Z",
         "content_sha256": sha(content),
-        "content_sha256_crlf": sha(sync.crlf(content)),
+        "content_sha256_crlf": sha(signer_crlf(content)),
         "content_size": len(content),
         "placeholders": content.count(b"__INSTALLDIRNAME__"),
         "schemaversion": "4.90",
@@ -328,6 +338,23 @@ def test_unknown_manifest_fields_are_ignored_and_a_crlf_release_is_fine(env, aud
     crlf_template = TEMPLATE.replace(b"\n", b"\r\n")
     result = check(Service(ok(bundle(crlf_template))))
     assert result.outcome == SyncOutcome.APPLIED and env.minio.get(DEFAULT) == crlf_template
+
+
+def test_crlf_is_the_signers_normalisation():
+    # LF and CRLF become CRLF; a lone CR stays, so \r\r\n stays \r\r\n (a regex over \r|\n would make it \r\n\r\n)
+    assert sync.crlf(b"a\nb\r\nc\rd\r\r\ne") == b"a\r\nb\r\nc\rd\r\r\ne"
+    for data in (TEMPLATE, TEMPLATE.replace(b"\n", b"\r\n"), b"x\ry\r\r\nz\n\n\r"):
+        assert sync.crlf(data) == signer_crlf(data)
+
+
+def test_a_release_with_bare_carriage_returns_is_applied(env, audit_rows):
+    # A Windows tool's bare CR, or a double conversion's \r\r\n: git keeps both, the workflow signs the blob as it is,
+    # and the service accepts it. CoPilot must agree on content_sha256_crlf.
+    odd = TEMPLATE.replace(b"</ProcessCreate>\n", b"</ProcessCreate>\r").replace(b"</RuleGroup>\n", b"</RuleGroup>\r\r\n")
+    assert b"\r" in odd and signer_crlf(odd) != odd.replace(b"\r\n", b"\n").replace(b"\r", b"\n").replace(b"\n", b"\r\n")
+    result = check(Service(ok(bundle(odd), 1, odd)))
+    assert result.outcome == SyncOutcome.APPLIED, result.message
+    assert env.minio.get(DEFAULT) == odd and env.minio.json(SYNC)["content_sha256_crlf"] == sha(signer_crlf(odd))
 
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -646,6 +673,51 @@ def test_a_network_error_is_reported(env):
     assert result.outcome == SyncOutcome.NETWORK_ERROR and "ConnectError: connection refused" in result.message
 
 
+def test_a_trickling_answer_is_abandoned_at_the_deadline(env, audit_rows, monkeypatch):
+    # A byte every 50 ms never trips a per-read timeout (MockTransport has none at all): only the deadline ends it
+    monkeypatch.setattr(sync, "FETCH_DEADLINE_SECONDS", 0.3)
+    sent = []
+
+    class Drip(httpx.AsyncByteStream):
+        async def __aiter__(self):
+            for _ in range(200):
+                sent.append(1)
+                yield b"x"
+                await asyncio.sleep(0.05)
+
+    env.minio.put(DEFAULT, LOCAL)
+    started = time.monotonic()
+    result = check(Service(lambda request: httpx.Response(200, headers={"Content-Length": "100000"}, stream=Drip())))
+    elapsed = time.monotonic() - started
+
+    assert result.outcome == SyncOutcome.NETWORK_ERROR and not result.ok
+    assert "did not send its whole answer within 0.3 s" in result.message and "nothing was changed" in result.message
+    assert elapsed < 3 and len(sent) < 50
+    assert env.minio.get(DEFAULT) == LOCAL and env.minio.get(SYNC) is None and sync_rows(audit_rows) == []
+    # The run lock is free again: the next check runs
+    assert not sync.check_running()
+    assert check(Service(ok(bundle()))).outcome == SyncOutcome.LOCAL_DEFAULT_DIFFERS
+
+
+def test_the_database_transaction_ends_before_the_service_is_asked(env):
+    session = SimpleNamespace(rollback=AsyncMock())
+
+    def answer(request):
+        # The license read's transaction is over by the time the request goes out
+        assert session.rollback.await_count == 1
+        return ok(bundle())
+
+    service = Service(answer)
+    result = asyncio.run(sync.run_sysmon_default_sync(session, transport=service.transport))
+    assert result.outcome == SyncOutcome.APPLIED and len(service.requests) == 1
+    env.license.assert_awaited_once_with(session, raise_on_missing=False)
+
+    # A rollback that fails is logged, and the check goes on
+    session.rollback = AsyncMock(side_effect=RuntimeError("connection lost"))
+    result = asyncio.run(sync.run_sysmon_default_sync(session, transport=Service(httpx.Response(304)).transport))
+    assert result.outcome == SyncOutcome.UP_TO_DATE
+
+
 def test_a_redirect_to_another_host_is_not_followed(env):
     def answer(request):
         if request.url.host == "sync.test":
@@ -815,6 +887,21 @@ def test_sync_now_runs_a_check_as_the_admin(env, audit_rows, monkeypatch):
 
     got = asyncio.run(routes.get_sysmon_default_sync_status())
     assert got.success and got.status.last_check.outcome == SyncOutcome.APPLIED
+
+
+def test_sync_now_answers_at_once_while_a_check_is_running(env, monkeypatch):
+    run = AsyncMock()
+    monkeypatch.setattr(routes, "run_sysmon_default_sync", run)
+
+    async def while_a_check_runs():
+        async with sync._RUN_LOCK:
+            with pytest.raises(HTTPException) as raised:
+                await routes.run_sysmon_default_sync_now(request=None, force=False, current_user=ADMIN, session=None)
+        return raised.value
+
+    error = asyncio.run(while_a_check_runs())
+    assert error.status_code == 409 and "already running" in error.detail
+    run.assert_not_awaited()
 
 
 SYNC_PATH = "/api/sysmon_config/default-config/sync"

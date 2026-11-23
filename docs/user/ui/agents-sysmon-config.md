@@ -128,7 +128,7 @@ Below **Add new Configuration**, admins see one line:
 - `SOCFortress default sync off` or `SOCFortress default sync not configured`: nothing is fetched (Sync now is disabled).
 - `Default not synced from SOCFortress yet`, with the reason (no license, the service unreachable, nothing published yet, a release refused, ...).
 
-When the last check failed, its message is shown under the line. **Sync now** checks at once. When the default was changed here, it asks first whether to replace it with SOCFortress's latest release.
+When the last check failed, its message is shown under the line. **Sync now** checks at once. When the default was changed here, it asks first whether to replace it with SOCFortress's latest release. While a check is already running (the scheduled one, or another admin's), **Sync now** says so at once instead of waiting; try again a minute later.
 
 #### The guard: a default saved here is kept
 
@@ -160,7 +160,7 @@ Until a CoPilot version ships a SOCFortress release key, sync is **not configure
 | `off`, `not_configured` | Nothing was fetched. |
 | `no_license`, `invalid_url` | Nothing was fetched: no license, or an unusable `SOCFORTRESS_SYSMON_SYNC_URL`. |
 | `unauthorized`, `license_rejected`, `not_published`, `rate_limited`, `service_unavailable` | The service answered 401, 403, 404, 429 or 503. |
-| `network_error`, `http_error`, `redirect_refused`, `too_large` | No usable answer (a redirect to another host is never followed; answers over 12 MiB are refused). |
+| `network_error`, `http_error`, `redirect_refused`, `too_large` | No usable answer: none, or not all of it within 60 s; a redirect to another host is never followed; answers over 12 MiB are refused. |
 | `verification_failed`, `invalid_config`, `rollback_refused` | The release was refused: signature, key, format or hashes; the config itself; or older than the one applied. |
 | `store_error` | This CoPilot's data store (MinIO) could not be read or written. |
 

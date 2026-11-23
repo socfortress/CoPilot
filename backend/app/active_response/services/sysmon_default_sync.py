@@ -17,7 +17,9 @@ A check, every 6 hours (the ``sync_sysmon_default`` job) or on an admin's "Sync 
 1. ``SYSMON_DEFAULT_SYNC``: ``on`` (default), ``force`` or ``off`` (no request at all).
 2. GET {url}/v1/sysmon/default with this CoPilot's license key (``x-api-key``; only its fingerprint is ever logged),
    the release it has (``x-sysmon-default-sequence``) and, while the stored default is that release, its ETag (a 304
-   means nothing new). TLS verified, 30 s, at most 12 MiB, no redirect to another host.
+   means nothing new). TLS verified, 10 s to connect, 30 s at most between bytes and 60 s for the whole answer, at
+   most 12 MiB, no redirect to another host. The database transaction that read the license key is ended first, so no
+   pooled connection stays checked out while the service answers.
 3. Verify the bundle: the signature over the exact manifest bytes first, with a key in the trust list that has not
    expired, and only then the manifest (format, key, channel, hashes, size, placeholders, schemaversion), then the
    config itself (``validate_sysmon_config``, the default's checks).
@@ -90,7 +92,10 @@ CHANNEL = "stable"
 MODULE_VERSION = "1.0"
 SOURCE = "socfortress-sync"
 MAX_RESPONSE_BYTES = 12 * 1024 * 1024
+# Per phase: 10 s to connect, 30 s for each read or write. A server that sends a byte every 29 s never trips these, so
+# the whole fetch (redirects and body included) also has a deadline
 FETCH_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
+FETCH_DEADLINE_SECONDS = 60.0
 MAX_REDIRECTS = 3
 TRUSTED_KEYS_FILE = Path(__file__).resolve().parents[1] / "assets" / "sysmon_default" / "release_keys.json"
 # The audit actor of the scheduled check (no user): audit rows take a null actor_user_id
@@ -101,13 +106,12 @@ _HEX40_RE = re.compile(r"[0-9a-f]{40}")
 _HEX64_RE = re.compile(r"[0-9a-f]{64}")
 _UTC_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 _UTC_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
-_LINE_END_RE = re.compile(rb"\r\n|\r|\n")
 _LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 _REDIRECT_CODES = frozenset({301, 302, 303, 307, 308})
 _OFF_VALUES = frozenset({"off", "false", "0", "no", "disabled"})
 _ON_VALUES = frozenset({"", "on", "true", "1", "yes", "enabled"})
 
-# One check at a time (the job and an admin's Sync now)
+# One check at a time (the job and an admin's Sync now). Held for at most FETCH_DEADLINE_SECONDS of network time
 _RUN_LOCK = asyncio.Lock()
 # Held while the stored default is read, compared and written, by a check and by "Save as default", so a check can
 # never overwrite a default an admin saved after the check read it
@@ -277,8 +281,12 @@ class Release:
 
 
 def crlf(data: bytes) -> bytes:
-    """The content with every line ending normalised to CRLF (what the manifest's content_sha256_crlf is of)."""
-    return _LINE_END_RE.sub(b"\r\n", data)
+    """
+    The content with every line ending (LF or CRLF) normalised to CRLF: what the manifest's content_sha256_crlf is of.
+    Exactly the release signer's and the sync service's definition: a lone CR is left as it is, so \\r\\r\\n stays
+    \\r\\r\\n (not \\r\\n\\r\\n). Any other definition would refuse releases the other two accept.
+    """
+    return data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
 
 def _sha256(data: bytes) -> str:
@@ -629,6 +637,16 @@ def _changed_here_message(release: Release, applied: Optional[SysmonDefaultSyncA
     )
 
 
+async def _end_read_transaction(session: Optional[AsyncSession]) -> None:
+    """Roll back the session's read-only transaction, which returns its connection to the pool. A failure is logged."""
+    if session is None:
+        return
+    try:
+        await session.rollback()
+    except Exception as e:  # noqa: BLE001 - the license key is read; the check goes on
+        logger.warning(f"Sysmon default sync: could not end the license read's database transaction: {type(e).__name__}")
+
+
 async def _check(
     session: AsyncSession,
     mode: SyncMode,
@@ -658,6 +676,9 @@ async def _check(
 
     license_row = await get_license(session, raise_on_missing=False)
     license_key = (getattr(license_row, "license_key", None) or "").strip()
+    # The license read is the check's only database work: end its transaction now, so the fetch below (up to
+    # FETCH_DEADLINE_SECONDS) keeps no pooled database connection checked out
+    await _end_read_transaction(session)
     if not license_key:
         return (
             done(SyncOutcome.NO_LICENSE, "This CoPilot has no license, which the SOCFortress sync service requires. Nothing was fetched."),
@@ -723,9 +744,22 @@ async def _fetch_and_apply(
         headers["If-None-Match"] = etag(applied.sequence, applied.content_sha256)
 
     try:
-        status, body, response_headers = await _fetch(url, headers, transport)
+        # The whole fetch, not only each read: a server that trickles bytes would otherwise hold the run lock (and with
+        # it every later scheduled check and Sync now) for as long as it likes
+        async with asyncio.timeout(FETCH_DEADLINE_SECONDS):
+            status, body, response_headers = await _fetch(url, headers, transport)
     except SyncError as e:
         return done(e.outcome, e.message), None, fingerprint
+    except TimeoutError:
+        return (
+            done(
+                SyncOutcome.NETWORK_ERROR,
+                f"The SOCFortress sync service at {service} did not send its whole answer within {FETCH_DEADLINE_SECONDS:g} s: "
+                "the check was abandoned and nothing was changed. The next scheduled check tries again.",
+            ),
+            None,
+            fingerprint,
+        )
     except httpx.HTTPError as e:
         detail = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
         return done(SyncOutcome.NETWORK_ERROR, f"Could not reach the SOCFortress sync service at {service}: {detail}."), None, fingerprint
@@ -902,6 +936,14 @@ async def _audit(apply: _Apply, actor, request: Optional[Request]) -> None:
         details=apply.error or ("Sync now" if actor is not None else f"Scheduled check ({JOB_ID})"),
         request=request,
     )
+
+
+def check_running() -> bool:
+    """
+    Whether a check is running (the scheduled one or an admin's Sync now), so Sync now can answer at once instead of
+    queueing behind it. Nothing is awaited between this test and run_sysmon_default_sync taking the lock.
+    """
+    return _RUN_LOCK.locked()
 
 
 async def run_sysmon_default_sync(
