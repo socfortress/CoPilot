@@ -1,0 +1,39 @@
+annotated-doc==0.0.7
+    # via fastapi
+annotated-types==0.8.0
+    # via pydantic
+anyio==4.16.0
+    # via
+    #   fastapi
+    #   starlette
+click==8.5.1
+    # via uvicorn
+fastapi==0.165.0
+    # via -r requirements.in
+h11==0.16.0
+    # via uvicorn
+idna==3.20
+    # via anyio
+opentelemetry-api==1.45.2
+    # via fastapi
+pydantic==2.14.4
+    # via fastapi
+pydantic-core==2.50.5
+    # via pydantic
+starlette==1.10.0
+    # via fastapi
+typing-extensions==4.16.0
+    # via
+    #   anyio
+    #   fastapi
+    #   opentelemetry-api
+    #   pydantic
+    #   pydantic-core
+    #   starlette
+    #   typing-inspection
+typing-inspection==0.4.5
+    # via
+    #   fastapi
+    #   pydantic
+uvicorn==0.54.0
+    # via -r requirements.in

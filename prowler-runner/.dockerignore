@@ -1,0 +1,6 @@
+# The image needs only requirements.txt and runner/.
+*
+!requirements.txt
+!runner
+**/__pycache__
+**/*.pyc

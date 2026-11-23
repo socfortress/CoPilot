@@ -468,6 +468,21 @@ Things to keep straight in the InfluxDB half:
 
 Tests: `tests/test_sonicwall_network_connector.py`, `tests/test_siem_dashboard_templates.py`, `tests/test_siem_dashboard_executor.py` (no DB, no network); frontend `components/customers/networkConnectors/__tests__/sonicwall.spec.ts`.
 
+### Cloud security assessment: the Prowler runner (#1328)
+
+Prowler replaces ScoutSuite (design: the comment on #1328). Scans run in **`copilot-prowler`** (`prowler-runner/`): Prowler's official CLI image (`toniblyx/prowler`, tag and digest pinned in its Dockerfile) plus a FastAPI job API in a virtualenv of its own. The backend half (cloud accounts per customer, findings in MySQL, schedules, UI, ScoutSuite's removal) isn't built yet. Load-bearing:
+
+- **It can't live in the backend.** Prowler pins ~100 packages exactly (20 clash with the backend's; its numpy 2.x can't coexist with the 1.26 `elasticsearch7` needs), keeps its cloud session in a process-wide global (`Provider._global`), and Microsoft 365 needs PowerShell 7 and its modules, which the image has.
+- **One `prowler` process per scan**, in its own process group (cancel and timeout `killpg` it, PowerShell included), in `/work/<job id>` (0700), with an environment built from scratch (`commands.scan_environment`: only proxy variables pass from the runner's own; its token never does). **No secret on a command line**: keys and client secrets go in the scan's environment, a GCP key in `secrets/` (0600, deleted when Prowler exits); every argv value matched a pattern that rules out a leading `-`, and single values are `--opt=value`. Prowler's executable and interpreter are constants (`settings.PROWLER_BIN`/`PROWLER_PYTHON`), never settings.
+- **Prowler runs with `-z --only-logs --log-level=ERROR`**: exit 0 and 3 are success. Its `--only-logs` records look like JSON but aren't escaped (a message with a newline spans lines), so `logs.py` matches each record's prefix and keeps only exception class names and counts. `classify_failure` reads the CRITICAL names, and the ERROR ones too when those are vague: an Azure sign-in failure is an ERROR `ClientAuthenticationError` then a CRITICAL `AzureHTTPResponseError`.
+- **The OCSF output is read in a separate process** (`python -m runner.normalize_cli JOB_DIR PROVIDER`, a streaming array reader) into `summary.json` (totals; per check a metadata snapshot, its compliance mapping and counts) and `findings.ndjson` (FAIL and MANUAL only; PASS is counted). `resources[].data`, the raw resource configuration, can hold secrets and never leaves; the OCSF file and the compliance CSVs are deleted once read. `pass`/`fail`/`manual` exclude muted findings (OCSF `status` "Suppressed"), counted apart.
+- **Compliance keys** are `<Framework>-<Version>`, or `<Framework>` without a version, as Prowler writes `unmapped.compliance`. `GET /v1/compliance/{provider}` serves the requirement titles from Prowler's own framework files under the same keys.
+- **Every error is a fixed text** (`{"detail", "code"}`). A 422 names fields only, since FastAPI's default echoes values, secrets included. A bearer token of at least 32 characters is required, or every `/v1` route answers 503. Jobs live in memory in one uvicorn worker; a restart forgets them and empties `/work` (only entries named `[conn-]<32 hex>`).
+- **Microsoft 365 signs in with a client secret** (the decision on #1328). Prowler still runs the Exchange and Teams checks with one: it passes access tokens to `Connect-ExchangeOnline` and `Connect-MicrosoftTeams`. The connection test needs one of the tenant's domains (Prowler's `provider_id`).
+- **Upgrading Prowler**: change `PROWLER_IMAGE` (tag and digest), regenerate `tests/fixtures/aws_sample.ocsf.json` with `make_ocsf_fixture.py` under the new version, and check that a scan with fake credentials ends `auth_failed`, not `invalid_request` (`prowler-runner/README.md`).
+
+Tests: `prowler-runner/tests/` (from `prowler-runner/`, a Python 3.12 venv with `requirements-dev.txt`, then `python -m pytest`; a fake `prowler` writes the fixture Prowler's own OCSF writer produced; no network).
+
 ### Frontend essentials
 
 - `src/api/httpClient.ts` (axios) and `src/api/sseClient.ts` (`@microsoft/fetch-event-source`) — backend traffic. Wrappers in `src/api/endpoints/`.

@@ -1,0 +1,59 @@
+{
+  "Framework": "CIS",
+  "Name": "CIS Amazon Web Services Foundations Benchmark v5.0.0",
+  "Version": "5.0",
+  "Provider": "AWS",
+  "Description": "Sample of the CIS benchmark, in Prowler's file format.",
+  "Requirements": [
+    {
+      "Id": "1.1",
+      "Description": "Maintain current contact details",
+      "Checks": [
+        "account_maintain_current_contact_details"
+      ],
+      "Attributes": [
+        {
+          "Section": "1 Identity and Access Management",
+          "Profile": "Level 1"
+        }
+      ]
+    },
+    {
+      "Id": "1.5",
+      "Description": "Ensure MFA is enabled for the 'root' user account",
+      "Checks": [
+        "iam_root_mfa_enabled",
+        "NOT A CHECK; rm -rf /"
+      ],
+      "Attributes": [
+        {
+          "Section": "1 Identity and Access Management"
+        }
+      ]
+    },
+    {
+      "Id": "2.1.4",
+      "Description": "Ensure that S3 is configured with 'Block Public Access' enabled",
+      "Checks": [
+        "s3_bucket_public_access"
+      ],
+      "Attributes": []
+    },
+    {
+      "Id": "4.1",
+      "Description": "A manual requirement: no automated check.",
+      "Checks": [],
+      "Attributes": [
+        {
+          "Section": "4 Monitoring"
+        }
+      ]
+    },
+    {
+      "Description": "A requirement without an id is skipped",
+      "Checks": [
+        "iam_root_mfa_enabled"
+      ]
+    }
+  ]
+}
