@@ -41,3 +41,84 @@ export interface SaveDefaultConfigResponse {
 	/** How many of the customer's install-folder paths were turned back into the placeholder. */
 	restored: number
 }
+
+/** SYSMON_DEFAULT_SYNC: "on" applies a SOCFortress release unless the default was changed here, "force" always does. */
+export type DefaultSyncMode = "on" | "force" | "off"
+
+export type DefaultSyncOutcome =
+	| "applied"
+	| "adopted"
+	| "up_to_date"
+	| "local_default_differs"
+	| "off"
+	| "not_configured"
+	| "invalid_url"
+	| "no_license"
+	| "unauthorized"
+	| "license_rejected"
+	| "not_published"
+	| "rate_limited"
+	| "service_unavailable"
+	| "http_error"
+	| "redirect_refused"
+	| "too_large"
+	| "network_error"
+	| "verification_failed"
+	| "invalid_config"
+	| "rollback_refused"
+	| "store_error"
+	| "error"
+
+/** One check of the SOCFortress default sync. */
+export interface DefaultSyncCheck {
+	outcome: DefaultSyncOutcome
+	/** Whether the default is SOCFortress's latest release after this check (applied, adopted or up to date). */
+	ok: boolean
+	message: string
+	mode: DefaultSyncMode
+	forced: boolean
+	/** UTC, YYYY-MM-DDTHH:MM:SSZ */
+	checked_at: string
+	/** The release the check got from the service, when it got one. */
+	sequence: number | null
+	commit: string | null
+}
+
+/** The SOCFortress release this CoPilot's default was last synced to. */
+export interface DefaultSyncApplied {
+	sequence: number
+	commit: string
+	content_sha256: string
+	content_sha256_crlf: string | null
+	key_id: string | null
+	applied_at: string | null
+	created_at: string | null
+	schemaversion: string | null
+	source: string | null
+	service_url: string | null
+}
+
+export interface DefaultSyncStatus {
+	mode: DefaultSyncMode
+	/** SYSMON_DEFAULT_SYNC as set, when it is not one of on / force / off (sync then runs as "on"). */
+	mode_setting: string | null
+	service_url: string
+	/** Whether this CoPilot version ships a trusted SOCFortress release key. */
+	configured: boolean
+	trusted_key_ids: string[]
+	last_check: DefaultSyncCheck | null
+	applied: DefaultSyncApplied | null
+	default_present: boolean | null
+	/** The stored default was changed here since the release in `applied`: sync leaves it alone. */
+	local_default_differs: boolean | null
+	read_error: string | null
+}
+
+export interface DefaultSyncStatusResponse {
+	status: DefaultSyncStatus
+}
+
+export interface DefaultSyncRunResponse {
+	result: DefaultSyncCheck
+	status: DefaultSyncStatus
+}

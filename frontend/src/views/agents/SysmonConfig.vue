@@ -56,6 +56,38 @@
 								<span class="ml-1.5 truncate">Add new Configuration</span>
 							</n-button>
 						</n-dropdown>
+						<!-- Where this CoPilot's default comes from: the SOCFortress default sync. -->
+						<div
+							v-if="isAdmin && defaultSyncLine"
+							class="mt-4 flex flex-col gap-2 text-xs"
+							data-testid="default-sync"
+						>
+							<div class="flex items-start gap-1.5">
+								<Icon
+									:name="defaultSyncLine.icon"
+									:size="14"
+									class="mt-0.5 shrink-0"
+									:class="defaultSyncLine.iconClass"
+								/>
+								<span data-testid="default-sync-line">{{ defaultSyncLine.text }}</span>
+							</div>
+							<div v-if="defaultSyncLine.detail" class="text-secondary" data-testid="default-sync-detail">
+								{{ defaultSyncLine.detail }}
+							</div>
+							<n-button
+								size="small"
+								secondary
+								:loading="syncingDefault"
+								:disabled="!defaultSyncLine.canSync"
+								data-testid="default-sync-now"
+								@click="syncDefaultNow()"
+							>
+								<template #icon>
+									<Icon :name="SyncIcon" />
+								</template>
+								Sync now
+							</n-button>
+						</div>
 					</div>
 				</n-spin>
 			</template>
@@ -190,7 +222,7 @@ import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { ConfigContent } from "@/types/sysmon-config"
+import type { ConfigContent, DefaultSyncStatus } from "@/types/sysmon-config"
 import _clone from "lodash/cloneDeep"
 import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
 import { computed, h, onBeforeMount, onBeforeUnmount, ref } from "vue"
@@ -200,17 +232,22 @@ import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
+import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
+import { formatDate } from "@/utils/format"
 
 const message = useMessage()
 const dialog = useDialog()
 const { routeCustomer } = useNavigation()
 const isAdmin = computed(() => useAuthStore().isAdmin)
+const dFormats = useSettingsStore().dateFormat
 const loadingList = ref(false)
 const loadingConfig = ref(false)
 const uploadingConfig = ref(false)
 const deployingConfig = ref(false)
 const savingDefault = ref(false)
+const syncingDefault = ref(false)
+const defaultSync = ref<DefaultSyncStatus | null>(null)
 const customers = ref<string[]>([])
 const currentConfig = ref<ConfigContent | null>(null)
 const backupConfig = ref<ConfigContent | null>(null)
@@ -222,6 +259,7 @@ const DeployIcon = "carbon:deploy"
 const UploadIcon = "carbon:cloud-upload"
 const NewConfigIcon = "carbon:document-add"
 const SaveDefaultIcon = "carbon:template"
+const SyncIcon = "carbon:renew"
 
 const isDirty = computed(() => currentConfig.value?.config_content !== backupConfig.value?.config_content)
 const xmlErrors = ref<XMLError[]>([])
@@ -521,6 +559,8 @@ function saveAsDefault(configContent: string, customerCode?: string) {
 						closable: true
 					})
 				}
+				// A default saved here is no longer SOCFortress's release: the status line says sync now leaves it alone.
+				getDefaultSync()
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -533,9 +573,131 @@ function saveAsDefault(configContent: string, customerCode?: string) {
 		})
 }
 
+// The SOCFortress default sync: this CoPilot pulls the signed default from SOCFortress every 6 hours, unless an admin
+// changed the default here. One line says which release the default is, or why it is not.
+interface DefaultSyncLine {
+	text: string
+	detail: string | null
+	icon: string
+	iconClass: string
+	canSync: boolean
+	/** The default was changed on this CoPilot: Sync now asks before replacing it (force). */
+	differs: boolean
+}
+
+const defaultSyncLine = computed<DefaultSyncLine | null>(() => {
+	const status = defaultSync.value
+	if (!status) return null
+
+	const { applied, last_check: lastCheck } = status
+	const line = (
+		text: string,
+		tone: "success" | "warning" | "info",
+		detail: string | null,
+		extra: Partial<DefaultSyncLine> = {}
+	): DefaultSyncLine => ({
+		text,
+		detail: status.read_error || detail,
+		icon: { success: "carbon:checkmark-outline", warning: "carbon:warning-alt", info: "carbon:information" }[tone],
+		iconClass: { success: "text-success", warning: "text-warning", info: "text-secondary" }[tone],
+		canSync: true,
+		differs: false,
+		...extra
+	})
+
+	if (status.mode === "off") {
+		return line("SOCFortress default sync off", "info", "SYSMON_DEFAULT_SYNC=off on this CoPilot.", {
+			canSync: false
+		})
+	}
+	if (!status.configured) {
+		return line("SOCFortress default sync not configured", "info", null, { canSync: false })
+	}
+	// What failed last, unless that is the guard itself (the line says it)
+	const failed =
+		lastCheck && !lastCheck.ok && lastCheck.outcome !== "local_default_differs" ? lastCheck.message : null
+	const newest = Math.max(applied?.sequence ?? 0, lastCheck?.sequence ?? 0)
+	if (status.local_default_differs || (!applied && lastCheck?.outcome === "local_default_differs")) {
+		return line(`Local default differs from SOCFortress release #${newest}: not updated`, "warning", failed, {
+			differs: true
+		})
+	}
+	if (applied) {
+		const synced = applied.applied_at ? `, synced ${formatDate(applied.applied_at, dFormats.datetime)}` : ""
+		return line(
+			`Default: SOCFortress release #${applied.sequence} (${applied.commit.slice(0, 7)})${synced}`,
+			failed ? "warning" : "success",
+			failed ? `Last check: ${failed}` : null
+		)
+	}
+	return line("Default not synced from SOCFortress yet", failed ? "warning" : "info", lastCheck?.message ?? null)
+})
+
+function getDefaultSync() {
+	if (!isAdmin.value) return
+
+	Api.sysmonConfig
+		.getDefaultSyncStatus()
+		.then(res => {
+			if (res.data.success) {
+				defaultSync.value = res.data.status
+			}
+		})
+		.catch(() => {
+			// Only an information line: the page works without it
+			defaultSync.value = null
+		})
+}
+
+function syncDefaultNow() {
+	if (!defaultSyncLine.value?.differs) {
+		runDefaultSync(false)
+		return
+	}
+	dialog.warning({
+		title: "Replace with SOCFortress's default",
+		content:
+			"This CoPilot's default Sysmon config was changed here, so sync does not update it. Replace it with SOCFortress's latest release? Customers' stored configs do not change.",
+		positiveText: "Replace",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			runDefaultSync(true)
+		}
+	})
+}
+
+function runDefaultSync(force: boolean) {
+	syncingDefault.value = true
+
+	Api.sysmonConfig
+		.syncDefaultConfig(force)
+		.then(res => {
+			if (res.data.success) {
+				defaultSync.value = res.data.status
+				const { result } = res.data
+				if (result.ok) {
+					message.success(result.message, { duration: 10000, closable: true })
+				} else if (result.outcome === "local_default_differs" || result.outcome === "off") {
+					message.warning(result.message, { duration: 10000, closable: true })
+				} else {
+					message.error(result.message, { duration: 0, closable: true })
+				}
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			syncingDefault.value = false
+		})
+}
+
 onBeforeMount(() => {
 	getList()
 	getCustomers()
+	getDefaultSync()
 })
 
 onBeforeUnmount(() => {

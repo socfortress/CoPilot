@@ -83,6 +83,10 @@ class AuditAction(str, Enum):
     # This CoPilot's default Sysmon config replaced (it pre-fills "Add new Configuration"). The row identifies the
     # config by its sha256 and size; the XML itself is never stored.
     SYSMON_CONFIG_DEFAULT_SAVE = "response.sysmon_default_save"
+    # A signed SOCFortress release stored as that default (or an equal default adopted) by the default sync: the
+    # scheduled job (actor "system", no user id) or an admin's Sync now. Identified by release number, commit and
+    # sha256; the XML itself is never stored.
+    SYSMON_DEFAULT_SYNC = "response.sysmon_default_sync"
 
     # Cases
     CASE_CREATE = "case.create"

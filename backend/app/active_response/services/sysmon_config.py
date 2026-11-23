@@ -78,9 +78,9 @@ def _filters_something(event_filtering: ET.Element) -> bool:
     return any(len(event) or event.attrib.get("onmatch", "").strip().lower() == "exclude" for event in events)
 
 
-async def validate_sysmon_config(xml_content: str, allow_installer_tokens: bool = False) -> None:
+async def validate_sysmon_config(xml_content: str, allow_installer_tokens: bool = False) -> ET.Element:
     """
-    Validate a Sysmon configuration XML string.
+    Validate a Sysmon configuration XML string. Returns its root element, so a caller never parses it again.
 
     allow_installer_tokens skips only the installer-token check: this CoPilot's default config is the installer's
     template, so it keeps its __INSTALLDIRNAME__ placeholders. A customer's config (upload, deploy) never does.
@@ -133,6 +133,7 @@ async def validate_sysmon_config(xml_content: str, allow_installer_tokens: bool 
                 ),
             )
 
+        return root
     except ET.ParseError as e:
         raise HTTPException(status_code=400, detail=f"Invalid XML syntax: {str(e)}")
 

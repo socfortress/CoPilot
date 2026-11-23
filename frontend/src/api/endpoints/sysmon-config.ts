@@ -2,6 +2,8 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	ConfigContent,
 	DefaultConfigResponse,
+	DefaultSyncRunResponse,
+	DefaultSyncStatusResponse,
 	DeployConfigResponse,
 	SaveDefaultConfigResponse,
 	UploadConfigFileResponse
@@ -43,6 +45,21 @@ export default {
 		return HttpClient.put<FlaskBaseResponse & SaveDefaultConfigResponse>(`/sysmon_config/default-config`, {
 			config_content: configContent,
 			customer_code: customerCode || null
+		})
+	},
+	/** Where this CoPilot's default comes from: the SOCFortress default sync's mode, last check and release. Admin only. */
+	getDefaultSyncStatus(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & DefaultSyncStatusResponse>(`/sysmon_config/default-config/sync`, {
+			signal
+		})
+	},
+	/**
+	 * Check SOCFortress for a newer default now. With force, a default changed on this CoPilot is replaced too (older
+	 * releases are refused either way). Admin only.
+	 */
+	syncDefaultConfig(force = false) {
+		return HttpClient.post<FlaskBaseResponse & DefaultSyncRunResponse>(`/sysmon_config/default-config/sync`, null, {
+			params: { force }
 		})
 	}
 }
