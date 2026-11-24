@@ -19,7 +19,8 @@ import { installMockBackend, signIn } from "./mock-backend"
 
 /**
  * Cloud Security Assessment (#1328) in a real browser: the page's URL state (an account opened
- * from the list, browser Back), the scan's tabs, what the customer's cloud reported shown as text,
+ * from the list, browser Back), the failures over time drawn by ECharts (a column opens its scan),
+ * the scan's tabs, what the customer's cloud reported shown as text,
  * Prowler's Markdown rendered without links it shouldn't have, the report as a download, and the
  * customer's Cloud Accounts section adding an AWS role. Tenancy and the API are the backend's tests.
  */
@@ -34,7 +35,7 @@ async function installCloudMock(context: BrowserContext): Promise<Mock> {
 	const json = (route: Route, body: unknown, status = 200) =>
 		route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
 	const base = `/cloud_assessment/${CUSTOMER}`
-	const scanBase = `${base}/scans/${LATEST}`
+	const scanRoute = new RegExp(`^${base}/scans/(\\d+)(/.+)$`)
 
 	// Registered after the generic mock, so these run first; anything else falls back to it.
 	await context.route(
@@ -44,6 +45,9 @@ async function installCloudMock(context: BrowserContext): Promise<Mock> {
 			const path = url.pathname.replace(/^\/api/, "")
 			const method = route.request().method()
 			const list = { encryption_key_configured: true, runner_configured: true }
+			// A scan's own routes, for any of the account's scans (the chart opens older ones).
+			const scanMatch = scanRoute.exec(path)
+			const scanPath = scanMatch && SCANS.some(scan => String(scan.id) === scanMatch[1]) ? scanMatch[2] : null
 
 			if (path === "/cloud_assessment/availability") return json(route, { success: true, ...AVAILABILITY })
 			if (path === "/cloud_assessment/accounts") return json(route, { success: true, accounts: [ACCOUNT], ...list })
@@ -58,18 +62,18 @@ async function installCloudMock(context: BrowserContext): Promise<Mock> {
 			}
 			if (path === `${base}/accounts/${ACCOUNT_ID}`) return json(route, { success: true, account: ACCOUNT })
 			if (path === `${base}/scans`) return json(route, { success: true, scans: SCANS, total: SCANS.length, page: 1, page_size: 100 })
-			if (path === `${scanBase}/checks`) {
+			if (scanPath === "/checks") {
 				return json(route, { success: true, checks: CHECKS, services: ["ec2"], total: CHECKS.length, page: 1, page_size: 50 })
 			}
-			if (path === `${scanBase}/findings`) {
+			if (scanPath === "/findings") {
 				mock.findingRequests.push(url)
 				return json(route, { success: true, findings: FINDINGS, total: FINDINGS.length, page: 1, page_size: 50 })
 			}
-			if (path === `${scanBase}/compliance`) return json(route, { success: true, frameworks: [FRAMEWORK], catalog_available: true })
-			if (path === `${scanBase}/compliance/${FRAMEWORK.key}`) {
+			if (scanPath === "/compliance") return json(route, { success: true, frameworks: [FRAMEWORK], catalog_available: true })
+			if (scanPath === `/compliance/${FRAMEWORK.key}`) {
 				return json(route, { success: true, framework: FRAMEWORK, requirements: REQUIREMENTS, catalog_available: true })
 			}
-			if (path === `${scanBase}/reports/html`) {
+			if (scanPath === "/reports/html") {
 				return route.fulfill({ status: 200, contentType: "application/octet-stream", body: "<html><body>Prowler</body></html>" })
 			}
 			if (path === `/customers/${CUSTOMER}/full`) {
@@ -110,6 +114,27 @@ test.describe("Cloud Security Assessment", () => {
 
 		await page.goBack()
 		await expect(page.getByTestId("cloud-accounts-overview")).toBeVisible()
+	})
+
+	test("failures over time: a column opens its scan, and the table says the same", async ({ page }) => {
+		await page.goto(accountUrl)
+		const trend = page.getByTestId("cloud-trend")
+		await expect(trend).toContainText("3 completed scans")
+		const canvas = trend.locator("canvas").first()
+		await expect(canvas).toBeVisible()
+		const box = await canvas.boundingBox()
+		if (!box) throw new Error("the chart has no box")
+		// Three columns, oldest on the left: the left fifth is scan 9's slot, above its column too.
+		const oldest = { x: box.x + box.width * 0.2, y: box.y + box.height * 0.3 }
+		await page.mouse.move(oldest.x, oldest.y)
+		await expect(page.getByText(/Scan #9 ·/)).toBeVisible()
+		await page.mouse.click(oldest.x, oldest.y)
+		await expect(page).toHaveURL(/scan=9/)
+		await expect(page.getByTestId("cloud-scan-view")).toContainText("Scan #9")
+
+		await trend.getByTestId("cloud-trend-view-table").click()
+		await expect(trend.getByTestId(`cloud-trend-row-${LATEST}`)).toContainText("5 new, 2 resolved")
+		await expect(trend.getByTestId("cloud-trend-row-9")).toContainText("first scan")
 	})
 
 	test("a finding's detail from the customer's cloud is text, never markup", async ({ page }) => {
