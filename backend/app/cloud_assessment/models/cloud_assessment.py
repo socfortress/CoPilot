@@ -116,7 +116,8 @@ class CloudAssessmentScan(SQLModel, table=True):
     The counts come from the runner's summary: ``pass_count``, ``fail_count`` and
     ``manual_count`` exclude muted findings, counted apart in ``muted_count``; the
     ``fail_<severity>`` columns split ``fail_count``. ``new_fail_count`` and
-    ``resolved_fail_count`` compare the account's previous completed scan.
+    ``resolved_fail_count`` compare the account's previous completed scan, check by check
+    (``services/ingest.py``: a check that didn't run in one of the two is left out).
     ``log_error_lines`` is how many check errors Prowler logged in a scan that still
     completed (a missing permission, usually). ``error_code`` is the runner's code for a
     failed scan and ``prowler_errors`` the exception classes it named, never a message.
@@ -214,7 +215,8 @@ class CloudAssessmentFinding(SQLModel, table=True):
     ``finding_uid`` is Prowler's id for the finding, cut to 512 characters for display;
     ``finding_uid_hash`` is the SHA-256 of the whole id, which is what matches a finding
     across scans: ``first_seen_at`` carries forward while the same finding keeps failing,
-    and ``is_new`` marks one the account's previous completed scan didn't have.
+    and ``is_new`` marks one the account's previous completed scan didn't have, when its
+    check ran there (``services/ingest.py``).
     Every text here comes from the customer's cloud and is shown as text only.
     """
 

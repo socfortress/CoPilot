@@ -11,12 +11,20 @@ them into the scan's rows and MinIO:
 - **Streamed.** Findings are read a line at a time and inserted in batches of ``BATCH_SIZE``,
   each committed, so a scan of 100,000 findings never sits in memory or in one transaction.
   At most ``MAX_FINDINGS`` are stored (the counts on the scan are always the summary's).
-- **Matched across scans.** A finding is the same finding as in the account's previous completed
-  scan when ``finding_uid_hash`` (the SHA-256 of Prowler's whole id) matches: its
-  ``first_seen_at`` carries forward while its status stays the same, and ``is_new`` marks one the
-  previous scan didn't have with that status. The first scan of an account marks nothing new.
-  New and resolved are counted by distinct id: Prowler repeats an id within one scan for some
-  checks (seen live: API Gateway's per-stage checks, 237 findings with 229 ids).
+- **Matched across scans, check by check.** A finding is the same finding as in the account's
+  previous completed scan when ``finding_uid_hash`` (the SHA-256 of Prowler's whole id) matches.
+  Only a check *observed* in a scan counts: it ran there (a check that errored, or had nothing to
+  check, writes no finding at all, not even a PASS) and every one of its unmuted FAIL and MANUAL
+  findings was stored (``MAX_FINDINGS`` can cut a scan short). A finding is new (``is_new``) only
+  when its check was observed in the previous scan and it didn't have this status there; a failure
+  is resolved only when its check was observed in this scan and it doesn't fail any more. So a
+  check that errored neither looks like a fix, nor makes its failures look new the next time it
+  runs. ``first_seen_at`` carries forward while the status stays the same, across scans in which
+  the check didn't run too (from the last kept scan in which it did). The first scan of an account
+  marks nothing new, and neither does a check with no earlier run (one Prowler added, or one with
+  nothing to check until now). New and resolved are counted by distinct id: Prowler repeats an id
+  within one scan for some checks (seen live: API Gateway's per-stage checks, 237 findings with
+  229 ids).
 - **Checked again.** Every value is cleaned and cut to its column here too (``utils.clean_text``):
   the runner is CoPilot's, but the text is the customer's cloud's.
 """
@@ -25,13 +33,16 @@ import os
 import re
 from typing import Any
 from typing import Dict
+from typing import Iterable
 from typing import List
+from typing import NamedTuple
 from typing import Optional
 from typing import Set
 from typing import Tuple
 
 from loguru import logger
 from sqlalchemy import delete
+from sqlalchemy import func
 from sqlalchemy import insert
 from sqlalchemy import select
 from sqlalchemy import update
@@ -59,6 +70,7 @@ MAX_CHECKS = 5000
 MAX_FRAMEWORKS = 200
 MAX_REQUIREMENTS = 500
 MAX_COUNT = 2**31 - 1
+IN_CHUNK = 500
 _CHECK_ID = re.compile(CHECK_ID_PATTERN)
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -158,9 +170,61 @@ def finding_row(item: Any, scan: CloudAssessmentScan) -> Optional[Dict[str, Any]
     }
 
 
-async def previous_findings(session: AsyncSession, scan: CloudAssessmentScan) -> Optional[Dict[str, Tuple[str, bool, Any]]]:
-    """``{finding_uid_hash: (status, muted, first_seen_at)}`` of the account's previous completed scan
-    whose findings are still kept, or None when there is none."""
+class Seen(NamedTuple):
+    """A finding as an earlier scan of the account stored it."""
+
+    status: str
+    muted: bool
+    first_seen_at: Any
+    check_id: str
+
+
+def complete_checks(ran: Iterable[str], expected: Dict[str, Tuple[int, int]], stored: Dict[Tuple[str, str], int]) -> Set[str]:
+    """The checks in ``ran`` that were observed: every unmuted FAIL and MANUAL finding the summary
+    counted (``expected``: per check, its fail and manual counts) was stored (``stored``: rows per
+    check and status). A finding cut by ``MAX_FINDINGS`` or unreadable leaves its check unobserved."""
+    observed = set()
+    for check_id in ran:
+        fail, manual = expected.get(check_id, (0, 0))
+        if stored.get((check_id, "FAIL"), 0) >= fail and stored.get((check_id, "MANUAL"), 0) >= manual:
+            observed.add(check_id)
+    return observed
+
+
+def _add(stored: Dict[Tuple[str, str], int], check_id: str, status: str) -> None:
+    stored[(check_id, status)] = stored.get((check_id, status), 0) + 1
+
+
+class Baseline:
+    """What the account's earlier scans saw, to match a new scan's findings with.
+
+    ``findings`` are the previous completed scan's, by ``finding_uid_hash``, and ``observed`` the
+    checks observed in it (``complete_checks``), the only ones whose findings can be new. ``earlier``
+    has, for each check that ran in this scan and not in the previous one, its findings in the last
+    kept scan in which it ran: only ``first_seen_at`` is carried from them.
+    """
+
+    def __init__(self) -> None:
+        self.findings: Dict[str, Seen] = {}
+        self.observed: Set[str] = set()
+        self.earlier: Dict[str, Seen] = {}
+
+
+def _seen_columns():
+    return select(
+        CloudAssessmentFinding.finding_uid_hash,
+        CloudAssessmentFinding.status,
+        CloudAssessmentFinding.muted,
+        CloudAssessmentFinding.first_seen_at,
+        CloudAssessmentFinding.check_id,
+    )
+
+
+async def load_baseline(session: AsyncSession, scan: CloudAssessmentScan, ran_now: Set[str]) -> Baseline:
+    """``scan``'s baseline, given the checks that ran in it: the account's newest completed scan
+    before it, whose findings are kept (retention keeps the newest), and for checks that didn't run
+    there, their last kept run before it. An account's first scan gets an empty one."""
+    baseline = Baseline()
     previous_id = (
         await session.execute(
             select(CloudAssessmentScan.id)
@@ -168,23 +232,75 @@ async def previous_findings(session: AsyncSession, scan: CloudAssessmentScan) ->
                 CloudAssessmentScan.account_id == scan.account_id,
                 CloudAssessmentScan.status == "completed",
                 CloudAssessmentScan.findings_pruned_at.is_(None),
-                CloudAssessmentScan.id != scan.id,
+                CloudAssessmentScan.id < scan.id,
             )
             .order_by(CloudAssessmentScan.id.desc())
             .limit(1),
         )
     ).scalar()
     if previous_id is None:
-        return None
-    rows = await session.execute(
-        select(
-            CloudAssessmentFinding.finding_uid_hash,
-            CloudAssessmentFinding.status,
-            CloudAssessmentFinding.muted,
-            CloudAssessmentFinding.first_seen_at,
-        ).where(CloudAssessmentFinding.scan_id == previous_id),
-    )
-    return {uid_hash: (status, bool(muted), first_seen) for uid_hash, status, muted, first_seen in rows}
+        return baseline
+    expected = {
+        check_id: (fail, manual)
+        for check_id, fail, manual in await session.execute(
+            select(
+                CloudAssessmentCheckResult.check_id,
+                CloudAssessmentCheckResult.fail_count,
+                CloudAssessmentCheckResult.manual_count,
+            ).where(CloudAssessmentCheckResult.scan_id == previous_id),
+        )
+    }
+    ran_before = set(expected)
+    stored: Dict[Tuple[str, str], int] = {}
+    names: Dict[str, str] = {}  # one string per check id and status, however many findings share it
+    for uid_hash, status, muted, first_seen, check_id in await session.execute(
+        _seen_columns().where(CloudAssessmentFinding.scan_id == previous_id),
+    ):
+        status = names.setdefault(status, status)
+        check_id = names.setdefault(check_id, check_id)
+        baseline.findings[uid_hash] = Seen(status, bool(muted), first_seen, check_id)
+        ran_before.add(check_id)
+        if not muted:
+            _add(stored, check_id, status)
+    baseline.observed = complete_checks(ran_before, expected, stored)
+    missing = sorted(ran_now - ran_before)
+    if missing:
+        baseline.earlier = await earlier_findings(session, scan.account_id, previous_id, missing)
+    return baseline
+
+
+async def earlier_findings(session: AsyncSession, account_id: int, before_id: int, check_ids: List[str]) -> Dict[str, Seen]:
+    """For checks that didn't run in the scan ``before_id``: their findings in the account's last
+    kept scan before it in which they ran, by ``finding_uid_hash``. A check ran in a scan when it
+    has a check result there (one per check with a finding of any status)."""
+    last_run: Dict[int, List[str]] = {}
+    for start in range(0, len(check_ids), IN_CHUNK):
+        rows = await session.execute(
+            select(CloudAssessmentCheckResult.check_id, func.max(CloudAssessmentCheckResult.scan_id))
+            .join(CloudAssessmentScan, CloudAssessmentScan.id == CloudAssessmentCheckResult.scan_id)
+            .where(
+                CloudAssessmentScan.account_id == account_id,
+                CloudAssessmentScan.status == "completed",
+                CloudAssessmentScan.findings_pruned_at.is_(None),
+                CloudAssessmentScan.id < before_id,
+                CloudAssessmentCheckResult.check_id.in_(check_ids[start : start + IN_CHUNK]),
+            )
+            .group_by(CloudAssessmentCheckResult.check_id),
+        )
+        for check_id, scan_id in rows:
+            last_run.setdefault(scan_id, []).append(check_id)
+    found: Dict[str, Seen] = {}
+    for scan_id, ids in last_run.items():
+        for start in range(0, len(ids), IN_CHUNK):
+            rows = await session.execute(
+                _seen_columns().where(
+                    CloudAssessmentFinding.scan_id == scan_id,
+                    CloudAssessmentFinding.check_id.in_(ids[start : start + IN_CHUNK]),
+                ),
+            )
+            for uid_hash, status, muted, first_seen, check_id in rows:
+                found[uid_hash] = Seen(status, bool(muted), first_seen, check_id)
+    return found
 
 
 class FindingsUnreadable(Exception):
@@ -205,6 +321,9 @@ class Ingestion:
         self.dropped = 0
         self.fail_hashes: Set[str] = set()
         self.new_fail_hashes: Set[str] = set()
+        self.ran: Set[str] = set()
+        self.stored_counts: Dict[Tuple[str, str], int] = {}
+        self.baseline = Baseline()
 
     async def _insert(self, model, rows: List[Dict[str, Any]]) -> None:
         if rows:
@@ -213,7 +332,6 @@ class Ingestion:
 
     async def run(self) -> bool:
         scan = self.scan
-        previous = await previous_findings(self.session, scan)
         await self.session.execute(delete(CloudAssessmentCheckResult).where(CloudAssessmentCheckResult.scan_id == scan.id))
         await self.session.commit()
         await delete_findings(self.session, [scan.id])
@@ -227,6 +345,8 @@ class Ingestion:
         rows = list(checks.values())
         for start in range(0, len(rows), BATCH_SIZE):
             await self._insert(CloudAssessmentCheckResult, rows[start : start + BATCH_SIZE])
+        self.ran.update(checks)
+        self.baseline = await load_baseline(self.session, scan, set(checks))
 
         now = utc_now()
         first_seen_default = scan.started_at or now
@@ -240,7 +360,7 @@ class Ingestion:
                 if self.stored >= self.limit:
                     self.dropped += 1
                     continue
-                self._match(row, previous, row["detected_at"] or first_seen_default)
+                self._match(row, row["detected_at"] or first_seen_default)
                 batch.append(row)
                 self.stored += 1
                 if len(batch) >= BATCH_SIZE:
@@ -258,22 +378,31 @@ class Ingestion:
                 # A scan that completed with its failures counted and none of them listed would mislead.
                 raise FindingsUnreadable()
 
-        resolved = 0
-        if previous is not None:
-            previous_fails = {uid_hash for uid_hash, (status, muted, _) in previous.items() if status == "FAIL" and not muted}
-            resolved = len(previous_fails - self.fail_hashes)
+        expected = {check_id: (entry["fail_count"], entry["manual_count"]) for check_id, entry in checks.items()}
+        observed = complete_checks(self.ran, expected, self.stored_counts)
+        resolved = sum(
+            1
+            for uid_hash, seen in self.baseline.findings.items()
+            if seen.status == "FAIL" and not seen.muted and seen.check_id in observed and uid_hash not in self.fail_hashes
+        )
         stored_reports = await self._store_reports()
         return await self._finish(summary, resolved, stored_reports)
 
-    def _match(self, row: Dict[str, Any], previous: Optional[Dict[str, Tuple[str, bool, Any]]], first_seen: Any) -> None:
-        before = previous.get(row["finding_uid_hash"]) if previous is not None else None
-        same = before is not None and before[0] == row["status"]
-        row["first_seen_at"] = before[2] if same and before[2] is not None else first_seen
-        row["is_new"] = previous is not None and not same
+    def _match(self, row: Dict[str, Any], first_seen: Any) -> None:
+        """Set a stored row's ``first_seen_at`` and ``is_new`` from the baseline, and count it for this
+        scan's own observed checks and new and resolved failures."""
+        uid_hash = row["finding_uid_hash"]
+        before = self.baseline.findings.get(uid_hash) or self.baseline.earlier.get(uid_hash)
+        same = before is not None and before.status == row["status"]
+        row["first_seen_at"] = before.first_seen_at if same and before.first_seen_at is not None else first_seen
+        row["is_new"] = row["check_id"] in self.baseline.observed and not same
+        self.ran.add(row["check_id"])
+        if not row["muted"]:
+            _add(self.stored_counts, row["check_id"], row["status"])
         if row["status"] == "FAIL":
-            self.fail_hashes.add(row["finding_uid_hash"])
+            self.fail_hashes.add(uid_hash)
             if row["is_new"] and not row["muted"]:
-                self.new_fail_hashes.add(row["finding_uid_hash"])
+                self.new_fail_hashes.add(uid_hash)
 
     async def _store_reports(self) -> Dict[str, Dict[str, Any]]:
         stored: Dict[str, Dict[str, Any]] = {}

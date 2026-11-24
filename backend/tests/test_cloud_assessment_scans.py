@@ -8,7 +8,9 @@ Pinned here:
 - a scan goes queued → running → completed with one runner job, and only one scan per account is
   under way; a busy or unreachable runner leaves it queued, a refusal fails it with the runner's code;
 - a completed scan's counts, checks, findings and reports are stored once (a second attempt replaces
-  the first), the runner's copy is deleted, and the next scan marks what's new and what was resolved;
+  the first), the runner's copy is deleted, and the next scan marks what's new and what was resolved,
+  check by check: a check that didn't run, or whose findings weren't all stored, neither resolves its
+  failures nor makes them new, and they keep their first-seen time;
 - a job the runner lost, a dead backend's half-done step, a failed or cancelled job all end right;
 - schedules queue one scan a slot, never at once when set, never for a disabled account;
 - retention prunes findings and reports past the kept scans and keeps their counts;
@@ -17,6 +19,7 @@ Pinned here:
 """
 
 import hashlib
+from datetime import datetime
 from datetime import timedelta
 
 import pytest
@@ -58,6 +61,22 @@ async def completed_scan(world, runner: FakeRunner) -> dict:
     runner.finish(next(iter(runner.jobs)))
     await world.tick()
     return {"account": account, "scan": (await world.client.get(f"{SCANS}/{scan['id']}", headers=as_user("ana"))).json()["scan"]}
+
+
+async def next_scan(world, runner: FakeRunner, account_id: int, checks: list, findings: list, seconds: int) -> CloudAssessmentScan:
+    """Another completed scan of the account, whose summary lists ``checks`` (the checks that ran)."""
+    runner.summary = summary(checks)
+    runner.findings = findings
+    scan = (await start(world, account_id)).json()["scan"]
+    runner.finish(next(iter(runner.jobs)))
+    await world.tick(now=utc_now() + timedelta(seconds=seconds))
+    return await world.db.scan(scan["id"])
+
+
+# The first scan's findings were detected at FIRST (``finding``'s default time); later ones say LATER.
+FIRST = datetime(2026, 11, 23, 10, 0)
+LATER = {"time": "2026-11-25T10:00:00.000000"}
+S3 = {"compliance": {"CIS-5.0": ["2.1"]}}
 
 
 # --- starting -------------------------------------------------------------------------------------
@@ -162,7 +181,12 @@ def test_the_next_scan_marks_new_carried_and_resolved_findings(monkeypatch):
         done = await completed_scan(world, runner)
         first = {f.finding_uid_hash: f for f in await world.db.rows(CloudAssessmentFinding)}
         # finding 1 still fails, 2 is fixed, 3 is now muted, 4 is new
-        runner.findings = [finding(1), finding(3, check_id="s3_bucket_public", severity="critical", muted=True), finding(4)]
+        runner.summary = summary([check("iam_root_mfa_enabled", fail=2, passed=1), check("s3_bucket_public", fail=0, muted=1, **S3)])
+        runner.findings = [
+            finding(1, **LATER),
+            finding(3, check_id="s3_bucket_public", severity="critical", muted=True, **LATER),
+            finding(4, **LATER),
+        ]
         second = (await start(world, done["account"]["id"])).json()["scan"]
         runner.finish(next(iter(runner.jobs)))
         await world.tick(now=utc_now() + timedelta(seconds=5))
@@ -185,8 +209,8 @@ def test_the_next_scan_marks_new_carried_and_resolved_findings(monkeypatch):
     assert compared["scan"] == compared["account"] == compared["first"]
     assert compared["list"] == {compared["second"]: compared["first"], compared["first"]: None}
     carried = second["resource1"]
-    assert carried.is_new is False and carried.first_seen_at == first[carried.finding_uid_hash].first_seen_at
-    assert second["resource4"].is_new is True
+    assert carried.is_new is False and carried.first_seen_at == first[carried.finding_uid_hash].first_seen_at == FIRST
+    assert second["resource4"].is_new is True and second["resource4"].first_seen_at == datetime(2026, 11, 25, 10, 0)
     assert scan.new_fail_count == 1  # resource4 (a muted failure isn't news)
     assert scan.resolved_fail_count == 1  # resource2; resource3 is muted, not fixed
 
@@ -199,6 +223,7 @@ def test_new_and_resolved_count_distinct_ids(monkeypatch):
     async def scenario(world):
         done = await completed_scan(world, runner)
         twice = finding(7, uid="prowler-aws-apigateway_restapi_logging_enabled-123456789012-us-east-1-api")
+        runner.summary = summary([check("iam_root_mfa_enabled", fail=3), check("s3_bucket_public", fail=0, passed=1, **S3)])
         runner.findings = [finding(1), twice, dict(twice, resource_name="api-stage-2")]
         second = (await start(world, done["account"]["id"])).json()["scan"]
         runner.finish(next(iter(runner.jobs)))
@@ -209,6 +234,76 @@ def test_new_and_resolved_count_distinct_ids(monkeypatch):
     rows, scan = run(scenario, monkeypatch, runner=runner)
     assert len(rows) == 3 and sum(row.is_new for row in rows) == 2
     assert scan.new_fail_count == 1 and scan.resolved_fail_count == 2
+
+
+def test_a_check_that_didn_t_run_resolves_nothing(monkeypatch):
+    """A check that errored, or had nothing to check, writes no finding at all, not even a PASS: its
+    failures in the previous scan weren't fixed, nobody looked."""
+    runner = FakeRunner()
+
+    async def scenario(world):
+        done = await completed_scan(world, runner)  # iam_root_mfa_enabled: 1 and 2 fail; s3_bucket_public: 3 fails
+        # s3_bucket_public didn't run; resource 2 is fixed
+        return await next_scan(world, runner, done["account"]["id"], [check("iam_root_mfa_enabled", fail=1, passed=1)], [finding(1)], 5)
+
+    scan = run(scenario, monkeypatch, runner=runner)
+    assert scan.resolved_fail_count == 1 and scan.new_fail_count == 0  # resource2, never resource3
+
+
+def test_when_a_check_runs_again_its_failures_aren_t_new_and_keep_their_first_seen_time(monkeypatch):
+    """After a scan in which a check didn't run, nobody knows what changed in it: none of its failures
+    is new (resource 5 may have failed for a while), and one that failed before the gap is still
+    failing since then, found in the last kept scan in which the check ran."""
+    runner = FakeRunner()
+    iam = check("iam_root_mfa_enabled", fail=2)
+
+    async def scenario(world):
+        done = await completed_scan(world, runner)  # iam_root_mfa_enabled: 1 and 2 fail; s3_bucket_public: 3 fails
+        account_id = done["account"]["id"]
+        gap = await next_scan(world, runner, account_id, [iam], [finding(1), finding(2)], 5)
+        s3 = check("s3_bucket_public", fail=2, **S3)
+        again = [finding(index, check_id="s3_bucket_public", severity="critical", **LATER) for index in (3, 5)]
+        back = await next_scan(world, runner, account_id, [iam, s3], [finding(1, **LATER), finding(2, **LATER), *again], 10)
+        rows = await world.db.rows(CloudAssessmentFinding, CloudAssessmentFinding.scan_id == back.id)
+        return gap, back, {row.resource_name: row for row in rows}
+
+    gap, back, rows = run(scenario, monkeypatch, runner=runner)
+    assert (gap.new_fail_count, gap.resolved_fail_count) == (0, 0)
+    assert (back.new_fail_count, back.resolved_fail_count) == (0, 0)
+    assert rows["resource3"].is_new is False and rows["resource3"].first_seen_at == FIRST  # across the gap
+    assert rows["resource5"].is_new is False and rows["resource5"].first_seen_at == datetime(2026, 11, 25, 10, 0)
+    assert rows["resource1"].first_seen_at == FIRST
+
+
+def test_findings_the_limit_left_out_are_neither_resolved_nor_make_the_next_scan_s_new(monkeypatch):
+    """``CLOUD_ASSESSMENT_MAX_FINDINGS`` stores a scan's first findings only: a check whose failures
+    weren't all stored wasn't observed, on either side of the comparison."""
+    runner = FakeRunner()
+    checks = [check("iam_root_mfa_enabled", fail=2), check("s3_bucket_public", fail=1, **S3)]
+    three = [finding(1), finding(2), finding(3, check_id="s3_bucket_public", severity="critical")]
+
+    async def scenario(world):
+        done = await completed_scan(world, runner)  # the same three failures
+        account_id = done["account"]["id"]
+        monkeypatch.setattr(ingest, "max_findings", lambda: 2)
+        cut = await next_scan(world, runner, account_id, checks, three, 5)  # resource 3 left out
+        monkeypatch.setattr(ingest, "max_findings", lambda: 1000)
+        more = [*three, finding(6, check_id="s3_bucket_public")]
+        after = await next_scan(world, runner, account_id, [checks[0], check("s3_bucket_public", fail=2, **S3)], more, 10)
+        stored = await world.db.rows(CloudAssessmentFinding, CloudAssessmentFinding.scan_id == cut.id)
+        return cut, after, stored
+
+    cut, after, stored = run(scenario, monkeypatch, runner=runner)
+    assert len(stored) == 2 and cut.resolved_fail_count == 0  # resource3 wasn't stored, not fixed
+    assert after.new_fail_count == 0  # was resource6 failing in the cut scan? Nobody knows
+    assert after.resolved_fail_count == 0
+
+
+def test_a_check_is_observed_when_every_unmuted_failure_it_counted_was_stored():
+    expected = {"a": (2, 0), "b": (1, 1), "c": (0, 0)}
+    stored = {("a", "FAIL"): 2, ("b", "FAIL"): 1, ("d", "MANUAL"): 1}
+    # b's MANUAL finding is missing; c and d ran with nothing to store (d isn't in the summary)
+    assert ingest.complete_checks(["a", "b", "c", "d"], expected, stored) == {"a", "c", "d"}
 
 
 def test_a_second_attempt_replaces_the_first(monkeypatch):
