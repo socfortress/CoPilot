@@ -23,6 +23,10 @@ from app.active_response.schema.sysmon_config import SysmonConfigUploadResponse
 from app.active_response.schema.sysmon_config import SysmonDefaultConfigResponse
 from app.active_response.schema.sysmon_config import SysmonDefaultConfigSaveRequest
 from app.active_response.schema.sysmon_config import SysmonDefaultConfigSaveResponse
+from app.active_response.schema.sysmon_default_sync import SysmonDefaultSyncRunResponse
+from app.active_response.schema.sysmon_default_sync import (
+    SysmonDefaultSyncStatusResponse,
+)
 from app.active_response.schema.sysmon_health import SysmonHealthApplyResult
 from app.active_response.services.sysmon_config import INSTALL_DIR_PLACEHOLDER
 from app.active_response.services.sysmon_config import MAX_SYSMON_CONFIG_BYTES
@@ -32,6 +36,12 @@ from app.active_response.services.sysmon_config import render_default_config
 from app.active_response.services.sysmon_config import templatize_install_dir
 from app.active_response.services.sysmon_config import usable_as_install_dir
 from app.active_response.services.sysmon_config import validate_sysmon_config
+from app.active_response.services.sysmon_default_sync import DEFAULT_CONFIG_LOCK
+from app.active_response.services.sysmon_default_sync import (
+    check_running as sysmon_default_check_running,
+)
+from app.active_response.services.sysmon_default_sync import get_sync_status
+from app.active_response.services.sysmon_default_sync import run_sysmon_default_sync
 from app.active_response.services.sysmon_health import RELOAD_TAG
 from app.active_response.services.sysmon_health import SYSMON_HEALTH_LOCK
 from app.active_response.services.sysmon_health import apply_sysmon_health
@@ -245,7 +255,9 @@ async def save_sysmon_default_config(
         "request": request,
     }
     try:
-        await write_default_sysmon_config(data)
+        # Never while the SOCFortress default sync is comparing and writing the default (it would overwrite this save)
+        async with DEFAULT_CONFIG_LOCK:
+            await write_default_sysmon_config(data)
     except Exception as e:  # noqa: BLE001 - audited, then reported
         logger.error(f"Could not save this CoPilot's default Sysmon config: {e}")
         await record_audit_event(**audit, result=AuditResult.FAILURE, details=f"Could not store it: {e}"[:1000])
@@ -258,6 +270,54 @@ async def save_sysmon_default_config(
         placeholders=placeholders,
         restored=restored,
     )
+
+
+# The SOCFortress default sync (services/sysmon_default_sync.py): this CoPilot pulls the signed default from
+# SOCFortress every 6 hours. Admin only, like the default itself; before the /{customer_code} route.
+
+
+@sysmon_config_router.get(
+    "/default-config/sync",
+    response_model=SysmonDefaultSyncStatusResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def get_sysmon_default_sync_status():
+    """Where this CoPilot's default comes from: the sync mode, the last check, the SOCFortress release applied, and
+    whether the default was changed here since (then sync leaves it alone)."""
+    status = await get_sync_status()
+    return SysmonDefaultSyncStatusResponse(success=True, message="Retrieved the SOCFortress default sync status", status=status)
+
+
+@sysmon_config_router.post(
+    "/default-config/sync",
+    response_model=SysmonDefaultSyncRunResponse,
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def run_sysmon_default_sync_now(
+    request: Request,
+    force: bool = Query(
+        False,
+        description=(
+            "Replace the default even if it was changed on this CoPilot (an admin's Save as default). Older releases are "
+            "refused either way."
+        ),
+    ),
+    current_user: User = Depends(AuthHandler().get_current_user),
+    session: AsyncSession = Depends(get_db),
+):
+    """Check SOCFortress for a newer default Sysmon config now, and apply it the way the scheduled check does."""
+    # Answer at once rather than wait behind a running check (up to a minute of network time) until the proxy gives up
+    if sysmon_default_check_running():
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "A check of SOCFortress's default Sysmon config is already running on this CoPilot (the scheduled one, or "
+                "another admin's Sync now). Its result shows here once it ends; try again in a minute"
+            ),
+        )
+    result = await run_sysmon_default_sync(session, force=force, actor=current_user, request=request)
+    status = await get_sync_status()
+    return SysmonDefaultSyncRunResponse(success=True, message=result.message, result=result, status=status)
 
 
 # This route must come before the /{customer_code} route

@@ -187,8 +187,9 @@ async def get_next_run(job_id: str) -> JobsNextRunResponse:
 #: Jobs only an admin (by the database role) may add, run, start, pause, reschedule or delete. The
 #: Talon ops poller talks to talon-analyst with an admin, every-customer identity
 #: (``identity.ops_poller_identity``), which an analyst must not set off at will; and pausing,
-#: deleting or rescheduling it silently stops the SOC's ops notifications (review of OJ-5).
-ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications"})
+#: deleting or rescheduling it silently stops the SOC's ops notifications (review of OJ-5). The
+#: SOCFortress default Sysmon config sync writes this CoPilot's default, which only an admin may change.
+ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications", "sync_sysmon_default"})
 
 
 def _job_names(job: Any) -> set:

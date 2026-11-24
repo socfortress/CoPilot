@@ -83,6 +83,7 @@ from app.schedulers.services.refresh_sidebar_indicators import (
     refresh_sidebar_indicators,
 )
 from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
+from app.schedulers.services.sync_sysmon_default import sync_sysmon_default
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 from app.schedulers.utils.universal import record_job_success
 from app.soc_management.services.notifier import notify_sla_transitions
@@ -328,6 +329,14 @@ async def initialize_job_metadata():
                 "function": prune_audit_log,
                 "description": "Prunes audit_log entries older than the configured retention window (AUDIT_LOG_RETENTION_DAYS).",
             },
+            {
+                "job_id": "sync_sysmon_default",
+                # Every 6 hours: this CoPilot pulls SOCFortress's signed default Sysmon config and stores it as its
+                # default, unless an admin changed the default here. SYSMON_DEFAULT_SYNC=off: the tick does nothing.
+                "time_interval": 360,
+                "function": sync_sysmon_default,
+                "description": "Pulls SOCFortress's signed default Sysmon config into this CoPilot's default, unless it was changed here.",
+            },
             # ! Mirgrated SIGMA to VELO ! #
             # {
             #     "job_id": "invoke_sigma_queries_collect",
@@ -468,6 +477,7 @@ def get_function_by_name(function_name: str):
         "notify_sla_transitions": notify_sla_transitions,
         "drain_notification_outbox": drain_notification_outbox,
         "invoke_portal_notification_digest": invoke_portal_notification_digest,
+        "sync_sysmon_default": sync_sysmon_default,
         # Add other function mappings here
     }
     # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore

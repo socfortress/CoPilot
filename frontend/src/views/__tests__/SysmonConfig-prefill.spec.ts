@@ -9,13 +9,16 @@ const sysmonConfig = vi.hoisted(() => ({
 	getConfigContent: vi.fn(),
 	uploadConfigFile: vi.fn(),
 	deployConfig: vi.fn(),
-	saveDefaultConfig: vi.fn()
+	saveDefaultConfig: vi.fn(),
+	getDefaultSyncStatus: vi.fn(),
+	syncDefaultConfig: vi.fn()
 }))
 const customers = vi.hoisted(() => ({ getCustomers: vi.fn() }))
 const message = vi.hoisted(() => ({ info: vi.fn(), warning: vi.fn(), error: vi.fn(), success: vi.fn() }))
 
 vi.mock("@/api", () => ({ default: { sysmonConfig, customers } }))
 vi.mock("@/stores/auth", () => ({ useAuthStore: () => ({ isAdmin: true }) }))
+vi.mock("@/stores/settings", () => ({ useSettingsStore: () => ({ dateFormat: { datetime: "YYYY-MM-DD HH:mm" } }) }))
 vi.mock("@/composables/useNavigation", () => ({
 	useNavigation: () => ({ routeCustomer: () => ({ navigate: () => {} }) })
 }))
@@ -68,6 +71,7 @@ describe("pre-filling a new Sysmon configuration", () => {
 		vi.clearAllMocks()
 		for (const notice of [message.info, message.warning]) notice.mockReturnValue({ destroy: vi.fn() })
 		sysmonConfig.getAll.mockResolvedValue({ data: { success: true, customer_codes: [] } })
+		sysmonConfig.getDefaultSyncStatus.mockRejectedValue(new Error("not under test"))
 		customers.getCustomers.mockResolvedValue({
 			data: { success: true, customers: [{ customer_code: "Y", customer_name: "Y Corp" }] }
 		})
