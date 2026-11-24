@@ -9,6 +9,8 @@ a ``fake_mode_*`` name among the ``--excluded-checks`` values:
   one ERROR line, exit 0
 - fake_mode_exit3: the same, exit 3
 - fake_mode_auth: log a CRITICAL assume-role error, exit 1
+- fake_mode_expired_secret: log Azure's refusal of an expired client secret as Prowler
+  prints it (not JSON-escaped: the message spans lines), exit 1
 - fake_mode_argparse: print a usage error, exit 2
 - fake_mode_sleep: start a child that sleeps, write its pid to child.pid, sleep
 - fake_mode_bad_output: write an OCSF file that isn't JSON, exit 0
@@ -84,6 +86,17 @@ def main():
     out_dir = Path(option(argv, "--output-directory"))
     name = option(argv, "--output-filename")
 
+    if mode == "fake_mode_expired_secret":
+        print(
+            '{"timestamp": "2026-11-24 09:00:01,100", "filename": "azure_provider.py:940", "level": "ERROR", '
+            '"module": "azure_provider", "message": "ClientAuthenticationError[933] -- DefaultAzureCredential failed '
+            "to retrieve a token from the included credentials.\nAttempted credentials:\n\tEnvironmentCredential: "
+            "Authentication failed: AADSTS7000222: The provided client secret keys for app 'SensitiveAppId' are "
+            'expired.\nTo mitigate this issue, please refer to the troubleshooting guidelines."}',
+            flush=True,
+        )
+        log("CRITICAL", "AzureHTTPResponseError[404]: AzureHTTPResponseError[2010]: Error in HTTP response from Azure")
+        sys.exit(1)
     if mode == "fake_mode_auth":
         log("CRITICAL", "AWSAssumeRoleError[1012]: AWS assume role error - arn:aws:iam::123456789012:role/SensitiveRoleName was refused")
         sys.exit(1)

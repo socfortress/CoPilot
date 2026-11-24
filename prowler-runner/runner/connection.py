@@ -3,7 +3,8 @@
 The test is the Prowler SDK's own (``<Provider>.test_connection``), run by
 ``helpers/test_connection.py`` under Prowler's interpreter in a process of its own.
 The credentials reach it on stdin. It answers with one line naming the outcome and,
-on failure, the exception's class; Prowler's error message never leaves it.
+on failure, the exception's class and, when its text (or a cause's) bears one of the
+marks in ``errors.REASONS``, that reason's code; Prowler's error message never leaves it.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from pathlib import Path
 from runner.commands import connection_test_input
 from runner.commands import scan_environment
 from runner.errors import MESSAGES
+from runner.errors import REASONS
 from runner.errors import RunnerError
 from runner.errors import classify
 from runner.models import M365ScanRequest
@@ -54,6 +56,8 @@ def parse_result(output: bytes) -> dict:
             return _outcome(True)
         if name in ("ModuleNotFoundError", "ImportError"):
             return _outcome(False, "internal", name)
+        if result.get("reason") in REASONS:
+            return _outcome(False, result["reason"], name)
         return _outcome(False, classify([name] if name else [], default="connection_failed"), name)
     return _outcome(False, "internal")
 

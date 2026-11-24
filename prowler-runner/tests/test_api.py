@@ -175,6 +175,18 @@ def test_exit_code_3_still_completes(client):
     assert done["exit_code"] == 3
 
 
+def test_an_expired_client_secret(client):
+    job = start(client, azure_scan(excluded_checks=["fake_mode_expired_secret"]))
+    done = wait_for(client, job["job_id"])
+    assert done["status"] == "failed"
+    assert done["error"] == {
+        "code": "secret_expired",
+        "message": "The client secret has expired. Create a new one in the app registration and enter it on the account.",
+        "prowler_errors": ["AzureHTTPResponseError", "ClientAuthenticationError"],
+    }
+    assert "SensitiveAppId" not in json.dumps(done) and "AADSTS" not in json.dumps(done)
+
+
 def test_a_refused_credential(client):
     job = start(client, aws_role_scan(excluded_checks=["fake_mode_auth"]))
     done = wait_for(client, job["job_id"])

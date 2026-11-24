@@ -86,11 +86,15 @@ A scan request (the connection test takes the same body):
 | `gcp` | `service_account_key`: the key file as JSON (its token URI and other URLs must be Google's) | `project_ids`, `excluded_project_ids`, `organization_id` |
 | `m365` | `client_secret`, as Azure | `tenant_domain` (required by the connection test) |
 
-A failed scan's `error.code` is one of `auth_failed`, `permission_denied`,
-`wrong_account`, `m365_powershell_failed`, `connection_failed`, `invalid_request`,
-`timeout`, `cancelled`, `scan_failed`, `output_invalid` or `internal`.
-`error.prowler_errors` lists the exception classes Prowler logged, never their
-messages. A scan that completed can still report checks that logged errors (usually
+A failed scan's `error.code` is one of `auth_failed`, `secret_expired`,
+`no_credentials`, `permission_denied`, `wrong_account`, `m365_powershell_failed`,
+`connection_failed`, `invalid_request`, `timeout`, `cancelled`, `scan_failed`,
+`output_invalid` or `internal`; a connection test's `code` is one of the same.
+`secret_expired` comes from the text of a failure (Microsoft Entra ID's
+`AADSTS7000222`: an Azure or Microsoft 365 client secret that expired), read and
+dropped in the runner; `no_credentials` is botocore's `NoCredentialsError`, an AWS
+role account without keys on a host with no AWS identity. `error.prowler_errors`
+lists the exception classes Prowler logged, never their messages. A scan that completed can still report checks that logged errors (usually
 a missing permission) in `logs`.
 
 ## Settings

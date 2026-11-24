@@ -3,18 +3,24 @@
 Run by the runner with Prowler's interpreter (``python -I test_connection.py``), never
 imported by the runner itself. Reads one JSON object on stdin and prints one line:
 
-    PROWLER_RUNNER_RESULT {"ok": true|false, "error_class": "<exception class>"|null}
+    PROWLER_RUNNER_RESULT {"ok": true|false, "error_class": "<exception class>"|null[, "reason": "<code>"]}
 
 The credentials arrive on stdin only. Nothing about them, and none of Prowler's error
 messages (they name accounts, roles and tenants), is printed: logging is switched
-off and a failure is reported by its exception's class alone.
+off and a failure is reported by its exception's class alone, plus a reason code when the
+text of the exception, or of one it was raised from, bears a known mark.
 """
 
 import json
 import logging
+import re
 import sys
 
 RESULT_PREFIX = "PROWLER_RUNNER_RESULT "
+
+# The runner's errors.REASONS, copied (this file can't import the runner): a test keeps them equal.
+REASONS = {"secret_expired": re.compile(r"\bAADSTS7000222\b")}
+MAX_CAUSES = 20
 
 
 def _aws(auth):
@@ -69,6 +75,27 @@ def _m365(auth, scope):
     )
 
 
+def reason_of(error):
+    """The code of the first mark in ``REASONS`` that the error's text bears, or the text of an
+    exception it was raised from or wraps (Prowler keeps the SDK's as ``original_exception``)."""
+    pending, seen = [error], set()
+    while pending and len(seen) < MAX_CAUSES:
+        current = pending.pop(0)
+        if current is None or id(current) in seen:
+            continue
+        seen.add(id(current))
+        try:
+            text = str(current)
+        except Exception:  # noqa: BLE001 - an exception whose text can't be read has no mark
+            text = ""
+        for code, mark in REASONS.items():
+            if mark.search(text):
+                return code
+        if isinstance(current, BaseException):
+            pending.extend((getattr(current, "original_exception", None), current.__cause__, current.__context__))
+    return None
+
+
 def run(payload):
     provider = payload["provider"]
     auth = payload["auth"]
@@ -90,8 +117,12 @@ def main():
         connection = run(json.loads(sys.stdin.read()))
         error = getattr(connection, "error", None)
         result = {"ok": bool(getattr(connection, "is_connected", False)), "error_class": type(error).__name__ if error else None}
-    except Exception as error:  # noqa: BLE001 - every failure is reported by its class only
+    except Exception as raised:  # noqa: BLE001 - every failure is reported by its class only
+        error = raised
         result = {"ok": False, "error_class": type(error).__name__}
+    reason = reason_of(error) if error is not None and not result["ok"] else None
+    if reason:
+        result["reason"] = reason
     sys.stdout.write(RESULT_PREFIX + json.dumps(result) + "\n")
     sys.stdout.flush()
 

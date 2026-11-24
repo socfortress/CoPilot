@@ -393,7 +393,11 @@ class JobManager:
         elif job.exit_code not in (0, 3):
             job.prowler_errors = collector.failure_names()
             # 2 is argparse refusing the command line.
-            code = "invalid_request" if job.exit_code == 2 else classify_failure(collector.critical_names, collector.error_names)
+            code = (
+                "invalid_request"
+                if job.exit_code == 2
+                else classify_failure(collector.critical_names, collector.error_names, collector.reasons)
+            )
             self._finish(job, JobStatus.FAILED, code)
         else:
             job.status = JobStatus.NORMALIZING

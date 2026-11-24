@@ -17,6 +17,8 @@ RUNNER_MESSAGES = {
     "invalid_request": "The request is not valid.",
     "tenant_domain_required": "Testing a Microsoft 365 connection needs one of the tenant's domains, for example contoso.onmicrosoft.com.",
     "auth_failed": "The cloud provider refused the credentials.",
+    "secret_expired": "The client secret has expired. Create a new one in the app registration and enter it on the account.",
+    "no_credentials": "No AWS credentials were found: the account stores no keys, and the host has no AWS identity Prowler can use, such as an EC2 instance profile.",
     "permission_denied": "The credentials were accepted, but they lack a permission the scan needs.",
     "wrong_account": "The credentials don't belong to the account, subscription, project or tenant named.",
     "m365_powershell_failed": "Signed in to Microsoft Graph, but the Exchange or Teams connection failed. Check Exchange.ManageAsApp and the Global Reader role.",

@@ -345,6 +345,32 @@ def test_a_job_that_ended_badly_ends_the_scan(status, code, expected, monkeypatc
         assert scan["error_code"] == "auth_failed" and scan["prowler_errors"] == ["AWSAssumeRoleError"]
 
 
+@pytest.mark.parametrize(
+    ("code", "message"),
+    [
+        ("secret_expired", "The client secret has expired. Create a new one in the app registration and enter it on the account."),
+        (
+            "no_credentials",
+            "No AWS credentials were found: the account stores no keys, and the host has no AWS identity Prowler can use, such as an EC2 instance profile.",
+        ),
+    ],
+)
+def test_a_scan_says_why_the_credential_failed(code, message, monkeypatch):
+    """An expired Azure or Microsoft 365 secret, and an AWS role with no keys on a host with no AWS
+    identity, each read as what they are rather than "the cloud provider refused the credentials"."""
+    runner = FakeRunner()
+
+    async def scenario(world):
+        account = await add_account(world)
+        scan = (await start(world, account["id"])).json()["scan"]
+        runner.finish(next(iter(runner.jobs)), status="failed", error=code, prowler_errors=["ClientAuthenticationError"])
+        await world.tick()
+        return (await world.client.get(f"{SCANS}/{scan['id']}", headers=as_user("ana"))).json()["scan"]
+
+    scan = run(scenario, monkeypatch, runner=runner)
+    assert (scan["status"], scan["error_code"], scan["error_message"]) == ("failed", code, message)
+
+
 def test_a_job_the_runner_lost_fails_the_scan(monkeypatch):
     runner = FakeRunner()
 

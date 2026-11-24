@@ -14,8 +14,11 @@ from pathlib import Path
 PREFIX = "PROWLER_RUNNER_RESULT "
 
 
-def answer(ok, error_class=None):
-    sys.stdout.write(PREFIX + json.dumps({"ok": ok, "error_class": error_class}) + "\n")
+def answer(ok, error_class=None, reason=None):
+    result = {"ok": ok, "error_class": error_class}
+    if reason:
+        result["reason"] = reason
+    sys.stdout.write(PREFIX + json.dumps(result) + "\n")
 
 
 def main():
@@ -34,6 +37,9 @@ def main():
     if "noisy" in marker:
         print("Error: the secret was " + marker)
         answer(False, "AzureClientAuthenticationError")
+        return
+    if "expired" in marker:
+        answer(False, "AzureClientAuthenticationError", "secret_expired")
         return
     if "wrongtenant" in marker:
         answer(False, "M365InvalidProviderIdError")

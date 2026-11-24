@@ -199,8 +199,14 @@ Customer Portal users have no access.
   </Accordion>
   <Accordion title="Test connection or a scan says the credentials were refused">
     - AWS role: check the role's trust policy has the External ID CoPilot shows and the right principal, and that the identity may call `sts:AssumeRole` on the role.
-    - Azure and Microsoft 365: check the client secret hasn't expired (the account shows *credential expired*) and that the app has its permissions, with admin consent.
+    - Azure and Microsoft 365: check the tenant id, the client id and the secret's value (not its id), and that the app has its permissions, with admin consent.
     - Google Cloud: check the key hasn't been deleted and the service account still has its roles.
+  </Accordion>
+  <Accordion title="“The client secret has expired”">
+    Microsoft Entra ID refused the Azure or Microsoft 365 client secret because it expired. Create a new secret on the app registration (**Certificates & secrets → New client secret**), then edit the account: enter the new secret and its expiry date. CoPilot warns from 30 days before an expiry date it knows.
+  </Accordion>
+  <Accordion title="“No AWS credentials were found”">
+    The account is an IAM role assumed with **CoPilot's own AWS identity**, and Prowler found none. Either store an IAM user's access keys on the account, or run copilot-prowler on an EC2 instance with an instance profile (IMDSv2's hop limit must be at least 2 for a container to reach it).
   </Accordion>
   <Accordion title="A scan stays queued">
     copilot-prowler is running `PROWLER_MAX_CONCURRENT` scans already. The scan starts when one ends.
