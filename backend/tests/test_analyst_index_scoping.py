@@ -12,7 +12,8 @@ and returned whatever came back. Pinned here (``app/middleware/document_access.p
 - single documents (by index and id) of another customer read like missing ones;
 - Wazuh's state indices (packages) are filtered by the caller's agents, by id, name and exact pair;
 - index names (shards, field mappings) are matched to customers by whole words, not substrings;
-- the local MCP servers (every customer's data) and the ingest backlog are admin-only;
+- the ingest backlog is admin-only, and the AI Chatbot has no local server left to read every
+  customer's data (the copilot-mcp container was removed);
 - the Detections Catalog's deployment-wide hit counts are an admin's view.
 
 Real routers, a real in-memory database, a fake indexer that applies the customer filter's clauses
@@ -883,36 +884,36 @@ def test_another_customers_agent_vulnerabilities_are_refused():
     service.assert_not_awaited()
 
 
-def test_the_local_mcp_servers_are_an_admins_only():
+#: The AI Chatbot's local servers, which the removed copilot-mcp container answered from every
+#: customer's data with deployment-wide credentials.
+REMOVED_MCP_SERVERS = ("wazuh-indexer", "wazuh-manager", "copilot", "velociraptor")
+
+
+def test_the_chatbot_reaches_no_local_data_server():
+    from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType
+    from app.integrations.copilot_mcp.services.copilot_mcp import MCPService
+
+    cloud = {server.value for server in MCPServerType}
+    assert cloud == {"threat-intel", "cyber-news", "knowledgebase", "attack-surface"}
+    assert all(MCPService.build_full_url(server).startswith("https://mcp.socfortress.co/") for server in MCPServerType)
     execute = AsyncMock(return_value={"success": True, "message": "ok", "result": "", "execution_time": 0.0})
 
     async def scenario(client, db):
         with patch("app.integrations.copilot_mcp.routes.copilot_mcp.MCPService.execute_query", execute):
-            listed = await client.get("/copilot_mcp/servers", headers=as_user("ana"))
-            refused = await client.post(
-                "/copilot_mcp/query",
-                json={"input": "list alerts", "mcp_server": "wazuh-indexer"},
-                headers=as_user("ana"),
-            )
-            database = await client.post(
-                "/copilot_mcp/query",
-                json={"input": "list users", "mcp_server": "copilot"},
-                headers=as_user("rex"),
-            )
-            admin = await client.post(
-                "/copilot_mcp/query",
-                json={"input": "list alerts", "mcp_server": "wazuh-indexer"},
-                headers=as_user("admin"),
-            )
-        return listed, refused, database, admin
+            listed = [await client.get("/copilot_mcp/servers", headers=as_user(who)) for who in ("ana", "admin")]
+            refused = [
+                await client.post("/copilot_mcp/query", json={"input": "list alerts", "mcp_server": server}, headers=as_user("admin"))
+                for server in REMOVED_MCP_SERVERS
+            ]
+        return listed, refused
 
     with indexer():
-        listed, refused, database, admin = call(scenario)
-    servers = {s["value"] for s in listed.json()["servers"]}
-    assert servers.isdisjoint({"wazuh-indexer", "wazuh-manager", "copilot", "velociraptor"})
-    assert refused.status_code == 403 and database.status_code == 403
-    assert admin.status_code == 200
-    assert execute.await_count == 1
+        listed, refused = call(scenario)
+    # An analyst and an admin see the same servers: all of them cloud ones.
+    assert [{s["value"] for s in response.json()["servers"]} for response in listed] == [cloud, cloud]
+    # Naming a removed server is refused, for an admin too, before anything is asked.
+    assert [response.status_code for response in refused] == [400] * len(REMOVED_MCP_SERVERS)
+    execute.assert_not_awaited()
 
 
 @pytest.mark.parametrize(("who", "withheld"), [("ana", True), ("admin", False)])
@@ -984,7 +985,6 @@ INDEXER_ROUTES = {
     ("POST", "/threat_intel/ai/velociraptor-artifact-recommendation"): "_alert_for_ai",
     ("POST", "/graylog/event/alerts"): "keep_customer_events",
     ("GET", "/syscollector/search/packages"): "agent_filters",
-    ("POST", "/copilot_mcp/query"): "may_query",
 }
 
 
@@ -1009,7 +1009,6 @@ def test_each_audited_route_uses_its_guard(route, guard):
     from fastapi.routing import APIRoute
 
     from app.routers import agents
-    from app.routers import copilot_mcp
     from app.routers import copilot_searches
     from app.routers import graylog
     from app.routers import incidents
@@ -1018,7 +1017,7 @@ def test_each_audited_route_uses_its_guard(route, guard):
     from app.routers import wazuh_manager
 
     api = FastAPI()
-    for module in (agents, copilot_mcp, copilot_searches, graylog, incidents, threat_intel, wazuh_indexer, wazuh_manager):
+    for module in (agents, copilot_searches, graylog, incidents, threat_intel, wazuh_indexer, wazuh_manager):
         api.include_router(module.router)
     method, path = route
     matched = [r for r in api.routes if isinstance(r, APIRoute) and r.path == path and method in r.methods]

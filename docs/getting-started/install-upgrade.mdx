@@ -42,7 +42,6 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/<VERSION>/docker-comp
 
 ```bash
 mkdir -p data
-mkdir -p data/copilot-mcp
 ```
 
 ### 3) Create your `.env`
@@ -249,9 +248,9 @@ What it does:
 
 1. **Checks** Docker, the Compose file, MySQL's version, MySQL Shell's upgrade checker and the free disk space. If any check fails, it stops there, with CoPilot still running as before.
 2. **Pulls the new images** while CoPilot keeps running.
-3. **Stops the backend and the MCP server, dumps every database**, and shuts MySQL down cleanly.
+3. **Stops the services that use the database, dumps every database**, and shuts MySQL down cleanly.
 4. **When MySQL moves to a new version, archives MySQL's data directory, then upgrades it.** MySQL 5.7, which installs made before September 2024 may still run, goes through MySQL 8.0 first: 8.4 can't upgrade 5.7 data directly.
-5. **Starts everything and waits for the backend** to answer, its database migrations done.
+5. **Starts everything and waits for the backend** to answer, its database migrations done. First it removes the container of a service CoPilot no longer has, which `docker compose up -d` would leave running ([`copilot-mcp`](#the-copilot-mcp-service-is-gone)).
 
 CoPilot is unavailable from the dump until the backend has started again: usually a few minutes, longer when MySQL upgrades a large database.
 
@@ -294,6 +293,21 @@ docker compose up -d
 
 > Tip: make sure your persistent `data/` directory is backed up before major upgrades.
 
+### The `copilot-mcp` service is gone
+
+`docker-compose.yml` no longer has the `copilot-mcp` service. It served the AI Chatbot's local sources (the Wazuh indexer, the Wazuh manager, CoPilot's database and Velociraptor), which went with it; the chatbot keeps its SOCFortress cloud sources. Ask questions about your own data in Talon's chat instead: see [AI Analyst](/power-features/ai-analyst).
+
+An install from before the change still runs the container until you remove it:
+
+- **With `upgrade.sh` and the new `docker-compose.yml`** (`git pull`, or the file downloaded again): the script stops the old container with the backend and removes it before CoPilot starts again. `./upgrade.sh --check` lists it under *Remove*.
+- **With a `docker-compose.yml` you keep** (you download only the script): the file still has the service, so the script stops it and starts it again like the backend. Delete the `copilot-mcp:` service from the file, or download the new one, then run the script.
+- **Without the script:** `docker compose up -d` leaves the old container running, and Compose warns about an orphan container. `docker compose up -d --remove-orphans` removes it, with any other container of this project that `docker-compose.yml` no longer has.
+
+Then clean up what only `copilot-mcp` used:
+
+- **`data/copilot-mcp/`** holds a copy of a Velociraptor API client config (`api.config.yaml`). Delete the directory. If that API client was made only for `copilot-mcp`, remove it on the Velociraptor server too; if CoPilot's own Velociraptor connection uses the same client, keep it.
+- **`.env`:** CoPilot reads none of `OPENAI_API_KEY`, `OPENAI_MODEL`, `LOG_LEVEL`, the `MCP_*` variables, `OPENSEARCH_*`, `MYSQL_ENABLED`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `WAZUH_PROD_*`, `VELOCIRAPTOR_API_KEY`, `VELOCIRAPTOR_SSL_VERIFY` or `VELOCIRAPTOR_TIMEOUT` any more, and you can delete them. Keep `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MYSQL_URL` and the other `VELOCIRAPTOR_*` settings.
+
 ### Upgrading to MySQL 8.4
 
 `docker-compose.yml` runs MySQL **8.4 LTS** (`mysql:8.4.13`); MySQL 8.0 reached end of life in April 2026. The version is pinned in the Compose file, so `docker compose pull` alone keeps your current MySQL: you move to 8.4 when you update `docker-compose.yml`. Its first start upgrades the data in the `mysql-data` volume in place. `upgrade.sh` does all of this for you; by hand:
@@ -307,10 +321,10 @@ docker compose up -d
   ```
 
   Or stop the stack (`docker compose down`) and copy the `mysql-data` volume.
-- **Shut MySQL down cleanly before you change its image.** Stop the backend and the MCP server, ask for a full shutdown, and give MySQL time to finish it (Docker kills a container after 10 seconds by default, and MySQL won't upgrade data left by a server that didn't shut down cleanly):
+- **Shut MySQL down cleanly before you change its image.** Stop the backend (and remove [`copilot-mcp`](#the-copilot-mcp-service-is-gone) first if it still runs), ask for a full shutdown, and give MySQL time to finish it (Docker kills a container after 10 seconds by default, and MySQL won't upgrade data left by a server that didn't shut down cleanly):
 
   ```bash
-  docker compose stop copilot-backend copilot-mcp
+  docker compose stop copilot-backend
   docker compose exec -T copilot-mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SET GLOBAL innodb_fast_shutdown = 0"'
   docker compose stop -t 900 copilot-mysql
   ```

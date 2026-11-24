@@ -4,7 +4,7 @@
 - `README.md`
   High‑level product overview, install steps, and TLS notes.
 - `docker-compose.yml`
-  Deployment stack for backend, frontend, MySQL, MinIO, MCP, and Nuclei.
+  Deployment stack for backend, frontend, MySQL, MinIO, and Nuclei.
 - `.env.example`
   Canonical list of backend environment variables and connector settings.
 - `build-dockers.sh`
@@ -80,7 +80,7 @@
 - `backend/app/integrations/modules/`
   Data collection modules for Duo, Darktrace, Mimecast, Huntress, etc.
 - `backend/app/integrations/copilot_mcp/`
-  MCP query routing (local and cloud services).
+  The AI Chatbot's queries to SOCFortress's cloud MCP servers.
 - `backend/app/integrations/nuclei/`
   Web vulnerability assessment.
 - `backend/app/integrations/github_audit/`

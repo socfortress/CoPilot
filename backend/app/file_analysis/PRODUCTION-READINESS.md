@@ -60,7 +60,7 @@ Legend: ✅ done · 🟡 partial · ⬜ not started · 🔒 needs an infra/human
 
 - ⬜ `customer_user` read-only scope (admin/analyst covered today).
 - ⬜ Event 11 auto-trigger; Graylog `data_sandbox_*` detection rules + dashboard;
-  AI analyst summary (copilot-mcp, display-only).
+  AI analyst summary (display-only).
 - ⬜ Optional: gVisor/Kata runtime for VM-grade Tier-1 isolation.
 
 ---

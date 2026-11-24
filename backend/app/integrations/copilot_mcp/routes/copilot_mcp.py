@@ -8,7 +8,6 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.models.users import RoleEnum
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.talon.services.talon_service_account import (
@@ -30,15 +29,9 @@ from app.middleware.license import is_feature_enabled
 copilot_mcp_router = APIRouter()
 auth_handler = AuthHandler()
 
-#: The local servers answer from every customer's data, with deployment-wide credentials: the
-#: indexer, the Wazuh manager, CoPilot's own database and Velociraptor. Nothing here can hold a
-#: model's tool calls to one customer, so only an admin (by the database role) may ask them; the
-#: cloud servers (threat intel, news, knowledge base, attack surface) hold no customer data.
-LOCAL_DATA_ADMIN_ONLY = "Only an admin can ask this server: it answers from every customer's data"
-
-
-def may_query(user: User, mcp_server: MCPServerType) -> bool:
-    return MCPService.is_cloud_service(mcp_server) or user.role_id == RoleEnum.admin
+# Every server is a SOCFortress cloud server, which holds no customer data, so admins and analysts
+# see and ask the same ones. The local servers that answered from every customer's data (the indexer,
+# the Wazuh manager, CoPilot's database and Velociraptor, in the copilot-mcp container) were removed.
 
 
 @copilot_mcp_router.get(
@@ -47,9 +40,7 @@ def may_query(user: User, mcp_server: MCPServerType) -> bool:
     description="Get list of available MCP servers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_available_mcp_servers(
-    current_user: User = Depends(auth_handler.get_current_user),
-) -> AvailableMCPServersResponse:
+async def get_available_mcp_servers() -> AvailableMCPServersResponse:
     """
     Retrieve a list of all available MCP servers with their capabilities.
 
@@ -63,9 +54,7 @@ async def get_available_mcp_servers(
     logger.info("Fetching available MCP servers")
 
     try:
-        servers = [
-            server for server in ExampleQuestionsService.get_available_servers() if may_query(current_user, MCPServerType(server.value))
-        ]
+        servers = ExampleQuestionsService.get_available_servers()
 
         logger.info(f"Found {len(servers)} available MCP servers")
 
@@ -230,33 +219,28 @@ async def query_mcp(
     Routes the query to the appropriate MCP server based on the selected server type.
     """
     logger.info(f"Processing MCP query for server: {request.mcp_server.value}")
-    if not may_query(current_user, request.mcp_server):
-        raise HTTPException(status_code=403, detail=LOCAL_DATA_ADMIN_ONLY)
 
-    license_key = None
+    # Every server is a cloud service, asked with the license key
+    try:
+        await is_feature_enabled("SOCFORTRESS AI", session=session)
 
-    # Check if it's a cloud service and get license key if needed
-    if MCPService.is_cloud_service(request.mcp_server):
-        try:
-            await is_feature_enabled("SOCFORTRESS AI", session=session)
+        # Will raise HTTPException(404) if no license record exists
+        license_info = await get_license(session)
+        license_key = license_info.license_key
 
-            # Will raise HTTPException(404) if no license record exists
-            license_info = await get_license(session)
-            license_key = license_info.license_key
+        # If a license record exists but the key is missing, mirror get_license behavior
+        if not license_key:
+            raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
 
-            # If a license record exists but the key is missing, mirror get_license behavior
-            if not license_key:
-                raise HTTPException(status_code=404, detail="No license found. A license must be created first.")
+        logger.info(f"Retrieved license key for cloud service {request.mcp_server.value}")
 
-            logger.info(f"Retrieved license key for cloud service {request.mcp_server.value}")
-
-        except HTTPException as http_exc:
-            # Surface the HTTPException unchanged
-            raise http_exc
-        except Exception as e:
-            # Unexpected errors -> 500
-            logger.error(f"Failed to get license key for cloud service: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"License validation failed: {str(e)}")
+    except HTTPException as http_exc:
+        # Surface the HTTPException unchanged
+        raise http_exc
+    except Exception as e:
+        # Unexpected errors -> 500
+        logger.error(f"Failed to get license key for cloud service: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"License validation failed: {str(e)}")
 
     # Use the modular service to execute the query
     return await MCPService.execute_query(request, license_key=license_key)

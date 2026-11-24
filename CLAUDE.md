@@ -19,7 +19,7 @@ Plus `tools/remotion-*` (video generators) and `docs/` (mkdocs site, published b
 ### Stack
 
 ```bash
-docker compose pull && docker compose up -d   # backend, frontend, mysql, minio, nuclei, mcp
+docker compose pull && docker compose up -d   # backend, frontend, mysql, minio, nuclei, prowler, inspector
 ./build-dockers.sh [version]                  # local image rebuild (frontend only; backend stanza commented)
 
 # Local backend rebuild + hot-swap into the running stack (~5–8 min build):
@@ -33,10 +33,11 @@ docker compose up -d --force-recreate copilot-backend
 
 ### Upgrading a deployment: `upgrade.sh`
 
-`./upgrade.sh` (repo root; `--check`, `--rollback`, `--help`) upgrades a customer's Compose stack, MySQL included: checks (Docker, compose file, MySQL version, MySQL Shell's `util.checkForServerUpgrade()` from the target image, disk), pulls while CoPilot runs, stops `copilot-backend`/`copilot-mcp`, dumps every database, shuts MySQL down slowly (`innodb_fast_shutdown=0`, `stop -t 900`: Docker's 10 s default kills mysqld mid-shutdown, and MySQL won't upgrade data a server didn't shut down cleanly), archives the data directory, upgrades the data, edits the compose file, starts everything and waits until the backend answers HTTP. Docs: `docs/getting-started/install-upgrade.mdx`. Load-bearing:
+`./upgrade.sh` (repo root; `--check`, `--rollback`, `--help`) upgrades a customer's Compose stack, MySQL included: checks (Docker, compose file, MySQL version, MySQL Shell's `util.checkForServerUpgrade()` from the target image, disk), pulls while CoPilot runs, stops `copilot-backend` (and `copilot-mcp` while a compose file still has it), dumps every database, shuts MySQL down slowly (`innodb_fast_shutdown=0`, `stop -t 900`: Docker's 10 s default kills mysqld mid-shutdown, and MySQL won't upgrade data a server didn't shut down cleanly), archives the data directory, upgrades the data, edits the compose file, starts everything and waits until the backend answers HTTP. Docs: `docs/getting-started/install-upgrade.mdx`. Load-bearing:
 - **The data is upgraded in standalone containers on the same mounts, before the compose file is touched**: a failure leaves the file as it was, and `--rollback` restores the archive and the old image. MySQL 5.7 goes through `mysql:8.0.46` first (8.4 refuses 5.7 data); the compose flags go only to 8.4+ (8.0's mysqld refuses an unknown option).
 - **`TARGET_MYSQL_IMAGE` and `TARGET_FLAGS` must equal `docker-compose.yml`'s `copilot-mysql`** (`test_the_script_targets_what_docker_compose_yml_runs`); moving MySQL again means changing both, and the hop logic past 8.4.
 - **It edits only `copilot-mysql`'s `image` and `command`, with awk** (mawk, gawk, busybox and macOS awk give identical output), and only a key directly under `services:` is the service: `docker compose config` writes `depends_on` as a map with a `copilot-mysql:` key. A compose file tracked by git is refused (`git pull` brings the new one; `--edit-compose` overrides), a custom `command:` or `COMPOSE_FILE` is refused, and every edit is checked with `docker compose config` before any downtime.
+- **A retired service's container is removed (`RETIRED_SERVICES`, now `copilot-mcp`)**: `docker compose up -d` leaves running the container of a service the compose file dropped, so `leftover_container` finds it by Compose's labels (the project name read off the backend's container), the script stops it with the database clients and removes it before starting CoPilot; `--check` lists it under *Remove*. A compose file that still defines the service keeps it (`copilot-mcp` also stays in `DB_CLIENT_SERVICES`).
 - **Backups go to `backups/upgrade-<UTC time>/`** (git-ignored): `mysql-all-databases.sql.gz`, `mysql-data.tar.gz`, the compose file `.before`, the checker report, `upgrade.log` and a `state` file `--rollback` reads (it takes the newest run with an archive). The root password goes to MySQL on stdin, never in an argument.
 
 Tests: `tests/test_upgrade_script.py` (no Docker; sources the script under every bash on the machine, 3.2 included), `tests/e2e/upgrade_script_e2e.py` (Docker, 30-60 min: 8.0.46 and 5.7.44 stacks upgraded, re-run, rolled back).
@@ -967,10 +968,13 @@ Rules when adding a route:
   - `ensure_index_visible` / `visible_index_names`: where only index names or mappings are
     shown. `customer_index.index_matches_customer` matches whole words, so `lab` no longer
     claims `collaboration_0` or `lab2_1`.
-  - The local MCP servers (indexer, Wazuh manager, CoPilot's MySQL, Velociraptor) and the
-    ingest backlog (`/incidents/alerts/alerts/not-created`) are admin-only, and the
+  - The ingest backlog (`/incidents/alerts/alerts/not-created`) is admin-only, and the
     Detections Catalog's deployment-wide hit counts are an admin's view
     (`without_global_firing`).
+  - The AI Chatbot (`/copilot_mcp/*`) asks only SOCFortress's cloud MCP servers. Its local
+    servers (indexer, Wazuh manager, CoPilot's MySQL, Velociraptor), which answered from every
+    customer's data, went with the `copilot-mcp` container; don't add a chatbot server like them
+    (`test_the_chatbot_reaches_no_local_data_server`).
   - A manual alert (`/incidents/alerts/create/manual`) is filed only under one of the
     caller's customers, so the UBA service user must be assigned the customers it delivers
     for (as its verdict polling already needs).
@@ -1088,7 +1092,7 @@ Tests: `tests/test_soc_management_{domain,analytics,lifecycle,metrics,routes,inc
 
 ### CI (`.github/workflows/`)
 
-- `docker.yml` — multi-arch builds → `ghcr.io/socfortress/copilot-{backend,frontend,customer-portal,mcp,nuclei-module,minio}`
+- `docker.yml` — multi-arch builds → `ghcr.io/socfortress/copilot-{backend,frontend,customer-portal,nuclei-module,minio}`
 - `pre-commit.yml` — runs the hooks above on PRs
 - `docs-pages.yml` — mkdocs → GitHub Pages from `docs/` (`mkdocs.yml`)
 
@@ -1105,7 +1109,7 @@ Tests: `tests/test_soc_management_{domain,analytics,lifecycle,metrics,routes,inc
 - **`incident_management_*.customer_code` is a STRING, not a foreign key.** Same for `customer_integrations`, `customer_network_connectors`, `monitoring_alerts`, `custom_alert_creation_settings`. Renaming or deleting a customer does *not* cascade. Don't write joins that assume referential integrity on these columns.
 - **AsyncSession + `back_populates` = `MissingGreenlet`** in some cases. `CustomerNotificationRoute` and `NotificationDispatchLog` deliberately omit `back_populates` on their reverse relationships (with code comments explaining why) — bidirectional relationships fire implicit synchronous loads on `flush()` that fail under `AsyncSession`. When adding relationships in async-write paths, prefer one-way FKs and explicit `session.get(...)` over `back_populates`.
 - **Reads of the `connectors` table are cached in-process; every write to it must invalidate.** `get_connector_info_from_db` (`app/connectors/utils.py`) is the single funnel for connector credentials — 89 call sites — and it now reads through `app/connectors/cache.py` (10-min TTL, `CONNECTOR_CACHE_TTL_SECONDS=0` disables it). Connector rows are deployment-wide and change only on operator action, which is what makes this safe; what makes it *correct* is that `ConnectorServices.update_connector_by_id` / `verify_connector_by_id` / `save_file` each call `connector_cache.invalidate(name)` **after** their `await session.commit()`. A new write path that skips it leaves outbound calls using a rotated credential's predecessor for up to the TTL; invalidating *before* the commit is just as wrong, because a concurrent read re-caches the pre-commit row. `tests/test_connector_cache.py` pins both. Note also that `Connectors.history_logs` is `lazy="selectin"` and is read nowhere in the codebase, so every uncached `select(Connectors)` costs two statements, not one.
-- **`.env` is shared across compose services.** Backend and `copilot-mcp` both read it; many MCP vars fall back to `WAZUH_*` defaults — renaming without fixing fallbacks breaks MCP wiring.
+- **`.env` feeds the backend (`env_file`) and compose's `${…}` substitutions for the other services** (`PROWLER_RUNNER_TOKEN`, …): renaming a variable means changing both places. The `MCP_*`, `OPENAI_*`, `OPENSEARCH_*` and `WAZUH_PROD_*` variables were the removed `copilot-mcp` container's; nothing reads them now.
 - **Black line length is 140**, not 88. **isort `force_single_line = true`** — combined imports get split.
 - **Pydantic 2 strictness regressions are still surfacing across the codebase.** The repo migrated from v1 to v2; v1 was lenient where v2 errors. Five patterns to watch for:
   - **Leading-underscore field annotations get silently dropped as `PrivateAttr`.** A field like `_source: GenericSourceModel` parses as nothing — Pydantic 2 never populates it. Use `source: GenericSourceModel = Field(alias="_source")` plus `model_config = ConfigDict(populate_by_name=True)`. We've hit this on `_source` (`GenericAlertModel`) and `_client_config` (Velociraptor `Organization`).

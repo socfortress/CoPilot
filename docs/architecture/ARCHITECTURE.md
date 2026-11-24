@@ -33,7 +33,7 @@ Key entry points:
 ## Directory Layout & Responsibilities
 
 ### Root
-- `docker-compose.yml`: default deployment stack (backend, frontend, MySQL, MinIO, MCP, Nuclei).
+- `docker-compose.yml`: default deployment stack (backend, frontend, MySQL, MinIO, Nuclei).
 - `.env.example`: required runtime configuration for connectors and services.
 - `build-dockers.sh`: build utility script.
 
@@ -54,7 +54,7 @@ Key entry points:
 - `backend/app/active_response/*`: automation scripts and invoke endpoints.
 - `backend/app/data_store/*`: MinIO storage (cases, templates, artifacts).
 - `backend/app/threat_intel/*`: EPSS, VirusTotal, SOCFortress threat intel.
-- `backend/app/integrations/copilot_mcp/*`: local and cloud MCP queries.
+- `backend/app/integrations/copilot_mcp/*`: the AI Chatbot's queries to SOCFortress's cloud MCP servers.
 
 ### Frontend
 - `frontend/src/router/index.ts`: primary navigation and feature routes.
@@ -180,11 +180,11 @@ Key entry points:
 - VirusTotal, EPSS, SOCFortress. `backend/app/threat_intel/*`
 
 ### MCP (CoPilot AI)
-- Local MCP service container configured in Docker.
-- Backend routes call `backend/app/integrations/copilot_mcp/services/copilot_mcp.py` to query local OpenSearch/MySQL/Wazuh/Velociraptor or cloud threat intel endpoints.
+- Backend routes call `backend/app/integrations/copilot_mcp/services/copilot_mcp.py` to query SOCFortress's cloud MCP servers (threat intel, cyber news, knowledge base, attack surface) with the license key.
+- The local `copilot-mcp` container (OpenSearch, MySQL, Wazuh and Velociraptor servers) was removed; questions about a deployment's own data go to Talon's chat.
 
 ## Configuration Management & Secrets
-- `.env` provides connector URLs, API keys, DB creds, MinIO creds, MCP settings. `.env.example` documents expected values.
+- `.env` provides connector URLs, API keys, DB creds, MinIO creds. `.env.example` documents expected values.
 - Frontend uses `VITE_API_URL` to target the backend.
 - TLS handled by `copilot-frontend` container; TLS cert/key paths are configurable in `docker-compose.yml` and documented in README.
 
@@ -194,7 +194,6 @@ Key entry points:
 - `copilot-mysql`: MySQL 8.4 LTS.
 - `copilot-minio`: object storage.
 - `copilot-nuclei-module`: web vulnerability scanner module.
-- `copilot-mcp`: MCP service for AI queries.
 - Optional `copilot-customer-portal` for customer‑facing UI.
 
 ## Extension Points
