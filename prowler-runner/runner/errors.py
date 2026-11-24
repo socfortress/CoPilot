@@ -7,6 +7,7 @@ a fixed text and, at most, the name of the exception Prowler logged.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 
 from fastapi import Request
@@ -26,6 +27,8 @@ MESSAGES = {
     "unknown_provider": "Unknown provider.",
     "tenant_domain_required": "Testing a Microsoft 365 connection needs one of the tenant's domains, for example contoso.onmicrosoft.com.",
     "auth_failed": "The cloud provider refused the credentials.",
+    "secret_expired": "The client secret has expired. Create a new one in the app registration and enter it on the account.",
+    "no_credentials": "No AWS credentials were found: the account stores no keys, and the host has no AWS identity Prowler can use, such as an EC2 instance profile.",
     "permission_denied": "The credentials were accepted, but they lack a permission the scan needs.",
     "wrong_account": "The credentials don't belong to the account, subscription, project or tenant named.",
     "m365_powershell_failed": "Signed in to Microsoft Graph, but the Exchange or Teams connection failed. Check Exchange.ManageAsApp and the Global Reader role.",
@@ -42,10 +45,12 @@ MESSAGES = {
 _CLASSIFICATION: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("wrong_account", ("InvalidProviderId",)),
     ("m365_powershell_failed", ("ExchangeConnection", "TeamsConnection")),
+    # botocore's NoCredentialsError (and Prowler's AWSNoCredentialsError): nothing to sign in
+    # with at all, which an AWS role account without keys meets on a host with no AWS identity.
+    ("no_credentials", ("NoCredentials",)),
     (
         "auth_failed",
         (
-            "NoCredentials",
             "Credential",
             "ClientAuthentication",
             "AssumeRole",
@@ -103,16 +108,32 @@ def classify(exception_names: Iterable[str], default: str = "scan_failed") -> st
 # Codes that say something failed without saying what to fix.
 _VAGUE = ("scan_failed", "connection_failed")
 
+# What a failure's text can tell that its exception's class can't, by code. Only the code
+# leaves the runner, never the text. AADSTS7000222 is Microsoft Entra ID refusing a client
+# secret that expired (Azure and Microsoft 365 alike).
+REASONS: dict[str, re.Pattern[str]] = {"secret_expired": re.compile(r"\bAADSTS7000222\b")}
 
-def classify_failure(critical: list[str], errors: list[str]) -> str:
+
+def reasons_in(text: str) -> list[str]:
+    """The codes of ``REASONS`` whose mark is in ``text``."""
+    return [code for code, mark in REASONS.items() if mark.search(text)]
+
+
+def classify_failure(critical: list[str], errors: list[str], reasons: Iterable[str] = ()) -> str:
     """The code for a scan Prowler stopped: from its CRITICAL exceptions, or, when those are
     vague, from its ERROR ones too. (A sign-in failure on Azure is logged as an ERROR
-    ``ClientAuthenticationError`` followed by a CRITICAL ``AzureHTTPResponseError``.)"""
+    ``ClientAuthenticationError`` followed by a CRITICAL ``AzureHTTPResponseError``.) A reason
+    found in the failures' text (``REASONS``), an expired client secret, says more than any
+    class name, unless the command line itself was refused."""
     code = classify(critical)
     if code in _VAGUE and errors:
         merged = classify(critical + errors)
         if merged not in _VAGUE:
-            return merged
+            code = merged
+    given = set(reasons)
+    found = [reason for reason in REASONS if reason in given]
+    if found and code != "invalid_request":
+        return found[0]
     return code
 
 

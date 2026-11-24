@@ -44,6 +44,16 @@ def test_refused_credentials(client):
     }
 
 
+def test_an_expired_secret(client):
+    body = client.post("/v1/connection-test", json=azure_scan("expired-secret")).json()
+    assert body == {
+        "ok": False,
+        "code": "secret_expired",
+        "message": "The client secret has expired. Create a new one in the app registration and enter it on the account.",
+        "prowler_error": "AzureClientAuthenticationError",
+    }
+
+
 def test_the_wrong_tenant(client):
     body = client.post("/v1/connection-test", json=m365_scan("wrongtenant-secret")).json()
     assert body["code"] == "wrong_account"
@@ -85,6 +95,16 @@ def test_the_helper_leaves_nothing_behind(client, settings):
             b'noise\nPROWLER_RUNNER_RESULT {"ok": false, "error_class": "AWSAssumeRoleError"}\n',
             (False, "auth_failed", "AWSAssumeRoleError"),
         ),
+        (
+            b'PROWLER_RUNNER_RESULT {"ok": false, "error_class": "AzureClientAuthenticationError", "reason": "secret_expired"}\n',
+            (False, "secret_expired", "AzureClientAuthenticationError"),
+        ),
+        # A reason the runner doesn't know is ignored: the class decides.
+        (
+            b'PROWLER_RUNNER_RESULT {"ok": false, "error_class": "AzureClientAuthenticationError", "reason": "rm -rf"}\n',
+            (False, "auth_failed", "AzureClientAuthenticationError"),
+        ),
+        (b'PROWLER_RUNNER_RESULT {"ok": false, "error_class": "NoCredentialsError"}\n', (False, "no_credentials", "NoCredentialsError")),
         (b'PROWLER_RUNNER_RESULT {"ok": false, "error_class": "Weird Name; rm"}\n', (False, "connection_failed", None)),
         (b'PROWLER_RUNNER_RESULT {"ok": false, "error_class": "ModuleNotFoundError"}\n', (False, "internal", "ModuleNotFoundError")),
         (b"PROWLER_RUNNER_RESULT not json\n", (False, "internal", None)),
@@ -100,7 +120,8 @@ def test_parse_result(output, expected):
     ("names", "code"),
     [
         (["AWSAssumeRoleError"], "auth_failed"),
-        (["NoCredentialsError"], "auth_failed"),
+        (["NoCredentialsError"], "no_credentials"),
+        (["AWSNoCredentialsError", "AWSAssumeRoleError"], "no_credentials"),
         (["AzureClientIdAndClientSecretNotBelongingToTenantIdError"], "auth_failed"),
         (["GCPInvalidProviderIdError"], "wrong_account"),
         (["AzureNoSubscriptionsError"], "permission_denied"),
@@ -127,6 +148,18 @@ class AWSAssumeRoleError(Exception):
     pass
 
 
+class ClientAuthenticationError(Exception):
+    pass
+
+
+class AzureClientAuthenticationError(Exception):
+    """As Prowler's: the SDK's exception kept as ``original_exception``."""
+
+    def __init__(self, original_exception):
+        super().__init__("[2004] Azure client authentication error")
+        self.original_exception = original_exception
+
+
 @pytest.fixture
 def helper(monkeypatch):
     calls = {}
@@ -138,6 +171,16 @@ def helper(monkeypatch):
                 calls[name] = kwargs
                 if kwargs.get("external_id") == "fails-0000":
                     return Connection(False, AWSAssumeRoleError("role arn:aws:iam::123456789012:role/Hidden refused"))
+                if kwargs.get("client_secret") == "expired-secret":
+                    sdk = ClientAuthenticationError(
+                        "Authentication failed: AADSTS7000222: The provided client secret keys for app 'app-0042' are expired.",
+                    )
+                    return Connection(False, AzureClientAuthenticationError(sdk))
+                if kwargs.get("client_secret") == "raises-expired":
+                    try:
+                        raise ClientAuthenticationError("AADSTS7000222: expired, app 'app-0042'")
+                    except ClientAuthenticationError as error:
+                        raise RuntimeError("wrapped") from error
                 return Connection()
 
         return Provider
@@ -226,3 +269,24 @@ def test_helper_is_a_standalone_script():
     source = Path(HELPER).read_text()
     assert "import runner" not in source
     assert "from runner" not in source
+
+
+@pytest.mark.parametrize("secret", ["expired-secret", "raises-expired"])
+def test_helper_names_an_expired_secret_by_code_only(helper, monkeypatch, secret):
+    output = run_helper(helper, monkeypatch, azure_scan(secret))
+    result = json.loads(output.removeprefix("PROWLER_RUNNER_RESULT "))
+    assert result["ok"] is False and result["reason"] == "secret_expired"
+    assert result["error_class"] in ("AzureClientAuthenticationError", "RuntimeError")
+    assert "AADSTS" not in output and "app-0042" not in output
+
+
+def test_helper_reports_no_reason_without_a_mark(helper, monkeypatch):
+    payload = aws_role_scan()
+    payload["auth"]["external_id"] = "fails-0000"
+    assert "reason" not in run_helper(helper, monkeypatch, payload)
+
+
+def test_the_helper_knows_the_runner_s_reasons(helper):
+    from runner.errors import REASONS
+
+    assert {code: mark.pattern for code, mark in helper.REASONS.items()} == {code: mark.pattern for code, mark in REASONS.items()}
