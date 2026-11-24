@@ -293,7 +293,8 @@ def test_a_valid_release_is_stored_as_the_default(env, audit_rows):
 
     (request,) = service.requests
     assert str(request.url) == BUNDLE_URL and request.method == "GET"
-    assert request.headers["x-api-key"] == LICENSE_KEY and request.headers["module-version"] == "1.0"
+    assert request.headers["authorization"] == f"Bearer {LICENSE_KEY}" and request.headers["module-version"] == "1.0"
+    assert "x-api-key" not in request.headers
     assert "if-none-match" not in request.headers and "x-sysmon-default-sequence" not in request.headers
 
 
@@ -750,7 +751,7 @@ def test_a_redirect_within_the_service_is_followed(env):
     service = Service(answer)
     assert check(service).outcome == SyncOutcome.APPLIED
     assert [r.url.path for r in service.requests] == ["/v1/sysmon/default", "/v1/sysmon/default/stable"]
-    assert service.requests[1].headers["x-api-key"] == LICENSE_KEY
+    assert service.requests[1].headers["authorization"] == f"Bearer {LICENSE_KEY}"
 
 
 def test_a_compressed_body_is_refused(env):

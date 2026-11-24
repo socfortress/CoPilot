@@ -15,7 +15,8 @@ a config. An empty key list means "not configured": nothing is fetched.
 A check, every 6 hours (the ``sync_sysmon_default`` job) or on an admin's "Sync now":
 
 1. ``SYSMON_DEFAULT_SYNC``: ``on`` (default), ``force`` or ``off`` (no request at all).
-2. GET {url}/v1/sysmon/default with this CoPilot's license key (``x-api-key``; only its fingerprint is ever logged),
+2. GET {url}/v1/sysmon/default with this CoPilot's license key (``Authorization: Bearer``, which proxies redact from
+   their logs; only its fingerprint is ever logged),
    the release it has (``x-sysmon-default-sequence``) and, while the stored default is that release, its ETag (a 304
    means nothing new). TLS verified, 10 s to connect, 30 s at most between bytes and 60 s for the whole answer, at
    most 12 MiB, no redirect to another host. The database transaction that read the license key is ended first, so no
@@ -724,7 +725,8 @@ async def _fetch_and_apply(
         )
 
     headers = {
-        "x-api-key": license_key,
+        # Bearer, not x-api-key: Caddy and most proxies redact Authorization in their logs, but log x-api-key verbatim
+        "Authorization": f"Bearer {license_key}",
         "module-version": MODULE_VERSION,
         "Accept": "application/json",
         "Accept-Encoding": "identity",
