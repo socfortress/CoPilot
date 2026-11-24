@@ -18,7 +18,10 @@ from app.cloud_assessment.models.cloud_assessment import CloudAssessmentScan
 
 BACKEND = Path(__file__).resolve().parents[1]
 MIGRATION = BACKEND / "alembic" / "versions" / "c1328a0b1c2d_add_cloud_assessment_tables.py"
-MODELS = {model.__tablename__: model.__table__ for model in (CloudAssessmentAccount, CloudAssessmentScan, CloudAssessmentCheckResult, CloudAssessmentFinding)}
+MODELS = {
+    model.__tablename__: model.__table__
+    for model in (CloudAssessmentAccount, CloudAssessmentScan, CloudAssessmentCheckResult, CloudAssessmentFinding)
+}
 
 
 class RecordingOp:
@@ -74,7 +77,12 @@ def test_the_migration_chains_off_the_head_it_was_written_on(migration):
 
 
 def test_it_creates_the_four_tables_and_drops_them_children_first(recorded):
-    assert list(recorded.tables) == ["cloud_assessment_account", "cloud_assessment_scan", "cloud_assessment_check_result", "cloud_assessment_finding"]
+    assert list(recorded.tables) == [
+        "cloud_assessment_account",
+        "cloud_assessment_scan",
+        "cloud_assessment_check_result",
+        "cloud_assessment_finding",
+    ]
     assert recorded.dropped == list(reversed(list(recorded.tables)))
 
 
@@ -116,8 +124,12 @@ def test_keys_and_indexes_match_the_model(recorded, table):
 
 
 def test_every_table_belongs_to_a_customer_and_goes_with_it():
-    assert {(fk.target_fullname, fk.ondelete) for fk in MODELS["cloud_assessment_account"].foreign_keys} == {("customers.customer_code", "CASCADE")}
-    assert {(fk.target_fullname, fk.ondelete) for fk in MODELS["cloud_assessment_scan"].foreign_keys} == {("cloud_assessment_account.id", "CASCADE")}
+    assert {(fk.target_fullname, fk.ondelete) for fk in MODELS["cloud_assessment_account"].foreign_keys} == {
+        ("customers.customer_code", "CASCADE"),
+    }
+    assert {(fk.target_fullname, fk.ondelete) for fk in MODELS["cloud_assessment_scan"].foreign_keys} == {
+        ("cloud_assessment_account.id", "CASCADE"),
+    }
     for table in ("cloud_assessment_check_result", "cloud_assessment_finding"):
         assert {(fk.target_fullname, fk.ondelete) for fk in MODELS[table].foreign_keys} == {("cloud_assessment_scan.id", "CASCADE")}
 

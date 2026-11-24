@@ -22,6 +22,7 @@ from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
 from app.schedulers.services.invoke_cato import invoke_cato_integration_collect
+from app.schedulers.services.invoke_cloud_assessment import invoke_cloud_assessment
 from app.schedulers.services.invoke_darktrace import (
     invoke_darktrace_integration_collect,
 )
@@ -257,6 +258,15 @@ async def initialize_job_metadata():
                 "description": "Sends Talon's new ops findings (quiet endpoints, silent log sources) to internal notification routes, once each time a finding becomes news.",
             },
             {
+                "job_id": "invoke_cloud_assessment",
+                # Every minute (#1328): queues due scheduled scans, hands queued scans to
+                # copilot-prowler, follows running ones and stores completed ones' results. Nothing
+                # to do costs two small queries; each step is a guarded UPDATE, so replicas are safe.
+                "time_interval": 1,
+                "function": invoke_cloud_assessment,
+                "description": "Runs cloud security assessments (Prowler): scheduled scans, starting and following scans, storing their results, retention.",
+            },
+            {
                 "job_id": "refresh_wazuh_rules_cache",
                 # Shorter than CACHE_TTL_MINUTES (60) so the cache is renewed
                 # before it can expire under a request. A cold load measured
@@ -470,6 +480,7 @@ def get_function_by_name(function_name: str):
         "invoke_palace_lesson_sweeper": invoke_palace_lesson_sweeper,
         "invoke_talon_action_outcomes": invoke_talon_action_outcomes,
         "invoke_talon_ops_notifications": invoke_talon_ops_notifications,
+        "invoke_cloud_assessment": invoke_cloud_assessment,
         "refresh_wazuh_rules_cache": refresh_wazuh_rules_cache,
         "refresh_catalog_caches": refresh_catalog_caches,
         "refresh_sidebar_health": refresh_sidebar_health,

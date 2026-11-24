@@ -47,6 +47,13 @@ def _count() -> Any:
     return Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
 
 
+# BIGINT on MySQL. SQLite numbers a row only through an INTEGER PRIMARY KEY, so the unit tests'
+# in-memory databases need that type there.
+_BIG_ID = BigInteger().with_variant(Integer, "sqlite")
+# None is SQL NULL, not the JSON value null, so "IS NULL" means "nothing stored".
+_NULLABLE_JSON = JSON(none_as_null=True)
+
+
 class CloudAssessmentAccount(SQLModel, table=True):
     """A cloud account of a customer's that CoPilot scans.
 
@@ -100,7 +107,9 @@ class CloudAssessmentAccount(SQLModel, table=True):
 class CloudAssessmentScan(SQLModel, table=True):
     """One scan of an account.
 
-    ``status`` is ``queued``, ``running``, ``completed``, ``failed`` or ``cancelled``;
+    ``status`` is ``queued``, ``starting`` (claimed, being handed to copilot-prowler),
+    ``running``, ``ingesting`` (its results being stored), ``completed``, ``failed`` or
+    ``cancelled``; each step is claimed with a guarded UPDATE, so one backend replica takes it.
     ``trigger_type`` is ``manual`` or ``schedule`` (``trigger`` is a reserved word in
     MySQL). ``runner_job_id`` is the job in copilot-prowler while it holds the results.
 
@@ -152,7 +161,7 @@ class CloudAssessmentScan(SQLModel, table=True):
     resolved_fail_count: int = _count()
     log_error_lines: int = _count()
     error_code: Optional[str] = Field(default=None, max_length=32, nullable=True)
-    prowler_errors: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    prowler_errors: Optional[List[str]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
     report_bucket: Optional[str] = Field(default=None, max_length=63, nullable=True)
     html_object_key: Optional[str] = Field(default=None, max_length=512, nullable=True)
     html_file_size: Optional[int] = Field(default=None, sa_column=Column(BigInteger, nullable=True))
@@ -178,7 +187,7 @@ class CloudAssessmentCheckResult(SQLModel, table=True):
         Index("ix_cloud_assessment_check_result_scan_fail", "scan_id", "fail_count"),
     )
 
-    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    id: Optional[int] = Field(default=None, sa_column=Column(_BIG_ID, primary_key=True, autoincrement=True))
     scan_id: int = Field(
         sa_column=Column(Integer, ForeignKey("cloud_assessment_scan.id", ondelete="CASCADE"), nullable=False),
     )
@@ -189,10 +198,10 @@ class CloudAssessmentCheckResult(SQLModel, table=True):
     description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     risk: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     remediation: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
-    remediation_urls: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
-    additional_urls: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
-    categories: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
-    compliance: Optional[Dict[str, List[str]]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    remediation_urls: Optional[List[str]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
+    additional_urls: Optional[List[str]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
+    categories: Optional[List[str]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
+    compliance: Optional[Dict[str, List[str]]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
     pass_count: int = _count()
     fail_count: int = _count()
     manual_count: int = _count()
@@ -217,7 +226,7 @@ class CloudAssessmentFinding(SQLModel, table=True):
         Index("ix_cloud_assessment_finding_customer", "customer_code"),
     )
 
-    id: Optional[int] = Field(default=None, sa_column=Column(BigInteger, primary_key=True, autoincrement=True))
+    id: Optional[int] = Field(default=None, sa_column=Column(_BIG_ID, primary_key=True, autoincrement=True))
     scan_id: int = Field(
         sa_column=Column(Integer, ForeignKey("cloud_assessment_scan.id", ondelete="CASCADE"), nullable=False),
     )
@@ -237,7 +246,7 @@ class CloudAssessmentFinding(SQLModel, table=True):
     resource_uid: str = Field(default="", max_length=1024, nullable=False)
     resource_name: str = Field(default="", max_length=512, nullable=False)
     resource_type: str = Field(default="", max_length=128, nullable=False)
-    resource_tags: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    resource_tags: Optional[List[str]] = Field(default=None, sa_column=Column(_NULLABLE_JSON, nullable=True))
     detected_at: Optional[datetime] = Field(default=None, nullable=True)
     first_seen_at: datetime = Field(default_factory=now_utc, nullable=False)
     is_new: bool = Field(default=False, sa_column=Column(Boolean, nullable=False, server_default="0"))
