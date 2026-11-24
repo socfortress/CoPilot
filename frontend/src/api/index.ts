@@ -8,7 +8,6 @@ import askSocfortress from "./endpoints/ask-socfortress"
 import audit from "./endpoints/audit"
 import auth from "./endpoints/auth"
 import cloudAssessment from "./endpoints/cloud-assessment"
-import cloudSecurityAssessment from "./endpoints/cloud-security-assessment"
 import connectors from "./endpoints/connectors"
 import copilotAction from "./endpoints/copilot-action"
 import copilotMCP from "./endpoints/copilot-mcp"
@@ -104,7 +103,6 @@ export default {
 	copilotSearches,
 	detectionCatalog,
 	fileAnalysis,
-	cloudSecurityAssessment,
 	cloudAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,

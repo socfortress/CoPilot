@@ -6,10 +6,6 @@
 #                      `elasticsearch7==7.10.1` (which is locked at 7.x for
 #                      Wazuh-indexer compatibility) hard-requires `urllib3<2`.
 #                      Lifting this requires migrating off elasticsearch7.
-#
-#   sqlitedict 2.1.0 — pip-audit flags CVE-2024-35515. Upstream has no fix yet
-#                      (last release Apr 2024). Pulled in transitively by
-#                      ScoutSuite. Either accept or eventually replace ScoutSuite.
 # ─────────────────────────────────────────────────────────────────────────────
 
 aiofiles
@@ -19,8 +15,8 @@ aiosqlite
 alembic
 apscheduler
 asyncgelf
-azure-identity>=1.16.1  # security floor — CVE-2024-35255 (transitive of ScoutSuite)
 bcrypt
+boto3  # the AWS integration's credential check (app/integrations/aws/services/validate.py)
 cortex4py
 cryptography
 docxtpl
@@ -35,6 +31,7 @@ influxdb-client[async]
 Jinja2
 loguru
 markdown-it-py  # direct dep since #1048 — notification bodies and AI reports render markdown to HTML for email
+matplotlib  # the customer PDF report's charts (app/incidents/services/customer_report_charts.py)
 miniopy-async
 packaging
 pdfkit
@@ -43,7 +40,7 @@ playwright
 pydantic[email]
 PyJWT
 PyMySQL
-pyOpenSSL>=26.0.0  # security floor — CVE-2026-27448, -27459 (transitive of ScoutSuite)
+pyOpenSSL>=26.0.0  # security floor — CVE-2026-27448, -27459 (transitive of webauthn)
 pyotp
 python-dotenv
 python-magic
@@ -53,7 +50,6 @@ PyYAML
 qrcode
 regex
 requests
-ScoutSuite
 setuptools>=78.1.1  # security floor — Snyk-flagged transitive CVE
 SQLAlchemy
 sqlmodel
