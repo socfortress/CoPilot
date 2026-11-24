@@ -78,7 +78,6 @@ Key entry points:
    - Seeds connectors, roles, available integrations, available network connectors. `backend/app/db/db_setup.py`, `backend/app/db/db_populate.py`
    - Ensures admin and scheduler users. `backend/app/db/db_setup.py`
    - Initializes APScheduler and schedules enabled jobs. `backend/app/schedulers/scheduler.py`
-3. Static mount: `scoutsuite-report` directory for cloud security assessment outputs. `backend/copilot.py`
 
 ### Auth & Authorization
 - JWT auth with OAuth2 password flow. `backend/app/auth/utils.py`
@@ -109,8 +108,7 @@ Key entry points:
 
 ### Data Storage
 - MySQL for all operational data (users, integrations, connectors, alerts/cases, scheduler metadata).
-- MinIO for case artifacts, report templates, sysmon configs, Velociraptor artifacts. `backend/app/data_store`
-- Local filesystem: `scoutsuite-report` directory for report outputs.
+- MinIO for case artifacts, report templates, sysmon configs, Velociraptor artifacts, cloud assessment reports. `backend/app/data_store`
 
 ## Major User‑Facing Features (Admin UI)
 - Overview dashboard and system health.
@@ -125,7 +123,7 @@ Key entry points:
 - External services: third‑party integrations and network connectors.
 - Reporting (Grafana dashboards, case reports, vuln/SCA reports).
 - Scheduler management.
-- Cloud security assessment (ScoutSuite).
+- Cloud security assessment (Prowler).
 - Web vulnerability assessment (Nuclei).
 - GitHub Audit.
 - Customer portal branding/settings.
@@ -174,9 +172,9 @@ Key entry points:
 - Integration: `backend/app/integrations/nuclei/*` and `backend/app/routers/nuclei.py`
 - Container present in `docker-compose.yml` as `copilot-nuclei-module`.
 
-### ScoutSuite
-- Integration: `backend/app/integrations/scoutsuite/*` and `backend/app/routers/scoutsuite.py`
-- Outputs served from `scoutsuite-report` static mount.
+### Prowler (cloud security assessment)
+- Module: `backend/app/cloud_assessment/*` and `backend/app/routers/cloud_assessment.py`; scans run in the `copilot-prowler` container (`prowler-runner/`).
+- Accounts, scans, check results and findings in MySQL; Prowler's HTML/CSV reports in the MinIO bucket `cloud-assessment`.
 
 ### Threat Intel
 - VirusTotal, EPSS, SOCFortress. `backend/app/threat_intel/*`

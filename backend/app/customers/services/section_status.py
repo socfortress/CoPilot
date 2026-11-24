@@ -14,6 +14,7 @@ from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.cloud_assessment.models.cloud_assessment import CloudAssessmentAccount
 from app.customer_portal.services.languages import languages_of
 from app.customer_portal.services.talon_chat import chat_switched_on
 from app.customers.schema.section_status import CustomerSectionStatus
@@ -66,6 +67,7 @@ LISTS = {
     "network_connectors": CustomerNetworkConnectors.customer_code,
     "event_sources": EventSources.customer_code,
     "waf": CustomerWafInstance.customer_code,
+    "cloud_accounts": CloudAssessmentAccount.customer_code,
     "notification_workflows": Notification.customer_code,
     "notification_routes": CustomerNotificationRoute.customer_code,
     "knowledge": CustomerKnowledgeItem.customer_code,

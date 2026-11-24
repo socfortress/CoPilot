@@ -1,9 +1,9 @@
 <template>
 	<div class="page">
-		<AvailableReportsList />
+		<CloudAssessmentPage />
 	</div>
 </template>
 
 <script setup lang="ts">
-import AvailableReportsList from "@/components/cloudSecurityAssessment/AvailableReportsList.vue"
+import CloudAssessmentPage from "@/components/cloudAssessment/CloudAssessmentPage.vue"
 </script>

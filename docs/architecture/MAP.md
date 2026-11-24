@@ -83,8 +83,6 @@
   MCP query routing (local and cloud services).
 - `backend/app/integrations/nuclei/`
   Web vulnerability assessment.
-- `backend/app/integrations/scoutsuite/`
-  Cloud security assessment.
 - `backend/app/integrations/github_audit/`
   GitHub audit reports and metadata.
 
@@ -105,6 +103,10 @@
   Incident alerts/cases, reports, tags, and case data store.
 - `backend/app/agents/`
   Wazuh/Velociraptor agents, SCA, vulnerabilities, data store.
+- `backend/app/cloud_assessment/`
+  Cloud security assessment: customers' cloud accounts, Prowler scans, their checks and findings.
+- `prowler-runner/`
+  The `copilot-prowler` container that runs the Prowler scans for the backend.
 
 ## Data Store
 - `backend/app/data_store/data_store_session.py`

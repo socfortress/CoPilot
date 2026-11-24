@@ -36,6 +36,9 @@ import app.auth.models.users  # noqa: E402,F401 — registers user/role tables
 from app.auth.models.users import User  # noqa: E402
 from app.auth.models.users import UserCustomerAccess  # noqa: E402
 from app.auth.utils import AuthHandler  # noqa: E402
+from app.cloud_assessment.models.cloud_assessment import (  # noqa: E402
+    CloudAssessmentAccount,
+)
 from app.customers.services.section_status import get_section_status  # noqa: E402
 from app.db.db_session import get_db  # noqa: E402
 from app.db.universal_models import CustomerKnowledgeItem  # noqa: E402
@@ -90,6 +93,7 @@ TABLES = (
     "customer_portal_chat_settings",
     "customer_portal_ioc_enrichment_settings",
     "customer_waf_instances",
+    "cloud_assessment_account",
     "customer_knowledge_item",
     "event_sources",
     "customer_notification_route",
@@ -129,6 +133,17 @@ def _app(db: Db) -> FastAPI:
 
 def _waf(code: str, name: str) -> CustomerWafInstance:
     return CustomerWafInstance(customer_code=code, name=name, api_url="https://waf", service_token_encrypted="x", token_prefix="wafst_")
+
+
+def _cloud_account(code: str, name: str) -> CloudAssessmentAccount:
+    return CloudAssessmentAccount(
+        customer_code=code,
+        name=name,
+        provider="aws",
+        auth_method="access_keys",
+        config={},
+        secret_ciphertext="x",
+    )
 
 
 def _route(code: str, name: str) -> CustomerNotificationRoute:
@@ -198,6 +213,9 @@ async def _seed(db: Db, *, acme=True) -> None:
                     _source("ACME", "crowdstrike"),
                     _source("GLOBEX", "wazuh"),
                     _waf("ACME", "prod"),
+                    _cloud_account("ACME", "Production"),
+                    _cloud_account("ACME", "Staging"),
+                    _cloud_account("GLOBEX", "Production"),
                     _fact("ACME", "10.0.0.0/24"),
                     _fact("ACME", "10.0.1.0/24"),
                     _fact("GLOBEX", "10.0.0.0/24"),
@@ -269,6 +287,7 @@ def test_switches_lists_languages_and_chat():
     assert sections["network_connectors"] == {"count": 1}
     assert sections["event_sources"] == {"count": 3}
     assert sections["waf"] == {"count": 1}
+    assert sections["cloud_accounts"] == {"count": 2}
     assert sections["knowledge"] == {"count": 2}
     assert sections["notification_routes"] == {"count": 2}
     assert sections["notification_workflows"] == {"count": 1}

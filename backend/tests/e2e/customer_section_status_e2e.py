@@ -227,9 +227,10 @@ async def main():
                         "notification_workflows",
                         "network_connectors",
                         "knowledge",
+                        "cloud_accounts",
                     )
                 ]
-                == [{"count": 2}, {"count": 1}, {"count": 1}, {"count": 1}, {"count": 1}, {"count": 0}, {"count": 0}],
+                == [{"count": 2}, {"count": 1}, {"count": 1}, {"count": 1}, {"count": 1}, {"count": 0}, {"count": 0}, {"count": 0}],
                 str(sections),
             )
 

@@ -1,119 +1,211 @@
 ---
-title: Cloud security assessment (Scout Suite)
-description: Run Scout Suite scans inside CoPilot to generate cloud posture reports (AWS supported; Azure/GCP may be limited depending on release).
+title: Cloud security assessment (Prowler)
+description: Scan each customer's AWS accounts, Azure subscriptions, Google Cloud projects and Microsoft 365 tenant with Prowler, on demand or on a schedule, and work the findings, checks and compliance frameworks from CoPilot.
 ---
 
-CoPilot can run **Scout Suite** scans and surface the resulting report inside the UI.
+CoPilot scans your customers' clouds with [Prowler](https://github.com/prowler-cloud/prowler), the open-source cloud security tool. Each customer can have up to 100 **cloud accounts** (an AWS account, Azure subscriptions, a Google Cloud project or organization, a Microsoft 365 tenant). CoPilot scans them on demand or on a schedule, keeps every scan's results, and tells you what is **new** and what was **resolved** since the scan before.
 
-Scout Suite is an open-source cloud security assessment tool that scans a cloud account via provider APIs, identifies risky configurations, and generates a report with remediation guidance.
+The scans run in their own container, **copilot-prowler**: Prowler's official image plus a small job API. CoPilot stores the accounts, their credentials (encrypted), the scans, their checks and findings, and Prowler's HTML and CSV reports.
 
----
-
-## Why this is a power feature
-
-Cloud posture assessment is not required for the initial SIEM bring-up, but it becomes valuable once your core pipeline is healthy.
-
-Use it for:
-- periodic cloud posture reviews (monthly/quarterly)
-- identifying misconfigurations and risky exposures
-- producing a shareable “here’s what to fix next” report for stakeholders
+<Note>
+  Prowler replaces Scout Suite, which earlier CoPilot releases used for this page. Scout Suite reports aren't carried over: they lived inside the backend container.
+</Note>
 
 ---
 
-## How it works in CoPilot (high level)
+## What you get
 
-1) You create cloud credentials with read-only assessment permissions (provider-specific)
-2) In CoPilot, you create a new cloud assessment report
-3) CoPilot runs Scout Suite in the background
-4) When complete, the report is listed and can be opened/viewed in CoPilot
-
----
-
-## Supported providers
-
-- **AWS**
-- **Azure**
-- **Google Cloud (GCP)**
-
-CoPilot can run Scout Suite scans for these providers as long as the appropriate credentials and API permissions are in place.
+- **Every customer's cloud posture in one list**: each account's last scan, its failures by severity, what changed since the scan before and when it is scanned next. The list follows the sidebar's customer filter.
+- **Findings** that failed or need a manual review, by severity, with the resource, region and Prowler's explanation. Each one is matched with the scan before, so a new failure is marked **new**, and one that disappeared counts as **resolved**.
+- **Checks**: everything Prowler checked, with its description, risk, remediation and references, and the findings of any check in one click.
+- **Compliance**: how each scan maps onto the frameworks Prowler supports for the provider (CIS, NIST, ISO 27001, SOC 2, PCI DSS, MITRE ATT&CK…), requirement by requirement.
+- **Prowler's own reports** (HTML and CSV) for every scan, as downloads.
+- **Schedules**: daily or weekly, at an hour you pick (UTC).
 
 ---
 
-## Setup checklist (AWS / Azure / GCP)
+## Before you start (operator)
 
-### 1) Create a dedicated Scout Suite cloud principal
+copilot-prowler is part of CoPilot's Docker Compose file. It needs two settings in CoPilot's `.env`:
 
-Create a dedicated identity for assessments:
-- **AWS:** IAM user/role
-- **Azure:** App registration / service principal
-- **GCP:** service account
+<Steps>
+  <Step title="A token for the runner">
+    Set `PROWLER_RUNNER_TOKEN` to a random value of at least 32 characters, for example from `openssl rand -hex 32`. copilot-backend and copilot-prowler both read it; without it every scan is refused.
+  </Step>
+  <Step title="A key for the cloud credentials">
+    Set `CLOUD_ASSESSMENT_ENCRYPTION_KEY` to a key made with:
 
-Guidance:
-- Use **least privilege**.
-- Prefer read-only where possible.
+    ```bash
+    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ```
 
-Provider-specific credential setup (recommended):
-- AWS: https://github.com/nccgroup/ScoutSuite/wiki/Amazon-Web-Services
-- Azure: https://github.com/nccgroup/ScoutSuite/wiki/Azure
-- GCP: https://github.com/nccgroup/ScoutSuite/wiki/Google-Cloud-Platform
+    It encrypts every cloud account's credential (AWS keys, client secrets, GCP key files). Without it, no cloud account can be saved.
 
-### 2) Generate credentials
+    <Warning>
+      Keep this key. A different key makes the stored credentials unreadable: each account's credential then has to be entered again.
+    </Warning>
+  </Step>
+  <Step title="Start it">
+    ```bash
+    docker compose pull && docker compose up -d
+    ```
 
-Create the credentials required for the provider you’re scanning.
+    Open **Exposure → Cloud Security Assessment**: the top right shows the Prowler version once copilot-prowler answers.
+  </Step>
+</Steps>
 
-Common patterns from the Scout Suite wiki:
-- **AWS:** standard AWS credential sources (profiles in `~/.aws/credentials`, environment variables, role assumption, or explicit access keys)
-- **Azure:** Azure CLI login, user-account browser login (MFA-friendly), or service principal (including file-based SDK auth)
-- **GCP:** application-default user credentials or a service account key JSON
+Optional settings:
 
-### 3) Run the scan in CoPilot
+| Setting | Default | What it does |
+|---|---|---|
+| `PROWLER_MAX_CONCURRENT` | `2` | Scans that run at once. Others wait in the queue. |
+| `PROWLER_SCAN_TIMEOUT` | `14400` | Seconds before a scan is stopped. An account can set its own, 5 to 720 minutes. |
+| `PROWLER_RUNNER_URL` | `http://copilot-prowler:8080` | Where the backend reaches the runner. |
+| `CLOUD_ASSESSMENT_KEEP_FINDINGS_SCANS` | `30` | Each account's newest completed scans that keep their findings and reports. Older scans keep their counts and checks. |
+| `CLOUD_ASSESSMENT_RETENTION_DAYS` | `400` | Scans older than this are deleted. |
+| `CLOUD_ASSESSMENT_MAX_FINDINGS` | `500000` | Findings stored per scan. The counts are always complete. |
 
-In CoPilot:
-1) Open **Cloud security assessment**
-2) Select provider type (AWS / Azure / GCP)
-3) Set a report name
-4) Enter credentials
-5) Submit
-
-The scan runs in the background. Runtime depends on the size of the cloud environment.
-
-Operational tip (from the video):
-- You can tail CoPilot container logs to see when report generation completes.
-- Use Refresh in the UI; when done, the report appears in the list.
-
----
-
-## Success criteria
-
-- [ ] You can create a report and the scan completes
-- [ ] The report shows in the UI after refresh
-- [ ] The report content is accessible to authorized users
+copilot-prowler publishes no port: only the backend talks to it. It needs outbound access to the cloud providers' APIs.
 
 ---
 
-## Safety / guardrails
+## Add a customer's cloud account
 
-- Cloud posture reports can contain sensitive inventory details (accounts, resources, IAM relationships).
-  - Restrict access (RBAC) appropriately.
-- Use dedicated credentials and rotate them.
-- Avoid storing long-lived keys if your environment supports roles/short-lived credentials.
+Cloud accounts are set up on the customer: **Customers → (customer) → Data sources → Cloud Accounts → Add account** (admins). Give the account a name, pick the provider, and enter what that provider needs. The credential is **write-only**: CoPilot never shows it again, and when you edit an account, leaving a credential field empty keeps the stored one.
+
+Read-only access is enough for every provider: Prowler only reads.
+
+<Tabs>
+  <Tab title="AWS">
+    **Recommended: an IAM role with an External ID.** Prowler assumes a read-only role in the customer's account. The External ID is generated by CoPilot, one per account, and stops anyone else from pointing an account at a role they don't own.
+
+    1. In CoPilot, add the account with **IAM role with an External ID** and the role's ARN (`arn:aws:iam::<account>:role/ProwlerScan`). Then choose how CoPilot assumes the role:
+       - **An IAM user's access keys**: the long-lived keys (`AKIA…`) of an IAM user that needs nothing but `sts:AssumeRole` on the role;
+       - **CoPilot's own AWS identity**, when CoPilot runs in AWS with an EC2 instance profile or ECS task role. No keys are stored.
+    2. CoPilot then shows **Role setup**: in the customer's account, create a CloudFormation stack from Prowler's `prowler-scan-role.yml` template, with:
+       - `ExternalId`: the one CoPilot shows (copy button);
+       - `AccountId`: the 12-digit account of the identity that assumes the role. **Replace the default, `232136659152`: that is Prowler Cloud's account**;
+       - `IAMPrincipal`: that identity, as `user/<name>` or `role/<name>`.
+    3. If you use an IAM user's keys, give that user the `sts:AssumeRole` policy Role setup shows.
+    4. Once the stack shows `CREATE_COMPLETE`, use **Test connection**.
+
+    **Alternative: access keys.** An IAM user in the scanned account with the `SecurityAudit` and `ViewOnlyAccess` managed policies, and its long-lived access keys.
+
+    **Regions** are optional: without any, Prowler scans every region.
+  </Tab>
+  <Tab title="Azure">
+    An **app registration** in the customer's Entra ID with a **client secret**:
+
+    - the **Reader** role on each subscription to scan;
+    - the Microsoft Graph permissions Prowler lists for its Entra ID checks (see [Prowler's documentation](https://docs.prowler.com)).
+
+    Enter the **directory (tenant) id**, the **application (client) id**, the **client secret** (its value, not its id) and, optionally, the **subscriptions** to scan (default: every subscription the app can read).
+
+    Enter the secret's **expiry date** as Entra ID showed it: CoPilot warns from 30 days before it lapses, and flags it once it has.
+  </Tab>
+  <Tab title="Microsoft 365">
+    An **app registration** in the customer's Entra ID with a **client secret** and the Microsoft Graph and Exchange Online permissions Prowler lists (see [Prowler's documentation](https://docs.prowler.com)). Prowler runs its Exchange and Teams checks with the same secret.
+
+    Enter the **directory (tenant) id**, the **application (client) id**, the **client secret**, its **expiry date**, and **one of the tenant's domains** (for example `contoso.onmicrosoft.com`), which the connection test needs.
+  </Tab>
+  <Tab title="Google Cloud">
+    A **service account** with the **Viewer** and **Security Reviewer** roles, and one of its **JSON keys**: paste it or upload the file.
+
+    Optionally restrict the scan to some **projects**, skip others, or give an **organization id**. Without projects, Prowler scans every project the key can read.
+  </Tab>
+</Tabs>
+
+Every account also has:
+
+- **Schedule**: off, daily, or weekly on a day, at an hour UTC.
+- **Enabled**: a disabled account is neither scheduled nor scanned.
+- **Advanced**: Prowler checks or services to skip, and a time limit for this account's scans.
+
+Then use **Test connection**: Prowler signs in with the credential and says whether it works, in up to two and a half minutes. A failure shows the reason and the error Prowler raised.
+
+---
+
+## Scan
+
+**Scan now** starts a scan at once (admins and analysts). Scheduled scans start on their own. An account runs one scan at a time.
+
+| Status | Meaning |
+|---|---|
+| **Queued** | Waiting for copilot-prowler (all its slots are busy, or it can't be reached yet). |
+| **Starting**, **Running** | Prowler is scanning. Large accounts take from minutes to hours. |
+| **Storing results** | Prowler finished; CoPilot is storing the findings and reports. |
+| **Completed** | Done. |
+| **Failed** | The reason is shown, with the error Prowler raised (for example, the credentials were refused). |
+| **Cancelled** | Someone stopped it. |
+
+A completed scan may say that some checks **logged an error**: usually a permission the credential lacks. Those checks' results may be missing; give the credential the permission and scan again.
+
+---
+
+## Read the results
+
+**Exposure → Cloud Security Assessment** lists every cloud account of the customers you can see. Open one for its details and its scans, newest first; the newest completed scan opens below them, in four tabs:
+
+- **Overview**: the share of checks passing, the failures, the findings under manual review and muted, **new failures** and **resolved** since the scan before, the failures by severity, and the worst failing checks.
+- **Findings**: what failed or needs a manual review, filtered by severity, status, muted, **new since the scan before** and text. Open one for Prowler's detail, the resource and its tags, and when it was first seen.
+- **Checks**: every check of the scan, failing ones first. Open one for Prowler's description, risk, remediation, references and the frameworks it maps to, and **Its findings** to see them.
+- **Compliance**: every framework the scan's checks map to, with its requirements passing, failing, under manual review and not assessed. Open one for each requirement and the checks behind it.
+
+The account, the scan, the tab and the filters are in the URL, so a link opens the same view.
+
+A few terms:
+
+- **New** and **resolved** compare with the account's previous completed scan. An account's first scan has nothing to compare with, so it says *first scan*.
+- **Manual review**: a check Prowler can't decide on its own; someone has to look.
+- **Muted**: findings Prowler's mutelist suppresses. They are counted apart and hidden from the findings by default.
+- **Not assessed**: a requirement no check of this scan covers. Review it by hand.
+
+**HTML report** and **CSV** download Prowler's own reports of the scan. They hold names and tags from the customer's cloud.
+
+---
+
+## Who can do what
+
+| | Admin | Analyst / Responder |
+|---|---|---|
+| See accounts, scans and results | All customers | Their customers |
+| Test a connection, scan, cancel a scan, download reports | ✓ | ✓ (their customers) |
+| Add, change or delete an account | ✓ | |
+| Delete a scan | ✓ | |
+
+Customer Portal users have no access.
+
+---
+
+## Data kept
+
+- **Credentials**: encrypted with `CLOUD_ASSESSMENT_ENCRYPTION_KEY`, never shown or logged. Deleting an account in CoPilot doesn't revoke its credential in the cloud: remove the role, user, app registration or key there too.
+- **Findings and reports**: kept for each account's newest `CLOUD_ASSESSMENT_KEEP_FINDINGS_SCANS` completed scans. An older scan says *Retention removed this scan's findings and reports* and keeps its counts, checks and compliance.
+- **Scans** older than `CLOUD_ASSESSMENT_RETENTION_DAYS` are deleted. Deleting an account deletes its scans.
 
 ---
 
 ## Troubleshooting
 
-- Report never appears:
-  - confirm credentials are valid
-  - confirm required API permissions exist
-  - check CoPilot container logs for Scout Suite errors
-
-- Report takes a long time:
-  - large environments can take longer to enumerate
-  - rerun during a quieter window
-
----
-
-## Video context
-
-Walkthrough + setup:
-- https://www.youtube.com/watch?v=G3MDJSMvnRo
+<AccordionGroup>
+  <Accordion title="“Cloud credentials can't be saved until CLOUD_ASSESSMENT_ENCRYPTION_KEY is set”">
+    Set the key in `.env` (see *Before you start*) and recreate `copilot-backend`.
+  </Accordion>
+  <Accordion title="“Scans need PROWLER_RUNNER_TOKEN”, or the page says copilot-prowler doesn't answer">
+    Set `PROWLER_RUNNER_TOKEN` (32 characters or more) in `.env`, the same for both containers, and check that `copilot-prowler` is running (`docker compose ps`). Scans stay queued until it answers.
+  </Accordion>
+  <Accordion title="“The stored credential can't be decrypted … Re-enter the credential”">
+    `CLOUD_ASSESSMENT_ENCRYPTION_KEY` changed since the credential was saved. Edit the account and enter the credential again.
+  </Accordion>
+  <Accordion title="Test connection or a scan says the credentials were refused">
+    - AWS role: check the role's trust policy has the External ID CoPilot shows and the right principal, and that the identity may call `sts:AssumeRole` on the role.
+    - Azure and Microsoft 365: check the client secret hasn't expired (the account shows *credential expired*) and that the app has its permissions, with admin consent.
+    - Google Cloud: check the key hasn't been deleted and the service account still has its roles.
+  </Accordion>
+  <Accordion title="A scan stays queued">
+    copilot-prowler is running `PROWLER_MAX_CONCURRENT` scans already. The scan starts when one ends.
+  </Accordion>
+  <Accordion title="“CoPilot couldn't read any of copilot-prowler's findings”">
+    copilot-prowler and copilot-backend are from different releases. Pull both images and recreate both containers.
+  </Accordion>
+</AccordionGroup>

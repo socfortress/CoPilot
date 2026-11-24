@@ -33,6 +33,7 @@ class CustomerSectionStatus(BaseModel):
     network_connectors: ListState
     event_sources: ListState
     waf: ListState
+    cloud_accounts: ListState
     knowledge: ListState
     ai_triggers: SwitchState
     notification_workflows: ListState
