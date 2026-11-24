@@ -17,6 +17,7 @@ read it. It can hold secrets (an ECS task's environment, a Lambda's variables).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter
@@ -167,14 +168,19 @@ def normalize_finding(item: Any) -> dict | None:
         return None
     check_id = _object(item.get("metadata")).get("event_code")
     status = item.get("status_code")
-    finding_uid = clean_text(_object(item.get("finding_info")).get("uid"), 512)
-    if not isinstance(check_id, str) or not CHECK_ID.match(check_id) or status not in STATUSES or not finding_uid:
+    raw_uid = _object(item.get("finding_info")).get("uid")
+    finding_uid = clean_text(raw_uid, 512)
+    if not isinstance(check_id, str) or not CHECK_ID.match(check_id) or status not in STATUSES:
+        return None
+    if not isinstance(raw_uid, str) or not finding_uid:
         return None
     resource = _first_resource(item)
     cloud = _object(item.get("cloud"))
     account = _object(cloud.get("account"))
     return {
         "finding_uid": finding_uid,
+        # What matches a finding across scans: the whole id, which finding_uid may cut.
+        "finding_uid_sha256": hashlib.sha256(raw_uid.encode("utf-8", "surrogatepass")).hexdigest(),
         "check_id": check_id,
         "status": status,
         "severity": _severity(item.get("severity")),

@@ -1,5 +1,6 @@
 """Reading Prowler's OCSF output: the file the tests use was written by Prowler 5.52.0's own writer."""
 
+import hashlib
 import io
 import json
 
@@ -106,6 +107,7 @@ def test_a_finding_keeps_its_resource_fields():
     finding = normalize_finding(sample_items()[0])
     assert finding == {
         "finding_uid": "prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7",
+        "finding_uid_sha256": hashlib.sha256(b"prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7").hexdigest(),
         "check_id": "ecs_task_definitions_no_environment_secrets",
         "status": "FAIL",
         "severity": "critical",
@@ -153,6 +155,7 @@ def test_only_http_references_are_kept():
         lambda item: item["metadata"].update(event_code="Bad Check; rm -rf"),
         lambda item: item.update(status_code="ERROR"),
         lambda item: item["finding_info"].pop("uid"),
+        lambda item: item["finding_info"].update(uid=12345),
     ],
 )
 def test_records_that_are_not_prowler_findings_are_skipped(change):
@@ -223,3 +226,13 @@ def test_the_normalizer_only_works_in_a_job_directory(tmp_path, arguments):
     directory = job_dir(tmp_path, SAMPLE.read_text())
     assert normalize_main(arguments(directory)) == 2
     assert not (directory / "summary.json").exists()
+
+
+def test_a_long_id_is_cut_for_display_but_matched_whole():
+    first, second = sample_items()[0], sample_items()[0]
+    first["finding_info"]["uid"] = "prowler-aws-x-" + "a" * 600 + "-one"
+    second["finding_info"]["uid"] = "prowler-aws-x-" + "a" * 600 + "-two"
+    one, two = normalize_finding(first), normalize_finding(second)
+    assert one["finding_uid"] == two["finding_uid"]  # the same once cut to 512 characters
+    assert len(one["finding_uid"]) == 512
+    assert one["finding_uid_sha256"] != two["finding_uid_sha256"]
