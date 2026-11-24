@@ -7,6 +7,7 @@ import artifacts from "./endpoints/artifacts"
 import askSocfortress from "./endpoints/ask-socfortress"
 import audit from "./endpoints/audit"
 import auth from "./endpoints/auth"
+import cloudAssessment from "./endpoints/cloud-assessment"
 import cloudSecurityAssessment from "./endpoints/cloud-security-assessment"
 import connectors from "./endpoints/connectors"
 import copilotAction from "./endpoints/copilot-action"
@@ -104,6 +105,7 @@ export default {
 	detectionCatalog,
 	fileAnalysis,
 	cloudSecurityAssessment,
+	cloudAssessment,
 	webVulnerabilityAssessment,
 	incidentManagement,
 	incidentReports,

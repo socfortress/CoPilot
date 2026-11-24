@@ -20,6 +20,7 @@ export const SECTION_IDS = [
 	"Network Connectors",
 	"Event Sources",
 	"WAF",
+	"Cloud Accounts",
 	"AI Triggers",
 	"AI Automation",
 	"Notification Workflows",
@@ -144,6 +145,14 @@ export const SECTIONS: SectionDef[] = [
 		noun: ["source", "sources"]
 	},
 	{ id: "WAF", label: "WAF", group: "data", keywords: ["firewall", "coraza"], status: "waf", noun: ["WAF", "WAFs"] },
+	{
+		id: "Cloud Accounts",
+		label: "Cloud Accounts",
+		group: "data",
+		keywords: ["aws", "azure", "gcp", "google cloud", "microsoft 365", "m365", "prowler", "cspm", "posture", "scoutsuite"],
+		status: "cloud_accounts",
+		noun: ["account", "accounts"]
+	},
 	{
 		id: "AI Triggers",
 		label: "AI Triggers",

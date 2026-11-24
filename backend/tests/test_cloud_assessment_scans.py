@@ -145,6 +145,7 @@ def test_a_completed_scan_is_stored_and_the_runner_s_copy_deleted(monkeypatch):
     assert scan["status"] == "completed" and scan["prowler_version"] == "5.52.0"
     assert scan["counts"]["total"] == 10 and scan["counts"]["failed"] == 3 and scan["counts"]["failed_critical"] == 1
     assert scan["counts"]["new_failed"] == 0 and scan["counts"]["resolved_failed"] == 0  # a first scan marks nothing new
+    assert scan["previous_scan_id"] is None  # ... and says it had nothing to compare with
     assert sorted(c.check_id for c in checks) == ["iam_root_mfa_enabled", "s3_bucket_public"]
     assert checks[0].remediation_urls == ["https://hub.prowler.com/check/" + checks[0].check_id]  # javascript: dropped
     assert len(findings) == 3 and not any(f.is_new for f in findings)
@@ -166,9 +167,23 @@ def test_the_next_scan_marks_new_carried_and_resolved_findings(monkeypatch):
         runner.finish(next(iter(runner.jobs)))
         await world.tick(now=utc_now() + timedelta(seconds=5))
         rows = await world.db.rows(CloudAssessmentFinding, CloudAssessmentFinding.scan_id == second["id"])
-        return first, {f.resource_name: f for f in rows}, await world.db.scan(second["id"])
+        # What each answer says the counts compare with: the scan route, the list and the account.
+        compared = {
+            "scan": (await world.client.get(f"{SCANS}/{second['id']}", headers=as_user("ana"))).json()["scan"]["previous_scan_id"],
+            "list": {
+                item["id"]: item["previous_scan_id"] for item in (await world.client.get(SCANS, headers=as_user("ana"))).json()["scans"]
+            },
+            "account": (await world.client.get(f"{ACCOUNTS}/{done['account']['id']}", headers=as_user("ana"))).json()["account"][
+                "last_completed_scan"
+            ]["previous_scan_id"],
+            "first": done["scan"]["id"],
+            "second": second["id"],
+        }
+        return first, {f.resource_name: f for f in rows}, await world.db.scan(second["id"]), compared
 
-    first, second, scan = run(scenario, monkeypatch, runner=runner)
+    first, second, scan, compared = run(scenario, monkeypatch, runner=runner)
+    assert compared["scan"] == compared["account"] == compared["first"]
+    assert compared["list"] == {compared["second"]: compared["first"], compared["first"]: None}
     carried = second["resource1"]
     assert carried.is_new is False and carried.first_seen_at == first[carried.finding_uid_hash].first_seen_at
     assert second["resource4"].is_new is True

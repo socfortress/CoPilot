@@ -25,6 +25,7 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -308,7 +309,7 @@ def counts_of(scan: CloudAssessmentScan) -> ScanCounts:
     )
 
 
-def scan_brief(scan: Optional[CloudAssessmentScan]) -> Optional[AccountScanBrief]:
+def scan_brief(scan: Optional[CloudAssessmentScan], previous: Optional[Dict[int, Optional[int]]] = None) -> Optional[AccountScanBrief]:
     if scan is None:
         return None
     return AccountScanBrief(
@@ -319,7 +320,30 @@ def scan_brief(scan: Optional[CloudAssessmentScan]) -> Optional[AccountScanBrief
         completed_at=as_utc(scan.completed_at),
         counts=counts_of(scan) if scan.status == "completed" else None,
         error_code=scan.error_code,
+        previous_scan_id=(previous or {}).get(scan.id),
     )
+
+
+async def previous_completed(session: AsyncSession, scans: Iterable[Optional[CloudAssessmentScan]]) -> Dict[int, Optional[int]]:
+    """Per scan id: its account's newest completed scan before it, the one ingestion compared its new
+    and resolved failures with (``ingest.previous_findings``), or None for the account's first."""
+    wanted = [scan for scan in scans if scan is not None]
+    if not wanted:
+        return {}
+    rows = await session.execute(
+        select(CloudAssessmentScan.account_id, CloudAssessmentScan.id).where(
+            CloudAssessmentScan.account_id.in_({scan.account_id for scan in wanted}),
+            CloudAssessmentScan.status == "completed",
+        ),
+    )
+    completed: Dict[int, List[int]] = {}
+    for account_id, scan_id in rows:
+        completed.setdefault(account_id, []).append(scan_id)
+    previous: Dict[int, Optional[int]] = {}
+    for scan in wanted:
+        earlier = [scan_id for scan_id in completed.get(scan.account_id, []) if scan_id < scan.id]
+        previous[scan.id] = max(earlier) if earlier else None
+    return previous
 
 
 def to_out(
@@ -327,6 +351,7 @@ def to_out(
     last_scan: Optional[CloudAssessmentScan] = None,
     last_completed: Optional[CloudAssessmentScan] = None,
     now: Optional[datetime] = None,
+    previous: Optional[Dict[int, Optional[int]]] = None,
 ) -> AccountOut:
     now = now or utc_now()
     expires = to_naive_utc(account.secret_expires_at)
@@ -358,8 +383,8 @@ def to_out(
         created_at=as_utc(account.created_at),
         updated_by=account.updated_by,
         updated_at=as_utc(account.updated_at),
-        last_scan=scan_brief(last_scan),
-        last_completed_scan=scan_brief(last_completed),
+        last_scan=scan_brief(last_scan, previous),
+        last_completed_scan=scan_brief(last_completed, previous),
     )
 
 
@@ -432,10 +457,11 @@ async def get_account(session: AsyncSession, customer_code: str, account_id: int
 async def latest_scans(
     session: AsyncSession,
     account_ids: List[int],
-) -> Tuple[Dict[int, CloudAssessmentScan], Dict[int, CloudAssessmentScan]]:
-    """Each account's newest scan, and its newest completed one."""
+) -> Tuple[Dict[int, CloudAssessmentScan], Dict[int, CloudAssessmentScan], Dict[int, Optional[int]]]:
+    """Each account's newest scan, its newest completed one, and each of those scans' previous
+    completed scan (``previous_completed``)."""
     if not account_ids:
-        return {}, {}
+        return {}, {}, {}
     newest = (
         select(func.max(CloudAssessmentScan.id))
         .where(CloudAssessmentScan.account_id.in_(account_ids))
@@ -454,12 +480,12 @@ async def latest_scans(
             last[scan.account_id] = scan
         if scan.status == "completed" and scan.id > getattr(last_completed.get(scan.account_id), "id", 0):
             last_completed[scan.account_id] = scan
-    return last, last_completed
+    return last, last_completed, await previous_completed(session, [*last.values(), *last_completed.values()])
 
 
 async def account_out(session: AsyncSession, account: CloudAssessmentAccount) -> AccountOut:
-    last, last_completed = await latest_scans(session, [account.id])
-    return to_out(account, last.get(account.id), last_completed.get(account.id))
+    last, last_completed, previous = await latest_scans(session, [account.id])
+    return to_out(account, last.get(account.id), last_completed.get(account.id), previous=previous)
 
 
 async def list_accounts(session: AsyncSession, customer_code: str) -> List[AccountOut]:
@@ -473,9 +499,23 @@ async def list_accounts(session: AsyncSession, customer_code: str) -> List[Accou
         .scalars()
         .all()
     )
-    last, last_completed = await latest_scans(session, [account.id for account in accounts])
+    last, last_completed, previous = await latest_scans(session, [account.id for account in accounts])
     now = utc_now()
-    return [to_out(account, last.get(account.id), last_completed.get(account.id), now) for account in accounts]
+    return [to_out(account, last.get(account.id), last_completed.get(account.id), now, previous) for account in accounts]
+
+
+async def list_all_accounts(session: AsyncSession, customer_codes: Optional[List[str]]) -> List[AccountOut]:
+    """Every account of these customers (None: every customer), each with its newest scans. The
+    caller has narrowed the codes to the user's own (``scoped_customer_codes``); ``[]`` sees nothing."""
+    if customer_codes == []:
+        return []
+    statement = select(CloudAssessmentAccount).order_by(CloudAssessmentAccount.customer_code, CloudAssessmentAccount.name)
+    if customer_codes is not None:
+        statement = statement.where(CloudAssessmentAccount.customer_code.in_(customer_codes))
+    accounts = (await session.execute(statement)).scalars().all()
+    last, last_completed, previous = await latest_scans(session, [account.id for account in accounts])
+    now = utc_now()
+    return [to_out(account, last.get(account.id), last_completed.get(account.id), now, previous) for account in accounts]
 
 
 # --- writes -------------------------------------------------------------------------------------

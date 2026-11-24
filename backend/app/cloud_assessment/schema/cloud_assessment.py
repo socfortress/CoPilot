@@ -217,6 +217,9 @@ class ScanOut(BaseModel):
     prowler_errors: List[str] = Field(default_factory=list)
     reports: List[str] = Field(default_factory=list)
     findings_pruned: bool = False
+    # The account's completed scan before this one, which ``new_failed`` and ``resolved_failed``
+    # compare with. None: the account's first scan, so those two counts compare with nothing.
+    previous_scan_id: Optional[int] = None
 
 
 class AccountScanBrief(BaseModel):
@@ -227,6 +230,7 @@ class AccountScanBrief(BaseModel):
     completed_at: Optional[datetime] = None
     counts: Optional[ScanCounts] = None
     error_code: Optional[str] = None
+    previous_scan_id: Optional[int] = None  # as ``ScanOut.previous_scan_id``
 
 
 class AccountOut(BaseModel):

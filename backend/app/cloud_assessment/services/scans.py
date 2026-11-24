@@ -58,6 +58,7 @@ from app.cloud_assessment.services.accounts import audit
 from app.cloud_assessment.services.accounts import counts_of
 from app.cloud_assessment.services.accounts import delete_findings
 from app.cloud_assessment.services.accounts import get_account
+from app.cloud_assessment.services.accounts import previous_completed
 from app.cloud_assessment.services.accounts import require_admin
 from app.cloud_assessment.services.accounts import runner_payload
 from app.cloud_assessment.services.accounts import stored_customer_code
@@ -106,7 +107,11 @@ def retention_days() -> int:
 # --- responses ----------------------------------------------------------------------------------
 
 
-def scan_out(scan: CloudAssessmentScan, account: Optional[CloudAssessmentAccount] = None) -> ScanOut:
+def scan_out(
+    scan: CloudAssessmentScan,
+    account: Optional[CloudAssessmentAccount] = None,
+    previous_scan_id: Optional[int] = None,
+) -> ScanOut:
     duration = None
     if scan.started_at and scan.completed_at and scan.status == "completed":
         duration = max(int((scan.completed_at - scan.started_at).total_seconds()), 0)
@@ -134,7 +139,14 @@ def scan_out(scan: CloudAssessmentScan, account: Optional[CloudAssessmentAccount
         prowler_errors=list(scan.prowler_errors or []),
         reports=reports_kept,
         findings_pruned=scan.findings_pruned_at is not None,
+        previous_scan_id=previous_scan_id,
     )
+
+
+async def scan_detail(session: AsyncSession, scan: CloudAssessmentScan, account: Optional[CloudAssessmentAccount]) -> ScanOut:
+    """One scan, with the scan its new and resolved failures compare with."""
+    previous = await previous_completed(session, [scan])
+    return scan_out(scan, account, previous.get(scan.id))
 
 
 # --- reads --------------------------------------------------------------------------------------
@@ -205,7 +217,8 @@ async def list_scans(
             .scalars()
             .all()
         }
-    return [scan_out(scan, accounts.get(scan.account_id)) for scan in rows], total
+    previous = await previous_completed(session, rows)
+    return [scan_out(scan, accounts.get(scan.account_id), previous.get(scan.id)) for scan in rows], total
 
 
 # --- state changes ------------------------------------------------------------------------------

@@ -162,6 +162,13 @@
 					<section v-if="wasOpened('WAF')" v-show="current === 'WAF'" v-bind="pane('WAF')">
 						<CustomerWaf :customer-code="customer.customer_code" />
 					</section>
+					<section
+						v-if="wasOpened('Cloud Accounts')"
+						v-show="current === 'Cloud Accounts'"
+						v-bind="pane('Cloud Accounts')"
+					>
+						<CloudAccountsSection :customer-code="customer.customer_code" @changed="refresh()" />
+					</section>
 
 					<section v-if="wasOpened('AI Triggers')" v-show="current === 'AI Triggers'" v-bind="pane('AI Triggers')">
 						<CustomerAITriggers :customer-code="customer.customer_code" />
@@ -342,6 +349,9 @@ const CustomerPortalIocEnrichment = defineAsyncComponent(
 )
 // SOCFortress WAFs of this customer (#1165) — config, live views and IP blocking.
 const CustomerWaf = defineAsyncComponent(() => import("@/components/customerWaf/CustomerWaf.vue"))
+const CloudAccountsSection = defineAsyncComponent(
+	() => import("@/components/cloudAssessment/setup/CloudAccountsSection.vue")
+)
 const CustomerSecurity = defineAsyncComponent(() => import("./security/CustomerSecurity.vue"))
 // What SOC analysts record about the customer, read by talon-analyst as context (D98).
 const CustomerKnowledge = defineAsyncComponent(() => import("./knowledge/CustomerKnowledge.vue"))

@@ -50,6 +50,7 @@ from app.connectors.talon.services.talon_service_account import (
     refuse_talon_service_account_dependency,
 )
 from app.db.db_session import get_db
+from app.middleware.customer_access import scoped_customer_codes
 from app.middleware.customer_access import verify_customer_code_access
 
 cloud_assessment_router = APIRouter()
@@ -83,6 +84,29 @@ async def get_availability() -> AvailabilityResponse:
 
 
 # --- accounts -----------------------------------------------------------------------------------
+
+
+@cloud_assessment_router.get(
+    "/accounts",
+    response_model=AccountListResponse,
+    description="Every cloud account of the customers the caller can see, each with its newest scan.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def list_all_accounts(
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Depends(AuthHandler().get_current_user),
+) -> AccountListResponse:
+    # The one account route without a {customer_code}: tenancy comes from scoped_customer_codes.
+    # [] means "sees nothing", which list_all_accounts answers without a query.
+    codes = await scoped_customer_codes(current_user, None, session)
+    found = await account_service.list_all_accounts(session, codes)
+    return AccountListResponse(
+        success=True,
+        message=f"{len(found)} cloud account(s)",
+        accounts=found,
+        encryption_key_configured=key_configured(),
+        runner_configured=RunnerClient.from_env().problem() is None,
+    )
 
 
 @cloud_assessment_router.get(
@@ -230,7 +254,7 @@ async def list_scans(
 )
 async def get_scan(customer_code: str, scan_id: int, session: AsyncSession = Depends(get_db)) -> ScanResponse:
     _, scan, account = await scan_service.scan_with_account(session, customer_code, scan_id)
-    return ScanResponse(success=True, message="Scan", scan=scan_service.scan_out(scan, account))
+    return ScanResponse(success=True, message="Scan", scan=await scan_service.scan_detail(session, scan, account))
 
 
 @cloud_assessment_router.post(

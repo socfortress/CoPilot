@@ -496,3 +496,22 @@ def test_the_test_route_gets_longer_than_the_backend_waits_in_nginx():
     assert timeout > runner_client.CONNECTION_TEST_TIMEOUT
     assert pattern.match("/api/cloud_assessment/ACME/accounts/12/test")
     assert not pattern.match("/api/cloud_assessment/ACME/accounts/12/scans")
+
+
+def test_the_cross_customer_list_shows_each_caller_their_own_customers(monkeypatch):
+    """The page's overview (``GET /cloud_assessment/accounts``): an admin sees every customer's
+    accounts, an analyst only their customers', a portal user nothing."""
+
+    async def scenario(world):
+        await world.add(AWS_ROLE)
+        await world.add(AZURE, code="GLOBEX")
+        answers = {}
+        for who in ("admin", "ana", "portal"):
+            answers[who] = await world.client.get("/cloud_assessment/accounts", headers=as_user(who))
+        return answers
+
+    answers = run(scenario, monkeypatch)
+    assert sorted(a["customer_code"] for a in answers["admin"].json()["accounts"]) == ["ACME", "GLOBEX"]
+    assert [a["customer_code"] for a in answers["ana"].json()["accounts"]] == ["ACME"]
+    assert answers["portal"].status_code == 403
+    assert no_secret_in(answers["admin"].text)
