@@ -155,7 +155,7 @@ The account, the scan, the tab and the filters are in the URL, so a link opens t
 
 A few terms:
 
-- **New** and **resolved** compare with the account's previous completed scan. An account's first scan has nothing to compare with, so it says *first scan*.
+- **New** and **resolved** compare with the account's previous completed scan, check by check. A check that couldn't run in one of the two scans (Prowler logged an error for it, or it had nothing to check) is left out of the comparison: its failures aren't counted as resolved when it didn't run, and aren't counted as new the next time it runs. A finding keeps its first-seen time across such a gap. A check that ran but couldn't read one region still counts that region's failures as resolved, so when a scan says checks logged an error, treat its resolved count with care. An account's first scan has nothing to compare with, so it says *first scan*.
 - **Manual review**: a check Prowler can't decide on its own; someone has to look.
 - **Muted**: findings Prowler's mutelist suppresses. They are counted apart and hidden from the findings by default.
 - **Not assessed**: a requirement no check of this scan covers. Review it by hand.

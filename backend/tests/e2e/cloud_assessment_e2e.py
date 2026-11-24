@@ -20,12 +20,16 @@ What it proves, on MySQL (what SQLite in the unit tests can't):
   ticks racing for one queued scan hand it to the runner once (the guarded UPDATE);
 - a completed scan's checks and findings are stored with their JSON and utf8mb4 text intact,
   None as SQL NULL, and the next scan's new and resolved counts and carried first-seen times;
-- retention prunes the older scan's findings; deleting the account takes every row with it.
+- a check that didn't run resolves nothing, and when it runs again its failures aren't new and
+  keep their first-seen time from its last run (the look-back query, a JOIN and GROUP BY);
+- retention prunes the older scans' findings; deleting the account takes every row with it.
 """
 
 import asyncio
+import hashlib
 import os
 import sys
+from datetime import datetime
 from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -54,7 +58,9 @@ from tests.cloud_assessment_support import RUNNER_URL  # noqa: E402
 from tests.cloud_assessment_support import TOKEN  # noqa: E402
 from tests.cloud_assessment_support import FakeMinio  # noqa: E402
 from tests.cloud_assessment_support import FakeRunner  # noqa: E402
+from tests.cloud_assessment_support import check as summary_check  # noqa: E402
 from tests.cloud_assessment_support import finding  # noqa: E402
+from tests.cloud_assessment_support import summary  # noqa: E402
 
 assert os.environ["MYSQL_URL"].endswith(":13306"), "a disposable MySQL on 13306 only"
 CUSTOMER = "E2E_CA"
@@ -81,7 +87,7 @@ async def main() -> int:
     os.environ["CLOUD_ASSESSMENT_ENCRYPTION_KEY"] = Fernet.generate_key().decode()
     os.environ["PROWLER_RUNNER_URL"] = RUNNER_URL
     os.environ["PROWLER_RUNNER_TOKEN"] = TOKEN
-    os.environ["CLOUD_ASSESSMENT_KEEP_FINDINGS_SCANS"] = "1"
+    os.environ["CLOUD_ASSESSMENT_KEEP_FINDINGS_SCANS"] = "3"  # 1 before the last scan, for retention
     runner_client.TRANSPORT = runner.transport()
 
     async def fake_minio():
@@ -151,8 +157,10 @@ async def main() -> int:
             )
             check("a check's compliance mapping is JSON", compliance[0][0] == '"1.1"', compliance)
 
-            print("== the next scan")
+            print("== the next scan, in which s3_bucket_public didn't run")
             before = dict(await q("SELECT finding_uid_hash, first_seen_at FROM cloud_assessment_finding WHERE scan_id = :s", s=first["id"]))
+            iam = summary_check("iam_root_mfa_enabled", fail=2)
+            runner.summary = summary([iam])
             runner.findings = [finding(1, resource_name="sérvér-🔥-\u202eevil"), finding(4)]
             await client.post(f"{base}/accounts/{account['id']}/scans")
             runner.finish(next(iter(runner.jobs)))
@@ -160,8 +168,8 @@ async def main() -> int:
             await scans.run_tick(now=utc_now() + timedelta(seconds=2))
             second = (await client.get(f"{base}/scans")).json()["scans"][0]
             check(
-                "one new failure and two resolved",
-                (second["counts"]["new_failed"], second["counts"]["resolved_failed"]) == (1, 2),
+                "one new failure, and one resolved: a check that didn't run fixed nothing",
+                (second["counts"]["new_failed"], second["counts"]["resolved_failed"]) == (1, 1),
                 second["counts"],
             )
             after = await q(
@@ -171,12 +179,41 @@ async def main() -> int:
             carried = sorted((first_seen == before.get(uid_hash), bool(is_new)) for uid_hash, first_seen, is_new in after)
             check("a finding still failing keeps its first-seen time, a new one is new", carried == [(False, True), (True, False)], carried)
 
+            print("== the check runs again")
+            os.environ["CLOUD_ASSESSMENT_KEEP_FINDINGS_SCANS"] = "1"
+            runner.summary = summary([iam, summary_check("s3_bucket_public", fail=2, compliance={"CIS-5.0": ["2.1"]})])
+            later = {"time": "2026-11-25T10:00:00.000000"}
+            s3 = [finding(index, check_id="s3_bucket_public", severity="critical", resource_tags=[], **later) for index in (3, 5)]
+            runner.findings = [finding(1, resource_name="sérvér-🔥-\u202eevil", **later), finding(4, **later), *s3]
+            await client.post(f"{base}/accounts/{account['id']}/scans")
+            runner.finish(next(iter(runner.jobs)))
+            scans._last_retention = None
+            await scans.run_tick(now=utc_now() + timedelta(seconds=4))
+            third = (await client.get(f"{base}/scans")).json()["scans"][0]
+            check(
+                "nothing new or resolved: s3_bucket_public wasn't looked at in the scan before",
+                (third["counts"]["new_failed"], third["counts"]["resolved_failed"]) == (0, 0),
+                third["counts"],
+            )
+            back = await q(
+                "SELECT resource_name, first_seen_at, is_new FROM cloud_assessment_finding WHERE scan_id = :s AND check_id = 's3_bucket_public' "
+                "ORDER BY resource_name",
+                s=third["id"],
+            )
+            resource3 = hashlib.sha256(b"prowler-aws-s3_bucket_public-123456789012-eu-west-1-resource3").hexdigest()
+            check(
+                "resource3 keeps its first-seen time from the scan before the gap, resource5 is first seen now, neither new",
+                [(name, first_seen, bool(is_new)) for name, first_seen, is_new in back]
+                == [("resource3", before[resource3], False), ("resource5", datetime(2026, 11, 25, 10, 0), False)],
+                back,
+            )
+
             print("== retention and deletion")
             pruned = await q(
                 "SELECT findings_pruned_at IS NOT NULL, (SELECT COUNT(*) FROM cloud_assessment_finding WHERE scan_id = :s) FROM cloud_assessment_scan WHERE id = :s",
                 s=first["id"],
             )
-            check("the older scan's findings are pruned, its counts kept", pruned == [(1, 0)], pruned)
+            check("the older scans' findings are pruned, their counts kept", pruned == [(1, 0)], pruned)
             deleted = await client.delete(f"{base}/accounts/{account['id']}")
             left = await q(
                 "SELECT (SELECT COUNT(*) FROM cloud_assessment_account WHERE customer_code = :c), (SELECT COUNT(*) FROM cloud_assessment_scan WHERE customer_code = :c), "

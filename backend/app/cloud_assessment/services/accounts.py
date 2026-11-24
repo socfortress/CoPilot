@@ -326,7 +326,7 @@ def scan_brief(scan: Optional[CloudAssessmentScan], previous: Optional[Dict[int,
 
 async def previous_completed(session: AsyncSession, scans: Iterable[Optional[CloudAssessmentScan]]) -> Dict[int, Optional[int]]:
     """Per scan id: its account's newest completed scan before it, the one ingestion compared its new
-    and resolved failures with (``ingest.previous_findings``), or None for the account's first."""
+    and resolved failures with (``ingest.load_baseline``), or None for the account's first."""
     wanted = [scan for scan in scans if scan is not None]
     if not wanted:
         return {}
