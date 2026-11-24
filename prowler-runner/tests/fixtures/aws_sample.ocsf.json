@@ -601,7 +601,7 @@
                 "name": "iam"
             },
             "labels": [],
-            "name": "root‮",
+            "name": "root\u202e",
             "type": "AwsEcsTaskDefinition",
             "uid": "arn:aws:iam::123456789012:root"
         }

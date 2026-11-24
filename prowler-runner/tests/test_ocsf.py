@@ -107,7 +107,9 @@ def test_a_finding_keeps_its_resource_fields():
     finding = normalize_finding(sample_items()[0])
     assert finding == {
         "finding_uid": "prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7",
-        "finding_uid_sha256": hashlib.sha256(b"prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7").hexdigest(),
+        "finding_uid_sha256": hashlib.sha256(
+            b"prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7",
+        ).hexdigest(),
         "check_id": "ecs_task_definitions_no_environment_secrets",
         "status": "FAIL",
         "severity": "critical",
@@ -129,7 +131,7 @@ def test_control_characters_go_and_other_invisible_characters_stay():
     root = normalize_finding(sample_items()[4])
     assert root["status_extended"] == "MFA is not enabled for root account."  # the BEL is gone
     # A right-to-left override is kept: hiding it would hide a spoofed name. The UI shows it.
-    assert root["resource_name"] == "root‮"
+    assert root["resource_name"] == "root\u202e"
 
 
 def test_long_text_is_cut_with_an_ellipsis():

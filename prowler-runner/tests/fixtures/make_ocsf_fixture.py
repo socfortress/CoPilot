@@ -159,7 +159,7 @@ FINDINGS = [
         status="FAIL",
         status_extended="MFA is not enabled for root account.\u0007",
         resource_uid="arn:aws:iam::123456789012:root",
-        resource_name="root‮",
+        resource_name="root\u202e",
         region="us-east-1",
         compliance={"CIS-5.0": ["1.5"], "MITRE-ATTACK": ["T1078"]},
     ),

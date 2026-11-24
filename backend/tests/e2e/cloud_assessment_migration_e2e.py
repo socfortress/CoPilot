@@ -153,7 +153,7 @@ def add_finding(conn, scan_id, account_id, customer):
         h="0" * 64,
         ext="MFA is not enabled for root account.",
         ruid="arn:aws:iam::123456789012:" + "r" * 998,
-        rname="résumé-сервер-服务器‮",
+        rname="résumé-сервер-服务器\u202e",
         tags='["env:prod", "owner:team-a"]',
     )
 
@@ -206,9 +206,13 @@ def main() -> int:
             "FROM cloud_assessment_finding WHERE customer_code = :c",
             c=CUSTOMER,
         ).one()
-        check("the widest values and utf8mb4 text fit", stored[:3] == (1024, 512, "résumé-сервер-服务器‮"), stored)
+        check("the widest values and utf8mb4 text fit", stored[:3] == (1024, 512, "résumé-сервер-服务器\u202e"), stored)
         check("JSON round-trips", stored[3] == '"owner:team-a"', stored[3])
-        defaults = q(conn, "SELECT enabled, schedule, muted, is_new, pass_count FROM cloud_assessment_account a JOIN cloud_assessment_scan s ON s.account_id = a.id JOIN cloud_assessment_finding f ON f.scan_id = s.id WHERE a.id = :a", a=account).one()
+        defaults = q(
+            conn,
+            "SELECT enabled, schedule, muted, is_new, pass_count FROM cloud_assessment_account a JOIN cloud_assessment_scan s ON s.account_id = a.id JOIN cloud_assessment_finding f ON f.scan_id = s.id WHERE a.id = :a",
+            a=account,
+        ).one()
         check("defaults apply", tuple(defaults) == (1, "off", 0, 0, 0), defaults)
 
     for statement, name in (
