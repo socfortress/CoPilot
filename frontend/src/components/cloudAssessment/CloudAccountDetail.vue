@@ -73,6 +73,15 @@
 					</n-alert>
 				</section>
 
+				<!-- Its failures across the completed scans, once there are two to compare. -->
+				<CloudFailuresTrend
+					v-if="trend.length >= 2"
+					class="mt-4"
+					:points="trend"
+					:selected-id="selectedScan?.id ?? null"
+					@select="selectScan"
+				/>
+
 				<!-- The scans, newest first: picking one shows it below. -->
 				<section class="border-default bg-default mt-4 overflow-hidden rounded-lg border" data-testid="cloud-scans">
 					<header class="bg-secondary border-default flex flex-wrap items-baseline justify-between gap-2 border-b px-4 py-2">
@@ -141,9 +150,11 @@ import { useSettingsStore } from "@/stores/settings"
 import { getApiErrorMessage } from "@/utils"
 import dayjs from "@/utils/dayjs"
 import { formatDate } from "@/utils/format"
+import CloudFailuresTrend from "./CloudFailuresTrend.vue"
 import CloudProviderLogo from "./CloudProviderLogo.vue"
 import CloudScanStatusTag from "./CloudScanStatusTag.vue"
 import CloudScanView from "./CloudScanView.vue"
+import { trendPoints } from "./trend"
 import {
 	AUTH_LABELS,
 	AUTH_SHORT_LABELS,
@@ -188,6 +199,7 @@ let timer: ReturnType<typeof setInterval> | null = null
 
 const expiry = computed(() => (account.value ? expiryState(account.value) : "unknown"))
 const visibleScans = computed(() => (showAllScans.value ? scans.value : scans.value.slice(0, COLLAPSED_SCANS)))
+const trend = computed(() => trendPoints(scans.value))
 
 /** The scan the URL names, else the newest completed one, else the newest. */
 const selectedScan = computed<CloudScan | null>(() => {

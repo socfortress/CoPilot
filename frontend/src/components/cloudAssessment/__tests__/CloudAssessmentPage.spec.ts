@@ -37,6 +37,8 @@ const saveAs = vi.hoisted(() => vi.fn())
 
 vi.mock("@/api", () => ({ default: { cloudAssessment: api, customers } }))
 vi.mock("file-saver", () => ({ saveAs }))
+// ECharts needs a canvas jsdom hasn't: the trend's chart is a plain element here (trend.spec.ts covers its option).
+vi.mock("vue-echarts", () => ({ default: defineComponent({ setup: () => () => h("div", { "data-testid": "v-chart" }) }) }))
 
 const globalCodes = ref<string[]>([])
 vi.mock("@/composables/useGlobalCustomerFilter", () => ({
@@ -225,6 +227,24 @@ describe("an account", () => {
 		const tile = current().find("[data-testid=cloud-scan-tile-new]").text()
 		expect(tile).toContain("—")
 		expect(tile).toContain("first scan")
+	})
+
+	it("charts its failures across the completed scans, once there are two", async () => {
+		const router = await render("/cloud-security-assessment?customer=ACME&account=1")
+		const trend = current().find("[data-testid=cloud-trend]")
+		expect(trend.text()).toContain("2 completed scans")
+		expect(trend.find("[data-testid=cloud-trend-chart]").exists()).toBe(true)
+
+		await trend.find("[data-testid=cloud-trend-view-table]").trigger("click")
+		await current().find("[data-testid=cloud-trend-row-10] button").trigger("click")
+		await flushPromises()
+		expect(router.currentRoute.value.query.scan).toBe("10")
+		expect(current().find("[data-testid=cloud-scan-view]").text()).toContain("Scan #10")
+		current().unmount()
+
+		api.getScans.mockResolvedValue({ data: { scans: [scan(11)], total: 1, page: 1, page_size: 100 } })
+		await render("/cloud-security-assessment?customer=ACME&account=1")
+		expect(current().find("[data-testid=cloud-trend]").exists()).toBe(false)
 	})
 
 	it("says why a scan failed", async () => {
