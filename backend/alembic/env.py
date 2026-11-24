@@ -11,6 +11,10 @@ from app.audit.models.audit import AuditLog
 from app.auth.models.passkey import UserPasskey
 from app.auth.models.passkey import WebAuthnChallenge
 from app.auth.models.users import User
+from app.cloud_assessment.models.cloud_assessment import CloudAssessmentAccount
+from app.cloud_assessment.models.cloud_assessment import CloudAssessmentCheckResult
+from app.cloud_assessment.models.cloud_assessment import CloudAssessmentFinding
+from app.cloud_assessment.models.cloud_assessment import CloudAssessmentScan
 from app.connectors.models import Connectors
 from app.connectors.talon.models.talon_v2 import TalonActionRequest
 from app.connectors.talon.models.talon_v2 import TalonConnectorSettings

@@ -1,0 +1,6 @@
+# The runner API's own dependencies, in its own virtualenv (/opt/prowler-runner/venv).
+# Prowler's interpreter and packages (/home/prowler/.venv) are left exactly as the base image ships them.
+# Regenerate requirements.txt with:
+#   uv pip compile requirements.in --python-version 3.12 --no-header -o requirements.txt
+fastapi
+uvicorn

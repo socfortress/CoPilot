@@ -73,6 +73,17 @@ services:
         image: ghcr.io/socfortress/copilot-nuclei-module:latest
         restart: always
 
+    # Cloud security assessment with Prowler (#1328). copilot-backend calls it on the
+    # internal network; it publishes no port. Scans carry customer cloud credentials,
+    # so they run here, apart from the backend. Needs PROWLER_RUNNER_TOKEN in .env.
+    copilot-prowler:
+        image: ghcr.io/socfortress/copilot-prowler:latest
+        environment:
+            PROWLER_RUNNER_TOKEN: ${PROWLER_RUNNER_TOKEN:-}
+            PROWLER_MAX_CONCURRENT: ${PROWLER_MAX_CONCURRENT:-2}
+            PROWLER_SCAN_TIMEOUT: ${PROWLER_SCAN_TIMEOUT:-14400}
+        restart: always
+
     copilot-mcp:
         image: ghcr.io/socfortress/copilot-mcp:latest
         volumes:

@@ -1,0 +1,18 @@
+{
+  "Framework": "MITRE-ATTACK",
+  "Name": "MITRE ATT&CK compliance framework",
+  "Version": "",
+  "Provider": "AWS",
+  "Description": "Sample.",
+  "Requirements": [
+    {
+      "Name": "Unsecured Credentials",
+      "Id": "T1552",
+      "Description": "Adversaries may search compromised systems to find and obtain insecurely stored credentials.",
+      "Checks": [
+        "ecs_task_definitions_no_environment_secrets"
+      ],
+      "Attributes": []
+    }
+  ]
+}

@@ -165,6 +165,18 @@ class AuditAction(str, Enum):
     CUSTOMER_KNOWLEDGE_UPDATE = "customer_knowledge.update"
     CUSTOMER_KNOWLEDGE_DELETE = "customer_knowledge.delete"
 
+    # Cloud security assessment with Prowler (#1328): a customer's cloud accounts (settings before
+    # and after, never a credential), connection tests, scans started, cancelled or deleted, and
+    # report downloads. Scheduled scans are the scheduler's and aren't recorded.
+    CLOUD_ASSESSMENT_ACCOUNT_CREATE = "cloud_assessment.account_create"
+    CLOUD_ASSESSMENT_ACCOUNT_UPDATE = "cloud_assessment.account_update"
+    CLOUD_ASSESSMENT_ACCOUNT_DELETE = "cloud_assessment.account_delete"
+    CLOUD_ASSESSMENT_CONNECTION_TEST = "cloud_assessment.connection_test"
+    CLOUD_ASSESSMENT_SCAN_START = "cloud_assessment.scan_start"
+    CLOUD_ASSESSMENT_SCAN_CANCEL = "cloud_assessment.scan_cancel"
+    CLOUD_ASSESSMENT_SCAN_DELETE = "cloud_assessment.scan_delete"
+    CLOUD_ASSESSMENT_REPORT_DOWNLOAD = "cloud_assessment.report_download"
+
     # SOCFortress UBA per customer (#1241)
     UBA_MODE_CHANGE = "uba.mode_change"
     UBA_ROLLBACK = "uba.rollback"

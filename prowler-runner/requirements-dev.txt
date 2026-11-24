@@ -1,0 +1,4 @@
+# Test dependencies (not in the image): pip install -r requirements-dev.txt
+-r requirements.txt
+httpx2==2.16.2
+pytest==9.2.0

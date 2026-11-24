@@ -71,6 +71,7 @@ from app.routers import aws
 from app.routers import bitdefender
 from app.routers import carbonblack
 from app.routers import cato
+from app.routers import cloud_assessment
 from app.routers import connectors
 from app.routers import copilot_action
 from app.routers import copilot_mcp
@@ -343,6 +344,7 @@ api_router.include_router(opencti.router)
 api_router.include_router(uba.router)
 api_router.include_router(customer_waf.router)
 api_router.include_router(customer_knowledge.router)
+api_router.include_router(cloud_assessment.router)
 api_router.include_router(soc_management.router)
 
 # Include the APIRouter in the FastAPI app

@@ -1,0 +1,859 @@
+[{
+    "message": "Potential secrets found in ECS task definition api with revision 7: Secret Keyword on the environment variable DB_PASSWORD.",
+    "metadata": {
+        "event_code": "ecs_task_definitions_no_environment_secrets",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "Potential secrets found in ECS task definition api with revision 7: Secret Keyword on the environment variable DB_PASSWORD.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "secrets"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "MITRE-ATTACK": [
+                "T1552"
+            ],
+            "CIS-5.0": [
+                "5.1"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "ecs",
+            "name": "ECS task definitions have no secrets in environment variables",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "ecs_task_definitions_no_environment_secrets"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of ecs_task_definitions_no_environment_secrets.",
+        "attacks": [
+            {
+                "tactic": {
+                    "name": "Credential Access"
+                },
+                "technique": {
+                    "name": "Unsecured Credentials",
+                    "src_url": "https://attack.mitre.org/techniques/T1552/",
+                    "uid": "T1552"
+                }
+            }
+        ],
+        "title": "ECS task definitions have no secrets in environment variables",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-api:7"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "eu-west-1",
+            "data": {
+                "details": "",
+                "metadata": {
+                    "environment": [
+                        {
+                            "name": "DB_PASSWORD",
+                            "value": "FIXTURE-SECRET-VALUE"
+                        }
+                    ]
+                }
+            },
+            "group": {
+                "name": "ecs"
+            },
+            "labels": [
+                "env:prod",
+                "owner:team-a"
+            ],
+            "name": "api:7",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:ecs:eu-west-1:123456789012:task-definition/api:7"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "eu-west-1"
+    },
+    "remediation": {
+        "desc": "Fix ecs_task_definitions_no_environment_secrets.",
+        "references": [
+            "https://hub.prowler.com/check/ecs_task_definitions_no_environment_secrets"
+        ]
+    },
+    "risk_details": "Risk of ecs_task_definitions_no_environment_secrets.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "No secrets found in ECS task definition web with revision 3.",
+    "metadata": {
+        "event_code": "ecs_task_definitions_no_environment_secrets",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 5,
+    "severity": "Critical",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "No secrets found in ECS task definition web with revision 3.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "secrets"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "MITRE-ATTACK": [
+                "T1552"
+            ],
+            "CIS-5.0": [
+                "5.1"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "ecs",
+            "name": "ECS task definitions have no secrets in environment variables",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "ecs_task_definitions_no_environment_secrets"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of ecs_task_definitions_no_environment_secrets.",
+        "attacks": [
+            {
+                "tactic": {
+                    "name": "Credential Access"
+                },
+                "technique": {
+                    "name": "Unsecured Credentials",
+                    "src_url": "https://attack.mitre.org/techniques/T1552/",
+                    "uid": "T1552"
+                }
+            }
+        ],
+        "title": "ECS task definitions have no secrets in environment variables",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-ecs_task_definitions_no_environment_secrets-123456789012-eu-west-1-web:3"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "eu-west-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "ecs"
+            },
+            "labels": [],
+            "name": "web:3",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:ecs:eu-west-1:123456789012:task-definition/web:3"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "eu-west-1"
+    },
+    "remediation": {
+        "desc": "Fix ecs_task_definitions_no_environment_secrets.",
+        "references": [
+            "https://hub.prowler.com/check/ecs_task_definitions_no_environment_secrets"
+        ]
+    },
+    "risk_details": "Risk of ecs_task_definitions_no_environment_secrets.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "S3 Bucket logs-bucket is publicly accessible.",
+    "metadata": {
+        "event_code": "s3_bucket_public_access",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "Suppressed",
+    "status_code": "FAIL",
+    "status_detail": "S3 Bucket logs-bucket is publicly accessible.",
+    "status_id": 3,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "CIS-5.0": [
+                "2.1.4"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "s3",
+            "name": "S3 bucket is not publicly accessible",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "s3_bucket_public_access"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of s3_bucket_public_access.",
+        "title": "S3 bucket is not publicly accessible",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-s3_bucket_public_access-123456789012-us-east-1-logs-bucket"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "s3"
+            },
+            "labels": [],
+            "name": "logs-bucket",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:s3:::logs-bucket"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Fix s3_bucket_public_access.",
+        "references": [
+            "https://hub.prowler.com/check/s3_bucket_public_access"
+        ]
+    },
+    "risk_details": "Risk of s3_bucket_public_access.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Login to the AWS Console. Choose your account name on the top right of the window and check the contact information.",
+    "metadata": {
+        "event_code": "account_maintain_current_contact_details",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 2,
+    "severity": "Low",
+    "status": "New",
+    "status_code": "MANUAL",
+    "status_detail": "Login to the AWS Console. Choose your account name on the top right of the window and check the contact information.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "CIS-5.0": [
+                "1.1"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "account",
+            "name": "Maintain current contact details",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "account_maintain_current_contact_details"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of account_maintain_current_contact_details.",
+        "title": "Maintain current contact details",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-account_maintain_current_contact_details-123456789012-us-east-1-123456789012"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "account"
+            },
+            "labels": [],
+            "name": "123456789012",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:iam::123456789012:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Fix account_maintain_current_contact_details.",
+        "references": [
+            "https://hub.prowler.com/check/account_maintain_current_contact_details"
+        ]
+    },
+    "risk_details": "Risk of account_maintain_current_contact_details.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "MFA is not enabled for root account.\u0007",
+    "metadata": {
+        "event_code": "iam_root_mfa_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 4,
+    "severity": "High",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "MFA is not enabled for root account.\u0007",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "CIS-5.0": [
+                "1.5"
+            ],
+            "MITRE-ATTACK": [
+                "T1078"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "iam",
+            "name": "Root account has MFA enabled",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "iam_root_mfa_enabled"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of iam_root_mfa_enabled.",
+        "attacks": [
+            {
+                "tactic": {
+                    "name": "Defense Evasion"
+                },
+                "technique": {
+                    "name": "Valid Accounts",
+                    "src_url": "https://attack.mitre.org/techniques/T1078/",
+                    "uid": "T1078"
+                }
+            },
+            {
+                "tactic": {
+                    "name": "Persistence"
+                },
+                "technique": {
+                    "name": "Valid Accounts",
+                    "src_url": "https://attack.mitre.org/techniques/T1078/",
+                    "uid": "T1078"
+                }
+            },
+            {
+                "tactic": {
+                    "name": "Privilege Escalation"
+                },
+                "technique": {
+                    "name": "Valid Accounts",
+                    "src_url": "https://attack.mitre.org/techniques/T1078/",
+                    "uid": "T1078"
+                }
+            },
+            {
+                "tactic": {
+                    "name": "Initial Access"
+                },
+                "technique": {
+                    "name": "Valid Accounts",
+                    "src_url": "https://attack.mitre.org/techniques/T1078/",
+                    "uid": "T1078"
+                }
+            }
+        ],
+        "title": "Root account has MFA enabled",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-iam_root_mfa_enabled-123456789012-us-east-1-root"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "iam"
+            },
+            "labels": [],
+            "name": "root\u202e",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:iam::123456789012:root"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Fix iam_root_mfa_enabled.",
+        "references": [
+            "https://hub.prowler.com/check/iam_root_mfa_enabled"
+        ]
+    },
+    "risk_details": "Risk of iam_root_mfa_enabled.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "Trail org-trail is multiregion and it is logging.",
+    "metadata": {
+        "event_code": "cloudtrail_multi_region_enabled",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 1,
+    "severity": "Informational",
+    "status": "New",
+    "status_code": "PASS",
+    "status_detail": "Trail org-trail is multiregion and it is logging.",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {
+            "CIS-5.0": [
+                "3.1"
+            ]
+        },
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "cloudtrail",
+            "name": "CloudTrail trail is enabled in all regions",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "cloudtrail_multi_region_enabled"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of cloudtrail_multi_region_enabled.",
+        "title": "CloudTrail trail is enabled in all regions",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-cloudtrail_multi_region_enabled-123456789012-us-east-1-123456789012"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "us-east-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "cloudtrail"
+            },
+            "labels": [],
+            "name": "org-trail",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "us-east-1"
+    },
+    "remediation": {
+        "desc": "Fix cloudtrail_multi_region_enabled.",
+        "references": [
+            "https://hub.prowler.com/check/cloudtrail_multi_region_enabled"
+        ]
+    },
+    "risk_details": "Risk of cloudtrail_multi_region_enabled.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+},{
+    "message": "EC2 Instance i-0abc has a public IP address. xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "metadata": {
+        "event_code": "ec2_instance_public_ip",
+        "product": {
+            "name": "Prowler",
+            "uid": "prowler",
+            "vendor_name": "Prowler",
+            "version": "5.52.0"
+        },
+        "profiles": [
+            "cloud",
+            "datetime"
+        ],
+        "tenant_uid": "o-exampleorg",
+        "version": "1.5.0"
+    },
+    "severity_id": 3,
+    "severity": "Medium",
+    "status": "New",
+    "status_code": "FAIL",
+    "status_detail": "EC2 Instance i-0abc has a public IP address. xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "status_id": 1,
+    "unmapped": {
+        "related_url": "",
+        "categories": [
+            "identity-access"
+        ],
+        "depends_on": [],
+        "related_to": [],
+        "additional_urls": [
+            "https://example.com/additional"
+        ],
+        "notes": "",
+        "compliance": {},
+        "scan_id": "01a20846-fe00-7708-ae08-9b9fdf943c6e",
+        "provider_uid": "123456789012",
+        "provider": "aws"
+    },
+    "activity_name": "Create",
+    "activity_id": 1,
+    "finding_info": {
+        "analytic": {
+            "category": "ec2",
+            "name": "EC2 instance does not have a public IP address",
+            "type": "Rule",
+            "type_id": 1,
+            "uid": "ec2_instance_public_ip"
+        },
+        "created_time": 1795435200,
+        "created_time_dt": "2026-11-23T12:00:00Z",
+        "desc": "Description of ec2_instance_public_ip.",
+        "title": "EC2 instance does not have a public IP address",
+        "types": [
+            "Software and Configuration Checks/AWS Security Best Practices"
+        ],
+        "uid": "prowler-aws-ec2_instance_public_ip-123456789012-eu-west-1-i-0abc"
+    },
+    "resources": [
+        {
+            "cloud_partition": "aws",
+            "region": "eu-west-1",
+            "data": {
+                "details": "",
+                "metadata": {}
+            },
+            "group": {
+                "name": "ec2"
+            },
+            "labels": [],
+            "name": "i-0abc",
+            "type": "AwsEcsTaskDefinition",
+            "uid": "arn:aws:ec2:eu-west-1:123456789012:instance/i-0abc"
+        }
+    ],
+    "category_name": "Findings",
+    "category_uid": 2,
+    "class_name": "Detection Finding",
+    "class_uid": 2004,
+    "cloud": {
+        "account": {
+            "name": "production",
+            "type": "AWS Account",
+            "type_id": 10,
+            "uid": "123456789012",
+            "labels": [
+                "cost-center:security"
+            ]
+        },
+        "org": {
+            "name": "Example Org",
+            "uid": "o-exampleorg"
+        },
+        "provider": "aws",
+        "region": "eu-west-1"
+    },
+    "remediation": {
+        "desc": "Fix ec2_instance_public_ip.",
+        "references": [
+            "https://hub.prowler.com/check/ec2_instance_public_ip"
+        ]
+    },
+    "risk_details": "Risk of ec2_instance_public_ip.",
+    "time": 1795435200,
+    "time_dt": "2026-11-23T12:00:00Z",
+    "type_uid": 200401,
+    "type_name": "Detection Finding: Create"
+}]
