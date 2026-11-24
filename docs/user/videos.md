@@ -190,7 +190,7 @@ Use these thumbnail grids to jump straight to a video. Click the **thumbnail** t
   <img src="https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg" alt="Simplify Cloud Security: ScoutSuite and Copilot Tutorial" />
 </a>
 [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](#vid-G3MDJSMvnRo)
-<div class="sf-thumb-meta">Best for: Both</div>
+<div class="sf-thumb-meta">Best for: Both · Legacy: CoPilot now uses Prowler</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
@@ -532,7 +532,7 @@ Use these thumbnail grids to jump straight to a video. Click the **thumbnail** t
   <img src="https://img.youtube.com/vi/G3MDJSMvnRo/hqdefault.jpg" alt="Simplify Cloud Security: ScoutSuite and Copilot Tutorial" />
 </a>
 [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](#vid-G3MDJSMvnRo)
-<div class="sf-thumb-meta">Best for: Both</div>
+<div class="sf-thumb-meta">Best for: Both · Legacy: CoPilot now uses Prowler</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
@@ -937,6 +937,7 @@ Alert triage, case work, investigations, and day-to-day SOC workflows.
 
 <a id="vid-G3MDJSMvnRo"></a>
 #### Simplify Cloud Security: ScoutSuite and Copilot Tutorial
+- **Legacy:** CoPilot no longer uses ScoutSuite. Cloud scans now run with Prowler: see [Cloud security assessment](/power-features/cloud-security-assessment).
 - Link: https://www.youtube.com/watch?v=G3MDJSMvnRo
 - Best for: Both
 - What you learn:
@@ -1575,6 +1576,7 @@ Connecting sources, configuring integrations, tuning detections, reporting, and 
 
 <a id="vid-G3MDJSMvnRo"></a>
 #### Simplify Cloud Security: ScoutSuite and Copilot Tutorial
+- **Legacy:** CoPilot no longer uses ScoutSuite. Cloud scans now run with Prowler: see [Cloud security assessment](/power-features/cloud-security-assessment).
 - Link: https://www.youtube.com/watch?v=G3MDJSMvnRo
 - Best for: Both
 - What you learn:
@@ -1748,7 +1750,7 @@ Connecting sources, configuring integrations, tuning detections, reporting, and 
 - [Supercharge Your Log Ingestion: Webhooks to SIEM Made Easy](https://www.youtube.com/watch?v=O5SaFwAMMtA) — *Best for: Admin-Engineer*
 - [Auto-Enrich Wazuh Events with Threat Intel Feeds!](https://www.youtube.com/watch?v=FJunzP2c_mQ) — *Best for: Both*
 - [Analyzing Processes in Wazuh Alerts with Advanced Risk Scoring from Global Data](https://www.youtube.com/watch?v=CVVj9HRtjOE) — *Best for: Both*
-- [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](https://www.youtube.com/watch?v=G3MDJSMvnRo) — *Best for: Both*
+- [Simplify Cloud Security: ScoutSuite and Copilot Tutorial](https://www.youtube.com/watch?v=G3MDJSMvnRo) — *Best for: Both* · *Legacy: replaced by Prowler, see [Cloud security assessment](/power-features/cloud-security-assessment)*
 - [Integrate EPSS with Wazuh for Top-Notch Vulnerability Management!](https://www.youtube.com/watch?v=Qnm9SXVJGWw) — *Best for: Both*
 - [Enhancing Web App Security: Integrating Copilot with Nuclei for Vulnerability Scanning](https://www.youtube.com/watch?v=-SVHKuQUxlI) — *Best for: Both*
 - [Boost CoPilot: IoCs from Wazuh + VirusTotal Enrichment](https://www.youtube.com/watch?v=fNybop2FTRE) — *Best for: Both*

@@ -99,12 +99,14 @@ Read-only access is enough for every provider: Prowler only reads.
     - the **Reader** role on each subscription to scan;
     - the Microsoft Graph permissions Prowler lists for its Entra ID checks (see [Prowler's documentation](https://docs.prowler.com)).
 
+    Prowler's script creates all of it in one go: see [Create the app registration with Prowler's script](#create-the-app-registration-with-prowlers-script) below.
+
     Enter the **directory (tenant) id**, the **application (client) id**, the **client secret** (its value, not its id) and, optionally, the **subscriptions** to scan (default: every subscription the app can read).
 
     Enter the secret's **expiry date** as Entra ID showed it: CoPilot warns from 30 days before it lapses, and flags it once it has.
   </Tab>
   <Tab title="Microsoft 365">
-    An **app registration** in the customer's Entra ID with a **client secret** and the Microsoft Graph and Exchange Online permissions Prowler lists (see [Prowler's documentation](https://docs.prowler.com)). Prowler runs its Exchange and Teams checks with the same secret.
+    An **app registration** in the customer's Entra ID with a **client secret** and the Microsoft Graph and Exchange Online permissions Prowler lists (see [Prowler's documentation](https://docs.prowler.com)). Prowler runs its Exchange and Teams checks with the same secret. Prowler's script creates all of it: see [Create the app registration with Prowler's script](#create-the-app-registration-with-prowlers-script) below.
 
     Enter the **directory (tenant) id**, the **application (client) id**, the **client secret**, its **expiry date**, and **one of the tenant's domains** (for example `contoso.onmicrosoft.com`), which the connection test needs.
   </Tab>
@@ -114,6 +116,55 @@ Read-only access is enough for every provider: Prowler only reads.
     Optionally restrict the scan to some **projects**, skip others, or give an **organization id**. Without projects, Prowler scans every project the key can read.
   </Tab>
 </Tabs>
+
+### Create the app registration with Prowler's script
+
+For Azure and Microsoft 365, Prowler ships a script, `prowler-azure-m365-scan-identity.sh`, that creates the app registration and gives it every read-only role and permission the scans need. Run it once per customer tenant, signed in to that tenant: in **Azure Cloud Shell** (Bash), which is signed in already, or anywhere with the Azure CLI after `az login` (`az login --allow-no-subscriptions` for a tenant without Azure subscriptions).
+
+The person who runs it needs, in the customer's tenant:
+
+- **Privileged Role Administrator** (or Global Administrator), to grant the application permissions and assign Global Reader;
+- **Application Developer** as well, if users there can't register applications;
+- for Azure, **Owner** or **User Access Administrator** on each subscription or management group to scan.
+
+<Steps>
+  <Step title="Download the script for the Prowler version CoPilot runs">
+    The version is at the top right of **Exposure → Cloud Security Assessment**, for example *Prowler 5.52.0*:
+
+    ```bash
+    curl -fsSLO https://raw.githubusercontent.com/prowler-cloud/prowler/5.52.0/permissions/prowler-azure-m365-scan-identity.sh
+    ```
+  </Step>
+  <Step title="See what it would do">
+    Without `--apply` it changes nothing: it prints each command it would run.
+
+    ```bash
+    # Azure: the subscriptions to scan (repeat --subscription, or use --management-group <id>)
+    bash prowler-azure-m365-scan-identity.sh --azure --subscription <subscription-id> --client-secret
+
+    # Microsoft 365
+    bash prowler-azure-m365-scan-identity.sh --m365 --client-secret
+
+    # Both, with one app registration
+    bash prowler-azure-m365-scan-identity.sh --azure --subscription <subscription-id> --m365 --client-secret
+    ```
+  </Step>
+  <Step title="Run it">
+    Add `--apply` to the same command. At the end the script prints the **Tenant ID**, the **Client ID** and, only this once, the **client secret**: copy the secret then, it is stored nowhere. The secret is valid for 180 days, and the script prints the date it expires.
+  </Step>
+  <Step title="Add the account in CoPilot">
+    Enter the tenant id, the client id, the client secret and its expiry date (for Microsoft 365, also one of the tenant's domains), then use **Test connection**.
+  </Step>
+</Steps>
+
+What it sets up, all read-only:
+
+- **Azure** (`--azure`): the **Reader** role on each subscription or management group, a custom role, **ProwlerRole**, for four App Service checks, and three Microsoft Graph permissions for the Entra ID checks. ProwlerRole can read Function App keys and App Service app settings, which may hold secrets: `--skip-custom-role` leaves it out, and those four checks don't run.
+- **Microsoft 365** (`--m365`): thirteen Microsoft Graph permissions, plus **Exchange.ManageAsApp** and the **Global Reader** directory role for the checks that run through PowerShell. `--graph-only` leaves those two out, and the PowerShell checks don't run.
+
+Use `--client-secret`, not `--certificate`: CoPilot signs in with a client secret. The script is safe to run again. If an app registration with its name (*Prowler Scan* unless you pass `--app-name`) already exists, it stops and asks for `--use-existing-app`.
+
+**When the secret expires**, create a new one on the app registration (**Certificates & secrets → New client secret** in the Microsoft Entra admin center) and enter it, with its expiry date, on the account. The script doesn't replace the secret it created: to use it again, delete that secret first (`az ad app credential delete`), then run it with `--use-existing-app --client-secret --apply`.
 
 Every account also has:
 
