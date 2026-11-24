@@ -601,9 +601,15 @@ def test_no_trusted_key_fetches_nothing(env):
     assert not env.license.await_count
 
 
-def test_the_shipped_trust_list_is_empty_for_now():
-    assert json.loads(sync.TRUSTED_KEYS_FILE.read_text()) == {"keys": []}
-    assert sync.load_trusted_keys() == []
+def test_the_shipped_trust_list_holds_the_socfortress_release_key():
+    """The public half of the installer repo's release signing key (its private half lives only in a GitHub secret).
+    Rotation adds the next key here before the old one expires."""
+    data = json.loads(sync.TRUSTED_KEYS_FILE.read_text())
+    assert [k["key_id"] for k in data["keys"]] == ["sysmon-release-2026-11"]
+    entry = data["keys"][0]
+    assert len(base64.b64decode(entry["public_key"], validate=True)) == 32
+    assert entry["not_after"] == "2028-11-30T23:59:59Z"
+    assert [k.key_id for k in sync.load_trusted_keys()] == ["sysmon-release-2026-11"]
 
 
 def test_a_broken_trust_entry_never_widens_trust(env):
