@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Dict
 from typing import Optional
 
@@ -10,62 +9,24 @@ from app.integrations.copilot_mcp.schema.copilot_mcp import MCPQueryResponse
 from app.integrations.copilot_mcp.schema.copilot_mcp import MCPServerType
 
 
-class MCPServiceType(str, Enum):
-    """Enumeration of MCP service deployment types"""
-
-    LOCAL = "local"
-    CLOUD = "cloud"
-
-
-class MCPServerConfig:
-    """Configuration for MCP server endpoints"""
-
-    def __init__(self, service_type: MCPServiceType, endpoint: str):
-        self.service_type = service_type
-        self.endpoint = endpoint
-
-
 class MCPService:
-    """Service for handling MCP queries with modular server routing"""
+    """Sends the AI Chatbot's queries to SOCFortress's cloud MCP servers.
 
-    # Base URLs for different service types
-    _BASE_URLS = {
-        MCPServiceType.LOCAL: "http://copilot-mcp/mcp",
-        MCPServiceType.CLOUD: "https://mcp.socfortress.co/query",
+    Every server is a cloud one, asked with the license key as ``x-api-key``. The local servers (the
+    Wazuh indexer and manager, CoPilot's database and Velociraptor, which the ``copilot-mcp`` container
+    served) were removed: questions about a deployment's own data go to Talon's chat, where Talon is
+    installed.
+    """
+
+    BASE_URL = "https://mcp.socfortress.co/query"
+
+    #: Each server's endpoint under BASE_URL.
+    _ENDPOINTS: Dict[MCPServerType, str] = {
+        MCPServerType.THREAT_INTEL: "threat_intel",
+        MCPServerType.CYBER_NEWS: "cyber_news",
+        MCPServerType.KNOWLEDGEBASE: "knowledgebase",
+        MCPServerType.ATTACK_SURFACE: "attack_surface",
     }
-
-    # Define the mapping of MCP server types to their configurations
-    _SERVER_CONFIGS: Dict[MCPServerType, MCPServerConfig] = {
-        # Local services
-        MCPServerType.WAZUH_INDEXER: MCPServerConfig(MCPServiceType.LOCAL, "opensearch-query"),
-        MCPServerType.WAZUH_MANAGER: MCPServerConfig(MCPServiceType.LOCAL, "wazuh-query"),
-        MCPServerType.COPILOT: MCPServerConfig(MCPServiceType.LOCAL, "mysql-query"),
-        MCPServerType.VELOCIRAPTOR: MCPServerConfig(MCPServiceType.LOCAL, "velociraptor-query"),
-        # Cloud services
-        MCPServerType.THREAT_INTEL: MCPServerConfig(MCPServiceType.CLOUD, "threat_intel"),
-        MCPServerType.CYBER_NEWS: MCPServerConfig(MCPServiceType.CLOUD, "cyber_news"),
-        MCPServerType.KNOWLEDGEBASE: MCPServerConfig(MCPServiceType.CLOUD, "knowledgebase"),
-        MCPServerType.ATTACK_SURFACE: MCPServerConfig(MCPServiceType.CLOUD, "attack_surface"),
-    }
-
-    @classmethod
-    def get_server_config(cls, mcp_server: MCPServerType) -> MCPServerConfig:
-        """
-        Get the configuration for a specific MCP server type.
-
-        Args:
-            mcp_server: The MCP server type
-
-        Returns:
-            MCPServerConfig: The configuration for the server
-
-        Raises:
-            ValueError: If the server type is not supported
-        """
-        config = cls._SERVER_CONFIGS.get(mcp_server)
-        if not config:
-            raise ValueError(f"Unsupported MCP server type: {mcp_server}")
-        return config
 
     @classmethod
     def build_full_url(cls, mcp_server: MCPServerType) -> str:
@@ -77,60 +38,37 @@ class MCPService:
 
         Returns:
             str: The full URL for the server endpoint
-        """
-        config = cls.get_server_config(mcp_server)
-        base_url = cls._BASE_URLS[config.service_type]
-        return f"{base_url}/{config.endpoint}"
 
-    @classmethod
-    def is_cloud_service(cls, mcp_server: MCPServerType) -> bool:
+        Raises:
+            ValueError: If the server type is not supported
         """
-        Check if the MCP server is a cloud service.
-
-        Args:
-            mcp_server: The MCP server type
-
-        Returns:
-            bool: True if it's a cloud service, False if local
-        """
-        config = cls.get_server_config(mcp_server)
-        return config.service_type == MCPServiceType.CLOUD
+        endpoint = cls._ENDPOINTS.get(mcp_server)
+        if not endpoint:
+            raise ValueError(f"Unsupported MCP server type: {mcp_server}")
+        return f"{cls.BASE_URL}/{endpoint}"
 
     @classmethod
     async def execute_query(cls, data: MCPQueryRequest, license_key: Optional[str] = None) -> MCPQueryResponse:
         """
-        Execute a query on the appropriate MCP server based on the request.
+        Execute a query on the MCP server the request names.
 
         Args:
             data: The MCP query request containing the server type and query
-            license_key: Optional license key for cloud services authentication
+            license_key: The license key, sent as the x-api-key header
 
         Returns:
-            MCPQueryResponse: The response from the MCP server
-
-        Raises:
-            httpx.HTTPError: If the HTTP request fails
-            ValueError: If the server type is not supported
+            MCPQueryResponse: The response from the MCP server (success=False when the query failed)
         """
         try:
-            # Get the full URL for the specified server
             full_url = cls.build_full_url(data.mcp_server)
-            is_cloud = cls.is_cloud_service(data.mcp_server)
 
-            logger.info(f"Sending MCP query to {data.mcp_server.value} ({'cloud' if is_cloud else 'local'}) at {full_url}")
+            logger.info(f"Sending MCP query to {data.mcp_server.value} at {full_url}")
             logger.debug(f"Query data: {data.model_dump()}")
 
-            # Set different timeout for cloud vs local services
-            timeout = 300 if is_cloud else 300
-
-            # Prepare headers
             headers = {"Content-Type": "application/json"}
-
-            # Add license key as x-api-key header for cloud services
-            if is_cloud and license_key:
+            if license_key:
                 headers["x-api-key"] = license_key
-                logger.debug("Added x-api-key header for cloud service")
-            elif is_cloud and not license_key:
+            else:
                 logger.warning(f"No license key provided for cloud service {data.mcp_server.value}")
 
             async with httpx.AsyncClient() as client:
@@ -138,7 +76,7 @@ class MCPService:
                     full_url,
                     json=data.model_dump(),
                     headers=headers,
-                    timeout=timeout,
+                    timeout=300,
                 )
 
                 # Raise an exception for HTTP error status codes
@@ -170,62 +108,3 @@ class MCPService:
                 structured_result=None,
                 execution_time=0.0,
             )
-
-    @classmethod
-    def add_local_service(cls, server_type: MCPServerType, endpoint: str) -> None:
-        """
-        Add a new local MCP service.
-
-        Args:
-            server_type: The MCP server type enum
-            endpoint: The endpoint path for the local service
-        """
-        cls._SERVER_CONFIGS[server_type] = MCPServerConfig(MCPServiceType.LOCAL, endpoint)
-
-    @classmethod
-    def add_cloud_service(cls, server_type: MCPServerType, endpoint: str) -> None:
-        """
-        Add a new cloud MCP service.
-
-        Args:
-            server_type: The MCP server type enum
-            endpoint: The endpoint path for the cloud service
-        """
-        cls._SERVER_CONFIGS[server_type] = MCPServerConfig(MCPServiceType.CLOUD, endpoint)
-
-    @classmethod
-    def get_service_info(cls) -> Dict[str, Dict[str, str]]:
-        """
-        Get information about all configured services.
-
-        Returns:
-            Dict containing service information grouped by type
-        """
-        local_services = {}
-        cloud_services = {}
-
-        for server_type, config in cls._SERVER_CONFIGS.items():
-            service_info = {"endpoint": config.endpoint, "full_url": cls.build_full_url(server_type)}
-
-            if config.service_type == MCPServiceType.LOCAL:
-                local_services[server_type.value] = service_info
-            else:
-                cloud_services[server_type.value] = service_info
-
-        return {"local": local_services, "cloud": cloud_services}
-
-
-# Convenience function to maintain backward compatibility
-async def post_to_copilot_mcp(data: MCPQueryRequest) -> MCPQueryResponse:
-    """
-    Send a POST request to the appropriate copilot-mcp endpoint based on server type.
-
-    This function maintains backward compatibility while using the new modular service.
-
-    Args:
-        data: The MCP query request
-
-    Returns:
-        MCPQueryResponse: The response from the MCP server
-    """
-    return await MCPService.execute_query(data)

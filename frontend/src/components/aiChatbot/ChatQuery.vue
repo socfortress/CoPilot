@@ -158,7 +158,8 @@ function getList() {
 		.then(res => {
 			if (res.data.success) {
 				servers.value = res.data?.servers || []
-				if (servers.value.length && !selectedServer.value) {
+				// Also when the stored choice is a server that is gone (the local ones went with copilot-mcp)
+				if (servers.value.length && !selectedServerDetails.value) {
 					selectedServer.value = servers.value[0]?.value ?? null
 				}
 				emit("server-loaded")
@@ -199,11 +200,12 @@ function handleCancelEdit() {
 	reset()
 }
 
+// Only a server the backend lists, so a stored choice that is gone never asks for its example questions
 watch(
-	selectedServer,
+	selectedServerDetails,
 	val => {
 		if (val) {
-			emit("select-server", val)
+			emit("select-server", val.value)
 		}
 	},
 	{ immediate: true }

@@ -9,11 +9,12 @@
 #   1. checks the deployment: Docker, the Compose file, MySQL's version, MySQL Shell's upgrade
 #      checker, disk space, and that docker-compose.yml can be pointed at the new MySQL
 #   2. downloads every new image while CoPilot keeps running
-#   3. stops the backend and the MCP server, dumps every database, and shuts MySQL down cleanly
+#   3. stops the services that use the database, dumps every database, and shuts MySQL down cleanly
 #   4. archives MySQL's data directory as it was (the rollback point), then upgrades the data:
 #      MySQL 5.7 goes through 8.0 first, since 8.4 can't upgrade 5.7 data directly
 #   5. points docker-compose.yml's copilot-mysql at the new MySQL, with the flags CoPilot needs,
-#      starts everything, and waits for the backend to finish its database migrations
+#      removes the containers of services CoPilot no longer has (copilot-mcp), starts everything,
+#      and waits for the backend to finish its database migrations
 #
 # Run it from the directory that holds docker-compose.yml and .env:
 #
@@ -31,6 +32,11 @@ TARGET_FLAGS=("--restrict-fk-on-non-standard-key=OFF" "--mysql-native-password=O
 MYSQL_SERVICE="copilot-mysql"
 BACKEND_SERVICE="copilot-backend"
 DB_CLIENT_SERVICES=("copilot-backend" "copilot-mcp") # stopped before MySQL, started again after
+# Services docker-compose.yml no longer has. `docker compose up -d` leaves the container an older
+# compose file started for one running, so the upgrade stops it with the services that use the
+# database and removes it before CoPilot starts again. (copilot-mcp stays in DB_CLIENT_SERVICES for a
+# compose file that still has it: then it is stopped and started again like the backend.)
+RETIRED_SERVICES=("copilot-mcp")
 DATADIR="/var/lib/mysql"
 
 # --- options ---------------------------------------------------------------------------------
@@ -129,6 +135,19 @@ service_defined() { compose config --services 2>/dev/null | grep -qx "$1"; }
 
 # The service's container, running or not (empty when it has none).
 service_container() { compose ps -a -q "$1" 2>/dev/null | head -n1; }
+
+# The container this project still has for a service its compose file doesn't define, left by an
+# older compose file (empty when there is none, or when the service is defined). Compose labels its
+# containers with the project's name, read here from the backend's container.
+leftover_container() {
+    local backend project
+    service_defined "$1" && return 0
+    backend=$(service_container "$BACKEND_SERVICE")
+    [ -n "$backend" ] || return 0
+    project=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$backend" 2>/dev/null) || return 0
+    [ -n "$project" ] || return 0
+    docker ps -aq --filter "label=com.docker.compose.project=$project" --filter "label=com.docker.compose.service=$1" 2>/dev/null | head -n1 || true
+}
 
 container_running() { [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = "true" ]; }
 
@@ -624,6 +643,13 @@ HAS_MYSQL=0
 service_defined "$MYSQL_SERVICE" && HAS_MYSQL=1
 service_defined "$BACKEND_SERVICE" || die "The compose file has no $BACKEND_SERVICE service: is this a CoPilot directory?"
 
+# "service container" for each retired service an older compose file left a container for.
+LEFTOVERS=()
+for s in ${RETIRED_SERVICES[@]+"${RETIRED_SERVICES[@]}"}; do
+    c=$(leftover_container "$s")
+    if [ -n "$c" ]; then LEFTOVERS+=("$s $c"); fi
+done
+
 HOPS=()
 NEEDS_COMPOSE_EDIT=0
 NEW_IMAGE=""
@@ -776,6 +802,9 @@ if [ "$HAS_MYSQL" = 1 ]; then
     echo "  Backups: $BACKUP_DIR/upgrade-<time>/ (SQL dump of every database$([ ${#HOPS[@]} -gt 0 ] && [ "$DATA_ARCHIVE" = 1 ] && echo ", archive of MySQL's data directory"))"
 fi
 echo "  Images:  $([ "$PULL" = 1 ] && echo "pull the new ones, then recreate the containers that changed" || echo "use the ones on this host")"
+for l in ${LEFTOVERS[@]+"${LEFTOVERS[@]}"}; do
+    echo "  Remove:  the ${l%% *} container (CoPilot no longer has ${l%% *}; an older compose file started it)"
+done
 echo "  CoPilot is down from the database dump until the backend has started again."
 
 if [ "$MODE" = "check" ]; then
@@ -829,6 +858,13 @@ if [ "$HAS_MYSQL" = 1 ]; then
         service_defined "$s" || continue
         compose stop -t 60 "$s" >/dev/null
         info "Stopped $s."
+    done
+    for l in ${LEFTOVERS[@]+"${LEFTOVERS[@]}"}; do
+        if docker stop -t 60 "${l#* }" >/dev/null 2>&1; then
+            info "Stopped ${l%% *} (removed before CoPilot starts again)."
+        else
+            warn "Couldn't stop the ${l%% *} container (${l#* })."
+        fi
     done
 
     PHASE="dumping the databases"
@@ -923,6 +959,13 @@ fi
 
 PHASE="starting CoPilot"
 step "Starting CoPilot"
+for l in ${LEFTOVERS[@]+"${LEFTOVERS[@]}"}; do
+    if docker rm -f "${l#* }" >/dev/null 2>&1; then
+        info "Removed the ${l%% *} container: CoPilot no longer has ${l%% *}."
+    else
+        warn "Couldn't remove the ${l%% *} container. Remove it with: docker rm -f ${l#* }"
+    fi
+done
 since=$(($(date +%s) - 5))
 compose up -d
 info "Waiting for the backend to start and run its database migrations..."

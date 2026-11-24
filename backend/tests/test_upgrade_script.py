@@ -59,6 +59,37 @@ def test_the_script_targets_what_docker_compose_yml_runs(bash):
     assert out[1:] == mysql["command"] == FLAGS
 
 
+def test_the_retired_services_are_gone_from_docker_compose_yml(bash):
+    retired = run(bash, 'printf "%s\\n" "${RETIRED_SERVICES[@]}"').split()
+    assert "copilot-mcp" in retired
+    assert not set(retired) & set(yaml.safe_load(CURRENT.read_text())["services"])
+    # A compose file from before the removal still has it: stopped and started like the backend.
+    assert "copilot-mcp" in yaml.safe_load(BEFORE.read_text())["services"]
+    assert "copilot-mcp" in run(bash, 'printf "%s\\n" "${DB_CLIENT_SERVICES[@]}"').split()
+
+
+# compose and docker stand in for Docker: the compose file defines only the backend, whose container
+# belongs to the project "copilot", and that project still has a copilot-mcp container.
+LEFTOVER_FAKES = (
+    'compose() { case "$*" in "config --services") echo copilot-backend ;; "ps -a -q copilot-backend") echo backend-id ;; esac; }; '
+    'docker() { case "$1" in '
+    'inspect) [ "$4" = backend-id ] && echo copilot ;; '
+    'ps) [ "$4 $6" = "label=com.docker.compose.project=copilot label=com.docker.compose.service=copilot-mcp" ] && echo mcp-id ;; '
+    "esac; return 0; }; "
+)
+
+
+def test_a_container_left_for_a_service_the_compose_file_dropped(bash):
+    snippet = LEFTOVER_FAKES + 'echo "[$(leftover_container copilot-mcp)] [$(leftover_container copilot-backend)]"'
+    assert run(bash, snippet).strip() == "[mcp-id] []"
+
+
+def test_no_leftover_without_a_backend_container(bash):
+    snippet = LEFTOVER_FAKES + 'compose() { [ "$*" = "config --services" ] && echo copilot-backend; return 0; }; '
+    snippet += 'echo "[$(leftover_container copilot-mcp)]"'
+    assert run(bash, snippet).strip() == "[]"
+
+
 def test_state_of_the_compose_files(bash, tmp_path):
     before = state(bash, BEFORE)
     assert before["found"] == "1"

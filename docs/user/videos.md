@@ -86,7 +86,7 @@ Use these thumbnail grids to jump straight to a video. Click the **thumbnail** t
   <img src="https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg" alt="AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!" />
 </a>
 [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](#vid-FHjD9QBaLD4)
-<div class="sf-thumb-meta">Best for: Both</div>
+<div class="sf-thumb-meta">Best for: Both · Legacy: the chatbot no longer queries your stack</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
@@ -324,7 +324,7 @@ Use these thumbnail grids to jump straight to a video. Click the **thumbnail** t
   <img src="https://img.youtube.com/vi/FHjD9QBaLD4/hqdefault.jpg" alt="AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!" />
 </a>
 [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](#vid-FHjD9QBaLD4)
-<div class="sf-thumb-meta">Best for: Both</div>
+<div class="sf-thumb-meta">Best for: Both · Legacy: the chatbot no longer queries your stack</div>
 </div>
 
 <div class="sf-thumb-card" markdown>
@@ -739,6 +739,7 @@ Alert triage, case work, investigations, and day-to-day SOC workflows.
 
 <a id="vid-FHjD9QBaLD4"></a>
 #### AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!
+- **Legacy:** the AI Chatbot no longer queries Wazuh, Velociraptor or CoPilot's database: the copilot-mcp container that did was removed. Ask Talon's chat instead: see [AI Analyst (Talon)](/power-features/ai-analyst).
 - Link: https://www.youtube.com/watch?v=FHjD9QBaLD4
 - Best for: Both
 - What you learn:
@@ -1185,6 +1186,7 @@ Connecting sources, configuring integrations, tuning detections, reporting, and 
 
 <a id="vid-FHjD9QBaLD4"></a>
 #### AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!
+- **Legacy:** the AI Chatbot no longer queries Wazuh, Velociraptor or CoPilot's database: the copilot-mcp container that did was removed. Ask Talon's chat instead: see [AI Analyst (Talon)](/power-features/ai-analyst).
 - Link: https://www.youtube.com/watch?v=FHjD9QBaLD4
 - Best for: Both
 - What you learn:
@@ -1724,7 +1726,7 @@ Connecting sources, configuring integrations, tuning detections, reporting, and 
 - [Open Source SIEM Response | Dynamic Endpoint Actions with SOCFortress CoPilot](https://www.youtube.com/watch?v=l9OLtgemYOQ) — *Best for: Both*
 - [Endpoint Investigation Made Easier: New Velociraptor Features in SOCFORTRESS CoPilot](https://www.youtube.com/watch?v=R_pG1Gx_7O8) — *Best for: Operator*
 - [AI Analyst for Wazuh Alerts: Revolutionize Your SOC with SOCFortress Copilot!](https://www.youtube.com/watch?v=-2srPC-Dw-0) — *Best for: Both*
-- [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](https://www.youtube.com/watch?v=FHjD9QBaLD4) — *Best for: Both*
+- [AI Agent for Open Source SIEM: Wazuh, Velociraptor + CoPilot!](https://www.youtube.com/watch?v=FHjD9QBaLD4) — *Best for: Both* · *Legacy: the chatbot no longer queries your stack, see [AI Analyst (Talon)](/power-features/ai-analyst)*
 - [AI Chatbot Now With Threat Intel, Cyber News, Knowledge Base & Attack Surface!](https://www.youtube.com/watch?v=QaLrmSgEcLI) — *Best for: Both*
 - [Automate Your SOC: Triggering Alerts with Wazuh Rules via Copilot](https://www.youtube.com/watch?v=tguRiVgytso) — *Best for: Both*
 - [Wazuh Rule Writing With CoPilot AI Module - Handle Your Alert Flooding](https://www.youtube.com/watch?v=AH1g3p8s2_o) — *Best for: Both*

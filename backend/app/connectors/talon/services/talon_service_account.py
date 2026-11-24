@@ -13,7 +13,8 @@ stepped around (``refuse_talon_service_account``):
 - ``/api/file-analysis/velociraptor/enumerate`` and ``/submit`` (a ``FileFinder`` collection);
 - ``/api/agents/{agent_id}/delete``, ``/bulk/delete``, ``/bulk/delete/filter`` (Velociraptor's
   ``Server.Utils.DeleteClient``);
-- ``/api/copilot_mcp/query`` (an MCP agent, the Velociraptor server among them);
+- ``/api/copilot_mcp/query`` (the AI Chatbot: its agent reached Velociraptor through the
+  ``copilot-mcp`` container until that was removed, and the route stays refused);
 - ``/api/copilot_action/invoke``;
 - deciding a Talon v2 action proposal (``talon_action_execution.check_d47``).
 

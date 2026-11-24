@@ -11,7 +11,6 @@ Source of truth: `docker-compose.yml`.
 | MySQL | `copilot-mysql` | Primary relational DB | `3306:3306` | named volume `mysql-data:/var/lib/mysql` |
 | MinIO | `copilot-minio` | Object storage for case/artifact files | `9000:9000` (S3 API), container also uses `9001` console | `./data/data/minio-data:/data` |
 | Nuclei module | `copilot-nuclei-module` | External module container | none | none |
-| MCP service | `copilot-mcp` | MCP/OpenAI-adjacent service + optional subservers | none exposed by compose | `./data/copilot-mcp/api.config.yaml:/app/velociraptor-config.yaml:ro` |
 | Customer portal (optional) | `copilot-customer-portal` | Separate customer-facing UI | example `8443:443` (commented) | none by default |
 
 ## Networking and Request Path
@@ -36,8 +35,6 @@ Primary env file: `.env` (template: `.env.example`).
   - e.g. `WAZUH_INDEXER_URL`, `GRAYLOG_URL`, `GRAFANA_URL`, etc. (loaded in `backend/app/db/db_populate.py`)
 - Header/shared-secret style values:
   - `GRAYLOG_API_HEADER_VALUE`, `VELOCIRAPTOR_API_HEADER_VALUE`
-- MCP/OpenAI values:
-  - `OPENAI_API_KEY`, `OPENAI_MODEL`, `MCP_*`, `OPENSEARCH_*`, `WAZUH_PROD_*`, `VELOCIRAPTOR_*`
 
 ## TLS
 

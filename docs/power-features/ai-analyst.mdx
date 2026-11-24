@@ -250,6 +250,8 @@ This is independent of **AI Triggers**, which start investigations automatically
 
 The **AI Chatbot** button and the AI-drafted Wazuh exclusion rule on an alert are CoPilot features of their own, separate from Talon. They don't use Talon and keep working whether or not Talon is installed.
 
+The AI Chatbot answers from SOCFortress's cloud sources: threat intel, cyber news, the knowledge base and attack surface. They need a SOCFortress license with **SOCFORTRESS AI**. The chatbot used to query a deployment's own Wazuh indexer, Wazuh manager, CoPilot database and Velociraptor through the `copilot-mcp` container. That container was removed, with those four sources. Ask questions about your own data in **AI Analyst → Talon Chat** instead: each thread stays with one customer.
+
 ---
 
 ## Safety and guardrails
@@ -267,5 +269,5 @@ The **AI Chatbot** button and the AI-drafted Wazuh exclusion rule on an alert ar
 These videos show earlier versions of CoPilot's AI features; the UI has changed since.
 
 - AI analyst (alert context and exclusion-rule assistance): https://www.youtube.com/watch?v=-2srPC-Dw-0
-- AI chatbot and "chat with your stack": https://www.youtube.com/watch?v=FHjD9QBaLD4
+- AI chatbot and "chat with your stack" (legacy: the chatbot no longer queries your stack): https://www.youtube.com/watch?v=FHjD9QBaLD4
 - Expanded AI companion features: https://www.youtube.com/watch?v=QaLrmSgEcLI
