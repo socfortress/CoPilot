@@ -84,6 +84,7 @@ from app.schedulers.services.refresh_sidebar_indicators import (
     refresh_sidebar_indicators,
 )
 from app.schedulers.services.refresh_wazuh_rules_cache import refresh_wazuh_rules_cache
+from app.schedulers.services.send_sysmon_stats import send_sysmon_stats
 from app.schedulers.services.sync_sysmon_default import sync_sysmon_default
 from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 from app.schedulers.utils.universal import record_job_success
@@ -347,6 +348,15 @@ async def initialize_job_metadata():
                 "function": sync_sysmon_default,
                 "description": "Pulls SOCFortress's signed default Sysmon config into this CoPilot's default, unless it was changed here.",
             },
+            {
+                "job_id": "send_sysmon_stats",
+                # Every 6 hours: sends each customer's report of the previous ISO week once, after its jittered send time
+                # (Monday 01:00 to Tuesday 24:00 UTC). Ticking often matters: the scheduler first runs a job one interval
+                # after startup. SYSMON_STATS_SHARING=off: the tick does nothing.
+                "time_interval": 360,
+                "function": send_sysmon_stats,
+                "description": "Sends this CoPilot's weekly, redacted Sysmon noise statistics per customer to SOCFortress (per-customer opt-out; SYSMON_STATS_SHARING=off sends nothing).",
+            },
             # ! Mirgrated SIGMA to VELO ! #
             # {
             #     "job_id": "invoke_sigma_queries_collect",
@@ -489,6 +499,7 @@ def get_function_by_name(function_name: str):
         "drain_notification_outbox": drain_notification_outbox,
         "invoke_portal_notification_digest": invoke_portal_notification_digest,
         "sync_sysmon_default": sync_sysmon_default,
+        "send_sysmon_stats": send_sysmon_stats,
         # Add other function mappings here
     }
     # Raise rather than returning a placeholder lambda: APScheduler's SQLAlchemy jobstore

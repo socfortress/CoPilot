@@ -289,6 +289,10 @@ SYSMON_CONFIG_DEFAULT_OBJECT = "sysmon_config.xml"
 # the default was last synced to, and the outcome of the last check. Neither holds any of the config.
 SYSMON_DEFAULT_SYNC_OBJECT = "sync.json"
 SYSMON_DEFAULT_SYNC_STATUS_OBJECT = "sync-status.json"
+# The weekly Sysmon noise statistics (app/active_response/services/sysmon_stats/): the per-customer, per-week send state,
+# and one queued withdraw per customer pseudonym. Neither holds a value from a report, a payload or the license key.
+SYSMON_STATS_STATE_OBJECT = "stats-state.json"
+SYSMON_STATS_WITHDRAW_PREFIX = "stats-withdraw/"
 # MinIO's answers that mean "no default is set" (the bucket is created at startup, but may not exist yet)
 _NO_DEFAULT_CODES = frozenset({"NoSuchKey", "NoSuchBucket"})
 
@@ -324,6 +328,29 @@ async def write_sysmon_defaults_object(object_name: str, content: bytes, content
             length=len(content),
             content_type=content_type,
         )
+
+
+async def list_sysmon_defaults_objects(prefix: str) -> list:
+    """The names of the sysmon-config-defaults bucket's objects under ``prefix``; [] when the bucket does not exist. Any
+    other failure raises."""
+    async with await create_session() as client:
+        if not await client.bucket_exists(SYSMON_CONFIG_DEFAULTS_BUCKET):
+            return []
+        names = []
+        async for obj in client.list_objects(SYSMON_CONFIG_DEFAULTS_BUCKET, prefix=prefix, recursive=True):
+            names.append(obj.object_name)
+        return names
+
+
+async def delete_sysmon_defaults_object(object_name: str) -> None:
+    """Delete one object of the sysmon-config-defaults bucket. A missing object is no error; any other failure raises."""
+    async with await create_session() as client:
+        try:
+            await client.remove_object(SYSMON_CONFIG_DEFAULTS_BUCKET, object_name)
+        except S3Error as e:
+            if e.code in _NO_DEFAULT_CODES:
+                return
+            raise
 
 
 async def read_default_sysmon_config() -> Optional[bytes]:

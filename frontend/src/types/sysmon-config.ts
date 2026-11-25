@@ -122,3 +122,175 @@ export interface DefaultSyncRunResponse {
 	result: DefaultSyncCheck
 	status: DefaultSyncStatus
 }
+
+/** SYSMON_STATS_SHARING: "on" sends each customer's weekly noise report (unless opted out), "off" sends nothing. */
+export type StatsMode = "on" | "off"
+
+export type StatsOutcome =
+	| "sent"
+	| "withdrawn"
+	| "refused"
+	| "local_refused"
+	| "refused_bad_request"
+	| "refused_content_type"
+	| "too_large"
+	| "week_not_accepted"
+	| "week_before_first_seen"
+	| "customer_limit"
+	| "storage_quota"
+	| "waf_refused"
+	| "no_sysmon_events"
+	| "ambiguous_label"
+	| "unauthorized"
+	| "license_rejected"
+	| "license_blocked"
+	| "service_not_accepting"
+	| "http_error"
+	| "redirect_refused"
+	| "body_timeout"
+	| "busy"
+	| "rate_limited"
+	| "service_unavailable"
+	| "storage_full"
+	| "network_error"
+	| "indexer_error"
+	| "indexer_timeout"
+	| "store_error"
+	| "error"
+	| "sharing_off"
+	| "nothing_due"
+	| "latched"
+	| "no_license"
+	| "invalid_url"
+	| "indexer_fields_unavailable"
+	| "indexer_unreachable"
+	| "locked"
+	| "running"
+	| "completed"
+
+/** One customer's report of one ISO week: counts and hashes only, never a value. */
+export interface StatsWeekState {
+	/** "terminal": done for the week; "pending": a later run tries again. */
+	status: "terminal" | "pending"
+	outcome: StatsOutcome
+	message: string | null
+	attempts: number
+	last_attempt_at: string | null
+	not_before: string | null
+	http_status: number | null
+	reason: string | null
+	sent_at: string | null
+	payload_sha256: string | null
+	payload_bytes: number | null
+	patterns: number | null
+	truncated: boolean | null
+	endpoints: number | null
+	config: number | string | null
+	accepted: number | null
+	rejected: number | null
+	rejected_by_reason: Record<string, number>
+	replaced: boolean | null
+	local_drops: Record<string, number>
+}
+
+export interface StatsService {
+	/** Whether SOCFortress accepts reports; null while not known yet. */
+	accepting: boolean | null
+	checked_at: string | null
+	last_status: number | null
+	not_before: string | null
+}
+
+export interface StatsLastTick {
+	started_at: string | null
+	finished_at: string | null
+	outcome: StatsOutcome | null
+	message: string | null
+	sent: number
+	pending: number
+	terminal: number
+	week: string | null
+}
+
+/** Reports are paused: SOCFortress refused one for its content. */
+export interface StatsLatch {
+	set_at: string
+	reason: string
+	copilot_version: string
+}
+
+export interface StatsCustomer {
+	customer_code: string
+	customer_name: string | null
+	/** The customer's id in this CoPilot's reports (cust_ + 32 hex). */
+	pseudonym: string | null
+	sharing: boolean
+	install_dir_name: string | null
+	own_domains: string[]
+	withdraw: { queued: boolean; requested_at: string | null; withdrawn_at: string | null; last_status: number | null }
+	/** When the target week's report is sent (UTC). */
+	due_at: string | null
+	target_week_state: StatsWeekState | null
+	last_sent_week: string | null
+	last_sent_state: StatsWeekState | null
+}
+
+export interface StatsStatus {
+	mode: StatsMode
+	/** SYSMON_STATS_SHARING as set, when CoPilot does not know it (then: off). */
+	mode_setting: string | null
+	service_url: string
+	service: StatsService
+	last_tick: StatsLastTick | null
+	latch: StatsLatch | null
+	target_week: string
+	max_rule_level: number
+	min_endpoints: number
+	customers: StatsCustomer[]
+	read_error: string | null
+}
+
+export interface StatsStatusResponse {
+	status: StatsStatus
+}
+
+export interface StatsSharingBody {
+	sharing: boolean
+	install_dir_name?: string | null
+	own_domains?: string[] | null
+}
+
+export interface StatsSharingResponse {
+	customer: StatsCustomer
+	withdraw: { outcome: "withdrawn" | "queued" | "failed"; reports_deleted: number | null; message: string | null } | null
+}
+
+export interface StatsPreview {
+	week: string
+	customer_pseudonym: string
+	would_send: { ok: boolean; why: string | null }
+	/** The exact report whose compact UTF-8 JSON would be sent. */
+	payload: Record<string, unknown> | null
+	payload_sha256: string | null
+	payload_bytes: number | null
+	local: { raw_patterns: number; sent: number; dropped_by_reason: Record<string, number>; merged: number; truncated: boolean }
+	outcome: StatsOutcome | null
+	message: string | null
+	ms: number
+}
+
+export interface StatsPreviewResponse {
+	preview: StatsPreview
+}
+
+export interface StatsRunResult {
+	outcome: StatsOutcome
+	message: string
+	week: string | null
+	customers: { customer_code: string; outcome: StatsOutcome; message: string | null }[]
+}
+
+export interface StatsRunResponse {
+	result: StatsRunResult
+	status: StatsStatus
+}

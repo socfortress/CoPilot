@@ -87,6 +87,16 @@ class AuditAction(str, Enum):
     # scheduled job (actor "system", no user id) or an admin's Sync now. Identified by release number, commit and
     # sha256; the XML itself is never stored.
     SYSMON_DEFAULT_SYNC = "response.sysmon_default_sync"
+    # The weekly Sysmon noise statistics sent to SOCFortress (app/active_response/services/sysmon_stats/). Every row
+    # identifies a report by week, customer pseudonym, payload sha256 and counts; no value, payload or license key.
+    # A report POST (the scheduled job, actor "system", or an admin's Send now)
+    SYSMON_STATS_SEND = "response.sysmon_stats_send"
+    # A customer's sharing turned off or on, or its redaction hints changed
+    SYSMON_STATS_SHARING = "response.sysmon_stats_sharing"
+    # A withdraw request: SOCFortress asked to delete a customer's stored reports
+    SYSMON_STATS_WITHDRAW = "response.sysmon_stats_withdraw"
+    # The pause set after SOCFortress refused a report for its content, cleared by an admin
+    SYSMON_STATS_RESUME = "response.sysmon_stats_resume"
 
     # Cases
     CASE_CREATE = "case.create"

@@ -1,0 +1,914 @@
+{
+ "default_ctx": {
+  "customer_code": "contoso",
+  "customer_name": "Contoso Pharma Ltd",
+  "install_dirs": [
+   "edrsvc"
+  ],
+  "own_domains": [
+   "contoso.com"
+  ],
+  "hostnames": [
+   "WS-0142",
+   "LAPTOP-7731.corp.contoso.com"
+  ],
+  "accounts": [
+   "CONTOSO\\jdoe",
+   "jane.roe@contoso.com",
+   "WS-0142$"
+  ]
+ },
+ "cases": [
+  {
+   "id": "doubled-path",
+   "field": "Image",
+   "raw": "C:\\\\Windows\\\\System32\\\\svchost.exe",
+   "expect": {
+    "value": "C:\\Windows\\System32\\svchost.exe"
+   }
+  },
+  {
+   "id": "raw-path-untouched",
+   "field": "Image",
+   "raw": "C:\\Windows\\System32\\svchost.exe",
+   "expect": {
+    "value": "C:\\Windows\\System32\\svchost.exe"
+   }
+  },
+  {
+   "id": "raw-unc-with-f-untouched-then-host",
+   "field": "TargetFilename",
+   "raw": "\\\\nas\\files\\x.txt",
+   "expect": {
+    "value": "\\\\<host>\\files\\x.txt"
+   }
+  },
+  {
+   "id": "raw-unc-with-b-untouched-then-host",
+   "field": "TargetFilename",
+   "raw": "\\\\nas\\backup\\x.txt",
+   "expect": {
+    "value": "\\\\<host>\\backup\\x.txt"
+   }
+  },
+  {
+   "id": "doubled-twice-dropped",
+   "field": "Image",
+   "raw": "C:\\\\\\\\Windows\\\\\\\\x.exe",
+   "expect": {
+    "drop": "value-rule-doubled-backslash"
+   }
+  },
+  {
+   "id": "profile-users",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\Temp\\\\setup.tmp",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Local\\Temp\\setup.tmp"
+   }
+  },
+  {
+   "id": "profile-forward-slash",
+   "field": "TargetFilename",
+   "raw": "C:/Users/mmiller/AppData/Local/Temp/a.tmp",
+   "expect": {
+    "value": "C:/Users/<user>/AppData/Local/Temp/a.tmp"
+   }
+  },
+  {
+   "id": "profile-long-path",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\?\\\\C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\a.tmp",
+   "expect": {
+    "value": "\\\\?\\C:\\Users\\<user>\\AppData\\Local\\a.tmp"
+   }
+  },
+  {
+   "id": "profile-device",
+   "field": "TargetFilename",
+   "raw": "\\\\Device\\\\HarddiskVolume3\\\\Users\\\\mmiller\\\\AppData\\\\Roaming\\\\x.dat",
+   "expect": {
+    "value": "\\Device\\HarddiskVolume3\\Users\\<user>\\AppData\\Roaming\\x.dat"
+   }
+  },
+  {
+   "id": "profile-volume-guid",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\?\\\\Volume{0f1e2d3c-0000-1111-2222-333344445555}\\\\Users\\\\mmiller\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "\\\\?\\Volume{0f1e2d3c-0000-1111-2222-333344445555}\\Users\\<user>\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-documents-and-settings",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Documents and Settings\\\\mmiller\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "C:\\Documents and Settings\\<user>\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-docume-8dot3",
+   "field": "TargetFilename",
+   "raw": "C:\\\\DOCUME~1\\\\mmiller\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "C:\\DOCUME~1\\<user>\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-domain-suffix-whole-folder",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller.FABRIKAM\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-already-numbered",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\<user>.000\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-dotted-spelling-refused",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\..\\\\Users\\\\mmiller\\\\x.dat",
+   "expect": {
+    "drop": "identity-unredacted"
+   }
+  },
+  {
+   "id": "profile-public-untouched",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\Public\\\\Documents\\\\x.dat",
+   "expect": {
+    "value": "C:\\Users\\Public\\Documents\\x.dat"
+   }
+  },
+  {
+   "id": "profile-default-untouched",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\Default\\\\AppData\\\\x.dat",
+   "expect": {
+    "value": "C:\\Users\\Default\\AppData\\x.dat"
+   }
+  },
+  {
+   "id": "profile-folder-only",
+   "field": "Image",
+   "raw": "C:\\\\Users\\\\mmiller",
+   "expect": {
+    "value": "C:\\Users\\<user>"
+   }
+  },
+  {
+   "id": "user-content-documents",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Documents\\\\Board minutes.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\Documents\\<redacted>"
+   }
+  },
+  {
+   "id": "user-content-desktop",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Desktop\\\\notes",
+   "expect": {
+    "value": "C:\\Users\\<user>\\Desktop\\<redacted>"
+   }
+  },
+  {
+   "id": "user-content-downloads",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Downloads\\\\tool.exe",
+   "expect": {
+    "value": "C:\\Users\\<user>\\Downloads\\<redacted>"
+   }
+  },
+  {
+   "id": "user-content-folder-itself",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Downloads",
+   "expect": {
+    "value": "C:\\Users\\<user>\\Downloads"
+   }
+  },
+  {
+   "id": "user-content-saved-games",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Saved Games\\\\x.sav",
+   "expect": {
+    "value": "C:\\Users\\<user>\\Saved Games\\<redacted>"
+   }
+  },
+  {
+   "id": "user-other-folder",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\Fabrikam Shared\\\\plan.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\<redacted>"
+   }
+  },
+  {
+   "id": "user-root-file",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\notes.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\<redacted>"
+   }
+  },
+  {
+   "id": "user-ntuser-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\NTUSER.DAT.LOG1",
+   "expect": {
+    "value": "C:\\Users\\<user>\\NTUSER.DAT.LOG1"
+   }
+  },
+  {
+   "id": "user-dot-folder-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\.vscode\\\\extensions\\\\x.json",
+   "expect": {
+    "value": "C:\\Users\\<user>\\.vscode\\extensions\\x.json"
+   }
+  },
+  {
+   "id": "appdata-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\Fabrikam\\\\Agent\\\\cache.db",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Local\\Fabrikam\\Agent\\cache.db"
+   }
+  },
+  {
+   "id": "appdata-recent-cut",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Roaming\\\\Microsoft\\\\Windows\\\\Recent\\\\Board minutes.lnk",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Roaming\\Microsoft\\Windows\\Recent\\<redacted>"
+   }
+  },
+  {
+   "id": "appdata-office-recent-cut",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Roaming\\\\Microsoft\\\\Office\\\\Recent\\\\x.LNK",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Roaming\\Microsoft\\Office\\Recent\\<redacted>"
+   }
+  },
+  {
+   "id": "appdata-outlook-attachments-cut",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\Microsoft\\\\Windows\\\\INetCache\\\\Content.Outlook\\\\AB12CD34\\\\invoice.zip",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Local\\Microsoft\\Windows\\INetCache\\Content.Outlook\\<redacted>"
+   }
+  },
+  {
+   "id": "appdata-olk-attachments-cut",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\Microsoft\\\\Olk\\\\Attachments\\\\x.bin",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Local\\Microsoft\\Olk\\Attachments\\<redacted>"
+   }
+  },
+  {
+   "id": "onedrive-personal-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\OneDrive\\\\x.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\OneDrive\\<redacted>"
+   }
+  },
+  {
+   "id": "onedrive-personal-explicit",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\OneDrive - Personal\\\\x.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\OneDrive - Personal\\<redacted>"
+   }
+  },
+  {
+   "id": "onedrive-business-redacted",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\OneDrive - Fabrikam Inc\\\\x.txt",
+   "expect": {
+    "value": "C:\\Users\\<user>\\OneDrive - <redacted>\\<redacted>"
+   }
+  },
+  {
+   "id": "email-in-ost-name",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Users\\\\mmiller\\\\AppData\\\\Local\\\\Microsoft\\\\Outlook\\\\m.miller@fabrikam-example.com.ost",
+   "expect": {
+    "value": "C:\\Users\\<user>\\AppData\\Local\\Microsoft\\Outlook\\<redacted>.ost"
+   }
+  },
+  {
+   "id": "email-outside-profile",
+   "field": "TargetFilename",
+   "raw": "D:\\\\Mail\\\\archive-m.miller@fabrikam-example.com",
+   "expect": {
+    "value": "D:\\Mail\\<redacted>"
+   }
+  },
+  {
+   "id": "image-scale-not-email",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Program Files\\\\Fabrikam\\\\res\\\\icon@2x.png",
+   "expect": {
+    "value": "C:\\Program Files\\Fabrikam\\res\\icon@2x.png"
+   }
+  },
+  {
+   "id": "npm-version-not-email",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Program Files\\\\Fabrikam\\\\node_modules\\\\.pnpm\\\\lodash@4.17.21\\\\x.js",
+   "expect": {
+    "value": "C:\\Program Files\\Fabrikam\\node_modules\\.pnpm\\lodash@4.17.21\\x.js"
+   }
+  },
+  {
+   "id": "sid-hive",
+   "field": "TargetObject",
+   "raw": "HKU\\\\S-1-5-21-1111111111-2222222222-3333333333-1001\\\\Software\\\\Fabrikam\\\\Run",
+   "expect": {
+    "value": "HKU\\<SID>\\Software\\Fabrikam\\Run"
+   }
+  },
+  {
+   "id": "sid-classes",
+   "field": "TargetObject",
+   "raw": "HKU\\\\S-1-5-21-1111111111-2222222222-3333333333-1001_Classes\\\\CLSID\\\\x",
+   "expect": {
+    "value": "HKU\\<SID>_Classes\\CLSID\\x"
+   }
+  },
+  {
+   "id": "sid-entra",
+   "field": "TargetObject",
+   "raw": "HKU\\\\S-1-12-1-1111111111-2222222222-3333333333-4444444444\\\\Software\\\\x",
+   "expect": {
+    "value": "HKU\\<SID>\\Software\\x"
+   }
+  },
+  {
+   "id": "service-hive-kept",
+   "field": "TargetObject",
+   "raw": "HKU\\\\S-1-5-18\\\\Software\\\\Fabrikam\\\\x",
+   "expect": {
+    "value": "HKU\\S-1-5-18\\Software\\Fabrikam\\x"
+   }
+  },
+  {
+   "id": "default-hive-kept",
+   "field": "TargetObject",
+   "raw": "HKU\\\\.DEFAULT\\\\Software\\\\Fabrikam\\\\x",
+   "expect": {
+    "value": "HKU\\.DEFAULT\\Software\\Fabrikam\\x"
+   }
+  },
+  {
+   "id": "unc-plain",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\FS01\\\\share\\\\x.txt",
+   "expect": {
+    "value": "\\\\<host>\\share\\x.txt"
+   }
+  },
+  {
+   "id": "unc-long",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\?\\\\UNC\\\\FS01\\\\share\\\\x.txt",
+   "expect": {
+    "value": "\\\\?\\UNC\\<host>\\share\\x.txt"
+   }
+  },
+  {
+   "id": "unc-nt",
+   "field": "TargetFilename",
+   "raw": "\\\\??\\\\UNC\\\\FS01\\\\share\\\\x.txt",
+   "expect": {
+    "value": "\\??\\UNC\\<host>\\share\\x.txt"
+   }
+  },
+  {
+   "id": "unc-mup",
+   "field": "TargetFilename",
+   "raw": "\\\\Device\\\\Mup\\\\FS01\\\\share\\\\x.txt",
+   "expect": {
+    "value": "\\Device\\Mup\\<host>\\share\\x.txt"
+   }
+  },
+  {
+   "id": "unc-forward",
+   "field": "TargetFilename",
+   "raw": "//FS01/share/x.txt",
+   "expect": {
+    "value": "//<host>/share/x.txt"
+   }
+  },
+  {
+   "id": "unc-ip-host",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\192.0.2.10\\\\share\\\\x.txt",
+   "expect": {
+    "value": "\\\\<host>\\share\\x.txt"
+   }
+  },
+  {
+   "id": "unc-sysvol-private-domain",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\DC01\\\\SYSVOL\\\\fabrikam.local\\\\Policies\\\\x.pol",
+   "expect": {
+    "value": "\\\\<host>\\SYSVOL\\<redacted>\\Policies\\x.pol"
+   }
+  },
+  {
+   "id": "install-dir-code",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\contoso\\\\chainsaw\\\\chainsaw.exe",
+   "expect": {
+    "value": "C:\\Program Files\\__INSTALLDIRNAME__\\chainsaw\\chainsaw.exe"
+   }
+  },
+  {
+   "id": "install-dir-hint",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\edrsvc\\\\sysinternals\\\\Autoruns64.exe",
+   "expect": {
+    "value": "C:\\Program Files\\__INSTALLDIRNAME__\\sysinternals\\Autoruns64.exe"
+   }
+  },
+  {
+   "id": "install-dir-uppercase",
+   "field": "Image",
+   "raw": "C:\\\\PROGRAM FILES\\\\EDRSVC\\\\x.exe",
+   "expect": {
+    "value": "C:\\PROGRAM FILES\\__INSTALLDIRNAME__\\x.exe"
+   }
+  },
+  {
+   "id": "install-dir-discovered",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\northwind-edr\\\\chainsaw\\\\x.exe",
+   "ctx": {
+    "customer_code": "contoso",
+    "customer_name": "Contoso Pharma Ltd",
+    "install_dirs": [
+     "northwind-edr"
+    ],
+    "own_domains": [
+     "contoso.com"
+    ],
+    "hostnames": [
+     "WS-0142",
+     "LAPTOP-7731.corp.contoso.com"
+    ],
+    "accounts": [
+     "CONTOSO\\jdoe",
+     "jane.roe@contoso.com",
+     "WS-0142$"
+    ]
+   },
+   "expect": {
+    "value": "C:\\Program Files\\__INSTALLDIRNAME__\\chainsaw\\x.exe"
+   }
+  },
+  {
+   "id": "install-dir-x86-is-a-name",
+   "field": "Image",
+   "raw": "C:\\\\Program Files (x86)\\\\edrsvc\\\\x.exe",
+   "expect": {
+    "value": "C:\\Program Files (x86)\\<redacted>\\x.exe"
+   }
+  },
+  {
+   "id": "name-code",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Contoso\\\\agent\\\\x.log",
+   "expect": {
+    "value": "C:\\ProgramData\\<redacted>\\agent\\x.log"
+   }
+  },
+  {
+   "id": "name-token",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\PharmaSuite\\\\x.log",
+   "expect": {
+    "value": "C:\\ProgramData\\PharmaSuite\\x.log"
+   }
+  },
+  {
+   "id": "name-token-whole-word",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Pharma\\\\x.log",
+   "expect": {
+    "value": "C:\\ProgramData\\<redacted>\\x.log"
+   }
+  },
+  {
+   "id": "name-stopword-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Ltd\\\\x.log",
+   "expect": {
+    "value": "C:\\ProgramData\\Ltd\\x.log"
+   }
+  },
+  {
+   "id": "name-hostname",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\WS-0142\\\\x.log",
+   "expect": {
+    "value": "C:\\ProgramData\\Fabrikam\\<redacted>\\x.log"
+   }
+  },
+  {
+   "id": "name-fqdn-first-label",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\LAPTOP-7731.cache",
+   "expect": {
+    "value": "C:\\ProgramData\\Fabrikam\\<redacted>.cache"
+   }
+  },
+  {
+   "id": "name-learned-account",
+   "field": "TargetFilename",
+   "raw": "D:\\\\Exports\\\\jdoe-report.csv",
+   "expect": {
+    "value": "D:\\Exports\\<redacted>-report.csv"
+   }
+  },
+  {
+   "id": "name-learned-upn-account",
+   "field": "TargetFilename",
+   "raw": "D:\\\\Exports\\\\jane.roe\\\\x.csv",
+   "expect": {
+    "value": "D:\\Exports\\<redacted>\\x.csv"
+   }
+  },
+  {
+   "id": "name-learned-domain-segment",
+   "field": "TargetFilename",
+   "raw": "D:\\\\Sites\\\\contoso.com\\\\web.config",
+   "expect": {
+    "value": "D:\\Sites\\<redacted>\\web.config"
+   }
+  },
+  {
+   "id": "document-name-redacted",
+   "field": "TargetFilename",
+   "raw": "D:\\\\Finance\\\\Q3 forecast.xlsx",
+   "expect": {
+    "value": "D:\\Finance\\<redacted>.xlsx"
+   }
+  },
+  {
+   "id": "document-in-system-root-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\Help\\\\guide.pdf",
+   "expect": {
+    "value": "C:\\Windows\\Help\\guide.pdf"
+   }
+  },
+  {
+   "id": "document-in-program-files-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Program Files\\\\Fabrikam\\\\docs\\\\manual.pdf",
+   "expect": {
+    "value": "C:\\Program Files\\Fabrikam\\docs\\manual.pdf"
+   }
+  },
+  {
+   "id": "user-system",
+   "field": "User",
+   "raw": "NT AUTHORITY\\\\SYSTEM",
+   "expect": {
+    "value": "NT AUTHORITY\\SYSTEM"
+   }
+  },
+  {
+   "id": "user-network-service",
+   "field": "User",
+   "raw": "NT AUTHORITY\\\\NETWORK SERVICE",
+   "expect": {
+    "value": "NT AUTHORITY\\NETWORK SERVICE"
+   }
+  },
+  {
+   "id": "user-virtual-service",
+   "field": "User",
+   "raw": "NT SERVICE\\\\FabrikamSvc",
+   "expect": {
+    "value": "NT SERVICE\\FabrikamSvc"
+   }
+  },
+  {
+   "id": "user-virtual-service-with-name",
+   "field": "User",
+   "raw": "NT SERVICE\\\\ContosoSync",
+   "expect": {
+    "value": "NT SERVICE\\ContosoSync"
+   }
+  },
+  {
+   "id": "user-domain-account",
+   "field": "User",
+   "raw": "FABRIKAM\\\\mmiller",
+   "expect": {
+    "value": "<redacted>"
+   }
+  },
+  {
+   "id": "user-upn",
+   "field": "SourceUser",
+   "raw": "m.miller@fabrikam-example.com",
+   "expect": {
+    "value": "<redacted>"
+   }
+  },
+  {
+   "id": "user-dash",
+   "field": "TargetUser",
+   "raw": "-",
+   "expect": {
+    "value": "-"
+   }
+  },
+  {
+   "id": "dns-vendor-kept",
+   "field": "QueryName",
+   "raw": "telemetry.fabrikam-example.com",
+   "expect": {
+    "value": "telemetry.fabrikam-example.com"
+   }
+  },
+  {
+   "id": "dns-ip-literal",
+   "field": "QueryName",
+   "raw": "192.0.2.10",
+   "expect": {
+    "drop": "dns-ip-literal"
+   }
+  },
+  {
+   "id": "dns-ipv6-literal",
+   "field": "DestinationHostname",
+   "raw": "2001:db8::1",
+   "expect": {
+    "drop": "dns-ip-literal"
+   }
+  },
+  {
+   "id": "dns-single-label",
+   "field": "QueryName",
+   "raw": "wpad",
+   "expect": {
+    "drop": "dns-single-label"
+   }
+  },
+  {
+   "id": "dns-srv",
+   "field": "QueryName",
+   "raw": "_ldap._tcp.dc._msdcs.fabrikam-example.com",
+   "expect": {
+    "drop": "dns-service-record"
+   }
+  },
+  {
+   "id": "dns-reverse",
+   "field": "QueryName",
+   "raw": "10.2.0.192.in-addr.arpa",
+   "expect": {
+    "drop": "dns-reverse-lookup"
+   }
+  },
+  {
+   "id": "dns-reverse-named",
+   "field": "QueryName",
+   "raw": "x.ip6.arpa",
+   "expect": {
+    "drop": "dns-reverse-lookup"
+   }
+  },
+  {
+   "id": "dns-local",
+   "field": "QueryName",
+   "raw": "printer01.local",
+   "expect": {
+    "drop": "dns-private-suffix"
+   }
+  },
+  {
+   "id": "dns-home-arpa",
+   "field": "QueryName",
+   "raw": "nas.home.arpa",
+   "expect": {
+    "drop": "dns-private-suffix"
+   }
+  },
+  {
+   "id": "dns-corp",
+   "field": "QueryName",
+   "raw": "intranet.fabrikam.corp",
+   "expect": {
+    "drop": "dns-private-suffix"
+   }
+  },
+  {
+   "id": "dns-own-domain",
+   "field": "QueryName",
+   "raw": "vpn.contoso.com",
+   "expect": {
+    "drop": "dns-own-domain"
+   }
+  },
+  {
+   "id": "dns-identity-token",
+   "field": "QueryName",
+   "raw": "pharma-portal.example-cdn.net",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-hostname-label",
+   "field": "QueryName",
+   "raw": "ws-0142.dyn.example-dns.net",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-ip-label-dashes",
+   "field": "QueryName",
+   "raw": "ip-10-1-2-3.ec2.example-cloud.com",
+   "expect": {
+    "drop": "dns-ip-label"
+   }
+  },
+  {
+   "id": "dns-ip-label-dotted",
+   "field": "QueryName",
+   "raw": "203-0-113-5.static.example-isp.net",
+   "expect": {
+    "drop": "dns-ip-label"
+   }
+  },
+  {
+   "id": "dns-tenant-redacted",
+   "field": "QueryName",
+   "raw": "fabrikam-my.sharepoint.com",
+   "expect": {
+    "value": "<redacted>.sharepoint.com"
+   }
+  },
+  {
+   "id": "dns-tenant-blob",
+   "field": "DestinationHostname",
+   "raw": "fabrikamstore.blob.core.windows.net",
+   "expect": {
+    "value": "<redacted>.blob.core.windows.net"
+   }
+  },
+  {
+   "id": "dns-tenant-of-customer-dropped",
+   "field": "QueryName",
+   "raw": "contoso-my.sharepoint.com",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-non-ascii",
+   "field": "QueryName",
+   "raw": "xn--xample-9ua.com",
+   "expect": {
+    "value": "xn--xample-9ua.com"
+   }
+  },
+  {
+   "id": "dns-non-ascii-raw",
+   "field": "QueryName",
+   "raw": "éxample.com",
+   "expect": {
+    "drop": "value-rule-non-ascii-dns"
+   }
+  },
+  {
+   "id": "rule-wildcard",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Classes\\\\*\\\\shell\\\\x",
+   "expect": {
+    "drop": "value-rule-wildcard"
+   }
+  },
+  {
+   "id": "rule-env-var",
+   "field": "TargetFilename",
+   "raw": "%TEMP%\\\\x.tmp",
+   "expect": {
+    "drop": "value-rule-env-var"
+   }
+  },
+  {
+   "id": "rule-not-nfc",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\café.txt",
+   "expect": {
+    "drop": "value-rule-not-nfc"
+   }
+  },
+  {
+   "id": "rule-rlo",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\x‮txt.exe",
+   "expect": {
+    "drop": "value-rule-bad-character"
+   }
+  },
+  {
+   "id": "rule-kelvin",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\Fabrikam\\\\Kagent.exe",
+   "expect": {
+    "drop": "value-rule-look-alike"
+   }
+  },
+  {
+   "id": "rule-unknown-placeholder",
+   "field": "PipeName",
+   "raw": "\\\\fabrikam-<foo>",
+   "expect": {
+    "drop": "value-rule-unknown-placeholder"
+   }
+  },
+  {
+   "id": "rule-unknown-token",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Program Files\\\\__OTHERDIR__\\\\x.exe",
+   "expect": {
+    "drop": "value-rule-unknown-token"
+   }
+  },
+  {
+   "id": "rule-empty",
+   "field": "Image",
+   "raw": "",
+   "expect": {
+    "drop": "value-empty"
+   }
+  },
+  {
+   "id": "rule-too-long",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "expect": {
+    "drop": "value-too-long"
+   }
+  },
+  {
+   "id": "rule-way-too-long",
+   "field": "TargetFilename",
+   "raw": "C:\\\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "expect": {
+    "drop": "value-too-long"
+   }
+  },
+  {
+   "id": "anonymous-pipe-kept",
+   "field": "PipeName",
+   "raw": "<Anonymous Pipe>",
+   "expect": {
+    "value": "<Anonymous Pipe>"
+   }
+  },
+  {
+   "id": "pipe-kept",
+   "field": "PipeName",
+   "raw": "\\\\fabrikam-agent-ipc",
+   "expect": {
+    "value": "\\fabrikam-agent-ipc"
+   }
+  },
+  {
+   "id": "granted-access-kept",
+   "field": "GrantedAccess",
+   "raw": "0x1010",
+   "expect": {
+    "value": "0x1010"
+   }
+  },
+  {
+   "id": "signature-kept",
+   "field": "Signature",
+   "raw": "Fabrikam, Inc.",
+   "expect": {
+    "value": "Fabrikam, Inc."
+   }
+  }
+ ]
+}

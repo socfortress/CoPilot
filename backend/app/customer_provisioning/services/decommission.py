@@ -5,6 +5,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.active_response.services.sysmon_stats.sharing import on_customer_decommissioned
 from app.blocking import DEFAULT_HTTP_TIMEOUT
 from app.blocking import run_blocking
 from app.connectors.portainer.services.stack import delete_wazuh_customer_stack
@@ -152,6 +153,9 @@ async def decomission_wazuh_customer(
 
     # Delete the Sysmon config stored for those groups (best effort)
     await delete_stored_sysmon_config(customer_meta.customer_code)
+
+    # Ask SOCFortress to delete the customer's Sysmon noise reports, and drop its sharing setting (best effort)
+    await on_customer_decommissioned(customer_meta.customer_code)
 
     # Delete Graylog Stream
     await delete_stream(customer_meta.customer_meta_graylog_stream)

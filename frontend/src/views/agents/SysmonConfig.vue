@@ -88,6 +88,47 @@
 								Sync now
 							</n-button>
 						</div>
+						<!-- The weekly, redacted Sysmon noise statistics this CoPilot sends SOCFortress. -->
+						<div v-if="isAdmin && statsLineValue" class="mt-4 flex flex-col gap-2 text-xs" data-testid="stats-sharing">
+							<div class="flex items-start gap-1.5">
+								<Icon
+									:name="statsLineValue.icon"
+									:size="14"
+									class="mt-0.5 shrink-0"
+									:class="statsLineValue.iconClass"
+								/>
+								<span data-testid="stats-line">{{ statsLineValue.text }}</span>
+							</div>
+							<div v-if="statsLineValue.detail" class="text-secondary" data-testid="stats-detail">
+								{{ statsLineValue.detail }}
+							</div>
+							<div class="flex gap-2">
+								<n-button size="small" secondary data-testid="stats-manage" @click="showStatsDialog = true">
+									Manage
+								</n-button>
+								<n-button
+									v-if="statsLineValue.latched"
+									size="small"
+									secondary
+									:loading="sendingStats"
+									data-testid="stats-resume"
+									@click="confirmSendStats(true)"
+								>
+									Resume
+								</n-button>
+								<n-button
+									v-else
+									size="small"
+									secondary
+									:loading="sendingStats"
+									:disabled="!statsLineValue.canSend"
+									data-testid="stats-send-now"
+									@click="confirmSendStats(false)"
+								>
+									Send now
+								</n-button>
+							</div>
+						</div>
 					</div>
 				</n-spin>
 			</template>
@@ -191,6 +232,47 @@
 			<template #main-content>
 				<div v-if="currentConfig" class="px-4.5 py-2.5 text-sm break-all">
 					<div class="font-mono">Customer: {{ currentConfig?.customer_code }}</div>
+					<!-- This customer's noise statistics: sharing, its pseudonym in the reports, the last report. -->
+					<div
+						v-if="isAdmin && currentStatsCustomer"
+						class="text-secondary mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
+						data-testid="stats-customer"
+					>
+						<span class="flex items-center gap-1.5">
+							<n-switch
+								size="small"
+								:value="currentStatsCustomer.sharing"
+								:loading="savingSharing"
+								:disabled="statsStatus?.mode === 'off'"
+								data-testid="stats-customer-switch"
+								@update:value="setCustomerSharing($event)"
+							/>
+							Noise statistics
+						</span>
+						<span v-if="currentStatsCustomer.pseudonym" class="flex items-center gap-1 font-mono">
+							{{ currentStatsCustomer.pseudonym }}
+							<n-button size="tiny" text data-testid="stats-copy-pseudonym" @click="copy(currentStatsCustomer.pseudonym)">
+								<template #icon>
+									<Icon :name="CopyIcon" />
+								</template>
+							</n-button>
+						</span>
+						<n-tooltip :disabled="!currentStatsReport?.message">
+							<template #trigger>
+								<span data-testid="stats-customer-last">{{ currentStatsReportText }}</span>
+							</template>
+							{{ currentStatsReport?.message }}
+						</n-tooltip>
+						<n-button
+							size="tiny"
+							secondary
+							:disabled="statsStatus?.mode === 'off'"
+							data-testid="stats-customer-preview"
+							@click="openStatsPreview(currentStatsCustomer.customer_code)"
+						>
+							Preview
+						</n-button>
+					</div>
 				</div>
 				<n-spin
 					:show="loadingConfig || uploadingConfig || deployingConfig"
@@ -213,6 +295,8 @@
 				</n-spin>
 			</template>
 		</SegmentedPage>
+		<SysmonStatsDialog v-model:show="showStatsDialog" :status="statsStatus" @customer="onStatsCustomer($event)" />
+		<SysmonStatsPreview v-model:show="showStatsPreview" :customer-code="statsPreviewCode" />
 	</div>
 </template>
 
@@ -222,14 +306,29 @@ import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface"
 import type { XMLEditorCtx, XMLError } from "@/components/common/XMLEditor.vue"
 import type { ApiError } from "@/types/common"
 import type { Customer } from "@/types/customers"
-import type { ConfigContent, DefaultSyncStatus } from "@/types/sysmon-config"
+import type { ConfigContent, DefaultSyncStatus, StatsCustomer, StatsStatus } from "@/types/sysmon-config"
+import { useClipboard } from "@vueuse/core"
 import _clone from "lodash/cloneDeep"
-import { NButton, NDropdown, NEmpty, NPopover, NScrollbar, NSpin, NTooltip, useDialog, useMessage } from "naive-ui"
+import {
+	NButton,
+	NDropdown,
+	NEmpty,
+	NPopover,
+	NScrollbar,
+	NSpin,
+	NSwitch,
+	NTooltip,
+	useDialog,
+	useMessage
+} from "naive-ui"
 import { computed, h, onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import SegmentedPage from "@/components/common/SegmentedPage.vue"
 import XMLEditor from "@/components/common/XMLEditor.vue"
+import { statsLine, toggleSharing, weekStateText } from "@/components/sysmon/statsSharing"
+import SysmonStatsDialog from "@/components/sysmon/SysmonStatsDialog.vue"
+import SysmonStatsPreview from "@/components/sysmon/SysmonStatsPreview.vue"
 import { useNavigation } from "@/composables/useNavigation"
 import { useAuthStore } from "@/stores/auth"
 import { useSettingsStore } from "@/stores/settings"
@@ -694,10 +793,121 @@ function runDefaultSync(force: boolean) {
 		})
 }
 
+// The weekly Sysmon noise statistics sent to SOCFortress: a status line, per customer a sharing switch, the preview.
+const statsStatus = ref<StatsStatus | null>(null)
+const showStatsDialog = ref(false)
+const showStatsPreview = ref(false)
+const statsPreviewCode = ref<string | null>(null)
+const sendingStats = ref(false)
+const savingSharing = ref(false)
+const CopyIcon = "carbon:copy"
+const { copy: copyText } = useClipboard({ legacy: true })
+
+const statsLineValue = computed(() => statsLine(statsStatus.value))
+const currentStatsCustomer = computed<StatsCustomer | null>(
+	() => statsStatus.value?.customers.find(c => c.customer_code === currentConfig.value?.customer_code) ?? null
+)
+const currentStatsReport = computed(() => {
+	const customer = currentStatsCustomer.value
+	return customer?.target_week_state ?? customer?.last_sent_state ?? null
+})
+const currentStatsReportText = computed(() => {
+	const customer = currentStatsCustomer.value
+	if (!customer) return ""
+	const week = customer.target_week_state ? statsStatus.value?.target_week ?? null : customer.last_sent_week
+	return weekStateText(week, currentStatsReport.value, iso => formatDate(iso, dFormats.datetime) as string)
+})
+
+function copy(text: string | null) {
+	if (!text) return
+	Promise.resolve(copyText(text))
+		.then(() => message.success("Copied"))
+		.catch(() => message.warning("Could not copy"))
+}
+
+function getStatsStatus() {
+	if (!isAdmin.value) return
+	// Only an information block: the page works without it
+	Promise.resolve()
+		.then(() => Api.sysmonConfig.getStatsStatus())
+		.then(res => {
+			statsStatus.value = res.data.success ? res.data.status : null
+		})
+		.catch(() => {
+			statsStatus.value = null
+		})
+}
+
+function onStatsCustomer(updated: StatsCustomer) {
+	if (!statsStatus.value) return
+	statsStatus.value = {
+		...statsStatus.value,
+		customers: statsStatus.value.customers.map(c => (c.customer_code === updated.customer_code ? updated : c))
+	}
+}
+
+function setCustomerSharing(value: boolean) {
+	const customer = currentStatsCustomer.value
+	if (!customer) return
+	savingSharing.value = true
+	toggleSharing(dialog, message, customer, value).then(updated => {
+		savingSharing.value = false
+		if (updated) onStatsCustomer(updated)
+	})
+}
+
+function openStatsPreview(code: string) {
+	statsPreviewCode.value = code
+	showStatsPreview.value = true
+}
+
+function confirmSendStats(resume: boolean) {
+	dialog.warning({
+		title: resume ? "Resume noise statistics" : "Send noise statistics now",
+		content: resume
+			? `SOCFortress refused a report (${statsStatus.value?.latch?.reason ?? ""}), so reports are paused. Resume and send the due reports now? Update CoPilot first if a newer version is available.`
+			: "Send every due weekly report now, without waiting for its scheduled time? A week already sent for a customer is not sent again.",
+		positiveText: resume ? "Resume" : "Send now",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			sendStats(resume)
+		}
+	})
+}
+
+function sendStats(resume: boolean) {
+	sendingStats.value = true
+
+	Api.sysmonConfig
+		.sendStatsNow({ resume })
+		.then(res => {
+			if (res.data.success) {
+				statsStatus.value = res.data.status
+				const { result } = res.data
+				if (result.outcome === "completed" && result.customers.every(c => c.outcome === "sent")) {
+					message.success(result.message, { duration: 10000, closable: true })
+				} else if (["completed", "nothing_due", "service_not_accepting", "sharing_off"].includes(result.outcome)) {
+					message.warning(result.message, { duration: 10000, closable: true })
+				} else {
+					message.error(result.message, { duration: 0, closable: true })
+				}
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			sendingStats.value = false
+		})
+}
+
 onBeforeMount(() => {
 	getList()
 	getCustomers()
 	getDefaultSync()
+	getStatsStatus()
 })
 
 onBeforeUnmount(() => {
