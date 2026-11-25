@@ -256,6 +256,11 @@ class RulesCache(BackgroundRefreshMixin):
 
     async def ensure_loaded(self):
         """Ensure rules are loaded, refreshing if stale."""
+        # CoPilot loads this cache at startup and on its catalog refresh job: the moment to make sure the grouped
+        # (aggregation) CoPilot Searches events are being collected in this process (idempotent; see grouped_alerts).
+        from app.integrations.copilot_searches.services.grouped_alerts import start_grouped_alert_collector
+
+        start_grouped_alert_collector()
         if self.is_stale:
             await self.refresh()
 
@@ -836,6 +841,15 @@ def _parse_duration_to_ms(value: Any) -> int:
     if seconds <= 0:
         raise ValueError(f"Duration must be positive: {value!r}")
     return int(seconds * 1000)
+
+
+def _copilot_alert_id_marker(aggregation: Optional[AggregationConfig]) -> str:
+    """The queue a rule's Graylog events go to: ``NONE`` (CoPilot's alert collector, which builds the alert from the
+    log the event points at) or, for a rule grouped by fields, ``GROUPED`` (CoPilot Searches' own collector,
+    ``services/grouped_alerts.py``: a grouped event points at no log, so CoPilot's collector can't read it)."""
+    from app.integrations.copilot_searches.services.grouped_alerts import GROUPED_MARKER
+
+    return GROUPED_MARKER if aggregation is not None and aggregation.group_by else "NONE"
 
 
 def _get_rule_aggregation(rule: dict) -> Optional[AggregationConfig]:
@@ -1511,7 +1525,7 @@ async def provision_graylog_alert_from_rule(
                 providers=[
                     GraylogAlertProvisionProvider(
                         type="template-v1",
-                        template="NONE",
+                        template=_copilot_alert_id_marker(aggregation),
                         require_values=True,
                     ),
                 ],
