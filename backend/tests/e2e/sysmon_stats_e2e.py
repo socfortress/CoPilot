@@ -32,8 +32,9 @@ Local only; nothing touches a remote host. Skipped unless these are set:
 3. CKA: `sysmonctl suggest check` on the candidates: nothing invalid; P1 survives as a global suggestion; P2 is dropped
    (a placeholder in the narrowest rule); P3 goes to a person (processcreate-never-drafted; older CKA: dropped as
    baseline-incomplete); P4 (one owner) is dropped as an unknown customer's and P4b (two owners) deferred below the
-   threshold: neither is suggested; P9 survives as a global suggestion (it carries OriginalFileName); P5 and P8 only
-   have to load.
+   threshold: neither is suggested; P9 survives as a global suggestion (it carries OriginalFileName); P8 (a
+   ProcessCreate whose main verdict hangs on the command line the fleet never reports) goes to a person, flagged
+   main-verdict-depends-on (older CKA: dropped as not logged by main), never a suggestion; P5 only has to load.
 4. Feedback: the probe answers and the 422 go back through CoPilot's classifier (not accepting / accepting; refused and
    the pause).
 """
@@ -495,6 +496,10 @@ def step3():
         fail(f"P2: expected dropped at the deny gate, got {outcomes['P2']}")
     if (outcomes["P3"][0], outcomes["P3"][2]) not in (("needs_person", "processcreate-never-drafted"), ("dropped", "baseline-incomplete")):
         fail(f"P3: expected needs_person/processcreate-never-drafted, got {outcomes['P3']}")
+    # P8: whether main logs chainsaw.exe depends on its command line, which the fleet never reports. CKA with the
+    # main-verdict-depends-on fix lists it for a person; older CKA (c626507) drops it as not logged by main.
+    if (outcomes["P8"][0], outcomes["P8"][2]) not in (("needs_person", "processcreate-never-drafted"), ("dropped", "not-logged-by-main")):
+        fail(f"P8: expected needs_person/processcreate-never-drafted, got {outcomes['P8']}")
     return outcomes, counts, head
 
 
