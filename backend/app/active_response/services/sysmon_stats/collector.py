@@ -6,6 +6,11 @@ by its ``X-Opaque-Id`` when the client gives up. A search that timed out or lost
 report: undercounts are never sent. Events are attributed to a customer only by their customer label, matched
 case-insensitively to a CoPilot customer code; an unlabelled event, or one whose label is no customer's, is never
 attributed (no fallback to agent ids or host names).
+
+Field discovery asks only about the indices that may hold the target week's events (``index_filter``), and the week's
+searches go to exactly those indices: an old index that mapped a field differently neither hides the field nor fails
+the searches' shards. An event whose key field still cannot be aggregated is left out, and said so: a warning, and the
+report marked truncated.
 """
 import uuid
 from dataclasses import dataclass
@@ -17,6 +22,7 @@ from datetime import timezone
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Set
 from typing import Tuple
 
@@ -27,6 +33,7 @@ from elasticsearch7.exceptions import ConnectionTimeout
 from loguru import logger
 
 from app.active_response.services.sysmon_stats import settings
+from app.active_response.services.sysmon_stats.fields import BASE_FIELDS
 from app.active_response.services.sysmon_stats.fields import EVENT_PLAN
 from app.active_response.services.sysmon_stats.fields import FIELD_CAPS_FIELDS
 from app.active_response.services.sysmon_stats.fields import FieldMap
@@ -114,20 +121,58 @@ async def search(client: Any, index: str, body: Dict[str, Any], timeout: int) ->
     return response
 
 
-async def discover_fields(client: Any, index: str) -> List[FieldMap]:
+@dataclass
+class Discovery:
+    """The usable shapes, and the index expression the week's searches go to."""
+
+    maps: List[FieldMap]
+    index: str
+
+
+async def _field_caps(client: Any, index: str, body: Optional[Dict[str, Any]]) -> Any:
+    kwargs: Dict[str, Any] = {}
+    if body is not None:
+        kwargs["body"] = body
     try:
-        response = await client.field_caps(
+        return await client.field_caps(
             index=index,
             fields=FIELD_CAPS_FIELDS,
             ignore_unavailable=True,
             allow_no_indices=True,
             request_timeout=settings.METADATA_TIMEOUT_SECONDS,
+            **kwargs,
         )
     except (AuthenticationException, AuthorizationException, IndexerConnectionError, ConnectionTimeout) as e:
         raise IndexerUnreachable(type(e).__name__)
     except Exception as e:  # noqa: BLE001
         raise IndexerFailure(type(e).__name__)
-    return discover(response)
+
+
+def _week_indices(response: Any) -> List[str]:
+    indices = response.get("indices") if isinstance(response, dict) else None
+    if not isinstance(indices, list):
+        return []
+    return sorted({i for i in indices if isinstance(i, str) and i and "," not in i and not any(ch.isspace() for ch in i)})
+
+
+async def discover_fields(client: Any, index: str, monday: Optional[date] = None) -> Discovery:
+    """The usable shapes. With ``monday``: asked of the indices that may hold that week's events only, which the week's
+    searches then target by name; when the indexer cannot filter, names none or too many, the whole pattern is asked
+    and searched (a field must then be aggregatable in every index of it)."""
+    if monday is not None:
+        start, end = week_bounds(monday)
+        body = {"index_filter": {"range": {BASE_FIELDS["time"][0]: {"gte": start, "lt": end, "format": "epoch_millis"}}}}
+        try:
+            response = await _field_caps(client, index, body)
+        except IndexerFailure as e:
+            logger.info(f"Sysmon stats: the indexer could not limit field discovery to the week ({e}); asking every index")
+        else:
+            names = _week_indices(response)
+            joined = ",".join(names)
+            maps = discover(response)
+            if names and maps and len(joined) <= settings.MAX_INDEX_PATTERN_LENGTH:
+                return Discovery(maps=maps, index=joined)
+    return Discovery(maps=discover(await _field_caps(client, index, None)), index=index)
 
 
 @dataclass
@@ -179,7 +224,10 @@ class Collection:
     patterns: List[RawPattern] = field(default_factory=list)
     pairs_left_out: bool = False
     cut_tails: List[int] = field(default_factory=list)
-    unavailable_events: int = 0
+    # Event IDs with qualifying pairs whose patterns could not be collected (a key field not aggregatable)
+    unavailable_events: List[int] = field(default_factory=list)
+    # The customer's computers' names (the Windows event's Computer), to learn its host names and domains from
+    computers: List[str] = field(default_factory=list)
     searches: int = 0
 
 
@@ -193,7 +241,8 @@ async def collect_customer(
     min_endpoints: int,
     timeout: int,
 ) -> Collection:
-    """Stage 1 and stage 2 for one customer, in every shape its labels appear in."""
+    """Stage 1 and stage 2 for one customer, in every shape its labels appear in. Counts found in both shapes are never
+    added (queries.merge_shapes): the same endpoints may be in both."""
     start, end = week_bounds(monday)
     result = Collection()
     raw: List[RawPattern] = []
@@ -203,16 +252,27 @@ async def collect_customer(
             continue
         first = parse_stage1(await search(client, index, stage1_body(fm, shape_labels, start, end, level_max), timeout))
         result.searches += 1
-        result.endpoints += first.endpoints
+        result.endpoints = max(result.endpoints, first.endpoints)
         result.cut_tails.extend(first.cut_tails)
+        for name in first.computers:
+            if name not in result.computers and len(result.computers) < settings.STAGE1_COMPUTERS_SIZE:
+                result.computers.append(name)
         pairs, left_out = select_pairs(first.pairs, min_endpoints)
         result.pairs_left_out = result.pairs_left_out or left_out
         by_event: Dict[int, List[str]] = {}
         for pair in pairs:
             by_event.setdefault(pair.eid, []).append(pair.actor)
         for eid, actors in sorted(by_event.items()):
-            if eid not in EVENT_PLAN or not fm.plan_mapped(eid):
-                result.unavailable_events += 1
+            if eid not in EVENT_PLAN:
+                continue
+            unmapped = fm.unmapped_keys(eid)
+            if unmapped:
+                if eid not in result.unavailable_events:
+                    result.unavailable_events.append(eid)
+                logger.warning(
+                    f"Sysmon stats: event {eid} has patterns to report, but {', '.join(unmapped)} is not aggregatable in every "
+                    f"index of the {fm.shape} shape; they are left out and the report is marked truncated",
+                )
                 continue
             body = stage2_body(fm, shape_labels, start, end, level_max, eid, actors)
             leaves, tails = parse_stage2(await search(client, index, body, timeout), eid)

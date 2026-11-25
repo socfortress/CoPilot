@@ -50,7 +50,22 @@ BUSY_RETRIES = 2
 class Probe:
     ACCEPTING = "accepting"
     NOT_ACCEPTING = "not_accepting"
+    # No answer (DNS, egress, TLS, a timeout) or a proxy's 5xx: nothing is collected on this tick
+    UNREACHABLE = "unreachable"
+    # A redirect, never followed: nothing is collected on this tick
+    REDIRECT = "redirect"
+    # 429 or 503: SOCFortress asks to wait (ProbeResult.retry_seconds)
+    WAIT = "wait"
+    # Any other answer: reports are attempted (the report's own answer decides)
     UNKNOWN = "unknown"
+
+
+@dataclass
+class ProbeResult:
+    verdict: str
+    status: Optional[int] = None
+    retry_seconds: Optional[int] = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -140,19 +155,35 @@ async def _post(url: str, body: bytes, hdrs: Dict[str, str], deadline: float, tr
         return Answer(status=None, error=type(e).__name__)
 
 
-async def probe(base: str, transport: Optional[httpx.AsyncBaseTransport] = None) -> str:
+async def check(base: str, transport: Optional[httpx.AsyncBaseTransport] = None) -> ProbeResult:
     """Whether the service accepts reports, asked without a license key and with an empty body: it answers 404 "reports
     are not enabled" before any authentication while reports are off, and 401 once they are on. No credential and no
-    data leaves this CoPilot."""
+    data leaves this CoPilot. No answer, a redirect or a 5xx says the service cannot take a report now, so no indexer
+    query is spent on one; 429 and 503 also say how long to wait."""
     url, error = settings.endpoint_url(base, settings.REPORT_PATH)
     if url is None:
-        return Probe.UNKNOWN
+        return ProbeResult(Probe.UNKNOWN, error=error)
     answer = await _post(url, b"{}", headers(None), settings.PROBE_DEADLINE, transport)
-    if answer.status == 404 and (answer.body or {}).get("detail") == settings.NOT_ENABLED_DETAIL:
-        return Probe.NOT_ACCEPTING
-    if answer.status == 401:
-        return Probe.ACCEPTING
-    return Probe.UNKNOWN
+    status = answer.status
+    if status is None:
+        return ProbeResult(Probe.UNREACHABLE, error=answer.error or "no answer")
+    if status == 404 and (answer.body or {}).get("detail") == settings.NOT_ENABLED_DETAIL:
+        return ProbeResult(Probe.NOT_ACCEPTING, status)
+    if status == 401:
+        return ProbeResult(Probe.ACCEPTING, status)
+    if status in _REDIRECTS:
+        return ProbeResult(Probe.REDIRECT, status)
+    if status in (429, 503):
+        default = 3600 if status == 429 else 300
+        return ProbeResult(Probe.WAIT, status, retry_seconds=retry_after(answer.headers.get("retry-after"), default))
+    if status >= 500:
+        return ProbeResult(Probe.UNREACHABLE, status, error=f"HTTP {status}")
+    return ProbeResult(Probe.UNKNOWN, status)
+
+
+async def probe(base: str, transport: Optional[httpx.AsyncBaseTransport] = None) -> str:
+    """``check``'s verdict alone."""
+    return (await check(base, transport)).verdict
 
 
 def retry_after(value: Optional[str], default: int, now: Optional[datetime] = None) -> int:

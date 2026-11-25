@@ -257,3 +257,82 @@ def test_the_customer_flows_call_the_hooks(module):
 
     source = inspect.getsource(importlib.import_module(module))
     assert "on_customer_deleted(customer_code)" in source or "on_customer_decommissioned(customer_meta.customer_code)" in source
+
+
+def test_decommission_keeps_an_opt_out_and_turns_sharing_off(monkeypatch, audit_rows):
+    """Review: decommission deleted the settings row while the Customers row stayed, so an admin's opt-out reverted to
+    sharing (no row means on), its hints went, and reports started again. Now sharing is off and stays off."""
+    from app.active_response.services.sysmon_stats import status as status_mod
+
+    docs = (
+        week_docs("contoso")
+        + week_docs("contoso", monday="2026-11-23")
+        + week_docs("northwind")
+        + week_docs("northwind", monday="2026-11-23")
+    )
+    world = World(monkeypatch, docs)
+    service = Sysmonsync()
+
+    async def scenario():
+        await world.setup({"contoso": "Contoso Ltd", "northwind": "Northwind"})
+        await opt(world, "contoso", False, service, install_dir_name="edrsvc", own_domains=["contoso.com"])
+        await sharing.on_customer_decommissioned("contoso", now=NOW)
+        # A customer that was sharing (no row) is turned off too
+        await sharing.on_customer_decommissioned("northwind", now=NOW)
+        async with world.db.session() as s:
+            status = await status_mod.get_status(s, now=NOW)
+        ticks = []
+        for moment in (NOW, datetime(2026, 12, 2, 23, 0, tzinfo=timezone.utc)):
+            async with world.db.session() as s:
+                ticks.append(await runner.run_tick(s, now=moment, transport=service.transport))
+        return status, ticks, await row(world, "contoso"), await row(world, "northwind")
+
+    status, ticks, contoso, northwind = run(scenario())
+    assert [c.sharing for c in status.customers] == [False, False]
+    assert contoso.sharing_enabled is False and contoso.install_dir_name == "edrsvc" and contoso.own_domains == ["contoso.com"]
+    assert northwind.sharing_enabled is False and northwind.withdrawn_at is not None
+    assert service.reports() == [] and all(t.outcome is StatsOutcome.NOTHING_DUE for t in ticks)
+    decommissioned = [
+        r for r in audit_rows if r.action == AuditAction.SYSMON_STATS_SHARING.value and r.details == "Customer decommissioned"
+    ]
+    assert [(r.customer_code, r.actor_username) for r in decommissioned] == [("contoso", "system"), ("northwind", "system")]
+    assert {"sharing": False} == _as_dict(decommissioned[1].new_value) and {"sharing": True} == _as_dict(decommissioned[1].old_value)
+
+
+def _as_dict(value):
+    return json.loads(value) if isinstance(value, str) else value
+
+
+def test_a_refused_customer_deletion_withdraws_nothing(monkeypatch):
+    """Review: the withdraw was queued before the deletion was committed, so a refused deletion (users still assigned)
+    withdrew a live, sharing customer's reports. Now it is queued only once the customer is gone."""
+    from sqlmodel import SQLModel
+
+    import app.auth.models.users as users
+    from app.customers.routes.customers import delete_customer
+
+    world = World(monkeypatch, week_docs("contoso"))
+
+    async def scenario():
+        await world.setup({"contoso": "Contoso Ltd", "northwind": "Northwind"})
+        tables = [SQLModel.metadata.tables[n] for n in ("role", "user", "user_customer_access", "customersmeta")]
+        async with world.db.engine.begin() as conn:
+            await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=tables))
+        async with world.db.session() as s:
+            s.add(users.User(id=7, username="analyst1", password="x", email="a@example.invalid"))
+            await s.commit()
+            s.add(users.UserCustomerAccess(user_id=7, customer_code="contoso"))
+            await s.commit()
+        async with world.db.session() as s:
+            await load_secret(s, create=True)
+        async with world.db.session() as s:
+            with pytest.raises(HTTPException) as refused:
+                await delete_customer("contoso", s)
+        after_refusal = world.minio.names("stats-withdraw/")
+        async with world.db.session() as s:
+            deleted = await delete_customer("northwind", s)
+        return refused.value, after_refusal, deleted, await pseudonym(world, "northwind")
+
+    refused, after_refusal, deleted, cust_n = run(scenario())
+    assert refused.status_code == 400 and after_refusal == []
+    assert deleted.success and world.minio.names("stats-withdraw/") == [f"stats-withdraw/{cust_n}.json"]

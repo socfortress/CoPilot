@@ -61,8 +61,9 @@ def _level_filter(fm: FieldMap, level_max: int) -> Dict[str, Any]:
 
 
 def stage1_body(fm: FieldMap, labels: List[str], start_ms: int, end_ms: int, level_max: int) -> Dict[str, Any]:
-    """The customer's report endpoints (every Sysmon event of the week, any level), and its quiet events' top (event ID,
-    actor) pairs, each with its endpoints."""
+    """The customer's report endpoints (every Sysmon event of the week, any level), its computers' names (when mapped:
+    what its host names and own domains are learned from, never sent), and its quiet events' top (event ID, actor)
+    pairs, each with its endpoints."""
     actor_aggs: Dict[str, Any] = {}
     for actor in ("Image", "SourceImage", "ImageLoaded"):
         name = fm.ed(actor)
@@ -74,10 +75,13 @@ def stage1_body(fm: FieldMap, labels: List[str], start_ms: int, end_ms: int, lev
     by_event: Dict[str, Any] = {"terms": {"field": fm.event_id, "size": len(EVENT_IDS)}}
     if actor_aggs:
         by_event["aggs"] = actor_aggs
+    aggs: Dict[str, Any] = {"endpoints": {"cardinality": {"field": fm.agent, "precision_threshold": settings.PRECISION_REPORT}}}
+    if fm.computer:
+        aggs["computers"] = {"terms": {"field": fm.computer, "size": settings.STAGE1_COMPUTERS_SIZE}}
     return _base(
         [_week_filter(fm, start_ms, end_ms), _channel_filter(fm), {"terms": {fm.label: list(labels)}}],
         {
-            "endpoints": {"cardinality": {"field": fm.agent, "precision_threshold": settings.PRECISION_REPORT}},
+            **aggs,
             "quiet": {
                 "filter": {
                     "bool": {
@@ -102,6 +106,8 @@ class Pair:
 class Stage1:
     endpoints: int
     pairs: List[Pair] = field(default_factory=list)
+    # The customer's computers' names (the Windows event's Computer), when mapped
+    computers: List[str] = field(default_factory=list)
     # The doc_count of the last returned bucket of each actor agg that left buckets out (its tail could have qualified)
     cut_tails: List[int] = field(default_factory=list)
 
@@ -117,6 +123,10 @@ def parse_stage1(response: Dict[str, Any]) -> Stage1:
     aggs = response.get("aggregations") or {}
     endpoints = int((aggs.get("endpoints") or {}).get("value") or 0)
     result = Stage1(endpoints=endpoints)
+    for bucket in (aggs.get("computers") or {}).get("buckets") or []:
+        key = bucket.get("key")
+        if isinstance(key, str) and key.strip():
+            result.computers.append(key)
     for event in ((aggs.get("quiet") or {}).get("by_event") or {}).get("buckets") or []:
         eid = _int_key(event.get("key"))
         if eid not in EVENT_PLAN:
@@ -318,8 +328,11 @@ def parse_stage2(response: Dict[str, Any], eid: int) -> Tuple[List[RawPattern], 
 
 
 def merge_shapes(patterns: List[RawPattern]) -> List[RawPattern]:
-    """Merge leaves of the same raw key found in both shapes (a customer moving from one pipeline to the other): events
-    summed, endpoints summed (clamped later), days ORed, a detail's covering values united (both must cover)."""
+    """Merge leaves of the same raw key found in both shapes (a customer moving from one pipeline to the other, or two
+    pipelines ingesting the same events at once): days ORed, a detail's covering values united (both must cover), and
+    events and endpoints the larger of the two, never their sum. The same endpoints (and, with two pipelines, the same
+    events) may be in both shapes, so a sum could count them twice and lift a pattern over the endpoints floor; the
+    larger count is a lower bound either way."""
     merged: Dict[Tuple[int, Tuple[Tuple[str, str], ...]], RawPattern] = {}
     for p in patterns:
         k = (p.eid, tuple(sorted(p.key.items())))
@@ -327,8 +340,8 @@ def merge_shapes(patterns: List[RawPattern]) -> List[RawPattern]:
             merged[k] = RawPattern(p.eid, dict(p.key), p.events, p.endpoints, p.days, dict(p.details), p.rule_names, list(p.accounts))
             continue
         m = merged[k]
-        m.events += p.events
-        m.endpoints += p.endpoints
+        m.events = max(m.events, p.events)
+        m.endpoints = max(m.endpoints, p.endpoints)
         m.days |= p.days
         m.accounts.extend(p.accounts)
         for name in set(m.details) | set(p.details):

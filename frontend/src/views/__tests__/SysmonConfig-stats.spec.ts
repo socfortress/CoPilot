@@ -118,6 +118,26 @@ const SENT = {
 	local_drops: {}
 }
 
+const STARTED = {
+	outcome: "started" as const,
+	message: "Sending the due reports in the background; the status shows the result when it is done.",
+	week: null,
+	customers: []
+}
+
+function tick(outcome: NonNullable<StatsStatus["last_tick"]>["outcome"], text: string, sent: number) {
+	return {
+		started_at: "2026-11-24T06:00:00Z",
+		finished_at: "2026-11-24T06:01:00Z",
+		outcome,
+		message: text,
+		sent,
+		pending: 0,
+		terminal: 0,
+		week: "2026-W47"
+	}
+}
+
 async function open(current: StatsStatus | null) {
 	sysmonConfig.getStatsStatus.mockResolvedValue({ data: { success: true, message: "", status: current } })
 	const wrapper = mount(SysmonConfig)
@@ -179,30 +199,72 @@ describe("the noise statistics on the Sysmon Config page", () => {
 		const [[options]] = dialog.warning.mock.calls
 		expect(options.content).toContain("identity-leak")
 		sysmonConfig.sendStatsNow.mockResolvedValue({
-			data: {
-				success: true,
-				message: "",
-				result: { outcome: "completed", message: "2026-W47: 1 report(s) sent", week: "2026-W47", customers: [{ customer_code: "contoso", outcome: "sent", message: null }] },
-				status: status()
-			}
+			data: { success: true, message: "", result: STARTED, status: status({ running: true }) }
 		})
-		options.onPositiveClick()
-		await flushPromises()
-		expect(sysmonConfig.sendStatsNow).toHaveBeenCalledWith({ resume: true })
-		expect(message.success).toHaveBeenCalledWith("2026-W47: 1 report(s) sent", expect.anything())
+		vi.useFakeTimers()
+		try {
+			options.onPositiveClick()
+			await flushPromises()
+			expect(sysmonConfig.sendStatsNow).toHaveBeenCalledWith({ resume: true })
+			expect(message.info).toHaveBeenCalledWith(STARTED.message, expect.anything())
+			sysmonConfig.getStatsStatus.mockResolvedValue({
+				data: { success: true, message: "", status: status({ running: false, last_tick: tick("completed", "2026-W47: 1 report(s) sent", 1) }) }
+			})
+			await vi.advanceTimersByTimeAsync(5000)
+			await flushPromises()
+			expect(message.success).toHaveBeenCalledWith("2026-W47: 1 report(s) sent", expect.anything())
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 
-	it("sends now after a confirmation", async () => {
-		const wrapper = await open(status())
+	it("sends now after a confirmation, in the background, and says how it ended", async () => {
+		const wrapper = await open(status({ last_tick: tick("completed", "an older run", 0) }))
 		await wrapper.get("[data-testid=stats-send-now]").trigger("click")
 		const [[options]] = dialog.warning.mock.calls
 		sysmonConfig.sendStatsNow.mockResolvedValue({
-			data: { success: true, message: "", result: { outcome: "nothing_due", message: "No customer's 2026-W47 report is due.", week: "2026-W47", customers: [] }, status: status() }
+			data: { success: true, message: "", result: STARTED, status: status({ running: true, last_tick: tick("completed", "an older run", 0) }) }
 		})
+		vi.useFakeTimers()
+		try {
+			options.onPositiveClick()
+			await flushPromises()
+			expect(sysmonConfig.sendStatsNow).toHaveBeenCalledWith({ resume: false })
+			expect(message.info).toHaveBeenCalledWith(STARTED.message, expect.anything())
+			// Still running: the button stays busy and the status is asked again
+			expect(wrapper.get("[data-testid=stats-send-now]").classes().join(" ")).toContain("loading")
+			sysmonConfig.getStatsStatus.mockClear()
+			sysmonConfig.getStatsStatus.mockResolvedValue({
+				data: { success: true, message: "", status: status({ running: true, last_tick: tick("completed", "an older run", 0) }) }
+			})
+			await vi.advanceTimersByTimeAsync(5000)
+			expect(sysmonConfig.getStatsStatus).toHaveBeenCalledTimes(1)
+			expect(message.warning).not.toHaveBeenCalled()
+			const done = { ...tick("nothing_due", "No customer's 2026-W47 report is due.", 0), started_at: "2026-11-25T00:30:00Z" }
+			sysmonConfig.getStatsStatus.mockResolvedValue({ data: { success: true, message: "", status: status({ running: false, last_tick: done }) } })
+			await vi.advanceTimersByTimeAsync(5000)
+			await flushPromises()
+			expect(message.warning).toHaveBeenCalledWith("No customer's 2026-W47 report is due.", expect.anything())
+			expect(wrapper.get("[data-testid=stats-send-now]").classes().join(" ")).not.toContain("loading")
+			// Done: no more polling
+			sysmonConfig.getStatsStatus.mockClear()
+			await vi.advanceTimersByTimeAsync(20000)
+			expect(sysmonConfig.getStatsStatus).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	it("says at once when Send now cannot start", async () => {
+		const wrapper = await open(status())
+		await wrapper.get("[data-testid=stats-send-now]").trigger("click")
+		const [[options]] = dialog.warning.mock.calls
+		const off = { outcome: "sharing_off", message: "Noise statistics are off on this CoPilot (SYSMON_STATS_SHARING). Nothing was sent.", week: null, customers: [] }
+		sysmonConfig.sendStatsNow.mockResolvedValue({ data: { success: true, message: "", result: off, status: status() } })
 		options.onPositiveClick()
 		await flushPromises()
-		expect(sysmonConfig.sendStatsNow).toHaveBeenCalledWith({ resume: false })
-		expect(message.warning).toHaveBeenCalledWith("No customer's 2026-W47 report is due.", expect.anything())
+		expect(message.warning).toHaveBeenCalledWith(off.message, expect.anything())
+		expect(message.info).not.toHaveBeenCalled()
 	})
 
 	it("shows nothing to a non-admin", async () => {
@@ -241,7 +303,7 @@ describe("the noise statistics on the Sysmon Config page", () => {
 			payload: { format: "socfortress-sysmon-report/1", customer: PSEUDONYM, patterns: [{ event_id: 22, fields: { QueryName: "<b>t.fabrikam-example.com</b>" } }] },
 			payload_sha256: "e".repeat(64),
 			payload_bytes: 321,
-			local: { raw_patterns: 3, sent: 1, dropped_by_reason: { "dns-private-suffix": 2 }, merged: 0, truncated: false },
+			local: { raw_patterns: 3, sent: 1, dropped_by_reason: { "dns-private-suffix": 2 }, merged: 0, truncated: true, unavailable_events: [11] },
 			outcome: null,
 			message: null,
 			ms: 40
@@ -254,6 +316,8 @@ describe("the noise statistics on the Sysmon Config page", () => {
 		expect(wrapper.get("[data-testid=stats-preview-nothing-sent]").text()).toContain("Nothing was sent")
 		expect(wrapper.get("[data-testid=stats-preview-sha256]").text()).toBe("e".repeat(64))
 		expect(wrapper.get("[data-testid=stats-preview-drops]").text()).toContain("dns-private-suffix: 2")
+		// An event left out because the indexer cannot aggregate its fields is said, never silent
+		expect(wrapper.get("[data-testid=stats-preview-unavailable]").text()).toContain("event 11")
 		const payload = wrapper.get("[data-testid=stats-preview-payload]")
 		// Shown as text, never markup
 		expect(payload.text()).toContain('"QueryName": "<b>t.fabrikam-example.com</b>"')

@@ -15,15 +15,25 @@ R1. Wazuh's doubling undone: the eventchannel decoder JSON-escapes each eventdat
 R2. Empty: dropped (Sysmon logs ``-`` for an empty field).
 R3. Account fields (User, SourceUser, TargetUser) keep only well-known service principals (``NT AUTHORITY\SYSTEM``,
     ``NT SERVICE\x``, ``BUILTIN\x``, ``-``); anything else is ``<redacted>``. DNS fields go through dns_policy.
-R4. Everything else, structurally: the install folder, user SIDs, profile folders (what may follow them, below), UNC
-    hosts, e-mail addresses, OneDrive for Business folders, private-domain path segments, document file names.
-R5. The customer's own names (code, name, its distinctive words, install folders, agent host names, the accounts and
-    domains seen in its events, admin hints), matched as whole words, become ``<redacted>``.
+R4. Everything else, structurally: the install folder, user SIDs, profile folders (also through an admin share and on
+    a non-default profile root; what may follow them, below), UNC hosts and what a share may hold (a folder below a
+    share that is not a well-known one may be a user's: home and roaming-profile shares), e-mail addresses, OneDrive
+    for Business folders, the domain folder of SYSVOL, host names in registry keys (printer connections, print
+    servers, Remote Desktop servers), private-domain and own-domain path segments, IPv4 and IPv6 addresses (not a
+    version in the places Windows writes one: GAC, AppX, WinSxS), document file names.
+R5. The customer's own names (code, name, its distinctive words, its name written as one word, install folders, agent
+    host names, the accounts and domains seen in its events, admin hints), matched as whole words, become
+    ``<redacted>``; its name written as one word (``acmewidgets``) also inside a longer word.
+
+Before any value of a report is redacted, ``learn_from_patterns`` reads every value of the customer's patterns for its
+own domains (dns_policy.owner_domain, a SYSVOL folder, the host of a SYSVOL or NETLOGON share): what one value reveals
+redacts every other, whatever the order of the patterns.
 R7. sysmon-sync's checks: at most 1024 characters, the value rules (``value_reasons``), and no identity leak. Any
     failure drops the pattern.
 
 Values are never case-folded or normalised: they stay as logged, so a suggestion built from them matches real events.
 """
+import ipaddress
 import json
 import re
 import unicodedata
@@ -44,6 +54,7 @@ from app.active_response.services.sysmon_stats.contract_v1 import VALUE_REASON_O
 from app.active_response.services.sysmon_stats.contract_v1 import pattern_key
 from app.active_response.services.sysmon_stats.contract_v1 import rule_name_leak
 from app.active_response.services.sysmon_stats.contract_v1 import service_leak
+from app.active_response.services.sysmon_stats.contract_v1_rules import _VOLUME_ROOT
 from app.active_response.services.sysmon_stats.contract_v1_rules import (
     REGISTRY_SERVICE_HIVES,
 )
@@ -58,6 +69,7 @@ from app.active_response.services.sysmon_stats.contract_v1_rules import (
 from app.active_response.services.sysmon_stats.dns_policy import PRIVATE_SUFFIXES
 from app.active_response.services.sysmon_stats.dns_policy import Drop
 from app.active_response.services.sysmon_stats.dns_policy import classify_dns
+from app.active_response.services.sysmon_stats.dns_policy import owner_domain
 from app.active_response.services.sysmon_stats.dns_policy import under
 from app.active_response.services.sysmon_stats.fields import EVENT_PLAN
 from app.active_response.services.sysmon_stats.queries import RawPattern
@@ -176,6 +188,29 @@ _SYSTEM_ROOT_RE = re.compile(
     r"(?i)^(?:[a-z]:|\\Device\\[^\\/]+|\\\\[?.]\\[a-z]:|\\\?\?\\[a-z]:)?[\\/](?:Windows|Program Files|Program Files \(x86\)|ProgramData)[\\/]",
 )
 _DOCUMENT_RE = re.compile(r"(?i)^(.+)\.([a-z0-9]{2,5})$")
+_SPLIT_KEEP_RE = re.compile(r"([\\/])")
+# Profile roots other than \Users: roaming-profile, home-folder and Remote Desktop profile folders on a volume's root
+OTHER_PROFILE_ROOT_RE = re.compile(
+    r"(?i)(" + _VOLUME_ROOT + r"[\\/]+(?:Profiles|UserProfiles|User Profiles|RoamingProfiles|Roaming Profiles|TSProfiles|Home|Homes"
+    r"|HomeDirs|UserHome|UserHomes|UserData|RedirectedFolders|FolderRedirection)[\\/]+)"
+    r"(?!(?:Public|Default|All Users|Default User)(?:[\\/\"]|$))([^\\/\"]+)",
+)
+_PROFILE_DIRS = frozenset({"users", "documents and settings"})
+_DOCUME_RE = re.compile(r"(?i)docume~\d")
+_SHARED_PROFILES = frozenset({"public", "default", "all users", "default user"})
+# Shares whose first folder is never a user's: Active Directory's, the admin shares, the printer drivers'
+_WELL_KNOWN_SHARES = frozenset({"sysvol", "netlogon", "ipc$", "admin$", "print$"})
+_DRIVE_SHARE_RE = re.compile(r"(?i)[a-z]\$?")
+# What may follow a SYSVOL folder without being the domain's name
+_SYSVOL_KEEP = frozenset({"sysvol", "domain", "staging", "staging areas", "sysvol_dfsr", "policies", "scripts"})
+_GUID_RE = re.compile(r"\{[0-9A-Fa-f-]{1,64}\}")
+# IP addresses (owner decision D1: never sent). A dotted quad not inside a longer run of numbers and dots (a version)
+_IP_OCTET = r"(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)"
+IPV4_RE = re.compile(rf"(?<![\d.]){_IP_OCTET}\.{_IP_OCTET}\.{_IP_OCTET}\.{_IP_OCTET}(?!\d|\.\d)")
+IPV6_RE = re.compile(r"(?i)(?<![0-9a-z:])((?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(?:%[0-9a-z_.-]{1,32})?)(?![0-9a-z:])")
+# Where Windows writes a version, never an address: _<v>__<public key token> (GAC), _<v>_<architecture>_ (AppX,
+# WinSxS), _<v>_<language>_ (WinSxS)
+_VERSION_TAIL_RE = re.compile(r"(?i)__[0-9a-f]{16}(?![0-9a-z])|_(?:x86|x64|arm|arm64|amd64|neutral|none|msil|wow64|[a-z]{2}-[a-z]{2,4})_")
 
 # ---- R5: names ------------------------------------------------------------------------------------------------------
 # Never a customer name on their own: the placeholders, and words every Windows path is made of
@@ -272,12 +307,20 @@ class RedactionContext:
     names: Set[str] = field(default_factory=set)
     install_dirs: List[str] = field(default_factory=list)
     own_domains: Set[str] = field(default_factory=set)
+    # The first label of each of its host names (what dns_policy.owner_domain learns <host>.<domain> from)
+    hosts: Set[str] = field(default_factory=set)
+    # Its name written as one word (acmewidgets): redacted inside longer words too, in paths and DNS labels
+    compounds: Set[str] = field(default_factory=set)
+    # Also dropped inside a longer DNS label (contosoinc.com): its code and a one-word name
+    dns_fragments: Set[str] = field(default_factory=set)
     _index: Optional[Dict[str, List[str]]] = None
 
-    def add_name(self, value: Optional[str], min_len: int = 3) -> None:
-        """Add one identity name (stripped of leading and trailing non-alphanumerics), unless it is a stopword."""
-        if not value or len(self.names) >= MAX_NAMES:
-            return
+    @staticmethod
+    def clean(value: Optional[str], min_len: int = 3) -> Optional[str]:
+        """``value`` as an identity name (lowercase, stripped of leading and trailing non-alphanumerics), or None when
+        it is too short or a stopword."""
+        if not value:
+            return None
         name = " ".join(value.split()).strip().lower()
         start, end = 0, len(name)
         while start < end and name[start] not in _ALNUM:
@@ -286,9 +329,56 @@ class RedactionContext:
             end -= 1
         name = name[start:end]
         if len(name) < min_len or name in STOPLIST:
+            return None
+        return name
+
+    def add_name(self, value: Optional[str], min_len: int = 3) -> None:
+        """Add one identity name (stripped of leading and trailing non-alphanumerics), unless it is a stopword."""
+        if len(self.names) >= MAX_NAMES:
+            return
+        name = self.clean(value, min_len)
+        if name is None or name in self.names:
             return
         self.names.add(name)
         self._index = None
+
+    def add_host(self, hostname: Optional[str]) -> None:
+        """One of its host names: a short name (WS-0142) or a fully qualified one (WS-0142.corp.contoso.com, whose
+        domain is learned; a single-label AD domain becomes a name)."""
+        host = (hostname or "").strip().rstrip(".")
+        if not host:
+            return
+        self.add_name(host)
+        first, dot, rest = host.partition(".")
+        label = self.clean(first)
+        if label is not None and len(self.hosts) < MAX_NAMES:
+            self.hosts.add(label)
+        if dot:
+            self.add_name(first)
+            if "." in rest:
+                self.add_domain(rest)
+            else:
+                self.add_name(rest)
+
+    def add_compound(self, words: Iterable[str]) -> None:
+        """A name of several words, written as one (acmewidgets) and hyphenated (acme-widgets), with and without its
+        stopwords (Ltd, Inc, ...)."""
+        tokens = [w.lower() for w in words if w]
+        kept = [t for t in tokens if t not in STOPLIST]
+        for group in (tokens, kept):
+            if len(group) < 2:
+                continue
+            joined = self.clean("".join(group), min_len=6)
+            if joined is not None:
+                self.add_name(joined, min_len=6)
+                self.compounds.add(joined)
+                self.dns_fragments.add(joined)
+            self.add_name("-".join(group), min_len=6)
+
+    def add_dns_fragment(self, value: Optional[str]) -> None:
+        fragment = self.clean(value, min_len=6)
+        if fragment is not None and _NAME_TOKEN_RE.fullmatch(fragment):
+            self.dns_fragments.add(fragment)
 
     def add_domain(self, domain: Optional[str]) -> None:
         if not domain:
@@ -335,10 +425,16 @@ def build_context(
     TargetUser buckets: the domains, accounts and UPN domains in them are learned."""
     ctx = RedactionContext()
     ctx.add_name(customer_code)
+    ctx.add_compound(_NAME_TOKEN_RE.findall(customer_code or ""))
+    ctx.add_dns_fragment(customer_code)
     if customer_name:
         ctx.add_name(customer_name)
-        for token in _NAME_TOKEN_RE.findall(customer_name):
+        tokens = _NAME_TOKEN_RE.findall(customer_name)
+        for token in tokens:
             ctx.add_name(token, min_len=4)
+        ctx.add_compound(tokens)
+        if len(tokens) == 1:
+            ctx.add_dns_fragment(tokens[0])
     from app.active_response.services.sysmon_config import usable_as_install_dir
 
     if usable_as_install_dir(customer_code):
@@ -348,15 +444,8 @@ def build_context(
     for domain in own_domains:
         ctx.add_domain(domain)
     for hostname in hostnames:
-        if not hostname:
-            continue
-        host = hostname.strip()
-        ctx.add_name(host)
-        if "." in host:
-            first, _, rest = host.partition(".")
-            ctx.add_name(first)
-            if rest.count(".") >= 1:
-                ctx.add_domain(rest)
+        if isinstance(hostname, str):
+            ctx.add_host(hostname)
     for account in accounts:
         learn_account(ctx, account)
     return ctx
@@ -387,13 +476,57 @@ def learn_account(ctx: RedactionContext, raw: str) -> None:
         ctx.add_name(account)
 
 
+def _learn_domain(ctx: RedactionContext, domain: Optional[str]) -> None:
+    if not domain:
+        return
+    if "." in domain:
+        ctx.add_domain(domain)
+    else:
+        ctx.add_name(domain)
+
+
+def _learn_path(ctx: RedactionContext, value: str) -> None:
+    r"""The domain a path reveals: the folder below SYSVOL (\\<domain>\SYSVOL\<domain>\, ...\GroupPolicy\DataStore\0
+    \sysvol\<domain>\), and the host of a SYSVOL or NETLOGON share."""
+    lowered = value.lower()
+    if "sysvol" not in lowered and "netlogon" not in lowered:
+        return
+    parts = _SPLIT_KEEP_RE.split(value)[0::2]
+    for i in range(1, len(parts)):
+        if parts[i - 1].lower() == "sysvol" and parts[i] and parts[i].lower() not in _SYSVOL_KEEP and "." in parts[i]:
+            if _DNS_SEGMENT_RE.fullmatch(parts[i]):
+                _learn_domain(ctx, parts[i].lower().rstrip("."))
+    for m in UNC_ANY_RE.finditer(value):
+        share = _SPLIT_KEEP_RE.split(value[m.end() :], maxsplit=1)[0].lower()
+        host = m.group("host").lower().rstrip(".")
+        if share in ("sysvol", "netlogon") and _DNS_SEGMENT_RE.fullmatch(host):
+            _learn_domain(ctx, host)
+
+
+def learn_from_patterns(ctx: RedactionContext, patterns: Iterable[RawPattern]) -> None:
+    """Learn the customer's own domains from every value of its patterns, before any is redacted (so the order of the
+    patterns does not matter): the DNS names (dns_policy.owner_domain) and the SYSVOL and NETLOGON paths."""
+    for p in patterns:
+        values: List[Tuple[str, object]] = list(p.key.items())
+        for name, detail in p.details.items():
+            values.extend((name, v) for v in (detail or []))
+        for name, raw in values:
+            if not isinstance(raw, str) or len(raw) > settings.MAX_RAW_VALUE_LEN or name in USER_FIELDS:
+                continue
+            value = unescape_value(raw)
+            if name in DNS_FIELDS:
+                _learn_domain(ctx, owner_domain(value, ctx.hosts))
+            else:
+                _learn_path(ctx, value)
+
+
 # ---- per value ------------------------------------------------------------------------------------------------------
 
 
 def _replace_names(piece: str, ctx: RedactionContext) -> str:
     """Every whole-word occurrence of a name (case-insensitive) in a piece without placeholders becomes <redacted>."""
     index = ctx.name_index()
-    if not index:
+    if not index and not ctx.compounds:
         return piece
     out: List[str] = []
     i, n = 0, len(piece)
@@ -405,6 +538,11 @@ def _replace_names(piece: str, ctx: RedactionContext) -> str:
             j = i
             while j < n and piece[j] in _ALNUM:
                 j += 1
+            if any(c in lowered[i:j] for c in ctx.compounds):
+                # Its name written as one word, inside a longer one (AcmeWidgetsIT): the whole word
+                out.append(REDACTED)
+                i = j
+                continue
             hit = None
             for name in index.get(lowered[i:j], ()):
                 end = i + len(name)
@@ -461,27 +599,121 @@ def _redact_profiles(value: str) -> str:
     """Every profile folder (C:\\Users\\<name>, in every spelling the contract knows) becomes <user>, the whole folder
     name, and what follows it is cut down (D9). A path through ``.`` or ``..`` is not rewritten: the identity check
     refuses it afterwards."""
-    pos = 0
-    for _ in range(32):
-        m = USER_DIR_RE.search(value, pos)
-        if not m:
-            break
-        if m.group(2) == "<user>":
-            pos = m.end(2)
-            continue
-        tail = value[m.end(2) :]
-        # The rest of this path: up to a quote or whitespace-separated next token is unusual in these fields; the
-        # whole remainder is treated as the path
-        value = value[: m.start(2)] + "<user>" + _profile_rest(tail)
-        pos = m.start(2) + len("<user>")
+    for regex in (USER_DIR_RE, OTHER_PROFILE_ROOT_RE):
+        pos = 0
+        for _ in range(32):
+            m = regex.search(value, pos)
+            if not m:
+                break
+            if m.group(2) == "<user>":
+                pos = m.end(2)
+                continue
+            tail = value[m.end(2) :]
+            # The rest of this path: up to a quote or whitespace-separated next token is unusual in these fields; the
+            # whole remainder is treated as the path
+            value = value[: m.start(2)] + "<user>" + _profile_rest(tail)
+            pos = m.start(2) + len("<user>")
     return value
 
 
-def _redact_unc(value: str) -> str:
-    def sub(m: "re.Match[str]") -> str:
-        return m.group("prefix") + "<host>" + (m.group("sep") or "")
+def _share_tail(tail: str) -> str:
+    r"""What follows \\<host>\ in a UNC path: the share, then its folders. An admin share (C$) or a redirected drive
+    (\\tsclient\C) is a volume's root, whose profile folder becomes <user>. Below any other share that is not a
+    well-known one (SYSVOL, NETLOGON, ADMIN$, IPC$, print$), the first folder may be a user's (a home or roaming-profile
+    share: \\fs01\Profiles$\jsmith.V6\): it becomes <redacted>, and what follows it is cut down as in a profile."""
+    parts = _SPLIT_KEEP_RE.split(tail)
+    share = parts[0].lower()
+    if share in _WELL_KNOWN_SHARES or len(parts) < 5:
+        return tail
+    if _DRIVE_SHARE_RE.fullmatch(share):
+        folder, user = parts[2], parts[4]
+        if (folder.lower() in _PROFILE_DIRS or _DOCUME_RE.fullmatch(folder)) and user and user.lower() not in _SHARED_PROFILES:
+            if user in PLACEHOLDERS:
+                return tail
+            return "".join(parts[:4]) + "<user>" + _profile_rest("".join(parts[5:]))
+        return tail
+    if not parts[2] or parts[2] in PLACEHOLDERS:
+        return tail
+    return "".join(parts[:2]) + REDACTED + _profile_rest("".join(parts[3:]))
 
-    return UNC_ANY_RE.sub(sub, value)
+
+def _redact_unc(value: str) -> str:
+    """Every UNC host becomes <host>, and what its share may hold is cut down (``_share_tail``)."""
+    matches = list(UNC_ANY_RE.finditer(value))
+    if not matches:
+        return value
+    out: List[str] = []
+    pos = 0
+    for k, m in enumerate(matches):
+        out.append(value[pos : m.start()])
+        out.append(m.group("prefix") + "<host>" + (m.group("sep") or ""))
+        end = matches[k + 1].start() if k + 1 < len(matches) else len(value)
+        tail = value[m.end() : end]
+        out.append(_share_tail(tail) if m.group("sep") in ("\\", "/") else tail)
+        pos = end
+    out.append(value[pos:])
+    return "".join(out)
+
+
+def _redact_sysvol(value: str) -> str:
+    r"""The folder below a SYSVOL folder is the AD domain's DNS name (\\<host>\SYSVOL\<domain>\, C:\Windows\SYSVOL\sysvol
+    \<domain>\, ...\GroupPolicy\DataStore\0\sysvol\<domain>\): <redacted>, learned or not."""
+    if "sysvol" not in value.lower():
+        return value
+    parts = _SPLIT_KEEP_RE.split(value)
+    for i in range(2, len(parts), 2):
+        if parts[i - 2].lower() == "sysvol" and parts[i] and parts[i].lower() not in _SYSVOL_KEEP and parts[i] not in PLACEHOLDERS:
+            parts[i] = REDACTED
+    return "".join(parts)
+
+
+def _host_list(parent: str) -> bool:
+    """A registry key whose subkeys are server names: Remote Desktop's servers, a print provider's print servers."""
+    return parent == "terminal server client" or parent.endswith("print provider") or parent.endswith("print services")
+
+
+def _redact_registry_hosts(value: str) -> str:
+    r"""Host names in registry key paths: a printer connection ``,,<server>,<share>`` becomes ``,,<host>,<redacted>``;
+    below ...\Terminal Server Client\Servers\ and a print provider's ...\Servers\, the server becomes <host> (and a
+    printer below it that is not a GUID, <redacted>)."""
+    if "\\" not in value:
+        return value
+    segments = value.split("\\")
+    lowered = [s.lower() for s in segments]
+    for i, segment in enumerate(segments):
+        if segment.startswith(",,") and not segment.startswith(",,<host>"):
+            _, comma, _ = segment[2:].partition(",")
+            segments[i] = ",,<host>" + (",<redacted>" if comma else "")
+        elif i >= 2 and lowered[i - 1] == "servers" and _host_list(lowered[i - 2]) and segment and segment not in PLACEHOLDERS:
+            segments[i] = "<host>"
+            if i + 2 < len(segments) and lowered[i + 1] == "printers":
+                printer = segments[i + 2]
+                if printer and printer not in PLACEHOLDERS and not _GUID_RE.fullmatch(printer):
+                    segments[i + 2] = REDACTED
+    return "\\".join(segments)
+
+
+def _redact_addresses(value: str) -> str:
+    """Every IPv6 and IPv4 address becomes <redacted> (a dotted quad in a place where Windows writes a version is
+    kept)."""
+    if value.count(":") >= 2:
+
+        def v6(m: "re.Match[str]") -> str:
+            try:
+                ipaddress.IPv6Address(m.group(1).split("%", 1)[0])
+            except ValueError:
+                return m.group(0)
+            return REDACTED
+
+        value = IPV6_RE.sub(v6, value)
+
+    def v4(m: "re.Match[str]") -> str:
+        start, end = m.span()
+        if start > 0 and m.string[start - 1] == "_" and _VERSION_TAIL_RE.match(m.string, end):
+            return m.group(0)
+        return REDACTED
+
+    return IPV4_RE.sub(v4, value)
 
 
 def _redact_emails(value: str) -> str:
@@ -537,7 +769,10 @@ def _redact_structure(value: str, ctx: RedactionContext) -> str:
     value = _redact_unc(value)
     value = _redact_emails(value)
     value = ONEDRIVE_BUSINESS_RE.sub(lambda m: m.group(1) + REDACTED, value)
+    value = _redact_sysvol(value)
+    value = _redact_registry_hosts(value)
     value = _redact_private_segments(value, ctx)
+    value = _redact_addresses(value)
     value = _redact_document_name(value)
     return value
 
@@ -576,7 +811,7 @@ def redact_value(field_name: str, raw: object, ctx: RedactionContext) -> Union[s
         if not well_known_principal(value):
             value = REDACTED
     elif field_name in DNS_FIELDS:
-        verdict = classify_dns(value, ctx.names, ctx.own_domains)
+        verdict = classify_dns(value, ctx.names, ctx.own_domains, ctx.dns_fragments)
         if isinstance(verdict, Drop):
             return verdict
         value = verdict

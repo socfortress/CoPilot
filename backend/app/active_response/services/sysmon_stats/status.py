@@ -11,6 +11,7 @@ from app.active_response.schema.sysmon_stats import StatsState
 from app.active_response.schema.sysmon_stats import StatsStatus
 from app.active_response.schema.sysmon_stats import StatsWithdrawStatus
 from app.active_response.services.sysmon_default_sync import _utc_text
+from app.active_response.services.sysmon_stats import runner
 from app.active_response.services.sysmon_stats import settings
 from app.active_response.services.sysmon_stats import state as store
 from app.active_response.services.sysmon_stats.identity import customer_pseudonym
@@ -20,6 +21,7 @@ from app.active_response.services.sysmon_stats.runner import CustomerRow
 from app.active_response.services.sysmon_stats.runner import _end
 from app.active_response.services.sysmon_stats.runner import read_customers
 from app.active_response.services.sysmon_stats.runner import target_week
+from app.db import named_lock
 
 
 def _customer_status(
@@ -89,6 +91,7 @@ async def get_status(session: AsyncSession, now: Optional[datetime] = None) -> S
     status.last_tick = state.last_tick
     status.latch = state.latch
     status.customers = [_customer_status(c, secret, state, queued, week, monday) for _, c in sorted(customers.items())]
+    status.running = runner.running() or await named_lock.lock_in_use(runner.LOCK_PREFIX)
     if errors:
         status.read_error = f"Could not read {', '.join(errors)} from this CoPilot's data store (MinIO)."
     return status

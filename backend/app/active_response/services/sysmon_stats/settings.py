@@ -33,6 +33,8 @@ PAIRS_TOTAL = 40
 PAIRS_PER_EVENT = 10
 STAGE1_ACTOR_SIZE = 25
 STAGE0_LABELS_SIZE = 1000
+# The customer's computers' names read in stage 1 (only to learn its host names and own domains)
+STAGE1_COMPUTERS_SIZE = 500
 BUCKET_BUDGET = 20_000
 PRECISION_REPORT = 3000
 PRECISION_LEAF = 1000

@@ -200,7 +200,9 @@ def test_the_fields_are_capped_at_5_in_the_plans_order():
         details={"SignatureStatus": ["Valid"], "Signed": ["true"], "OriginalFileName": ["b.dll"], "User": ["NT AUTHORITY\\\\SYSTEM"]},
     )
     p = r.redact_pattern(raw, ctx)
-    assert list(p.fields) == ["Image", "ImageLoaded", "Signature", "SignatureStatus", "Signed"]
+    # OriginalFileName before SignatureStatus (review: SOCFortress's ImageLoad includes match on it); Signed never
+    assert list(p.fields) == ["Image", "ImageLoaded", "Signature", "OriginalFileName", "SignatureStatus"]
+    assert p.fields["OriginalFileName"] == "b.dll"
 
 
 def test_registry_event_types():
@@ -264,3 +266,172 @@ def test_collisions_after_redaction_are_merged_without_inflating_endpoints():
 def test_a_value_is_never_case_folded_or_normalised():
     ctx = r.build_context(customer_code="c1", customer_name=None)
     assert r.redact_value("Image", "C:\\\\PROGRAM FILES\\\\Fabrikam\\\\Agent.EXE", ctx) == "C:\\PROGRAM FILES\\Fabrikam\\Agent.EXE"
+
+
+# ── the customer's own domains, learned from every value of its report (review findings) ─────────────────────────
+SVCHOST = "C:\\\\Windows\\\\System32\\\\svchost.exe"
+AD = "aw-corp-example.com"
+
+
+def _p(eid, key, endpoints=8):
+    return RawPattern(eid=eid, key=key, events=500, endpoints=endpoints, days=127, details={}, rule_names=None, accounts=[])
+
+
+def _doubled(value):
+    return value.replace("\\", "\\\\")
+
+
+def _report(ctx, patterns):
+    from app.active_response.services.sysmon_stats.report import build_report
+
+    return build_report(
+        customer="cust_" + "0" * 32,
+        week="2026-W47",
+        config="unknown",
+        endpoints=20,
+        raw_patterns=patterns,
+        ctx=ctx,
+        min_endpoints=3,
+    )
+
+
+def _acme(**kw):
+    spec = {
+        "customer_code": "acme",
+        "customer_name": "Acme Widgets",
+        "hostnames": ["WS-0001", "WS-0002", "DC01"],
+        "accounts": ["AWCORP\\\\jdoe"],
+    }
+    spec.update(kw)
+    return r.build_context(**spec)
+
+
+# Names under the AD domain, which shares no word with the customer's code or name
+UNDER_THE_DOMAIN = [
+    _p(22, {"Image": SVCHOST, "QueryName": AD}),
+    _p(3, {"Image": SVCHOST, "DestinationHostname": f"fs01.{AD}", "DestinationPort": "445"}),
+    _p(17, {"Image": SVCHOST, "PipeName": _doubled(f"\\{AD}\\sync")}),
+]
+VENDOR = _p(22, {"Image": SVCHOST, "QueryName": "telemetry.fabrikam-example.com"})
+
+
+@pytest.mark.parametrize(
+    "evidence",
+    [
+        pytest.param([_p(22, {"Image": SVCHOST, "QueryName": f"WS-0002.{AD}"})], id="an-agents-fqdn-looked-up"),
+        pytest.param([_p(22, {"Image": SVCHOST, "QueryName": f"_ldap._tcp.dc._msdcs.{AD}"})], id="an-ad-locator-record"),
+        pytest.param([_p(22, {"Image": SVCHOST, "QueryName": f"_kerberos._tcp.Default-First-Site-Name._sites.{AD}"})], id="a-site-locator"),
+        pytest.param([_p(22, {"Image": SVCHOST, "QueryName": f"wpad.{AD}"})], id="wpad"),
+        pytest.param(
+            [_p(1, {"Image": _doubled(f"\\\\{AD}\\SYSVOL\\{AD}\\scripts\\deploy.exe"), "ParentImage": SVCHOST})],
+            id="a-sysvol-share",
+        ),
+        pytest.param(
+            [
+                _p(
+                    11,
+                    {
+                        "Image": SVCHOST,
+                        "TargetFilename": _doubled(f"C:\\Windows\\System32\\GroupPolicy\\DataStore\\0\\sysvol\\{AD}\\Policies\\gpt.ini"),
+                    },
+                ),
+            ],
+            id="the-group-policy-cache",
+        ),
+        pytest.param([_p(1, {"Image": _doubled(f"\\\\{AD}\\NETLOGON\\logon.exe"), "ParentImage": SVCHOST})], id="a-netlogon-share"),
+    ],
+)
+def test_the_ad_domain_is_learned_from_any_value_whatever_the_patterns_order(evidence):
+    """Review: with only short agent names known (Wazuh's usual), the AD domain went out verbatim in DNS names, SYSVOL
+    paths and pipes. One value that reveals it now keeps it out of every other, before or after it."""
+    for patterns in (UNDER_THE_DOMAIN + evidence + [VENDOR], evidence + [VENDOR] + UNDER_THE_DOMAIN):
+        built = _report(_acme(), patterns)
+        text = json.dumps(built.doc)
+        assert AD not in text and "aw-corp" not in text, text
+        assert "telemetry.fabrikam-example.com" in text
+
+
+def test_the_ad_domain_from_the_computers_names():
+    """The Windows event's Computer (WS-0001.aw-corp-example.com), read in stage 1, is a host name like an agent's."""
+    built = _report(_acme(hostnames=["WS-0001", f"WS-0001.{AD}"]), UNDER_THE_DOMAIN + [VENDOR])
+    assert built.stats.dropped_by_reason == {"dns-own-domain": 2}
+    assert [p["fields"].get("QueryName") for p in built.doc["patterns"] if p["event_id"] == 22] == ["telemetry.fabrikam-example.com"]
+    (pipe,) = [p["fields"]["PipeName"] for p in built.doc["patterns"] if p["event_id"] == 17]
+    assert pipe == "\\<redacted>\\sync"
+
+
+def test_a_single_label_ad_domain_from_a_computers_name_is_a_name():
+    ctx = r.build_context(customer_code="acme", customer_name=None, hostnames=["WS-0001.awcorp"])
+    assert "awcorp" in ctx.names and "ws-0001" in ctx.hosts
+    assert r.redact_value("QueryName", "fs01.awcorp", ctx) == Drop("dns-identity-token")
+
+
+def test_a_providers_domain_is_never_learned_as_the_customers():
+    ctx = _acme()
+    built = _report(
+        ctx,
+        [_p(22, {"Image": SVCHOST, "QueryName": "autodiscover.outlook.com"}), _p(22, {"Image": SVCHOST, "QueryName": "smtp.outlook.com"})],
+    )
+    assert "outlook.com" not in ctx.own_domains
+    assert sorted(p["fields"]["QueryName"] for p in built.doc["patterns"]) == ["autodiscover.outlook.com", "smtp.outlook.com"]
+
+
+def test_the_reviewers_privacy_probe_sends_nothing_of_the_customer():
+    """The review's probe, transcribed (its domain as aw-corp-example.com): the customer's AD domain, a printer's address,
+    its public domain written as one word, a print server and share, an admin share's profile. sysmon-sync's validator
+    accepted all of them before; now none goes out unredacted."""
+    patterns = [
+        _p(22, {"Image": SVCHOST, "QueryName": f"WS-0002.{AD}"}),
+        _p(22, {"Image": SVCHOST, "QueryName": AD}),
+        _p(3, {"Image": SVCHOST, "DestinationHostname": f"fs01.{AD}", "DestinationPort": "445"}),
+        _p(
+            1,
+            {
+                "Image": _doubled(f"\\\\{AD}\\SYSVOL\\{AD}\\scripts\\deploy.exe"),
+                "ParentImage": _doubled("C:\\Windows\\System32\\gpscript.exe"),
+            },
+        ),
+        _p(
+            11,
+            {
+                "Image": SVCHOST,
+                "TargetFilename": _doubled(
+                    f"C:\\Windows\\System32\\GroupPolicy\\DataStore\\0\\sysvol\\{AD}\\Policies\\{{31B2F340-016D-11D2-945F-00C04FB984F9}}\\Machine\\Registry.pol",
+                ),
+            },
+        ),
+        _p(
+            13,
+            {
+                "Image": _doubled("C:\\Windows\\System32\\spoolsv.exe"),
+                "TargetObject": _doubled(
+                    "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors\\Standard TCP/IP Port\\Ports\\10.20.30.40\\HostName",
+                ),
+            },
+        ),
+        _p(
+            22,
+            {
+                "Image": _doubled("C:\\Program Files\\Microsoft Office\\root\\Office16\\OUTLOOK.EXE"),
+                "QueryName": "autodiscover.acmewidgets.com",
+            },
+        ),
+        _p(11, {"Image": SVCHOST, "TargetFilename": _doubled("C:\\ProgramData\\AcmeWidgets\\agent\\cache.db")}),
+        _p(
+            13,
+            {
+                "Image": _doubled("C:\\Windows\\System32\\spoolsv.exe"),
+                "TargetObject": _doubled(
+                    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print\\Connections\\,,printsrv01,HP Floor2 Finance",
+                ),
+            },
+        ),
+        _p(11, {"Image": SVCHOST, "TargetFilename": _doubled("\\\\WS-0009\\C$\\Users\\jsmith\\AppData\\Local\\Temp\\x.tmp")}),
+    ]
+    built = _report(_acme(), patterns)
+    text = json.dumps(built.doc).lower()
+    for leaked in ("aw-corp", "10.20.30.40", "acmewidgets", "printsrv01", "floor2", "jsmith", "ws-0009", "ws-0002"):
+        assert leaked not in text, leaked
+    for p in built.doc["patterns"]:
+        for name, value in p["fields"].items():
+            assert identity_leak(name, value, REGISTRY_SERVICE_HIVES) is None and value_reasons(name, value) == []

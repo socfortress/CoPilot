@@ -27,6 +27,7 @@ from app.active_response.services.sysmon_stats.dns_policy import Drop
 from app.active_response.services.sysmon_stats.queries import RawPattern
 from app.active_response.services.sysmon_stats.redaction import RedactedPattern
 from app.active_response.services.sysmon_stats.redaction import RedactionContext
+from app.active_response.services.sysmon_stats.redaction import learn_from_patterns
 from app.active_response.services.sysmon_stats.redaction import merge_collisions
 from app.active_response.services.sysmon_stats.redaction import redact_pattern
 
@@ -40,6 +41,8 @@ class LocalStats:
     merged: int = 0
     truncated: bool = False
     dropped_by_reason: Dict[str, int] = field(default_factory=dict)
+    # Event IDs whose patterns could not be collected (a key field not aggregatable): the report is truncated
+    unavailable_events: List[int] = field(default_factory=list)
 
 
 @dataclass
@@ -89,10 +92,11 @@ def build_report(
     min_endpoints: int,
     pairs_left_out: bool = False,
     cut_tails: Optional[List[int]] = None,
+    unavailable_events: Optional[List[int]] = None,
     today: Optional[date] = None,
 ) -> BuiltReport:
     """The report, its exact bytes and their sha256. Raises LocalRefusal when it cannot be sent as built."""
-    stats = LocalStats(raw_patterns=len(raw_patterns))
+    stats = LocalStats(raw_patterns=len(raw_patterns), unavailable_events=sorted(set(unavailable_events or [])))
     drops: Counter = Counter()
     report_endpoints = max(0, min(settings.MAX_REPORT_ENDPOINTS, int(endpoints)))
     monday = iso_week(week)
@@ -101,6 +105,8 @@ def build_report(
     if today is not None and not week_accepted(monday, today, MAX_REPORT_AGE_WEEKS):
         raise LocalRefusal("week-not-accepted")
 
+    # What any value reveals of the customer's own domains redacts every other value, whatever the patterns' order
+    learn_from_patterns(ctx, raw_patterns)
     redacted: List[RedactedPattern] = []
     for raw in raw_patterns:
         result = redact_pattern(raw, ctx)
@@ -121,7 +127,8 @@ def build_report(
         qualifying.append(p)
     qualifying.sort(key=_sort_key)
     chosen = qualifying[: settings.MAX_PATTERNS]
-    truncated = len(qualifying) > settings.MAX_PATTERNS or pairs_left_out
+    # An event left out because a key field cannot be aggregated: its patterns may well be among the noisiest
+    truncated = len(qualifying) > settings.MAX_PATTERNS or pairs_left_out or bool(stats.unavailable_events)
     # A stage-1 or stage-2 terms agg that left buckets out: their tail could have held a pattern that would be sent
     smallest = chosen[-1].events if len(chosen) >= settings.MAX_PATTERNS else 0
     if any(tail >= smallest for tail in (cut_tails or [])):

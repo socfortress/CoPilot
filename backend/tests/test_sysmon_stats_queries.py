@@ -34,13 +34,25 @@ from tests.sysmon_stats_support import field_caps  # noqa: E402
 from tests.sysmon_stats_support import ms  # noqa: E402
 
 GOLDEN = Path(__file__).parent / "fixtures" / "sysmon_stats" / "queries"
+
+
+@pytest.fixture
+def caplog_loguru():
+    from loguru import logger
+
+    lines = []
+    sink = logger.add(lambda m: lines.append(str(m)), level="DEBUG")
+    yield lines
+    logger.remove(sink)
+
+
 W47 = date(2026, 11, 16)
 AGENT = "C:\\Program Files\\Fabrikam\\agent.exe"
 NAMES = ["Image", "ImageLoaded", "SourceImage", "Signature", "SignatureStatus", "Signed", "OriginalFileName", "User", "RuleName"]
 
 
 def fm_for(shape):
-    doc = alert(eid=7, ts=0, agent="001", label="contoso", shape=shape, **{n: "x" for n in NAMES})
+    doc = alert(eid=7, ts=0, agent="001", label="contoso", shape=shape, computer="WS-0142.corp.contoso.test", **{n: "x" for n in NAMES})
     return fields.discover(field_caps([doc], fields.FIELD_CAPS_FIELDS))[0]
 
 
@@ -127,12 +139,190 @@ def test_an_event_whose_key_field_is_unmapped_is_skipped():
     fi = FakeIndexer(docs)
 
     async def scenario():
-        maps = await collector.discover_fields(fi, "wazuh-*")
+        maps = (await collector.discover_fields(fi, "wazuh-*")).maps
         return await collector.collect_customer(fi, "wazuh-*", maps, {"nested": ["contoso"]}, W47, 5, 3, 60)
 
     result = asyncio.run(scenario())
-    assert result.unavailable_events == 1 and result.patterns == []
+    assert result.unavailable_events == [22] and result.patterns == []
     assert [s["stage"] for s in fi.searches] == ["quiet"]
+
+
+def test_an_unavailable_event_is_said_never_silently_left_out(caplog_loguru):
+    """An event whose key field one index maps as text: its patterns are left out, logged by field name (no value), and
+    the report says it is truncated (review: unavailable_events was counted and never read)."""
+    from app.active_response.services.sysmon_stats.redaction import build_context
+    from app.active_response.services.sysmon_stats.report import build_report
+
+    docs = []
+    for i in range(5):
+        for day in range(7):
+            ts = ms("2026-11-16T09:00:00") + day * 86_400_000 + i
+            docs.append(
+                alert(
+                    eid=11,
+                    ts=ts,
+                    agent=f"{i}",
+                    label="contoso",
+                    Image=AGENT,
+                    TargetFilename="C:\\ProgramData\\Fabrikam\\cache\\state.json",
+                ),
+            )
+            docs.append(alert(eid=22, ts=ts, agent=f"{i}", label="contoso", Image=AGENT, QueryName="t.fabrikam-example.com"))
+    mixed = {"keyword": {"type": "keyword", "aggregatable": True}, "text": {"type": "text", "aggregatable": False}}
+    fi = FakeIndexer(docs, caps_overrides={"data.win.eventdata.targetFilename": mixed})
+    result = _collect(fi)
+    assert result.unavailable_events == [11]
+    assert any("event 11" in line and "TargetFilename" in line and "truncated" in line for line in caplog_loguru)
+    assert not any("ProgramData" in line for line in caplog_loguru)
+    built = build_report(
+        customer="cust_" + "0" * 32,
+        week="2026-W47",
+        config="unknown",
+        endpoints=result.endpoints,
+        raw_patterns=result.patterns,
+        ctx=build_context(customer_code="contoso", customer_name=None),
+        min_endpoints=3,
+        unavailable_events=result.unavailable_events,
+    )
+    assert built.doc["truncated"] is True and built.stats.unavailable_events == [11]
+    assert [p["event_id"] for p in built.doc["patterns"]] == [22]
+
+
+def test_discovery_asks_only_the_weeks_indices_and_the_searches_target_them():
+    """An index outside the week that mapped a field as text no longer hides it: discovery is asked with an index_filter
+    for the week, and the week's searches go to exactly the indices it names."""
+    docs = [
+        alert(
+            eid=11,
+            ts=ms("2026-11-17T09:00:00") + i,
+            agent=f"{i}",
+            label="contoso",
+            Image=AGENT,
+            TargetFilename="C:\\ProgramData\\Fabrikam\\x.json",
+        )
+        for i in range(5)
+    ]
+    old_text = {"keyword": {"type": "keyword", "aggregatable": True}, "text": {"type": "text", "aggregatable": False}}
+    fi = FakeIndexer(
+        docs,
+        history_caps={"data.win.eventdata.targetFilename": old_text},
+        week_indices=["wazuh-alerts-4.x-2026.11.17", "wazuh-alerts-4.x-2026.11.16"],
+    )
+
+    async def scenario():
+        discovery = await collector.discover_fields(fi, "wazuh-*", W47)
+        result = await collector.collect_customer(fi, discovery.index, discovery.maps, {"nested": ["contoso"]}, W47, 5, 3, 60)
+        return discovery, result
+
+    discovery, result = asyncio.run(scenario())
+    (call,) = fi.field_caps_calls
+    start, end = collector.week_bounds(W47)
+    assert call["body"] == {"index_filter": {"range": {"timestamp": {"gte": start, "lt": end, "format": "epoch_millis"}}}}
+    assert discovery.index == "wazuh-alerts-4.x-2026.11.16,wazuh-alerts-4.x-2026.11.17"
+    assert {s["index"] for s in fi.searches} == {discovery.index}
+    assert result.unavailable_events == [] and [p.eid for p in result.patterns] == [11]
+    # Without the week (or when the indexer names no index), the whole pattern: the old index's text mapping counts
+    plain = asyncio.run(collector.discover_fields(fi, "wazuh-*"))
+    assert plain.index == "wazuh-*" and plain.maps[0].ed("TargetFilename") is None
+    fi.week_indices = []
+    fallback = asyncio.run(collector.discover_fields(fi, "wazuh-*", W47))
+    assert fallback.index == "wazuh-*" and "body" not in fi.field_caps_calls[-1]
+
+
+def test_an_indexer_that_cannot_filter_field_discovery_is_asked_the_old_way():
+    from elasticsearch7.exceptions import RequestError
+
+    docs = [alert(eid=22, ts=ms("2026-11-17T09:00:00"), agent="1", label="contoso", Image=AGENT, QueryName="t.fabrikam-example.com")]
+    fi = FakeIndexer(docs)
+    real = fi.field_caps
+
+    async def field_caps(**kwargs):
+        if "body" in kwargs:
+            raise RequestError(400, "illegal_argument_exception", {})
+        return await real(**kwargs)
+
+    fi.field_caps = field_caps
+    discovery = asyncio.run(collector.discover_fields(fi, "wazuh-*", W47))
+    assert discovery.index == "wazuh-*" and [m.shape for m in discovery.maps] == ["nested"]
+
+
+def test_counts_in_both_shapes_are_never_added():
+    """Review: a customer whose pipeline moves from the flat shape to the nested one mid-week has the same agents in
+    both. Endpoints are the larger of the two shapes', never their sum: a pattern seen on 2 endpoints is not sent as 4."""
+    from app.active_response.services.sysmon_stats.redaction import build_context
+    from app.active_response.services.sysmon_stats.report import build_report
+
+    docs = []
+    start = ms("2026-11-16T09:00:00")
+    for day in range(7):
+        shape = "flat" if day < 3 else "nested"
+        for i in range(3):
+            ts = start + day * 86_400_000 + i * 1000
+            docs.append(alert(eid=22, ts=ts, agent=f"00{i}", label="acme", shape=shape, Image=AGENT, QueryName="x.fabrikam-example.com"))
+            if i < 2:
+                docs.append(
+                    alert(eid=22, ts=ts, agent=f"00{i}", label="acme", shape=shape, Image=AGENT, QueryName="y.fabrikam-example.com"),
+                )
+    fi = FakeIndexer(docs)
+
+    async def scenario():
+        maps = (await collector.discover_fields(fi, "wazuh-*")).maps
+        labels, _ = await collector.stage0(fi, "wazuh-*", maps, W47, 60)
+        mapped = collector.map_labels(labels, ["acme"])
+        return await collector.collect_customer(fi, "wazuh-*", maps, mapped.by_customer["acme"], W47, 5, 3, 60)
+
+    result = asyncio.run(scenario())
+    assert result.endpoints == 3
+    by_name = {p.key["QueryName"]: p for p in result.patterns}
+    assert by_name["x.fabrikam-example.com"].endpoints == 3 and by_name["y.fabrikam-example.com"].endpoints == 2
+    assert by_name["x.fabrikam-example.com"].days == 0b1111111
+    built = build_report(
+        customer="cust_" + "0" * 32,
+        week="2026-W47",
+        config="unknown",
+        endpoints=result.endpoints,
+        raw_patterns=result.patterns,
+        ctx=build_context(customer_code="acme", customer_name=None),
+        min_endpoints=3,
+    )
+    assert built.doc["endpoints"] == 3
+    assert [p["fields"]["QueryName"] for p in built.doc["patterns"]] == ["x.fabrikam-example.com"]
+    assert built.stats.dropped_by_reason == {"below-min-endpoints": 1}
+
+
+def test_merge_shapes_keeps_the_larger_count():
+    a = queries.RawPattern(22, {"Image": "a", "QueryName": "q"}, events=10, endpoints=2, days=0b11, details={"User": ["x"]})
+    b = queries.RawPattern(22, {"Image": "a", "QueryName": "q"}, events=7, endpoints=3, days=0b1100, details={"User": ["y"]})
+    (m,) = queries.merge_shapes([a, b])
+    assert (m.events, m.endpoints, m.days, m.details["User"]) == (10, 3, 0b1111, ["x", "y"])
+
+
+def test_the_customers_computers_are_read_in_stage_1_never_from_another_customer():
+    docs = [
+        alert(
+            eid=22,
+            ts=ms("2026-11-17T09:00:00") + i,
+            agent=f"{i}",
+            label="contoso",
+            computer=f"WS-{i:04d}.aw-corp.example",
+            Image=AGENT,
+            QueryName="t.fabrikam-example.com",
+        )
+        for i in range(4)
+    ]
+    docs.append(
+        alert(
+            eid=22,
+            ts=ms("2026-11-17T09:00:00"),
+            agent="9",
+            label="northwind",
+            computer="NW-01.northwind.example",
+            Image=AGENT,
+            QueryName="t.fabrikam-example.com",
+        ),
+    )
+    result = _collect(FakeIndexer(docs))
+    assert sorted(result.computers) == [f"WS-{i:04d}.aw-corp.example" for i in range(4)]
 
 
 # ── labels ──────────────────────────────────────────────────────────────────
@@ -164,7 +354,7 @@ def test_unlabelled_events_are_never_attributed():
     fi = FakeIndexer(docs)
 
     async def scenario():
-        maps = await collector.discover_fields(fi, "wazuh-*")
+        maps = (await collector.discover_fields(fi, "wazuh-*")).maps
         labels, _ = await collector.stage0(fi, "wazuh-*", maps, W47, 60)
         return collector.map_labels(labels, ["contoso"])
 
@@ -195,7 +385,7 @@ def test_pair_selection_threshold_per_event_and_total():
 
 def _collect(fi):
     async def scenario():
-        maps = await collector.discover_fields(fi, "wazuh-*")
+        maps = (await collector.discover_fields(fi, "wazuh-*")).maps
         return await collector.collect_customer(fi, "wazuh-*", maps, {"nested": ["contoso"]}, W47, 5, 3, 60)
 
     return asyncio.run(scenario())
@@ -258,7 +448,7 @@ def test_one_heavy_search_at_a_time_shared_with_the_firing_stats(monkeypatch):
             fi.in_flight -= 1
 
     async def scenario():
-        maps = await collector.discover_fields(fi, "wazuh-*")
+        maps = (await collector.discover_fields(fi, "wazuh-*")).maps
         await asyncio.gather(
             collector.collect_customer(fi, "wazuh-*", maps, {"nested": ["contoso"]}, W47, 5, 3, 60),
             collector.collect_customer(fi, "wazuh-*", maps, {"nested": ["contoso"]}, W47, 5, 3, 60),

@@ -36,6 +36,7 @@ BASE_FIELDS = {
         "level": "rule_level",
         "event_id": "data_win_system_eventID",
         "channel": "data_win_system_channel",
+        "computer": "data_win_system_computer",
         "prefix": "data_win_eventdata_",
     },
     "nested": {
@@ -44,6 +45,7 @@ BASE_FIELDS = {
         "level": "rule.level",
         "event_id": "data.win.system.eventID",
         "channel": "data.win.system.channel",
+        "computer": "data.win.system.computer",
         "prefix": "data.win.eventdata.",
     },
 }
@@ -72,9 +74,11 @@ def alert(
     shape: str = "nested",
     channel: str = CHANNEL,
     escaped: bool = True,
+    computer: Optional[str] = None,
     **eventdata: str,
 ) -> Dict[str, Any]:
-    """One Sysmon alert as the indexer holds it, flattened to its field paths."""
+    """One Sysmon alert as the indexer holds it, flattened to its field paths. ``computer`` is the Windows event's
+    Computer (a domain-joined endpoint's fully qualified name)."""
     f = BASE_FIELDS[shape]
     doc: Dict[str, Any] = {
         "timestamp": ts,
@@ -85,6 +89,8 @@ def alert(
     }
     if label is not None:
         doc[f["label"]] = label
+    if computer is not None:
+        doc[f["computer"]] = computer
     for name, value in eventdata.items():
         doc[f["prefix"] + lower_camel(name)] = wazuh_escaped(value) if escaped else value
     return doc
@@ -216,10 +222,24 @@ def stage_of(body: Dict[str, Any]) -> str:
 class FakeIndexer:
     """Answers field_caps and search over ``docs``; ``answers`` replaces a stage's answer (a response or an exception)."""
 
-    def __init__(self, docs=None, *, answers=None, caps_overrides=None, field_caps_error=None, delay=0.0):
+    def __init__(
+        self,
+        docs=None,
+        *,
+        answers=None,
+        caps_overrides=None,
+        field_caps_error=None,
+        delay=0.0,
+        history_caps=None,
+        week_indices=None,
+    ):
         self.docs = list(docs or [])
         self.answers = dict(answers or {})
         self.caps_overrides = caps_overrides
+        # Mappings only an index outside the asked week has: what field_caps answers without an index_filter
+        self.history_caps = history_caps
+        # The indices field_caps names when asked with an index_filter (None: it names the one default index)
+        self.week_indices = week_indices
         self.field_caps_error = field_caps_error
         self.delay = delay
         self.searches: List[Dict[str, Any]] = []
@@ -234,7 +254,14 @@ class FakeIndexer:
         self.field_caps_calls.append(kwargs)
         if self.field_caps_error is not None:
             raise self.field_caps_error
-        return field_caps(self.docs, kwargs["fields"], self.caps_overrides)
+        filtered = "index_filter" in (kwargs.get("body") or {})
+        overrides = dict(self.caps_overrides or {})
+        if not filtered:
+            overrides.update(self.history_caps or {})
+        answer = field_caps(self.docs, kwargs["fields"], overrides)
+        if filtered and self.week_indices is not None:
+            answer["indices"] = list(self.week_indices)
+        return answer
 
     async def search(self, index, body, **kwargs):
         stage = stage_of(body)

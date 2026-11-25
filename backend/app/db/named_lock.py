@@ -66,6 +66,22 @@ async def mysql_named_lock(prefix: str, label: str) -> AsyncIterator[bool]:
         await session.close()
 
 
+async def lock_in_use(prefix: str) -> bool:
+    """Whether some connection (another replica, or this one) holds the named lock ``prefix`` + DATABASE() now. False
+    on another database, or when MySQL cannot be asked."""
+    session = new_session()
+    try:
+        if session.get_bind().dialect.name != "mysql":
+            return False
+        name = (await session.execute(text(LOCK_NAME_SQL), {"prefix": prefix})).scalar()
+        return (await session.execute(text("SELECT IS_USED_LOCK(:name)"), {"name": name})).scalar() is not None
+    except Exception as e:  # noqa: BLE001 - only shown, never relied on: the lock itself decides
+        logger.warning(f"Could not ask whether a named lock is in use ({type(e).__name__})")
+        return False
+    finally:
+        await session.close()
+
+
 async def _invalidate(connection: Any, label: str) -> None:
     """Close ``connection`` for good (never back to the pool): MySQL releases its named locks."""
     if connection is None:

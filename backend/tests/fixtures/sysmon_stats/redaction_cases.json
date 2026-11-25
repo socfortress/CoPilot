@@ -909,6 +909,334 @@
    "expect": {
     "value": "Fabrikam, Inc."
    }
+  },
+  {
+   "id": "ip-printer-port-key",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\Print\\\\Monitors\\\\Standard TCP/IP Port\\\\Ports\\\\10.20.30.40\\\\HostName",
+   "expect": {
+    "value": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors\\Standard TCP/IP Port\\Ports\\<redacted>\\HostName"
+   }
+  },
+  {
+   "id": "ip-printer-port-ip-prefix",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\Print\\\\Monitors\\\\Standard TCP/IP Port\\\\Ports\\\\IP_10.20.30.40",
+   "expect": {
+    "value": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors\\Standard TCP/IP Port\\Ports\\IP_<redacted>"
+   }
+  },
+  {
+   "id": "ip-in-file-name",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\Temp\\\\IP_10.20.30.40.log",
+   "expect": {
+    "value": "C:\\Windows\\Temp\\IP_<redacted>.log"
+   }
+  },
+  {
+   "id": "ip-with-port",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Fabrikam\\\\Agent\\\\Relays\\\\192.0.2.15:8443",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Fabrikam\\Agent\\Relays\\<redacted>:8443"
+   }
+  },
+  {
+   "id": "ipv6-in-key",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Services\\\\Tcpip\\\\Parameters\\\\Interfaces\\\\{0A1B}\\\\fe80::1c2d:3e4f",
+   "expect": {
+    "value": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{0A1B}\\<redacted>"
+   }
+  },
+  {
+   "id": "ipv6-full-in-pipe",
+   "field": "PipeName",
+   "raw": "\\\\fabrikam\\\\2001:db8:0:0:0:0:0:1",
+   "expect": {
+    "value": "\\fabrikam\\<redacted>"
+   }
+  },
+  {
+   "id": "version-gac-kept",
+   "field": "ImageLoaded",
+   "raw": "C:\\\\Windows\\\\Microsoft.NET\\\\assembly\\\\GAC_MSIL\\\\System.Xml\\\\v4.0_4.0.0.0__b77a5c561934e089\\\\System.Xml.dll",
+   "expect": {
+    "value": "C:\\Windows\\Microsoft.NET\\assembly\\GAC_MSIL\\System.Xml\\v4.0_4.0.0.0__b77a5c561934e089\\System.Xml.dll"
+   }
+  },
+  {
+   "id": "version-appx-kept",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\WindowsApps\\\\Fabrikam.Notes_1.2.3.0_x64__8wekyb3d8bbwe\\\\Notes.exe",
+   "expect": {
+    "value": "C:\\Program Files\\WindowsApps\\Fabrikam.Notes_1.2.3.0_x64__8wekyb3d8bbwe\\Notes.exe"
+   }
+  },
+  {
+   "id": "version-five-parts-kept",
+   "field": "Image",
+   "raw": "C:\\\\Program Files\\\\Fabrikam\\\\1.2.3.4.5\\\\agent.exe",
+   "expect": {
+    "value": "C:\\Program Files\\Fabrikam\\1.2.3.4.5\\agent.exe"
+   }
+  },
+  {
+   "id": "version-folder-looks-like-an-address",
+   "field": "ImageLoaded",
+   "raw": "C:\\\\Program Files (x86)\\\\Fabrikam\\\\Update\\\\1.3.181.5\\\\update.dll",
+   "expect": {
+    "value": "C:\\Program Files (x86)\\Fabrikam\\Update\\<redacted>\\update.dll"
+   }
+  },
+  {
+   "id": "clock-time-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\logs\\\\12:34:56.txt",
+   "expect": {
+    "value": "C:\\ProgramData\\Fabrikam\\logs\\12:34:56.txt"
+   }
+  },
+  {
+   "id": "printer-connection",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Print\\\\Connections\\\\,,printsrv01,HP Floor2 Finance",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print\\Connections\\,,<host>,<redacted>"
+   }
+  },
+  {
+   "id": "printer-connection-subkey",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Print\\\\Connections\\\\,,printsrv01,HP Floor2 Finance\\\\Server",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print\\Connections\\,,<host>,<redacted>\\Server"
+   }
+  },
+  {
+   "id": "print-provider-server",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\Print\\\\Providers\\\\Client Side Rendering Print Provider\\\\Servers\\\\PRINTSRV01\\\\Printers\\\\{0A1B2C3D-0000-1111-2222-333344445555}\\\\DsSpooler\\\\printerName",
+   "expect": {
+    "value": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Providers\\Client Side Rendering Print Provider\\Servers\\<host>\\Printers\\{0A1B2C3D-0000-1111-2222-333344445555}\\DsSpooler\\printerName"
+   }
+  },
+  {
+   "id": "print-services-server-and-share",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\Print\\\\Providers\\\\LanMan Print Services\\\\Servers\\\\PRINTSRV01\\\\Printers\\\\HP Floor2 Finance\\\\DsSpooler",
+   "expect": {
+    "value": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Providers\\LanMan Print Services\\Servers\\<host>\\Printers\\<redacted>\\DsSpooler"
+   }
+  },
+  {
+   "id": "rdp-server-name",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Terminal Server Client\\\\Servers\\\\jumphost01\\\\UsernameHint",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Microsoft\\Terminal Server Client\\Servers\\<host>\\UsernameHint"
+   }
+  },
+  {
+   "id": "rdp-server-address",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Terminal Server Client\\\\Servers\\\\10.1.1.5",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Microsoft\\Terminal Server Client\\Servers\\<host>"
+   }
+  },
+  {
+   "id": "sysvol-unc-domain-folder",
+   "field": "Image",
+   "raw": "\\\\\\\\aw-corp-example.com\\\\SYSVOL\\\\aw-corp-example.com\\\\scripts\\\\deploy.exe",
+   "expect": {
+    "value": "\\\\<host>\\SYSVOL\\<redacted>\\scripts\\deploy.exe"
+   }
+  },
+  {
+   "id": "sysvol-gp-datastore-domain-folder",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\System32\\\\GroupPolicy\\\\DataStore\\\\0\\\\sysvol\\\\aw-corp-example.com\\\\Policies\\\\{31B2F340-016D-11D2-945F-00C04FB984F9}\\\\Machine\\\\Registry.pol",
+   "expect": {
+    "value": "C:\\Windows\\System32\\GroupPolicy\\DataStore\\0\\sysvol\\<redacted>\\Policies\\{31B2F340-016D-11D2-945F-00C04FB984F9}\\Machine\\Registry.pol"
+   }
+  },
+  {
+   "id": "sysvol-on-a-dc",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\SYSVOL\\\\sysvol\\\\aw-corp-example.com\\\\scripts\\\\logon.ps1",
+   "expect": {
+    "value": "C:\\Windows\\SYSVOL\\sysvol\\<redacted>\\scripts\\logon.ps1"
+   }
+  },
+  {
+   "id": "sysvol-domain-junction-kept",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\SYSVOL\\\\domain\\\\Policies\\\\x.pol",
+   "expect": {
+    "value": "C:\\Windows\\SYSVOL\\domain\\Policies\\x.pol"
+   }
+  },
+  {
+   "id": "netlogon-kept",
+   "field": "Image",
+   "raw": "\\\\\\\\corpdc\\\\NETLOGON\\\\logon.bat",
+   "expect": {
+    "value": "\\\\<host>\\NETLOGON\\logon.bat"
+   }
+  },
+  {
+   "id": "profile-admin-share",
+   "field": "Image",
+   "raw": "\\\\\\\\WS-0002\\\\C$\\\\Users\\\\jsmith\\\\AppData\\\\Local\\\\Temp\\\\x.exe",
+   "expect": {
+    "value": "\\\\<host>\\C$\\Users\\<user>\\AppData\\Local\\Temp\\x.exe"
+   }
+  },
+  {
+   "id": "profile-admin-share-long-unc",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\?\\\\UNC\\\\WS-0002\\\\c$\\\\Users\\\\jsmith\\\\AppData\\\\Roaming\\\\x.dat",
+   "expect": {
+    "value": "\\\\?\\UNC\\<host>\\c$\\Users\\<user>\\AppData\\Roaming\\x.dat"
+   }
+  },
+  {
+   "id": "profile-admin-share-public-kept",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\WS-0002\\\\C$\\\\Users\\\\Public\\\\Desktop\\\\x.lnk",
+   "expect": {
+    "value": "\\\\<host>\\C$\\Users\\Public\\Desktop\\x.lnk"
+   }
+  },
+  {
+   "id": "profile-redirected-drive",
+   "field": "Image",
+   "raw": "\\\\\\\\tsclient\\\\C\\\\Users\\\\jsmith\\\\Desktop\\\\tool.exe",
+   "expect": {
+    "value": "\\\\<host>\\C\\Users\\<user>\\Desktop\\<redacted>"
+   }
+  },
+  {
+   "id": "profile-roaming-share",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\Profiles$\\\\jsmith.V6\\\\AppData\\\\Roaming\\\\x.dat",
+   "expect": {
+    "value": "\\\\<host>\\Profiles$\\<redacted>\\AppData\\Roaming\\x.dat"
+   }
+  },
+  {
+   "id": "profile-home-share",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\home$\\\\jsmith\\\\Documents\\\\Budget 2027.xlsx",
+   "expect": {
+    "value": "\\\\<host>\\home$\\<redacted>\\Documents\\<redacted>"
+   }
+  },
+  {
+   "id": "share-file-at-its-root-kept",
+   "field": "Image",
+   "raw": "\\\\\\\\fs01\\\\deploy$\\\\setup.exe",
+   "expect": {
+    "value": "\\\\<host>\\deploy$\\setup.exe"
+   }
+  },
+  {
+   "id": "profile-non-default-root",
+   "field": "Image",
+   "raw": "D:\\\\Profiles\\\\jsmith\\\\AppData\\\\Local\\\\Temp\\\\x.exe",
+   "expect": {
+    "value": "D:\\Profiles\\<user>\\AppData\\Local\\Temp\\x.exe"
+   }
+  },
+  {
+   "id": "profile-non-default-root-device",
+   "field": "TargetFilename",
+   "raw": "\\\\Device\\\\HarddiskVolume4\\\\UserProfiles\\\\jsmith\\\\AppData\\\\Roaming\\\\x.dat",
+   "expect": {
+    "value": "\\Device\\HarddiskVolume4\\UserProfiles\\<user>\\AppData\\Roaming\\x.dat"
+   }
+  },
+  {
+   "id": "name-written-as-one-word",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\ContosoPharma\\\\agent\\\\cache.db",
+   "expect": {
+    "value": "C:\\ProgramData\\<redacted>\\agent\\cache.db"
+   }
+  },
+  {
+   "id": "name-written-as-one-word-inside-a-longer-one",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\ContosoPharmaIT\\\\Agent",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\<redacted>\\Agent"
+   }
+  },
+  {
+   "id": "name-hyphenated",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\contoso-pharma\\\\x.db",
+   "expect": {
+    "value": "C:\\ProgramData\\<redacted>\\x.db"
+   }
+  },
+  {
+   "id": "dns-name-written-as-one-word",
+   "field": "QueryName",
+   "raw": "intranet.contosopharma.net",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-name-inside-a-longer-label",
+   "field": "QueryName",
+   "raw": "vpn.contosopharmagroup.net",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-code-inside-a-longer-label",
+   "field": "QueryName",
+   "raw": "mail.contosoinc.net",
+   "expect": {
+    "drop": "dns-identity-token"
+   }
+  },
+  {
+   "id": "dns-own-locator-autodiscover",
+   "field": "QueryName",
+   "raw": "autodiscover.northwind-traders-example.net",
+   "expect": {
+    "drop": "dns-own-locator"
+   }
+  },
+  {
+   "id": "dns-own-locator-device-registration",
+   "field": "QueryName",
+   "raw": "enterpriseregistration.northwind-traders-example.net",
+   "expect": {
+    "drop": "dns-own-locator"
+   }
+  },
+  {
+   "id": "dns-own-locator-wpad",
+   "field": "QueryName",
+   "raw": "wpad.aw-corp-example.com",
+   "expect": {
+    "drop": "dns-own-locator"
+   }
+  },
+  {
+   "id": "dns-provider-autodiscover-kept",
+   "field": "QueryName",
+   "raw": "autodiscover.outlook.com",
+   "expect": {
+    "value": "autodiscover.outlook.com"
+   }
   }
  ]
 }

@@ -20,14 +20,17 @@ from app.active_response.services.sysmon_stats import runner
 from app.active_response.services.sysmon_stats import settings
 from app.active_response.services.sysmon_stats.sharing import set_sharing
 from app.active_response.services.sysmon_stats.status import get_status
+from app.audit.services.audit import _client_ip
 from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
+from app.db import named_lock
 from app.db.db_session import get_db
 from app.middleware.customer_access import verify_customer_code_access
 
 sysmon_stats_router = APIRouter()
 
 RUNNING_DETAIL = "A noise statistics run or preview is already in progress on this CoPilot; try again in a minute"
+LOCKED_DETAIL = "Another CoPilot replica is sending noise statistics right now; try again in a minute"
 
 
 @sysmon_stats_router.get(
@@ -79,7 +82,7 @@ async def preview_sysmon_stats(
     session: AsyncSession = Depends(get_db),
 ):
     """Build the customer's report exactly as it would be sent, from the indexer, and return it. Sends nothing and writes
-    no state."""
+    no state. Bounded by runner.PREVIEW_DEADLINE (the frontend's nginx gives this route longer than that)."""
     if week is not None and week not in runner.accepted_weeks(runner._now()):
         raise HTTPException(status_code=400, detail="week must be one of the two weeks SOCFortress accepts (YYYY-Www)")
     if not settings.sharing_on():
@@ -109,18 +112,19 @@ async def send_sysmon_stats_now(
     session: AsyncSession = Depends(get_db),
 ):
     """Send the due reports now, the way the scheduled run does but without waiting for each customer's send time. A week
-    already done for a customer is not sent again."""
+    already done for a customer is not sent again. The run goes on in the background (it may take many minutes): this
+    answers at once with "started", and the status shows ``running`` until the run's result is its ``last_tick``."""
     if runner.running():
         raise HTTPException(status_code=409, detail=RUNNING_DETAIL)
-    result = await runner.run_tick(
-        session,
+    if await named_lock.lock_in_use(runner.LOCK_PREFIX):
+        raise HTTPException(status_code=409, detail=LOCKED_DETAIL)
+    result = await runner.start_send_now(
         actor=current_user,
-        request=request,
+        source_ip=_client_ip(request),
         customer_code=customer_code,
-        ignore_jitter=True,
         resume=resume,
     )
-    if result.outcome.value == "locked":
-        raise HTTPException(status_code=409, detail="Another CoPilot replica is sending noise statistics right now; try again in a minute")
+    if result.outcome.value == "running":
+        raise HTTPException(status_code=409, detail=RUNNING_DETAIL)
     status = await get_status(session)
     return StatsRunResponse(success=True, message=result.message, result=result, status=status)

@@ -19,8 +19,12 @@ Local only; nothing touches a remote host. Skipped unless these are set:
    P3 a vendor helper started by WmiPrvSE.exe (a ProcessCreate, no command line); P4 a vendor DNS query in A only
    (P4b in A and B); P5 a NetworkConnect to a vendor host; P6 an alert at rule level 10; P7 a .local DNS query; P8 the EDR's own
    install folder (a different InstallDirName in each CoPilot: the code, an admin hint, discovered from the stored
-   config). Locally: P6 and P7 are absent, P8 carries __INSTALLDIRNAME__, no payload holds a customer code, name, host
-   name or license key, and sysmon-sync's own validator (loaded from SYSMON_SYNC_DIR) accepts every report.
+   config); P9 the vendor agent loading clr.dll (an ImageLoad SOCFortress's config logs by its OriginalFileName). Every
+   endpoint is in an AD domain that shares no word with its customer (the Windows event's Computer is its FQDN), looks
+   up a file server in it, caches a Group Policy file under SYSVOL and has a TCP/IP printer port named by its address.
+   Locally: P6 and P7 are absent, P8 carries __INSTALLDIRNAME__, no payload holds a customer code, name, host name, AD
+   domain, IP address or license key, the SYSVOL and printer paths are redacted, and sysmon-sync's own validator
+   (loaded from SYSMON_SYNC_DIR) accepts every report.
 2. Service (sysmon-sync's venv, a subprocess, tests/e2e/sysmon_stats_sysmon_sync_driver.py): the probe while reports are
    off (404) and on (401), every report posted as the exact bytes (200, nothing rejected), a withdraw of C's second
    customer (200) and a repost right after it (409), a deliberately unredacted report (422 identity-leak), then the
@@ -28,7 +32,8 @@ Local only; nothing touches a remote host. Skipped unless these are set:
 3. CKA: `sysmonctl suggest check` on the candidates: nothing invalid; P1 survives as a global suggestion; P2 is dropped
    (a placeholder in the narrowest rule); P3 goes to a person (processcreate-never-drafted; older CKA: dropped as
    baseline-incomplete); P4 (one owner) is dropped as an unknown customer's and P4b (two owners) deferred below the
-   threshold: neither is suggested; P5 and P8 only have to load.
+   threshold: neither is suggested; P9 survives as a global suggestion (it carries OriginalFileName); P5 and P8 only
+   have to load.
 4. Feedback: the probe answers and the 422 go back through CoPilot's classifier (not accepting / accepting; refused and
    the pause).
 """
@@ -82,6 +87,10 @@ COPILOTS = {
         "customers": {"tailspin": ("Tailspin Toys", "tailspin-edr", "discovered"), "wingtip": ("Wingtip Toys", "wingtip", "code")},
     },
 }
+# Each CoPilot's customers' AD domain: no word of a customer's code or name in it
+AD_DOMAINS = {"A": "alpha-dir-example.com", "B": "bravo-dir-example.com", "C": "charlie-dir-example.com"}
+PRINTER_IP = "10.20.30.40"
+CLR = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\clr.dll"
 WEEKS = {
     "2026-W46": ("2026-11-09", datetime(2026, 11, 18, 0, 30, tzinfo=timezone.utc)),
     "2026-W47": ("2026-11-16", datetime(2026, 11, 25, 0, 30, tzinfo=timezone.utc)),
@@ -106,9 +115,10 @@ def docs_for(copilot, code, install_dir, monday):
     for i in range(5):
         agent = f"{copilot}{code}-{i:03d}"
         host = f"{code.upper()[:4]}-WS{i:04d}"
+        ad = AD_DOMAINS[copilot]
         for day in range(7):
             ts = start + day * DAY_MS + i * 1000
-            base = {"ts": ts, "agent": agent, "label": code}
+            base = {"ts": ts, "agent": agent, "label": code, "computer": f"{host}.{ad}"}
             # P1
             out.append(
                 alert(eid=22, Image=AGENT, QueryName="telemetry.fabrikam-example.com", QueryStatus="0", User=SYSTEM, RuleName="-", **base),
@@ -176,6 +186,44 @@ def docs_for(copilot, code, install_dir, monday):
                     Image=AGENT,
                     TargetFilename=f"C:\\ProgramData\\Fabrikam\\Agent\\cache\\{host}.json",
                     User=f"{code.upper()}\\j.doe{i}",
+                    **base,
+                ),
+            )
+            # P9: an ImageLoad SOCFortress's config logs by its OriginalFileName
+            out.append(
+                alert(
+                    eid=7,
+                    Image=AGENT,
+                    ImageLoaded=CLR,
+                    Signature="Microsoft Corporation",
+                    SignatureStatus="Valid",
+                    Signed="true",
+                    OriginalFileName="clr.dll",
+                    User=SYSTEM,
+                    RuleName="technique_id=T1055,technique_name=Process Injection",
+                    **base,
+                ),
+            )
+            # The AD domain, a file server in it, the Group Policy cache, a TCP/IP printer port: none may leave as logged
+            out.append(
+                alert(eid=22, Image="C:\\Windows\\System32\\svchost.exe", QueryName=f"fs01.{ad}", QueryStatus="0", User=SYSTEM, **base),
+            )
+            out.append(
+                alert(
+                    eid=11,
+                    Image="C:\\Windows\\System32\\svchost.exe",
+                    TargetFilename=f"C:\\Windows\\System32\\GroupPolicy\\DataStore\\0\\sysvol\\{ad}\\Policies\\{{31B2F340-016D-11D2-945F-00C04FB984F9}}\\GPT.INI",
+                    User=SYSTEM,
+                    **base,
+                ),
+            )
+            out.append(
+                alert(
+                    eid=13,
+                    Image="C:\\Windows\\System32\\spoolsv.exe",
+                    TargetObject=f"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors\\Standard TCP/IP Port\\Ports\\{PRINTER_IP}\\HostName",
+                    EventType="SetValue",
+                    User=SYSTEM,
                     **base,
                 ),
             )
@@ -316,7 +364,12 @@ def step1():
     for spec in COPILOTS.values():
         for code, (cname, _, _) in spec["customers"].items():
             forbidden += [code, cname, code.upper()[:4] + "-WS"]
-    forbidden += ["s3cr3t", "--tenant", "203.0.113.10", "svc_fabupd", "j.doe", "-Embedding"]
+    forbidden += ["s3cr3t", "--tenant", "203.0.113.10", "svc_fabupd", "j.doe", "-Embedding", PRINTER_IP, "dir-example"]
+    forbidden += list(AD_DOMAINS.values())
+    sysvol = (
+        "C:\\Windows\\System32\\GroupPolicy\\DataStore\\0\\sysvol\\<redacted>\\Policies\\{31B2F340-016D-11D2-945F-00C04FB984F9}\\GPT.INI"
+    )
+    port = "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Monitors\\Standard TCP/IP Port\\Ports\\<redacted>\\HostName"
     p8 = 0
     for name, item in all_reports:
         raw = item["raw"]
@@ -333,13 +386,22 @@ def step1():
         if parsed.rejected:
             fail(f"sysmon-sync's validator dropped patterns of CoPilot {name}: {[p.to_json() for p in parsed.rejected]}")
         p8 += sum(1 for p in doc["patterns"] if p["fields"].get("Image") == "C:\\Program Files\\__INSTALLDIRNAME__\\chainsaw\\chainsaw.exe")
+        values = [v for p in doc["patterns"] for v in p["fields"].values()]
+        if sysvol not in values or port not in values:
+            fail(f"a report of CoPilot {name} lacks the redacted SYSVOL cache path or printer port")
+        p9 = [p for p in doc["patterns"] if p["fields"].get("ImageLoaded") == CLR]
+        if not p9 or p9[0]["fields"].get("OriginalFileName") != "clr.dll":
+            fail(f"a report of CoPilot {name} lacks P9 with its OriginalFileName")
     if p8 != len(all_reports):
         fail(f"P8 (the install folder as __INSTALLDIRNAME__) is in {p8} of {len(all_reports)} reports")
     for row in audit_rows:
         blob = json.dumps(row.model_dump(), default=str)
         if any(spec["key"] in blob for spec in COPILOTS.values()) or "fabrikam-example" in blob:
             fail("an audit row holds a license key or a value")
-    say(f"  local checks passed: no identity, P6/P7 absent, P8 tokenized in every report, {len(audit_rows)} audit rows without values")
+    say(
+        f"  local checks passed: no identity, AD domain or address, P6/P7 absent, P8 tokenized, SYSVOL and printer paths "
+        f"redacted, P9 with its OriginalFileName in every report, {len(audit_rows)} audit rows without values",
+    )
     return manifest
 
 
@@ -371,6 +433,7 @@ CANDIDATE_NAMES = {
     ("QueryName", "cdn-ab.fabrikam-example.com"): "P4b",
     ("DestinationHostname", "api.fabrikam-example.com"): "P5",
     ("Image", "C:\\Program Files\\__INSTALLDIRNAME__\\chainsaw\\chainsaw.exe"): "P8",
+    ("ImageLoaded", CLR): "P9",
 }
 
 
@@ -378,7 +441,11 @@ def step3():
     say("Step 3: the installer repo's suggest check on the candidates")
     path = WORK / "candidates.json"
     text = path.read_text()
-    for word in ["cust_"] + [spec["key"] for spec in COPILOTS.values()] + ["contoso", "northwind", "tailspin", "wingtip", "-WS0"]:
+    for word in (
+        ["cust_"]
+        + [spec["key"] for spec in COPILOTS.values()]
+        + ["contoso", "northwind", "tailspin", "wingtip", "-WS0", "dir-example", PRINTER_IP]
+    ):
         if word.lower() in text.lower():
             fail(f"candidates.json holds {word!r}")
     doc = json.loads(text)
@@ -387,7 +454,7 @@ def step3():
         for (field, value), name in CANDIDATE_NAMES.items():
             if cand["fields"].get(field) == value:
                 by_name[name] = cand
-    missing = {"P1", "P2", "P3", "P4", "P4b", "P5", "P8"} - set(by_name)
+    missing = {"P1", "P2", "P3", "P4", "P4b", "P5", "P8", "P9"} - set(by_name)
     if missing:
         fail(f"candidates missing: {sorted(missing)}")
     if "CommandLine" not in by_name["P3"]["absent"]:
@@ -415,7 +482,8 @@ def step3():
     say(f"  CKA {head}: counts {counts}")
     for name in sorted(outcomes):
         say(f"  {name}: {outcomes[name]}")
-    expect = {"P1": ("survivor", "global"), "P4b": ("deferred", "below-threshold")}
+    # P9: an ImageLoad main logs by OriginalFileName (review: without it, CKA read it as not logged by main and dropped it)
+    expect = {"P1": ("survivor", "global"), "P4b": ("deferred", "below-threshold"), "P9": ("survivor", "global")}
     for name, (outcome, reason) in expect.items():
         if (outcomes[name][0], outcomes[name][2]) != (outcome, reason):
             fail(f"{name}: expected {outcome}/{reason}, got {outcomes[name]}")
