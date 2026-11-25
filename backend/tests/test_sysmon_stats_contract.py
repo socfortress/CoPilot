@@ -190,6 +190,7 @@ def test_the_vendored_constants_are_the_services():
         "REGISTRY_KEY_FIELDS",
         "_PROBLEM_REASONS",
         "CKA_COMMIT",
+        "SID_PATTERN",
     ):
         assert getattr(rules, name) == getattr(cka, name), name
     for name in ("USER_DIR_RE", "UNC_ANY_RE", "SID_RE", "HKU_HIVE_RE", "PLACEHOLDER_LIKE", "TEMPLATE_TOKEN_LIKE", "ENV_VAR_RE"):

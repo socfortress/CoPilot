@@ -80,10 +80,15 @@ SOCFortress turns patterns seen across many CoPilots into reviewed exclusions in
   `Computer`), its agents' names, Active Directory locator records, `<its host>.<domain>`, `autodiscover.`,
   `enterpriseregistration.`, `wpad.` and like names, SYSVOL and NETLOGON paths, and every name under them is dropped
   (in paths: `<redacted>`). The folder below SYSVOL, print servers and printer shares in registry keys, Remote
-  Desktop servers, the first folder below any non-well-known share (home and roaming-profile shares) and profile
-  folders reached through an admin share or on a non-default root are redacted. The customer's name written as one
-  word (`acmewidgets`) is redacted inside longer words too. A public-looking domain of the customer that none of its
-  values reveals is still sent as logged: an admin's `own_domains` hint covers it.
+  Desktop servers and profile folders reached through an admin share or on a non-default root are redacted. Below any
+  share but SYSVOL, NETLOGON, ADMIN$, IPC$, print$ and a volume's root (`C$`, `\\tsclient\C`), the first segment is
+  `<redacted>` also as the path's last segment (`\\fs01\home$\jsmith`, `\\fs01\Profiles$\jsmith.V6`), and what
+  follows it is cut down as in a profile; only a program, script or installer file right below a share not named for
+  per-user folders is kept (`\\fs01\deploy$\agent.msi`; `\\fs01\deploy$\Contoso\setup.exe` becomes
+  `\\<host>\deploy$\<redacted>\<redacted>`). A user SID is `<SID>` also glued to a word
+  (`Tasks\GoogleUpdateTaskUser<SID>Core`): the contract's `SID_PATTERN` has no leading word boundary. The customer's
+  name written as one word (`acmewidgets`) is redacted inside longer words too. A public-looking domain of the
+  customer that none of its values reveals is still sent as logged: an admin's `own_domains` hint covers it.
 - **Indexer**: aggregations only, in the heavy-query slot shared with the firing-stats cache, two stages per customer,
   bounded sizes and budgets; events are attributed only by their customer label (case-insensitive), never guessed.
   Field discovery and the week's searches are limited to the indices that may hold the week (`index_filter`). An event

@@ -1,5 +1,8 @@
-"""Vendored from sysmon-sync (socfortress/sysmon-sync, commit 034dcbd, app/reports/cka_rules.py), which vendors them
-from the installer repo, Client-Kickstart-Automated, at commit 0d86099.
+"""Vendored from sysmon-sync (socfortress/sysmon-sync, commit 99b44fa on branch fix/glued-sid, app/reports/cka_rules.py),
+which vendors them from the installer repo, Client-Kickstart-Automated, at commit af3ca08 (branch
+fix/suggest-glued-sid-and-cmdline-uncertain). Against the previous copy (sysmon-sync 034dcbd, CKA 0d86099) only the
+SID rule changed: SID_PATTERN, no leading \\b, so a user SID glued to a word (GoogleUpdateTaskUserS-1-5-21-...Core)
+is an identity leak.
 
 These are the value and identity rules sysmon-sync applies to every value of a fleet noise report (contract v1). CoPilot
 runs the same rules on its own report before it sends it, so the service should only ever see accepted patterns: a
@@ -17,7 +20,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-CKA_COMMIT = "0d86099"
+CKA_COMMIT = "af3ca08"
 
 # ---- context.py --------------------------------------------------------------------------
 TOKEN = "__INSTALLDIRNAME__"
@@ -384,9 +387,21 @@ def dns_name_problems(field_name: str, value, policy: dict) -> list[str]:
 
 
 # ---- alert.py: identities ----------------------------------------------------------------
+# Any hive directly under HKU\ ; the ones that are NOT a user's come from policy.toml
+# (registry_service_hives). Users can be S-1-5-21-... (local/AD) or S-1-12-1-... (Entra ID). Its leading \b (HKU not
+# glued to a word, so a folder like ...\SHKU\bin\ is no hive) hides no SID: a user SID is found by SID_RE anywhere in
+# the value, glued to a word or not (xHKU\S-1-5-21-...\ is still a user's SID).
 HKU_HIVE_RE = re.compile(r"(?i)\bHKU\\([^\\;]+)(?:\\|$|;)")
 SERVICE_HIVES = (".DEFAULT", "S-1-5-18", "S-1-5-19", "S-1-5-20")
-SID_RE = re.compile(r"(?i)\bS-1-(?:5-21|12-1)(?:-\d+)+(?:_Classes)?")
+# A user's SID: S-1-5-21-<sub-authorities> (a local or AD account) or S-1-12-1-<sub-authorities> (Entra ID), case-
+# insensitive, ANYWHERE in the value: no leading word boundary, since one is often glued to a word (Omaha-style task
+# names: C:\Windows\System32\Tasks\GoogleUpdateTaskUserS-1-5-21-...-1001Core, TaskCache\Tree\
+# MicrosoftEdgeUpdateTaskUserS-1-5-21-...UA), to an underscore (x_S-1-5-21-...) or to a digit (1S-1-12-1-...), where
+# \b (a non-word character before the S) never matched. SID_PATTERN is the one rule for every check (personal,
+# identity_leak, redact, lint's sample-pii; a copy of it elsewhere must stay identical). SID_RE also takes a user's
+# Classes hive suffix (S-1-5-21-..._Classes) into the literal it returns and redacts.
+SID_PATTERN = r"S-1-(?:5-21|12-1)(?:-\d+)+"
+SID_RE = re.compile(r"(?i)" + SID_PATTERN + r"(?:_Classes)?")
 _VOLUME_ROOT = r"(?:[A-Z]:|\\Device\\[^\\/\s\"]+(?:\\Partition\d+)?|\\(?:\\[?.]|\?\?)\\Volume\{[^}\\/\s\"]*\}" r"|(?<![^\s\"'=,(;]))"
 USER_DIR_RE = re.compile(
     r"(?i)(" + _VOLUME_ROOT + r"[\\/]+(?:Users|Documents and Settings|DOCUME~\d)[\\/]+)"

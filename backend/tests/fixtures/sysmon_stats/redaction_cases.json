@@ -40,7 +40,7 @@
    "field": "TargetFilename",
    "raw": "\\\\nas\\files\\x.txt",
    "expect": {
-    "value": "\\\\<host>\\files\\x.txt"
+    "value": "\\\\<host>\\files\\<redacted>"
    }
   },
   {
@@ -48,7 +48,7 @@
    "field": "TargetFilename",
    "raw": "\\\\nas\\backup\\x.txt",
    "expect": {
-    "value": "\\\\<host>\\backup\\x.txt"
+    "value": "\\\\<host>\\backup\\<redacted>"
    }
   },
   {
@@ -356,6 +356,54 @@
    }
   },
   {
+   "id": "sid-glued-google-update-task",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\System32\\\\Tasks\\\\GoogleUpdateTaskUserS-1-5-21-1111111111-2222222222-3333333333-1001Core",
+   "expect": {
+    "value": "C:\\Windows\\System32\\Tasks\\GoogleUpdateTaskUser<SID>Core"
+   }
+  },
+  {
+   "id": "sid-glued-google-update-task-ua",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\System32\\\\Tasks\\\\GoogleUpdateTaskUserS-1-5-21-1111111111-2222222222-3333333333-1001UA",
+   "expect": {
+    "value": "C:\\Windows\\System32\\Tasks\\GoogleUpdateTaskUser<SID>UA"
+   }
+  },
+  {
+   "id": "sid-glued-edge-taskcache",
+   "field": "TargetObject",
+   "raw": "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Schedule\\\\TaskCache\\\\Tree\\\\MicrosoftEdgeUpdateTaskUserS-1-5-21-1111111111-2222222222-3333333333-1001UA",
+   "expect": {
+    "value": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\MicrosoftEdgeUpdateTaskUser<SID>UA"
+   }
+  },
+  {
+   "id": "sid-glued-underscore",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\x_S-1-5-21-1111111111-2222222222-3333333333-1001\\\\state.dat",
+   "expect": {
+    "value": "C:\\ProgramData\\Fabrikam\\x_<SID>\\state.dat"
+   }
+  },
+  {
+   "id": "sid-glued-digit-entra",
+   "field": "TargetFilename",
+   "raw": "C:\\\\ProgramData\\\\Fabrikam\\\\1S-1-12-1-1111111111-2222222222-3333333333-4444444444\\\\state.dat",
+   "expect": {
+    "value": "C:\\ProgramData\\Fabrikam\\1<SID>\\state.dat"
+   }
+  },
+  {
+   "id": "sid-glued-lowercase",
+   "field": "TargetFilename",
+   "raw": "C:\\\\Windows\\\\System32\\\\Tasks\\\\taskusers-1-5-21-1111111111-2222222222-3333333333-1001core",
+   "expect": {
+    "value": "C:\\Windows\\System32\\Tasks\\taskuser<SID>core"
+   }
+  },
+  {
    "id": "service-hive-kept",
    "field": "TargetObject",
    "raw": "HKU\\\\S-1-5-18\\\\Software\\\\Fabrikam\\\\x",
@@ -376,7 +424,7 @@
    "field": "TargetFilename",
    "raw": "\\\\\\\\FS01\\\\share\\\\x.txt",
    "expect": {
-    "value": "\\\\<host>\\share\\x.txt"
+    "value": "\\\\<host>\\share\\<redacted>"
    }
   },
   {
@@ -384,7 +432,7 @@
    "field": "TargetFilename",
    "raw": "\\\\\\\\?\\\\UNC\\\\FS01\\\\share\\\\x.txt",
    "expect": {
-    "value": "\\\\?\\UNC\\<host>\\share\\x.txt"
+    "value": "\\\\?\\UNC\\<host>\\share\\<redacted>"
    }
   },
   {
@@ -392,7 +440,7 @@
    "field": "TargetFilename",
    "raw": "\\\\??\\\\UNC\\\\FS01\\\\share\\\\x.txt",
    "expect": {
-    "value": "\\??\\UNC\\<host>\\share\\x.txt"
+    "value": "\\??\\UNC\\<host>\\share\\<redacted>"
    }
   },
   {
@@ -400,7 +448,7 @@
    "field": "TargetFilename",
    "raw": "\\\\Device\\\\Mup\\\\FS01\\\\share\\\\x.txt",
    "expect": {
-    "value": "\\Device\\Mup\\<host>\\share\\x.txt"
+    "value": "\\Device\\Mup\\<host>\\share\\<redacted>"
    }
   },
   {
@@ -408,7 +456,7 @@
    "field": "TargetFilename",
    "raw": "//FS01/share/x.txt",
    "expect": {
-    "value": "//<host>/share/x.txt"
+    "value": "//<host>/share/<redacted>"
    }
   },
   {
@@ -416,7 +464,7 @@
    "field": "TargetFilename",
    "raw": "\\\\\\\\192.0.2.10\\\\share\\\\x.txt",
    "expect": {
-    "value": "\\\\<host>\\share\\x.txt"
+    "value": "\\\\<host>\\share\\<redacted>"
    }
   },
   {
@@ -1140,6 +1188,122 @@
    "raw": "\\\\\\\\fs01\\\\deploy$\\\\setup.exe",
    "expect": {
     "value": "\\\\<host>\\deploy$\\setup.exe"
+   }
+  },
+  {
+   "id": "share-home-folder-last",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\home$\\\\jsmith",
+   "expect": {
+    "value": "\\\\<host>\\home$\\<redacted>"
+   }
+  },
+  {
+   "id": "share-homes-folder-last",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\homes\\\\jsmith",
+   "expect": {
+    "value": "\\\\<host>\\homes\\<redacted>"
+   }
+  },
+  {
+   "id": "share-profiles-folder-last",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\profiles$\\\\jsmith.V6",
+   "expect": {
+    "value": "\\\\<host>\\profiles$\\<redacted>"
+   }
+  },
+  {
+   "id": "share-users-folder-last",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\users\\\\jsmith",
+   "expect": {
+    "value": "\\\\<host>\\users\\<redacted>"
+   }
+  },
+  {
+   "id": "share-redirect-desktop",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\redirect$\\\\jsmith\\\\Desktop",
+   "expect": {
+    "value": "\\\\<host>\\redirect$\\<redacted>\\Desktop"
+   }
+  },
+  {
+   "id": "share-deploy-installer-kept",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\deploy$\\\\agent.msi",
+   "expect": {
+    "value": "\\\\<host>\\deploy$\\agent.msi"
+   }
+  },
+  {
+   "id": "share-deploy-folder-redacted",
+   "field": "Image",
+   "raw": "\\\\\\\\fs01\\\\deploy$\\\\Contoso\\\\setup.exe",
+   "ctx": {
+    "customer_code": "northwind",
+    "customer_name": "Northwind Traders"
+   },
+   "expect": {
+    "value": "\\\\<host>\\deploy$\\<redacted>\\<redacted>"
+   }
+  },
+  {
+   "id": "share-per-user-program-redacted",
+   "field": "Image",
+   "raw": "\\\\\\\\fs01\\\\home$\\\\setup.exe",
+   "expect": {
+    "value": "\\\\<host>\\home$\\<redacted>"
+   }
+  },
+  {
+   "id": "share-root-document-redacted",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\scans\\\\jsmith.pdf",
+   "expect": {
+    "value": "\\\\<host>\\scans\\<redacted>"
+   }
+  },
+  {
+   "id": "share-one-letter-not-a-drive",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\H\\\\jsmith",
+   "expect": {
+    "value": "\\\\<host>\\H\\<redacted>"
+   }
+  },
+  {
+   "id": "share-doubled-forward-separator",
+   "field": "TargetFilename",
+   "raw": "//fs01/home$//jsmith/x.dat",
+   "expect": {
+    "value": "//<host>/home$//<redacted>/<redacted>"
+   }
+  },
+  {
+   "id": "share-only-kept",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\home$",
+   "expect": {
+    "value": "\\\\<host>\\home$"
+   }
+  },
+  {
+   "id": "profile-admin-share-home-root",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\fs01\\\\D$\\\\Home\\\\jsmith\\\\x.dat",
+   "expect": {
+    "value": "\\\\<host>\\D$\\Home\\<user>\\<redacted>"
+   }
+  },
+  {
+   "id": "profile-redirected-drive-profiles-root",
+   "field": "TargetFilename",
+   "raw": "\\\\\\\\tsclient\\\\D\\\\Profiles\\\\jsmith.V6\\\\AppData\\\\Roaming\\\\x.dat",
+   "expect": {
+    "value": "\\\\<host>\\D\\Profiles\\<user>\\AppData\\Roaming\\x.dat"
    }
   },
   {
