@@ -258,7 +258,9 @@ class RulesCache(BackgroundRefreshMixin):
         """Ensure rules are loaded, refreshing if stale."""
         # CoPilot loads this cache at startup and on its catalog refresh job: the moment to make sure the grouped
         # (aggregation) CoPilot Searches events are being collected in this process (idempotent; see grouped_alerts).
-        from app.integrations.copilot_searches.services.grouped_alerts import start_grouped_alert_collector
+        from app.integrations.copilot_searches.services.grouped_alerts import (
+            start_grouped_alert_collector,
+        )
 
         start_grouped_alert_collector()
         if self.is_stale:
