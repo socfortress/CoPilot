@@ -15,9 +15,11 @@ R1. Wazuh's doubling undone: the eventchannel decoder JSON-escapes each eventdat
 R2. Empty: dropped (Sysmon logs ``-`` for an empty field).
 R3. Account fields (User, SourceUser, TargetUser) keep only well-known service principals (``NT AUTHORITY\SYSTEM``,
     ``NT SERVICE\x``, ``BUILTIN\x``, ``-``); anything else is ``<redacted>``. DNS fields go through dns_policy.
-R4. Everything else, structurally: the install folder, user SIDs, profile folders (also through an admin share and on
-    a non-default profile root; what may follow them, below), UNC hosts and what a share may hold (a folder below a
-    share that is not a well-known one may be a user's: home and roaming-profile shares), e-mail addresses, OneDrive
+R4. Everything else, structurally: the install folder, user SIDs (also glued to a word: GoogleUpdateTaskUser<SID>Core),
+    profile folders (also through an admin share and on a non-default profile root; what may follow them, below), UNC
+    hosts and what a share may hold (the first segment below a share that is not a well-known one may be a user's:
+    home, roaming-profile and redirected-folder shares; it is <redacted> also as the last segment, unless it is a
+    program, script or installer file below a share not named for per-user folders), e-mail addresses, OneDrive
     for Business folders, the domain folder of SYSVOL, host names in registry keys (printer connections, print
     servers, Remote Desktop servers), private-domain and own-domain path segments, IPv4 and IPv6 addresses (not a
     version in the places Windows writes one: GAC, AppX, WinSxS), document file names.
@@ -58,6 +60,7 @@ from app.active_response.services.sysmon_stats.contract_v1_rules import _VOLUME_
 from app.active_response.services.sysmon_stats.contract_v1_rules import (
     REGISTRY_SERVICE_HIVES,
 )
+from app.active_response.services.sysmon_stats.contract_v1_rules import SID_PATTERN
 from app.active_response.services.sysmon_stats.contract_v1_rules import UNC_ANY_RE
 from app.active_response.services.sysmon_stats.contract_v1_rules import USER_DIR_RE
 from app.active_response.services.sysmon_stats.contract_v1_rules import bad_characters
@@ -119,7 +122,10 @@ def _doubled_backslash(value: str) -> bool:
 
 
 # ---- R4: structure --------------------------------------------------------------------------------------------------
-SID_RE = re.compile(r"(?i)\bS-1-(?:5-21|12-1)(?:-\d+)+")
+# A user's SID wherever it is, also glued to a word (Tasks\GoogleUpdateTaskUserS-1-5-21-...-1001Core becomes
+# Tasks\GoogleUpdateTaskUser<SID>Core): the contract's own SID_PATTERN, no leading word boundary. A Classes hive keeps
+# its suffix (HKU\<SID>_Classes\).
+SID_RE = re.compile(r"(?i)" + SID_PATTERN)
 # Under a profile, the first folder decides what of the rest is kept (owner decision D9)
 _USER_CONTENT = frozenset(
     {
@@ -190,17 +196,76 @@ _SYSTEM_ROOT_RE = re.compile(
 _DOCUMENT_RE = re.compile(r"(?i)^(.+)\.([a-z0-9]{2,5})$")
 _SPLIT_KEEP_RE = re.compile(r"([\\/])")
 # Profile roots other than \Users: roaming-profile, home-folder and Remote Desktop profile folders on a volume's root
+# (also through an admin share: \\fs01\D$\Home\jsmith)
+_OTHER_PROFILE_ROOTS = (
+    "Profiles",
+    "UserProfiles",
+    "User Profiles",
+    "RoamingProfiles",
+    "Roaming Profiles",
+    "TSProfiles",
+    "Home",
+    "Homes",
+    "HomeDirs",
+    "UserHome",
+    "UserHomes",
+    "UserData",
+    "RedirectedFolders",
+    "FolderRedirection",
+)
 OTHER_PROFILE_ROOT_RE = re.compile(
-    r"(?i)(" + _VOLUME_ROOT + r"[\\/]+(?:Profiles|UserProfiles|User Profiles|RoamingProfiles|Roaming Profiles|TSProfiles|Home|Homes"
-    r"|HomeDirs|UserHome|UserHomes|UserData|RedirectedFolders|FolderRedirection)[\\/]+)"
+    r"(?i)(" + _VOLUME_ROOT + r"[\\/]+(?:" + "|".join(re.escape(root) for root in _OTHER_PROFILE_ROOTS) + r")[\\/]+)"
     r"(?!(?:Public|Default|All Users|Default User)(?:[\\/\"]|$))([^\\/\"]+)",
 )
-_PROFILE_DIRS = frozenset({"users", "documents and settings"})
+_PROFILE_ROOTS = frozenset({"users", "documents and settings"} | {root.lower() for root in _OTHER_PROFILE_ROOTS})
 _DOCUME_RE = re.compile(r"(?i)docume~\d")
 _SHARED_PROFILES = frozenset({"public", "default", "all users", "default user"})
 # Shares whose first folder is never a user's: Active Directory's, the admin shares, the printer drivers'
 _WELL_KNOWN_SHARES = frozenset({"sysvol", "netlogon", "ipc$", "admin$", "print$"})
-_DRIVE_SHARE_RE = re.compile(r"(?i)[a-z]\$?")
+# A volume's root: a drive's admin share (C$) on any host, a bare drive letter (C) only on tsclient (a drive Remote
+# Desktop redirects). On any other host a one-letter share is an ordinary one (a file server's H for home folders).
+_ADMIN_DRIVE_SHARE_RE = re.compile(r"(?i)[a-z]\$")
+_REDIRECTED_DRIVE_RE = re.compile(r"(?i)[a-z]")
+_RDP_REDIRECTOR_HOST = "tsclient"
+# A share named for per-user folders (home, roaming-profile, redirected-folder and user shares: home$, Homes,
+# HomeDirs, Profiles$, TSProfiles, Redirect$, RedirectedFolders, Folders$, Users, UserData): what is directly below it
+# is a user's, a file too
+_PER_USER_SHARE_RE = re.compile(r"(?i)home|profile|redirect|folder|^user")
+# The only thing kept directly below any other share, and only as the path's last segment: a program, script or
+# installer file (a deployment share's agent.msi, setup.exe, logon.ps1). Never a folder, never another kind of file.
+_PROGRAM_EXTS = frozenset(
+    {
+        "exe",
+        "dll",
+        "sys",
+        "ocx",
+        "cpl",
+        "scr",
+        "msi",
+        "msp",
+        "msu",
+        "mst",
+        "msix",
+        "msixbundle",
+        "appx",
+        "appxbundle",
+        "cab",
+        "inf",
+        "ps1",
+        "psm1",
+        "psd1",
+        "bat",
+        "cmd",
+        "vbs",
+        "vbe",
+        "js",
+        "jse",
+        "wsf",
+        "wsh",
+        "hta",
+    },
+)
+_PROGRAM_FILE_RE = re.compile(r"(?i)[^\s<>][^<>]*\.([a-z0-9]{2,10})")
 # What may follow a SYSVOL folder without being the domain's name
 _SYSVOL_KEEP = frozenset({"sysvol", "domain", "staging", "staging areas", "sysvol_dfsr", "policies", "scripts"})
 _GUID_RE = re.compile(r"\{[0-9A-Fa-f-]{1,64}\}")
@@ -616,25 +681,50 @@ def _redact_profiles(value: str) -> str:
     return value
 
 
-def _share_tail(tail: str) -> str:
-    r"""What follows \\<host>\ in a UNC path: the share, then its folders. An admin share (C$) or a redirected drive
-    (\\tsclient\C) is a volume's root, whose profile folder becomes <user>. Below any other share that is not a
-    well-known one (SYSVOL, NETLOGON, ADMIN$, IPC$, print$), the first folder may be a user's (a home or roaming-profile
-    share: \\fs01\Profiles$\jsmith.V6\): it becomes <redacted>, and what follows it is cut down as in a profile."""
+def _program_file(segment: str) -> bool:
+    """A program, script or installer file name (agent.msi, Setup 2.1.exe, logon.ps1)."""
+    m = _PROGRAM_FILE_RE.fullmatch(segment)
+    return bool(m) and m.group(1).lower() in _PROGRAM_EXTS
+
+
+def _share_tail(tail: str, host: str) -> str:
+    r"""What follows \\<host>\ in a UNC path: the share, then its folders. Empty segments (a doubled separator) are
+    skipped, never taken for the segment that decides.
+
+    - SYSVOL, NETLOGON, ADMIN$, IPC$, print$: kept (the folder below SYSVOL is ``_redact_sysvol``'s).
+    - A volume's root (a drive's admin share C$, or \\tsclient\C, a drive Remote Desktop redirects): its first folder is
+      the volume's (Windows, Program Files) and kept; a profile folder below \Users or another profile root (\Home,
+      \Profiles, ...) becomes <user>, and what follows it is cut down as in a profile (D9).
+    - Any other share: its first segment may be a user's (a home, roaming-profile or redirected-folder share:
+      \\fs01\home$\jsmith, \\fs01\Profiles$\jsmith.V6, \\fs01\Users\jsmith), also when it is the path's last segment:
+      it becomes <redacted>, and what follows it is cut down as in a profile (D9). The one exception is a program,
+      script or installer file as the last segment, directly below a share not named for per-user folders
+      (\\fs01\deploy$\agent.msi is kept, \\fs01\home$\x.exe is not). A folder is never kept, whatever the share's name:
+      a deployment share cannot be told from a home share by its name, so \\fs01\deploy$\Contoso\setup.exe becomes
+      \\<host>\deploy$\<redacted>\<redacted>.
+    """
     parts = _SPLIT_KEEP_RE.split(tail)
     share = parts[0].lower()
-    if share in _WELL_KNOWN_SHARES or len(parts) < 5:
+    if share in _WELL_KNOWN_SHARES:
         return tail
-    if _DRIVE_SHARE_RE.fullmatch(share):
-        folder, user = parts[2], parts[4]
-        if (folder.lower() in _PROFILE_DIRS or _DOCUME_RE.fullmatch(folder)) and user and user.lower() not in _SHARED_PROFILES:
+    segments = [i for i in range(2, len(parts), 2) if parts[i]]
+    if not segments:
+        return tail
+    if _ADMIN_DRIVE_SHARE_RE.fullmatch(share) or (host.lower() == _RDP_REDIRECTOR_HOST and _REDIRECTED_DRIVE_RE.fullmatch(share)):
+        if len(segments) < 2:
+            return tail
+        folder, i = parts[segments[0]], segments[1]
+        user = parts[i]
+        if (folder.lower() in _PROFILE_ROOTS or _DOCUME_RE.fullmatch(folder)) and user.lower() not in _SHARED_PROFILES:
             if user in PLACEHOLDERS:
                 return tail
-            return "".join(parts[:4]) + "<user>" + _profile_rest("".join(parts[5:]))
+            return "".join(parts[:i]) + "<user>" + _profile_rest("".join(parts[i + 1 :]))
         return tail
-    if not parts[2] or parts[2] in PLACEHOLDERS:
+    i = segments[0]
+    first = parts[i]
+    if i == len(parts) - 1 and not _PER_USER_SHARE_RE.search(share) and _program_file(first):
         return tail
-    return "".join(parts[:2]) + REDACTED + _profile_rest("".join(parts[3:]))
+    return "".join(parts[:i]) + (first if first in PLACEHOLDERS else REDACTED) + _profile_rest("".join(parts[i + 1 :]))
 
 
 def _redact_unc(value: str) -> str:
@@ -649,7 +739,7 @@ def _redact_unc(value: str) -> str:
         out.append(m.group("prefix") + "<host>" + (m.group("sep") or ""))
         end = matches[k + 1].start() if k + 1 < len(matches) else len(value)
         tail = value[m.end() : end]
-        out.append(_share_tail(tail) if m.group("sep") in ("\\", "/") else tail)
+        out.append(_share_tail(tail, m.group("host")) if m.group("sep") in ("\\", "/") else tail)
         pos = end
     out.append(value[pos:])
     return "".join(out)

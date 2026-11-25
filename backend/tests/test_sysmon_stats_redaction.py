@@ -10,12 +10,15 @@ Run with: cd backend && python -m pytest tests/test_sysmon_stats_redaction.py
 """
 import json
 import os
+import re
 from pathlib import Path
 
 import pytest
 
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-default")
 
+from app.active_response.services.sysmon_stats import contract_v1  # noqa: E402
+from app.active_response.services.sysmon_stats import contract_v1_rules as rules  # noqa: E402
 from app.active_response.services.sysmon_stats import redaction as r  # noqa: E402
 from app.active_response.services.sysmon_stats.contract_v1 import (  # noqa: E402
     service_leak,
@@ -266,6 +269,94 @@ def test_collisions_after_redaction_are_merged_without_inflating_endpoints():
 def test_a_value_is_never_case_folded_or_normalised():
     ctx = r.build_context(customer_code="c1", customer_name=None)
     assert r.redact_value("Image", "C:\\\\PROGRAM FILES\\\\Fabrikam\\\\Agent.EXE", ctx) == "C:\\PROGRAM FILES\\Fabrikam\\Agent.EXE"
+
+
+# ── a user SID glued to a word (the installer repo's and sysmon-sync's SID_PATTERN) ───────────────────────────────────
+GLUED_SIDS = [
+    "C:\\Windows\\System32\\Tasks\\GoogleUpdateTaskUserS-1-5-21-1111111111-2222222222-3333333333-1001Core",
+    "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\MicrosoftEdgeUpdateTaskUserS-1-5-21-1-2-3-1001UA",
+    "C:\\ProgramData\\Fabrikam\\x_S-1-5-21-1111111111-2222222222-3333333333-1001\\y",
+    "C:\\ProgramData\\Fabrikam\\1S-1-12-1-1111111111-2222222222-3333333333-4444444444\\y",
+    "xHKU\\S-1-5-21-1-2-3-1001\\Software",
+]
+
+
+def test_one_sid_rule_with_the_contract_and_no_leading_word_boundary():
+    """The redactor's SID rule is the contract's SID_PATTERN (no leading \\b), and no identity regex of the redactor or
+    the vendored contract looks for a SID only after a word boundary."""
+    assert r.SID_RE.pattern == "(?i)" + rules.SID_PATTERN
+    assert rules.SID_RE.pattern == "(?i)" + rules.SID_PATTERN + "(?:_Classes)?"
+    for module in (r, rules, contract_v1):
+        for name, value in vars(module).items():
+            if isinstance(value, re.Pattern):
+                assert not re.search(r"\\b(?:\(\?[a-z]*[:)])?S-1", value.pattern, re.I), f"{module.__name__}.{name}"
+
+
+@pytest.mark.parametrize("value", GLUED_SIDS)
+def test_a_user_sid_glued_to_a_word_is_refused_unredacted_and_redacted(value):
+    ctx = r.build_context(customer_code="c1", customer_name=None)
+    assert identity_leak("TargetObject", value, REGISTRY_SERVICE_HIVES) == "a user's SID"
+    got = r.redact_value("TargetObject", value.replace("\\", "\\\\"), ctx)
+    assert isinstance(got, str) and "<SID>" in got and "s-1-5-21" not in got.lower() and "s-1-12-1" not in got.lower()
+    assert identity_leak("TargetObject", got, REGISTRY_SERVICE_HIVES) is None
+
+
+def test_service_sids_are_not_user_sids():
+    ctx = r.build_context(customer_code="c1", customer_name=None)
+    for sid in ("S-1-5-18", "S-1-5-19", "S-1-5-20", "S-1-5-32-544", "S-1-15-2-1"):
+        value = f"C:\\ProgramData\\Fabrikam\\TaskUser{sid}"
+        assert r.redact_value("TargetFilename", value, ctx) == value
+
+
+# ── what a share may hold ─────────────────────────────────────────────────────────────────────────────────────────────
+PER_USER_SHARES = [
+    "home$",
+    "Homes",
+    "HomeDirs",
+    "UserHomes",
+    "Profiles$",
+    "TSProfiles",
+    "Users",
+    "users$",
+    "Redirect$",
+    "RedirectedFolders",
+    "Folders$",
+    "UserData",
+]
+OTHER_SHARES = ["deploy$", "Software", "Apps", "share", "files", "scans$"]
+
+
+@pytest.mark.parametrize("share", PER_USER_SHARES + OTHER_SHARES)
+def test_the_first_folder_below_a_share_is_redacted_also_as_the_last_segment(share):
+    ctx = r.build_context(customer_code="c1", customer_name=None)
+    for below in ("jsmith", "jsmith.V6", "j.smith", "jsmith.txt", "Board minutes.docx"):
+        assert r.redact_value("TargetFilename", f"\\\\fs01\\{share}\\{below}", ctx) == f"\\\\<host>\\{share}\\<redacted>"
+    # A folder, also one named like a program, is never kept; what follows it is cut down as in a profile (D9)
+    assert r.redact_value("Image", f"\\\\fs01\\{share}\\tools.exe\\x.exe", ctx) == f"\\\\<host>\\{share}\\<redacted>\\<redacted>"
+    assert (
+        r.redact_value("TargetFilename", f"\\\\fs01\\{share}\\jsmith\\AppData\\x.dat", ctx)
+        == f"\\\\<host>\\{share}\\<redacted>\\AppData\\x.dat"
+    )
+
+
+@pytest.mark.parametrize("program", ["agent.msi", "Setup 2.1.exe", "logon.ps1", "map.cmd", "drivers.cab", "Update.msixbundle"])
+def test_a_program_directly_below_a_share_is_kept_unless_the_share_holds_user_folders(program):
+    ctx = r.build_context(customer_code="c1", customer_name=None)
+    for share in OTHER_SHARES:
+        assert r.redact_value("Image", f"\\\\fs01\\{share}\\{program}", ctx) == f"\\\\<host>\\{share}\\{program}"
+    for share in PER_USER_SHARES:
+        assert r.redact_value("Image", f"\\\\fs01\\{share}\\{program}", ctx) == f"\\\\<host>\\{share}\\<redacted>"
+
+
+def test_a_volume_root_keeps_its_folders_and_redacts_its_profiles():
+    ctx = r.build_context(customer_code="c1", customer_name=None)
+    assert r.redact_value("Image", "\\\\fs01\\C$\\Windows\\System32\\x.exe", ctx) == "\\\\<host>\\C$\\Windows\\System32\\x.exe"
+    assert r.redact_value("Image", "\\\\tsclient\\C\\Tools\\x.exe", ctx) == "\\\\<host>\\C\\Tools\\x.exe"
+    for root in ("Users", "Home", "Profiles", "TSProfiles", "UserData", "RedirectedFolders"):
+        got = r.redact_value("TargetFilename", f"\\\\fs01\\D$\\{root}\\jsmith\\x.dat", ctx)
+        assert got == f"\\\\<host>\\D$\\{root}\\<user>\\<redacted>"
+    # A one-letter share is a redirected drive only on tsclient: on a file server it is an ordinary share
+    assert r.redact_value("Image", "\\\\fs01\\C\\Tools\\x.exe", ctx) == "\\\\<host>\\C\\<redacted>\\<redacted>"
 
 
 # ── the customer's own domains, learned from every value of its report (review findings) ─────────────────────────
