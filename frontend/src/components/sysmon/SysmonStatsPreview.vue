@@ -34,6 +34,10 @@
 						<template v-if="preview.local.truncated">, truncated</template>
 					</span>
 				</div>
+				<div v-if="preview.local.unavailable_events?.length" class="text-warning" data-testid="stats-preview-unavailable">
+					Left out: event {{ preview.local.unavailable_events.join(", ") }}, whose fields the indexer cannot aggregate in
+					every index (see CoPilot's log).
+				</div>
 				<div v-if="drops.length" data-testid="stats-preview-drops">
 					<div class="text-secondary mb-1">Left out, by reason</div>
 					<div class="flex flex-wrap gap-1">

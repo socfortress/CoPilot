@@ -4,7 +4,8 @@ Two shapes exist side by side: Wazuh's own nested mapping (``data.win.eventdata.
 the flat one Graylog pipelines write (``data_win_eventdata_image``, ``agent_labels_customer``). One ``_field_caps`` call
 says which fields are mapped; a shape is usable only if all its base fields are. Eventdata names are matched
 case-insensitively (``TargetFilename`` is ``targetFilename`` in the index), an exact keyword field preferred over its
-``.keyword`` sub-field.
+``.keyword`` sub-field. The Windows event's ``Computer`` (a domain-joined endpoint's fully qualified name) is optional:
+when mapped, the customer's host names and own domains are learned from it.
 """
 from dataclasses import dataclass
 from dataclasses import field
@@ -25,9 +26,14 @@ BASE_FIELDS: Dict[str, Tuple[str, str]] = {
     "event_id": ("data_win_system_eventID", "data.win.system.eventID"),
     "channel": ("data_win_system_channel", "data.win.system.channel"),
 }
+# role -> (flat, nested); a shape is usable without them
+OPTIONAL_FIELDS: Dict[str, Tuple[str, str]] = {
+    "computer": ("data_win_system_computer", "data.win.system.computer"),
+}
 EVENTDATA_PREFIX = {"flat": "data_win_eventdata_", "nested": "data.win.eventdata."}
 FIELD_CAPS_FIELDS = ",".join(
-    [f for pair in BASE_FIELDS.values() for f in dict.fromkeys(pair)] + [f"{EVENTDATA_PREFIX['flat']}*", f"{EVENTDATA_PREFIX['nested']}*"],
+    [f for pair in (*BASE_FIELDS.values(), *OPTIONAL_FIELDS.values()) for f in dict.fromkeys(pair)]
+    + [f"{EVENTDATA_PREFIX['flat']}*", f"{EVENTDATA_PREFIX['nested']}*"],
 )
 
 
@@ -75,11 +81,13 @@ EVENT_PLAN: Dict[int, EventPlan] = {
         (("Signed", 2),),
         ("ImageLoaded", "Signature", "SignatureStatus", "Signed"),
     ),
+    # OriginalFileName before SignatureStatus: SOCFortress's own ImageLoad includes match on it (clr.dll, amsi.dll, ...),
+    # and a pattern without it would be judged as not logged by them. Signed adds nothing once SignatureStatus is sent.
     7: EventPlan(
         "Image",
         (Nest("ImageLoaded", 15), Nest("Signature", 3, missing=True)),
-        (("SignatureStatus", 2), ("Signed", 2), ("OriginalFileName", 2), _USER),
-        ("Image", "ImageLoaded", "Signature", "SignatureStatus", "Signed"),
+        (("OriginalFileName", 2), ("SignatureStatus", 2), _USER),
+        ("Image", "ImageLoaded", "Signature", "OriginalFileName", "SignatureStatus"),
     ),
     8: EventPlan(
         "SourceImage",
@@ -139,14 +147,19 @@ class FieldMap:
     event_id: str
     channel: str
     eventdata: Dict[str, str] = field(default_factory=dict)
+    computer: Optional[str] = None
 
     def ed(self, name: str) -> Optional[str]:
         return self.eventdata.get(name)
 
     def plan_mapped(self, eid: int) -> bool:
         """Whether every key field of the event is mapped (an unmapped detail is just never sent)."""
-        plan = EVENT_PLAN[eid]
-        return all(self.ed(name) for name in plan.key_fields)
+        return not self.unmapped_keys(eid)
+
+    def unmapped_keys(self, eid: int) -> List[str]:
+        """The event's key fields that are not mapped (or not aggregatable in every index): its patterns cannot be
+        collected."""
+        return [name for name in EVENT_PLAN[eid].key_fields if not self.ed(name)]
 
 
 def _types(caps: Dict[str, Any], name: str) -> Dict[str, Any]:
@@ -211,5 +224,6 @@ def discover(field_caps_response: Any) -> List[FieldMap]:
                 if chosen:
                     eventdata[sysmon_name] = chosen
                     break
-        maps.append(FieldMap(shape=shape, eventdata=eventdata, **roles))
+        computer = _keyword_variant(caps, OPTIONAL_FIELDS["computer"][index])
+        maps.append(FieldMap(shape=shape, eventdata=eventdata, computer=computer, **roles))
     return maps

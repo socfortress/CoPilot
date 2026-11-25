@@ -447,16 +447,16 @@ async def delete_customer(
             detail=f"Customer with customer_code {customer_code} not found",
         )
 
-    # Ask SOCFortress to delete the customer's Sysmon noise reports, by its pseudonym (queued; best effort). Its sharing
-    # setting cascades away with the row.
-    await on_customer_deleted(customer_code)
-
     try:
         # Delete the customer
         await session.delete(existing_customer)
         await session.flush()  # Flush to trigger any constraint violations
         await session.commit()  # Commit the transaction
         await session.close()  # Close the session
+
+        # Only once it is gone: ask SOCFortress to delete the customer's Sysmon noise reports, by its pseudonym (queued;
+        # best effort). Its sharing setting cascaded away with the row. A refused deletion withdraws nothing.
+        await on_customer_deleted(customer_code)
 
         logger.info(f"Successfully deleted customer with customer_code: {customer_code}")
         return DeleteCustomerResponse(

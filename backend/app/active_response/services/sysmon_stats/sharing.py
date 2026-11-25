@@ -6,6 +6,10 @@ asking CoPilot to wait, sends it at once. Every tick sends the queued withdraws 
 off nothing is sent, withdraws included: they stay queued and go out when sharing is on again (owner decision D5).
 Opting in again keeps the row (for its hints); reports resume no sooner than 180 s after the last confirmed withdraw,
 since SOCFortress drops a withdrawn customer's reports for 120 s.
+
+Deleting a customer queues its withdraw once the deletion is committed (a refused deletion withdraws nothing), and the
+row cascades away with it. Decommissioning keeps the customer's row in Customers, so it keeps this one too and turns
+sharing off: what was withdrawn stays withdrawn, also if the code is provisioned again, until an admin opts it in.
 """
 import re
 from datetime import datetime
@@ -19,7 +23,6 @@ import httpx
 from fastapi import HTTPException
 from fastapi import Request
 from loguru import logger
-from sqlalchemy import delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -172,13 +175,13 @@ async def process_withdraw_queue(
     transport: Optional[httpx.AsyncBaseTransport] = None,
     state: Optional[StatsState] = None,
     now: Optional[datetime] = None,
-) -> int:
-    """Send the queued withdraws (only with sharing on). Stops at the first answer that says to wait. Returns how many
-    were confirmed."""
+) -> List[str]:
+    """Send the queued withdraws (only with sharing on). Stops at the first answer that says to wait. Returns the
+    pseudonyms SOCFortress confirmed (their reports wait REOPTIN_DELAY: the caller's copy of withdrawn_at is stale)."""
     if not settings.sharing_on() or not customers:
-        return 0
+        return []
     now = now or _now()
-    confirmed = 0
+    confirmed: List[str] = []
     for customer in customers:
         queued = await store.read_withdraw(customer)
         waiting = _parse_utc(queued.not_before) if queued else None
@@ -186,7 +189,7 @@ async def process_withdraw_queue(
             continue
         result = await send_withdraw(session, customer, license_key, base, transport=transport, state=state, now=now)
         if result.withdrawn:
-            confirmed += 1
+            confirmed.append(customer)
         elif result.stop:
             break
     return confirmed
@@ -297,24 +300,62 @@ def _new_session() -> AsyncSession:
 new_session = _new_session
 
 
-async def on_customer_deleted(customer_code: str) -> None:
-    """Before a customer row is deleted: queue a withdraw for its pseudonym (its settings row cascades away). Best effort."""
+async def _queue_customer_withdraw(customer_code: str, what: str) -> None:
     try:
         async with new_session() as session:
             secret = await load_secret(session, create=False)
             await session.rollback()
         if secret is not None:
             await queue_withdraw(customer_pseudonym(secret, customer_code), customer_code)
-    except Exception as e:  # noqa: BLE001 - deleting the customer must not fail on this
-        logger.warning(f"Sysmon stats: could not queue the withdraw of a deleted customer ({type(e).__name__})")
+    except Exception as e:  # noqa: BLE001 - the customer's deletion or decommission must not fail on this
+        logger.warning(f"Sysmon stats: could not queue the withdraw of a {what} customer ({type(e).__name__})")
 
 
-async def on_customer_decommissioned(customer_code: str) -> None:
-    """A decommissioned customer: queue a withdraw for its pseudonym and drop its settings row. Best effort."""
-    await on_customer_deleted(customer_code)
+async def on_customer_deleted(customer_code: str) -> None:
+    """After a customer row was deleted (committed): queue a withdraw for its pseudonym (its settings row cascaded
+    away). Best effort."""
+    await _queue_customer_withdraw(customer_code, "deleted")
+
+
+async def on_customer_decommissioned(customer_code: str, now: Optional[datetime] = None) -> None:
+    """A decommissioned customer, whose Customers row stays: queue a withdraw for its pseudonym and turn its sharing off
+    (its row is kept, with its hints, or written), audited. Its reports stay withdrawn, also if the code is provisioned
+    again, until an admin opts it in; the row goes with the customer's deletion (ON DELETE CASCADE). Best effort."""
+    await _queue_customer_withdraw(customer_code, "decommissioned")
+    now = now or _now()
     try:
         async with new_session() as session:
-            await session.execute(delete(SysmonStatsCustomerSettings).where(SysmonStatsCustomerSettings.customer_code == customer_code))
+            exists = (await session.execute(select(Customers.customer_code).where(Customers.customer_code == customer_code))).first()
+            if exists is None:
+                await session.rollback()
+                return
+            row = (
+                (
+                    await session.execute(
+                        select(SysmonStatsCustomerSettings).where(SysmonStatsCustomerSettings.customer_code == customer_code),
+                    )
+                )
+                .scalars()
+                .first()
+            )
+            was_sharing = True if row is None else bool(row.sharing_enabled)
+            if row is None:
+                row = SysmonStatsCustomerSettings(customer_code=customer_code, sharing_enabled=False)
+                session.add(row)
+            row.sharing_enabled = False
+            row.updated_at = now.astimezone(timezone.utc).replace(tzinfo=None)
+            row.updated_by = None
             await session.commit()
     except Exception as e:  # noqa: BLE001 - decommission must not fail on this
-        logger.warning(f"Sysmon stats: could not delete a decommissioned customer's settings ({type(e).__name__})")
+        logger.warning(f"Sysmon stats: could not turn a decommissioned customer's sharing off ({type(e).__name__})")
+        return
+    await record_audit_event(
+        action=AuditAction.SYSMON_STATS_SHARING,
+        actor_username=SYSTEM_ACTOR,
+        customer_code=customer_code,
+        entity_type="sysmon_stats_customer",
+        entity_id=customer_code,
+        old_value={"sharing": was_sharing},
+        new_value={"sharing": False},
+        details="Customer decommissioned",
+    )

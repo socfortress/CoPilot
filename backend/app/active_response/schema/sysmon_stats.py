@@ -64,6 +64,8 @@ class StatsOutcome(str, Enum):
     LOCKED = "locked"
     RUNNING = "running"
     COMPLETED = "completed"
+    # Send now: the run goes on in the background (the status shows its result)
+    STARTED = "started"
 
 
 TERMINAL_OUTCOMES = frozenset(
@@ -109,13 +111,29 @@ class StatsWeekState(BaseModel):
     rejected_by_reason: Dict[str, int] = Field(default_factory=dict)
     replaced: Optional[bool] = None
     local_drops: Dict[str, int] = Field(default_factory=dict)
+    unavailable_events: List[int] = Field(
+        default_factory=list,
+        description="Event IDs left out because a key field is not aggregatable in the indexer (the report is truncated).",
+    )
+
+
+class StatsLicenseRefusal(BaseModel):
+    """SOCFortress refused this CoPilot's license (HTTP 401 or 403): scheduled runs collect nothing until LICENSE_RETRY
+    has passed or the license key changes. Holds the key's fingerprint, never the key."""
+
+    fingerprint: str
+    at: str
+    outcome: StatsOutcome
+    http_status: Optional[int] = None
 
 
 class StatsServiceState(BaseModel):
     accepting: Optional[bool] = Field(None, description="Whether SOCFortress accepts reports (None: not known yet).")
+    reachable: Optional[bool] = Field(None, description="Whether the last probe got an answer (None: not known yet).")
     checked_at: Optional[str] = None
     last_status: Optional[int] = None
     not_before: Optional[str] = Field(None, description="No report or withdraw is sent before this time (Retry-After).")
+    license_refused: Optional[StatsLicenseRefusal] = None
 
 
 class StatsLastTick(BaseModel):
@@ -199,6 +217,7 @@ class StatsStatus(BaseModel):
     min_endpoints: int
     customers: List[StatsCustomerStatus] = Field(default_factory=list)
     read_error: Optional[str] = None
+    running: bool = Field(False, description="A run (a tick or Send now) or a preview is in progress.")
 
 
 class StatsStatusResponse(BaseModel):
@@ -240,6 +259,7 @@ class StatsPreviewLocal(BaseModel):
     dropped_by_reason: Dict[str, int] = Field(default_factory=dict)
     merged: int = 0
     truncated: bool = False
+    unavailable_events: List[int] = Field(default_factory=list)
 
 
 class StatsPreview(BaseModel):

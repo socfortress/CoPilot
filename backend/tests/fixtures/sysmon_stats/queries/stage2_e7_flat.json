@@ -18,12 +18,6 @@
           "size": 2
          }
         },
-        "d_Signed": {
-         "terms": {
-          "field": "data_win_eventdata_signed",
-          "size": 2
-         }
-        },
         "d_User": {
          "terms": {
           "field": "data_win_eventdata_user",

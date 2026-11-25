@@ -1,5 +1,11 @@
 {
  "aggs": {
+  "computers": {
+   "terms": {
+    "field": "data_win_system_computer",
+    "size": 500
+   }
+  },
   "endpoints": {
    "cardinality": {
     "field": "agent_id",

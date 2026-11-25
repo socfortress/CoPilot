@@ -167,6 +167,8 @@ export type StatsOutcome =
 	| "locked"
 	| "running"
 	| "completed"
+	/** Send now: the run goes on in the background; the status shows its result. */
+	| "started"
 
 /** One customer's report of one ISO week: counts and hashes only, never a value. */
 export interface StatsWeekState {
@@ -191,11 +193,15 @@ export interface StatsWeekState {
 	rejected_by_reason: Record<string, number>
 	replaced: boolean | null
 	local_drops: Record<string, number>
+	/** Event IDs left out because a key field is not aggregatable in the indexer (the report is truncated). */
+	unavailable_events?: number[]
 }
 
 export interface StatsService {
 	/** Whether SOCFortress accepts reports; null while not known yet. */
 	accepting: boolean | null
+	/** Whether the last probe got an answer; null while not known yet. */
+	reachable?: boolean | null
 	checked_at: string | null
 	last_status: number | null
 	not_before: string | null
@@ -248,6 +254,8 @@ export interface StatsStatus {
 	min_endpoints: number
 	customers: StatsCustomer[]
 	read_error: string | null
+	/** A run (a tick or Send now) or a preview is in progress. */
+	running?: boolean
 }
 
 export interface StatsStatusResponse {
@@ -273,7 +281,14 @@ export interface StatsPreview {
 	payload: Record<string, unknown> | null
 	payload_sha256: string | null
 	payload_bytes: number | null
-	local: { raw_patterns: number; sent: number; dropped_by_reason: Record<string, number>; merged: number; truncated: boolean }
+	local: {
+		raw_patterns: number
+		sent: number
+		dropped_by_reason: Record<string, number>
+		merged: number
+		truncated: boolean
+		unavailable_events?: number[]
+	}
 	outcome: StatsOutcome | null
 	message: string | null
 	ms: number

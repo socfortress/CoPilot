@@ -518,3 +518,239 @@ def test_a_run_never_raises(monkeypatch):
         return await tick(world, Sysmonsync())
 
     assert run(scenario()).outcome is StatsOutcome.ERROR
+
+
+# ── review findings ─────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "probe, outcome",
+    [
+        (httpx.ConnectError("egress blocked"), StatsOutcome.NETWORK_ERROR),
+        (httpx.Response(302, headers={"location": "https://elsewhere.test/"}), StatsOutcome.REDIRECT_REFUSED),
+        (httpx.Response(502, text="bad gateway"), StatsOutcome.NETWORK_ERROR),
+    ],
+)
+def test_an_unreachable_service_costs_no_indexer_query_and_no_audit_row(monkeypatch, audit_rows, probe, outcome):
+    """Review: no answer to the probe (DNS, egress, TLS), a redirect or a proxy's 5xx went on to the indexer every 6 h,
+    with a failed POST and an audit row each time. Now the tick stops at the probe: one WARNING when it starts, quiet
+    after, INFO when it answers again."""
+    world = World(monkeypatch, week_docs("contoso"))
+    service = Sysmonsync(probe=probe)
+    lines = []
+    sink = logger.add(lambda m: lines.append(str(m)), level="DEBUG")
+
+    async def scenario():
+        await world.setup()
+        return [await tick(world, service, now=NOW + timedelta(hours=6 * i)) for i in range(4)]
+
+    try:
+        results = run(scenario())
+    finally:
+        logger.remove(sink)
+    assert [r.outcome for r in results] == [outcome] * 4
+    assert world.indexer_clients == 0 and world.indexer.searches == [] and world.indexer.field_caps_calls == []
+    assert service.reports() == [] and len(service.probes()) == 4 and sends(audit_rows) == []
+    assert sum(1 for line in lines if "| WARNING" in line and "report service" in line) == 1
+    assert world.state()["service"]["reachable"] is False
+    assert world.week().get("contoso") is None  # still due: nothing was attempted
+
+    # It answers again: the next tick sends, and says so
+    service.probe_answer = httpx.Response(401, json={"detail": "missing license key"})
+    lines.clear()
+    sink = logger.add(lambda m: lines.append(str(m)), level="INFO")
+    try:
+        result = run(tick(world, service, now=NOW + timedelta(hours=24)))
+    finally:
+        logger.remove(sink)
+    assert result.outcome is StatsOutcome.COMPLETED and len(service.reports()) == 1
+    assert any("answers again" in line for line in lines) and world.state()["service"]["reachable"] is True
+
+
+def test_a_probe_asked_to_wait_holds_the_tick(monkeypatch):
+    world = World(monkeypatch, week_docs("contoso"))
+    service = Sysmonsync(probe=httpx.Response(503, headers={"retry-after": "600"}, json={"detail": "unavailable"}))
+
+    async def scenario():
+        await world.setup()
+        first = await tick(world, service)
+        second = await tick(world, service, now=NOW + timedelta(seconds=300))
+        return first, second
+
+    first, second = run(scenario())
+    assert first.outcome is StatsOutcome.SERVICE_UNAVAILABLE and second.outcome is StatsOutcome.RATE_LIMITED
+    assert world.indexer.searches == [] and len(service.probes()) == 1
+    assert world.state()["service"]["not_before"] == "2026-11-25T00:40:00Z"
+
+
+@pytest.mark.parametrize(
+    "answer, outcome",
+    [
+        (httpx.Response(403, json={"detail": "invalid or expired license"}), StatsOutcome.LICENSE_REJECTED),
+        (httpx.Response(403, json={"detail": "reports from this license are refused"}), StatsOutcome.LICENSE_BLOCKED),
+        (httpx.Response(401, json={"detail": "missing license key"}), StatsOutcome.UNAUTHORIZED),
+    ],
+)
+def test_a_refused_license_is_not_retried_by_every_tick(monkeypatch, audit_rows, answer, outcome):
+    """Review: a 403 "invalid or expired license" re-ran the indexer work, a POST and an audit row every 6 h. Now the
+    scheduled ticks wait LICENSE_RETRY (no probe, no indexer); Send now and a new license key try again at once."""
+    world = World(monkeypatch, week_docs("contoso"))
+    service = Sysmonsync(reports=[answer])
+
+    async def scenario():
+        await world.setup()
+        out = [await tick(world, service, now=NOW + timedelta(hours=6 * i)) for i in range(4)]
+        searches = len(world.indexer.searches)
+        out.append(await tick(world, service, now=NOW + runner.LICENSE_RETRY + timedelta(minutes=1)))
+        return out, searches
+
+    results, searches_in_a_day = run(scenario())
+    assert [r.outcome for r in results[:4]] == [outcome] * 4
+    assert len(service.reports()) == 2 and len(sends(audit_rows)) == 2  # the first tick, and the one a day later
+    assert len(service.probes()) == 2
+    refusal = world.state()["service"]["license_refused"]
+    assert refusal["outcome"] == outcome.value and LICENSE_KEY not in json.dumps(world.state())
+    assert "Send now" in results[1].message
+    assert searches_in_a_day == len(world.indexer.searches) // 2
+
+
+def test_send_now_and_a_new_license_key_retry_a_refused_license(monkeypatch, audit_rows):
+    from sqlalchemy import update
+
+    from app.db.universal_models import License
+
+    world = World(monkeypatch, week_docs("contoso"))
+    service = Sysmonsync(reports=[httpx.Response(403, json={"detail": "invalid or expired license"}), Sysmonsync().stored()])
+
+    async def scenario():
+        await world.setup()
+        first = await tick(world, service)
+        held = await tick(world, service, now=NOW + timedelta(hours=6))
+        admin = type("U", (), {"id": 7, "username": "alice"})()
+        by_admin = await tick(world, service, now=NOW + timedelta(hours=7), actor=admin, ignore_jitter=True)
+        return first, held, by_admin
+
+    first, held, by_admin = run(scenario())
+    assert (first.outcome, held.outcome) == (StatsOutcome.LICENSE_REJECTED, StatsOutcome.LICENSE_REJECTED)
+    assert by_admin.outcome is StatsOutcome.COMPLETED and world.state()["service"]["license_refused"] is None
+
+    # A new key clears it too
+    world2 = World(monkeypatch, week_docs("contoso"))
+    service2 = Sysmonsync(reports=[httpx.Response(403, json={"detail": "invalid or expired license"}), Sysmonsync().stored()])
+
+    async def scenario2():
+        await world2.setup()
+        await tick(world2, service2)
+        async with world2.db.session() as s:
+            await s.execute(update(License).values(license_key="LICENSE-renewed-9999999999-SECRET"))
+            await s.commit()
+        return await tick(world2, service2, now=NOW + timedelta(hours=6))
+
+    assert run(scenario2()).outcome is StatsOutcome.COMPLETED and len(service2.reports()) == 2
+
+
+class _WithdrawAwareSync(Sysmonsync):
+    """sysmon-sync's rule (WITHDRAW_GRACE_SECONDS=120): a report of a customer withdrawn moments before answers 409
+    "withdrawn". Modelled as: withdrawn earlier in this run."""
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.withdrawn = set()
+
+    async def handle(self, request):
+        if request.url.path == "/v1/sysmon/report/withdraw":
+            self.withdrawn.add(json.loads(request.content)["customer"])
+        elif "authorization" in request.headers and json.loads(request.content).get("customer") in self.withdrawn:
+            self.requests.append(request)
+            return httpx.Response(409, json={"detail": "report not stored: withdrawn", "reason": "withdrawn"})
+        return await super().handle(request)
+
+
+def test_a_withdraw_confirmed_in_a_tick_holds_that_customers_report_to_a_later_one(monkeypatch):
+    """Review: an opt-out and opt-in while its withdraw was queued sent the withdraw and then, in the same tick, the
+    report, which SOCFortress drops (409) and the week was lost. Now the report waits for a later tick."""
+    from app.active_response.schema.sysmon_stats import StatsSharingRequest
+    from app.active_response.services.sysmon_stats import sharing
+
+    world = World(monkeypatch, week_docs("contoso"))
+    service = _WithdrawAwareSync()
+
+    async def scenario():
+        await world.setup()
+        monkeypatch.setenv("SYSMON_STATS_SHARING", "off")
+        for value in (False, True):
+            async with world.db.session() as s:
+                await sharing.set_sharing(
+                    s,
+                    "contoso",
+                    StatsSharingRequest(sharing=value),
+                    actor=None,
+                    transport=service.transport,
+                    now=NOW - timedelta(days=2),
+                )
+        monkeypatch.setenv("SYSMON_STATS_SHARING", "on")
+        service.withdrawn.clear()
+        first = await tick(world, service)
+        service.withdrawn.clear()  # the service's grace period has passed by the next tick
+        second = await tick(world, service, now=NOW + timedelta(hours=6))
+        return first, second
+
+    first, second = run(scenario())
+    paths = [(r.url.path, "authorization" in r.headers) for r in service.requests]
+    assert paths[0] == ("/v1/sysmon/report/withdraw", True)
+    assert first.outcome is StatsOutcome.NOTHING_DUE and len(service.reports()) == 1  # the second tick's
+    assert second.outcome is StatsOutcome.COMPLETED and [c.outcome for c in second.customers] == [StatsOutcome.SENT]
+    assert world.week()["contoso"]["outcome"] == "sent"
+
+
+def test_an_unavailable_event_is_in_the_weeks_state(monkeypatch):
+    world = World(monkeypatch, week_docs("contoso"))
+    mixed = {"keyword": {"type": "keyword", "aggregatable": True}, "text": {"type": "text", "aggregatable": False}}
+    world.indexer.caps_overrides = {"data.win.eventdata.targetObject": mixed}
+    service = Sysmonsync()
+
+    async def scenario():
+        await world.setup()
+        return await tick(world, service)
+
+    run(scenario())
+    state = world.week()["contoso"]
+    assert state["outcome"] == "sent" and state["truncated"] is True and state["unavailable_events"] == [13]
+    (report,) = service.reports()
+    assert json.loads(report.content)["truncated"] is True
+
+
+def test_the_customers_computers_keep_its_ad_domain_out_of_a_real_tick(monkeypatch):
+    """Review: agent names are short (WS-0142), so the AD domain was not known. The Windows event's Computer is read in
+    stage 1 and the domain learned from it: a name under it is never sent."""
+    from tests.sysmon_stats_support import DAY_MS
+    from tests.sysmon_stats_support import FABRIKAM_AGENT
+    from tests.sysmon_stats_support import alert
+    from tests.sysmon_stats_support import ms
+
+    docs = week_docs("contoso")
+    start = ms("2026-11-16T10:00:00")
+    for i in range(5):
+        for day in range(7):
+            docs.append(
+                alert(
+                    eid=22,
+                    ts=start + day * DAY_MS + i,
+                    agent=f"contoso-{i:03d}",
+                    label="contoso",
+                    computer=f"WS-{i:04d}.aw-corp-example.com",
+                    Image=FABRIKAM_AGENT,
+                    QueryName="fs01.aw-corp-example.com",
+                ),
+            )
+    world = World(monkeypatch, docs)
+    service = Sysmonsync()
+
+    async def scenario():
+        await world.setup()
+        return await tick(world, service)
+
+    run(scenario())
+    (report,) = service.reports()
+    assert "aw-corp" not in report.content.decode() and "telemetry.fabrikam-example.com" in report.content.decode()
+    assert world.week()["contoso"]["local_drops"]["dns-own-domain"] == 1

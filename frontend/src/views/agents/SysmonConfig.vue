@@ -825,16 +825,60 @@ function copy(text: string | null) {
 		.catch(() => message.warning("Could not copy"))
 }
 
+// Send now runs in the background: the status is asked again every few seconds while a run is in progress
+const STATS_POLL_MS = 5000
+let statsPollTimer: ReturnType<typeof setTimeout> | null = null
+// The last_tick a Send now started after: its result is announced once a newer one is in
+let statsSentAfter: string | null | undefined
+
+function stopStatsPolling() {
+	if (statsPollTimer !== null) {
+		clearTimeout(statsPollTimer)
+		statsPollTimer = null
+	}
+}
+
+function announceStatsRun(status: StatsStatus) {
+	const tick = status.last_tick
+	if (!tick || tick.started_at === statsSentAfter || !tick.outcome) {
+		message.info("The noise statistics run has finished.", { duration: 10000, closable: true })
+		return
+	}
+	const text = tick.message || tick.outcome.replace(/_/g, " ")
+	if (tick.outcome === "completed" && tick.pending === 0 && tick.terminal === 0 && tick.sent > 0) {
+		message.success(text, { duration: 10000, closable: true })
+	} else if (["completed", "nothing_due", "service_not_accepting", "sharing_off"].includes(tick.outcome)) {
+		message.warning(text, { duration: 10000, closable: true })
+	} else {
+		message.error(text, { duration: 0, closable: true })
+	}
+}
+
+function applyStatsStatus(status: StatsStatus | null) {
+	statsStatus.value = status
+	stopStatsPolling()
+	if (status?.running) {
+		sendingStats.value = true
+		statsPollTimer = setTimeout(getStatsStatus, STATS_POLL_MS)
+		return
+	}
+	if (sendingStats.value) {
+		sendingStats.value = false
+		if (status && statsSentAfter !== undefined) announceStatsRun(status)
+	}
+	statsSentAfter = undefined
+}
+
 function getStatsStatus() {
 	if (!isAdmin.value) return
 	// Only an information block: the page works without it
 	Promise.resolve()
 		.then(() => Api.sysmonConfig.getStatsStatus())
 		.then(res => {
-			statsStatus.value = res.data.success ? res.data.status : null
+			applyStatsStatus(res.data.success ? res.data.status : null)
 		})
 		.catch(() => {
-			statsStatus.value = null
+			applyStatsStatus(null)
 		})
 }
 
@@ -877,29 +921,30 @@ function confirmSendStats(resume: boolean) {
 
 function sendStats(resume: boolean) {
 	sendingStats.value = true
+	statsSentAfter = statsStatus.value?.last_tick?.started_at ?? null
 
 	Api.sysmonConfig
 		.sendStatsNow({ resume })
 		.then(res => {
-			if (res.data.success) {
-				statsStatus.value = res.data.status
-				const { result } = res.data
-				if (result.outcome === "completed" && result.customers.every(c => c.outcome === "sent")) {
-					message.success(result.message, { duration: 10000, closable: true })
-				} else if (["completed", "nothing_due", "service_not_accepting", "sharing_off"].includes(result.outcome)) {
-					message.warning(result.message, { duration: 10000, closable: true })
-				} else {
-					message.error(result.message, { duration: 0, closable: true })
-				}
-			} else {
+			if (!res.data.success) {
+				sendingStats.value = false
 				message.error(res.data?.message || "An error occurred. Please try again later.")
+				return
 			}
+			const { result } = res.data
+			if (result.outcome === "started") {
+				message.info(result.message, { duration: 10000, closable: true })
+			} else {
+				sendingStats.value = false
+				statsSentAfter = undefined
+				message.warning(result.message, { duration: 10000, closable: true })
+			}
+			applyStatsStatus(res.data.status)
 		})
 		.catch(err => {
-			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
 			sendingStats.value = false
+			statsSentAfter = undefined
+			message.error(getApiErrorMessage(err as ApiError) || "An error occurred. Please try again later.")
 		})
 }
 
@@ -913,5 +958,6 @@ onBeforeMount(() => {
 onBeforeUnmount(() => {
 	// Drops a default still loading, so its message never shows up on another page.
 	startEditorRequest()
+	stopStatsPolling()
 })
 </script>

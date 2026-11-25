@@ -11,12 +11,19 @@ A tick (every 6 hours, the ``send_sysmon_stats`` job):
    admin resumes them.
 5. The target week is the previous complete ISO week (UTC). A customer is due unless opted out, withdrawn less than
    180 s ago, already done for the week, waiting out a Retry-After, or before its jittered send time.
-6. Nothing due: stop (no probe, no indexer). Else the unauthenticated probe: SOCFortress answering "reports are not
-   enabled" is a quiet state, not an error (no indexer query, no audit row, one INFO line when it changes).
-7. Indexer: field discovery and the labels once, then per due customer (at most N, by due time, within the tick's
-   deadline) stage 1 and 2, the redaction context (its agents' host names, a short read), the report, a fresh opt-out
-   check, the POST, the state, an audit row and one log line. A 200 is followed by another opt-out check: a customer
-   opted out meanwhile is withdrawn again.
+6. Nothing due: stop (no probe, no indexer). SOCFortress refused this license (401/403) less than LICENSE_RETRY ago
+   and the key is the same: a scheduled tick stops too (Send now tries again). Else the unauthenticated probe:
+   SOCFortress answering "reports are not enabled" is a quiet state, not an error (no indexer query, no audit row, one
+   INFO line when it changes); no answer, a redirect or a 5xx stops the tick the same way (one WARNING line when it
+   changes), and 429/503 make it wait their Retry-After.
+7. Indexer: field discovery (limited to the week's indices) and the labels once, then per due customer (at most N, by
+   due time, within the tick's deadline) stage 1 and 2, the redaction context (its agents' and computers' host names,
+   a short read), the report, a fresh opt-out check, the POST, the state, an audit row and one log line. A 200 is
+   followed by another opt-out check: a customer opted out meanwhile is withdrawn again.
+
+Send now runs the same way in the background (``start_send_now``): the request answers at once, and the status shows
+``running`` until the run's result is in ``last_tick``. The preview is bounded by PREVIEW_DEADLINE, which the frontend's
+nginx timeout for its route is kept above.
 """
 import asyncio
 import re
@@ -27,11 +34,13 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+from types import SimpleNamespace
 from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Tuple
 
 import httpx
@@ -44,6 +53,7 @@ from app.active_response.schema.sysmon_stats import TERMINAL_OUTCOMES
 from app.active_response.schema.sysmon_stats import StatsCustomerRun
 from app.active_response.schema.sysmon_stats import StatsLastTick
 from app.active_response.schema.sysmon_stats import StatsLatch
+from app.active_response.schema.sysmon_stats import StatsLicenseRefusal
 from app.active_response.schema.sysmon_stats import StatsOutcome
 from app.active_response.schema.sysmon_stats import StatsPreview
 from app.active_response.schema.sysmon_stats import StatsPreviewLocal
@@ -73,6 +83,7 @@ from app.active_response.services.sysmon_stats.report import LocalRefusal
 from app.active_response.services.sysmon_stats.report import build_report
 from app.audit.models.audit import AuditAction
 from app.audit.models.audit import AuditResult
+from app.audit.services.audit import _client_ip
 from app.audit.services.audit import record_audit_event
 from app.data_store.data_store_operations import download_sysmon_config
 from app.db import named_lock
@@ -87,6 +98,25 @@ SYSTEM_ACTOR = "system"
 # Send now and the preview never wait behind a tick, and a tick never runs while either does
 _RUN_LOCK = asyncio.Lock()
 _monotonic: Callable[[], float] = time.monotonic
+# Send now's runs, held until they are done
+_BACKGROUND: Set["asyncio.Task[Any]"] = set()
+# 401/403 to a report: scheduled ticks collect nothing for this long (or until the license key changes)
+LICENSE_RETRY = timedelta(hours=24)
+# The preview's whole indexer work (field discovery, the labels, one customer's two stages). The frontend's nginx
+# timeout for the preview route is kept above it (test_sysmon_stats_routes keeps the two in step).
+PREVIEW_DEADLINE = 420
+LICENSE_OUTCOMES = frozenset({StatsOutcome.UNAUTHORIZED, StatsOutcome.LICENSE_REJECTED, StatsOutcome.LICENSE_BLOCKED})
+
+
+def _new_session() -> AsyncSession:
+    from app.db.db_session import AsyncSessionLocal
+
+    return AsyncSessionLocal()
+
+
+# Send now's background run uses a session of its own (the request's is closed when it answers). Tests point this at
+# their own database.
+new_session: Callable[[], AsyncSession] = _new_session
 
 
 def _now() -> datetime:
@@ -277,7 +307,8 @@ async def prepare_customer(
     stored = await _stored_config(customer.code)
     install_dirs = [d for d in [customer.install_dir_name] if d] + _discovered_install_dirs(stored, template)
     config = config_value(stored, releases, install_dirs + [customer.code])
-    hostnames = await _hostnames(session, customer.code)
+    # Its agents' names, and its computers' as Windows logs them (WS-0142.corp.contoso.com: its own domain)
+    hostnames = await _hostnames(session, customer.code) + list(collection.computers)
     ctx = build_context(
         customer_code=customer.code,
         customer_name=customer.name,
@@ -297,6 +328,7 @@ async def prepare_customer(
             min_endpoints=min_endpoints,
             pairs_left_out=collection.pairs_left_out,
             cut_tails=collection.cut_tails,
+            unavailable_events=collection.unavailable_events,
             today=today,
         )
     except LocalRefusal as e:
@@ -339,7 +371,7 @@ async def _audit_send(
     result: http.ReportResult,
     base: str,
     actor,
-    request: Optional[Request],
+    source_ip: Optional[str],
 ) -> None:
     if result.outcome is StatsOutcome.SENT:
         outcome = AuditResult.SUCCESS
@@ -374,7 +406,7 @@ async def _audit_send(
             "service_url": base,
         },
         details="Send now" if actor is not None else f"Scheduled send ({settings.JOB_ID})",
-        request=request,
+        source_ip=source_ip,
     )
 
 
@@ -449,6 +481,28 @@ async def _read_run(session: AsyncSession) -> Tuple[Optional[_Run], Optional[Sta
     )
 
 
+def _license_refused(state: StatsState, run: "_Run", now: datetime, actor, week: str) -> Optional[StatsRunResult]:
+    """SOCFortress refused this license (401/403) less than LICENSE_RETRY ago: a scheduled tick spends no indexer query
+    on a report it would refuse again. A new license key, or an admin's Send now, tries again at once."""
+    refused = state.service.license_refused
+    if refused is None:
+        return None
+    if refused.fingerprint != run.fingerprint:
+        state.service.license_refused = None
+        return None
+    at = _parse_utc(refused.at)
+    if actor is not None or at is None or now >= at + LICENSE_RETRY:
+        return None
+    return StatsRunResult(
+        outcome=refused.outcome,
+        message=(
+            f"SOCFortress refused this CoPilot's license (HTTP {refused.http_status}) at {refused.at}: nothing was collected. "
+            f"The scheduled run tries again after {_utc_text(at + LICENSE_RETRY)}, Send now at any time."
+        ),
+        week=week,
+    )
+
+
 def _service_waiting(state: StatsState, now: datetime) -> Optional[datetime]:
     moment = _parse_utc(state.service.not_before)
     return moment if moment is not None and moment > now else None
@@ -491,30 +545,124 @@ async def run_tick(
     transport: Optional[httpx.AsyncBaseTransport] = None,
 ) -> StatsRunResult:
     """One tick (``actor`` None) or an admin's Send now (jitter ignored, optionally one customer). Never raises."""
+    off = _sharing_off()
+    if off is not None:
+        return off
+    if _RUN_LOCK.locked():
+        return StatsRunResult(outcome=StatsOutcome.RUNNING, message="A run is already in progress on this CoPilot.")
+    async with _RUN_LOCK:
+        return await _run_holding_lock(session, now, actor, _client_ip(request), customer_code, ignore_jitter, resume, transport)
+
+
+def _sharing_off() -> Optional[StatsRunResult]:
     mode, _ = settings.sharing_mode()
     if mode.value != "on":
         return StatsRunResult(
             outcome=StatsOutcome.SHARING_OFF,
             message="Noise statistics are off on this CoPilot (SYSMON_STATS_SHARING). Nothing was sent.",
         )
+    return None
+
+
+async def _run_holding_lock(
+    session: AsyncSession,
+    now: Optional[datetime],
+    actor,
+    source_ip: Optional[str],
+    customer_code: Optional[str],
+    ignore_jitter: bool,
+    resume: bool,
+    transport: Optional[httpx.AsyncBaseTransport],
+) -> StatsRunResult:
+    """The run, with _RUN_LOCK held by the caller: the named lock, then ``_locked_run``. Never raises."""
+    now = now or _now()
+    try:
+        async with named_lock.mysql_named_lock(LOCK_PREFIX, "Sysmon stats") as held:
+            if not held:
+                return StatsRunResult(outcome=StatsOutcome.LOCKED, message="Another CoPilot replica is sending; nothing was done here.")
+            try:
+                return await _locked_run(session, now, actor, source_ip, customer_code, ignore_jitter, resume, transport)
+            except Exception as e:  # noqa: BLE001 - a run never raises into the scheduler or a route
+                logger.error(f"Sysmon stats: the run failed ({type(e).__name__})")
+                result = StatsRunResult(outcome=StatsOutcome.ERROR, message=f"The run failed ({type(e).__name__}).")
+                # Still under the named lock: the state is only ever written by its holder
+                await _record_last_tick(now, result)
+                return result
+    except Exception as e:  # noqa: BLE001 - the named lock itself failed
+        logger.error(f"Sysmon stats: the run failed ({type(e).__name__})")
+        return StatsRunResult(outcome=StatsOutcome.ERROR, message=f"The run failed ({type(e).__name__}).")
+
+
+async def start_send_now(
+    *,
+    actor,
+    source_ip: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    resume: bool = False,
+    now: Optional[datetime] = None,
+    transport: Optional[httpx.AsyncBaseTransport] = None,
+) -> StatsRunResult:
+    """An admin's Send now: the run (jitter ignored, optionally one customer) goes on in the background, in a session
+    of its own, and its result lands in the state's ``last_tick``. Answers at once: STARTED, SHARING_OFF or RUNNING."""
+    off = _sharing_off()
+    if off is not None:
+        return off
     if _RUN_LOCK.locked():
         return StatsRunResult(outcome=StatsOutcome.RUNNING, message="A run is already in progress on this CoPilot.")
-    async with _RUN_LOCK:
+    # Not locked and nothing awaited since the test: acquire() takes it at once, so no other run starts in between
+    await _RUN_LOCK.acquire()
+    who = SimpleNamespace(id=getattr(actor, "id", None), username=getattr(actor, "username", None))
+
+    async def run() -> None:
         try:
-            async with named_lock.mysql_named_lock(LOCK_PREFIX, "Sysmon stats") as held:
-                if not held:
-                    return StatsRunResult(outcome=StatsOutcome.LOCKED, message="Another CoPilot replica is sending; nothing was done here.")
-                return await _locked_run(session, now or _now(), actor, request, customer_code, ignore_jitter, resume, transport)
-        except Exception as e:  # noqa: BLE001 - a run never raises into the scheduler or a route
-            logger.error(f"Sysmon stats: the run failed ({type(e).__name__})")
-            return StatsRunResult(outcome=StatsOutcome.ERROR, message=f"The run failed ({type(e).__name__}).")
+            async with new_session() as session:
+                await _run_holding_lock(session, now, who, source_ip, customer_code, True, resume, transport)
+        except Exception as e:  # noqa: BLE001 - a detached task: logged, never raised
+            logger.error(f"Sysmon stats: Send now failed ({type(e).__name__})")
+        finally:
+            _RUN_LOCK.release()
+
+    try:
+        task = asyncio.get_running_loop().create_task(run())
+    except BaseException:
+        _RUN_LOCK.release()
+        raise
+    _BACKGROUND.add(task)
+    task.add_done_callback(_BACKGROUND.discard)
+    return StatsRunResult(
+        outcome=StatsOutcome.STARTED,
+        message="Sending the due reports in the background; the status shows the result when it is done.",
+    )
+
+
+async def wait_background() -> None:
+    """Wait for Send now's runs (tests, and a clean shutdown)."""
+    while _BACKGROUND:
+        await asyncio.gather(*list(_BACKGROUND), return_exceptions=True)
+
+
+async def _record_last_tick(now: datetime, result: StatsRunResult) -> None:
+    """A run that ended before its state was read: its result as ``last_tick`` all the same (Send now's only answer).
+    Best effort."""
+    try:
+        state = await store.read_state()
+        state.last_tick = StatsLastTick(
+            started_at=_utc_text(now),
+            finished_at=_utc_text(_now()),
+            week=result.week,
+            outcome=result.outcome,
+            message=result.message,
+        )
+        await store.write_state(state)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Sysmon stats: could not record the run's result ({type(e).__name__})")
 
 
 async def _locked_run(
     session: AsyncSession,
     now: datetime,
     actor,
-    request: Optional[Request],
+    source_ip: Optional[str],
     only: Optional[str],
     ignore_jitter: bool,
     resume: bool,
@@ -524,10 +672,12 @@ async def _locked_run(
     week, monday = target_week(now)
     run, outcome, message = await _read_run(session)
     if run is None:
-        return StatsRunResult(outcome=outcome, message=message, week=week)
+        result = StatsRunResult(outcome=outcome, message=message, week=week)
+        await _record_last_tick(now, result)
+        return result
     state = run.state
     tick = StatsLastTick(started_at=_utc_text(now), week=week)
-    result = await _run_body(session, run, now, started, week, monday, actor, request, only, ignore_jitter, resume, transport, tick)
+    result = await _run_body(session, run, now, started, week, monday, actor, source_ip, only, ignore_jitter, resume, transport, tick)
     tick.finished_at = _utc_text(now + timedelta(seconds=max(0.0, _monotonic() - started)))
     tick.outcome = result.outcome
     tick.message = result.message
@@ -547,7 +697,7 @@ async def _run_body(
     week: str,
     monday: date,
     actor,
-    request: Optional[Request],
+    source_ip: Optional[str],
     only: Optional[str],
     ignore_jitter: bool,
     resume: bool,
@@ -564,8 +714,22 @@ async def _run_body(
         )
 
     # Withdraws first: an opt-out's deletion never waits behind a report
-    await sharing.process_withdraw_queue(session, run.license_key, run.base, run.queued, transport=transport, state=state, now=now)
+    confirmed = await sharing.process_withdraw_queue(
+        session,
+        run.license_key,
+        run.base,
+        run.queued,
+        transport=transport,
+        state=state,
+        now=now,
+    )
     run.queued = await store.list_withdraws()
+    if confirmed:
+        # SOCFortress drops a report arriving within 120 s of its customer's withdraw (409, the week lost): a customer
+        # withdrawn just now waits REOPTIN_DELAY, like one withdrawn before this run (its row read above is stale)
+        for customer in run.customers.values():
+            if customer_pseudonym(run.secret, customer.code) in confirmed:
+                customer.withdrawn_at = _naive(now)
     if _service_waiting(state, now) is not None:
         return StatsRunResult(outcome=StatsOutcome.RATE_LIMITED, message="SOCFortress asked to wait.", week=week)
 
@@ -578,7 +742,7 @@ async def _run_body(
                 entity_type="sysmon_stats",
                 entity_id="latch",
                 old_value={"latch_reason": state.latch.reason},
-                request=request,
+                source_ip=source_ip,
             )
             state.latch = None
         elif state.latch.copilot_version != CURRENT_VERSION:
@@ -602,9 +766,41 @@ async def _run_body(
         return StatsRunResult(outcome=StatsOutcome.NOTHING_DUE, message=f"No customer's {week} report is due.", week=week)
     due.sort(key=lambda item: (item[0], item[1].code))
 
-    verdict = await http.probe(run.base, transport)
+    refused = _license_refused(state, run, now, actor, week)
+    if refused is not None:
+        return refused
+
+    probed = await http.check(run.base, transport)
+    verdict = probed.verdict
     previous_accepting = state.service.accepting
+    previous_reachable = state.service.reachable
     state.service.checked_at = _utc_text(now)
+    if verdict in (http.Probe.UNREACHABLE, http.Probe.REDIRECT):
+        # No report could arrive now: no indexer query is spent on one, and no audit row is written
+        state.service.reachable = False
+        state.service.last_status = probed.status
+        what = f"redirected (HTTP {probed.status}), not followed" if verdict == http.Probe.REDIRECT else f"did not answer ({probed.error})"
+        line = f"Sysmon stats: SOCFortress's report service {what}; nothing was collected, the next tick asks again"
+        if previous_reachable is not False:
+            logger.warning(line)
+        else:
+            logger.debug(line)
+        return StatsRunResult(
+            outcome=StatsOutcome.REDIRECT_REFUSED if verdict == http.Probe.REDIRECT else StatsOutcome.NETWORK_ERROR,
+            message=f"The SOCFortress service {what}. Nothing was collected; the next run asks again.",
+            week=week,
+        )
+    if previous_reachable is False:
+        logger.info("Sysmon stats: SOCFortress's report service answers again")
+    state.service.reachable = True
+    if verdict == http.Probe.WAIT:
+        state.service.last_status = probed.status
+        state.service.not_before = _utc_text(now + timedelta(seconds=probed.retry_seconds or 300))
+        return StatsRunResult(
+            outcome=StatsOutcome.RATE_LIMITED if probed.status == 429 else StatsOutcome.SERVICE_UNAVAILABLE,
+            message=f"SOCFortress asked to wait until {state.service.not_before} (HTTP {probed.status}). Nothing was collected.",
+            week=week,
+        )
     if verdict == http.Probe.NOT_ACCEPTING:
         state.service.accepting = False
         state.service.last_status = 404
@@ -634,7 +830,7 @@ async def _run_body(
         )
     runs: List[StatsCustomerRun] = []
     try:
-        return await _collect_and_send(session, client, run, now, started, week, monday, due, actor, request, transport, tick, runs)
+        return await _collect_and_send(session, client, run, now, started, week, monday, due, actor, source_ip, transport, tick, runs)
     finally:
         try:
             await client.close()
@@ -652,7 +848,7 @@ async def _collect_and_send(
     monday: date,
     due: List[Tuple[datetime, CustomerRow]],
     actor,
-    request: Optional[Request],
+    source_ip: Optional[str],
     transport: Optional[httpx.AsyncBaseTransport],
     tick: StatsLastTick,
     runs: List[StatsCustomerRun],
@@ -660,7 +856,8 @@ async def _collect_and_send(
     state = run.state
     index, timeout = settings.index_pattern(), settings.query_timeout()
     try:
-        maps = await collector.discover_fields(client, index)
+        discovery = await collector.discover_fields(client, index, monday)
+        maps, index = discovery.maps, discovery.index
         if not maps:
             return StatsRunResult(
                 outcome=StatsOutcome.INDEXER_FIELDS_UNAVAILABLE,
@@ -763,9 +960,18 @@ async def _collect_and_send(
             result=result,
             base=run.base,
             actor=actor,
-            request=request,
+            source_ip=source_ip,
         )
         _log_send(run.fingerprint, code, week, result, built)
+        if result.outcome in LICENSE_OUTCOMES:
+            state.service.license_refused = StatsLicenseRefusal(
+                fingerprint=run.fingerprint,
+                at=_utc_text(now),
+                outcome=result.outcome,
+                http_status=result.http_status,
+            )
+        elif result.http_status is not None and 200 <= result.http_status < 300:
+            state.service.license_refused = None
         state.service.last_status = result.http_status
         if result.http_status is not None and result.http_status < 500 and result.http_status != 404:
             state.service.accepting = True
@@ -795,6 +1001,7 @@ async def _collect_and_send(
             rejected_by_reason=result.rejected_by_reason,
             replaced=result.replaced,
             local_drops=built.stats.dropped_by_reason,
+            unavailable_events=built.stats.unavailable_events,
         )
         runs.append(StatsCustomerRun(customer_code=code, outcome=result.outcome, message=result.message))
         if result.outcome is StatsOutcome.SENT:
@@ -901,44 +1108,26 @@ async def preview(session: AsyncSession, customer_code: str, week: Optional[str]
             )
             return out
         try:
-            index, timeout = settings.index_pattern(), settings.query_timeout()
             try:
-                maps = await collector.discover_fields(client, index)
-                if not maps:
-                    out.outcome, out.message = StatsOutcome.INDEXER_FIELDS_UNAVAILABLE, "The Wazuh indexer maps no usable Sysmon fields."
-                    return out
-                labels_by_shape, _ = await collector.stage0(client, index, maps, monday, timeout)
-            except collector.IndexerUnreachable as e:
-                out.outcome, out.message = StatsOutcome.INDEXER_UNREACHABLE, f"The Wazuh indexer cannot be reached ({e})."
+                async with asyncio.timeout(PREVIEW_DEADLINE):
+                    prepared = await _preview_collect(
+                        session,
+                        client,
+                        out,
+                        customers,
+                        customer,
+                        customer_code,
+                        secret,
+                        week,
+                        monday,
+                        releases,
+                        now,
+                    )
+            except TimeoutError:
+                out.outcome = StatsOutcome.INDEXER_TIMEOUT
+                out.message = f"The indexer did not answer within {PREVIEW_DEADLINE} s; try the preview again later."
                 return out
-            except (collector.IndexerTimeout, collector.IndexerFailure) as e:
-                out.outcome, out.message = StatsOutcome.INDEXER_ERROR, f"The Wazuh indexer's labels could not be read ({type(e).__name__})."
-                return out
-            labels = collector.map_labels(labels_by_shape, list(customers))
-            if customer_code in labels.ambiguous:
-                out.outcome, out.message = StatsOutcome.AMBIGUOUS_LABEL, "Another customer's code differs from this one only in case."
-                return out
-            customer_labels = labels.by_customer.get(customer_code)
-            if not customer_labels:
-                out.outcome, out.message = StatsOutcome.NO_SYSMON_EVENTS, "No Sysmon events with this customer's label that week."
-                return out
-            try:
-                prepared = await prepare_customer(
-                    session,
-                    client,
-                    index,
-                    maps,
-                    customer_labels,
-                    customer,
-                    secret,
-                    week,
-                    monday,
-                    releases,
-                    await _template(),
-                    now.date(),
-                )
-            except collector.IndexerUnreachable as e:
-                out.outcome, out.message = StatsOutcome.INDEXER_UNREACHABLE, f"The Wazuh indexer cannot be reached ({e})."
+            if prepared is None:
                 return out
         finally:
             try:
@@ -960,9 +1149,67 @@ async def preview(session: AsyncSession, customer_code: str, week: Optional[str]
             dropped_by_reason=built.stats.dropped_by_reason,
             merged=built.stats.merged,
             truncated=built.stats.truncated,
+            unavailable_events=built.stats.unavailable_events,
         )
         out.ms = int((_monotonic() - started) * 1000)
         return out
+
+
+async def _preview_collect(
+    session: AsyncSession,
+    client: Any,
+    out: StatsPreview,
+    customers: Dict[str, CustomerRow],
+    customer: CustomerRow,
+    customer_code: str,
+    secret: bytes,
+    week: str,
+    monday: date,
+    releases: Dict[int, Tuple[str, Optional[str]]],
+    now: datetime,
+) -> Optional[Prepared]:
+    """The preview's indexer work: field discovery, the labels, the customer's report. None (with ``out``'s outcome
+    set) when there is none to show."""
+    index, timeout = settings.index_pattern(), settings.query_timeout()
+    try:
+        discovery = await collector.discover_fields(client, index, monday)
+        maps, index = discovery.maps, discovery.index
+        if not maps:
+            out.outcome, out.message = StatsOutcome.INDEXER_FIELDS_UNAVAILABLE, "The Wazuh indexer maps no usable Sysmon fields."
+            return None
+        labels_by_shape, _ = await collector.stage0(client, index, maps, monday, timeout)
+    except collector.IndexerUnreachable as e:
+        out.outcome, out.message = StatsOutcome.INDEXER_UNREACHABLE, f"The Wazuh indexer cannot be reached ({e})."
+        return None
+    except (collector.IndexerTimeout, collector.IndexerFailure) as e:
+        out.outcome, out.message = StatsOutcome.INDEXER_ERROR, f"The Wazuh indexer's labels could not be read ({type(e).__name__})."
+        return None
+    labels = collector.map_labels(labels_by_shape, list(customers))
+    if customer_code in labels.ambiguous:
+        out.outcome, out.message = StatsOutcome.AMBIGUOUS_LABEL, "Another customer's code differs from this one only in case."
+        return None
+    customer_labels = labels.by_customer.get(customer_code)
+    if not customer_labels:
+        out.outcome, out.message = StatsOutcome.NO_SYSMON_EVENTS, "No Sysmon events with this customer's label that week."
+        return None
+    try:
+        return await prepare_customer(
+            session,
+            client,
+            index,
+            maps,
+            customer_labels,
+            customer,
+            secret,
+            week,
+            monday,
+            releases,
+            await _template(),
+            now.date(),
+        )
+    except collector.IndexerUnreachable as e:
+        out.outcome, out.message = StatsOutcome.INDEXER_UNREACHABLE, f"The Wazuh indexer cannot be reached ({e})."
+        return None
 
 
 async def _safe_list_withdraws() -> List[str]:

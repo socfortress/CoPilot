@@ -165,8 +165,8 @@ def test_the_preview_refuses_while_off_running_or_for_an_unknown_customer(monkey
 def test_send_now_answers_409_while_a_run_is_in_progress(monkeypatch):
     from unittest.mock import AsyncMock
 
-    tick = AsyncMock()
-    monkeypatch.setattr(runner, "run_tick", tick)
+    start = AsyncMock()
+    monkeypatch.setattr(runner, "start_send_now", start)
 
     async def scenario():
         async with runner._RUN_LOCK:
@@ -176,39 +176,120 @@ def test_send_now_answers_409_while_a_run_is_in_progress(monkeypatch):
 
     error = asyncio.run(scenario())
     assert error.status_code == 409 and "in progress" in error.detail
-    tick.assert_not_awaited()
+    start.assert_not_awaited()
 
 
-def test_send_now_runs_as_the_admin(monkeypatch, audit_rows):
+def test_send_now_answers_409_while_another_replica_sends(monkeypatch):
+    from unittest.mock import AsyncMock
+
+    from app.db import named_lock
+
+    start = AsyncMock()
+    monkeypatch.setattr(runner, "start_send_now", start)
+    monkeypatch.setattr(named_lock, "lock_in_use", AsyncMock(return_value=True))
+    with pytest.raises(HTTPException) as raised:
+        asyncio.run(routes.send_sysmon_stats_now(request=None, customer_code=None, resume=False, current_user=ADMIN, session=None))
+    assert raised.value.status_code == 409 and "replica" in raised.value.detail
+    start.assert_not_awaited()
+
+
+def test_send_now_runs_in_the_background_as_the_admin(monkeypatch, audit_rows):
+    """Review: Send now ran every due customer inside the request, up to the tick's 30-minute deadline, behind nginx's 60 s:
+    the page got a 504 while the reports were still being sent. Now it answers at once ("started"), the status says
+    running, and the run's result is the status's last_tick."""
+    import functools
+
     world = World(monkeypatch, week_docs("contoso"))
     service = Sysmonsync()
-    real = runner.run_tick
-
-    async def run_tick(session, **kw):
-        return await real(session, now=NOW, transport=service.transport, **kw)
-
-    monkeypatch.setattr(runner, "run_tick", run_tick)
+    monkeypatch.setattr(runner, "start_send_now", functools.partial(runner.start_send_now, now=NOW, transport=service.transport))
+    monkeypatch.setattr(runner, "new_session", world.db.session)
     monkeypatch.setattr(runner, "_now", lambda: NOW)
+    request = type("R", (), {"headers": {"x-forwarded-for": "198.51.100.7"}, "client": None})()
 
     async def scenario():
         await world.setup()
         async with world.db.session() as session:
-            return await routes.send_sysmon_stats_now(
-                request=None,
+            response = await routes.send_sysmon_stats_now(
+                request=request,
                 customer_code="contoso",
                 resume=False,
                 current_user=ADMIN,
                 session=session,
             )
+        await runner.wait_background()
+        async with world.db.session() as session:
+            after = await routes.get_sysmon_stats_status(session=session)
+        return response, after.status
 
-    response = asyncio.run(scenario())
-    assert response.result.customers[0].outcome.value == "sent"
-    (status_customer,) = response.status.customers
+    response, after = asyncio.run(scenario())
+    assert response.result.outcome.value == "started" and response.status.running is True
+    assert after.running is False and not runner.running()
+    assert after.last_tick.outcome.value == "completed" and after.last_tick.sent == 1
+    (status_customer,) = after.customers
     assert status_customer.last_sent_week == "2026-W47" and status_customer.last_sent_state.outcome.value == "sent"
     (row,) = [r for r in audit_rows if r.action == "response.sysmon_stats_send"]
-    assert (row.actor_user_id, row.actor_username) == (7, "alice")
+    assert (row.actor_user_id, row.actor_username, row.source_ip) == (7, "alice", "198.51.100.7")
     stored = json.dumps(row.model_dump(), default=str)
     assert "telemetry.fabrikam-example.com" not in stored and "Fabrikam" not in stored and "agent.exe" not in stored
+
+
+def test_send_now_says_at_once_when_it_cannot_start(monkeypatch):
+    world = World(monkeypatch)
+    monkeypatch.setenv("SYSMON_STATS_SHARING", "off")
+
+    async def scenario():
+        await world.setup()
+        async with world.db.session() as session:
+            return await routes.send_sysmon_stats_now(request=None, customer_code=None, resume=False, current_user=ADMIN, session=session)
+
+    response = asyncio.run(scenario())
+    assert response.result.outcome.value == "sharing_off" and response.status.running is False and not runner._BACKGROUND
+
+
+def test_a_failed_background_run_still_leaves_its_result(monkeypatch):
+    world = World(monkeypatch, week_docs("contoso"))
+    monkeypatch.setattr(runner, "new_session", world.db.session)
+
+    async def boom(*args, **kwargs):
+        raise RuntimeError("bug")
+
+    monkeypatch.setattr(runner, "_locked_run", boom)
+
+    async def scenario():
+        await world.setup()
+        result = await runner.start_send_now(actor=ADMIN, now=NOW)
+        await runner.wait_background()
+        return result
+
+    assert asyncio.run(scenario()).outcome.value == "started"
+    assert world.state()["last_tick"]["outcome"] == "error" and not runner.running()
+
+
+def test_the_preview_is_bounded_and_nginx_waits_longer_than_that(monkeypatch):
+    """Review: the preview ran past nginx's 60 s default (504 while the backend went on). It is bounded by
+    PREVIEW_DEADLINE, and the frontend's nginx gives its route longer; Send now needs no location (it answers at once)."""
+    import re
+    from pathlib import Path
+
+    conf = (Path(__file__).resolve().parents[2] / "frontend" / "build" / "etc" / "nginx" / "sites-enabled" / "default.conf").read_text()
+    found = re.search(r"location ~ (\^/api/sysmon_config/stats/[^\s]+preview\$) \{\s*proxy_read_timeout (\d+)s;", conf)
+    assert found, "the frontend nginx needs a location for the noise statistics' preview"
+    pattern, timeout = re.compile(found.group(1)), int(found.group(2))
+    assert timeout > runner.PREVIEW_DEADLINE
+    assert pattern.match("/api/sysmon_config/stats/customers/acme/preview")
+    assert not pattern.match("/api/sysmon_config/stats/send-now")
+
+    world = World(monkeypatch, week_docs("contoso"))
+    monkeypatch.setattr(runner, "PREVIEW_DEADLINE", 0.3)
+    world.indexer.delay = 0.2
+
+    async def scenario():
+        await world.setup()
+        async with world.db.session() as session:
+            return await runner.preview(session, "contoso", now=NOW)
+
+    preview = asyncio.run(scenario())
+    assert preview.outcome.value == "indexer_timeout" and preview.payload is None and not runner.running()
 
 
 def test_the_status_and_the_sharing_route(monkeypatch, audit_rows):

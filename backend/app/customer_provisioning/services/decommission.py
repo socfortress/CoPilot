@@ -154,7 +154,7 @@ async def decomission_wazuh_customer(
     # Delete the Sysmon config stored for those groups (best effort)
     await delete_stored_sysmon_config(customer_meta.customer_code)
 
-    # Ask SOCFortress to delete the customer's Sysmon noise reports, and drop its sharing setting (best effort)
+    # Ask SOCFortress to delete the customer's Sysmon noise reports, and turn its sharing off (best effort)
     await on_customer_decommissioned(customer_meta.customer_code)
 
     # Delete Graylog Stream
