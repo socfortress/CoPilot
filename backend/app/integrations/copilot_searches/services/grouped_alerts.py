@@ -560,8 +560,12 @@ async def handle_event(es: Any, hit: Dict[str, Any]) -> str:
 
 async def collect_grouped_alerts_once() -> int:
     """One run: up to ``MAX_EVENTS_PER_RUN`` queued grouped events, oldest first. Returns how many were handled."""
-    from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client_async
-    from app.connectors.wazuh_indexer.utils.universal import return_graylog_events_index_names
+    from app.connectors.wazuh_indexer.utils.universal import (
+        create_wazuh_indexer_client_async,
+    )
+    from app.connectors.wazuh_indexer.utils.universal import (
+        return_graylog_events_index_names,
+    )
 
     indices = await return_graylog_events_index_names()
     if not indices:
