@@ -189,7 +189,7 @@ async def get_next_run(job_id: str) -> JobsNextRunResponse:
 #: (``identity.ops_poller_identity``), which an analyst must not set off at will; and pausing,
 #: deleting or rescheduling it silently stops the SOC's ops notifications (review of OJ-5). The
 #: SOCFortress default Sysmon config sync writes this CoPilot's default, which only an admin may change.
-ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications", "sync_sysmon_default"})
+ADMIN_ONLY_JOBS = frozenset({"invoke_talon_ops_notifications", "sync_sysmon_default", "send_sysmon_stats"})
 
 
 def _job_names(job: Any) -> set:

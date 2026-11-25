@@ -73,6 +73,7 @@ from elasticsearch7.exceptions import ConnectionTimeout
 from elasticsearch7.exceptions import RequestError
 from loguru import logger
 
+from app.connectors.wazuh_indexer.utils.heavy_query import heavy_query_slot
 from app.integrations.copilot_searches.services.cache_support import (
     BackgroundRefreshMixin,
 )
@@ -202,20 +203,10 @@ class CustomerFiringStats:
     fetched_at: Optional[datetime] = None
 
 
-# One heavy search at a time, across the global refresh and every customer
-# slice: the cluster serves other dashboards too (#1319). Bound to the running
-# loop, so a new loop (tests, a restart of the app's loop) gets a fresh one.
-_heavy_slot: Optional[asyncio.Semaphore] = None
-_heavy_slot_loop: Optional[asyncio.AbstractEventLoop] = None
-
-
-def _heavy_query_slot() -> asyncio.Semaphore:
-    global _heavy_slot, _heavy_slot_loop
-    loop = asyncio.get_running_loop()
-    if _heavy_slot is None or _heavy_slot_loop is not loop:
-        _heavy_slot = asyncio.Semaphore(1)
-        _heavy_slot_loop = loop
-    return _heavy_slot
+# One heavy search at a time, across the global refresh, every customer slice
+# and the weekly Sysmon noise statistics: the cluster serves other dashboards
+# too (#1319). The slot lives in heavy_query.py, shared by both features.
+_heavy_query_slot = heavy_query_slot
 
 
 class WazuhFiringStatsCache(BackgroundRefreshMixin):

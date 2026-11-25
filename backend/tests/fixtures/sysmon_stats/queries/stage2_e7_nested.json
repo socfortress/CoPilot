@@ -1,0 +1,127 @@
+{
+ "aggs": {
+  "actor": {
+   "aggs": {
+    "k1": {
+     "aggs": {
+      "k2": {
+       "aggs": {
+        "d_OriginalFileName": {
+         "terms": {
+          "field": "data.win.eventdata.originalFileName",
+          "size": 2
+         }
+        },
+        "d_SignatureStatus": {
+         "terms": {
+          "field": "data.win.eventdata.signatureStatus",
+          "size": 2
+         }
+        },
+        "d_Signed": {
+         "terms": {
+          "field": "data.win.eventdata.signed",
+          "size": 2
+         }
+        },
+        "d_User": {
+         "terms": {
+          "field": "data.win.eventdata.user",
+          "size": 10
+         }
+        },
+        "days": {
+         "date_histogram": {
+          "field": "timestamp",
+          "fixed_interval": "1d",
+          "min_doc_count": 1,
+          "time_zone": "UTC"
+         }
+        },
+        "endpoints": {
+         "cardinality": {
+          "field": "agent.id",
+          "precision_threshold": 1000
+         }
+        },
+        "rule_name": {
+         "terms": {
+          "field": "data.win.eventdata.ruleName",
+          "size": 2
+         }
+        }
+       },
+       "terms": {
+        "field": "data.win.eventdata.signature",
+        "missing": "-",
+        "size": 3
+       }
+      }
+     },
+     "terms": {
+      "field": "data.win.eventdata.imageLoaded",
+      "size": 15
+     }
+    }
+   },
+   "terms": {
+    "field": "data.win.eventdata.image",
+    "size": 1
+   }
+  }
+ },
+ "query": {
+  "bool": {
+   "filter": [
+    {
+     "range": {
+      "timestamp": {
+       "format": "epoch_millis",
+       "gte": 1794787200000,
+       "lt": 1795392000000
+      }
+     }
+    },
+    {
+     "term": {
+      "data.win.system.channel": "Microsoft-Windows-Sysmon/Operational"
+     }
+    },
+    {
+     "terms": {
+      "agent.labels.customer": [
+       "acme",
+       "ACME"
+      ]
+     }
+    },
+    {
+     "terms": {
+      "rule.level": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5
+      ]
+     }
+    },
+    {
+     "term": {
+      "data.win.system.eventID": "7"
+     }
+    },
+    {
+     "terms": {
+      "data.win.eventdata.image": [
+       "C:\\\\Program Files\\\\Fabrikam\\\\agent.exe"
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "size": 0,
+ "track_total_hits": false
+}

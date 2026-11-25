@@ -1873,3 +1873,50 @@ class CustomerShuffleIntegration(SQLModel, table=True):
     # See note on CustomerNotificationRoute.dispatches — back_populates
     # removed for AsyncSession compatibility.
     routes: list["CustomerNotificationRoute"] = Relationship(sa_relationship_kwargs={"overlaps": "shuffle_integration"})
+
+
+class SysmonStatsCustomerSettings(SQLModel, table=True):
+    """Per-customer setting of the weekly Sysmon noise statistics sent to SOCFortress
+    (app/active_response/services/sysmon_stats/).
+
+    Sharing is **on by default**: a customer with no row here shares. An admin's opt-out writes
+    ``sharing_enabled = False`` (and CoPilot asks SOCFortress to delete what it already sent); the row
+    also holds two optional redaction hints. Nothing should write this table but
+    ``sysmon_stats/sharing.py``.
+    """
+
+    __tablename__ = "sysmon_stats_customer_settings"
+
+    id: Optional[int] = Field(primary_key=True)
+    # CASCADE: deleting a customer deletes only its row, and a plain FK would block it.
+    customer_code: str = Field(
+        sa_column=Column(
+            String(50),
+            ForeignKey("customers.customer_code", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+            unique=True,
+        ),
+    )
+    sharing_enabled: bool = Field(default=True, nullable=False)
+    # The customer's installer InstallDirName when it is not the customer code ([A-Za-z0-9._-]{1,64}):
+    # its \Program Files\<dir>\ paths are sent as __INSTALLDIRNAME__.
+    install_dir_name: Optional[str] = Field(default=None, max_length=64)
+    # The customer's own DNS domains (lowercase, at most 20): names under them are never sent.
+    own_domains: Optional[List[str]] = Field(default=None, sa_column=Column(JSON, nullable=True))
+    # The last withdraw SOCFortress confirmed: reports are sent again no sooner than 180 s after it.
+    withdrawn_at: Optional[datetime] = Field(default=None)
+    updated_at: datetime = Field(default_factory=now_utc)
+    updated_by: Optional[int] = Field(default=None)  # User ID who last updated
+
+
+class SysmonStatsIdentity(SQLModel, table=True):
+    """The one row (id 1) holding this CoPilot's report secret: 32 random bytes as hex, generated once. The
+    customer pseudonyms in the Sysmon noise reports are HMACs under it, so SOCFortress, which sees the license
+    key, cannot recompute them from customer codes. Never logged, returned or audited."""
+
+    __tablename__ = "sysmon_stats_identity"
+
+    id: int = Field(primary_key=True)
+    report_secret: str = Field(sa_column=Column(String(64), nullable=False))
+    created_at: datetime = Field(default_factory=now_utc)

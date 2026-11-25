@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.active_response.services.sysmon_stats.sharing import on_customer_deleted
 from app.auth.models.users import User
 from app.auth.utils import AuthHandler
 from app.connectors.talon.services.talon_service_account import (
@@ -445,6 +446,10 @@ async def delete_customer(
             status_code=404,
             detail=f"Customer with customer_code {customer_code} not found",
         )
+
+    # Ask SOCFortress to delete the customer's Sysmon noise reports, by its pseudonym (queued; best effort). Its sharing
+    # setting cascades away with the row.
+    await on_customer_deleted(customer_code)
 
     try:
         # Delete the customer

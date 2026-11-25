@@ -6,6 +6,11 @@ import type {
 	DefaultSyncStatusResponse,
 	DeployConfigResponse,
 	SaveDefaultConfigResponse,
+	StatsPreviewResponse,
+	StatsRunResponse,
+	StatsSharingBody,
+	StatsSharingResponse,
+	StatsStatusResponse,
 	UploadConfigFileResponse
 } from "@/types/sysmon-config"
 import { HttpClient } from "../http-client"
@@ -61,5 +66,31 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & DefaultSyncRunResponse>(`/sysmon_config/default-config/sync`, null, {
 			params: { force }
 		})
+	},
+	/** The weekly Sysmon noise statistics sent to SOCFortress: mode, last run, and per customer its sharing. Admin only. */
+	getStatsStatus(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & StatsStatusResponse>(`/sysmon_config/stats`, { signal })
+	},
+	/** Turn a customer's noise statistics off or on (off also asks SOCFortress to delete its reports). Admin only. */
+	setStatsSharing(customerCode: string, body: StatsSharingBody) {
+		return HttpClient.put<FlaskBaseResponse & StatsSharingResponse>(
+			`/sysmon_config/stats/customers/${encodeURIComponent(customerCode)}`,
+			body
+		)
+	},
+	/** The exact report a customer's week would send. Sends nothing. Admin only. */
+	previewStats(customerCode: string, week?: string) {
+		return HttpClient.post<FlaskBaseResponse & StatsPreviewResponse>(
+			`/sysmon_config/stats/customers/${encodeURIComponent(customerCode)}/preview`,
+			null,
+			{ params: week ? { week } : undefined }
+		)
+	},
+	/** Send the due reports now (each week once per customer). resume lifts the pause after a refusal. Admin only. */
+	sendStatsNow(options: { customerCode?: string; resume?: boolean } = {}) {
+		const params: Record<string, string | boolean> = {}
+		if (options.customerCode) params.customer_code = options.customerCode
+		if (options.resume) params.resume = true
+		return HttpClient.post<FlaskBaseResponse & StatsRunResponse>(`/sysmon_config/stats/send-now`, null, { params })
 	}
 }
