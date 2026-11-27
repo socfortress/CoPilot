@@ -24,6 +24,9 @@ from typing import NamedTuple
 from typing import Optional
 
 EXAMPLE_PATTERN = "wazuh-*,-wazuh-monitoring-*"
+# index_snapshot_schedules.index_pattern is VARCHAR(255) (migration 8c419faae3e5): a longer pattern
+# would fail at the database, or be cut short where MySQL isn't strict.
+MAX_INDEX_PATTERN_LENGTH = 255
 
 
 class IndexPattern(NamedTuple):
@@ -106,7 +109,9 @@ def expand_requested_indices(requested: Iterable[str], indices: Iterable[str]) -
 
 
 def index_pattern_problem(pattern: Optional[str]) -> Optional[str]:
-    """Why ``pattern`` can never select an index, or None when it can."""
+    """Why ``pattern`` can't be a schedule's (it could never select an index, or can't be stored), or None."""
+    if len(pattern or "") > MAX_INDEX_PATTERN_LENGTH:
+        return f"The pattern is {len(pattern)} characters long; a schedule can store at most {MAX_INDEX_PATTERN_LENGTH}"
     parts = [part.strip() for part in (pattern or "").split(",")]
     if not any(parts):
         return f"Enter an index pattern, for example {EXAMPLE_PATTERN}"

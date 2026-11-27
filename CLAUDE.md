@@ -470,8 +470,9 @@ Things to keep straight in the InfluxDB half:
   - It deletes oldest first, one snapshot per request, within `RETENTION_MAX_DELETES_PER_RUN` (50) and `RETENTION_TIME_BUDGET_SECONDS` (300). A `ConnectionTimeout` (after `RETENTION_DELETE_TIMEOUT_SECONDS`) ends that run's deletions: the indexer finishes that one, and every later one would wait behind the same snapshot. A 404 counts as deleted. Any other failure is reported, and the next one is tried.
   - Failures never fail the run. The outcome is appended to the status (`_with_note`: `SUCCESS: retention deleted …`; the UI's label is the text before the first colon).
   - `retention_days` must be 1–36500 on create and update (a negative one would delete everything). An explicit null in an update clears it (`model_fields_set`), since the form sends null for "keep forever". The response model stays unbounded.
+- **The schedule form checks a pattern as it is typed** (`POST /api/snapshots/schedules/preview`, admin, `preview_index_pattern`): a pattern a schedule couldn't be saved with is a 200 carrying `index_pattern_problem`'s text (the 422's rules, plus the column's 255 characters, `MAX_INDEX_PATTERN_LENGTH`), without asking the indexer; else the count and the first `PREVIEW_INDEX_LIMIT` (200) names in natural order (`_natural_key`: `acme_2` before `acme_10`), `truncated` past that; an indexer that can't be listed is a 502. `SnapshotScheduleForm.vue` asks through `useIndexPatternPreview.ts` (400 ms debounce, the superseded request aborted, an answer for a pattern typed over dropped), also when an existing schedule opens, and the save toast repeats `matching_index_count` (`SnapshotSchedules.vue:confirmSaved`, a warning at 0).
 
-Tests: `tests/test_snapshot_schedule_patterns.py` (a fake indexer client, in-memory SQLite).
+Tests: `tests/test_snapshot_schedule_patterns.py` (a fake indexer client, in-memory SQLite); frontend `components/snapshots/__tests__/SnapshotScheduleForm.spec.ts`.
 
 ### Network connectors: per-customer firewall inputs (SonicWall over TLS or UDP, #1357)
 

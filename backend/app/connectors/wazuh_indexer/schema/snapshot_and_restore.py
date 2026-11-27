@@ -391,6 +391,31 @@ class SnapshotScheduleResponse(BaseModel):
     updated_at: str = Field(..., description="When this schedule was last updated")
 
 
+class IndexPatternPreviewRequest(BaseModel):
+    """A pattern typed in the schedule form, before the schedule is saved."""
+
+    # Beyond what a schedule can store (index_pattern_problem says so), only bounds the work.
+    index_pattern: str = Field(..., max_length=4096, description=INDEX_PATTERN_DESCRIPTION)
+
+
+class IndexPatternPreviewResponse(BaseModel):
+    """What a pattern selects on the cluster right now."""
+
+    index_pattern: str = Field(..., description="The pattern previewed, as sent")
+    problem: Optional[str] = Field(
+        None,
+        description="Why a schedule can't be saved with this pattern (saving it would be a 422); None when it can",
+    )
+    matching_index_count: Optional[int] = Field(None, description="How many indices the pattern matches right now; None with a problem")
+    matching_indices: List[str] = Field(
+        default_factory=list,
+        description="The matching index names in natural order, fortinet-acme_2 before fortinet-acme_10 (the first 200)",
+    )
+    truncated: bool = Field(False, description="More indices match than matching_indices lists")
+    success: bool = Field(..., description="Whether the operation was successful")
+    message: str = Field(..., description="Status message")
+
+
 class SnapshotScheduleListResponse(BaseModel):
     """Response model for listing snapshot schedules."""
 
