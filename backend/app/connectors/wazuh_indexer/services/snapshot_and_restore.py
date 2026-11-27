@@ -1,15 +1,21 @@
 import re
+import time
 from collections import defaultdict
+from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone as dt_timezone
 from typing import Dict
+from typing import Iterable
 from typing import List
 from typing import Optional
 from typing import Tuple
 from zoneinfo import ZoneInfo
 from zoneinfo import ZoneInfoNotFoundError
 
+from elasticsearch7.exceptions import ConnectionTimeout
+from elasticsearch7.exceptions import NotFoundError
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,6 +77,20 @@ NO_MATCH_STATUS = "NO_MATCH: pattern matched 0 indices"
 # Statuses a deferred poll leaves in place, so that the problem stays on screen until the next run
 # instead of being replaced by "DEFERRED: …" fifteen minutes later.
 PROBLEM_STATUS_PREFIXES = ("NO_MATCH", "FAILED")
+
+# Retention: each run that matched indices deletes the snapshots its schedule created that started
+# more than retention_days ago, oldest first, before it starts its own. At most this many a run,
+# within this many seconds, so a backlog (retention set or lowered on an old schedule) is worked
+# off over several runs instead of holding up the scheduler.
+RETENTION_MAX_DELETES_PER_RUN = 50
+RETENTION_TIME_BUDGET_SECONDS = 300
+# A deletion waits for any snapshot still writing to the repository. Past this the client stops
+# waiting (the indexer finishes the deletion on its own) and the run deletes nothing more.
+RETENTION_DELETE_TIMEOUT_SECONDS = 60
+# Only a finished snapshot is ever deleted: deleting one in progress aborts it.
+FINISHED_SNAPSHOT_STATES = frozenset({"SUCCESS", "PARTIAL", "FAILED", "INCOMPATIBLE"})
+# What follows a schedule's prefix in the names execute_snapshot_schedule gives its snapshots.
+_SNAPSHOT_TIMESTAMP = re.compile(r"\d{8}_\d{6}")
 
 
 def parse_graylog_index_name(index_name: str) -> Tuple[Optional[str], Optional[int]]:
@@ -904,11 +924,12 @@ async def update_snapshot_schedule(
             schedule.include_global_state = request.include_global_state
         if request.skip_write_indices is not None:
             schedule.skip_write_indices = request.skip_write_indices
-        if request.retention_days is not None:
-            schedule.retention_days = request.retention_days
         # Allow explicit NULL on scheduled_hour/minute so users can clear
         # the time-of-day gate via the API (Pydantic tracks set fields).
-        fields_set = request.__fields_set__
+        fields_set = request.model_fields_set
+        # And on retention_days: the form sends null for "keep forever", and retention deletes.
+        if "retention_days" in fields_set:
+            schedule.retention_days = request.retention_days
         if "scheduled_hour" in fields_set:
             schedule.scheduled_hour = request.scheduled_hour
         if "scheduled_minute" in fields_set:
@@ -1185,6 +1206,11 @@ async def execute_snapshot_schedule(
                 message=NO_MATCH_STATUS,
             )
 
+        # Retention, on every run that matched indices (never on a deferred, NO_MATCH or failed
+        # listing), before this run's snapshot starts: a deletion waits for any snapshot still
+        # writing to the repository, this run's own included.
+        retention_note = await _apply_retention(schedule)
+
         # Indices matched, but none is new (each a write index or already snapshotted): the
         # steady state of an incremental schedule, a normal run.
         if not indices_to_snapshot:
@@ -1198,7 +1224,7 @@ async def execute_snapshot_schedule(
 
             # Update schedule with execution results
             schedule.last_execution_time = datetime.utcnow()
-            schedule.last_execution_status = f"SKIPPED: {message}"
+            schedule.last_execution_status = _with_note(f"SKIPPED: {message}", retention_note)
             schedule.updated_at = datetime.utcnow()
 
             await session.commit()
@@ -1210,7 +1236,7 @@ async def execute_snapshot_schedule(
                 indices_snapshotted=[],
                 skipped_write_indices=skipped_write_indices,
                 success=True,  # Not a failure, just nothing to do
-                message=message,
+                message=_with_note(message, retention_note),
             )
 
         # Generate snapshot name with timestamp
@@ -1242,7 +1268,7 @@ async def execute_snapshot_schedule(
         # Update schedule with execution results
         schedule.last_execution_time = datetime.utcnow()
         schedule.last_snapshot_name = snapshot_name if response.success else None
-        schedule.last_execution_status = "SUCCESS" if response.success else f"FAILED: {response.message}"
+        schedule.last_execution_status = _with_note("SUCCESS" if response.success else f"FAILED: {response.message}", retention_note)
         schedule.updated_at = datetime.utcnow()
 
         await session.commit()
@@ -1265,7 +1291,7 @@ async def execute_snapshot_schedule(
             indices_snapshotted=indices_to_snapshot if response.success else [],
             skipped_write_indices=skipped_write_indices,
             success=response.success,
-            message=response.message,
+            message=_with_note(response.message, retention_note),
         )
 
     except Exception as e:
@@ -1321,58 +1347,146 @@ async def execute_all_enabled_schedules() -> List[ScheduledSnapshotExecutionResp
     return results
 
 
-async def cleanup_old_snapshots(
-    schedule: SnapshotSchedule,
-) -> Dict[str, any]:
-    """
-    Clean up old snapshots based on retention policy.
+def _plural(count: int, word: str) -> str:
+    return f"{count} {word}" if count == 1 else f"{count} {word}s"
 
-    Args:
-        schedule: The schedule with retention settings.
 
-    Returns:
-        Dictionary with cleanup results.
+@dataclass
+class RetentionResult:
+    """What one run's retention did."""
+
+    expired: int = 0
+    deleted: List[str] = field(default_factory=list)
+    failed: List[str] = field(default_factory=list)
+    # A deletion the client stopped waiting for: the indexer finishes it on its own.
+    still_running: Optional[str] = None
+    # Past retention, but left for the next run (the cap, the time budget, a deletion still running).
+    left: int = 0
+
+    def describe(self, retention_days: int) -> str:
+        """A note for the run's status, '' when there was nothing to delete."""
+        parts = []
+        if self.deleted:
+            parts.append(f"retention deleted {_plural(len(self.deleted), 'snapshot')} older than {retention_days} days")
+        if self.failed:
+            parts.append(f"retention could not delete {_plural(len(self.failed), 'snapshot')} (see the log)")
+        if self.still_running:
+            parts.append(f"the indexer is still deleting {self.still_running} for retention")
+        if self.left:
+            more = "more " if parts else ""
+            parts.append(f"{self.left} {more}past retention left for the next run")
+        return "; ".join(parts)
+
+
+def _snapshot_name_prefix(schedule: SnapshotSchedule) -> str:
+    """The prefix of every name execute_snapshot_schedule gives this schedule's snapshots."""
+    return f"{schedule.snapshot_prefix}_{schedule.name}_".lower().replace(" ", "_")
+
+
+def is_schedules_own_snapshot(snapshot: dict, schedule: SnapshotSchedule) -> bool:
+    """Whether ``snapshot`` (an entry of GET _snapshot/<repository>/_all) was created by ``schedule``.
+
+    Both its name and its metadata must say so. The name alone isn't enough: schedule "Daily"'s
+    prefix also begins schedule "Daily Snapshots"' names, and a manual snapshot can be named like
+    a scheduled one. The metadata alone isn't either: another deployment writing to the same
+    repository has a schedule with the same id. A renamed schedule's earlier snapshots therefore
+    stay, which is the safe way round.
     """
+    name = snapshot.get("snapshot") or ""
+    prefix = _snapshot_name_prefix(schedule)
+    if not name.startswith(prefix) or not _SNAPSHOT_TIMESTAMP.fullmatch(name[len(prefix) :]):
+        return False
+    metadata = snapshot.get("metadata")
+    return isinstance(metadata, dict) and str(metadata.get("schedule_id")) == str(schedule.id)
+
+
+def expired_snapshot_names(snapshots: Iterable[dict], schedule: SnapshotSchedule, now_utc: datetime) -> List[str]:
+    """This schedule's own finished snapshots that started more than retention_days before ``now_utc``, oldest first.
+
+    A snapshot still in progress is never one (deleting it would abort it), nor one whose state
+    or start time can't be read.
+    """
+    cutoff_ms = int((now_utc - timedelta(days=schedule.retention_days)).timestamp() * 1000)
+    expired = []
+    for snapshot in snapshots:
+        if not is_schedules_own_snapshot(snapshot, schedule) or snapshot.get("state") not in FINISHED_SNAPSHOT_STATES:
+            continue
+        started = snapshot.get("start_time_in_millis")
+        if isinstance(started, int) and not isinstance(started, bool) and 0 < started < cutoff_ms:
+            expired.append((started, snapshot["snapshot"]))
+    return [name for _, name in sorted(expired)]
+
+
+async def cleanup_old_snapshots(schedule: SnapshotSchedule, now_utc: Optional[datetime] = None) -> RetentionResult:
+    """Delete this schedule's own snapshots past retention_days (see expired_snapshot_names).
+
+    Oldest first, one per request, at most RETENTION_MAX_DELETES_PER_RUN and within
+    RETENTION_TIME_BUDGET_SECONDS; the rest is left for the next run. A deletion that fails is
+    reported and the next one is tried; one the client stops waiting for ends this run's
+    deletions, since every later one would wait behind the same snapshot. Raises when the
+    repository's snapshots can't be listed.
+    """
+    result = RetentionResult()
+    retention_days = schedule.retention_days
+    if not isinstance(retention_days, int) or isinstance(retention_days, bool) or retention_days < 1:
+        return result
+
+    now_utc = now_utc or datetime.now(dt_timezone.utc)
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    response = await run_blocking(es_client.snapshot.get, repository=schedule.repository, snapshot="_all", ignore_unavailable=True)
+    expired = expired_snapshot_names(response.get("snapshots", []), schedule, now_utc)
+    result.expired = len(expired)
+
+    started = time.monotonic()
+    for position, name in enumerate(expired):
+        if position >= RETENTION_MAX_DELETES_PER_RUN or time.monotonic() - started >= RETENTION_TIME_BUDGET_SECONDS:
+            result.left = len(expired) - position
+            break
+        try:
+            await run_blocking(
+                es_client.snapshot.delete,
+                repository=schedule.repository,
+                snapshot=name,
+                request_timeout=RETENTION_DELETE_TIMEOUT_SECONDS,
+            )
+        except NotFoundError:
+            logger.info(f"Schedule {schedule.name}: snapshot {name} was already deleted")
+            result.deleted.append(name)
+        except ConnectionTimeout:
+            logger.warning(
+                f"Schedule {schedule.name}: deleting snapshot {name} took longer than {RETENTION_DELETE_TIMEOUT_SECONDS}s; "
+                "the indexer finishes it, and the next run deletes the rest",
+            )
+            result.still_running = name
+            result.left = len(expired) - position - 1
+            break
+        except Exception as e:
+            logger.error(f"Schedule {schedule.name}: could not delete snapshot {name} from repository {schedule.repository}: {e}")
+            result.failed.append(name)
+        else:
+            logger.info(f"Schedule {schedule.name}: deleted snapshot {name} (older than {retention_days} days)")
+            result.deleted.append(name)
+    return result
+
+
+async def _apply_retention(schedule: SnapshotSchedule) -> str:
+    """Retention for a run that matched indices: a note for its status, '' when there is nothing to say."""
     if not schedule.retention_days:
-        return {"deleted": 0, "message": "No retention policy configured"}
-
-    logger.info(f"Cleaning up snapshots for schedule {schedule.name} " f"(retention: {schedule.retention_days} days)")
-
+        return ""
     try:
-        es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-
-        # List snapshots in the repository
-        response = await run_blocking(es_client.snapshot.get, repository=schedule.repository, snapshot="_all", ignore_unavailable=True)
-
-        snapshots_to_delete = []
-        cutoff_time = datetime.utcnow() - timedelta(days=schedule.retention_days)
-        cutoff_millis = int(cutoff_time.timestamp() * 1000)
-
-        # Find snapshots matching this schedule's prefix that are older than retention
-        prefix = f"{schedule.snapshot_prefix}_{schedule.name}_".lower().replace(" ", "_")
-
-        for snap_data in response.get("snapshots", []):
-            snapshot_name = snap_data.get("snapshot", "")
-            end_time_millis = snap_data.get("end_time_in_millis", 0)
-
-            if snapshot_name.startswith(prefix) and end_time_millis < cutoff_millis:
-                snapshots_to_delete.append(snapshot_name)
-
-        # Delete old snapshots
-        deleted_count = 0
-        for snapshot_name in snapshots_to_delete:
-            try:
-                await run_blocking(es_client.snapshot.delete, repository=schedule.repository, snapshot=snapshot_name)
-                deleted_count += 1
-                logger.info(f"Deleted old snapshot: {snapshot_name}")
-            except Exception as e:
-                logger.error(f"Failed to delete snapshot {snapshot_name}: {e}")
-
-        return {
-            "deleted": deleted_count,
-            "message": f"Deleted {deleted_count} snapshots older than {schedule.retention_days} days",
-        }
-
+        result = await cleanup_old_snapshots(schedule)
     except Exception as e:
-        logger.error(f"Failed to cleanup snapshots for schedule {schedule.name}: {e}")
-        return {"deleted": 0, "message": f"Cleanup failed: {str(e)}"}
+        logger.error(f"Schedule {schedule.name}: retention could not list the snapshots in repository {schedule.repository}: {e}")
+        return "retention could not read the repository's snapshots (see the log)"
+    return result.describe(schedule.retention_days)
+
+
+def _with_note(status: str, note: str) -> str:
+    """``status`` (or a run's message) with ``note`` after it.
+
+    A bare status word gets a colon ("SUCCESS: …"), since the UI's label is what comes before the
+    first colon; anything longer gets "; ".
+    """
+    if not note:
+        return status
+    return f"{status}: {note}" if re.fullmatch(r"[A-Z_]+", status) else f"{status}; {note}"
