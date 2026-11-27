@@ -103,6 +103,21 @@ fortinet-*,palo_alto-*,office365-*,wazuh-*,-wazuh-monitoring-*,-wazuh-statistics
 | `NO_MATCH` | The pattern matched no index at all, so nothing was snapshotted. The schedule tries again at the next poll (the interval doesn't apply), and the status stays until a run matches something. Compare the pattern with the index names under **Index Management**. |
 | `FAILED` | The run failed (the indexer, the repository or the snapshot itself). The status stays until the next run. |
 
+A run's status ends with what retention did, when it did something: `SUCCESS: retention deleted 3 snapshots older than 365 days`.
+
+### Retention
+
+**Retention (Days)** deletes the schedule's own snapshots once they are older than that many days. It is checked on every run that matches indices, before the run starts its new snapshot. It never runs on a deferred poll, or on a `NO_MATCH` or failed run.
+
+- **Only snapshots this schedule created are deleted.** The name must be the schedule's (`<prefix>_<schedule name>_<timestamp>`), and the snapshot's metadata must carry the schedule's id. Snapshots made by hand, by another schedule, or by another CoPilot writing to the same repository are never touched.
+- **A snapshot still in progress is never deleted**: deleting it would abort it.
+- **Age is counted from the snapshot's start.** The oldest go first, at most 50 a run (and within 5 minutes), so a backlog is worked off over several runs.
+- **Clear the field to keep snapshots forever.** Lowering it deletes the older snapshots at the next run.
+- **Renaming a schedule, or pointing it at another repository, leaves its earlier snapshots alone.** Delete them by hand if you no longer need them.
+- **An incremental schedule snapshots each index once**, so retention removes that index from cold storage. If the index is still on the cluster when its snapshot is deleted, the next run snapshots it again.
+
+Earlier versions stored Retention without acting on it. After upgrading, a schedule that has it set starts deleting its older snapshots at its next run, 50 a run.
+
 ### Schedule window (time-of-day + day interval)
 
 By default a snapshot schedule is evaluated every 15 minutes — and if there are new indices to snapshot, it fires immediately. That can mean snapshot operations hit the Wazuh Indexer during business hours, when the cluster is busiest.

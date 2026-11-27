@@ -29,6 +29,7 @@ import os
 import time
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -36,6 +37,9 @@ os.environ.setdefault("JWT_SECRET", "test-only-secret-not-the-compromised-defaul
 
 import httpx  # noqa: E402
 import pytest  # noqa: E402
+from elasticsearch7.exceptions import ConnectionTimeout  # noqa: E402
+from elasticsearch7.exceptions import NotFoundError  # noqa: E402
+from elasticsearch7.exceptions import TransportError  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from pydantic import ValidationError  # noqa: E402
 from sqlalchemy import func  # noqa: E402
@@ -237,14 +241,21 @@ def test_an_update_without_a_pattern_keeps_the_stored_one():
 class FakeIndexer:
     """The calls the snapshot service makes, on a fixed cluster."""
 
-    def __init__(self, names, existing_snapshots=(), unreachable=False):
+    def __init__(self, names, existing_snapshots=(), unreachable=False, delete_errors=None, snapshots_unreadable=False):
         self.names = list(names)
         self.existing_snapshots = list(existing_snapshots)
         self.unreachable = unreachable
+        self.delete_errors = dict(delete_errors or {})
+        self.snapshots_unreadable = snapshots_unreadable
         self.listings = 0
+        self.snapshot_listings = 0
         self.created = []
+        self.deleted = []
+        self.delete_timeouts = []
+        # Snapshot creations and deletions in the order they were asked for.
+        self.calls = []
         self.indices = SimpleNamespace(get_alias=self._get_alias)
-        self.snapshot = SimpleNamespace(get=self._get_snapshots, create=self._create)
+        self.snapshot = SimpleNamespace(get=self._get_snapshots, create=self._create, delete=self._delete)
 
     def _get_alias(self, index):
         self.listings += 1
@@ -254,11 +265,24 @@ class FakeIndexer:
         return {name: {"aliases": {}} for name in self.names}
 
     def _get_snapshots(self, repository, snapshot, ignore_unavailable):
+        self.snapshot_listings += 1
+        if self.snapshots_unreadable:
+            raise ConnectionError("repository unreadable")
         return {"snapshots": self.existing_snapshots}
 
     def _create(self, repository, snapshot, body, wait_for_completion):
         self.created.append({"repository": repository, "snapshot": snapshot, "body": body})
+        self.calls.append(("create", snapshot))
         return {"accepted": True}
+
+    def _delete(self, repository, snapshot, request_timeout):
+        assert repository == "cold"
+        self.calls.append(("delete", snapshot))
+        self.delete_timeouts.append(request_timeout)
+        if snapshot in self.delete_errors:
+            raise self.delete_errors[snapshot]
+        self.deleted.append(snapshot)
+        return {"acknowledged": True}
 
 
 def indexer_client(fake):
@@ -435,6 +459,203 @@ def test_an_indexer_that_cannot_be_asked_is_a_failed_run_not_a_pattern_without_m
     assert fake.created == []
 
 
+# --- retention ---------------------------------------------------------------------------------
+
+SCHEDULE_ID = 7
+# The run matches these and has fortinet-acme_11 to snapshot (the newest index of each set is a write index).
+RUN_CLUSTER = CLUSTER + ["fortinet-acme_11"]
+
+
+def scheduled_snapshot(days_ago, *, schedule_id=SCHEDULE_ID, prefix=SCHEDULE_PREFIX, state="SUCCESS", metadata=True, dated=True):
+    """A snapshot as GET _snapshot/<repository>/_all lists it, named and tagged as the schedule's run would."""
+    started = datetime.now(timezone.utc) - timedelta(days=days_ago)
+    entry = {"snapshot": f"{prefix}{started:%Y%m%d_%H%M%S}", "state": state, "indices": []}
+    if dated:
+        entry["start_time_in_millis"] = int(started.timestamp() * 1000)
+    if metadata:
+        entry["metadata"] = {"schedule_id": schedule_id, "schedule_name": "Daily cold storage", "created_by": "scheduled_job"}
+    return entry
+
+
+def run_with_retention(fake, **overrides):
+    fields = dict(id=SCHEDULE_ID, retention_days=30, last_execution_time=a_while_ago())
+    fields.update(overrides)
+    [result], stored = run_schedule(fake, **fields)
+    return result, stored
+
+
+def test_retention_deletes_only_this_schedules_finished_snapshots_past_the_limit_oldest_first():
+    kept = [
+        scheduled_snapshot(29),  # not old enough
+        scheduled_snapshot(60, state="IN_PROGRESS"),  # deleting it would abort it
+        scheduled_snapshot(61, state=None),  # a state we can't read
+        scheduled_snapshot(62, dated=False),  # no start time to judge its age by
+        scheduled_snapshot(90, schedule_id=8),  # another schedule's, or another deployment's
+        scheduled_snapshot(91, metadata=False),  # named like ours, made by hand
+        # Schedule "Daily cold storage archive": its names begin with our prefix too.
+        scheduled_snapshot(92, prefix="scheduled_daily_cold_storage_archive_"),
+    ]
+    expired = [scheduled_snapshot(40), scheduled_snapshot(400, state="FAILED"), scheduled_snapshot(31, state="PARTIAL")]
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=kept + expired)
+
+    result, stored = run_with_retention(fake)
+
+    assert fake.deleted == [expired[1]["snapshot"], expired[0]["snapshot"], expired[2]["snapshot"]]
+    assert fake.delete_timeouts == [snapshots.RETENTION_DELETE_TIMEOUT_SECONDS] * 3
+    # Before this run's own snapshot starts.
+    assert [kind for kind, _ in fake.calls] == ["delete", "delete", "delete", "create"]
+    assert result.success is True
+    assert stored.last_execution_status == "SUCCESS: retention deleted 3 snapshots older than 30 days"
+    assert stored.last_snapshot_name == fake.created[0]["snapshot"]
+
+
+def test_retention_also_runs_when_there_is_nothing_new_to_snapshot():
+    expired = scheduled_snapshot(45)
+    fake = FakeIndexer(CLUSTER, existing_snapshots=[expired])
+
+    result, stored = run_with_retention(fake)
+
+    assert fake.deleted == [expired["snapshot"]]
+    assert fake.created == []
+    assert stored.last_execution_status == (
+        "SKIPPED: No new indices to snapshot (3 write indices skipped); retention deleted 1 snapshot older than 30 days"
+    )
+    assert result.message.endswith("; retention deleted 1 snapshot older than 30 days")
+
+
+def test_without_retention_days_nothing_is_deleted():
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[scheduled_snapshot(4000)])
+
+    result, stored = run_with_retention(fake, retention_days=None)
+
+    assert fake.deleted == []
+    # Only the lookup of what is already snapshotted read the repository.
+    assert fake.snapshot_listings == 1
+    assert stored.last_execution_status == "SUCCESS"
+
+
+@pytest.mark.parametrize("case", ["deferred", "no match", "indexer unreachable"])
+def test_retention_deletes_nothing_on_a_run_that_matched_no_indices(case):
+    fields = {}
+    if case == "deferred":
+        fields["last_execution_time"] = datetime.utcnow()
+    if case == "no match":
+        fields["index_pattern"] = "pfsense-*"
+    fake = FakeIndexer(CLUSTER, existing_snapshots=[scheduled_snapshot(45)], unreachable=case == "indexer unreachable")
+
+    run_with_retention(fake, **fields)
+
+    assert fake.deleted == []
+    assert fake.snapshot_listings == 0
+
+
+def test_a_deletion_that_fails_is_reported_and_the_others_go_ahead():
+    first, second, third = scheduled_snapshot(50), scheduled_snapshot(40), scheduled_snapshot(35)
+    refused = TransportError(500, "repository_exception", {"error": "the bucket refused the delete"})
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[first, second, third], delete_errors={second["snapshot"]: refused})
+
+    result, stored = run_with_retention(fake)
+
+    assert fake.deleted == [first["snapshot"], third["snapshot"]]
+    assert result.success is True
+    assert stored.last_execution_status == (
+        "SUCCESS: retention deleted 2 snapshots older than 30 days; retention could not delete 1 snapshot (see the log)"
+    )
+
+
+def test_a_deletion_that_outlasts_its_timeout_ends_this_runs_deletions():
+    # A deletion waits for any snapshot still writing to the repository; every later one would too.
+    first, second, third = scheduled_snapshot(50), scheduled_snapshot(40), scheduled_snapshot(35)
+    timed_out = ConnectionTimeout("TIMEOUT", "read timed out", TimeoutError("read timed out"))
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[first, second, third], delete_errors={first["snapshot"]: timed_out})
+
+    result, stored = run_with_retention(fake)
+
+    assert [name for kind, name in fake.calls if kind == "delete"] == [first["snapshot"]]
+    assert fake.created, "the run's own snapshot still starts"
+    assert stored.last_execution_status == (
+        f"SUCCESS: the indexer is still deleting {first['snapshot']} for retention; 2 more past retention left for the next run"
+    )
+
+
+def test_a_snapshot_already_gone_counts_as_deleted():
+    gone = scheduled_snapshot(50)
+    missing = NotFoundError(404, "snapshot_missing_exception", {})
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[gone], delete_errors={gone["snapshot"]: missing})
+
+    result, stored = run_with_retention(fake)
+
+    assert stored.last_execution_status == "SUCCESS: retention deleted 1 snapshot older than 30 days"
+
+
+def test_retention_deletes_at_most_its_cap_in_one_run_oldest_first(monkeypatch):
+    monkeypatch.setattr(snapshots, "RETENTION_MAX_DELETES_PER_RUN", 2)
+    expired = [scheduled_snapshot(days) for days in (31, 32, 33, 34, 35)]
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=expired)
+
+    result, stored = run_with_retention(fake)
+
+    assert fake.deleted == [expired[4]["snapshot"], expired[3]["snapshot"]]
+    assert stored.last_execution_status == (
+        "SUCCESS: retention deleted 2 snapshots older than 30 days; 3 more past retention left for the next run"
+    )
+
+
+def test_retention_stops_when_its_time_budget_is_spent(monkeypatch):
+    monkeypatch.setattr(snapshots, "RETENTION_TIME_BUDGET_SECONDS", 0)
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[scheduled_snapshot(31), scheduled_snapshot(32)])
+
+    result, stored = run_with_retention(fake)
+
+    assert fake.deleted == []
+    assert stored.last_execution_status == "SUCCESS: 2 past retention left for the next run"
+
+
+def test_retention_that_cannot_read_the_repository_never_fails_the_run():
+    fake = FakeIndexer(RUN_CLUSTER, snapshots_unreadable=True)
+
+    result, stored = run_with_retention(fake)
+
+    assert result.success is True
+    assert fake.created
+    assert stored.last_execution_status == "SUCCESS: retention could not read the repository's snapshots (see the log)"
+
+
+def test_the_retention_cutoff_does_not_move_with_the_servers_timezone():
+    # datetime.utcnow().timestamp() reads a UTC time as local time: on a server west of UTC the old
+    # cutoff landed hours late, and snapshots short of their retention went too.
+    schedule = SimpleNamespace(id=SCHEDULE_ID, name="Daily cold storage", snapshot_prefix="scheduled", repository="cold", retention_days=30)
+    older, younger = scheduled_snapshot(30 + 1 / 24), scheduled_snapshot(30 - 1 / 24)
+    fake = FakeIndexer([], existing_snapshots=[older, younger])
+
+    async def _inner():
+        with indexer_client(fake):
+            return await snapshots.cleanup_old_snapshots(schedule)
+
+    previous = os.environ.get("TZ")
+    os.environ["TZ"] = "America/Los_Angeles"
+    time.tzset()
+    try:
+        result = asyncio.run(_inner())
+    finally:
+        if previous is None:
+            os.environ.pop("TZ", None)
+        else:
+            os.environ["TZ"] = previous
+        time.tzset()
+
+    assert result.deleted == [older["snapshot"]]
+
+
+@pytest.mark.parametrize("days", [0, -1, 36501])
+def test_a_retention_outside_one_day_to_a_hundred_years_is_refused(days):
+    # A negative one would put the cutoff in the future and delete every snapshot.
+    with pytest.raises(ValidationError):
+        SnapshotScheduleCreate(name="Daily cold storage", index_pattern="wazuh-*", repository="cold", retention_days=days)
+    with pytest.raises(ValidationError):
+        SnapshotScheduleUpdate(retention_days=days)
+
+
 # --- creating and updating a schedule ----------------------------------------------------------
 
 ADMIN = SimpleNamespace(id=1, username="admin", role_id=1)
@@ -534,6 +755,28 @@ def test_a_pattern_with_nothing_to_include_is_a_422_on_create_and_update():
         assert response.status_code == 422
         assert "Enter an index pattern" in response.text
         assert (await db.get(schedule_id)).index_pattern == FULL_PATTERN
+
+    call_api(FakeIndexer(CLUSTER), scenario)
+
+
+def test_clearing_retention_in_an_update_stops_it_and_other_updates_keep_it():
+    # The form sends retention_days: null for "keep forever"; the update used to ignore it, so
+    # a schedule kept deleting after its retention was cleared.
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules", json={**NEW_SCHEDULE, "retention_days": 30})
+        schedule_id = response.json()["schedule"]["id"]
+
+        response = await http.put(f"/snapshots/schedules/{schedule_id}", json={"enabled": False})
+        assert response.status_code == 200, response.text
+        assert response.json()["schedule"]["retention_days"] == 30
+
+        response = await http.put(f"/snapshots/schedules/{schedule_id}", json={"retention_days": None})
+        assert response.status_code == 200, response.text
+        assert response.json()["schedule"]["retention_days"] is None
+        assert (await db.get(schedule_id)).retention_days is None
+
+        response = await http.put(f"/snapshots/schedules/{schedule_id}", json={"retention_days": 0})
+        assert response.status_code == 422
 
     call_api(FakeIndexer(CLUSTER), scenario)
 

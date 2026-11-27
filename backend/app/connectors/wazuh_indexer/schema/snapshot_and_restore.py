@@ -13,6 +13,12 @@ INDEX_PATTERN_DESCRIPTION = (
     "Indices to snapshot: comma-separated patterns, * as the wildcard; a part starting with - excludes "
     "the indices it matches, wherever it stands (e.g., fortinet-*,wazuh-*,-wazuh-monitoring-*)"
 )
+RETENTION_DAYS_DESCRIPTION = (
+    "Delete this schedule's own snapshots once they are older than this many days, checked on each run "
+    "that matches indices (at most 50 deleted per run). None keeps them forever."
+)
+# 100 years: anything longer is "forever", and timedelta would overflow long before an int does.
+MAX_RETENTION_DAYS = 36500
 
 
 class SnapshotRepositorySettings(BaseModel):
@@ -272,7 +278,9 @@ class SnapshotScheduleCreate(BaseModel):
     )
     retention_days: Optional[int] = Field(
         None,
-        description="Number of days to retain snapshots (None = forever)",
+        ge=1,
+        le=MAX_RETENTION_DAYS,
+        description=RETENTION_DAYS_DESCRIPTION,
     )
     scheduled_hour: Optional[int] = Field(
         None,
@@ -318,7 +326,12 @@ class SnapshotScheduleUpdate(BaseModel):
     snapshot_prefix: Optional[str] = Field(None, description="Prefix for snapshot names")
     include_global_state: Optional[bool] = Field(None, description="Include global cluster state")
     skip_write_indices: Optional[bool] = Field(None, description="Skip indices currently being written to")
-    retention_days: Optional[int] = Field(None, description="Number of days to retain snapshots")
+    retention_days: Optional[int] = Field(
+        None,
+        ge=1,
+        le=MAX_RETENTION_DAYS,
+        description=f"{RETENTION_DAYS_DESCRIPTION} An explicit null clears it; leaving the field out keeps it.",
+    )
     scheduled_hour: Optional[int] = Field(
         None,
         ge=0,
