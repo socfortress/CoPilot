@@ -28,14 +28,15 @@ async def invoke_snapshot_schedules():
                 f"Scheduled snapshot execution completed: " f"{successful} successful, {failed} failed out of {len(results)} schedules",
             )
 
-            # Log details for each execution
+            # Log details for each execution. The message says what a run without a snapshot did
+            # (deferred, or nothing new to snapshot).
             for result in results:
                 if result.success:
                     logger.info(
                         f"  - {result.schedule_name}: SUCCESS "
                         f"(snapshot: {result.snapshot_name}, "
                         f"indices: {len(result.indices_snapshotted)}, "
-                        f"skipped: {len(result.skipped_write_indices)}, ",
+                        f"skipped: {len(result.skipped_write_indices)}) - {result.message}",
                     )
                 else:
                     logger.error(f"  - {result.schedule_name}: FAILED - {result.message}")

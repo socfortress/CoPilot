@@ -5,6 +5,14 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import field_validator
+
+from app.connectors.wazuh_indexer.utils.index_patterns import checked_index_pattern
+
+INDEX_PATTERN_DESCRIPTION = (
+    "Indices to snapshot: comma-separated patterns, * as the wildcard; a part starting with - excludes "
+    "the indices it matches, wherever it stands (e.g., fortinet-*,wazuh-*,-wazuh-monitoring-*)"
+)
 
 
 class SnapshotRepositorySettings(BaseModel):
@@ -245,8 +253,8 @@ class SnapshotScheduleCreate(BaseModel):
     name: str = Field(..., description="Friendly name for this schedule")
     index_pattern: str = Field(
         ...,
-        description="Index pattern to snapshot (e.g., wazuh_customer_*)",
-        examples=["wazuh_customer_*"],
+        description=INDEX_PATTERN_DESCRIPTION,
+        examples=["wazuh_customer_*", "fortinet-*,wazuh-*,-wazuh-monitoring-*"],
     )
     repository: str = Field(..., description="Repository to store snapshots")
     enabled: Optional[bool] = Field(True, description="Whether this schedule is active")
@@ -294,12 +302,17 @@ class SnapshotScheduleCreate(BaseModel):
         description="IANA timezone name used to evaluate scheduled_hour/minute (e.g., 'UTC', 'America/New_York').",
     )
 
+    @field_validator("index_pattern")
+    @classmethod
+    def _pattern_can_match(cls, value: str) -> str:
+        return checked_index_pattern(value)
+
 
 class SnapshotScheduleUpdate(BaseModel):
     """Request model for updating a snapshot schedule."""
 
     name: Optional[str] = Field(None, description="Friendly name for this schedule")
-    index_pattern: Optional[str] = Field(None, description="Index pattern to snapshot")
+    index_pattern: Optional[str] = Field(None, description=INDEX_PATTERN_DESCRIPTION)
     repository: Optional[str] = Field(None, description="Repository to store snapshots")
     enabled: Optional[bool] = Field(None, description="Whether this schedule is active")
     snapshot_prefix: Optional[str] = Field(None, description="Prefix for snapshot names")
@@ -333,6 +346,12 @@ class SnapshotScheduleUpdate(BaseModel):
         None,
         description="IANA timezone name used to evaluate scheduled_hour/minute.",
     )
+
+    @field_validator("index_pattern")
+    @classmethod
+    def _pattern_can_match(cls, value: Optional[str]) -> Optional[str]:
+        # None leaves the stored pattern as it is.
+        return None if value is None else checked_index_pattern(value)
 
 
 class SnapshotScheduleResponse(BaseModel):
@@ -376,6 +395,13 @@ class SnapshotScheduleOperationResponse(BaseModel):
     schedule: Optional[SnapshotScheduleResponse] = Field(
         None,
         description="The snapshot schedule",
+    )
+    matching_index_count: Optional[int] = Field(
+        None,
+        description=(
+            "How many indices the schedule's pattern matches right now. Set when a schedule is created "
+            "or an update sends index_pattern; None otherwise, or when the indexer could not be asked."
+        ),
     )
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Status message")
