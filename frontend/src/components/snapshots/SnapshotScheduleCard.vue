@@ -101,6 +101,25 @@
 
 		<template #footerExtra>
 			<div class="flex items-center gap-2">
+				<n-popconfirm
+					:disabled="running"
+					positive-text="Run now"
+					negative-text="Cancel"
+					@positive-click="emit('run')"
+				>
+					<template #trigger>
+						<n-button size="small" secondary :loading="running" :disabled="running" data-testid="run-now">
+							<template #icon>
+								<Icon :name="RunIcon" :size="14" />
+							</template>
+							Run now
+						</n-button>
+					</template>
+					<div class="flex max-w-72 flex-col gap-1.5 text-sm" data-testid="run-now-confirm">
+						<span class="font-semibold">Run this schedule now?</span>
+						<span v-for="line of runNowLines" :key="line" class="text-secondary">{{ line }}</span>
+					</div>
+				</n-popconfirm>
 				<n-button size="small" secondary @click="emit('edit')">
 					<template #icon>
 						<Icon :name="EditIcon" :size="14" />
@@ -133,16 +152,20 @@ import CardEntity from "@/components/common/cards/CardEntity.vue"
 import Icon from "@/components/common/Icon.vue"
 import { formatDate } from "@/utils/format"
 
-const { schedule } = defineProps<{
+const { schedule, running = false } = defineProps<{
 	schedule: SnapshotScheduleResponse
+	/** A Run now of this schedule is under way. */
+	running?: boolean
 }>()
 
 const emit = defineEmits<{
 	"toggle-enabled": [enabled: boolean]
 	edit: []
 	delete: []
+	run: []
 }>()
 
+const RunIcon = "carbon:play"
 const EditIcon = "carbon:edit"
 const DeleteIcon = "carbon:trash-can"
 const PatternIcon = "carbon:code"
@@ -154,6 +177,26 @@ const SnapshotIcon = "carbon:camera"
 const WEEKDAY_NAMES = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"] as const
 
 const showExecutionMeta = computed(() => Boolean(schedule.last_execution_time || schedule.last_snapshot_name))
+
+/** What a Run now does, said before it starts: it is the schedule's run, retention included. */
+const runNowLines = computed(() => {
+	const interval = schedule.interval_days ?? 1
+	const lines = [
+		"It snapshots the indices its pattern matches that none of its snapshots holds yet, without waiting for its window."
+	]
+	if (schedule.retention_days) {
+		lines.push(`It also deletes its snapshots older than ${schedule.retention_days} days.`)
+	}
+	lines.push(
+		interval === 1
+			? "It counts as today's run: the schedule next runs on a later day."
+			: `It counts as a run: the schedule next runs ${interval} days from today at the earliest.`
+	)
+	if (!schedule.enabled) {
+		lines.push("The schedule stays disabled.")
+	}
+	return lines
+})
 
 function formatRetention(retentionDays?: number | null) {
 	return retentionDays ? `${retentionDays} days` : "Forever"

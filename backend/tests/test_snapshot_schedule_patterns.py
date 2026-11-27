@@ -26,6 +26,7 @@ import asyncio
 import fnmatch
 import itertools
 import os
+import threading
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -241,12 +242,16 @@ def test_an_update_without_a_pattern_keeps_the_stored_one():
 class FakeIndexer:
     """The calls the snapshot service makes, on a fixed cluster."""
 
-    def __init__(self, names, existing_snapshots=(), unreachable=False, delete_errors=None, snapshots_unreadable=False):
+    def __init__(self, names, existing_snapshots=(), unreachable=False, delete_errors=None, snapshots_unreadable=False, hold=None):
         self.names = list(names)
         self.existing_snapshots = list(existing_snapshots)
         self.unreachable = unreachable
         self.delete_errors = dict(delete_errors or {})
         self.snapshots_unreadable = snapshots_unreadable
+        # With a threading.Event: listing the indices waits for it, and sets ``entered`` first,
+        # so a test can act while a run is under way (the listing runs in a worker thread).
+        self.hold = hold
+        self.entered = threading.Event()
         self.listings = 0
         self.snapshot_listings = 0
         self.created = []
@@ -259,6 +264,9 @@ class FakeIndexer:
 
     def _get_alias(self, index):
         self.listings += 1
+        if self.hold is not None:
+            self.entered.set()
+            assert self.hold.wait(timeout=10), "the test never released the run"
         if self.unreachable:
             raise ConnectionError("indexer unreachable")
         assert index == "*"
@@ -847,6 +855,148 @@ def test_clearing_retention_in_an_update_stops_it_and_other_updates_keep_it():
         assert response.status_code == 422
 
     call_api(FakeIndexer(CLUSTER), scenario)
+
+
+# --- running a schedule now --------------------------------------------------------------------
+
+
+def outside_its_window():
+    """Schedule fields no poll right now runs: another weekday, another hour."""
+    now = datetime.now(timezone.utc)
+    return dict(timezone="UTC", day_of_week=(now.weekday() + 3) % 7, scheduled_hour=(now.hour + 12) % 24, scheduled_minute=0)
+
+
+async def poll(db, schedule_id):
+    """One poll of the 15-minute job for this schedule."""
+    async with db.factory() as session:
+        schedule = await session.get(SnapshotSchedule, schedule_id)
+        return await snapshots.execute_snapshot_schedule(schedule, session)
+
+
+def test_run_now_runs_a_schedule_outside_its_window_as_a_scheduled_run_and_the_interval_counts_from_it():
+    old, recent = scheduled_snapshot(60), scheduled_snapshot(10)
+    fake = FakeIndexer(RUN_CLUSTER, existing_snapshots=[old, recent])
+    last_run = a_while_ago()
+
+    async def scenario(http, db):
+        # Disabled, on another weekday, at another hour: no poll would run it now.
+        fields = schedule_fields(id=SCHEDULE_ID, enabled=False, retention_days=30, last_execution_time=last_run, **outside_its_window())
+        schedule_id = await db.add(**fields)
+        assert (await poll(db, schedule_id)).message.startswith("DEFERRED: not scheduled day")
+        assert fake.listings == 0
+
+        response = await http.post(f"/snapshots/schedules/{schedule_id}/run")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        [created] = fake.created
+        assert body["outcome"] == "snapshot_started"
+        assert body["success"] is True
+        assert body["snapshot_name"] == created["snapshot"]
+        assert body["indices_snapshotted"] == 1
+        assert body["message"] == f"Snapshot {created['snapshot']} started with 1 index; retention deleted 1 snapshot older than 30 days"
+
+        # Everything a scheduled run does: the new index only, under the schedule's name and id (so
+        # retention and the next runs know it as the schedule's), and its retention.
+        assert created["snapshot"].startswith(SCHEDULE_PREFIX)
+        assert created["body"]["indices"] == "fortinet-acme_11"
+        metadata = created["body"]["metadata"]
+        assert (metadata["schedule_id"], metadata["created_by"], metadata["requested_by"]) == (SCHEDULE_ID, "run_now", "admin")
+        assert fake.deleted == [old["snapshot"]]
+
+        stored = await db.get(schedule_id)
+        assert stored.last_execution_status == "SUCCESS: retention deleted 1 snapshot older than 30 days"
+        assert stored.last_snapshot_name == created["snapshot"]
+        assert stored.last_execution_time > last_run
+        assert stored.enabled is False
+        assert body["schedule"]["last_execution_status"] == stored.last_execution_status
+        assert body["schedule"]["last_snapshot_name"] == created["snapshot"]
+
+        # It was the schedule's run: the next poll waits interval_days from it.
+        assert (await poll(db, schedule_id)).message == "DEFERRED: interval_days=1, last run 0 day(s) ago"
+
+    call_api(fake, scenario)
+
+
+@pytest.mark.parametrize(
+    ("indexer", "pattern", "outcome", "message", "status"),
+    [
+        (
+            {},
+            FULL_PATTERN,
+            "nothing_new",
+            "No new indices to snapshot (3 write indices skipped)",
+            "SKIPPED: No new indices to snapshot (3 write indices skipped)",
+        ),
+        ({}, "pfsense-*", "no_match", "The index pattern matches no index, so nothing was snapshotted", snapshots.NO_MATCH_STATUS),
+        ({"unreachable": True}, FULL_PATTERN, "failed", "The run failed: indexer unreachable", "FAILED: indexer unreachable"),
+    ],
+)
+def test_run_now_says_what_the_run_did_and_records_it_as_a_scheduled_run_would(indexer, pattern, outcome, message, status):
+    fake = FakeIndexer(CLUSTER, **indexer)
+    last_run = a_while_ago()
+
+    async def scenario(http, db):
+        schedule_id = await db.add(**schedule_fields(index_pattern=pattern, last_execution_time=last_run, **outside_its_window()))
+
+        response = await http.post(f"/snapshots/schedules/{schedule_id}/run")
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert (body["outcome"], body["message"]) == (outcome, message)
+        assert body["success"] is (outcome == "nothing_new")
+        assert (body["snapshot_name"], body["indices_snapshotted"]) == (None, 0)
+        assert fake.created == []
+
+        stored = await db.get(schedule_id)
+        assert stored.last_execution_status == status
+        # As for a scheduled run, a pattern that matched nothing leaves the time alone, so the next
+        # poll tries again.
+        if outcome == "no_match":
+            assert stored.last_execution_time == last_run
+        else:
+            assert stored.last_execution_time > last_run
+
+    call_api(fake, scenario)
+
+
+def test_running_an_unknown_schedule_is_a_404():
+    fake = FakeIndexer(CLUSTER)
+
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules/99/run")
+        assert response.status_code == 404
+        assert "not found" in response.text
+        assert fake.listings == 0
+
+    call_api(fake, scenario)
+
+
+def test_one_run_of_a_schedule_at_a_time_a_second_run_now_is_a_409_and_the_poll_leaves_it_alone():
+    # Two runs at once would both read the repository before either snapshot exists, and snapshot
+    # the same indices twice.
+    fake = FakeIndexer(RUN_CLUSTER, hold=threading.Event())
+
+    async def scenario(http, db):
+        schedule_id = await db.add(**schedule_fields(last_execution_time=a_while_ago()))
+        first = asyncio.create_task(http.post(f"/snapshots/schedules/{schedule_id}/run"))
+        # The first run is listing the cluster's indices.
+        assert await asyncio.to_thread(fake.entered.wait, 10)
+
+        second = await http.post(f"/snapshots/schedules/{schedule_id}/run")
+        assert second.status_code == 409
+        assert "already under way" in second.text
+        skipped = await poll(db, schedule_id)
+        assert skipped.message == "Skipped: A run of this schedule is already under way"
+        assert fake.listings == 1, "neither asked the indexer anything"
+
+        fake.hold.set()
+        assert (await first).status_code == 200
+        assert len(fake.created) == 1
+
+        # The run is over: the schedule runs again.
+        response = await http.post(f"/snapshots/schedules/{schedule_id}/run")
+        assert response.status_code == 200, response.text
+
+    call_api(fake, scenario)
 
 
 # --- a manual snapshot's index list ------------------------------------------------------------

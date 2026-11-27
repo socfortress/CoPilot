@@ -42,6 +42,7 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     ScheduledSnapshotExecutionResponse,
 )
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import ScheduleRunResponse
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotInfo
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     SnapshotListResponse,
@@ -95,6 +96,20 @@ RETENTION_DELETE_TIMEOUT_SECONDS = 60
 FINISHED_SNAPSHOT_STATES = frozenset({"SUCCESS", "PARTIAL", "FAILED", "INCOMPATIBLE"})
 # What follows a schedule's prefix in the names execute_snapshot_schedule gives its snapshots.
 _SNAPSHOT_TIMESTAMP = re.compile(r"\d{8}_\d{6}")
+
+# The schedules a run is under way for in this process. A Run now while the 15-minute job runs the
+# same schedule (or two Run nows at once) would both read the repository before either snapshot
+# exists, and snapshot the same indices twice.
+_runs_in_progress: set = set()
+ALREADY_RUNNING_MESSAGE = "A run of this schedule is already under way"
+
+
+class ScheduleNotFound(LookupError):
+    """No snapshot schedule has this id."""
+
+
+class ScheduleRunInProgress(RuntimeError):
+    """A run of this schedule is already under way in this process."""
 
 
 def parse_graylog_index_name(index_name: str) -> Tuple[Optional[str], Optional[int]]:
@@ -1182,25 +1197,62 @@ async def get_indices_needing_snapshot(
 async def execute_snapshot_schedule(
     schedule: SnapshotSchedule,
     session: AsyncSession,
+    *,
+    run_now: bool = False,
+    requested_by: Optional[str] = None,
 ) -> ScheduledSnapshotExecutionResponse:
     """
-    Execute a single snapshot schedule.
+    Execute a single snapshot schedule: as the 15-minute job does, only when it is due, or now
+    (``run_now``: whatever its window and interval say, everything else the same).
+
+    One run of a schedule at a time in this process: the job skips a schedule while a Run now runs
+    it, and a Run now raises ScheduleRunInProgress while any run of it is under way.
 
     Args:
         schedule: The schedule to execute.
         session: Database session.
+        run_now: Run it now, without the due check (POST /schedules/{id}/run).
+        requested_by: Who asked for a Run now, recorded in the snapshot's metadata.
 
     Returns:
         ScheduledSnapshotExecutionResponse: Response containing execution details.
     """
-    logger.info(f"Executing snapshot schedule: {schedule.name} (ID: {schedule.id})")
+    if schedule.id in _runs_in_progress:
+        if run_now:
+            raise ScheduleRunInProgress(ALREADY_RUNNING_MESSAGE)
+        logger.info(f"Schedule {schedule.name}: {ALREADY_RUNNING_MESSAGE}, so this poll leaves it alone")
+        return ScheduledSnapshotExecutionResponse(
+            schedule_id=schedule.id,
+            schedule_name=schedule.name,
+            success=True,
+            message=f"Skipped: {ALREADY_RUNNING_MESSAGE}",
+        )
+    _runs_in_progress.add(schedule.id)
+    try:
+        return await _execute_snapshot_schedule(schedule, session, run_now=run_now, requested_by=requested_by)
+    finally:
+        _runs_in_progress.discard(schedule.id)
+
+
+async def _execute_snapshot_schedule(
+    schedule: SnapshotSchedule,
+    session: AsyncSession,
+    *,
+    run_now: bool,
+    requested_by: Optional[str],
+) -> ScheduledSnapshotExecutionResponse:
+    if run_now:
+        logger.info(f"Running snapshot schedule now: {schedule.name} (ID: {schedule.id}), asked by {requested_by}")
+    else:
+        logger.info(f"Executing snapshot schedule: {schedule.name} (ID: {schedule.id})")
 
     try:
         # Time-of-day / day-interval gate. Cheap check that runs before any
         # indexer API calls — defers the snapshot until it falls inside the
         # configured window. Legacy schedules with no scheduling fields set
-        # behave exactly as before (always due, every poll).
-        due, defer_reason = _is_schedule_due(schedule)
+        # behave exactly as before (always due, every poll). A Run now is the
+        # run, whenever it is asked for.
+        due, defer_reason = (True, "") if run_now else _is_schedule_due(schedule)
         if not due:
             logger.info(f"Schedule {schedule.name}: {defer_reason}")
             # A deferral is not a run: it leaves a NO_MATCH or FAILED status on screen until the
@@ -1277,6 +1329,7 @@ async def execute_snapshot_schedule(
                 snapshot_name=None,
                 indices_snapshotted=[],
                 skipped_write_indices=skipped_write_indices,
+                already_snapshotted_indices=already_snapshotted,
                 success=True,  # Not a failure, just nothing to do
                 message=_with_note(message, retention_note),
             )
@@ -1284,6 +1337,17 @@ async def execute_snapshot_schedule(
         # Generate snapshot name with timestamp
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         snapshot_name = f"{schedule.snapshot_prefix}_{schedule.name}_{timestamp}".lower().replace(" ", "_")
+
+        # schedule_id is what retention recognises the schedule's snapshots by (with the name).
+        metadata = {
+            "schedule_id": schedule.id,
+            "schedule_name": schedule.name,
+            "created_by": "run_now" if run_now else "scheduled_job",
+            "skipped_write_indices": skipped_write_indices,
+            "already_snapshotted_count": len(already_snapshotted),
+        }
+        if run_now and requested_by:
+            metadata["requested_by"] = requested_by
 
         # Create the snapshot request with specific indices (not patterns)
         request = CreateSnapshotRequest(
@@ -1295,13 +1359,7 @@ async def execute_snapshot_schedule(
             partial=False,
             wait_for_completion=False,
             skip_write_indices=False,  # Already filtered above
-            metadata={
-                "schedule_id": schedule.id,
-                "schedule_name": schedule.name,
-                "created_by": "scheduled_job",
-                "skipped_write_indices": skipped_write_indices,
-                "already_snapshotted_count": len(already_snapshotted),
-            },
+            metadata=metadata,
         )
 
         # Execute the snapshot
@@ -1332,6 +1390,7 @@ async def execute_snapshot_schedule(
             snapshot_name=snapshot_name if response.success else None,
             indices_snapshotted=indices_to_snapshot if response.success else [],
             skipped_write_indices=skipped_write_indices,
+            already_snapshotted_indices=already_snapshotted,
             success=response.success,
             message=_with_note(response.message, retention_note),
         )
@@ -1387,6 +1446,63 @@ async def execute_all_enabled_schedules() -> List[ScheduledSnapshotExecutionResp
     logger.info(f"Completed scheduled snapshots: {successful} successful, {failed} failed")
 
     return results
+
+
+# A run's status label (the word before the first colon) and what it tells the person who asked for
+# the run. A Run now is never deferred; any other label is a failure.
+_RUN_OUTCOMES = {"SUCCESS": "snapshot_started", "SKIPPED": "nothing_new", "NO_MATCH": "no_match"}
+
+
+def _run_now_message(outcome: str, result: ScheduledSnapshotExecutionResponse, status: str) -> str:
+    """What a Run now did, in a sentence, from its result and the status it recorded.
+
+    The status is "<LABEL>" or "<LABEL>: <detail>" (_with_note): the detail says what the run found
+    and what retention did.
+    """
+    detail = status.partition(": ")[2]
+    if outcome == "snapshot_started":
+        count = len(result.indices_snapshotted)
+        started = f"Snapshot {result.snapshot_name} started with {count} {'index' if count == 1 else 'indices'}"
+        return f"{started}; {detail}" if detail else started
+    if outcome == "nothing_new":
+        return detail
+    if outcome == "no_match":
+        return "The index pattern matches no index, so nothing was snapshotted"
+    return f"The run failed: {detail}" if detail else "The run failed"
+
+
+async def run_snapshot_schedule_now(
+    schedule_id: int,
+    session: AsyncSession,
+    requested_by: Optional[str] = None,
+) -> ScheduleRunResponse:
+    """Run a schedule once, now, whatever its window and interval say (POST /schedules/{id}/run).
+
+    Everything else is a scheduled run's: the new indices its pattern matches, its retention, the
+    snapshot's name and metadata (schedule_id, so retention and the next runs know it as the
+    schedule's), and the status, time and snapshot it records. A disabled schedule runs too. It
+    counts as a run: interval_days counts from it, so a daily schedule next runs on a later day.
+
+    Raises:
+        ScheduleNotFound: no schedule has this id.
+        ScheduleRunInProgress: a run of it is already under way.
+    """
+    schedule = await session.get(SnapshotSchedule, schedule_id)
+    if schedule is None:
+        raise ScheduleNotFound(f"Snapshot schedule with ID {schedule_id} not found")
+
+    result = await execute_snapshot_schedule(schedule, session, run_now=True, requested_by=requested_by)
+
+    status = schedule.last_execution_status or ""
+    outcome = _RUN_OUTCOMES.get(status.split(":", 1)[0], "failed")
+    return ScheduleRunResponse(
+        outcome=outcome,
+        snapshot_name=result.snapshot_name,
+        indices_snapshotted=len(result.indices_snapshotted),
+        schedule=_schedule_to_response(schedule),
+        success=outcome in ("snapshot_started", "nothing_new"),
+        message=_run_now_message(outcome, result, status),
+    )
 
 
 def _plural(count: int, word: str) -> str:

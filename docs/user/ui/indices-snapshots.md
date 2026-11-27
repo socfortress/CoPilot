@@ -120,6 +120,16 @@ A run's status ends with what retention did, when it did something: `SUCCESS: re
 
 Earlier versions stored Retention without acting on it. After upgrading, a schedule that has it set starts deleting its older snapshots at its next run, 50 a run.
 
+### Run now
+
+**Run now** on a schedule's card runs it once, straight away, without waiting for its window or its interval. Use it after creating a schedule or changing its pattern, to see it work. It asks first, and says what the run will do.
+
+- **It does what a scheduled run does**: it snapshots the indices the pattern matches that none of the schedule's snapshots holds yet, under the schedule's name, and applies its Retention.
+- **It counts as the schedule's run.** The card's Last run, status and Last snapshot show it, and Interval (Days) counts from it, as from any run. A daily schedule next runs on a later day: run it now at 10:00 and its 23:00 window that day is skipped.
+- **It runs a disabled schedule too**, once. The schedule stays disabled.
+- **One run of a schedule at a time.** While one is under way (a scheduled run, or someone else's Run now), Run now says so and does nothing.
+- A message says what the run did: the snapshot it started and how many indices it holds, nothing new to snapshot, a pattern that matches no index, or why it failed.
+
 ### Schedule window (time-of-day + day interval)
 
 By default a snapshot schedule is evaluated every 15 minutes — and if there are new indices to snapshot, it fires immediately. That can mean snapshot operations hit the Wazuh Indexer during business hours, when the cluster is busiest.

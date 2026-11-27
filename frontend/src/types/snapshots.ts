@@ -198,3 +198,16 @@ export interface ScheduledSnapshotExecutionResponse {
 	skipped_write_indices: string[]
 	already_snapshotted_indices: string[]
 }
+
+/** What running a schedule now did (POST /snapshots/schedules/{id}/run). */
+export type ScheduleRunOutcome = "snapshot_started" | "nothing_new" | "no_match" | "failed"
+
+export interface ScheduleRunResponse {
+	outcome: ScheduleRunOutcome
+	/** The snapshot the run started. */
+	snapshot_name?: string | null
+	/** How many indices that snapshot holds. */
+	indices_snapshotted: number
+	/** The schedule as the run left it. */
+	schedule: SnapshotScheduleResponse
+}
