@@ -72,6 +72,37 @@ Restoring brings historical data back so you can:
 
 If you regularly offload older logs, scheduled snapshots help keep disk usage stable.
 
+### Index pattern
+
+A schedule's **Index Pattern** chooses the indices it snapshots. It is a comma-separated list of parts:
+
+| Part | Meaning |
+|---|---|
+| `fortinet-*` | Include every index whose name starts with `fortinet-`. `*` matches any run of characters. |
+| `gl-events_2` | Include that one index. |
+| `-wazuh-monitoring-*` | Exclude every index this part matches. |
+
+- Spaces around a part are ignored: `fortinet-*, palo_alto-*` is the same as `fortinet-*,palo_alto-*`.
+- An index is snapshotted when it matches at least one part to include and no part to exclude. An exclusion applies wherever it stands in the list.
+- `*` is the only wildcard. A `.` matches only a dot.
+- A pattern needs at least one part to include: one made only of exclusions can't be saved.
+
+Example: every tenant's Fortinet, Palo Alto, Office 365 and Wazuh index sets, without Wazuh's own monitoring, statistics and state indices, and without proof-of-concept tenants (`<name>-poc_<n>`):
+
+```
+fortinet-*,palo_alto-*,office365-*,wazuh-*,-wazuh-monitoring-*,-wazuh-statistics-*,-wazuh-states-*,-*-poc_*
+```
+
+### Last run status
+
+| Status | Meaning |
+|---|---|
+| `SUCCESS` | A snapshot of the new indices was started. |
+| `SKIPPED` | The pattern matched indices, but none was new: each is still being written to (with **Skip Write Indices** on) or is already in one of this schedule's snapshots. This is normal for an incremental schedule. |
+| `DEFERRED` | The poll fell outside the schedule window, or the interval hasn't passed since the last run. |
+| `NO_MATCH` | The pattern matched no index at all, so nothing was snapshotted. The schedule tries again at the next poll (the interval doesn't apply), and the status stays until a run matches something. Compare the pattern with the index names under **Index Management**. |
+| `FAILED` | The run failed (the indexer, the repository or the snapshot itself). The status stays until the next run. |
+
 ### Schedule window (time-of-day + day interval)
 
 By default a snapshot schedule is evaluated every 15 minutes — and if there are new indices to snapshot, it fires immediately. That can mean snapshot operations hit the Wazuh Indexer during business hours, when the cluster is busiest.
@@ -86,7 +117,7 @@ Each schedule has four optional fields that pin execution to a maintenance windo
 | **Interval (Days)** | `≥ 1`, default `1` | Minimum days between executions. `1` = at most once per day. `14` paired with **Day of Week** = "every other Sunday". |
 | **Timezone** | IANA name, default `UTC` | Used to evaluate Day of Week / Scheduled Hour / Scheduled Minute. Examples: `UTC`, `America/Chicago`, `Europe/London`. DST is handled automatically. |
 
-When the current time is outside the window, the schedule's **Last Execution** column shows a `DEFERRED` tag and **no Wazuh Indexer API calls are made** — there's effectively zero cluster load on deferred polls. The next poll inside the window picks up where it left off, and the existing "no new indices = SKIPPED" deduplication still applies.
+When the current time is outside the window, the schedule's **Last Execution** column shows a `DEFERRED` tag and **no Wazuh Indexer API calls are made** — there's effectively zero cluster load on deferred polls. A `NO_MATCH` or `FAILED` status isn't replaced by `DEFERRED`: it stays until the next run. The next poll inside the window picks up where it left off, and the existing "no new indices = SKIPPED" deduplication still applies.
 
 #### Example — daily at 02:00 UTC
 
@@ -135,6 +166,9 @@ Schedules created before this feature was introduced — and any new schedule wh
 
 ### “No snapshot repositories found”
 A repository must be registered in the Wazuh Indexer cluster before snapshots can run.
+
+### “NO_MATCH: pattern matched 0 indices”
+The schedule's index pattern selects no index on the cluster, so it snapshots nothing. Check each part against the index names under **Index Management**: a misspelt prefix, or an exclusion that removes everything the other parts match (`wazuh-*,-wazuh*`).
 
 ### “Snapshots succeed but disk is still full”
 Snapshots don’t automatically delete hot indexes. You still need a retention plan:

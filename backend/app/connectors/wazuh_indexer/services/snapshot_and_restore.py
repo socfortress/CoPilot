@@ -60,8 +60,17 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import SnapshotSta
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     SnapshotStatusResponse,
 )
+from app.connectors.wazuh_indexer.utils.index_patterns import expand_requested_indices
+from app.connectors.wazuh_indexer.utils.index_patterns import resolve_index_pattern
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.db_session import get_db_session
+
+# What a run records when the schedule's pattern matched no index at all. Such a run snapshotted
+# nothing, so it must not read as a success, nor make the schedule wait interval_days to try again.
+NO_MATCH_STATUS = "NO_MATCH: pattern matched 0 indices"
+# Statuses a deferred poll leaves in place, so that the problem stays on screen until the next run
+# instead of being replaced by "DEFERRED: …" fifteen minutes later.
+PROBLEM_STATUS_PREFIXES = ("NO_MATCH", "FAILED")
 
 
 def parse_graylog_index_name(index_name: str) -> Tuple[Optional[str], Optional[int]]:
@@ -143,17 +152,23 @@ def identify_write_indices(index_names: List[str]) -> Dict[str, IndexWriteStatus
     return write_indices
 
 
+async def list_index_names() -> List[str]:
+    """Every index name on the Wazuh Indexer. Raises when the indexer can't be asked."""
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    indices = await run_blocking(es_client.indices.get_alias, index="*")
+    return list(indices.keys())
+
+
 async def get_all_indices() -> List[str]:
     """
     Get all index names from the Wazuh Indexer.
 
     Returns:
-        List of index names.
+        List of index names, empty when the indexer can't be asked. A caller that must tell
+        "no index" from "no answer" uses list_index_names instead.
     """
     try:
-        es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-        indices = await run_blocking(es_client.indices.get_alias, index="*")
-        return list(indices.keys())
+        return await list_index_names()
     except Exception as e:
         logger.error(f"Failed to get indices: {e}")
         return []
@@ -177,19 +192,10 @@ async def filter_write_indices(
     # Identify write indices
     write_status = identify_write_indices(all_indices)
 
-    # Determine which indices to check
+    # Determine which indices to check: wildcards expanded (exclusions honoured, "." literal),
+    # names without a wildcard passed on as written.
     if requested_indices:
-        # Expand wildcards if present
-        indices_to_check = []
-        for pattern in requested_indices:
-            if "*" in pattern:
-                # Simple wildcard matching
-                regex_pattern = pattern.replace("*", ".*")
-                for index_name in all_indices:
-                    if re.match(f"^{regex_pattern}$", index_name):
-                        indices_to_check.append(index_name)
-            else:
-                indices_to_check.append(pattern)
+        indices_to_check = expand_requested_indices(requested_indices, all_indices)
     else:
         indices_to_check = all_indices
 
@@ -301,6 +307,24 @@ def _schedule_to_response(schedule: SnapshotSchedule) -> SnapshotScheduleRespons
         created_at=schedule.created_at.isoformat(),
         updated_at=schedule.updated_at.isoformat(),
     )
+
+
+async def count_matching_indices(index_pattern: str) -> Optional[int]:
+    """How many indices ``index_pattern`` selects right now, or None when the indexer can't be asked."""
+    try:
+        index_names = await list_index_names()
+    except Exception as e:
+        logger.warning(f"Could not list indices to count the matches of pattern '{index_pattern}': {e}")
+        return None
+    return len(resolve_index_pattern(index_pattern, index_names))
+
+
+def _describe_matches(count: Optional[int]) -> str:
+    if count is None:
+        return ""
+    if count == 0:
+        return " (its index pattern matches no index right now)"
+    return f" (its index pattern matches {count} {'index' if count == 1 else 'indices'} right now)"
 
 
 async def list_snapshot_repositories() -> SnapshotRepositoryListResponse:
@@ -732,10 +756,13 @@ async def create_snapshot_schedule(
 
         logger.info(f"Successfully created snapshot schedule: {schedule.name} (ID: {schedule.id},)")
 
+        matching_index_count = await count_matching_indices(schedule.index_pattern)
+
         return SnapshotScheduleOperationResponse(
             schedule=_schedule_to_response(schedule),
+            matching_index_count=matching_index_count,
             success=True,
-            message=f"Successfully created snapshot schedule: {schedule.name}",
+            message=f"Successfully created snapshot schedule: {schedule.name}{_describe_matches(matching_index_count)}",
         )
 
     except Exception as e:
@@ -900,10 +927,14 @@ async def update_snapshot_schedule(
 
         logger.info(f"Successfully updated snapshot schedule: {schedule.name}")
 
+        # Only a pattern sent with the update is counted: toggling `enabled` asks the indexer nothing.
+        matching_index_count = await count_matching_indices(schedule.index_pattern) if request.index_pattern is not None else None
+
         return SnapshotScheduleOperationResponse(
             schedule=_schedule_to_response(schedule),
+            matching_index_count=matching_index_count,
             success=True,
-            message=f"Successfully updated snapshot schedule: {schedule.name}",
+            message=f"Successfully updated snapshot schedule: {schedule.name}{_describe_matches(matching_index_count)}",
         )
 
     except Exception as e:
@@ -1014,34 +1045,37 @@ async def get_indices_needing_snapshot(
     Determine which indices need to be snapshotted based on the schedule's index pattern.
 
     This function:
-    1. Gets all indices matching the schedule's pattern
+    1. Gets all indices matching the schedule's pattern (resolve_index_pattern: comma-separated
+       parts, "-" exclusions, "*" the only wildcard)
     2. Filters out write indices (if configured)
     3. Filters out indices that have already been snapshotted
+
+    Every matching index lands in exactly one of the three lists, so all three are empty only
+    when the pattern matched nothing.
 
     Args:
         schedule: The snapshot schedule.
 
     Returns:
         Tuple of (indices_to_snapshot, skipped_write_indices, already_snapshotted_indices).
+
+    Raises:
+        Whatever listing the cluster's indices raised: an indexer that can't be asked is a failed
+        run, never a pattern that matched nothing.
     """
     logger.info(f"Determining indices needing snapshot for schedule: {schedule.name}")
 
     # Get all indices from the cluster
-    all_indices = await get_all_indices()
+    all_indices = await list_index_names()
 
     # Filter indices matching the schedule's pattern
-    matching_indices = []
     pattern = schedule.index_pattern
-    if "*" in pattern:
-        regex_pattern = pattern.replace("*", ".*")
-        for index_name in all_indices:
-            if re.match(f"^{regex_pattern}$", index_name):
-                matching_indices.append(index_name)
-    else:
-        if pattern in all_indices:
-            matching_indices.append(pattern)
+    matching_indices = resolve_index_pattern(pattern, all_indices)
 
     logger.info(f"Found {len(matching_indices)} indices matching pattern '{pattern}'")
+
+    if not matching_indices:
+        return [], [], []
 
     # Identify write indices
     write_status = identify_write_indices(all_indices)
@@ -1106,7 +1140,10 @@ async def execute_snapshot_schedule(
         due, defer_reason = _is_schedule_due(schedule)
         if not due:
             logger.info(f"Schedule {schedule.name}: {defer_reason}")
-            schedule.last_execution_status = defer_reason
+            # A deferral is not a run: it leaves a NO_MATCH or FAILED status on screen until the
+            # next run, rather than hiding it behind "DEFERRED: …" at the next poll.
+            if not (schedule.last_execution_status or "").startswith(PROBLEM_STATUS_PREFIXES):
+                schedule.last_execution_status = defer_reason
             schedule.updated_at = datetime.utcnow()
             try:
                 await session.commit()
@@ -1126,7 +1163,30 @@ async def execute_snapshot_schedule(
         # Determine which indices need to be snapshotted
         indices_to_snapshot, skipped_write_indices, already_snapshotted = await get_indices_needing_snapshot(schedule)
 
-        # If no new indices to snapshot, skip this execution
+        # The pattern matched no index at all: nothing was snapshotted, and nothing ever will be
+        # until the pattern or the cluster changes. Say so, and leave last_execution_time as it
+        # was, so the next poll tries again instead of waiting interval_days.
+        if not (indices_to_snapshot or skipped_write_indices or already_snapshotted):
+            logger.warning(f"Schedule {schedule.name}: index pattern '{schedule.index_pattern}' matched no index; nothing snapshotted")
+
+            schedule.last_execution_status = NO_MATCH_STATUS
+            schedule.updated_at = datetime.utcnow()
+
+            await session.commit()
+
+            return ScheduledSnapshotExecutionResponse(
+                schedule_id=schedule.id,
+                schedule_name=schedule.name,
+                snapshot_name=None,
+                indices_snapshotted=[],
+                skipped_write_indices=[],
+                already_snapshotted_indices=[],
+                success=False,
+                message=NO_MATCH_STATUS,
+            )
+
+        # Indices matched, but none is new (each a write index or already snapshotted): the
+        # steady state of an incremental schedule, a normal run.
         if not indices_to_snapshot:
             message = "No new indices to snapshot"
             if skipped_write_indices:
