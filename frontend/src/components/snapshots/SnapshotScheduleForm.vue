@@ -5,8 +5,72 @@
 		</n-form-item>
 
 		<n-form-item label="Index Pattern" path="index_pattern">
-			<n-input v-model:value="formData.index_pattern" placeholder="e.g., wazuh_customer_*" />
-			<template #feedback>Use wildcards (*) to match multiple indices. Example: wazuh_customer_*</template>
+			<div class="flex w-full flex-col gap-1.5">
+				<n-input
+					v-model:value="formData.index_pattern"
+					placeholder="e.g., fortinet-*,wazuh-*,-wazuh-monitoring-*"
+				/>
+				<p class="text-secondary text-xs leading-relaxed">
+					Separate patterns with commas.
+					<code>*</code>
+					matches any characters. A pattern starting with
+					<code>-</code>
+					excludes the indices it matches, wherever it is in the list.
+				</p>
+
+				<div
+					v-if="preview.kind === 'checking'"
+					class="text-secondary flex items-center gap-1.5 text-xs"
+					data-testid="pattern-preview"
+				>
+					<n-spin :size="12" />
+					Checking which indices match…
+				</div>
+				<div
+					v-else-if="previewProblem"
+					class="text-warning flex items-start gap-1.5 text-xs"
+					data-testid="pattern-preview"
+				>
+					<Icon :name="WarningIcon" :size="14" class="mt-px shrink-0" />
+					<span>{{ previewProblem }}</span>
+				</div>
+				<div
+					v-else-if="previewMatches && previewMatches.count === 0"
+					class="text-warning flex items-start gap-1.5 text-xs"
+					data-testid="pattern-preview"
+				>
+					<Icon :name="WarningIcon" :size="14" class="mt-px shrink-0" />
+					<span>Matches no index right now. Until an index matches, the schedule snapshots nothing.</span>
+				</div>
+				<div v-else-if="previewMatches" class="flex flex-col gap-1.5" data-testid="pattern-preview">
+					<div class="flex items-center gap-2 text-xs">
+						<Icon :name="MatchIcon" :size="14" class="text-success shrink-0" />
+						<span>{{ matchesSummary }}</span>
+						<n-button text size="tiny" type="primary" @click="showMatches = !showMatches">
+							{{ showMatches ? "Hide" : "Show" }}
+						</n-button>
+					</div>
+					<div
+						v-if="showMatches"
+						class="bg-secondary max-h-40 overflow-y-auto rounded px-2 py-1.5 font-mono text-xs"
+						data-testid="pattern-preview-indices"
+					>
+						<div v-for="name of previewMatches.indices" :key="name" class="truncate" :title="name">
+							{{ name }}
+						</div>
+						<div v-if="previewMatches.truncated" class="text-secondary">
+							{{ `and ${previewMatches.count - previewMatches.indices.length} more` }}
+						</div>
+					</div>
+				</div>
+				<div
+					v-else-if="preview.kind === 'unavailable'"
+					class="text-secondary text-xs"
+					data-testid="pattern-preview"
+				>
+					Couldn't check which indices match: the indexer didn't answer.
+				</div>
+			</div>
 		</n-form-item>
 
 		<n-form-item label="Repository" path="repository">
@@ -124,19 +188,36 @@
 import type { FormInst, FormRules, SelectOption } from "naive-ui"
 import type { ApiError } from "@/types/common"
 import type { SnapshotRepository, SnapshotScheduleCreate, SnapshotScheduleResponse } from "@/types/snapshots"
-import { NButton, NDivider, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, useMessage } from "naive-ui"
+import {
+	NButton,
+	NDivider,
+	NForm,
+	NFormItem,
+	NInput,
+	NInputNumber,
+	NSelect,
+	NSpin,
+	NSwitch,
+	useMessage
+} from "naive-ui"
 import { computed, onBeforeMount, ref, watch } from "vue"
 import Api from "@/api"
+import Icon from "@/components/common/Icon.vue"
 import { getApiErrorMessage } from "@/utils"
+import { useIndexPatternPreview } from "./useIndexPatternPreview"
 
 const props = defineProps<{
 	schedule?: SnapshotScheduleResponse | null
 }>()
 
 const emit = defineEmits<{
-	(e: "success"): void
+	/** With how many indices the saved pattern matches right now, when the backend counted them. */
+	(e: "success", matchingIndexCount: number | null): void
 	(e: "cancel"): void
 }>()
+
+const WarningIcon = "carbon:warning-alt"
+const MatchIcon = "carbon:checkmark-outline"
 
 const message = useMessage()
 const formRef = ref<FormInst | null>(null)
@@ -160,6 +241,15 @@ const formData = ref<SnapshotScheduleCreate>({
 	interval_days: 1,
 	day_of_week: null,
 	timezone: "UTC"
+})
+
+const { preview } = useIndexPatternPreview(() => formData.value.index_pattern)
+const showMatches = ref(false)
+const previewProblem = computed(() => (preview.value.kind === "problem" ? preview.value.problem : null))
+const previewMatches = computed(() => (preview.value.kind === "matches" ? preview.value : null))
+const matchesSummary = computed(() => {
+	const count = previewMatches.value?.count ?? 0
+	return `Matches ${count} ${count === 1 ? "index" : "indices"} right now`
 })
 
 const repositoryOptions = computed<SelectOption[]>(() =>
@@ -267,7 +357,7 @@ async function handleSubmit() {
 		}
 
 		if (response.data.success) {
-			emit("success")
+			emit("success", response.data.matching_index_count ?? null)
 		} else {
 			message.error(response.data.message)
 		}

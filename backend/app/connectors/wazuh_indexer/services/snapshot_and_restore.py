@@ -28,6 +28,9 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     CreateSnapshotResponse,
 )
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    IndexPatternPreviewResponse,
+)
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import IndexWriteStatus
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import RestoreShardInfo
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
@@ -67,6 +70,7 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     SnapshotStatusResponse,
 )
 from app.connectors.wazuh_indexer.utils.index_patterns import expand_requested_indices
+from app.connectors.wazuh_indexer.utils.index_patterns import index_pattern_problem
 from app.connectors.wazuh_indexer.utils.index_patterns import resolve_index_pattern
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.db_session import get_db_session
@@ -337,6 +341,44 @@ async def count_matching_indices(index_pattern: str) -> Optional[int]:
         logger.warning(f"Could not list indices to count the matches of pattern '{index_pattern}': {e}")
         return None
     return len(resolve_index_pattern(index_pattern, index_names))
+
+
+# How many matching index names a preview lists; the count is always the full one.
+PREVIEW_INDEX_LIMIT = 200
+
+
+def _natural_key(name: str) -> list:
+    """Graylog's numbered indices in number order: fortinet-acme_2 before fortinet-acme_10.
+
+    re.split with a group alternates text and digits, so the same positions always compare a
+    string with a string and a number with a number.
+    """
+    return [int(piece) if piece.isdigit() else piece for piece in re.split(r"(\d+)", name)]
+
+
+async def preview_index_pattern(index_pattern: str) -> IndexPatternPreviewResponse:
+    """What ``index_pattern`` selects on the cluster right now, for the schedule form.
+
+    A pattern a schedule couldn't be saved with answers its problem and asks the indexer nothing.
+    success is False only when the indexer can't be asked.
+    """
+    problem = index_pattern_problem(index_pattern)
+    if problem:
+        return IndexPatternPreviewResponse(index_pattern=index_pattern, problem=problem, success=True, message=problem)
+    try:
+        index_names = await list_index_names()
+    except Exception as e:
+        logger.warning(f"Could not list indices to preview pattern {index_pattern!r}: {e}")
+        return IndexPatternPreviewResponse(index_pattern=index_pattern, success=False, message="Could not list the indexer's indices")
+    matching = sorted(resolve_index_pattern(index_pattern, index_names), key=_natural_key)
+    return IndexPatternPreviewResponse(
+        index_pattern=index_pattern,
+        matching_index_count=len(matching),
+        matching_indices=matching[:PREVIEW_INDEX_LIMIT],
+        truncated=len(matching) > PREVIEW_INDEX_LIMIT,
+        success=True,
+        message=f"The pattern matches {len(matching)} {'index' if len(matching) == 1 else 'indices'}",
+    )
 
 
 def _describe_matches(count: Optional[int]) -> str:

@@ -2,6 +2,7 @@ import type { FlaskBaseResponse } from "@/types/flask"
 import type {
 	CreateSnapshotRequest,
 	CreateSnapshotResponse,
+	IndexPatternPreview,
 	RestoreSnapshotRequest,
 	RestoreSnapshotResponse,
 	SnapshotListResponse,
@@ -65,6 +66,15 @@ export default {
 
 	createSchedule(request: SnapshotScheduleCreate) {
 		return HttpClient.post<FlaskBaseResponse & SnapshotScheduleOperationResponse>("/snapshots/schedules", request)
+	},
+
+	/** Which indices a pattern matches right now, before a schedule is saved with it. */
+	previewSchedulePattern(indexPattern: string, signal?: AbortSignal) {
+		return HttpClient.post<FlaskBaseResponse & IndexPatternPreview>(
+			"/snapshots/schedules/preview",
+			{ index_pattern: indexPattern },
+			{ signal }
+		)
 	},
 
 	updateSchedule(scheduleId: number, request: SnapshotScheduleUpdate) {

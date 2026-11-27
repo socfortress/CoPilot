@@ -17,6 +17,12 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     CreateSnapshotResponse,
 )
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    IndexPatternPreviewRequest,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
+    IndexPatternPreviewResponse,
+)
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     RestoreSnapshotRequest,
 )
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
@@ -63,6 +69,9 @@ from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
     list_snapshot_schedules,
 )
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import list_snapshots
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    preview_index_pattern,
+)
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import restore_snapshot
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
     update_snapshot_schedule,
@@ -280,6 +289,25 @@ async def create_schedule_endpoint(
             status_code=500,
             detail=response.message,
         )
+
+    return response
+
+
+@wazuh_indexer_snapshots_router.post(
+    "/schedules/preview",
+    response_model=IndexPatternPreviewResponse,
+    summary="Preview a Schedule's Index Pattern",
+    description=(
+        "Which indices an index pattern matches right now, for the schedule form, before a schedule is saved with it. "
+        "A pattern a schedule couldn't be saved with is a 200 naming its problem; an indexer that can't be asked is a 502."
+    ),
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def preview_schedule_pattern_endpoint(request: IndexPatternPreviewRequest) -> IndexPatternPreviewResponse:
+    response = await preview_index_pattern(request.index_pattern)
+
+    if not response.success:
+        raise HTTPException(status_code=502, detail=response.message)
 
     return response
 

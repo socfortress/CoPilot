@@ -759,6 +759,74 @@ def test_a_pattern_with_nothing_to_include_is_a_422_on_create_and_update():
     call_api(FakeIndexer(CLUSTER), scenario)
 
 
+def test_the_preview_lists_what_a_pattern_matches_and_asks_nothing_for_a_pattern_with_a_problem():
+    fake = FakeIndexer(CLUSTER)
+
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": FULL_PATTERN})
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["problem"] is None
+        assert body["matching_index_count"] == 3
+        assert body["matching_indices"] == ["fortinet-acme_12", "palo_alto-globex_4", "wazuh-acme_30"]
+        assert body["truncated"] is False
+        assert body["index_pattern"] == FULL_PATTERN
+
+        listings = fake.listings
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": "-wazuh-monitoring-*"})
+        assert response.status_code == 200, response.text
+        assert "only excludes" in response.json()["problem"]
+        assert response.json()["matching_index_count"] is None
+        assert fake.listings == listings, "a pattern with a problem asks the indexer nothing"
+        assert await db.count() == 0, "a preview saves nothing"
+
+    call_api(fake, scenario)
+
+
+def test_the_preview_lists_the_first_names_in_number_order_and_counts_them_all():
+    names = [f"fortinet-acme_{n}" for n in range(250)] + ["fortinet-globex_3", "fortinet-globex_12"]
+
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": "fortinet-*"})
+        body = response.json()
+        assert body["matching_index_count"] == 252
+        # fortinet-acme_2 before fortinet-acme_10, as Graylog numbers them.
+        assert body["matching_indices"] == [f"fortinet-acme_{n}" for n in range(snapshots.PREVIEW_INDEX_LIMIT)]
+        assert body["truncated"] is True
+
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": "fortinet-globex_*"})
+        assert response.json()["matching_indices"] == ["fortinet-globex_3", "fortinet-globex_12"]
+
+    call_api(FakeIndexer(list(reversed(names))), scenario)
+
+
+def test_the_preview_is_a_502_when_the_indexer_cannot_be_asked():
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": "fortinet-*"})
+        assert response.status_code == 502
+        assert "Could not list the indexer's indices" in response.text
+
+    call_api(FakeIndexer(CLUSTER, unreachable=True), scenario)
+
+
+def test_a_pattern_longer_than_its_column_is_named_in_the_preview_and_refused_on_save():
+    # index_snapshot_schedules.index_pattern is VARCHAR(255): longer failed at the database (a 500).
+    long_pattern = ",".join(f"vendor{n:02d}-*" for n in range(30))
+    assert len(long_pattern) > 255
+
+    with pytest.raises(ValidationError, match="at most 255"):
+        SnapshotScheduleCreate(name="Daily cold storage", index_pattern=long_pattern, repository="cold")
+    with pytest.raises(ValidationError, match="at most 255"):
+        SnapshotScheduleUpdate(index_pattern=long_pattern)
+
+    async def scenario(http, db):
+        response = await http.post("/snapshots/schedules/preview", json={"index_pattern": long_pattern})
+        assert response.status_code == 200, response.text
+        assert "at most 255" in response.json()["problem"]
+
+    call_api(FakeIndexer(CLUSTER), scenario)
+
+
 def test_clearing_retention_in_an_update_stops_it_and_other_updates_keep_it():
     # The form sends retention_days: null for "keep forever"; the update used to ignore it, so
     # a schedule kept deleting after its retention was cleared.

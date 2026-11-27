@@ -85,7 +85,9 @@ A schedule's **Index Pattern** chooses the indices it snapshots. It is a comma-s
 - Spaces around a part are ignored: `fortinet-*, palo_alto-*` is the same as `fortinet-*,palo_alto-*`.
 - An index is snapshotted when it matches at least one part to include and no part to exclude. An exclusion applies wherever it stands in the list.
 - `*` is the only wildcard. A `.` matches only a dot.
-- A pattern needs at least one part to include: one made only of exclusions can't be saved.
+- A pattern needs at least one part to include: one made only of exclusions can't be saved. It holds at most 255 characters.
+
+The form checks the pattern against the cluster as you type, and again when you open an existing schedule. It says how many indices match right now, and **Show** lists them in name order (the first 200). A pattern that matches nothing is flagged before you save it, and so is one that can't be saved. Saving confirms the count too: "Schedule created: its index pattern matches 201 indices". The count is what matches at that moment: every run reads the pattern again, so an index created later is picked up by the next run.
 
 Example: every tenant's Fortinet, Palo Alto, Office 365 and Wazuh index sets, without Wazuh's own monitoring, statistics and state indices, and without proof-of-concept tenants (`<name>-poc_<n>`):
 
@@ -100,7 +102,7 @@ fortinet-*,palo_alto-*,office365-*,wazuh-*,-wazuh-monitoring-*,-wazuh-statistics
 | `SUCCESS` | A snapshot of the new indices was started. |
 | `SKIPPED` | The pattern matched indices, but none was new: each is still being written to (with **Skip Write Indices** on) or is already in one of this schedule's snapshots. This is normal for an incremental schedule. |
 | `DEFERRED` | The poll fell outside the schedule window, or the interval hasn't passed since the last run. |
-| `NO_MATCH` | The pattern matched no index at all, so nothing was snapshotted. The schedule tries again at the next poll (the interval doesn't apply), and the status stays until a run matches something. Compare the pattern with the index names under **Index Management**. |
+| `NO_MATCH` | The pattern matched no index at all, so nothing was snapshotted. The schedule tries again at the next poll (the interval doesn't apply), and the status stays until a run matches something. Open the schedule to see what its pattern matches now. |
 | `FAILED` | The run failed (the indexer, the repository or the snapshot itself). The status stays until the next run. |
 
 A run's status ends with what retention did, when it did something: `SUCCESS: retention deleted 3 snapshots older than 365 days`.
@@ -183,7 +185,7 @@ Schedules created before this feature was introduced — and any new schedule wh
 A repository must be registered in the Wazuh Indexer cluster before snapshots can run.
 
 ### “NO_MATCH: pattern matched 0 indices”
-The schedule's index pattern selects no index on the cluster, so it snapshots nothing. Check each part against the index names under **Index Management**: a misspelt prefix, or an exclusion that removes everything the other parts match (`wazuh-*,-wazuh*`).
+The schedule's index pattern selects no index on the cluster, so it snapshots nothing. Open the schedule with **Edit**: the form shows what the pattern matches now, and updates as you change it. Look for a misspelt prefix, or an exclusion that removes everything the other parts match (`wazuh-*,-wazuh*`).
 
 ### “Snapshots succeed but disk is still full”
 Snapshots don’t automatically delete hot indexes. You still need a retention plan:

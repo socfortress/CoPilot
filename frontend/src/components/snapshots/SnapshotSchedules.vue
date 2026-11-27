@@ -111,16 +111,28 @@ async function fetchSchedules() {
 	}
 }
 
-function onScheduleCreated() {
-	showCreateModal.value = false
-	fetchSchedules()
-	message.success("Schedule created successfully")
+/** The save confirmation, with how many indices the pattern matches right now when the backend counted them. */
+function confirmSaved(verb: "created" | "updated", matchingIndexCount: number | null) {
+	if (matchingIndexCount === 0) {
+		message.warning(`Schedule ${verb}, but its index pattern matches no index right now`)
+	} else if (matchingIndexCount == null) {
+		message.success(`Schedule ${verb} successfully`)
+	} else {
+		const noun = matchingIndexCount === 1 ? "index" : "indices"
+		message.success(`Schedule ${verb}: its index pattern matches ${matchingIndexCount} ${noun}`)
+	}
 }
 
-function onScheduleUpdated() {
+function onScheduleCreated(matchingIndexCount: number | null) {
+	showCreateModal.value = false
+	fetchSchedules()
+	confirmSaved("created", matchingIndexCount)
+}
+
+function onScheduleUpdated(matchingIndexCount: number | null) {
 	showEditModal.value = false
 	fetchSchedules()
-	message.success("Schedule updated successfully")
+	confirmSaved("updated", matchingIndexCount)
 }
 
 onBeforeMount(() => {

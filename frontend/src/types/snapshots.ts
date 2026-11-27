@@ -175,6 +175,19 @@ export interface SnapshotScheduleListResponse {
 
 export interface SnapshotScheduleOperationResponse {
 	schedule?: SnapshotScheduleResponse | null
+	/** How many indices the pattern matches right now: on a create, or an update that sent index_pattern; null when not counted. */
+	matching_index_count?: number | null
+}
+
+/** What an index pattern selects on the cluster right now (POST /snapshots/schedules/preview). */
+export interface IndexPatternPreview {
+	index_pattern: string
+	/** Why a schedule can't be saved with this pattern; null when it can. */
+	problem?: string | null
+	matching_index_count?: number | null
+	/** The matching index names, sorted (the first 200). */
+	matching_indices: string[]
+	truncated: boolean
 }
 
 export interface ScheduledSnapshotExecutionResponse {
