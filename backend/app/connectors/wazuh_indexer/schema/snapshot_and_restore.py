@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
 
 from pydantic import BaseModel
@@ -459,3 +460,21 @@ class ScheduledSnapshotExecutionResponse(BaseModel):
     )
     success: bool = Field(..., description="Whether the execution was successful")
     message: str = Field(..., description="Status message")
+
+
+class ScheduleRunResponse(BaseModel):
+    """What running a schedule now did (POST /snapshots/schedules/{id}/run)."""
+
+    outcome: Literal["snapshot_started", "nothing_new", "no_match", "failed"] = Field(
+        ...,
+        description=(
+            "snapshot_started: a snapshot of the new indices was started; nothing_new: the pattern matched indices, "
+            "but each is still being written to or already in one of this schedule's snapshots; no_match: the "
+            "pattern matched no index; failed: the run failed (the indexer, the repository or the snapshot)"
+        ),
+    )
+    snapshot_name: Optional[str] = Field(None, description="The snapshot the run started")
+    indices_snapshotted: int = Field(0, description="How many indices that snapshot holds")
+    schedule: SnapshotScheduleResponse = Field(..., description="The schedule as the run left it")
+    success: bool = Field(..., description="True when a snapshot was started or there was nothing new to snapshot")
+    message: str = Field(..., description="What the run did, in a sentence")

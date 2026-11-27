@@ -15,9 +15,11 @@
 					v-for="schedule in schedules"
 					:key="schedule.id"
 					:schedule
+					:running="runningIds.has(schedule.id)"
 					@toggle-enabled="enabled => toggleEnabled(schedule, enabled)"
 					@edit="openEditModal(schedule)"
 					@delete="deleteSchedule(schedule)"
+					@run="runSchedule(schedule)"
 				/>
 			</div>
 
@@ -44,7 +46,8 @@
 
 <script setup lang="ts">
 import type { ApiError } from "@/types/common.ts"
-import type { SnapshotScheduleResponse } from "@/types/snapshots"
+import type { FlaskBaseResponse } from "@/types/flask"
+import type { ScheduleRunResponse, SnapshotScheduleResponse } from "@/types/snapshots"
 import { NButton, NEmpty, NModal, NSpin, useMessage } from "naive-ui"
 import { onBeforeMount, ref } from "vue"
 import Api from "@/api"
@@ -61,6 +64,8 @@ const schedules = ref<SnapshotScheduleResponse[]>([])
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const selectedSchedule = ref<SnapshotScheduleResponse | null>(null)
+/** Schedules a Run now is under way for. */
+const runningIds = ref(new Set<number>())
 
 function openEditModal(schedule: SnapshotScheduleResponse) {
 	selectedSchedule.value = schedule
@@ -92,6 +97,34 @@ async function deleteSchedule(schedule: SnapshotScheduleResponse) {
 		}
 	} catch (error) {
 		message.error(getApiErrorMessage(error as ApiError) || "Failed to delete schedule")
+	}
+}
+
+/** What a Run now did, in the backend's words, as a toast of its outcome's kind. */
+function confirmRun(run: FlaskBaseResponse & ScheduleRunResponse) {
+	const options = { duration: 8000, closable: true }
+	if (run.outcome === "snapshot_started") message.success(run.message, options)
+	else if (run.outcome === "nothing_new") message.info(run.message, options)
+	else if (run.outcome === "no_match") message.warning(run.message, options)
+	else message.error(run.message, options)
+}
+
+async function runSchedule(schedule: SnapshotScheduleResponse) {
+	if (runningIds.value.has(schedule.id)) return
+	runningIds.value.add(schedule.id)
+	try {
+		const response = await Api.snapshots.runSchedule(schedule.id)
+		confirmRun(response.data)
+		// The card shows the run's status, time and snapshot without reloading the list.
+		const ran = response.data.schedule
+		schedules.value = schedules.value.map(item => (item.id === ran.id ? ran : item))
+	} catch (error) {
+		const text = getApiErrorMessage(error as ApiError) || "Failed to run the schedule"
+		// 409: a run of it (a scheduled one, or someone else's Run now) is under way.
+		if ((error as ApiError).response?.status === 409) message.warning(text)
+		else message.error(text)
+	} finally {
+		runningIds.value.delete(schedule.id)
 	}
 }
 

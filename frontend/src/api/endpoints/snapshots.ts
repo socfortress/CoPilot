@@ -5,6 +5,7 @@ import type {
 	IndexPatternPreview,
 	RestoreSnapshotRequest,
 	RestoreSnapshotResponse,
+	ScheduleRunResponse,
 	SnapshotListResponse,
 	SnapshotRepositoryListResponse,
 	SnapshotScheduleCreate,
@@ -88,5 +89,10 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & SnapshotScheduleOperationResponse>(
 			`/snapshots/schedules/${scheduleId}`
 		)
+	},
+
+	/** Runs a schedule once, now, outside its window and interval; a 409 while a run of it is under way. */
+	runSchedule(scheduleId: number) {
+		return HttpClient.post<FlaskBaseResponse & ScheduleRunResponse>(`/snapshots/schedules/${scheduleId}/run`)
 	}
 }

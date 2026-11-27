@@ -9,6 +9,7 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.models.users import User
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     CreateSnapshotRequest,
@@ -28,6 +29,7 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     RestoreSnapshotResponse,
 )
+from app.connectors.wazuh_indexer.schema.snapshot_and_restore import ScheduleRunResponse
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     SnapshotListResponse,
 )
@@ -48,6 +50,10 @@ from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
 )
 from app.connectors.wazuh_indexer.schema.snapshot_and_restore import (
     SnapshotStatusResponse,
+)
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import ScheduleNotFound
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    ScheduleRunInProgress,
 )
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import create_snapshot
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
@@ -73,6 +79,9 @@ from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
     preview_index_pattern,
 )
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import restore_snapshot
+from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
+    run_snapshot_schedule_now,
+)
 from app.connectors.wazuh_indexer.services.snapshot_and_restore import (
     update_snapshot_schedule,
 )
@@ -455,3 +464,29 @@ async def delete_schedule_endpoint(
         )
 
     return response
+
+
+@wazuh_indexer_snapshots_router.post(
+    "/schedules/{schedule_id}/run",
+    response_model=ScheduleRunResponse,
+    summary="Run a Snapshot Schedule Now",
+    description=(
+        "Runs the schedule once, now, whatever its window and interval say: it snapshots the indices its pattern "
+        "matches that none of its snapshots holds yet and applies its retention, as a scheduled run does, and records "
+        "the run. The interval counts from it. Every outcome is a 200 (see outcome); an unknown schedule is a 404, "
+        "and one a run of is already under way a 409."
+    ),
+)
+async def run_schedule_now_endpoint(
+    schedule_id: int = Path(..., description="ID of the schedule to run"),
+    session: AsyncSession = Depends(get_db),
+    current_user: User = Security(AuthHandler().get_current_user, scopes=["admin"]),
+) -> ScheduleRunResponse:
+    logger.info(f"Received request to run snapshot schedule ID {schedule_id} now, from {current_user.username}")
+
+    try:
+        return await run_snapshot_schedule_now(schedule_id=schedule_id, session=session, requested_by=current_user.username)
+    except ScheduleNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ScheduleRunInProgress as e:
+        raise HTTPException(status_code=409, detail=str(e))
